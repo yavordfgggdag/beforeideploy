@@ -159,7 +159,7 @@ struct GitCard: View {
                         .bidButton(.secondary, compact: true)
                         .disabled(g.remote == nil || (g.hasUpstream == true && (g.ahead ?? 0) == 0))
                     Button { model.fetch() } label: { Image(systemName: "arrow.down.circle") }
-                        .bidButton(.secondary, compact: true).help("git fetch")
+                        .bidButton(.secondary, compact: true).help(L("git.fetchHelp"))
                     Spacer()
                     if let url = g.githubUrl {
                         Button { model.open(url) } label: { Label("GitHub", systemImage: "arrow.up.right") }

@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct RootView: View {
@@ -119,22 +120,57 @@ struct RootView: View {
 }
 
 struct ToastView: View {
+    @EnvironmentObject var model: AppModel
     let toast: Toast
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 10) {
             Image(systemName: toast.isError ? "exclamationmark.circle.fill" : "checkmark.circle.fill")
                 .foregroundColor(toast.isError ? Theme.blocked : Theme.ready)
             Text(toast.text)
                 .font(.system(size: 12.5, weight: .medium))
                 .foregroundColor(Theme.text)
                 .lineLimit(3)
+                .textSelection(.enabled)
+            if let code = toast.code {
+                Text(code)
+                    .font(.system(size: 10.5, design: .monospaced))
+                    .foregroundColor(Theme.secondary)
+                    .padding(.horizontal, 6).padding(.vertical, 2)
+                    .background(RoundedRectangle(cornerRadius: 5, style: .continuous).fill(Theme.panel))
+                    .help(L("toast.codeHelp"))
+                Button {
+                    let pb = NSPasteboard.general
+                    pb.clearContents()
+                    pb.setString("\(toast.text) [\(code)]", forType: .string)
+                    model.flash(L("common.copied"))
+                } label: {
+                    Image(systemName: "doc.on.doc").font(.system(size: 11.5, weight: .medium)).foregroundColor(Theme.secondary)
+                }
+                .buttonStyle(.plain)
+                .help(L("toast.copy"))
+                if let url = toast.helpURL {
+                    Button { NSWorkspace.shared.open(url) } label: {
+                        Image(systemName: "questionmark.circle").font(.system(size: 12, weight: .medium)).foregroundColor(Theme.accent)
+                    }
+                    .buttonStyle(.plain)
+                    .help(L("toast.help"))
+                }
+            }
+            Button { model.dismissToast() } label: {
+                Image(systemName: "xmark").font(.system(size: 10, weight: .bold)).foregroundColor(Theme.tertiary)
+            }
+            .buttonStyle(.plain)
+            .help(L("common.close"))
+            .keyboardShortcut(.cancelAction)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 11)
         .background(Capsule().fill(Theme.elevated))
-        .overlay(Capsule().strokeBorder(Theme.hairline, lineWidth: 1))
+        .overlay(Capsule().strokeBorder(toast.isError ? Theme.blocked.opacity(0.35) : Theme.hairline, lineWidth: 1))
         .shadow(color: .black.opacity(0.35), radius: 16, y: 6)
-        .frame(maxWidth: 560)
+        .frame(maxWidth: 640)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(toast.code.map { "\(toast.text) (\($0))" } ?? toast.text)
     }
 }
 

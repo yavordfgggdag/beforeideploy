@@ -1,0 +1,87 @@
+# Error codes
+
+Every failure the engine reports carries a stable `code` (`EngineError.code`, also the `code` field of the
+`result` line in the NDJSON protocol). The app shows the code next to the message and, when the cloud
+settings define `help.url`, links to `<help.url>/<code>`. `scripts/error-codes.mjs` (CI) fails when a code
+is raised but not listed here, or listed but no longer raised. Exit codes: 2 usage / confirmation, 3
+blocked · stale · forbidden, 4 not linked, 5 not logged in, 6 Spaceship, 7 cloud not configured, 8 AI
+quota, 127 Node missing; everything else exits 1.
+
+## Engine
+
+| Code | Exit | Meaning | What to do |
+|---|---|---|---|
+| `usage` | 2 | A command got wrong or missing arguments. | Only reachable from the CLI; the app always passes complete arguments. `bid help` lists the commands. |
+| `confirm_required` | 2 | A production deploy, an account deletion, a paid setup step or a fix needs its confirmation word (`DEPLOY`, `DELETE`, `--yes`). | Type the word in the sheet; the engine refuses silently otherwise. |
+| `blocked` | 3 | The last check ended BLOCKED — deploying would publish a broken site. | Open the failed step, fix it (AI Fix or by hand) and check again. |
+| `stale_check` | 3 | Files changed after the last check, so its result no longer describes the working tree. | Run the check again (⌘R). |
+| `needs_check` | 3 | No check has been run for this project yet. | Run the check first. |
+| `forbidden` | 3 | The account's role or plan does not allow the action (Admin panel, Deep fix, cloud sync…). | An admin can change the role or plan; plans come with WP4. |
+| `not_linked` | 4 | The project is not linked to a site on its hosting yet. | Use Smart Deploy: it creates or links the site on the first run. |
+| `not_logged_in` | 5 | The action needs an account session (sync, Admin, cloud AI, export…). | Sign in from the sidebar badge. |
+| `spaceship_error` | 6 | The Spaceship API returned an error for a DNS or domain operation. | The message carries Spaceship's text; check the domain in Spaceship and retry. |
+| `not_configured` | 7 | No cloud (Supabase) is configured on this Mac. | Owner: Cloud setup screen (URL + anon key). Users normally never see this — the config ships with the app. |
+| `quota_exhausted` | 8 | The monthly AI credits are used up. | Wait for the renewal date shown in the message, buy a pack (WP4) or use the external AI buttons. |
+| `network` | 1 | A server (Supabase, hosting, registrar, AI, release feed) could not be reached. | Check the connection, VPN or proxy and retry; the app keeps working offline. |
+| `auth_error` | 1 | Supabase Auth refused the request: wrong email or password, unconfirmed email, expired link. | Read the message; "Forgot your password?" sends a new link. |
+| `weak_password` | 1 | The password is shorter than 8 characters. | Choose a longer password. |
+| `rest_failed` | 1 | A cloud table request failed (RLS, schema not applied, network mid-request). | Owner: check `supabase/schema.sql` is applied; users: retry, then send a support report. |
+| `sync_failed` | 1 | Cloud sync of the project list failed. | Retry from the account menu; local projects are never lost. |
+| `account_failed` | 1 | The `account` Edge Function (export / delete) returned an error. | Retry; owner: `supabase functions deploy account`. |
+| `admin_failed` | 1 | The `admin` Edge Function returned an error. | The message has the server's text; owner: function deployed and caller is `admin`? |
+| `aikey_failed` | 1 | Storing or checking an AI key in the Keychain failed. | Retry; if Keychain prompts appear, allow BeforeIDeploy. |
+| `unauthorized` | 1 | The provider rejected the credentials (AI key, Spaceship key). | Re-enter the key; for Spaceship also check the API secret. |
+| `ai_unavailable` | 1 | Built-in AI Fix is not available for this account: no plan, no own key for the role, or AI disabled. | VIP/admin: add an Anthropic or OpenAI key in Setup; normal users: a plan (WP4); the external AI buttons always work. |
+| `ai_rate_limited` | 1 | Too many AI requests in a minute or hour (cloud limit, or the provider's). | Wait a minute and retry. |
+| `ai_daily_cap` | 1 | Today's AI spend reached the daily cap (15 % of the monthly quota). | Continue tomorrow or use the external buttons. |
+| `ai_failed` | 1 | The AI provider returned an error or an unusable stream. | Retry; if it repeats, the support report has the response. |
+| `ai_refused` | 1 | The model declined to answer (safety refusal). | Rephrase by fixing the prompt's log manually, or use an external assistant. |
+| `bad_patch` | 1 | The saved AI answer does not belong to this project or has no applicable file changes. | Run AI Fix again; apply only from the panel it produced. |
+| `fix_failed` | 1 | An automatic fix (git init, untrack secrets, deps install, GitHub repo…) failed. | The message has the command output; fix by hand and check again. |
+| `ui_action` | 1 | This fix opens a panel in the app and cannot run from the CLI. | Use the app's button for it. |
+| `install_failed` | 1 | Installing a tool from Setup failed (Homebrew, npm). | Run the shown command in Terminal to see the full output. |
+| `not_runnable` | 1 | The Setup item has no automatic action. | Follow the manual instructions of the item. |
+| `login_failed` | 1 | Signing in to a hosting CLI (Netlify, Vercel, Cloudflare, GitHub) failed or was cancelled. | Retry; the browser must finish the login. |
+| `github_failed` | 1 | The GitHub CLI returned an error (repo creation, auth). | `gh auth status` in Terminal; retry. |
+| `git_failed` | 1 | A Git command failed (commit, push, fetch). | The message has Git's output; usually a conflict or missing upstream. |
+| `no_repo` | 1 | The project folder is not a Git repository. | Use the "Initialize Git" fix on the dashboard. |
+| `no_remote` | 1 | The repository has no remote (`origin`). | Add one from the Git panel (create the repo on GitHub or paste a URL). |
+| `nothing` | 1 | Nothing to do: no failing steps for AI Fix, no setup items, no new version. | Informational. |
+| `missing_cli` | 1 | A CLI this action needs is not installed (`gh`, an AI CLI, …). | Setup installs it. |
+| `no_cli` | 1 | The hosting CLI for the selected provider is missing (`netlify`, `vercel`, `wrangler`). | Setup installs it. |
+| `no_build` | 1 | No build output in the publish folder. | Run the check (it builds), or check the framework's output folder. |
+| `unsupported` | 1 | The action is not possible for this project on this hosting (SSR on Cloudflare/GitHub Pages, draft on GitHub Pages…). | Pick a hosting from the advice card that supports the project. |
+| `deploy_failed` | 1 | The hosting CLI failed during deploy. | The log has the details; usually a build or auth problem. |
+| `netlify_failed` | 1 | The Netlify CLI or API returned an error. | Read the message; `netlify status` in Terminal helps. |
+| `local_failed` | 1 | Local Preview could not start (port, build, dev server). | The log shows the server output; stop other servers on the port. |
+| `no_server` | 1 | Local Preview is not running. | Start it (⌘L). |
+| `not_connected` | 1 | Spaceship is not connected (no API key on this Mac). | Domains → Connect Spaceship. |
+| `no_site` | 1 | The domain cannot be connected: the project has no live site yet. | Deploy to production first. |
+| `not_found` | 1 | The project folder no longer exists, or a record is missing. | Re-add the project or remove it from the list. |
+| `update_failed` | 1 | The release feed could not be read or the download failed. | Retry later; the feed URL comes from the cloud settings. |
+| `update_corrupt` | 1 | The downloaded DMG does not match the published sha256. | Download again; never open a DMG that fails this check. |
+| `error` | 1 | An unexpected failure without a specific code. | The message and the engine log (support report) describe it. |
+
+## App
+
+| Code | Meaning | What to do |
+|---|---|---|
+| `missing` | The engine (Node script) is not installed at the expected path, or Node.js is missing. | Run the installer again; install Node.js (nvm, Volta or Homebrew). |
+
+## Cloud (Edge Functions)
+
+Returned as `code` in the JSON body; the engine maps them to the codes above (`quota_exhausted`,
+`ai_rate_limited`, `ai_daily_cap`, `ai_unavailable`, `forbidden`, `not_configured`).
+
+| Code | HTTP | Meaning |
+|---|---|---|
+| `no_profile` | 403 | Valid session but no `profiles` row — the signup trigger did not run. |
+| `disabled` | 403 | An admin disabled AI for this account. |
+| `no_plan` | 403 | Normal user on the Free plan asked for cloud AI. |
+| `forbidden` | 403 | Admin function called by a non-admin. |
+| `daily_cap` | 403 | Daily AI cap reached. |
+| `quota_exhausted` | 402 | No credits left. |
+| `rate_limited` | 429 | More than 6 requests a minute or 60 an hour. |
+| `prompt_too_long` | 413 | Prompt above `ai.promptMaxChars` (60 000 by default). |
+| `upstream` | 502 | The model API failed (network or 5xx). |
+| `not_configured` | 500 | `ANTHROPIC_API_KEY` secret is missing on the function. |

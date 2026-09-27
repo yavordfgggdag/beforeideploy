@@ -255,7 +255,7 @@ struct CloudSetupView: View {
                             .bidButton(.secondary, compact: true)
                     }
                     BIDTextField(placeholder: "https://xxxx.supabase.co", text: $url, mono: true)
-                    BIDTextField(placeholder: "anon public key", text: $key, mono: true)
+                    BIDTextField(placeholder: L("cloud.anonKeyPlaceholder"), text: $key, mono: true)
                     if let error { Text(error).foregroundColor(Theme.blocked).font(.system(size: 12.5)) }
                     Button {
                         busy = true

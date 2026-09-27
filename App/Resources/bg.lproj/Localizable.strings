@@ -118,6 +118,7 @@
 "auth.signupSubtitle" = "Един акаунт за всички твои сайтове, хостинги и домейни.";
 "auth.welcomeBack" = "Добре дошъл отново";
 
+"cloud.anonKeyPlaceholder" = "anon public key";
 "cloud.continueOffline" = "Продължи без акаунт засега";
 "cloud.copySchema" = "Копирай SQL схемата";
 "cloud.openSupabase" = "Отвори Supabase";
@@ -283,6 +284,7 @@
 "git.addRemote" = "Добави remote";
 "git.changes" = "промени";
 "git.createRepo" = "Създай GitHub repo";
+"git.fetchHelp" = "git fetch — обнови какво има в remote-а";
 "git.init" = "Инициализирай Git";
 "git.more" = "+ още %@";
 "git.notPushed" = "не е push-вано";
@@ -345,8 +347,11 @@
 "menu.commands" = "Команди…";
 "menu.commitPush" = "Commit & Push…";
 "menu.fullCheck" = "Пълна проверка (без кеш)";
+"menu.nextProject" = "Следващ проект";
+"menu.previousProject" = "Предишен проект";
 "menu.settings" = "Настройки…";
 "menu.stopLocal" = "Спри Local Preview";
+"menu.view" = "Изглед";
 
 "nav.missionControl" = "Mission Control";
 
@@ -388,6 +393,7 @@
 
 "overview.attention" = "Изисква внимание";
 "overview.autoSetup" = "Настрой автоматично";
+"overview.blockedCaption" = "блокирани";
 "overview.daysShort" = "%@д";
 "overview.failing" = "Грешки: %@";
 "overview.loading" = "Събирам статуса на всички проекти…";
@@ -395,6 +401,7 @@
 "overview.missingSetupHint" = "Мога да ги инсталирам и свържа автоматично.";
 "overview.noLiveSite" = "Няма live сайт";
 "overview.noProduction" = "без production";
+"overview.readyToDeploy" = "готови за deploy";
 "overview.sitesOnline" = "сайта онлайн";
 "overview.title" = "Всички проекти на едно място";
 "overview.unchecked" = "НЕПРОВЕРЕН";
@@ -533,6 +540,10 @@
 "time.hoursAgo" = "преди %@ ч";
 "time.justNow" = "току-що";
 "time.minutesAgo" = "преди %@ мин";
+
+"toast.codeHelp" = "Код на грешката — спомени го, когато търсиш помощ";
+"toast.copy" = "Копирай съобщението и кода";
+"toast.help" = "Отвори помощната страница за тази грешка";
 
 "tour.1.b1" = "Git, тайни, зависимости, lint, типове, build и хостинг";
 "tour.1.b2" = "Нищо не е променено? Втората проверка отнема секунди.";

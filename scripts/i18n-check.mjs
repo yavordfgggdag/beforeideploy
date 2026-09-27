@@ -90,6 +90,11 @@ for (const f of swiftFiles) {
         if (!allowCyrillic && cyrillic <= 20) errors.push(`${path.relative(ROOT, f)}:${i + 1}: hard-coded text ${lit.slice(0, 60)}`);
       }
     }
+    // English sentences handed straight to the UI (`Text("ready to deploy")`, `label: "blocked"`) — the
+    // catalogs must own every visible word, otherwise the other languages silently show English.
+    for (const m of code.matchAll(/\b(?:Text|Label|Button|label|placeholder|title|subtitle|help)\s*[:(]\s*"([a-z]+(?: [a-z]+)+)"/g)) {
+      errors.push(`${path.relative(ROOT, f)}:${i + 1}: English text outside the catalog "${m[1]}" — use L("key")`);
+    }
   });
 }
 if (app.en) {

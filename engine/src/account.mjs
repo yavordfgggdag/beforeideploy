@@ -161,6 +161,7 @@ function withFeatures(user, profile) {
     aiDisabled: p.aiDisabled,
     credits: p.credits,
     settings: p.settings || {},
+    helpUrl: typeof p.settings?.['help.url'] === 'string' ? p.settings['help.url'] : null,
     profileStale: !!p.stale,
     hasOwnKey,
     features: features({ role: p.role, plan: p.plan, aiDisabled: p.aiDisabled, hasOwnKey }),

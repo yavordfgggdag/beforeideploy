@@ -118,6 +118,7 @@
 "auth.signupSubtitle" = "One account for all your sites, hosting and domains.";
 "auth.welcomeBack" = "Welcome back";
 
+"cloud.anonKeyPlaceholder" = "anon public key";
 "cloud.continueOffline" = "Continue without an account for now";
 "cloud.copySchema" = "Copy the SQL schema";
 "cloud.openSupabase" = "Open Supabase";
@@ -283,6 +284,7 @@
 "git.addRemote" = "Add remote";
 "git.changes" = "changes";
 "git.createRepo" = "Create GitHub repo";
+"git.fetchHelp" = "git fetch — refresh what the remote has";
 "git.init" = "Initialize Git";
 "git.more" = "+ %@ more";
 "git.notPushed" = "not pushed";
@@ -345,8 +347,11 @@
 "menu.commands" = "Commands…";
 "menu.commitPush" = "Commit & Push…";
 "menu.fullCheck" = "Full check (no cache)";
+"menu.nextProject" = "Next project";
+"menu.previousProject" = "Previous project";
 "menu.settings" = "Settings…";
 "menu.stopLocal" = "Stop Local Preview";
+"menu.view" = "View";
 
 "nav.missionControl" = "Mission Control";
 
@@ -388,6 +393,7 @@
 
 "overview.attention" = "Needs attention";
 "overview.autoSetup" = "Set up automatically";
+"overview.blockedCaption" = "blocked";
 "overview.daysShort" = "%@d";
 "overview.failing" = "Errors: %@";
 "overview.loading" = "Collecting the status of all projects…";
@@ -395,6 +401,7 @@
 "overview.missingSetupHint" = "I can install and connect them automatically.";
 "overview.noLiveSite" = "No live site";
 "overview.noProduction" = "no production";
+"overview.readyToDeploy" = "ready to deploy";
 "overview.sitesOnline" = "sites online";
 "overview.title" = "All projects in one place";
 "overview.unchecked" = "UNCHECKED";
@@ -533,6 +540,10 @@
 "time.hoursAgo" = "%@ h ago";
 "time.justNow" = "just now";
 "time.minutesAgo" = "%@ min ago";
+
+"toast.codeHelp" = "Error code — mention it when you ask for help";
+"toast.copy" = "Copy the message and the code";
+"toast.help" = "Open the help page for this error";
 
 "tour.1.b1" = "Git, secrets, dependencies, lint, types, build and hosting";
 "tour.1.b2" = "Nothing changed? The second check takes seconds.";

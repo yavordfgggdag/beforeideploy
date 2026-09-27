@@ -571,6 +571,8 @@ struct AccountState: Codable {
     var features: Features?
     /// OAuth providers enabled in the cloud project (engine: GET /auth/v1/settings) — present before login.
     var providers: [String]?
+    /// Base URL of the error help pages (cloud `settings.help.url`); toasts link `<helpUrl>/<code>`.
+    var helpUrl: String?
 
     struct Credits: Codable, Hashable {
         var balance: Int

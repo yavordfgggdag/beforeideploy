@@ -175,6 +175,11 @@ t('i18n: scripts/i18n-check.mjs (engine + app каталози, без твър�
   assert(r.status === 0, (r.stdout + r.stderr).trim().split('\n').slice(-8).join(' | '));
 });
 
+t('грешки: всеки EngineError код е документиран в docs/errors.md (scripts/error-codes.mjs)', () => {
+  const r = spawnSync(process.execPath, [path.join(ROOT, 'scripts', 'error-codes.mjs')], { encoding: 'utf8' });
+  assert(r.status === 0, (r.stdout + r.stderr).trim().split('\n').slice(-8).join(' | '));
+});
+
 t('i18n: всеки ключ в engine/src съществува в каталога, няма неизползвани', () => {
   const en = catalog('en');
   const src = path.join(ROOT, 'engine', 'src');

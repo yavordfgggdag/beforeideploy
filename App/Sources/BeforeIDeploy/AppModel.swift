@@ -13,6 +13,9 @@ struct Toast: Identifiable, Equatable {
     let id = UUID()
     let text: String
     var isError = false
+    /// `EngineError.code` — shown as a chip, copied with the text, links to the help page when the cloud has `help.url`.
+    var code: String?
+    var helpURL: URL?
 }
 
 struct PendingFix: Identifiable {
@@ -621,16 +624,43 @@ final class AppModel: ObservableObject, Feedback {
     // MARK: - Feedback
 
     func flash(_ text: String, error: Bool = false) {
-        let t = Toast(text: text, isError: error)
+        present(Toast(text: text, isError: error), seconds: error ? 4 : 2.6)
+    }
+
+    /// Every failure goes through here (WP7): the message, the engine's error code and, when the cloud
+    /// settings carry `help.url`, a link to the page for that code (`<help.url>/<code>`).
+    func show(_ error: Error) {
+        if case EngineError.missing = error { engineMissing = true }
+        var t = Toast(text: error.localizedDescription, isError: true)
+        if case EngineError.failed(_, let code) = error, let code, !code.isEmpty, code != "error" {
+            t.code = code
+            if let base = account?.helpUrl, !base.isEmpty {
+                t.helpURL = URL(string: base.hasSuffix("/") ? base + code : base + "/" + code)
+            }
+        }
+        present(t, seconds: 6)
+    }
+
+    func dismissToast() {
+        withAnimation(.easeOut(duration: 0.2)) { toast = nil }
+    }
+
+    private func present(_ t: Toast, seconds: Double) {
         withAnimation(.spring(response: 0.35)) { toast = t }
         Task {
-            try? await Task.sleep(nanoseconds: 2_600_000_000)
+            try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
             if toast == t { withAnimation(.easeOut(duration: 0.25)) { toast = nil } }
         }
     }
 
-    func show(_ error: Error) {
-        if case EngineError.missing = error { engineMissing = true }
-        flash(error.localizedDescription, error: true)
+    // MARK: - Keyboard navigation
+
+    /// ⌘] / ⌘[ — next or previous project in the sidebar order, wrapping around.
+    func selectAdjacent(_ delta: Int) {
+        let keys = projects.map(\.key)
+        guard !keys.isEmpty else { return }
+        let current = selectedKey.flatMap { keys.firstIndex(of: $0) } ?? (delta > 0 ? -1 : 0)
+        let next = keys[((current + delta) % keys.count + keys.count) % keys.count]
+        Task { await select(next) }
     }
 }

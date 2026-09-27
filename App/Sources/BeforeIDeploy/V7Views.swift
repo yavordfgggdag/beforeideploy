@@ -123,8 +123,8 @@ struct MissionControlView: View {
                 if let o = model.overview {
                     HStack(spacing: 12) {
                         KPITile(value: "\(o.totals.projects)", label: L("common.projectsCaption"), icon: "folder.fill")
-                        KPITile(value: "\(o.totals.ready)", label: "ready to deploy", icon: "checkmark.seal.fill", tint: Theme.ready)
-                        KPITile(value: "\(o.totals.blocked)", label: "blocked", icon: "xmark.octagon.fill", tint: o.totals.blocked > 0 ? Theme.blocked : Theme.text)
+                        KPITile(value: "\(o.totals.ready)", label: L("overview.readyToDeploy"), icon: "checkmark.seal.fill", tint: Theme.ready)
+                        KPITile(value: "\(o.totals.blocked)", label: L("overview.blockedCaption"), icon: "xmark.octagon.fill", tint: o.totals.blocked > 0 ? Theme.blocked : Theme.text)
                         KPITile(value: "\(o.totals.online)/\(o.totals.live)", label: L("overview.sitesOnline"), icon: "dot.radiowaves.left.and.right",
                                 tint: o.totals.online < o.totals.live ? Theme.warn : Theme.ready)
                     }

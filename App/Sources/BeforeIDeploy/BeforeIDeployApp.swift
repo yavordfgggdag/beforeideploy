@@ -72,6 +72,21 @@ struct BeforeIDeployApp: App {
                 Button(L("common.refresh")) { Task { await model.refreshStatus() } }
                     .keyboardShortcut("r", modifiers: [.command, .shift])
             }
+            CommandMenu(L("menu.view")) {
+                Button(L("nav.missionControl")) { model.screen = .overview }
+                    .keyboardShortcut("1")
+                Button(L("common.domains")) { model.screen = .domains }
+                    .keyboardShortcut("2")
+                Button(L("common.costs")) { model.screen = .costs }
+                    .keyboardShortcut("3")
+                Button(L("common.setup")) { model.screen = .setup }
+                    .keyboardShortcut("4")
+                Divider()
+                Button(L("menu.nextProject")) { model.selectAdjacent(1) }
+                    .keyboardShortcut("]")
+                Button(L("menu.previousProject")) { model.selectAdjacent(-1) }
+                    .keyboardShortcut("[")
+            }
             CommandGroup(replacing: .appSettings) {
                 Button(L("menu.settings")) { model.sheet = .settings }
                     .keyboardShortcut(",")

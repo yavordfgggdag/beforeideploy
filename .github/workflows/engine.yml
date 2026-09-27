@@ -22,3 +22,5 @@ jobs:
         run: node tests/run.mjs
       - name: i18n check
         run: node scripts/i18n-check.mjs
+      - name: Error codes documented
+        run: node scripts/error-codes.mjs
