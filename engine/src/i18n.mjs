@@ -45,6 +45,16 @@ export function t(key, params) {
   return typeof text === 'string' ? interpolate(text, params) : key;
 }
 
+/** True if `text` is the bundled translation of `key` in any language — i.e. a default the user has not edited. */
+export function isDefaultText(key, text) {
+  if (typeof text !== 'string') return false;
+  let langs = [];
+  try {
+    langs = fs.readdirSync(I18N_DIR).filter((f) => f.endsWith('.json')).map((f) => f.slice(0, -5));
+  } catch {}
+  return langs.some((lang) => loadCatalog(lang)?.[key] === text);
+}
+
 const MSG = Symbol('bid.msg');
 
 /** A translatable message: `new EngineError(msg('git.notRepo'), 'no_repo')` keeps the key in the result. */

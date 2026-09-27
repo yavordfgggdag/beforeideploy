@@ -7,6 +7,7 @@ import { gitStatus } from './git.mjs';
 import { localStatus } from './local.mjs';
 import { isDir, nowISO } from './util.mjs';
 import { spaceshipDomains, domainAttention } from './spaceship.mjs';
+import { t } from './i18n.mjs';
 
 function ping(url, timeout = 6000) {
   return new Promise((resolve) => {
@@ -94,18 +95,18 @@ export async function overview({ network = true } = {}) {
 
   const attention = [];
   for (const c of cards) {
-    if (!c.exists) attention.push({ key: c.key, level: 'fail', text: `${c.name}: папката липсва` });
-    if (c.status === 'blocked') attention.push({ key: c.key, level: 'fail', text: `${c.name}: BLOCKED — ${c.failing.join(', ') || 'грешки'}` });
+    if (!c.exists) attention.push({ key: c.key, level: 'fail', text: t('overview.folderMissing', { name: c.name }) });
+    if (c.status === 'blocked') attention.push({ key: c.key, level: 'fail', text: t('overview.blocked', { name: c.name, steps: c.failing.join(', ') || t('overview.errors') }) });
     if (c.uptime && !c.uptime.ok) {
       // a site that was never published to production 404s by design — that's info, not an outage
-      if (!c.lastProd && c.uptime.status === 404) attention.push({ key: c.key, level: 'info', text: `${c.name}: още няма production deploy (само draft)` });
-      else attention.push({ key: c.key, level: 'fail', text: `${c.name}: live сайтът не отговаря (${c.uptime.status || c.uptime.error})` });
+      if (!c.lastProd && c.uptime.status === 404) attention.push({ key: c.key, level: 'info', text: t('overview.noProduction', { name: c.name }) });
+      else attention.push({ key: c.key, level: 'fail', text: t('overview.down', { name: c.name, reason: c.uptime.status || c.uptime.error }) });
     }
-    if (c.sslDays !== null && c.sslDays < 14) attention.push({ key: c.key, level: 'warn', text: `${c.name}: SSL изтича след ${c.sslDays} дни` });
-    if (c.behind) attention.push({ key: c.key, level: 'warn', text: `${c.name}: ${c.behind} commit(s) зад GitHub` });
+    if (c.sslDays !== null && c.sslDays < 14) attention.push({ key: c.key, level: 'warn', text: t('overview.sslExpiring', { name: c.name, days: c.sslDays }) });
+    if (c.behind) attention.push({ key: c.key, level: 'warn', text: t('overview.behind', { name: c.name, count: c.behind }) });
     if (c.changed > 0 && c.checkedAt && Date.now() - Date.parse(c.checkedAt) > 3 * 86400000)
-      attention.push({ key: c.key, level: 'warn', text: `${c.name}: ${c.changed} неприбрани промени от дни` });
-    if (!c.status && c.exists) attention.push({ key: c.key, level: 'info', text: `${c.name}: още не е проверен` });
+      attention.push({ key: c.key, level: 'warn', text: t('overview.staleChanges', { name: c.name, count: c.changed }) });
+    if (!c.status && c.exists) attention.push({ key: c.key, level: 'info', text: t('overview.notChecked', { name: c.name }) });
   }
 
   let domains = { connected: false, domains: [] };

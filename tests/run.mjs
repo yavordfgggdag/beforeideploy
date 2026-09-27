@@ -175,6 +175,20 @@ t('i18n: всеки ключ в engine/src съществува в катало�
   assert(!unused.length, `unused keys: ${unused.join(', ')}`);
 });
 
+t('i18n: ценоразписът следва BID_LANG, редактираните етикети остават', () => {
+  const en = bid('prices');
+  assert(en.data.items['local:check'].label === 'Local check / build', JSON.stringify(en.data.items['local:check']));
+  const file = path.join(ENV.BID_APP_DIR, 'prices.json');
+  const stored = JSON.parse(fs.readFileSync(file, 'utf8'));
+  stored.items['github:push'].label = 'Моят push';
+  fs.writeFileSync(file, JSON.stringify(stored));
+  const bg = bidEnv({ BID_LANG: 'bg' }, 'prices');
+  assert(bg.data.items['local:check'].label === 'Локална проверка / build', bg.data.items['local:check'].label);
+  assert(bg.data.items['github:push'].label === 'Моят push' && bid('prices').data.items['github:push'].label === 'Моят push', 'edited label changed');
+  const setup = bidEnv({ BID_LANG: 'bg' }, 'setup', 'status');
+  assert(setup.data.items.some((i) => i.group === 'Основа'), 'setup group not bg');
+});
+
 t('i18n: BID_LANG=bg дава текстовете от V9, непознат език → en', () => {
   const nope = path.join(TMP, 'nope');
   const bg = bidEnv({ BID_LANG: 'bg' }, 'project', 'add', '--path', nope);

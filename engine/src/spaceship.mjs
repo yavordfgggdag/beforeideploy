@@ -142,7 +142,7 @@ export async function connectDomainToNetlify(project, { domain, yes = false }) {
     add: wanted.map((w) => ({ type: w.type, name: w.name, value: w.address || w.cname })),
     replace: conflicts.map((c) => ({ type: c.type, name: c.name, value: c.value })),
     netlify: { custom_domain: domain, domain_aliases: [`www.${domain}`] },
-    note: 'Netlify издава SSL сертификат автоматично след като DNS-ът се разпространи (обикновено минути, до няколко часа).',
+    note: t('spaceship.plan.note'),
   };
   if (!yes) return { applied: false, plan };
 
@@ -174,9 +174,9 @@ export function domainAttention(domains) {
   const out = [];
   for (const d of domains || []) {
     if (d.daysLeft !== null && d.daysLeft < 30) {
-      out.push({ key: `domain:${d.name}`, level: d.daysLeft < 7 ? 'fail' : 'warn', text: `${d.name}: изтича след ${d.daysLeft} дни${d.autoRenew ? ' (auto-renew е включен)' : ' — auto-renew е ИЗКЛЮЧЕН'}` });
+      out.push({ key: `domain:${d.name}`, level: d.daysLeft < 7 ? 'fail' : 'warn', text: t(d.autoRenew ? 'spaceship.expiring.autoRenew' : 'spaceship.expiring.noAutoRenew', { name: d.name, days: d.daysLeft }) });
     } else if (!d.autoRenew && d.daysLeft !== null && d.daysLeft < 90) {
-      out.push({ key: `domain:${d.name}`, level: 'info', text: `${d.name}: auto-renew е изключен (изтича след ${d.daysLeft} дни)` });
+      out.push({ key: `domain:${d.name}`, level: 'info', text: t('spaceship.autoRenewOff', { name: d.name, days: d.daysLeft }) });
     }
   }
   return out;

@@ -25,8 +25,8 @@ export const PROVIDERS = {
     ssr: true,
     preview: true,
     commercialFree: true,
-    free: 'Безплатен план (кредитна система)',
-    note: 'Production deploy харчи кредити — виж „Разходи“.',
+    free: t('hosting.netlify.free'),
+    note: t('hosting.netlify.note'),
     pricing: 'https://www.netlify.com/pricing/',
   },
   vercel: {
@@ -37,8 +37,8 @@ export const PROVIDERS = {
     ssr: true,
     preview: true,
     commercialFree: false,
-    free: 'Hobby — безплатен, но само за лични/некомерсиални проекти',
-    note: 'За сайтове на клиенти е нужен платен Pro план.',
+    free: t('hosting.vercel.free'),
+    note: t('hosting.vercel.note'),
     pricing: 'https://vercel.com/pricing',
   },
   cloudflare: {
@@ -49,8 +49,8 @@ export const PROVIDERS = {
     ssr: false,
     preview: true,
     commercialFree: true,
-    free: 'Безплатен план за статични сайтове',
-    note: 'Отличен за статични сайтове с много трафик.',
+    free: t('hosting.cloudflare.free'),
+    note: t('hosting.cloudflare.note'),
     pricing: 'https://www.cloudflare.com/plans/developer-platform/',
   },
   ghpages: {
@@ -61,8 +61,8 @@ export const PROVIDERS = {
     ssr: false,
     preview: false,
     commercialFree: true,
-    free: 'Безплатен за публични repo-та (частни изискват платен GitHub)',
-    note: 'Без preview и без сървърни функции; не е за онлайн магазини.',
+    free: t('hosting.ghpages.free'),
+    note: t('hosting.ghpages.note'),
     pricing: 'https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits',
   },
 };
@@ -133,11 +133,11 @@ export function advise(project) {
     let compatible = true;
     if (needsServer && !p.ssr) {
       compatible = false;
-      reasons.push(d.ssr ? `${d.framework} със сървърно рендиране не върви тук` : 'Проектът има сървърни функции');
+      reasons.push(d.ssr ? t('hosting.reason.ssr', { framework: d.framework }) : t('hosting.reason.functions'));
     }
-    if (p.id === 'ghpages' && !d.git.remote) reasons.push('Нужно е GitHub repo');
+    if (p.id === 'ghpages' && !d.git.remote) reasons.push(t('hosting.reason.needsRepo'));
     if (p.id === 'ghpages' && ['astro', 'vite'].includes(d.framework))
-      reasons.push('Без собствен домейн сайтът е под /repo-име/ — трябва настройка на base');
+      reasons.push(t('hosting.reason.basePath'));
     if (!p.commercialFree) reasons.push(p.note);
     let score = compatible ? 50 : 0;
     if (compatible && p.commercialFree) score += 20;

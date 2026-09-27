@@ -21,7 +21,7 @@ function version(cmd, args = ['--version']) {
   return r.code === 0 ? (r.stdout || r.stderr).trim().split('\n')[0] : null;
 }
 
-const npmInstall = (pkg) => ({ type: 'run', label: 'Инсталирай', cmd: 'npm', args: ['install', '-g', pkg], display: `npm i -g ${pkg}` });
+const npmInstall = (pkg) => ({ type: 'run', label: t('setup.action.install'), cmd: 'npm', args: ['install', '-g', pkg], display: `npm i -g ${pkg}` });
 
 export function setupStatus() {
   const items = [];
@@ -29,85 +29,85 @@ export function setupStatus() {
     items.push({ group, id, title, ok, detail, action: ok ? null : action, optional });
 
   // ---------------------------------------------------------------- base
-  add('Основа', 'node', 'Node.js', !!which('node'), which('node') ? version('node') : 'Нужен за всички проекти', {
+  add(t('setup.group.base'), 'node', 'Node.js', !!which('node'), which('node') ? version('node') : t('setup.node.detail'), {
     type: 'open',
-    label: 'Изтегли',
+    label: t('setup.action.download'),
     url: 'https://nodejs.org/en/download',
   });
-  add('Основа', 'git', 'Git', !!which('git'), which('git') ? version('git') : 'Нужен за GitHub', {
+  add(t('setup.group.base'), 'git', 'Git', !!which('git'), which('git') ? version('git') : t('setup.git.detail'), {
     type: 'terminal',
-    label: 'Инсталирай',
+    label: t('setup.action.install'),
     script: 'xcode-select --install',
   });
   const name = which('git') ? sh('git', ['config', '--global', 'user.name']).stdout.trim() : '';
   const email = which('git') ? sh('git', ['config', '--global', 'user.email']).stdout.trim() : '';
-  add('Основа', 'git-identity', 'Git име и имейл', !!(name && email), name && email ? `${name} <${email}>` : 'Ще ги взема автоматично от GitHub акаунта ти', {
+  add(t('setup.group.base'), 'git-identity', t('setup.identity.label'), !!(name && email), name && email ? `${name} <${email}>` : t('setup.identity.detail'), {
     type: 'run',
-    label: 'Вземи от GitHub',
-    display: 'от GitHub профила',
+    label: t('setup.action.fromGitHub'),
+    display: t('setup.display.fromProfile'),
   });
   const brew = which('brew');
-  add('Основа', 'brew', 'Homebrew', !!brew, brew ? 'Инсталиран' : 'По желание — улеснява инсталирането на gh', {
+  add(t('setup.group.base'), 'brew', 'Homebrew', !!brew, brew ? t('setup.brew.installed') : t('setup.brew.detail'), {
     type: 'terminal',
-    label: 'Инсталирай',
+    label: t('setup.action.install'),
     script: '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"',
   }, true);
 
   // ---------------------------------------------------------------- hosting & git
   const nlCli = which('netlify');
-  add('Hosting & GitHub', 'netlify-cli', 'Netlify CLI', !!nlCli, nlCli ? version('netlify') : 'Без него всяка команда минава през по-бавния npx', npmInstall('netlify-cli'));
+  add(t('setup.group.hosting'), 'netlify-cli', 'Netlify CLI', !!nlCli, nlCli ? version('netlify') : t('setup.netlifyCli.detail'), npmInstall('netlify-cli'));
   const na = netlifyAuth();
-  add('Hosting & GitHub', 'netlify-login', 'Netlify акаунт', na.loggedIn, na.loggedIn ? na.email || 'Влязъл' : 'Нужен за deploy', {
+  add(t('setup.group.hosting'), 'netlify-login', t('setup.netlifyAccount.title'), na.loggedIn, na.loggedIn ? na.email || t('setup.loggedIn') : t('setup.netlifyAccount.detail'), {
     type: 'run',
-    label: 'Вход в браузъра',
-    display: 'отваря браузъра',
+    label: t('setup.action.browserLogin'),
+    display: t('setup.display.opensBrowser'),
   });
   const gh = which('gh');
   add(
-    'Hosting & GitHub',
+    t('setup.group.hosting'),
     'gh',
     'GitHub CLI',
     !!gh,
-    gh ? version('gh') : 'За автоматично създаване на repo и CI статус',
-    brew ? { type: 'run', label: 'Инсталирай', cmd: 'brew', args: ['install', 'gh'], display: 'brew install gh' } : { type: 'open', label: 'Изтегли', url: 'https://cli.github.com' }
+    gh ? version('gh') : t('setup.gh.detail'),
+    brew ? { type: 'run', label: t('setup.action.install'), cmd: 'brew', args: ['install', 'gh'], display: 'brew install gh' } : { type: 'open', label: t('setup.action.download'), url: 'https://cli.github.com' }
   );
   const ghAuth = gh ? sh('gh', ['auth', 'status'], { timeout: 12000 }).code === 0 : false;
-  add('Hosting & GitHub', 'gh-auth', 'GitHub акаунт', ghAuth, ghAuth ? 'Влязъл' : 'Отваря браузъра — само потвърждаваш', {
+  add(t('setup.group.hosting'), 'gh-auth', t('setup.ghAccount.title'), ghAuth, ghAuth ? t('setup.loggedIn') : t('setup.ghAccount.detail'), {
     type: 'run',
-    label: 'Вход в браузъра',
+    label: t('setup.action.browserLogin'),
     display: 'github.com/login/device',
   });
-  add('Hosting & GitHub', 'spaceship', 'Spaceship (домейни & DNS)', spaceshipConnected(), spaceshipConnected() ? 'Свързан' : 'API ключ от Spaceship → домейни, DNS, изтичане', {
+  add(t('setup.group.hosting'), 'spaceship', t('setup.spaceship.title'), spaceshipConnected(), spaceshipConnected() ? t('setup.connected') : t('setup.spaceship.detail'), {
     type: 'app',
-    label: 'Свържи',
+    label: t('setup.action.connect'),
     appAction: 'spaceship-connect',
   }, true);
 
   const vc = which('vercel');
-  add('Hosting & GitHub', 'vercel', 'Vercel CLI', !!vc, vc ? version('vercel') : 'Хостинг за Next.js и SSR проекти', npmInstall('vercel'), true);
+  add(t('setup.group.hosting'), 'vercel', 'Vercel CLI', !!vc, vc ? version('vercel') : t('setup.vercel.detail'), npmInstall('vercel'), true);
   const vcAuth = providerStatus('vercel').loggedIn;
-  add('Hosting & GitHub', 'vercel-auth', 'Vercel акаунт', vcAuth, vcAuth ? 'Влязъл' : vc ? 'Вход в браузъра' : 'Първо инсталирай Vercel CLI', vc ? { type: 'terminal', label: 'Вход в браузъра', script: 'vercel login' } : null, true);
+  add(t('setup.group.hosting'), 'vercel-auth', t('setup.vercelAccount.title'), vcAuth, vcAuth ? t('setup.loggedIn') : vc ? t('setup.action.browserLogin') : t('setup.vercelAccount.installFirst'), vc ? { type: 'terminal', label: t('setup.action.browserLogin'), script: 'vercel login' } : null, true);
   const wr = which('wrangler');
-  add('Hosting & GitHub', 'wrangler', 'Cloudflare Wrangler', !!wr, wr ? version('wrangler') : 'Хостинг на статични сайтове в Cloudflare Pages', npmInstall('wrangler'), true);
+  add(t('setup.group.hosting'), 'wrangler', 'Cloudflare Wrangler', !!wr, wr ? version('wrangler') : t('setup.wrangler.detail'), npmInstall('wrangler'), true);
   const wrAuth = providerStatus('cloudflare').loggedIn;
-  add('Hosting & GitHub', 'wrangler-auth', 'Cloudflare акаунт', wrAuth, wrAuth ? 'Влязъл' : wr ? 'Вход в браузъра' : 'Първо инсталирай Wrangler', wr ? { type: 'terminal', label: 'Вход в браузъра', script: 'wrangler login' } : null, true);
+  add(t('setup.group.hosting'), 'wrangler-auth', t('setup.cloudflareAccount.title'), wrAuth, wrAuth ? t('setup.loggedIn') : wr ? t('setup.action.browserLogin') : t('setup.cloudflareAccount.installFirst'), wr ? { type: 'terminal', label: t('setup.action.browserLogin'), script: 'wrangler login' } : null, true);
 
   // ---------------------------------------------------------------- AI
   const codex = which('codex');
-  add('AI помощници', 'codex', 'Codex CLI', !!codex, codex ? version('codex') : 'AI Fix директно в проекта (ChatGPT акаунт)', npmInstall('@openai/codex'), true);
+  add(t('setup.group.ai'), 'codex', 'Codex CLI', !!codex, codex ? version('codex') : t('setup.codex.detail'), npmInstall('@openai/codex'), true);
   const codexAuth = exists(path.join(HOME, '.codex', 'auth.json')) || !!process.env.OPENAI_API_KEY;
-  add('AI помощници', 'codex-auth', 'Codex вход', codexAuth, codexAuth ? 'Влязъл' : codex ? 'Влез с ChatGPT акаунта' : 'Първо инсталирай Codex', codex ? {
+  add(t('setup.group.ai'), 'codex-auth', t('setup.codexAuth.title'), codexAuth, codexAuth ? t('setup.loggedIn') : codex ? t('setup.codexAuth.detail') : t('setup.codexAuth.installFirst'), codex ? {
     type: 'terminal',
-    label: 'Вход',
+    label: t('setup.action.login'),
     script: 'codex login',
   } : null, true);
   const claude = which('claude');
-  add('AI помощници', 'claude-code', 'Claude Code', !!claude, claude ? version('claude') : 'AI Fix директно в проекта (Claude акаунт)', npmInstall('@anthropic-ai/claude-code'), true);
+  add(t('setup.group.ai'), 'claude-code', 'Claude Code', !!claude, claude ? version('claude') : t('setup.claude.detail'), npmInstall('@anthropic-ai/claude-code'), true);
   const claudeAuth = fileHas(path.join(HOME, '.claude.json'), /oauthAccount|primaryApiKey/) || !!process.env.ANTHROPIC_API_KEY;
-  add('AI помощници', 'claude-auth', 'Claude Code вход', claudeAuth, claudeAuth ? 'Влязъл' : claude ? 'Отвори Claude Code веднъж, за да влезеш' : 'Първо инсталирай Claude Code', claude ? {
+  add(t('setup.group.ai'), 'claude-auth', t('setup.claudeAuth.title'), claudeAuth, claudeAuth ? t('setup.loggedIn') : claude ? t('setup.claudeAuth.detail') : t('setup.claudeAuth.installFirst'), claude ? {
     type: 'terminal',
-    label: 'Вход',
-    script: 'echo "Влез в Claude Code, после напиши /exit"; claude',
+    label: t('setup.action.login'),
+    script: `echo "${t('setup.claudeAuth.script')}"; claude`,
   } : null, true);
 
   const required = items.filter((i) => !i.optional);
@@ -128,7 +128,7 @@ function writeCommand(name, body) {
   const envFile = path.join(ENGINE_DIR, 'env.zsh');
   fs.writeFileSync(
     file,
-    `#!/bin/zsh\n# Before I Deploy — Настройка\n[ -f '${envFile}' ] && source '${envFile}'\nclear\n${body}\necho\necho "Можеш да затвориш прозореца и да натиснеш „Обнови“ в Before I Deploy."\n`
+    `#!/bin/zsh\n# Before I Deploy — ${t('setup.command.title')}\n[ -f '${envFile}' ] && source '${envFile}'\nclear\n${body}\necho\necho "${t('setup.command.done')}"\n`
   );
   fs.chmodSync(file, 0o755);
   return file;

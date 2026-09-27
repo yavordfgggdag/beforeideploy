@@ -35,8 +35,8 @@ const HELP = `Before I Deploy engine ${VERSION}
   bid fix     list --project P | apply ID --project P --yes
   bid history [--project P] [--limit N]
   bid aifix   --project P --step ID --target chatgpt|claude|codex|claude-code|copy
-  bid costs   [--refresh]          разходи, кредити, ценоразпис, бюджети
-  bid usage   [--refresh]          реални лимити от доставчиците
+  bid costs   [--refresh]          costs, credits, price table, budgets
+  bid usage   [--refresh]          real limits from the providers
   bid budget  --netlify-min N
   bid setup   status | run ID --yes | auto --yes [--optional] | terminal ID|all
   bid overview [--no-network]      Mission Control
@@ -47,7 +47,7 @@ const HELP = `Before I Deploy engine ${VERSION}
   bid account logout | recover --email E | oauth [--provider github] | session --access A --refresh R | sync
   bid cloud config --url U --anon-key K
   bid hosting status | advise --project P | set --project P --provider netlify|vercel|cloudflare|ghpages
-  bid deploy  --project P [--prod --confirm DEPLOY]        с избрания хостинг
+  bid deploy  --project P [--prod --confirm DEPLOY]        with the selected hosting
   bid doctor`;
 
 function statusSnapshot(project) {

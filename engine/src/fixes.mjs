@@ -9,7 +9,7 @@ import { t, msg } from './i18n.mjs';
 const BG = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'h', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'sht', ъ: 'a', ь: 'y', ю: 'yu', я: 'ya' };
 
 export function repoSlug(name) {
-  const t = String(name)
+  const slug = String(name)
     .toLowerCase()
     .split('')
     .map((c) => BG[c] ?? c)
@@ -17,7 +17,7 @@ export function repoSlug(name) {
     .replace(/[^a-z0-9._-]+/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
-  return t || 'project';
+  return slug || 'project';
 }
 
 const ESSENTIALS = ['node_modules/', '.env', '.env.*', '!.env.example', '.netlify/', '.DS_Store', '*.log'];
@@ -54,8 +54,8 @@ export function listFixes(dir) {
   if (gi === null) {
     fixes.push({
       id: 'gitignore.create',
-      title: 'Създай .gitignore',
-      description: 'Проектът няма .gitignore. Ще създам такъв с node_modules, .env файлове, .netlify и системни файлове.',
+      title: t('fix.gitignoreCreate.title'),
+      description: t('fix.gitignoreCreate.description'),
       preview: ESSENTIALS.join('\n'),
       risk: 'safe',
     });
@@ -65,8 +65,8 @@ export function listFixes(dir) {
     if (needsEnv || missing.some((m) => m.startsWith('node_modules') || m.startsWith('.netlify'))) {
       fixes.push({
         id: 'gitignore.env',
-        title: 'Защити .env и служебните папки',
-        description: 'Ще добавя липсващите редове в края на .gitignore. Нищо съществуващо няма да бъде променено.',
+        title: t('fix.gitignoreEnv.title'),
+        description: t('fix.gitignoreEnv.description'),
         preview: missing.join('\n'),
         risk: 'safe',
       });
@@ -78,9 +78,8 @@ export function listFixes(dir) {
     if (tracked.length) {
       fixes.push({
         id: 'env.untrack',
-        title: 'Спри проследяването на .env',
-        description:
-          'Ще махна файловете от Git индекса (git rm --cached) — остават на диска. ВАЖНО: ако вече са качени в GitHub, смени ключовете в тях.',
+        title: t('fix.envUntrack.title'),
+        description: t('fix.envUntrack.description'),
         preview: tracked.join('\n'),
         risk: 'caution',
       });
@@ -88,8 +87,8 @@ export function listFixes(dir) {
   } else if (which('git')) {
     fixes.push({
       id: 'git.init',
-      title: 'Инициализирай Git',
-      description: 'Ще изпълня git init -b main (и ще създам .gitignore, ако липсва). Без commit и без remote.',
+      title: t('fix.gitInit.title'),
+      description: t('fix.gitInit.description'),
       preview: 'git init -b main',
       risk: 'safe',
     });
@@ -98,8 +97,8 @@ export function listFixes(dir) {
   if (d.hasPackageJson && !d.hasNodeModules) {
     fixes.push({
       id: 'deps.install',
-      title: 'Инсталирай зависимостите',
-      description: `Ще изпълня ${d.packageManager} install в папката на проекта.`,
+      title: t('fix.deps.title'),
+      description: t('fix.deps.description', { pm: d.packageManager }),
       preview: `${d.packageManager} install`,
       risk: 'safe',
     });
@@ -109,8 +108,8 @@ export function listFixes(dir) {
     const repo = repoSlug(path.basename(dir));
     fixes.push({
       id: 'github.create',
-      title: 'Създай GitHub repo',
-      description: `Ще създам ЧАСТНО repo „${repo}“ в твоя GitHub акаунт, ще го добавя като origin и ще кача кода. Ако няма commit, първо ще направя „Initial commit“.`,
+      title: t('fix.github.title'),
+      description: t('fix.github.description', { repo }),
       preview: `gh repo create ${repo} --private --source . --remote origin --push`,
       risk: 'safe',
     });
@@ -119,8 +118,8 @@ export function listFixes(dir) {
   if (!d.netlifyLinked) {
     fixes.push({
       id: 'netlify.link',
-      title: 'Свържи с Netlify',
-      description: 'Свържи папката със съществуващ Netlify сайт или създай нов (без CI от GitHub).',
+      title: t('fix.netlifyLink.title'),
+      description: t('fix.netlifyLink.description'),
       action: 'ui:netlify-setup',
       risk: 'safe',
     });
