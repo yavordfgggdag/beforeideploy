@@ -160,6 +160,11 @@ t('i18n: en и bg имат едни и същи ключове и placeholders',
   }
 });
 
+t('i18n: scripts/i18n-check.mjs (engine + app каталози, без твърд текст в Swift)', () => {
+  const r = spawnSync(process.execPath, [path.join(ROOT, 'scripts', 'i18n-check.mjs')], { encoding: 'utf8' });
+  assert(r.status === 0, (r.stdout + r.stderr).trim().split('\n').slice(-8).join(' | '));
+});
+
 t('i18n: всеки ключ в engine/src съществува в каталога, няма неизползвани', () => {
   const en = catalog('en');
   const src = path.join(ROOT, 'engine', 'src');

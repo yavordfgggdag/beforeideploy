@@ -6,69 +6,20 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseStrings as parseStringsText, stringsFormats, braces } from './i18n-lib.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const allowCyrillic = process.argv.includes('--allow-cyrillic');
 const errors = [];
 const warn = [];
 
-// ---------------------------------------------------------------- .strings parser
+const cFormats = stringsFormats;
 
-export function parseStrings(text, file = '') {
-  const out = {};
-  let i = 0;
-  const n = text.length;
-  const skip = () => {
-    for (;;) {
-      while (i < n && /\s/.test(text[i])) i++;
-      if (text.startsWith('/*', i)) {
-        const end = text.indexOf('*/', i + 2);
-        i = end < 0 ? n : end + 2;
-      } else if (text.startsWith('//', i)) {
-        const end = text.indexOf('\n', i);
-        i = end < 0 ? n : end + 1;
-      } else return;
-    }
-  };
-  const str = () => {
-    if (text[i] !== '"') throw new Error(`${file}: expected " at ${i}`);
-    i++;
-    let s = '';
-    while (i < n && text[i] !== '"') {
-      if (text[i] === '\\') {
-        const c = text[i + 1];
-        if (c === 'n') s += '\n';
-        else if (c === 't') s += '\t';
-        else if (c === 'U' || c === 'u') {
-          s += String.fromCharCode(parseInt(text.slice(i + 2, i + 6), 16));
-          i += 4;
-        } else s += c;
-        i += 2;
-      } else s += text[i++];
-    }
-    i++;
-    return s;
-  };
-  for (;;) {
-    skip();
-    if (i >= n) break;
-    const key = str();
-    skip();
-    if (text[i] !== '=') throw new Error(`${file}: expected = after "${key}"`);
-    i++;
-    skip();
-    const value = str();
-    skip();
-    if (text[i] !== ';') throw new Error(`${file}: expected ; after "${key}"`);
-    i++;
-    if (key in out) errors.push(`${file}: duplicate key ${key}`);
-    out[key] = value;
-  }
-  return out;
+function parseStrings(text, file) {
+  const { entries, duplicates } = parseStringsText(text, file);
+  for (const k of duplicates) errors.push(`${file}: duplicate key ${k}`);
+  return entries;
 }
-
-const cFormats = (s) => (String(s).match(/%(\d+\$)?[@dfs]/g) || []).length;
-const braces = (s) => [...String(s).matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort().join(',');
 
 function compare(label, catalogs, placeholders) {
   const en = catalogs.en;
