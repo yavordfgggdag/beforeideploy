@@ -321,6 +321,8 @@ Install Before I Deploy.command / Rebuild.command   двойно-кликаем�
 
 ## 7. Насоки за V10 (кандидати, приоритизирани по стойност/риск)
 
+> Актуалният план е в `V10-PLAN.md` и `ROADMAP.md`; списъкът по-долу е историческият вход към тях.
+
 1. **Реално покритие на Vercel / Cloudflare / GitHub Pages** — ръчно тестване с акаунти, SSR адаптери, връщане на preview URL от `vercel`/`wrangler` изхода, `hosting` стъпката да проверява и linked проект за тези доставчици.
 2. **Инкрементален check** — пропускай build/lint/typecheck по git hash; „бърза проверка" преди всеки commit.
 3. **Разделяне на AppModel** и добавяне на Swift тестове за Engine парсера и моделите.
