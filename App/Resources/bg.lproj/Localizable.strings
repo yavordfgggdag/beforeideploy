@@ -199,11 +199,13 @@
 "dashboard.connectHostingHelp" = "Свържи хостинга, за да публикуваш";
 "dashboard.fixErrorsFirst" = "Оправи грешките първо";
 "dashboard.issuesOnePrompt" = "%@ проблема — един prompt за всички";
+"dashboard.localTitle" = "Local";
 "dashboard.noEvents" = "Още няма събития за този проект.";
 "dashboard.noRepo" = "няма repo";
 "dashboard.notChecked" = "НЕ Е ПРОВЕРЕН";
 "dashboard.openInEditor" = "Отвори в Cursor / VS Code";
 "dashboard.productionHelp" = "Обновява LIVE сайта — с потвърждение";
+"dashboard.projectHealth" = "Project health";
 "dashboard.refreshShortcut" = "Обнови (⇧⌘R)";
 "dashboard.review" = "Прегледай";
 "dashboard.runCheckHint" = "Пусни проверка, за да видиш дали проектът е готов";
@@ -281,9 +283,12 @@
 "hosting.cliMissing" = "%@ CLI не е инсталиран.";
 "hosting.lastPreview" = "Последен preview";
 "hosting.lastProduction" = "Последен production";
+"hosting.liveLabel" = "LIVE";
 "hosting.noProductionYet" = "още няма production";
+"hosting.previewButton" = "Preview";
 "hosting.prices" = "Цени";
 "hosting.pricesNote" = "Цените и условията се променят — провери официалната страница с бутона „Цени“, преди да избереш платен план.";
+"hosting.productionButton" = "Production";
 "hosting.recommendedBadge" = "ПРЕПОРЪЧАН";
 "hosting.selectedBadge" = "ИЗБРАН";
 "hosting.set" = "Хостинг: %@";
@@ -300,7 +305,9 @@
 "library.added" = "Добавен: %@";
 "library.pickFolder" = "Избери папката на проекта";
 
+"local.buildPreview" = "Build preview";
 "local.devHelp" = "npm run dev с hot reload";
+"local.devServer" = "Dev server";
 "local.restart" = "Рестартирай";
 "local.running" = "Работи";
 "local.serverLog" = "Лог на сървъра";
@@ -315,12 +322,16 @@
 "menu.actions" = "Действия";
 "menu.addProject" = "Добави проект…";
 "menu.commands" = "Команди…";
+"menu.commitPush" = "Commit & Push…";
 "menu.fullCheck" = "Пълна проверка (без кеш)";
 "menu.settings" = "Настройки…";
 "menu.stopLocal" = "Спри Local Preview";
 
+"nav.missionControl" = "Mission Control";
+
 "netlify.connect" = "Свържи Netlify";
 "netlify.connectTitle" = "Свържи с Netlify";
+"netlify.dashboard" = "Dashboard";
 "netlify.hasCi" = "Сайтът има CI от GitHub — push-овете deploy-ват автоматично";
 "netlify.lastDraft" = "Последен draft";
 "netlify.linkHint" = "Създай нов сайт или свържи съществуващ. CI от GitHub няма да се включи — deploy-ите остават ръчни.";
@@ -338,6 +349,7 @@
 "netlifySetup.signInFirst" = "Първо влез в Netlify.";
 "netlifySetup.siteName" = "Име на сайта";
 "netlifySetup.subtitle" = "Без `netlify init` — GitHub CI няма да се включи, deploy-ите остават ръчни";
+"netlifySetup.team" = "Team";
 
 "open.appNotFound" = "Не намерих %@";
 "open.theApp" = "приложението";
@@ -368,6 +380,7 @@
 "overview.updated" = "Обновено %@ · live проверка на сайтовете и SSL";
 "overview.view" = "Виж";
 
+"palette.checkDetail" = "Git, secrets, lint, build";
 "palette.checkProject" = "Провери %@";
 "palette.costsDetail" = "Колко струва всичко";
 "palette.domainsDetail" = "Spaceship, DNS, изтичане";
@@ -380,9 +393,11 @@
 "palette.setupDetail" = "Инструменти и акаунти";
 "palette.smartDetail" = "Проверка → preview";
 
+"production.branch" = "Branch";
 "production.costDefault" = "~15 кредита (оценка)";
 "production.costEstimate" = "~%@ %@ (оценка)";
 "production.costs" = "Разходи";
+"production.deployButton" = "Deploy to Production";
 "production.explain" = "Преди качването ще мине пълна проверка (Git → Secrets → Lint → Typecheck → Build). При грешка deploy-ът спира. Production може да използва build минути/кредити от Netlify плана ти.";
 "production.freshBuild" = "%@/ след свеж build";
 "production.price" = "Цена: %@";
@@ -394,8 +409,13 @@
 "production.whatUploads" = "Какво се качва";
 
 "remote.openNew" = "Отвори github.com/new";
+"remote.sheetTitle" = "GitHub remote";
 "remote.steps" = "1. Създай празно repo в GitHub (без README).\n2. Постави URL-а му тук.";
 "remote.title" = "Свържи проекта с GitHub repository";
+
+"report.hint" = "Докладът съдържа лога на engine-а и логовете на последните операции с премахнати ключове, имейли и пътища. Нищо не се изпраща автоматично.";
+"report.save" = "Запази доклад за поддръжка…";
+"report.saved" = "Докладът е готов (без secrets) — показвам го във Finder";
 
 "root.emptyHint" = "Добави първия си проект — ще разпозная framework, package manager,\nGitHub и Netlify автоматично и ще ги запомня.";
 "root.engineMissing" = "Engine-ът не е инсталиран";
@@ -405,12 +425,18 @@
 "run.busy" = "Изчакай текущата операция да приключи";
 "run.checkCounts" = "%@ успешни · %@ предупреждения · %@ грешки";
 "run.checkDone" = "Проверката приключи";
+"run.commit" = "Commit";
+"run.commitPush" = "Commit & Push";
 "run.committed" = "Commit е направен";
+"run.deployBlocked" = "DEPLOY BLOCKED";
 "run.domainConnected" = "Домейнът е свързан";
 "run.domainConnecting" = "Свързване на %@";
 "run.domainSsl" = "SSL сертификатът се активира автоматично (минути до няколко часа).";
+"run.draftPreview" = "Draft Preview";
 "run.draftReady" = "Draft Preview е готов";
+"run.live" = "LIVE 🚀";
 "run.localFailed" = "Local Preview не стартира";
+"run.localPreview" = "Local Preview";
 "run.localStopped" = "Local Preview е спрян";
 "run.netlifyCreated" = "Сайтът е създаден и свързан";
 "run.netlifyLinked" = "Netlify е свързан";
@@ -418,10 +444,16 @@
 "run.netlifyLoggedIn" = "Влязъл си в Netlify";
 "run.netlifyLoginSubtitle" = "Потвърди входа в браузъра";
 "run.netlifyNewSite" = "Нов Netlify сайт";
+"run.productionDeploy" = "Production Deploy";
 "run.productionSubtitle" = "%@ · пълна проверка → LIVE";
+"run.push" = "Push";
 "run.pushed" = "Качено в GitHub";
+"run.readyToDeploy" = "READY TO DEPLOY";
+"run.readyWithWarnings" = "READY WITH WARNINGS";
 "run.remoteSet" = "Remote е зададен";
 "run.restarted" = "Рестартиран";
+"run.smartDeploy" = "Smart Deploy";
+"run.smartSubtitle" = "%@ · Git → Secrets → Build → Draft Preview";
 "run.stopped" = "Спряно";
 
 "settings.autoOpenPreview" = "Отваряй preview автоматично";
@@ -439,6 +471,8 @@
 "settings.netlifyAccount" = "Netlify акаунт";
 "settings.notifications" = "macOS известия";
 "settings.notificationsHint" = "Когато build / deploy приключи";
+"settings.support" = "Версия и поддръжка";
+"settings.version" = "Версия";
 "settings.viaNpx" = "през npx";
 
 "setup.allRequiredSet" = "Всичко задължително е настроено";
@@ -462,6 +496,7 @@
 "sidebar.openInCursor" = "Отвори в Cursor";
 "sidebar.remove" = "Премахни от библиотеката";
 "sidebar.search" = "Търси или действай…";
+"sidebar.tagline" = "Project Control Center";
 
 "spaceship.connect" = "Свържи Spaceship";
 "spaceship.connectIntro" = "Виждаш всички домейни, кога изтичат, DNS записите и свързваш домейн с Netlify с един бутон.";
@@ -476,6 +511,13 @@
 "time.hoursAgo" = "преди %@ ч";
 "time.justNow" = "току-що";
 "time.minutesAgo" = "преди %@ мин";
+
+"update.available" = "Нова версия %@";
+"update.checkNow" = "Провери за нова версия";
+"update.download" = "Изтегли";
+"update.downloaded" = "Изтеглих версия %@ — отварям DMG-то";
+"update.notConfigured" = "Проверката за нови версии още не е настроена";
+"update.upToDate" = "Имаш най-новата версия";
 
 "welcome.feature.ai" = "AI оправя грешките";
 "welcome.feature.aiDetail" = "ChatGPT, Claude и Codex с готов prompt";

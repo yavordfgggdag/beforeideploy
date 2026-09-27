@@ -285,6 +285,33 @@ struct AIApplyResult: Codable {
     var changedSince: [String]?
 }
 
+// Self-update (engine `bid update check|download`) and support report (`bid report`)
+struct UpdateInfo: Codable {
+    var current: String
+    var configured: Bool
+    var available: Bool
+    var mandatory: Bool?
+    var channel: String?
+    var latest: String?
+    var url: String?
+    var sha256: String?
+    var notes: [String: String]?
+    var publishedAt: String?
+    var fromCache: Bool?
+}
+
+struct UpdateDownload: Codable {
+    var path: String
+    var version: String
+}
+
+struct ReportResult: Codable {
+    var path: String
+    var dir: String?
+    var zip: String?
+    var files: [String]
+}
+
 struct SetupAction: Codable, Hashable {
     var type: String
     var label: String

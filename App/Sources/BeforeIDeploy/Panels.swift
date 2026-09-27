@@ -31,7 +31,7 @@ struct LocalCard: View {
     var body: some View {
         let l = status.local
         VStack(alignment: .leading, spacing: 14) {
-            PanelHeader(title: "Local Preview", icon: "desktopcomputer", status: l.running ? "pass" : nil)
+            PanelHeader(title: L("run.localPreview"), icon: "desktopcomputer", status: l.running ? "pass" : nil)
 
             HStack(spacing: 10) {
                 VStack(alignment: .leading, spacing: 3) {
@@ -77,10 +77,10 @@ struct LocalCard: View {
                     Button { model.localStart(mode: "auto") } label: { Label(L("local.start"), systemImage: "play.fill") }
                         .bidButton(.primary, compact: true)
                     if status.detect.hasPackageJson == true {
-                        Button("Build preview") { model.localStart(mode: "build") }
+                        Button(L("local.buildPreview")) { model.localStart(mode: "build") }
                             .bidButton(.secondary, compact: true)
                             .help(L("local.servesBuild"))
-                        Button("Dev server") { model.localStart(mode: "dev") }
+                        Button(L("local.devServer")) { model.localStart(mode: "dev") }
                             .bidButton(.secondary, compact: true)
                             .help(L("local.devHelp"))
                     }
@@ -152,10 +152,10 @@ struct GitCard: View {
                 }
 
                 HStack(spacing: 8) {
-                    Button { model.sheet = .commit } label: { Label("Commit & Push", systemImage: "arrow.up.circle.fill") }
+                    Button { model.sheet = .commit } label: { Label(L("run.commitPush"), systemImage: "arrow.up.circle.fill") }
                         .bidButton(.primary, compact: true)
                         .disabled((g.changedCount ?? 0) == 0)
-                    Button("Push") { model.push() }
+                    Button(L("run.push")) { model.push() }
                         .bidButton(.secondary, compact: true)
                         .disabled(g.remote == nil || (g.hasUpstream == true && (g.ahead ?? 0) == 0))
                     Button { model.fetch() } label: { Image(systemName: "arrow.down.circle") }
@@ -227,7 +227,7 @@ struct NetlifyCard: View {
             } else {
                 HStack(alignment: .top, spacing: 24) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("LIVE").font(.system(size: 10, weight: .bold)).tracking(1).foregroundColor(Theme.tertiary)
+                        Text(L("hosting.liveLabel")).font(.system(size: 10, weight: .bold)).tracking(1).foregroundColor(Theme.tertiary)
                         if let live {
                             Button { model.open(live) } label: {
                                 Text(Fmt.host(live)).font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.text)
@@ -246,7 +246,7 @@ struct NetlifyCard: View {
                 }
 
                 HStack(spacing: 8) {
-                    Button { model.draftPreview() } label: { Label("Draft Preview", systemImage: "eye") }
+                    Button { model.draftPreview() } label: { Label(L("run.draftPreview"), systemImage: "eye") }
                         .bidButton(.secondary, compact: true)
                     if let d = status.lastDraft?.url {
                         Button { model.open(d) } label: { Label(L("netlify.theLastDraft"), systemImage: "clock.arrow.circlepath") }
@@ -261,7 +261,7 @@ struct NetlifyCard: View {
                     }
                     Button {
                         model.open(n?.adminUrl ?? "https://app.netlify.com/sites/\(n?.siteName ?? "")")
-                    } label: { Label("Dashboard", systemImage: "speedometer") }
+                    } label: { Label(L("netlify.dashboard"), systemImage: "speedometer") }
                         .bidButton(.ghost, compact: true)
                 }
             }

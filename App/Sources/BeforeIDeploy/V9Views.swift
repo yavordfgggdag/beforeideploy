@@ -431,7 +431,7 @@ struct GenericHostingCard: View {
             } else {
                 HStack(alignment: .top, spacing: 24) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("LIVE").font(.system(size: 10, weight: .bold)).tracking(1).foregroundColor(Theme.tertiary)
+                        Text(L("hosting.liveLabel")).font(.system(size: 10, weight: .bold)).tracking(1).foregroundColor(Theme.tertiary)
                         Text(live.map { Fmt.host($0) } ?? L("hosting.noProductionYet"))
                             .font(.system(size: 15, weight: .semibold)).foregroundColor(live == nil ? Theme.tertiary : Theme.text)
                     }
@@ -441,7 +441,7 @@ struct GenericHostingCard: View {
                 }
                 HStack(spacing: 8) {
                     if h?.preview == true {
-                        Button { model.draftPreview() } label: { Label("Preview", systemImage: "eye") }
+                        Button { model.draftPreview() } label: { Label(L("hosting.previewButton"), systemImage: "eye") }
                             .bidButton(.secondary, compact: true)
                     }
                     Spacer()
@@ -474,7 +474,7 @@ struct CommandPalette: View {
 
     var commands: [PaletteCommand] {
         var c: [PaletteCommand] = [
-            PaletteCommand(title: "Mission Control", subtitle: L("common.allProjects"), icon: "square.grid.2x2.fill") { model.screen = .overview; Task { await model.loadOverview() } },
+            PaletteCommand(title: L("nav.missionControl"), subtitle: L("common.allProjects"), icon: "square.grid.2x2.fill") { model.screen = .overview; Task { await model.loadOverview() } },
             PaletteCommand(title: L("common.domains"), subtitle: L("palette.domainsDetail"), icon: "network") { model.screen = .domains; Task { await model.loadSpaceship() } },
             PaletteCommand(title: L("common.costs"), subtitle: L("palette.costsDetail"), icon: "creditcard.fill") { model.screen = .costs; Task { await model.loadCosts() } },
             PaletteCommand(title: L("common.setup"), subtitle: L("palette.setupDetail"), icon: "wand.and.stars") { model.screen = .setup; Task { await model.loadSetup() } },
@@ -487,7 +487,7 @@ struct CommandPalette: View {
         ]
         if let p = model.selected {
             c += [
-                PaletteCommand(title: L("palette.checkProject", p.name), subtitle: "Git, secrets, lint, build", icon: "arrow.triangle.2.circlepath") { model.runCheck() },
+                PaletteCommand(title: L("palette.checkProject", p.name), subtitle: L("palette.checkDetail"), icon: "arrow.triangle.2.circlepath") { model.runCheck() },
                 PaletteCommand(title: "Smart Deploy \(p.name)", subtitle: L("palette.smartDetail"), icon: "bolt.fill") { model.smartDeploy() },
                 PaletteCommand(title: "Local Preview \(p.name)", subtitle: L("palette.localDetail"), icon: "desktopcomputer") { model.localStart() },
                 PaletteCommand(title: "Commit & Push", subtitle: p.name, icon: "arrow.up.circle.fill") { model.sheet = .commit },

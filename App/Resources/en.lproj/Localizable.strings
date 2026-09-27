@@ -199,11 +199,13 @@
 "dashboard.connectHostingHelp" = "Connect hosting to publish";
 "dashboard.fixErrorsFirst" = "Fix the errors first";
 "dashboard.issuesOnePrompt" = "%@ issues — one prompt for all";
+"dashboard.localTitle" = "Local";
 "dashboard.noEvents" = "No events for this project yet.";
 "dashboard.noRepo" = "no repo";
 "dashboard.notChecked" = "NOT CHECKED";
 "dashboard.openInEditor" = "Open in Cursor / VS Code";
 "dashboard.productionHelp" = "Updates the LIVE site — with confirmation";
+"dashboard.projectHealth" = "Project health";
 "dashboard.refreshShortcut" = "Refresh (⇧⌘R)";
 "dashboard.review" = "Review";
 "dashboard.runCheckHint" = "Run a check to see whether the project is ready";
@@ -281,9 +283,12 @@
 "hosting.cliMissing" = "%@ CLI is not installed.";
 "hosting.lastPreview" = "Last preview";
 "hosting.lastProduction" = "Last production";
+"hosting.liveLabel" = "LIVE";
 "hosting.noProductionYet" = "no production yet";
+"hosting.previewButton" = "Preview";
 "hosting.prices" = "Prices";
 "hosting.pricesNote" = "Prices and terms change — check the official page with the “Prices” button before choosing a paid plan.";
+"hosting.productionButton" = "Production";
 "hosting.recommendedBadge" = "RECOMMENDED";
 "hosting.selectedBadge" = "SELECTED";
 "hosting.set" = "Hosting: %@";
@@ -300,7 +305,9 @@
 "library.added" = "Added: %@";
 "library.pickFolder" = "Choose the project folder";
 
+"local.buildPreview" = "Build preview";
 "local.devHelp" = "npm run dev with hot reload";
+"local.devServer" = "Dev server";
 "local.restart" = "Restart";
 "local.running" = "Running";
 "local.serverLog" = "Server log";
@@ -315,12 +322,16 @@
 "menu.actions" = "Actions";
 "menu.addProject" = "Add project…";
 "menu.commands" = "Commands…";
+"menu.commitPush" = "Commit & Push…";
 "menu.fullCheck" = "Full check (no cache)";
 "menu.settings" = "Settings…";
 "menu.stopLocal" = "Stop Local Preview";
 
+"nav.missionControl" = "Mission Control";
+
 "netlify.connect" = "Connect Netlify";
 "netlify.connectTitle" = "Connect to Netlify";
+"netlify.dashboard" = "Dashboard";
 "netlify.hasCi" = "The site has CI from GitHub — pushes deploy automatically";
 "netlify.lastDraft" = "Last draft";
 "netlify.linkHint" = "Create a new site or connect an existing one. CI from GitHub will not be enabled — deploys stay manual.";
@@ -338,6 +349,7 @@
 "netlifySetup.signInFirst" = "Sign in to Netlify first.";
 "netlifySetup.siteName" = "Site name";
 "netlifySetup.subtitle" = "No `netlify init` — GitHub CI will not be enabled, deploys stay manual";
+"netlifySetup.team" = "Team";
 
 "open.appNotFound" = "Could not find %@";
 "open.theApp" = "the app";
@@ -368,6 +380,7 @@
 "overview.updated" = "Updated %@ · live check of sites and SSL";
 "overview.view" = "View";
 
+"palette.checkDetail" = "Git, secrets, lint, build";
 "palette.checkProject" = "Check %@";
 "palette.costsDetail" = "What everything costs";
 "palette.domainsDetail" = "Spaceship, DNS, expiry";
@@ -380,9 +393,11 @@
 "palette.setupDetail" = "Tools and accounts";
 "palette.smartDetail" = "Check → preview";
 
+"production.branch" = "Branch";
 "production.costDefault" = "~15 credits (estimate)";
 "production.costEstimate" = "~%@ %@ (estimate)";
 "production.costs" = "Costs";
+"production.deployButton" = "Deploy to Production";
 "production.explain" = "Before uploading, a full check runs (Git → Secrets → Lint → Typecheck → Build). On an error the deploy stops. Production may use build minutes/credits from your Netlify plan.";
 "production.freshBuild" = "%@/ after a fresh build";
 "production.price" = "Price: %@";
@@ -394,8 +409,13 @@
 "production.whatUploads" = "What is uploaded";
 
 "remote.openNew" = "Open github.com/new";
+"remote.sheetTitle" = "GitHub remote";
 "remote.steps" = "1. Create an empty repo on GitHub (no README).\n2. Paste its URL here.";
 "remote.title" = "Connect the project to a GitHub repository";
+
+"report.hint" = "The report holds the engine log and the latest operation logs with keys, emails and paths removed. Nothing is sent automatically.";
+"report.save" = "Save a support report…";
+"report.saved" = "Report ready (secrets removed) — showing it in Finder";
 
 "root.emptyHint" = "Add your first project — I will detect the framework, package manager,\nGitHub and Netlify automatically and remember them.";
 "root.engineMissing" = "The engine is not installed";
@@ -405,12 +425,18 @@
 "run.busy" = "Wait for the current operation to finish";
 "run.checkCounts" = "%@ passed · %@ warnings · %@ errors";
 "run.checkDone" = "The check finished";
+"run.commit" = "Commit";
+"run.commitPush" = "Commit & Push";
 "run.committed" = "Committed";
+"run.deployBlocked" = "DEPLOY BLOCKED";
 "run.domainConnected" = "The domain is connected";
 "run.domainConnecting" = "Connecting %@";
 "run.domainSsl" = "The SSL certificate activates automatically (minutes to a few hours).";
+"run.draftPreview" = "Draft Preview";
 "run.draftReady" = "Draft Preview is ready";
+"run.live" = "LIVE 🚀";
 "run.localFailed" = "Local Preview did not start";
+"run.localPreview" = "Local Preview";
 "run.localStopped" = "Local Preview stopped";
 "run.netlifyCreated" = "The site was created and connected";
 "run.netlifyLinked" = "Netlify is connected";
@@ -418,10 +444,16 @@
 "run.netlifyLoggedIn" = "You are signed in to Netlify";
 "run.netlifyLoginSubtitle" = "Confirm the sign-in in the browser";
 "run.netlifyNewSite" = "New Netlify site";
+"run.productionDeploy" = "Production Deploy";
 "run.productionSubtitle" = "%@ · full check → LIVE";
+"run.push" = "Push";
 "run.pushed" = "Pushed to GitHub";
+"run.readyToDeploy" = "READY TO DEPLOY";
+"run.readyWithWarnings" = "READY WITH WARNINGS";
 "run.remoteSet" = "Remote set";
 "run.restarted" = "Restarted";
+"run.smartDeploy" = "Smart Deploy";
+"run.smartSubtitle" = "%@ · Git → Secrets → Build → Draft Preview";
 "run.stopped" = "Stopped";
 
 "settings.autoOpenPreview" = "Open previews automatically";
@@ -439,6 +471,8 @@
 "settings.netlifyAccount" = "Netlify account";
 "settings.notifications" = "macOS notifications";
 "settings.notificationsHint" = "When a build / deploy finishes";
+"settings.support" = "Version and support";
+"settings.version" = "Version";
 "settings.viaNpx" = "via npx";
 
 "setup.allRequiredSet" = "Everything required is set up";
@@ -462,6 +496,7 @@
 "sidebar.openInCursor" = "Open in Cursor";
 "sidebar.remove" = "Remove from library";
 "sidebar.search" = "Search or act…";
+"sidebar.tagline" = "Project Control Center";
 
 "spaceship.connect" = "Connect Spaceship";
 "spaceship.connectIntro" = "See all your domains, when they expire and their DNS records, and connect a domain to Netlify with one button.";
@@ -476,6 +511,13 @@
 "time.hoursAgo" = "%@ h ago";
 "time.justNow" = "just now";
 "time.minutesAgo" = "%@ min ago";
+
+"update.available" = "New version %@";
+"update.checkNow" = "Check for updates";
+"update.download" = "Download";
+"update.downloaded" = "Downloaded version %@ — opening the DMG";
+"update.notConfigured" = "Update checks are not configured yet";
+"update.upToDate" = "You have the latest version";
 
 "welcome.feature.ai" = "AI fixes the errors";
 "welcome.feature.aiDetail" = "ChatGPT, Claude and Codex with a ready prompt";

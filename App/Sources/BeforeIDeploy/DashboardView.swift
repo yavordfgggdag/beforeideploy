@@ -46,7 +46,7 @@ struct DashboardView: View {
                         FixesCard(fixes: status.fixes.filter { $0.id != "netlify.link" })
                     }
                     HStack(alignment: .top, spacing: 14) {
-                        MiniStat(title: "Local", value: status.local.running ? Fmt.host(status.local.url) : L("dashboard.stopped"),
+                        MiniStat(title: L("dashboard.localTitle"), value: status.local.running ? Fmt.host(status.local.url) : L("dashboard.stopped"),
                                  tint: status.local.running ? Theme.ready : Theme.tertiary, icon: "desktopcomputer") { tab = .local }
                         MiniStat(title: "GitHub", value: status.git.isRepo ? L("dashboard.changes", status.git.changedCount ?? 0) : L("dashboard.noRepo"),
                                  tint: (status.git.changedCount ?? 0) > 0 ? Theme.warn : Theme.text, icon: "arrow.triangle.branch") { tab = .git }
@@ -304,7 +304,7 @@ struct HeroCard: View {
                 Button {
                     model.smartDeploy()
                 } label: {
-                    Label("Smart Deploy", systemImage: "bolt.fill")
+                    Label(L("run.smartDeploy"), systemImage: "bolt.fill")
                 }
                 .bidButton(.primary)
                 .help(L("dashboard.smartHelp"))
@@ -324,7 +324,7 @@ struct HeroCard: View {
                     Button {
                         model.sheet = .production
                     } label: {
-                        Label("Production", systemImage: "paperplane.fill")
+                        Label(L("hosting.productionButton"), systemImage: "paperplane.fill")
                     }
                     .bidButton(.danger)
                     .disabled(state == "blocked")
@@ -386,7 +386,7 @@ struct HealthGrid: View {
             StepResult(id: $0.0, label: $0.1, category: nil, status: "pending", summary: "—")
         }
         VStack(alignment: .leading, spacing: 10) {
-            SectionLabel(text: "Project health", icon: "waveform.path.ecg")
+            SectionLabel(text: L("dashboard.projectHealth"), icon: "waveform.path.ecg")
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 150, maximum: 400), spacing: 10)], spacing: 10) {
                 ForEach(steps) { s in
                     HealthTile(step: s)

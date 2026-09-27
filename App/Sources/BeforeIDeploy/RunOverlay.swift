@@ -234,7 +234,7 @@ struct RunOverlay: View {
                     Button {
                         model.run = nil
                         model.draftPreview()
-                    } label: { Label("Draft Preview", systemImage: "eye") }
+                    } label: { Label(L("run.draftPreview"), systemImage: "eye") }
                         .bidButton(.secondary)
                 }
                 Button(L("common.close")) { close() }

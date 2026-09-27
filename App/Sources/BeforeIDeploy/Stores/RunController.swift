@@ -60,10 +60,10 @@ final class RunController: ObservableObject {
         startRun(s, args: ["check", "--project", p.key] + (force ? ["--force"] : []), successTitle: L("run.checkDone")) { outcome in
             if let check = try? outcome.decode(CheckState.self) {
                 switch check.status {
-                case "ready": s.outcomeTitle = "READY TO DEPLOY"
-                case "warnings": s.outcomeTitle = "READY WITH WARNINGS"
+                case "ready": s.outcomeTitle = L("run.readyToDeploy")
+                case "warnings": s.outcomeTitle = L("run.readyWithWarnings")
                 default:
-                    s.outcomeTitle = "DEPLOY BLOCKED"
+                    s.outcomeTitle = L("run.deployBlocked")
                     s.success = false
                 }
                 s.outcomeMessage = L("run.checkCounts", check.counts?.pass ?? 0, check.counts?.warn ?? 0, check.counts?.fail ?? 0)
@@ -73,7 +73,7 @@ final class RunController: ObservableObject {
 
     func smartDeploy() {
         guard let p = selected else { return }
-        let s = RunSession(title: "Smart Deploy", subtitle: "\(p.name) · Git → Secrets → Build → Draft Preview", kind: .smart)
+        let s = RunSession(title: L("run.smartDeploy"), subtitle: L("run.smartSubtitle", p.name), kind: .smart)
         startRun(s, args: ["smart", "--project", p.key], successTitle: L("run.draftReady")) { [weak self] outcome in
             self?.afterDeploy(outcome, session: s, prod: false)
         }
@@ -83,7 +83,7 @@ final class RunController: ObservableObject {
     func draftPreview() {
         guard let p = selected else { return }
         if let c = projects.status?.check, c.status != "blocked", let d = Fmt.date(c.at), Date().timeIntervalSince(d) < 25 * 60 {
-            let s = RunSession(title: "Draft Preview", subtitle: p.name, kind: .draft)
+            let s = RunSession(title: L("run.draftPreview"), subtitle: p.name, kind: .draft)
             startRun(s, args: ["deploy", "--project", p.key], successTitle: L("run.draftReady")) { [weak self] outcome in
                 self?.afterDeploy(outcome, session: s, prod: false)
             }
@@ -94,8 +94,8 @@ final class RunController: ObservableObject {
 
     func productionDeploy(confirm: String) {
         guard let p = selected, confirm == "DEPLOY" else { return }
-        let s = RunSession(title: "Production Deploy", subtitle: L("run.productionSubtitle", p.name), kind: .production)
-        startRun(s, args: ["smart", "--project", p.key, "--prod", "--confirm", "DEPLOY"], successTitle: "LIVE 🚀") { [weak self] outcome in
+        let s = RunSession(title: L("run.productionDeploy"), subtitle: L("run.productionSubtitle", p.name), kind: .production)
+        startRun(s, args: ["smart", "--project", p.key, "--prod", "--confirm", "DEPLOY"], successTitle: L("run.live")) { [weak self] outcome in
             self?.afterDeploy(outcome, session: s, prod: true)
         }
     }
@@ -119,7 +119,7 @@ final class RunController: ObservableObject {
         Task {
             defer { busy.remove("local") }
             // collect steps silently; the overlay (with log tail + AI Fix) is shown only on failure
-            let session = RunSession(title: "Local Preview", subtitle: p.name, kind: .local)
+            let session = RunSession(title: L("run.localPreview"), subtitle: p.name, kind: .local)
             let outcome = try? await engine.run(["local", "start", "--project", p.key, "--mode", mode]) { [weak session] ev in
                 session?.handle(ev)
             }
@@ -170,13 +170,13 @@ final class RunController: ObservableObject {
             args += ["--files-json", json]
         }
         if push { args.append("--push") }
-        let s = RunSession(title: push ? "Commit & Push" : "Commit", subtitle: p.name, kind: .git)
+        let s = RunSession(title: push ? L("run.commitPush") : L("run.commit"), subtitle: p.name, kind: .git)
         startRun(s, args: args, successTitle: push ? L("run.pushed") : L("run.committed"))
     }
 
     func push() {
         guard let p = selected else { return }
-        let s = RunSession(title: "Push", subtitle: p.name, kind: .git)
+        let s = RunSession(title: L("run.push"), subtitle: p.name, kind: .git)
         startRun(s, args: ["git", "push", "--project", p.key], successTitle: L("run.pushed"))
     }
 

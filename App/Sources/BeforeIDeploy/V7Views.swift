@@ -106,7 +106,7 @@ struct MissionControlView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                PageHeader(title: "Mission Control", subtitle: subtitle, icon: "square.grid.2x2.fill") {
+                PageHeader(title: L("nav.missionControl"), subtitle: subtitle, icon: "square.grid.2x2.fill") {
                     HStack(spacing: 8) {
                         if model.loadingOverview { Spinner(size: 14) }
                         Button { Task { await model.loadOverview() } } label: { Label(L("common.refresh"), systemImage: "arrow.clockwise") }

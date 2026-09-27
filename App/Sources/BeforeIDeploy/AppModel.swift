@@ -48,6 +48,7 @@ final class AppModel: ObservableObject, Feedback {
     @Published var setup: SetupStatus?
     @Published var loadingSetup = false
     @Published var showPalette = false
+    @Published var update: UpdateInfo?
 
     @AppStorage("checkOnSelect") var checkOnSelect = false
 
@@ -184,6 +185,7 @@ final class AppModel: ObservableObject, Feedback {
         Task { await loadOverview() }
         Task { await loadCosts() }
         Task { await loadSpaceship() }
+        Task { await checkForUpdates() }
         if selectedKey == nil {
             let lastSelectedKey = projectStore.lastSelectedKey
             if !lastSelectedKey.isEmpty, projects.contains(where: { $0.key == lastSelectedKey }) {
@@ -471,6 +473,48 @@ final class AppModel: ObservableObject, Feedback {
 
     func openCommand(_ path: String) {
         NSWorkspace.shared.open(URL(fileURLWithPath: path))
+    }
+
+    // MARK: - Updates & support (WP6.3, WP6.6)
+
+    /// Reads the release feed (dormant until settings.release.url is set); `announce` shows the outcome as a toast.
+    func checkForUpdates(force: Bool = false, announce: Bool = false) async {
+        var args = ["update", "check"]
+        if force { args.append("--force") }
+        do {
+            let u = try await engine.call(args, as: UpdateInfo.self)
+            update = u
+            if announce {
+                flash(u.available ? L("update.available", u.latest ?? "") : (u.configured ? L("update.upToDate") : L("update.notConfigured")))
+            }
+        } catch {
+            if announce { show(error) }
+        }
+    }
+
+    func downloadUpdate() {
+        busy.insert("update")
+        Task {
+            defer { busy.remove("update") }
+            do {
+                let r = try await engine.call(["update", "download"], as: UpdateDownload.self)
+                flash(L("update.downloaded", r.version))
+                openFile(r.path)
+            } catch { show(error) }
+        }
+    }
+
+    /// Bundles redacted logs + doctor into a zip and shows it in Finder (nothing is sent anywhere).
+    func saveReport() {
+        busy.insert("report")
+        Task {
+            defer { busy.remove("report") }
+            do {
+                let r = try await engine.call(["report"], as: ReportResult.self)
+                revealInFinder(r.path)
+                flash(L("report.saved"))
+            } catch { show(error) }
+        }
     }
 
     // MARK: - Account

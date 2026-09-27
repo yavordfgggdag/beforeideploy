@@ -56,15 +56,15 @@ struct BeforeIDeployApp: App {
                     .keyboardShortcut("r")
                 Button(L("menu.fullCheck")) { model.runCheck(force: true) }
                     .keyboardShortcut("r", modifiers: [.command, .option])
-                Button("Smart Deploy") { model.smartDeploy() }
+                Button(L("run.smartDeploy")) { model.smartDeploy() }
                     .keyboardShortcut("d")
                 Divider()
-                Button("Local Preview") { model.localStart() }
+                Button(L("run.localPreview")) { model.localStart() }
                     .keyboardShortcut("l")
                 Button(L("menu.stopLocal")) { model.localStop() }
                     .keyboardShortcut("l", modifiers: [.command, .shift])
                 Divider()
-                Button("Commit & Push…") { model.sheet = .commit }
+                Button(L("menu.commitPush")) { model.sheet = .commit }
                     .keyboardShortcut("k", modifiers: [.command, .shift])
                 Button(L("common.history")) { model.sheet = .history }
                     .keyboardShortcut("y")

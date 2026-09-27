@@ -13,7 +13,7 @@ struct SidebarView: View {
                     Text("Before I Deploy")
                         .font(.system(size: 13.5, weight: .bold))
                         .foregroundColor(Theme.text)
-                    Text("Project Control Center")
+                    Text(L("sidebar.tagline"))
                         .font(.system(size: 10.5))
                         .foregroundColor(Theme.tertiary)
                 }
@@ -23,7 +23,7 @@ struct SidebarView: View {
             .padding(.bottom, 22)
 
             VStack(spacing: 2) {
-                NavRow(symbol: "square.grid.2x2.fill", title: "Mission Control", selected: model.screen == .overview) {
+                NavRow(symbol: "square.grid.2x2.fill", title: L("nav.missionControl"), selected: model.screen == .overview) {
                     model.screen = .overview
                     Task { await model.loadOverview() }
                 }
@@ -106,6 +106,9 @@ struct SidebarView: View {
                     .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Theme.panel))
                 }
                 .buttonStyle(.plain)
+                if let u = model.update, u.available {
+                    UpdateBanner(info: u)
+                }
                 AccountBadge()
                 HStack(spacing: 8) {
                     SidebarFooterButton(symbol: "clock.arrow.circlepath", title: L("common.history")) { model.sheet = .history }
@@ -116,6 +119,30 @@ struct SidebarView: View {
         }
         .frame(maxHeight: .infinity)
         .background(Theme.sidebar)
+    }
+}
+
+/// "New version X" with a Download button (WP6.3). The DMG is verified by the engine and opened by the app.
+struct UpdateBanner: View {
+    @EnvironmentObject var model: AppModel
+    let info: UpdateInfo
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "arrow.down.circle.fill").foregroundColor(Theme.accent)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(L("update.available", info.latest ?? "")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                if let n = info.notes?[Localization.current] ?? info.notes?["en"] {
+                    Text(n).font(.system(size: 10.5)).foregroundColor(Theme.tertiary).lineLimit(2)
+                }
+            }
+            Spacer()
+            Button(L("update.download")) { model.downloadUpdate() }
+                .bidButton(.primary, compact: true)
+                .disabled(model.busy.contains("update"))
+        }
+        .padding(10)
+        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.accentSoft))
     }
 }
 

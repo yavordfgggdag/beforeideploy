@@ -62,7 +62,7 @@ struct ProductionSheet: View {
         let s = model.status
         let live = s?.project.netlify?.liveUrl ?? s?.lastProd?.url
         let warnings = s?.check?.steps.filter { $0.status == "warn" } ?? []
-        SheetScaffold(icon: "paperplane.fill", iconTint: Theme.blocked, title: "Production Deploy",
+        SheetScaffold(icon: "paperplane.fill", iconTint: Theme.blocked, title: L("run.productionDeploy"),
                       subtitle: L("production.title", s?.project.name ?? "")) {
             VStack(alignment: .leading, spacing: 14) {
                 VStack(alignment: .leading, spacing: 8) {
@@ -70,7 +70,7 @@ struct ProductionSheet: View {
                     InfoRow(label: L("production.whatUploads"), value: s?.detect.ssr == true || s?.detect.hasFunctions == true
                             ? "Netlify build (framework / functions)"
                             : L("production.freshBuild", s?.detect.publishDir ?? "dist"))
-                    InfoRow(label: "Branch", value: s?.git.branch ?? "—")
+                    InfoRow(label: L("production.branch"), value: s?.git.branch ?? "—")
                     InfoRow(label: L("production.uncommitted"), value: "\(s?.git.changedCount ?? 0)",
                             tint: (s?.git.changedCount ?? 0) > 0 ? Theme.warn : Theme.text)
                 }
@@ -118,7 +118,7 @@ struct ProductionSheet: View {
                 dismiss()
                 model.productionDeploy(confirm: typed)
             } label: {
-                Label("Deploy to Production", systemImage: "paperplane.fill")
+                Label(L("production.deployButton"), systemImage: "paperplane.fill")
             }
             .bidButton(.danger)
             .disabled(typed != "DEPLOY")
@@ -214,7 +214,7 @@ struct NetlifySetupSheet: View {
                         }
                         if teams.count > 1 {
                             VStack(alignment: .leading, spacing: 6) {
-                                Text("Team").font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                                Text(L("netlifySetup.team")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
                                 Menu {
                                     ForEach(teams) { t in Button(t.name ?? t.slug) { team = t.slug } }
                                 } label: {
@@ -341,7 +341,7 @@ struct CommitSheet: View {
     var included: [String] { files.map(\.path).filter { !excluded.contains($0) } }
 
     var body: some View {
-        SheetScaffold(icon: "arrow.up.circle.fill", title: "Commit & Push",
+        SheetScaffold(icon: "arrow.up.circle.fill", title: L("run.commitPush"),
                       subtitle: "\(model.status?.git.branch ?? "") → \(Fmt.host(model.status?.git.githubUrl ?? "origin"))",
                       width: 600) {
             VStack(alignment: .leading, spacing: 12) {
@@ -398,7 +398,7 @@ struct CommitSheet: View {
                 Button {
                     dismiss()
                     model.commit(message: finalMessage, files: excluded.isEmpty ? nil : included, push: true)
-                } label: { Label("Commit & Push", systemImage: "arrow.up") }
+                } label: { Label(L("run.commitPush"), systemImage: "arrow.up") }
                     .bidButton(.primary)
                     .disabled(included.isEmpty)
                     .keyboardShortcut(.defaultAction)
@@ -423,7 +423,7 @@ struct RemoteSheet: View {
     @Local private var url = ""
 
     var body: some View {
-        SheetScaffold(icon: "link", title: "GitHub remote", subtitle: L("remote.title")) {
+        SheetScaffold(icon: "link", title: L("remote.sheetTitle"), subtitle: L("remote.title")) {
             VStack(alignment: .leading, spacing: 10) {
                 Text(L("remote.steps"))
                     .font(.system(size: 12.5)).foregroundColor(Theme.secondary)
@@ -529,7 +529,7 @@ struct SettingsSheet: View {
     @Local private var doctor: DoctorInfo?
 
     var body: some View {
-        SheetScaffold(icon: "gearshape.fill", title: L("common.settings"), subtitle: "Before I Deploy V9", width: 600) {
+        SheetScaffold(icon: "gearshape.fill", title: L("common.settings"), subtitle: "Before I Deploy \(doctor.map { "v\($0.engine)" } ?? "")", width: 600) {
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 10) {
                     SectionLabel(text: L("settings.languageSection"))
@@ -558,6 +558,16 @@ struct SettingsSheet: View {
                     } else {
                         HStack { Spinner(size: 12); Text(L("settings.checking")).foregroundColor(Theme.secondary).font(.system(size: 12)) }
                     }
+                }
+                VStack(alignment: .leading, spacing: 8) {
+                    SectionLabel(text: L("settings.support"))
+                    InfoRow(label: L("settings.version"), value: doctor.map { "v\($0.engine)" } ?? "—")
+                    if let u = model.update, u.available { UpdateBanner(info: u) }
+                    HStack {
+                        Button(L("update.checkNow")) { Task { await model.checkForUpdates(force: true, announce: true) } }.bidButton(.secondary, compact: true)
+                        Button(L("report.save")) { model.saveReport() }.bidButton(.secondary, compact: true).disabled(model.busy.contains("report"))
+                    }
+                    Text(L("report.hint")).font(.system(size: 11)).foregroundColor(Theme.tertiary)
                 }
             }
         } actions: {
