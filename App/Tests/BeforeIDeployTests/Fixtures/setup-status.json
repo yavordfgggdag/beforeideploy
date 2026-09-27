@@ -1,0 +1,228 @@
+{
+  "items": [
+    {
+      "group": "Basics",
+      "id": "node",
+      "title": "Node.js",
+      "ok": true,
+      "detail": "v20.20.2",
+      "action": null,
+      "optional": false
+    },
+    {
+      "group": "Basics",
+      "id": "git",
+      "title": "Git",
+      "ok": true,
+      "detail": "git version 2.43.0",
+      "action": null,
+      "optional": false
+    },
+    {
+      "group": "Basics",
+      "id": "git-identity",
+      "title": "Git name and email",
+      "ok": false,
+      "detail": "I will take them from your GitHub account automatically",
+      "action": {
+        "type": "run",
+        "label": "Get from GitHub",
+        "display": "from the GitHub profile"
+      },
+      "optional": false
+    },
+    {
+      "group": "Basics",
+      "id": "brew",
+      "title": "Homebrew",
+      "ok": false,
+      "detail": "Optional — makes installing gh easier",
+      "action": {
+        "type": "terminal",
+        "label": "Install",
+        "script": "/bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+      },
+      "optional": true
+    },
+    {
+      "group": "Hosting & GitHub",
+      "id": "netlify-cli",
+      "title": "Netlify CLI",
+      "ok": false,
+      "detail": "Without it every command goes through the slower npx",
+      "action": {
+        "type": "run",
+        "label": "Install",
+        "cmd": "npm",
+        "args": [
+          "install",
+          "-g",
+          "netlify-cli"
+        ],
+        "display": "npm i -g netlify-cli"
+      },
+      "optional": false
+    },
+    {
+      "group": "Hosting & GitHub",
+      "id": "netlify-login",
+      "title": "Netlify account",
+      "ok": false,
+      "detail": "Needed for deploys",
+      "action": {
+        "type": "run",
+        "label": "Sign in via browser",
+        "display": "opens the browser"
+      },
+      "optional": false
+    },
+    {
+      "group": "Hosting & GitHub",
+      "id": "gh",
+      "title": "GitHub CLI",
+      "ok": false,
+      "detail": "For automatic repo creation and CI status",
+      "action": {
+        "type": "open",
+        "label": "Download",
+        "url": "https://cli.github.com"
+      },
+      "optional": false
+    },
+    {
+      "group": "Hosting & GitHub",
+      "id": "gh-auth",
+      "title": "GitHub account",
+      "ok": false,
+      "detail": "Opens the browser — you just confirm",
+      "action": {
+        "type": "run",
+        "label": "Sign in via browser",
+        "display": "github.com/login/device"
+      },
+      "optional": false
+    },
+    {
+      "group": "Hosting & GitHub",
+      "id": "spaceship",
+      "title": "Spaceship (domains & DNS)",
+      "ok": false,
+      "detail": "Spaceship API key → domains, DNS, expiry",
+      "action": {
+        "type": "app",
+        "label": "Connect",
+        "appAction": "spaceship-connect"
+      },
+      "optional": true
+    },
+    {
+      "group": "Hosting & GitHub",
+      "id": "vercel",
+      "title": "Vercel CLI",
+      "ok": false,
+      "detail": "Hosting for Next.js and SSR projects",
+      "action": {
+        "type": "run",
+        "label": "Install",
+        "cmd": "npm",
+        "args": [
+          "install",
+          "-g",
+          "vercel"
+        ],
+        "display": "npm i -g vercel"
+      },
+      "optional": true
+    },
+    {
+      "group": "Hosting & GitHub",
+      "id": "vercel-auth",
+      "title": "Vercel account",
+      "ok": false,
+      "detail": "Install the Vercel CLI first",
+      "action": null,
+      "optional": true
+    },
+    {
+      "group": "Hosting & GitHub",
+      "id": "wrangler",
+      "title": "Cloudflare Wrangler",
+      "ok": false,
+      "detail": "Static site hosting on Cloudflare Pages",
+      "action": {
+        "type": "run",
+        "label": "Install",
+        "cmd": "npm",
+        "args": [
+          "install",
+          "-g",
+          "wrangler"
+        ],
+        "display": "npm i -g wrangler"
+      },
+      "optional": true
+    },
+    {
+      "group": "Hosting & GitHub",
+      "id": "wrangler-auth",
+      "title": "Cloudflare account",
+      "ok": false,
+      "detail": "Install Wrangler first",
+      "action": null,
+      "optional": true
+    },
+    {
+      "group": "AI assistants",
+      "id": "codex",
+      "title": "Codex CLI",
+      "ok": false,
+      "detail": "AI Fix right in the project (ChatGPT account)",
+      "action": {
+        "type": "run",
+        "label": "Install",
+        "cmd": "npm",
+        "args": [
+          "install",
+          "-g",
+          "@openai/codex"
+        ],
+        "display": "npm i -g @openai/codex"
+      },
+      "optional": true
+    },
+    {
+      "group": "AI assistants",
+      "id": "codex-auth",
+      "title": "Codex sign-in",
+      "ok": false,
+      "detail": "Install Codex first",
+      "action": null,
+      "optional": true
+    },
+    {
+      "group": "AI assistants",
+      "id": "claude-code",
+      "title": "Claude Code",
+      "ok": true,
+      "detail": "2.1.283 (Claude Code)",
+      "action": null,
+      "optional": true
+    },
+    {
+      "group": "AI assistants",
+      "id": "claude-auth",
+      "title": "Claude Code sign-in",
+      "ok": false,
+      "detail": "Open Claude Code once to sign in",
+      "action": {
+        "type": "terminal",
+        "label": "Sign in",
+        "script": "echo \"Sign in to Claude Code, then type /exit\"; claude"
+      },
+      "optional": true
+    }
+  ],
+  "ready": false,
+  "missingRequired": 5,
+  "missingOptional": 9
+}

@@ -1,0 +1,30 @@
+{
+  "configured": true,
+  "loggedIn": true,
+  "id": "u-yavor@example.com",
+  "email": "yavor@example.com",
+  "name": "Test",
+  "avatar": null,
+  "provider": "email",
+  "role": "admin",
+  "plan": "free",
+  "locale": "en",
+  "aiDisabled": false,
+  "credits": {
+    "balance": 0
+  },
+  "settings": {},
+  "profileStale": false,
+  "hasOwnKey": false,
+  "features": {
+    "ai.cloud": false,
+    "ai.ownKey": true,
+    "ai.builtin": false,
+    "ai.external": true,
+    "ai.deep": true,
+    "cloud.sync": true,
+    "admin.panel": true,
+    "billing.plans": false,
+    "projects.max": null
+  }
+}

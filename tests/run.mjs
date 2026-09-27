@@ -45,6 +45,15 @@ function bidEnv(extra, ...args) {
   return { code: r.status, events, result, data: result?.data, stderr: r.stderr };
 }
 
+// Swift model tests decode these captured engine results (App/Tests/BeforeIDeployTests/Fixtures).
+// Written only on demand so the committed fixtures change deliberately: BID_WRITE_FIXTURES=1 node tests/run.mjs
+const FIXTURES_DIR = path.join(ROOT, 'App', 'Tests', 'BeforeIDeployTests', 'Fixtures');
+function fixture(name, data) {
+  if (!process.env.BID_WRITE_FIXTURES) return;
+  fs.mkdirSync(FIXTURES_DIR, { recursive: true });
+  fs.writeFileSync(path.join(FIXTURES_DIR, `${name}.json`), JSON.stringify(data, null, 2) + '\n');
+}
+
 function t(name, fn) {
   try {
     fn();
@@ -120,6 +129,7 @@ console.log(`\nBefore I Deploy — engine tests\n  tmp: ${TMP}\n`);
 t('doctor връща версия и node', () => {
   const r = bid('doctor');
   assert(r.result?.ok, 'doctor failed');
+  fixture('doctor', r.data);
   assert(/^\d+\.\d+\.\d+(-[\w.]+)?$/.test(r.data.engine), 'bad version');
 });
 
@@ -228,6 +238,7 @@ t('check: статичен сайт → ready', () => {
 
 t('check: vite app — build създава dist, статус ready', () => {
   const r = bid('check', '--project', viteApp);
+  fixture('check', r.data);
   assert(stepOf(r.data, 'build').status === 'pass', JSON.stringify(stepOf(r.data, 'build')));
   assert(fs.existsSync(path.join(viteApp, 'dist', 'index.html')), 'no dist');
   assert(stepOf(r.data, 'lint').status === 'pass', 'lint');
@@ -402,6 +413,7 @@ t('aifix: codex без инсталиран CLI → ясна грешка', () =
 t('costs: AI fix се записва в ledger-а, има ценоразпис', () => {
   const r = bid('costs');
   assert(r.result.ok, r.result?.error);
+  fixture('costs', r.data);
   assert(r.data.ledger.some((e) => e.op === 'aifix:build' && e.service === 'chatgpt'), 'ledger');
   assert(r.data.prices.items['netlify:production'].amount === 15, 'price table');
   assert(Array.isArray(r.data.usage.providers), 'usage');
@@ -409,6 +421,7 @@ t('costs: AI fix се записва в ledger-а, има ценоразпис',
 
 t('setup: статус и защита без --yes', () => {
   const s = bid('setup', 'status');
+  fixture('setup-status', s.data);
   assert(s.result.ok && s.data.items.some((i) => i.id === 'netlify-login'), 'items');
   const r = bid('setup', 'run', 'netlify-cli');
   assert(r.code === 2, `code ${r.code}`);
@@ -416,6 +429,7 @@ t('setup: статус и защита без --yes', () => {
 
 t('overview: карта за всеки проект + внимание', () => {
   const r = bid('overview', '--no-network');
+  fixture('overview', r.data);
   assert(r.result.ok, r.result?.error);
   assert(r.data.cards.length >= 3, `${r.data.cards.length}`);
   assert(r.data.attention.some((a) => a.level === 'fail'), 'blocked project should need attention');
@@ -458,6 +472,7 @@ t('spaceship: свързване, домейни, изтичане, DNS', () => 
   const r = spawnSync(BID, ['spaceship', 'connect'], { env: { ...ENV, BID_SPACESHIP_KEY: 'K', BID_SPACESHIP_SECRET: 'S' }, encoding: 'utf8' });
   assert(/"ok":true/.test(r.stdout), r.stdout.slice(-300));
   const st = bid('spaceship', 'status', '--refresh');
+  fixture('spaceship-status', st.data);
   assert(st.data.connected && st.data.domains[0].name === 'moyat-sait.bg', JSON.stringify(st.data).slice(0, 200));
   assert(st.data.domains[0].daysLeft <= 10, 'daysLeft');
   const dns = bid('spaceship', 'dns', '--domain', 'moyat-sait.bg');
@@ -574,6 +589,7 @@ t('акаунт: регистрация, вход, грешна парола, sy
     assert(badBg.result.error === 'Грешен имейл или парола.', badBg.result.error);
     const good = bid('account', 'login', '--email', 'yavor@example.com', '--password', 'supersecret1');
     assert(good.data.loggedIn, 'login');
+    fixture('account-status', good.data);
     assert(good.data.role === 'admin' && good.data.plan === 'free' && good.data.locale === 'en', JSON.stringify(good.data));
     assert(good.data.features['admin.panel'] === true && good.data.features['ai.ownKey'] === true && good.data.features['cloud.sync'] === true, JSON.stringify(good.data.features));
     const sync = bid('account', 'sync');
@@ -591,6 +607,7 @@ t('акаунт: регистрация, вход, грешна парола, sy
     assert(bid('account', 'keys', 'status').data.every((k) => !k.connected), 'bad key stored');
     const goodKey = spawnSync(BID, ['account', 'keys', 'set', '--provider', 'anthropic'], { env: { ...ENV, BID_AI_KEY: 'sk-ant-good-key-123' }, encoding: 'utf8' });
     assert(/"connected":true/.test(goodKey.stdout), goodKey.stdout.slice(-200));
+    fixture('ai-keys', bid('account', 'keys', 'status').data);
     const ks = bid('account', 'keys', 'status').data.find((k) => k.provider === 'anthropic');
     assert(ks.connected && ks.hint && !ks.hint.includes('good-key'), JSON.stringify(ks));
     assert(!fs.readFileSync(path.join(ENV.BID_APP_DIR, 'profile.json'), 'utf8').includes('sk-ant'), 'key leaked into profile cache');
@@ -599,6 +616,7 @@ t('акаунт: регистрация, вход, грешна парола, sy
 
     // admin panel: list users, roles, credits, audit; a normal user is refused
     const users = bid('admin', 'list_users');
+    fixture('admin-users', users.data);
     assert(users.result.ok && users.data.users.length === 1, JSON.stringify(users.result));
     bid('account', 'logout');
     const friend = bid('account', 'signup', '--email', 'friend@example.com', '--password', 'supersecret2', '--name', 'Friend');
@@ -641,6 +659,7 @@ t('ai: собствен ключ → patch, прилагане само с --yes
   spawnSync(BID, ['account', 'keys', 'set', '--provider', 'anthropic'], { env: { ...ENV, BID_AI_KEY: 'sk-ant-good-key-123' }, encoding: 'utf8' });
   const fix = bid('ai', 'fix', '--project', aiApp, '--step', 'build');
   assert(fix.result.ok, fix.result?.error + ' ' + fix.stderr);
+  fixture('ai-fix', fix.data);
   assert(fix.data.provider === 'anthropic' && fix.data.usage.input === 4500 && fix.data.usage.output === 1500, JSON.stringify(fix.data.usage));
   assert(fix.events.filter((e) => e.type === 'ai' && e.delta).length >= 3, 'streamed ai events');
   assert(fix.events.some((e) => e.type === 'step' && e.id === 'ai' && e.status === 'pass'), 'ai step event');
@@ -702,6 +721,7 @@ t('update: latest.json → налична версия, beta канал, изт�
   const none = bidEnv({ BID_UPDATE_URL: '' }, 'update', 'check');
   assert(none.data.configured === false && none.data.available === false, JSON.stringify(none.data));
   const r = bidEnv({ BID_UPDATE_URL: feed }, 'update', 'check');
+  fixture('update-check', r.data);
   assert(r.result.ok && r.data.current === '10.0.0-dev' && r.data.latest === '10.1.0' && r.data.available === true && r.data.mandatory === false, JSON.stringify(r.data));
   assert(r.data.notes.bg === 'Поправки', 'notes');
   const cached = bidEnv({ BID_UPDATE_URL: feed }, 'update', 'check');
@@ -729,6 +749,7 @@ t('logs & report: engine.log пази командите с маскирани �
 t('хостинг: съветник — SSR изключва статичните хостинги', () => {
   const nextApp = mk('next-app', { 'package.json': JSON.stringify({ name: 'n', dependencies: { next: '15' }, scripts: { build: 'node -e 0' } }), 'node_modules/.keep': '' });
   const r = bid('hosting', 'advise', '--project', nextApp);
+  fixture('hosting-advise', r.data);
   const cf = r.data.providers.find((p) => p.id === 'cloudflare');
   const gh = r.data.providers.find((p) => p.id === 'ghpages');
   assert(!cf.compatible && !gh.compatible, 'static hosts must be incompatible');
@@ -827,6 +848,7 @@ ta('local: dev mode използва dev script', async () => {
 
 ta('status: пълен snapshot за dashboard-а', async () => {
   const r = bid('status', '--project', viteApp);
+  fixture('status', r.data);
   assert(r.result.ok, r.result?.error);
   for (const k of ['project', 'detect', 'git', 'local', 'check', 'netlifyAuth', 'fixes']) assert(k in r.data, `missing ${k}`);
   assert(r.data.check.status === 'ready', r.data.check.status);
@@ -835,6 +857,7 @@ ta('status: пълен snapshot за dashboard-а', async () => {
 
 ta('history: записва проверките', async () => {
   const r = bid('history', '--limit', '100');
+  fixture('history', r.data);
   assert(r.data.length >= 5, `only ${r.data.length}`);
   assert(r.data.some((e) => e.kind === 'check' && e.status === 'fail'), 'no failed check');
   const scoped = bid('history', '--project', failingBuild);

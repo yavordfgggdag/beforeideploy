@@ -1,0 +1,46 @@
+{
+  "provider": "anthropic",
+  "model": "claude-sonnet-5",
+  "mode": "fix",
+  "step": "build",
+  "stepLabel": "production build",
+  "answer": "The build fails because src/app.js has a syntax error: a + ; is missing the right operand.\n\n<<<FILE src/app.js>>>\n<<<<<<< SEARCH\nconst c = a + ;\n=======\nconst c = a + b;\n>>>>>>> REPLACE\n<<<NEW FILE src/notes.txt>>>\nfixed by ai\n<<<END FILE>>>\n<<<FILE ../outside.js>>>\n<<<<<<< SEARCH\nx\n=======\ny\n>>>>>>> REPLACE\n",
+  "usage": {
+    "input": 4500,
+    "output": 1500,
+    "model": "claude-sonnet-5"
+  },
+  "duration": 0.014,
+  "explanation": "The build fails because src/app.js has a syntax error: a + ; is missing the right operand.",
+  "patchFile": "/tmp/bid-test-034T6B/cache/e91cb06f8f54/ai-patch-build-1790538329806.json",
+  "files": [
+    {
+      "path": "src/app.js",
+      "action": "edit",
+      "additions": 1,
+      "deletions": 1,
+      "diff": "--- a/src/app.js\n+++ b/src/app.js\n@@ -1,5 +1,5 @@\n const a = 1;\n const b = 2;\n-const c = a + ;\n+const c = a + b;\n console.log(c);\n ",
+      "applicable": true,
+      "error": null
+    },
+    {
+      "path": "src/notes.txt",
+      "action": "create",
+      "additions": 1,
+      "deletions": 0,
+      "diff": "--- /dev/null\n+++ b/src/notes.txt\n@@ -0,0 +1,1 @@\n+fixed by ai",
+      "applicable": true,
+      "error": null
+    },
+    {
+      "path": "../outside.js",
+      "action": "edit",
+      "additions": 0,
+      "deletions": 0,
+      "diff": "",
+      "applicable": false,
+      "error": "outside_project"
+    }
+  ],
+  "applicable": 2
+}

@@ -1,0 +1,263 @@
+[
+  {
+    "ts": "2026-09-27T19:45:43.230Z",
+    "project": "3fa2eabd3b6d",
+    "projectName": "vite-app",
+    "kind": "check",
+    "status": "ok",
+    "message": "Ready to deploy",
+    "duration": 0.073,
+    "log": null
+  },
+  {
+    "ts": "2026-09-27T19:45:42.974Z",
+    "project": "3fa2eabd3b6d",
+    "projectName": "vite-app",
+    "kind": "hosting",
+    "status": "ok",
+    "message": "Hosting → Netlify"
+  },
+  {
+    "ts": "2026-09-27T19:45:42.339Z",
+    "project": "3fa2eabd3b6d",
+    "projectName": "vite-app",
+    "kind": "check",
+    "status": "ok",
+    "message": "1 warnings",
+    "duration": 0.052,
+    "log": null
+  },
+  {
+    "ts": "2026-09-27T19:45:42.113Z",
+    "project": "3fa2eabd3b6d",
+    "projectName": "vite-app",
+    "kind": "hosting",
+    "status": "ok",
+    "message": "Hosting → Vercel"
+  },
+  {
+    "ts": "2026-09-27T19:45:36.655Z",
+    "project": "46651ec3540e",
+    "projectName": "ai-cloud-app",
+    "kind": "ai-fix",
+    "status": "fail",
+    "message": "production build: You are out of AI credits. They renew on 2026-10-01T00:00:00Z; you can add a pack from “Subscription”."
+  },
+  {
+    "ts": "2026-09-27T19:45:34.201Z",
+    "project": "46651ec3540e",
+    "projectName": "ai-cloud-app",
+    "kind": "ai-fix",
+    "status": "ok",
+    "message": "fix: production build",
+    "duration": 0.014
+  },
+  {
+    "ts": "2026-09-27T19:45:32.595Z",
+    "project": "46651ec3540e",
+    "projectName": "ai-cloud-app",
+    "kind": "check",
+    "status": "fail",
+    "message": "1 errors",
+    "duration": 0.439,
+    "log": "/tmp/bid-test-034T6B/cache/46651ec3540e/build.log"
+  },
+  {
+    "ts": "2026-09-27T19:45:31.590Z",
+    "project": "e91cb06f8f54",
+    "projectName": "ai-app",
+    "kind": "ai-fix",
+    "status": "ok",
+    "message": "explain: production build",
+    "duration": 0.012
+  },
+  {
+    "ts": "2026-09-27T19:45:30.926Z",
+    "project": "e91cb06f8f54",
+    "projectName": "ai-app",
+    "kind": "check",
+    "status": "ok",
+    "message": "1 warnings",
+    "duration": 0.413,
+    "log": null
+  },
+  {
+    "ts": "2026-09-27T19:45:30.333Z",
+    "project": "e91cb06f8f54",
+    "projectName": "ai-app",
+    "kind": "ai-apply",
+    "status": "ok",
+    "message": "src/app.js"
+  },
+  {
+    "ts": "2026-09-27T19:45:29.806Z",
+    "project": "e91cb06f8f54",
+    "projectName": "ai-app",
+    "kind": "ai-fix",
+    "status": "ok",
+    "message": "fix: production build",
+    "duration": 0.014
+  },
+  {
+    "ts": "2026-09-27T19:45:28.931Z",
+    "project": "e91cb06f8f54",
+    "projectName": "ai-app",
+    "kind": "check",
+    "status": "fail",
+    "message": "1 errors",
+    "duration": 0.47,
+    "log": "/tmp/bid-test-034T6B/cache/e91cb06f8f54/build.log"
+  },
+  {
+    "ts": "2026-09-27T19:44:16.874Z",
+    "project": "a10a2b409c4c",
+    "projectName": "leaky-build",
+    "kind": "check",
+    "status": "fail",
+    "message": "2 errors",
+    "duration": 0.428,
+    "log": "/tmp/bid-test-034T6B/cache/a10a2b409c4c/build.log"
+  },
+  {
+    "ts": "2026-09-27T19:44:15.856Z",
+    "project": "95c2b0411966",
+    "projectName": "static-site",
+    "kind": "commit",
+    "status": "ok",
+    "message": "only a"
+  },
+  {
+    "ts": "2026-09-27T19:44:15.636Z",
+    "project": "95c2b0411966",
+    "projectName": "static-site",
+    "kind": "commit",
+    "status": "ok",
+    "message": "Add about page"
+  },
+  {
+    "ts": "2026-09-27T19:44:14.945Z",
+    "project": "18a8c7d664db",
+    "projectName": "no-git",
+    "kind": "fix",
+    "status": "ok",
+    "message": "git.init: Git initialized (branch main)"
+  },
+  {
+    "ts": "2026-09-27T19:44:14.586Z",
+    "project": "c272bf1bc9ee",
+    "projectName": "secret-in-code",
+    "kind": "check",
+    "status": "fail",
+    "message": "1 errors",
+    "duration": 0.065,
+    "log": null
+  },
+  {
+    "ts": "2026-09-27T19:44:14.327Z",
+    "project": "084c5429fe3e",
+    "projectName": "tracked-env",
+    "kind": "fix",
+    "status": "ok",
+    "message": "env.untrack: Removed from the index: .env. Commit to make it take effect."
+  },
+  {
+    "ts": "2026-09-27T19:44:13.802Z",
+    "project": "084c5429fe3e",
+    "projectName": "tracked-env",
+    "kind": "check",
+    "status": "fail",
+    "message": "1 errors",
+    "duration": 0.062,
+    "log": null
+  },
+  {
+    "ts": "2026-09-27T19:44:12.462Z",
+    "project": "5a632332a1bc",
+    "projectName": "failing-build",
+    "kind": "check",
+    "status": "fail",
+    "message": "1 errors",
+    "duration": 0.384,
+    "log": "/tmp/bid-test-034T6B/cache/5a632332a1bc/build.log"
+  },
+  {
+    "ts": "2026-09-27T19:44:11.909Z",
+    "project": "5a632332a1bc",
+    "projectName": "failing-build",
+    "kind": "check",
+    "status": "fail",
+    "message": "1 errors",
+    "duration": 0.688,
+    "log": "/tmp/bid-test-034T6B/cache/5a632332a1bc/build.log"
+  },
+  {
+    "ts": "2026-09-27T19:44:11.006Z",
+    "project": "3fa2eabd3b6d",
+    "projectName": "vite-app",
+    "kind": "check",
+    "status": "ok",
+    "message": "Ready to deploy",
+    "duration": 1.026,
+    "log": null
+  },
+  {
+    "ts": "2026-09-27T19:44:09.794Z",
+    "project": "3fa2eabd3b6d",
+    "projectName": "vite-app",
+    "kind": "check",
+    "status": "ok",
+    "message": "1 warnings",
+    "duration": 0.07,
+    "log": null
+  },
+  {
+    "ts": "2026-09-27T19:44:09.553Z",
+    "project": "3fa2eabd3b6d",
+    "projectName": "vite-app",
+    "kind": "check",
+    "status": "ok",
+    "message": "1 warnings",
+    "duration": 0.972,
+    "log": null
+  },
+  {
+    "ts": "2026-09-27T19:44:08.414Z",
+    "project": "3fa2eabd3b6d",
+    "projectName": "vite-app",
+    "kind": "check",
+    "status": "ok",
+    "message": "Ready to deploy",
+    "duration": 0.979,
+    "log": null
+  },
+  {
+    "ts": "2026-09-27T19:44:07.277Z",
+    "project": "3fa2eabd3b6d",
+    "projectName": "vite-app",
+    "kind": "check",
+    "status": "ok",
+    "message": "Ready to deploy",
+    "duration": 0.071,
+    "log": null
+  },
+  {
+    "ts": "2026-09-27T19:44:07.021Z",
+    "project": "3fa2eabd3b6d",
+    "projectName": "vite-app",
+    "kind": "check",
+    "status": "ok",
+    "message": "Ready to deploy",
+    "duration": 1.02,
+    "log": null
+  },
+  {
+    "ts": "2026-09-27T19:44:05.828Z",
+    "project": "95c2b0411966",
+    "projectName": "static-site",
+    "kind": "check",
+    "status": "ok",
+    "message": "Ready to deploy",
+    "duration": 0.06,
+    "log": null
+  }
+]

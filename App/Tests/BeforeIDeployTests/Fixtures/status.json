@@ -1,0 +1,193 @@
+{
+  "project": {
+    "key": "3fa2eabd3b6d",
+    "path": "/tmp/bid-test-034T6B/vite-app",
+    "name": "vite-app",
+    "addedAt": "2026-09-27T19:44:03.164Z",
+    "framework": "vite",
+    "packageManager": "npm",
+    "publishDir": "dist",
+    "github": null,
+    "netlify": {
+      "siteName": "vite-app-demo"
+    },
+    "lastOpened": "2026-09-27T19:44:03.164Z",
+    "hosting": "netlify",
+    "lastPort": 4180,
+    "exists": true
+  },
+  "detect": {
+    "exists": true,
+    "path": "/tmp/bid-test-034T6B/vite-app",
+    "name": "vite-app",
+    "framework": "vite",
+    "ssr": false,
+    "packageManager": "npm",
+    "hasPackageJson": true,
+    "hasNodeModules": true,
+    "scripts": [
+      "build",
+      "lint",
+      "typecheck"
+    ],
+    "buildScript": "build",
+    "lintScript": "lint",
+    "typecheckScript": "typecheck",
+    "publishDir": "dist",
+    "publishReady": true,
+    "hasFunctions": false,
+    "netlifyToml": false,
+    "netlifyLinked": true,
+    "siteId": "site-123",
+    "hasGitignore": true,
+    "git": {
+      "isRepo": true,
+      "branch": "main",
+      "remote": null,
+      "githubUrl": null
+    }
+  },
+  "git": {
+    "isRepo": true,
+    "branch": "main",
+    "remote": null,
+    "githubUrl": null,
+    "installed": true,
+    "changed": [],
+    "changedCount": 0,
+    "hasUpstream": false,
+    "upstream": null,
+    "ahead": null,
+    "behind": null,
+    "lastCommit": {
+      "hash": "f8ccb7f",
+      "subject": "touch build",
+      "relative": "2 minutes ago"
+    }
+  },
+  "local": {
+    "running": false
+  },
+  "check": {
+    "status": "ready",
+    "at": "2026-09-27T19:45:43.229Z",
+    "counts": {
+      "pass": 7,
+      "info": 0,
+      "warn": 0,
+      "fail": 0
+    },
+    "steps": [
+      {
+        "id": "git",
+        "label": "Git",
+        "category": "Source Control",
+        "details": [
+          "Branch: main",
+          "No origin remote"
+        ],
+        "fixes": [],
+        "duration": 0.01,
+        "status": "pass",
+        "summary": "Clean working tree"
+      },
+      {
+        "id": "secrets",
+        "label": "Secrets",
+        "category": "Security",
+        "details": [],
+        "fixes": [],
+        "duration": 0.011,
+        "status": "pass",
+        "summary": "No secrets found"
+      },
+      {
+        "id": "deps",
+        "label": "Dependencies",
+        "category": "Dependencies",
+        "details": [
+          "Node v20.20.2",
+          "Package manager: npm"
+        ],
+        "fixes": [],
+        "duration": 0.01,
+        "status": "pass",
+        "summary": "npm · node_modules is in order"
+      },
+      {
+        "id": "lint",
+        "label": "Lint",
+        "category": "Code Quality",
+        "details": [],
+        "fixes": [],
+        "status": "pass",
+        "summary": "Lint passed · cached",
+        "log": "/tmp/bid-test-034T6B/cache/3fa2eabd3b6d/lint.log",
+        "duration": 0,
+        "cached": true
+      },
+      {
+        "id": "typecheck",
+        "label": "Typecheck",
+        "category": "Code Quality",
+        "details": [],
+        "fixes": [],
+        "status": "pass",
+        "summary": "Types are OK · cached",
+        "log": "/tmp/bid-test-034T6B/cache/3fa2eabd3b6d/typecheck.log",
+        "duration": 0,
+        "cached": true
+      },
+      {
+        "id": "build",
+        "label": "Build",
+        "category": "Build",
+        "details": [
+          "Output: dist"
+        ],
+        "fixes": [],
+        "status": "pass",
+        "summary": "Production build passed · cached",
+        "log": "/tmp/bid-test-034T6B/cache/3fa2eabd3b6d/build.log",
+        "duration": 0,
+        "cached": true
+      },
+      {
+        "id": "hosting",
+        "label": "Hosting",
+        "category": "Hosting",
+        "details": [
+          "Site ID: site-123",
+          "CLI: npx netlify-cli"
+        ],
+        "fixes": [],
+        "duration": 0.016,
+        "status": "pass",
+        "summary": "Netlify is connected"
+      }
+    ],
+    "duration": 0.073,
+    "cached": [
+      "lint",
+      "typecheck",
+      "build"
+    ]
+  },
+  "lastDraft": null,
+  "lastProd": null,
+  "netlifyAuth": {
+    "loggedIn": false,
+    "email": null,
+    "cli": "npx netlify-cli"
+  },
+  "fixes": [],
+  "hosting": {
+    "provider": "netlify",
+    "name": "Netlify",
+    "ready": true,
+    "preview": true,
+    "installed": true,
+    "loggedIn": false,
+    "liveUrl": null
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "project": "d827ba419e36",
+  "framework": "next",
+  "ssr": true,
+  "functions": false,
+  "current": "netlify",
+  "providers": [
+    {
+      "id": "netlify",
+      "name": "Netlify",
+      "compatible": true,
+      "current": true,
+      "installed": true,
+      "loggedIn": false,
+      "linked": false,
+      "free": "Free plan (credit system)",
+      "note": "Production deploys spend credits — see “Costs”.",
+      "pricing": "https://www.netlify.com/pricing/",
+      "preview": true,
+      "reasons": [],
+      "score": 85,
+      "recommended": true
+    },
+    {
+      "id": "vercel",
+      "name": "Vercel",
+      "compatible": true,
+      "current": false,
+      "installed": false,
+      "loggedIn": false,
+      "linked": false,
+      "free": "Hobby — free, but only for personal/non-commercial projects",
+      "note": "Client sites need a paid Pro plan.",
+      "pricing": "https://vercel.com/pricing",
+      "preview": true,
+      "reasons": [
+        "Client sites need a paid Pro plan."
+      ],
+      "score": 60
+    },
+    {
+      "id": "cloudflare",
+      "name": "Cloudflare Pages",
+      "compatible": false,
+      "current": false,
+      "installed": false,
+      "loggedIn": false,
+      "linked": false,
+      "free": "Free plan for static sites",
+      "note": "Great for static sites with a lot of traffic.",
+      "pricing": "https://www.cloudflare.com/plans/developer-platform/",
+      "preview": true,
+      "reasons": [
+        "next with server rendering does not run here"
+      ],
+      "score": 0
+    },
+    {
+      "id": "ghpages",
+      "name": "GitHub Pages",
+      "compatible": false,
+      "current": false,
+      "installed": false,
+      "loggedIn": false,
+      "linked": false,
+      "free": "Free for public repos (private ones need a paid GitHub plan)",
+      "note": "No previews and no server functions; not for online shops.",
+      "pricing": "https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits",
+      "preview": false,
+      "reasons": [
+        "next with server rendering does not run here",
+        "A GitHub repo is required"
+      ],
+      "score": 0
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "status": "ready",
+  "at": "2026-09-27T19:44:07.020Z",
+  "counts": {
+    "pass": 6,
+    "info": 1,
+    "warn": 0,
+    "fail": 0
+  },
+  "steps": [
+    {
+      "id": "git",
+      "label": "Git",
+      "category": "Source Control",
+      "details": [
+        "Branch: main",
+        "No origin remote"
+      ],
+      "fixes": [],
+      "duration": 0.009,
+      "status": "pass",
+      "summary": "Clean working tree"
+    },
+    {
+      "id": "secrets",
+      "label": "Secrets",
+      "category": "Security",
+      "details": [],
+      "fixes": [],
+      "duration": 0.012,
+      "status": "pass",
+      "summary": "No secrets found"
+    },
+    {
+      "id": "deps",
+      "label": "Dependencies",
+      "category": "Dependencies",
+      "details": [
+        "Node v20.20.2",
+        "Package manager: npm"
+      ],
+      "fixes": [],
+      "duration": 0.009,
+      "status": "pass",
+      "summary": "npm · node_modules is in order"
+    },
+    {
+      "id": "lint",
+      "label": "Lint",
+      "category": "Code Quality",
+      "details": [],
+      "fixes": [],
+      "duration": 0.313,
+      "status": "pass",
+      "summary": "Lint passed",
+      "log": "/tmp/bid-test-034T6B/cache/3fa2eabd3b6d/lint.log"
+    },
+    {
+      "id": "typecheck",
+      "label": "Typecheck",
+      "category": "Code Quality",
+      "details": [],
+      "fixes": [],
+      "duration": 0.354,
+      "status": "pass",
+      "summary": "Types are OK",
+      "log": "/tmp/bid-test-034T6B/cache/3fa2eabd3b6d/typecheck.log"
+    },
+    {
+      "id": "build",
+      "label": "Build",
+      "category": "Build",
+      "details": [
+        "Output: dist"
+      ],
+      "fixes": [],
+      "duration": 0.277,
+      "status": "pass",
+      "summary": "Production build passed",
+      "log": "/tmp/bid-test-034T6B/cache/3fa2eabd3b6d/build.log"
+    },
+    {
+      "id": "hosting",
+      "label": "Hosting",
+      "category": "Hosting",
+      "details": [],
+      "fixes": [
+        "netlify.link"
+      ],
+      "duration": 0.016,
+      "status": "info",
+      "summary": "Netlify is not connected"
+    }
+  ],
+  "duration": 1.02,
+  "cached": []
+}

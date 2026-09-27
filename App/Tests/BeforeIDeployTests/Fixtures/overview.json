@@ -1,0 +1,226 @@
+{
+  "at": "2026-09-27T19:45:14.303Z",
+  "cards": [
+    {
+      "key": "a10a2b409c4c",
+      "name": "leaky-build",
+      "path": "/tmp/bid-test-034T6B/leaky-build",
+      "exists": true,
+      "framework": "node",
+      "hosting": "netlify",
+      "status": "blocked",
+      "checkedAt": "2026-09-27T19:44:16.873Z",
+      "failing": [
+        "Secrets",
+        "Build"
+      ],
+      "liveUrl": null,
+      "lastProd": null,
+      "lastDraft": null,
+      "changed": 0,
+      "branch": "main",
+      "ahead": null,
+      "behind": null,
+      "local": null,
+      "uptime": null,
+      "sslDays": null
+    },
+    {
+      "key": "95c2b0411966",
+      "name": "static-site",
+      "path": "/tmp/bid-test-034T6B/static-site",
+      "exists": true,
+      "framework": "static",
+      "hosting": "netlify",
+      "status": "ready",
+      "checkedAt": "2026-09-27T19:44:05.827Z",
+      "failing": [],
+      "liveUrl": null,
+      "lastProd": null,
+      "lastDraft": null,
+      "changed": 1,
+      "branch": "main",
+      "ahead": null,
+      "behind": null,
+      "local": null,
+      "uptime": null,
+      "sslDays": null
+    },
+    {
+      "key": "18a8c7d664db",
+      "name": "no-git",
+      "path": "/tmp/bid-test-034T6B/no-git",
+      "exists": true,
+      "framework": "static",
+      "hosting": "netlify",
+      "status": null,
+      "checkedAt": null,
+      "failing": [],
+      "liveUrl": null,
+      "lastProd": null,
+      "lastDraft": null,
+      "changed": 2,
+      "branch": "main",
+      "ahead": null,
+      "behind": null,
+      "local": null,
+      "uptime": null,
+      "sslDays": null
+    },
+    {
+      "key": "c272bf1bc9ee",
+      "name": "secret-in-code",
+      "path": "/tmp/bid-test-034T6B/secret-in-code",
+      "exists": true,
+      "framework": "static",
+      "hosting": "netlify",
+      "status": "blocked",
+      "checkedAt": "2026-09-27T19:44:14.585Z",
+      "failing": [
+        "Secrets"
+      ],
+      "liveUrl": null,
+      "lastProd": null,
+      "lastDraft": null,
+      "changed": 0,
+      "branch": "main",
+      "ahead": null,
+      "behind": null,
+      "local": null,
+      "uptime": null,
+      "sslDays": null
+    },
+    {
+      "key": "084c5429fe3e",
+      "name": "tracked-env",
+      "path": "/tmp/bid-test-034T6B/tracked-env",
+      "exists": true,
+      "framework": "static",
+      "hosting": "netlify",
+      "status": "blocked",
+      "checkedAt": "2026-09-27T19:44:13.802Z",
+      "failing": [
+        "Secrets"
+      ],
+      "liveUrl": null,
+      "lastProd": null,
+      "lastDraft": null,
+      "changed": 2,
+      "branch": "main",
+      "ahead": null,
+      "behind": null,
+      "local": null,
+      "uptime": null,
+      "sslDays": null
+    },
+    {
+      "key": "7d47295aaf79",
+      "name": "fresh",
+      "path": "/tmp/bid-test-034T6B/fresh",
+      "exists": true,
+      "framework": "static",
+      "hosting": "netlify",
+      "status": null,
+      "checkedAt": null,
+      "failing": [],
+      "liveUrl": null,
+      "lastProd": null,
+      "lastDraft": null,
+      "changed": 0,
+      "branch": "main",
+      "ahead": null,
+      "behind": null,
+      "local": null,
+      "uptime": null,
+      "sslDays": null
+    },
+    {
+      "key": "5a632332a1bc",
+      "name": "failing-build",
+      "path": "/tmp/bid-test-034T6B/failing-build",
+      "exists": true,
+      "framework": "node",
+      "hosting": "netlify",
+      "status": "blocked",
+      "checkedAt": "2026-09-27T19:44:12.462Z",
+      "failing": [
+        "Build"
+      ],
+      "liveUrl": null,
+      "lastProd": null,
+      "lastDraft": null,
+      "changed": 0,
+      "branch": "main",
+      "ahead": null,
+      "behind": null,
+      "local": null,
+      "uptime": null,
+      "sslDays": null
+    },
+    {
+      "key": "3fa2eabd3b6d",
+      "name": "vite-app",
+      "path": "/tmp/bid-test-034T6B/vite-app",
+      "exists": true,
+      "framework": "vite",
+      "hosting": "netlify",
+      "status": "ready",
+      "checkedAt": "2026-09-27T19:44:11.005Z",
+      "failing": [],
+      "liveUrl": null,
+      "lastProd": null,
+      "lastDraft": null,
+      "changed": 0,
+      "branch": "main",
+      "ahead": null,
+      "behind": null,
+      "local": null,
+      "uptime": null,
+      "sslDays": null
+    }
+  ],
+  "domains": {
+    "connected": false,
+    "domains": []
+  },
+  "attention": [
+    {
+      "key": "a10a2b409c4c",
+      "level": "fail",
+      "text": "leaky-build: BLOCKED — Secrets, Build"
+    },
+    {
+      "key": "c272bf1bc9ee",
+      "level": "fail",
+      "text": "secret-in-code: BLOCKED — Secrets"
+    },
+    {
+      "key": "084c5429fe3e",
+      "level": "fail",
+      "text": "tracked-env: BLOCKED — Secrets"
+    },
+    {
+      "key": "5a632332a1bc",
+      "level": "fail",
+      "text": "failing-build: BLOCKED — Build"
+    },
+    {
+      "key": "18a8c7d664db",
+      "level": "info",
+      "text": "no-git: not checked yet"
+    },
+    {
+      "key": "7d47295aaf79",
+      "level": "info",
+      "text": "fresh: not checked yet"
+    }
+  ],
+  "totals": {
+    "projects": 8,
+    "ready": 2,
+    "warnings": 0,
+    "blocked": 4,
+    "online": 0,
+    "live": 0
+  }
+}
