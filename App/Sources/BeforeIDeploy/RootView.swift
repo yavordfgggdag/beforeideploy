@@ -2,10 +2,13 @@ import SwiftUI
 
 struct RootView: View {
     @EnvironmentObject var model: AppModel
+    @AppStorage(Localization.storageKey) private var locale = ""
 
     var body: some View {
         Group {
-            if model.mustAuthenticate {
+            if locale.isEmpty {
+                WelcomeLanguageView()
+            } else if model.mustAuthenticate {
                 if model.account?.configured == true {
                     AuthView()
                 } else {

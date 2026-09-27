@@ -14,8 +14,8 @@ enum Localization {
         return (v?.isEmpty ?? true) ? nil : v
     }
 
-    /// Active language. Until the language picker has been answered the app stays Bulgarian, as in V9.
-    static var current: String { stored ?? "bg" }
+    /// Active language; English until the welcome screen's language picker has been answered.
+    static var current: String { stored ?? fallback }
 
     static var locale: Locale { Locale(identifier: current) }
 
@@ -23,9 +23,11 @@ enum Localization {
     static var available: [String] {
         let dir = Bundle.main.resourceURL
         let names = (try? FileManager.default.contentsOfDirectory(atPath: dir?.path ?? "")) ?? []
-        return names.filter { $0.hasSuffix(".lproj") && $0 != "Base.lproj" }
+        let codes = names.filter { $0.hasSuffix(".lproj") && $0 != "Base.lproj" }
             .map { String($0.dropLast(".lproj".count)) }
             .sorted()
+        // e.g. `swift run` without build.sh: no catalogs, but the welcome screen must still let you through
+        return codes.isEmpty ? [fallback] : codes
     }
 
     /// The language's own name ("Български", "English", "Deutsch" …).
@@ -36,6 +38,32 @@ enum Localization {
 
     static func set(_ code: String) {
         UserDefaults.standard.set(code, forKey: storageKey)
+    }
+
+    /// The system language if the app has it, else English — preselected on the welcome screen.
+    static var suggested: String {
+        let codes = available
+        for pref in Locale.preferredLanguages {
+            let parts = pref.split(separator: "-").map(String.init)
+            for n in stride(from: parts.count, to: 0, by: -1) {
+                let candidate = parts.prefix(n).joined(separator: "-")
+                if codes.contains(candidate) { return candidate }
+            }
+        }
+        return fallback
+    }
+
+    /// V9 had no language setting and was Bulgarian only: an existing install keeps Bulgarian and is
+    /// never asked; only a fresh install sees the language picker.
+    static func migrateFromV9() {
+        guard stored == nil else { return }
+        let defaults = UserDefaults.standard
+        let v9Keys = ["lastSelectedKey", "offlineMode", "autoOpenPreview", "checkOnSelect", "notificationsEnabled"]
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+        let library = support?.appendingPathComponent("BeforeIDeploy/projects.json").path ?? ""
+        if v9Keys.contains(where: { defaults.object(forKey: $0) != nil }) || FileManager.default.fileExists(atPath: library) {
+            set("bg")
+        }
     }
 
     // MARK: - Lookup
@@ -53,10 +81,10 @@ enum Localization {
         return b
     }
 
-    /// Text for `key` in the active language, then English, else the key itself.
-    static func string(_ key: String) -> String {
-        for lang in [current, fallback] {
-            if let b = bundle(for: lang) {
+    /// Text for `key` in `lang` (the active language by default), then English, else the key itself.
+    static func string(_ key: String, in lang: String? = nil) -> String {
+        for code in [lang ?? current, fallback] {
+            if let b = bundle(for: code) {
                 let s = b.localizedString(forKey: key, value: missing, table: nil)
                 if s != missing { return s }
             }

@@ -55,6 +55,7 @@ final class AppModel: ObservableObject, Feedback {
     private var storeObservers: [AnyCancellable] = []
 
     init() {
+        Localization.migrateFromV9()
         let engine = EngineClient.shared
         let projects = ProjectStore(engine: engine)
         projectStore = projects
@@ -157,6 +158,8 @@ final class AppModel: ObservableObject, Feedback {
     // MARK: - Lifecycle
 
     func start() async {
+        // RootView is rebuilt on a language change and its .task calls start() again
+        guard !started else { return }
         engineMissing = !engine.isInstalled
         guard !engineMissing else { return }
         await loadAccount()
@@ -182,6 +185,24 @@ final class AppModel: ObservableObject, Feedback {
     }
 
     func loadProjects() async { await projectStore.loadProjects() }
+
+    /// Switches the app and engine language without a restart and reloads what the engine had already
+    /// sent in the old language (statuses, Setup, Mission Control, Costs, Domains, history).
+    func setLanguage(_ code: String) {
+        guard code != Localization.stored else { return }
+        Localization.set(code)
+        objectWillChange.send()
+        guard started else { return }
+        advice = nil
+        Task {
+            await refreshStatus(quiet: true)
+            await loadHistory()
+            await loadSetup()
+            await loadOverview()
+            await loadCosts()
+            await loadSpaceship()
+        }
+    }
 
     func select(_ key: String) async {
         screen = .project

@@ -223,6 +223,10 @@
 "hosting.signInLower" = "вход";
 "hosting.whereTitle" = "Къде да се хоства?";
 
+"language.continue" = "Продължи";
+"language.subtitle" = "Можеш да го смениш по всяко време от Настройки.";
+"language.title" = "Избери език";
+
 "library.addButton" = "Добави";
 "library.added" = "Добавен: %@";
 "library.pickFolder" = "Избери папката на проекта";
@@ -357,6 +361,9 @@
 "settings.checking" = "Проверявам…";
 "settings.dataFolder" = "Папка с данни";
 "settings.environment" = "Среда";
+"settings.language" = "Език на приложението";
+"settings.languageHint" = "Сменя се веднага — и за съобщенията от engine-а";
+"settings.languageSection" = "Език";
 "settings.logs" = "Логове";
 "settings.netlifyAccount" = "Netlify акаунт";
 "settings.notifications" = "macOS известия";

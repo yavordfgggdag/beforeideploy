@@ -276,7 +276,7 @@ enum Fmt {
         if secs < 3600 { return L("time.minutesAgo", Int(secs / 60)) }
         if secs < 86400 { return L("time.hoursAgo", Int(secs / 3600)) }
         let f = DateFormatter()
-        f.locale = Locale(identifier: "bg_BG")
+        f.locale = Localization.locale
         f.dateFormat = "d MMM, HH:mm"
         return f.string(from: d)
     }

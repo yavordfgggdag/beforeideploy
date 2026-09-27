@@ -223,6 +223,10 @@
 "hosting.signInLower" = "sign in";
 "hosting.whereTitle" = "Where to host?";
 
+"language.continue" = "Continue";
+"language.subtitle" = "You can change it any time in Settings.";
+"language.title" = "Choose your language";
+
 "library.addButton" = "Add";
 "library.added" = "Added: %@";
 "library.pickFolder" = "Choose the project folder";
@@ -357,6 +361,9 @@
 "settings.checking" = "Checking…";
 "settings.dataFolder" = "Data folder";
 "settings.environment" = "Environment";
+"settings.language" = "App language";
+"settings.languageHint" = "Changes right away — engine messages too";
+"settings.languageSection" = "Language";
 "settings.logs" = "Logs";
 "settings.netlifyAccount" = "Netlify account";
 "settings.notifications" = "macOS notifications";

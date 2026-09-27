@@ -25,10 +25,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 struct BeforeIDeployApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject private var model = AppModel.shared
+    /// Changing the language rebuilds the window content, so every L() text is read again.
+    @AppStorage(Localization.storageKey) private var locale = ""
 
     var body: some Scene {
         Window("Before I Deploy", id: "main") {
             RootView()
+                .id(locale)
+                .environment(\.locale, Localization.locale)
                 .environmentObject(model)
                 .frame(minWidth: 1080, minHeight: 700)
                 .preferredColorScheme(.dark)

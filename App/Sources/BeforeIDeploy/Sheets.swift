@@ -532,6 +532,10 @@ struct SettingsSheet: View {
         SheetScaffold(icon: "gearshape.fill", title: L("common.settings"), subtitle: "Before I Deploy V9", width: 600) {
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 10) {
+                    SectionLabel(text: L("settings.languageSection"))
+                    LanguageRow()
+                }
+                VStack(alignment: .leading, spacing: 10) {
                     SectionLabel(text: L("settings.behavior"))
                     ToggleRow(title: L("settings.autoOpenPreview"), subtitle: L("settings.autoOpenPreviewHint"), isOn: $autoOpenPreview)
                     ToggleRow(title: L("settings.checkOnSelect"), subtitle: L("settings.checkOnSelectHint"), isOn: $checkOnSelect)
