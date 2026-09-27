@@ -2,7 +2,7 @@ import AppKit
 import Combine
 import SwiftUI
 
-enum Screen: Hashable { case overview, project, domains, costs, setup }
+enum Screen: Hashable { case overview, project, domains, costs, setup, admin }
 
 enum SheetKind: Identifiable {
     case production, netlifySetup, commit, history, settings, remote, spaceshipConnect, connectDomain
@@ -32,6 +32,7 @@ final class AppModel: ObservableObject, Feedback {
     let accountStore: AccountStore
     let hostingStore: HostingStore
     let runController: RunController
+    let adminStore: AdminStore
 
     @Published var sheet: SheetKind?
     @Published var pendingFix: PendingFix?
@@ -62,15 +63,18 @@ final class AppModel: ObservableObject, Feedback {
         accountStore = AccountStore(engine: engine)
         hostingStore = HostingStore(engine: engine, projects: projects)
         runController = RunController(engine: engine, projects: projects)
+        adminStore = AdminStore(engine: engine)
 
         projectStore.feedback = self
         accountStore.feedback = self
         hostingStore.feedback = self
         runController.feedback = self
+        adminStore.feedback = self
 
         accountStore.onLogin = { [weak self] in
             guard let self else { return }
             if !self.started { await self.start() }
+            self.adoptProfileLanguage()
         }
         hostingStore.onSetupChanged = { [weak self] in
             await self?.loadSetup()
@@ -84,6 +88,7 @@ final class AppModel: ObservableObject, Feedback {
             forward(accountStore.objectWillChange),
             forward(hostingStore.objectWillChange),
             forward(runController.objectWillChange),
+            forward(adminStore.objectWillChange),
         ]
     }
 
@@ -188,10 +193,11 @@ final class AppModel: ObservableObject, Feedback {
 
     /// Switches the app and engine language without a restart and reloads what the engine had already
     /// sent in the old language (statuses, Setup, Mission Control, Costs, Domains, history).
-    func setLanguage(_ code: String) {
+    func setLanguage(_ code: String, syncToCloud: Bool = true) {
         guard code != Localization.stored else { return }
         Localization.set(code)
         objectWillChange.send()
+        if syncToCloud { accountStore.saveLocale(code) }
         guard started else { return }
         advice = nil
         Task {
@@ -217,6 +223,13 @@ final class AppModel: ObservableObject, Feedback {
     func refreshStatus(quiet: Bool = false) async { await projectStore.refreshStatus(quiet: quiet) }
 
     func loadHistory() async { await projectStore.loadHistory() }
+
+    /// A profile made on another Mac carries the language the user picked there — follow it once at login.
+    private func adoptProfileLanguage() {
+        guard let locale = account?.locale, !locale.isEmpty, locale != Localization.current,
+              Localization.available.contains(locale) else { return }
+        setLanguage(locale, syncToCloud: false)
+    }
 
     // MARK: - Library
 
@@ -452,7 +465,17 @@ final class AppModel: ObservableObject, Feedback {
 
     // MARK: - Account
 
-    func loadAccount() async { await accountStore.loadAccount() }
+    func loadAccount() async {
+        await accountStore.loadAccount()
+        if screen == .admin, account?.isAdmin != true { screen = .overview }
+    }
+
+    // MARK: - VIP AI keys
+
+    var aiKeys: [AIKeyStatus] { accountStore.aiKeys }
+    func loadAIKeys() async { await accountStore.loadAIKeys() }
+    func setAIKey(provider: String, key: String) async -> Bool { await accountStore.setAIKey(provider: provider, key: key) }
+    func deleteAIKey(provider: String) async { await accountStore.deleteAIKey(provider: provider) }
 
     /// Returns an error message, or nil on success.
     func signup(email: String, password: String, name: String) async -> String? {

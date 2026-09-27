@@ -295,6 +295,14 @@ enum Fmt {
         return "\(Int(secs) / 60)m \(Int(secs) % 60)s"
     }
 
+    /// AI credits are tokens: big numbers grouped by the app locale ("1 000 000" / "1,000,000").
+    static func tokens(_ n: Int) -> String {
+        let f = NumberFormatter()
+        f.numberStyle = .decimal
+        f.locale = Localization.locale
+        return f.string(from: NSNumber(value: n)) ?? String(n)
+    }
+
     static func host(_ url: String?) -> String {
         guard let url, let u = URL(string: url), let h = u.host else { return url ?? "—" }
         if let p = u.port { return "\(h):\(p)" }

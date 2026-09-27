@@ -1,12 +1,37 @@
 /* Before I Deploy — English. Keys are used from Swift via L("key"); formats use %@. */
 
 "account.offline" = "Offline mode";
+"account.rolePlan" = "%@ · %@ · %@ tokens";
 "account.signInOrUp" = "Sign in / Sign up";
 "account.signInToSync" = "Sign in to sync";
 "account.signOut" = "Sign out";
 "account.syncFailed" = "Sync failed";
 "account.syncProjects" = "Sync projects";
 "account.synced" = "Synced";
+
+"admin.aiDisabled" = "Disable AI for this user";
+"admin.audit" = "Audit log";
+"admin.auditEmpty" = "No actions yet.";
+"admin.credits" = "Credits";
+"admin.creditsBalance" = "AI credits (tokens)";
+"admin.find" = "Search";
+"admin.grant" = "Grant credits";
+"admin.grantHint" = "A negative number takes credits away. Recorded in credit_ledger as admin_grant.";
+"admin.granted" = "%@ tokens for %@";
+"admin.lastAi" = "Last AI Fix";
+"admin.locale" = "Language";
+"admin.noUsers" = "No users";
+"admin.pickUser" = "Pick a user from the list";
+"admin.plan" = "Plan";
+"admin.planSet" = "%@ → plan %@";
+"admin.reason" = "Reason (optional)";
+"admin.role" = "Role";
+"admin.roleAndPlan" = "Role and plan";
+"admin.roleSet" = "%@ → role %@";
+"admin.search" = "Search by email or name…";
+"admin.subtitle" = "Users, roles, plans and credits — every action is logged";
+"admin.title" = "Admin";
+"admin.tokens" = "tokens";
 
 "aifix.chatgpt" = "Fix in ChatGPT";
 "aifix.chatgptHelp" = "New ChatGPT chat with a ready prompt";
@@ -19,6 +44,17 @@
 "aifix.help" = "Fix with AI — a new chat with a dedicated prompt: log, files, versions (keys are hidden)";
 "aifix.openedChat" = "Opened a new chat with a ready prompt";
 "aifix.openedCli" = "Opened %@ in the project folder";
+
+"aikeys.checking" = "Checking…";
+"aikeys.connectedHint" = "Connected · %@";
+"aikeys.getKey" = "Get a key";
+"aikeys.group" = "AI keys";
+"aikeys.intro" = "The built-in AI Fix uses your own key. It is stored only in the macOS Keychain and verified with one request.";
+"aikeys.notConnected" = "Not added";
+"aikeys.placeholder" = "API key";
+"aikeys.rejected" = "The key was rejected";
+"aikeys.remove" = "Remove";
+"aikeys.saved" = "The key is verified and stored in the Keychain";
 
 "auth.backToLogin" = "← Back to sign in";
 "auth.checkInbox" = "Check your inbox for a new-password link.";

@@ -313,6 +313,12 @@ Install Before I Deploy.command / Rebuild.command   двойно-кликаем�
 
 ---
 
+## 6a. Промени във V10 (актуализира се по седмици)
+
+- **Седмица 1–2 (WP6.1, WP1):** `App/Sources/BeforeIDeploy/Stores/` (ProjectStore, AccountStore, HostingStore, RunController; AppModel е фасада) · `engine/src/i18n.mjs` + `engine/i18n/{en,bg}.json` (`t()`, `msg()`, `BID_LANG`; `result.key/params` при грешка) · `App/Sources/BeforeIDeploy/Localization.swift` (`L()`), `App/Resources/{en,bg}.lproj`, `LanguageViews.swift` (избор на език при първо пускане, смяна без рестарт) · `scripts/i18n-check.mjs`, `scripts/i18n-lib.mjs`, `scripts/i18n-translate.mjs` (машинен превод, пуска се от собственика с негов ключ).
+- **Седмица 3 (WP2):** `supabase/schema.sql` v10 (profiles, subscriptions, credit_ledger + credit_balance, ai_usage, admin_audit, settings) · `supabase/functions/admin/index.ts` · `engine/src/features.mjs` (гейтове по роля/план; решения 3 и 5 са константи там) · `engine/src/aikeys.mjs` (VIP ключове в Keychain `ai-anthropic`/`ai-openai`) · `engine/src/admin.mjs` (`bid admin`) · `account status` връща `role, plan, locale, credits, features`; профилът се кешира в `profile.json` (без secrets); `account sync` се пропуска, ако планът няма cloud sync · App: `AdminView.swift`, `Stores/AdminStore.swift`, група „AI ключове“ в Настройка за vip/admin, роля/план в AccountBadge, езикът се записва в `profiles.locale`.
+- Нов exit код: `3` и за `forbidden` (не-admin вика `bid admin`).
+
 ## 7. Насоки за V10 (кандидати, приоритизирани по стойност/риск)
 
 1. **Реално покритие на Vercel / Cloudflare / GitHub Pages** — ръчно тестване с акаунти, SSR адаптери, връщане на preview URL от `vercel`/`wrangler` изхода, `hosting` стъпката да проверява и linked проект за тези доставчици.

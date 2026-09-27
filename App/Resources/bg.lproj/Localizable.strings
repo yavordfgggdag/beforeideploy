@@ -1,12 +1,37 @@
 /* Before I Deploy — Български. Keys are used from Swift via L("key"); formats use %@. */
 
 "account.offline" = "Офлайн режим";
+"account.rolePlan" = "%@ · %@ · %@ токена";
 "account.signInOrUp" = "Влез / Регистрирай се";
 "account.signInToSync" = "Влез, за да синхронизираш";
 "account.signOut" = "Изход";
 "account.syncFailed" = "Синхронизацията не успя";
 "account.syncProjects" = "Синхронизирай проектите";
 "account.synced" = "Синхронизирано";
+
+"admin.aiDisabled" = "Спри AI за този потребител";
+"admin.audit" = "Одит лог";
+"admin.auditEmpty" = "Още няма действия.";
+"admin.credits" = "Кредити";
+"admin.creditsBalance" = "AI кредити (токени)";
+"admin.find" = "Търси";
+"admin.grant" = "Дай кредити";
+"admin.grantHint" = "Отрицателно число взима кредити. Записва се в credit_ledger като admin_grant.";
+"admin.granted" = "%@ токена за %@";
+"admin.lastAi" = "Последен AI Fix";
+"admin.locale" = "Език";
+"admin.noUsers" = "Няма потребители";
+"admin.pickUser" = "Избери потребител от списъка";
+"admin.plan" = "План";
+"admin.planSet" = "%@ → план %@";
+"admin.reason" = "Причина (по желание)";
+"admin.role" = "Роля";
+"admin.roleAndPlan" = "Роля и план";
+"admin.roleSet" = "%@ → роля %@";
+"admin.search" = "Търси по имейл или име…";
+"admin.subtitle" = "Потребители, роли, планове и кредити — всяко действие се записва";
+"admin.title" = "Админ";
+"admin.tokens" = "токени";
 
 "aifix.chatgpt" = "Оправи в ChatGPT";
 "aifix.chatgptHelp" = "Нов чат в ChatGPT с готов prompt";
@@ -19,6 +44,17 @@
 "aifix.help" = "Оправи с AI — нов чат със специален prompt: лог, файлове, версии (ключовете се скриват)";
 "aifix.openedChat" = "Отворих нов чат с готов prompt";
 "aifix.openedCli" = "Отворих %@ в папката на проекта";
+
+"aikeys.checking" = "Проверявам…";
+"aikeys.connectedHint" = "Свързан · %@";
+"aikeys.getKey" = "Вземи ключ";
+"aikeys.group" = "AI ключове";
+"aikeys.intro" = "Вграденият AI Fix ползва твоя ключ. Пази се само в macOS Keychain и се проверява с една заявка.";
+"aikeys.notConnected" = "Не е добавен";
+"aikeys.placeholder" = "API ключ";
+"aikeys.rejected" = "Ключът беше отказан";
+"aikeys.remove" = "Премахни";
+"aikeys.saved" = "Ключът е проверен и запазен в Keychain";
 
 "auth.backToLogin" = "← Назад към вход";
 "auth.checkInbox" = "Провери пощата си за линк за нова парола.";

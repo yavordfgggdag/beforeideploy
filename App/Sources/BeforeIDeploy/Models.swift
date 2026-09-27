@@ -476,7 +476,87 @@ struct AccountState: Codable {
     var avatar: String?
     var provider: String?
     var confirmEmail: Bool?
+    // V10: from the cloud profile (engine `account status`)
+    var role: String?
+    var plan: String?
+    var locale: String?
+    var aiDisabled: Bool?
+    var credits: Credits?
+    var profileStale: Bool?
+    var hasOwnKey: Bool?
+    var features: Features?
+
+    struct Credits: Codable, Hashable {
+        var balance: Int
+    }
+
+    /// Feature gates computed by engine/src/features.mjs — the app only renders them.
+    struct Features: Codable, Hashable {
+        var aiCloud = false
+        var aiOwnKey = false
+        var aiBuiltin = false
+        var aiExternal = true
+        var aiDeep = false
+        var cloudSync = false
+        var adminPanel = false
+        var billingPlans = false
+        var projectsMax: Int?
+
+        enum CodingKeys: String, CodingKey {
+            case aiCloud = "ai.cloud", aiOwnKey = "ai.ownKey", aiBuiltin = "ai.builtin", aiExternal = "ai.external", aiDeep = "ai.deep"
+            case cloudSync = "cloud.sync", adminPanel = "admin.panel", billingPlans = "billing.plans", projectsMax = "projects.max"
+        }
+    }
+
+    var isAdmin: Bool { features?.adminPanel == true }
+    var canUseOwnKey: Bool { features?.aiOwnKey == true }
 }
+
+struct AIKeyStatus: Codable, Identifiable, Hashable {
+    var provider: String
+    var name: String
+    var connected: Bool
+    var hint: String?
+    var savedAt: String?
+    var console: String?
+    var id: String { provider }
+}
+
+struct AdminUser: Codable, Identifiable, Hashable {
+    var userId: String
+    var email: String
+    var displayName: String?
+    var locale: String?
+    var role: String
+    var plan: String
+    var aiDisabled: Bool?
+    var createdAt: String?
+    var balance: Int?
+    var lastAiAt: String?
+    var id: String { userId }
+
+    enum CodingKeys: String, CodingKey {
+        case userId = "user_id", email, displayName = "display_name", locale, role, plan
+        case aiDisabled = "ai_disabled", createdAt = "created_at", balance, lastAiAt = "last_ai_at"
+    }
+}
+
+struct AdminUsersResult: Codable { var users: [AdminUser] }
+struct AdminUserResult: Codable { var user: AdminUser }
+struct AdminGrantResult: Codable { var balance: Int }
+
+struct AdminAuditEntry: Codable, Identifiable, Hashable {
+    var id: Int
+    var adminId: String?
+    var action: String
+    var target: String?
+    var createdAt: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id, adminId = "admin_id", action, target, createdAt = "created_at"
+    }
+}
+struct AdminAuditResult: Codable { var entries: [AdminAuditEntry] }
 
 struct OAuthStart: Codable {
     var url: String

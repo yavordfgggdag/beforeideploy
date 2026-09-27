@@ -555,6 +555,10 @@ struct SetupView: View {
                     }
                     .card(padding: 20)
 
+                    if model.account?.canUseOwnKey == true {
+                        AIKeysCard()
+                    }
+
                     ForEach(groups(s.items)) { group in
                         VStack(alignment: .leading, spacing: 4) {
                             SectionLabel(text: group.name).padding(.bottom, 6)

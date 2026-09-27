@@ -283,6 +283,9 @@ struct AccountBadge: View {
         Menu {
             if a?.loggedIn == true {
                 Text(a?.email ?? "")
+                if let role = a?.role, let plan = a?.plan {
+                    Text(L("account.rolePlan", role, plan, Fmt.tokens(a?.credits?.balance ?? 0)))
+                }
                 Button(L("account.syncProjects")) { model.syncNow() }
                 Divider()
                 Button(L("account.signOut")) { model.logout() }
@@ -475,6 +478,11 @@ struct CommandPalette: View {
             PaletteCommand(title: L("common.domains"), subtitle: L("palette.domainsDetail"), icon: "network") { model.screen = .domains; Task { await model.loadSpaceship() } },
             PaletteCommand(title: L("common.costs"), subtitle: L("palette.costsDetail"), icon: "creditcard.fill") { model.screen = .costs; Task { await model.loadCosts() } },
             PaletteCommand(title: L("common.setup"), subtitle: L("palette.setupDetail"), icon: "wand.and.stars") { model.screen = .setup; Task { await model.loadSetup() } },
+        ]
+        if model.account?.isAdmin == true {
+            c.append(PaletteCommand(title: L("admin.title"), subtitle: L("admin.subtitle"), icon: "person.2.badge.gearshape.fill") { model.screen = .admin })
+        }
+        c += [
             PaletteCommand(title: L("common.addProject"), subtitle: L("palette.pickFolder"), icon: "plus") { model.addProjectPanel() },
         ]
         if let p = model.selected {

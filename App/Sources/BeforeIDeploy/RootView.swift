@@ -42,6 +42,8 @@ struct RootView: View {
                     CostsView()
                 } else if model.screen == .setup {
                     SetupView()
+                } else if model.screen == .admin, model.account?.isAdmin == true {
+                    ScrollView { AdminView() }
                 } else if let status = model.status {
                     DashboardView(status: status)
                         .id(status.project.key)

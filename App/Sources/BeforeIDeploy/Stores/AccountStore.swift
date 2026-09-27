@@ -6,6 +6,7 @@ import SwiftUI
 final class AccountStore: ObservableObject {
     @Published var account: AccountState?
     @Published var accountChecked = false
+    @Published var aiKeys: [AIKeyStatus] = []
     @AppStorage("offlineMode") var offlineMode = false
 
     let engine: EngineClient
@@ -108,6 +109,42 @@ final class AccountStore: ObservableObject {
                 feedback?.flash(o?.errorMessage ?? L("account.syncFailed"), error: true)
             }
         }
+    }
+
+    /// Saves the app language to profiles.locale (quietly — nothing to show when offline or logged out).
+    func saveLocale(_ code: String) {
+        guard account?.loggedIn == true else { return }
+        Task { _ = try? await engine.run(["account", "locale", "--set", code]) }
+    }
+
+    // MARK: - Own AI keys (vip/admin)
+
+    func loadAIKeys() async {
+        aiKeys = (try? await engine.call(["account", "keys", "status"], as: [AIKeyStatus].self)) ?? []
+    }
+
+    /// Verifies and stores the key (engine → Keychain). The key travels through the environment, never argv.
+    func setAIKey(provider: String, key: String) async -> Bool {
+        do {
+            let outcome = try await engine.run(["account", "keys", "set", "--provider", provider], env: ["BID_AI_KEY": key])
+            guard outcome.ok else {
+                feedback?.flash(outcome.errorMessage ?? L("aikeys.rejected"), error: true)
+                return false
+            }
+            feedback?.flash(L("aikeys.saved"), error: false)
+            await loadAIKeys()
+            await loadAccount()
+            return true
+        } catch {
+            feedback?.show(error)
+            return false
+        }
+    }
+
+    func deleteAIKey(provider: String) async {
+        _ = try? await engine.run(["account", "keys", "delete", "--provider", provider])
+        await loadAIKeys()
+        await loadAccount()
     }
 
     func configureCloud(url: String, key: String) async -> String? {
