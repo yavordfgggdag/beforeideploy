@@ -1,0 +1,604 @@
+import SwiftUI
+
+enum ProjectTab: String, CaseIterable, Hashable {
+    case overview = "Преглед"
+    case local = "Local"
+    case git = "GitHub"
+    case hosting = "Хостинг & домейн"
+    case history = "История"
+
+    var icon: String {
+        switch self {
+        case .overview: return "gauge.medium"
+        case .local: return "desktopcomputer"
+        case .git: return "arrow.triangle.branch"
+        case .hosting: return "globe"
+        case .history: return "clock.arrow.circlepath"
+        }
+    }
+}
+
+struct DashboardView: View {
+    @EnvironmentObject var model: AppModel
+    let status: ProjectStatus
+    @Local private var tab: ProjectTab = .overview
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                HeaderView(status: status)
+                if let setup = model.setup, setup.missingRequired > 0 {
+                    SetupBanner(missing: setup.missingRequired)
+                }
+                TabStrip(selection: $tab, badges: badges)
+
+                switch tab {
+                case .overview:
+                    HeroCard(status: status)
+                    HealthGrid(status: status)
+                    if !status.fixes.filter({ $0.id != "netlify.link" }).isEmpty {
+                        FixesCard(fixes: status.fixes.filter { $0.id != "netlify.link" })
+                    }
+                    HStack(alignment: .top, spacing: 14) {
+                        MiniStat(title: "Local", value: status.local.running ? Fmt.host(status.local.url) : "спрян",
+                                 tint: status.local.running ? Theme.ready : Theme.tertiary, icon: "desktopcomputer") { tab = .local }
+                        MiniStat(title: "GitHub", value: status.git.isRepo ? "\(status.git.changedCount ?? 0) промени" : "няма repo",
+                                 tint: (status.git.changedCount ?? 0) > 0 ? Theme.warn : Theme.text, icon: "arrow.triangle.branch") { tab = .git }
+                        MiniStat(title: "Live · \(status.hosting?.name ?? "Netlify")",
+                                 value: (status.hosting?.liveUrl ?? status.project.netlify?.liveUrl).map { Fmt.host($0) } ?? (status.hosting?.ready == true ? "свързан" : "не е свързан"),
+                                 tint: status.hosting?.ready == true ? Theme.text : Theme.tertiary, icon: "globe") { tab = .hosting }
+                    }
+                case .local:
+                    LocalCard(status: status)
+                case .git:
+                    GitCard(status: status)
+                case .hosting:
+                    HostingChooserCard()
+                    if (status.hosting?.provider ?? "netlify") == "netlify" {
+                        NetlifyCard(status: status)
+                    } else {
+                        GenericHostingCard(status: status)
+                    }
+                    DomainProjectCard(status: status)
+                case .history:
+                    HistoryStrip()
+                }
+            }
+            .padding(.horizontal, 32)
+            .padding(.top, 40)
+            .padding(.bottom, 32)
+            .frame(maxWidth: 1100)
+            .frame(maxWidth: .infinity)
+        }
+    }
+
+    var badges: [ProjectTab: String] {
+        var b: [ProjectTab: String] = [:]
+        let issues = (status.check?.counts?.fail ?? 0) + (status.check?.counts?.warn ?? 0)
+        if issues > 0 { b[.overview] = "\(issues)" }
+        if status.local.running { b[.local] = "●" }
+        if let c = status.git.changedCount, c > 0 { b[.git] = "\(c)" }
+        return b
+    }
+}
+
+struct TabStrip: View {
+    @Binding var selection: ProjectTab
+    var badges: [ProjectTab: String] = [:]
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(ProjectTab.allCases, id: \.self) { t in
+                Button {
+                    withAnimation(.easeOut(duration: 0.15)) { selection = t }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: t.icon).font(.system(size: 11.5, weight: .semibold))
+                        Text(t.rawValue).font(.system(size: 12.5, weight: .semibold))
+                        if let b = badges[t] {
+                            Text(b)
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(selection == t ? .white : Theme.secondary)
+                                .padding(.horizontal, 5).padding(.vertical, 1)
+                                .background(Capsule().fill(selection == t ? Color.white.opacity(0.25) : Theme.hover))
+                        }
+                    }
+                    .foregroundColor(selection == t ? .white : Theme.secondary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .fill(selection == t ? Theme.accent : Color.clear)
+                    )
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+            Spacer()
+        }
+        .padding(4)
+        .background(RoundedRectangle(cornerRadius: 11, style: .continuous).fill(Theme.panel))
+        .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
+    }
+}
+
+struct MiniStat: View {
+    let title: String
+    let value: String
+    var tint: Color = Theme.text
+    let icon: String
+    var action: () -> Void
+    @Local private var hover = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: icon).font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.accent).frame(width: 22)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title.uppercased()).font(.system(size: 10, weight: .bold)).tracking(0.8).foregroundColor(Theme.tertiary)
+                    Text(value).font(.system(size: 13.5, weight: .semibold)).foregroundColor(tint).lineLimit(1)
+                }
+                Spacer()
+                Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundColor(Theme.tertiary)
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity)
+            .background(RoundedRectangle(cornerRadius: 13, style: .continuous).fill(hover ? Theme.elevated : Theme.panel))
+            .overlay(RoundedRectangle(cornerRadius: 13, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hover = $0 }
+    }
+}
+
+// MARK: - Header
+
+struct HeaderView: View {
+    @EnvironmentObject var model: AppModel
+    let status: ProjectStatus
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 16) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(status.project.name)
+                    .font(.system(size: 28, weight: .bold))
+                    .foregroundColor(Theme.text)
+                    .lineLimit(1)
+                HStack(spacing: 6) {
+                    if status.git.isRepo, let b = status.git.branch {
+                        Chip(text: b, icon: "arrow.triangle.branch")
+                    }
+                    if let pm = status.detect.packageManager { Chip(text: pm, icon: "shippingbox") }
+                    if let fw = status.detect.framework, fw != "unknown" { Chip(text: fw, icon: "square.stack.3d.up") }
+                    if let dir = status.detect.publishDir, status.detect.ssr != true {
+                        Chip(text: dir + "/", icon: "folder", tint: status.detect.publishReady == true ? Theme.secondary : Theme.tertiary)
+                    }
+                    if status.detect.netlifyLinked == true {
+                        Chip(text: status.project.netlify?.siteName ?? "Netlify", icon: "globe", tint: Theme.ready)
+                    }
+                }
+                Text(status.project.path)
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundColor(Theme.tertiary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .textSelection(.enabled)
+            }
+            Spacer()
+            HStack(spacing: 8) {
+                IconButton(symbol: "folder", help: "Покажи във Finder") { model.revealInFinder(status.project.path) }
+                IconButton(symbol: "chevron.left.forwardslash.chevron.right", help: "Отвори в Cursor / VS Code") {
+                    model.openIn(app: ["Cursor", "Visual Studio Code"], path: status.project.path)
+                }
+                IconButton(symbol: "terminal", help: "Отвори в Terminal") { model.openIn(app: ["Terminal"], path: status.project.path) }
+                if model.loadingStatus {
+                    Spinner(size: 14).frame(width: 30, height: 30)
+                } else {
+                    IconButton(symbol: "arrow.clockwise", help: "Обнови (⇧⌘R)") { Task { await model.refreshStatus() } }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Hero
+
+struct HeroCard: View {
+    @EnvironmentObject var model: AppModel
+    let status: ProjectStatus
+
+    var state: String { status.check?.status ?? "unknown" }
+
+    var title: String {
+        switch state {
+        case "ready": return "READY TO DEPLOY"
+        case "warnings": return "READY WITH WARNINGS"
+        case "blocked": return "DEPLOY BLOCKED"
+        default: return "НЕ Е ПРОВЕРЕН"
+        }
+    }
+
+    var stale: Bool {
+        guard let d = Fmt.date(status.check?.at) else { return true }
+        return Date().timeIntervalSince(d) > 30 * 60
+    }
+
+    var body: some View {
+        let tint = state == "unknown" ? Theme.idle : Theme.color(for: state)
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(alignment: .center, spacing: 16) {
+                ZStack {
+                    Circle().fill(tint.opacity(0.16)).frame(width: 54, height: 54)
+                        .blur(radius: state == "unknown" ? 0 : 8)
+                    Circle().fill(tint.opacity(0.14)).frame(width: 46, height: 46)
+                    Image(systemName: state == "unknown" ? "questionmark" : Theme.symbol(for: state))
+                        .font(.system(size: 21, weight: .bold))
+                        .foregroundColor(tint)
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.system(size: 20, weight: .heavy))
+                        .tracking(0.6)
+                        .foregroundColor(Theme.text)
+                    HStack(spacing: 6) {
+                        if let c = status.check {
+                            Text("Проверено \(Fmt.relative(c.at))")
+                            if stale { Text("· остаряло").foregroundColor(Theme.warn) }
+                            if let d = c.duration { Text("· \(Fmt.duration(d))") }
+                        } else {
+                            Text("Пусни проверка, за да видиш дали проектът е готов")
+                        }
+                    }
+                    .font(.system(size: 12))
+                    .foregroundColor(Theme.secondary)
+                }
+                Spacer()
+                if let c = status.check?.counts {
+                    HStack(spacing: 6) {
+                        CountPill(value: c.pass, symbol: "checkmark", tint: Theme.ready)
+                        CountPill(value: c.info, symbol: "info", tint: Theme.info)
+                        CountPill(value: c.warn, symbol: "exclamationmark", tint: Theme.warn)
+                        CountPill(value: c.fail, symbol: "xmark", tint: Theme.blocked)
+                    }
+                }
+            }
+
+            if let steps = status.check?.steps {
+                HealthBar(steps: steps)
+                let issues = steps.filter { $0.status == "fail" || $0.status == "warn" }
+                if !issues.isEmpty {
+                    let hasFail = issues.contains { $0.status == "fail" }
+                    HStack(alignment: .center, spacing: 12) {
+                        Image(systemName: hasFail ? "xmark.octagon.fill" : "exclamationmark.triangle.fill")
+                            .font(.system(size: 18)).foregroundColor(hasFail ? Theme.blocked : Theme.warn)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(issues.map { $0.label ?? $0.id }.joined(separator: " · "))
+                                .font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.text).lineLimit(1)
+                            Text(issues.count == 1 ? (issues[0].summary ?? "") : "\(issues.count) проблема — един prompt за всички")
+                                .font(.system(size: 11.5)).foregroundColor(Theme.secondary).lineLimit(1)
+                        }
+                        Spacer()
+                        AIFixBar(step: issues.count == 1 ? issues[0].id : "all", compact: true)
+                    }
+                    .padding(12)
+                    .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill((hasFail ? Theme.blocked : Theme.warn).opacity(0.08)))
+                }
+            }
+
+            HStack(spacing: 10) {
+                Button {
+                    model.runCheck()
+                } label: {
+                    Label("Провери", systemImage: "arrow.triangle.2.circlepath")
+                }
+                .bidButton(.secondary)
+                .help("⌘R — Git, secrets, lint, typecheck, build")
+
+                Button {
+                    model.smartDeploy()
+                } label: {
+                    Label("Smart Deploy", systemImage: "bolt.fill")
+                }
+                .bidButton(.primary)
+                .help("⌘D — проверка → preview, спира при първата грешка")
+                .disabled(status.hosting.map { !$0.ready } ?? (status.detect.netlifyLinked != true))
+
+                Spacer()
+
+                if !(status.hosting?.ready ?? (status.detect.netlifyLinked == true)) {
+                    Text("Свържи хостинга, за да публикуваш")
+                        .font(.system(size: 12))
+                        .foregroundColor(Theme.tertiary)
+                    Button("Настрой хостинг") {
+                        if (status.hosting?.provider ?? "netlify") == "netlify" { model.sheet = .netlifySetup } else { model.screen = .setup }
+                    }
+                        .bidButton(.secondary)
+                } else {
+                    Button {
+                        model.sheet = .production
+                    } label: {
+                        Label("Production", systemImage: "paperplane.fill")
+                    }
+                    .bidButton(.danger)
+                    .disabled(state == "blocked")
+                    .help(state == "blocked" ? "Оправи грешките първо" : "Обновява LIVE сайта — с потвърждение")
+                }
+            }
+        }
+        .card(padding: 22)
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
+                .strokeBorder(tint.opacity(state == "unknown" ? 0 : 0.25), lineWidth: 1)
+        )
+    }
+}
+
+struct CountPill: View {
+    let value: Int
+    let symbol: String
+    let tint: Color
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: symbol).font(.system(size: 9, weight: .black))
+            Text("\(value)").font(.system(size: 12, weight: .bold)).monospacedDigit()
+        }
+        .foregroundColor(value == 0 ? Theme.tertiary : tint)
+        .padding(.horizontal, 9)
+        .padding(.vertical, 5)
+        .background(Capsule().fill(value == 0 ? Theme.elevated : tint.opacity(0.12)))
+    }
+}
+
+struct HealthBar: View {
+    let steps: [StepResult]
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(steps) { s in
+                RoundedRectangle(cornerRadius: 3, style: .continuous)
+                    .fill(s.status == "skipped" ? Theme.elevated : Theme.color(for: s.status).opacity(s.status == "info" ? 0.45 : 0.9))
+                    .frame(height: 6)
+                    .help("\(s.label ?? s.id): \(s.summary ?? s.status)")
+            }
+        }
+    }
+}
+
+// MARK: - Health grid
+
+struct HealthGrid: View {
+    @EnvironmentObject var model: AppModel
+    let status: ProjectStatus
+
+    static let placeholders: [(String, String)] = [
+        ("git", "Git"), ("secrets", "Secrets"), ("deps", "Зависимости"), ("lint", "Lint"),
+        ("typecheck", "Typecheck"), ("build", "Build"), ("hosting", "Hosting"),
+    ]
+
+    var body: some View {
+        let steps: [StepResult] = status.check?.steps ?? Self.placeholders.map {
+            StepResult(id: $0.0, label: $0.1, category: nil, status: "pending", summary: "—")
+        }
+        VStack(alignment: .leading, spacing: 10) {
+            SectionLabel(text: "Project health", icon: "waveform.path.ecg")
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 150, maximum: 400), spacing: 10)], spacing: 10) {
+                ForEach(steps) { s in
+                    HealthTile(step: s)
+                }
+            }
+        }
+    }
+}
+
+struct HealthTile: View {
+    @EnvironmentObject var model: AppModel
+    let step: StepResult
+    @Local private var showDetails = false
+    @Local private var hover = false
+
+    static func icon(_ id: String) -> String {
+        switch id {
+        case "git": return "arrow.triangle.branch"
+        case "secrets": return "lock.shield"
+        case "deps": return "shippingbox"
+        case "lint": return "text.magnifyingglass"
+        case "typecheck": return "curlybraces"
+        case "build": return "hammer"
+        case "hosting": return "globe"
+        default: return "circle"
+        }
+    }
+
+    var body: some View {
+        let tint = Theme.color(for: step.status)
+        Button {
+            showDetails.toggle()
+        } label: {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Image(systemName: Self.icon(step.id))
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(Theme.secondary)
+                    Text(step.label ?? step.id)
+                        .font(.system(size: 12.5, weight: .semibold))
+                        .foregroundColor(Theme.text)
+                    Spacer()
+                    Image(systemName: Theme.symbol(for: step.status))
+                        .font(.system(size: 12))
+                        .foregroundColor(tint)
+                }
+                Text(step.summary ?? "—")
+                    .font(.system(size: 11.5))
+                    .foregroundColor(Theme.secondary)
+                    .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, minHeight: 74, alignment: .topLeading)
+            .background(
+                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                    .fill(hover ? Theme.elevated : Theme.panel)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                    .strokeBorder(step.status == "fail" ? Theme.blocked.opacity(0.45) : Theme.hairline, lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .onHover { hover = $0 }
+        .popover(isPresented: $showDetails, arrowEdge: .bottom) {
+            StepDetailPopover(step: step)
+                .environmentObject(model)
+        }
+    }
+}
+
+struct StepDetailPopover: View {
+    @EnvironmentObject var model: AppModel
+    let step: StepResult
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Image(systemName: Theme.symbol(for: step.status)).foregroundColor(Theme.color(for: step.status))
+                Text(step.label ?? step.id).font(.system(size: 14, weight: .bold))
+                Spacer()
+                if let d = step.duration, d > 0 { Text(Fmt.duration(d)).foregroundColor(Theme.tertiary).font(.system(size: 11)) }
+            }
+            Text(step.summary ?? "").foregroundColor(Theme.secondary).font(.system(size: 12.5))
+            if let details = step.details, !details.isEmpty {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 3) {
+                        ForEach(Array(details.enumerated()), id: \.offset) { _, l in
+                            Text(l).font(.system(size: 11, design: .monospaced)).foregroundColor(Theme.text)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .textSelection(.enabled)
+                        }
+                    }
+                    .padding(10)
+                }
+                .frame(maxHeight: 220)
+                .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.bg))
+            }
+            if step.status == "fail" || step.status == "warn" {
+                AIFixBar(step: step.id, compact: true)
+            }
+            HStack {
+                ForEach(step.fixes ?? [], id: \.self) { f in
+                    Button("Оправи") { model.requestFix(f) }.bidButton(.primary, compact: true)
+                }
+                Spacer()
+                if let log = step.log {
+                    Button("Отвори лога") { model.openFile(log) }.bidButton(.secondary, compact: true)
+                }
+            }
+        }
+        .padding(16)
+        .frame(width: 440)
+        .background(Theme.panel)
+    }
+}
+
+// MARK: - Fixes
+
+struct FixesCard: View {
+    @EnvironmentObject var model: AppModel
+    let fixes: [FixItem]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionLabel(text: "Безопасни поправки", icon: "wand.and.stars")
+            ForEach(fixes) { f in
+                HStack(spacing: 12) {
+                    Image(systemName: f.risk == "caution" ? "exclamationmark.triangle.fill" : "wand.and.stars")
+                        .foregroundColor(f.risk == "caution" ? Theme.warn : Theme.accent)
+                        .frame(width: 20)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(f.title).font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.text)
+                        Text(f.description).font(.system(size: 11.5)).foregroundColor(Theme.secondary).lineLimit(2)
+                    }
+                    Spacer()
+                    Button("Прегледай") { model.requestFix(f.id) }
+                        .bidButton(.secondary, compact: true)
+                }
+            }
+        }
+        .card()
+    }
+}
+
+// MARK: - History strip
+
+struct HistoryStrip: View {
+    @EnvironmentObject var model: AppModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                SectionLabel(text: "История", icon: "clock")
+                Spacer()
+                Button("Всичко") { model.sheet = .history }.bidButton(.ghost, compact: true)
+            }
+            if model.history.isEmpty {
+                Text("Още няма събития за този проект.")
+                    .font(.system(size: 12))
+                    .foregroundColor(Theme.tertiary)
+                    .padding(.vertical, 6)
+            } else {
+                VStack(spacing: 0) {
+                    ForEach(model.history.prefix(8)) { e in
+                        HistoryRow(entry: e, showProject: false)
+                        if e.id != model.history.prefix(8).last?.id {
+                            Rectangle().fill(Theme.hairline).frame(height: 1)
+                        }
+                    }
+                }
+            }
+        }
+        .card()
+    }
+}
+
+struct HistoryRow: View {
+    @EnvironmentObject var model: AppModel
+    let entry: HistoryEntry
+    var showProject = true
+    @Local private var hover = false
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Text(Fmt.time(entry.ts))
+                .font(.system(size: 11.5, design: .monospaced))
+                .foregroundColor(Theme.tertiary)
+                .frame(width: 78, alignment: .leading)
+            Image(systemName: entry.symbol)
+                .font(.system(size: 11))
+                .foregroundColor(entry.status == "ok" ? Theme.ready : Theme.blocked)
+                .frame(width: 16)
+            Text(entry.title)
+                .font(.system(size: 12.5, weight: .medium))
+                .foregroundColor(Theme.text)
+            if showProject, let n = entry.projectName {
+                Text(n).font(.system(size: 11.5)).foregroundColor(Theme.secondary)
+            }
+            if let m = entry.message {
+                Text(m).font(.system(size: 11.5)).foregroundColor(Theme.tertiary).lineLimit(1)
+            }
+            Spacer()
+            if let d = entry.duration { Text(Fmt.duration(d)).font(.system(size: 11)).foregroundColor(Theme.tertiary) }
+            if let url = entry.url {
+                Button { model.open(url) } label: { Image(systemName: "arrow.up.right.square") }
+                    .buttonStyle(.plain).foregroundColor(Theme.secondary).help(url)
+            }
+            if let log = entry.log {
+                Button { model.openFile(log) } label: { Image(systemName: "doc.text") }
+                    .buttonStyle(.plain).foregroundColor(Theme.secondary).help("Отвори лога")
+            }
+        }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 6)
+        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(hover ? Theme.elevated : .clear))
+        .onHover { hover = $0 }
+    }
+}

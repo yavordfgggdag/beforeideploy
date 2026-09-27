@@ -1,0 +1,32 @@
+#!/bin/zsh
+# Before I Deploy V6 — engine launcher. Sets up a login-like PATH, then runs the Node engine.
+ENGINE_DIR="${0:A:h}"
+
+# PATH captured by install.sh from your real Terminal session
+[ -f "$ENGINE_DIR/env.zsh" ] && source "$ENGINE_DIR/env.zsh"
+
+export PATH="/opt/homebrew/bin:/usr/local/bin:$HOME/.volta/bin:$HOME/.bun/bin:$HOME/.local/bin:$HOME/Library/pnpm:$PATH:/usr/bin:/bin:/usr/sbin:/sbin"
+export LANG="en_US.UTF-8" LC_ALL="en_US.UTF-8"
+
+# nvm without the slow nvm.sh: prefer the default alias, else the newest installed version
+if ! command -v node >/dev/null 2>&1 && [ -d "$HOME/.nvm/versions/node" ]; then
+  NVM_DEFAULT=""
+  [ -f "$HOME/.nvm/alias/default" ] && NVM_DEFAULT="$(cat "$HOME/.nvm/alias/default")"
+  NODE_BIN=""
+  if [ -n "$NVM_DEFAULT" ]; then
+    NODE_BIN=( $HOME/.nvm/versions/node/v${NVM_DEFAULT#v}*/bin(N/) )
+    NODE_BIN="${NODE_BIN[-1]}"
+  fi
+  if [ -z "$NODE_BIN" ]; then
+    NODE_BIN=( $HOME/.nvm/versions/node/*/bin(Nn/) )
+    NODE_BIN="${NODE_BIN[-1]}"
+  fi
+  [ -n "$NODE_BIN" ] && export PATH="$NODE_BIN:$PATH"
+fi
+
+if ! command -v node >/dev/null 2>&1; then
+  print -r -- '{"type":"result","ok":false,"code":"no_node","error":"Node.js не е намерен. Инсталирай го от nodejs.org или с Homebrew."}'
+  exit 127
+fi
+
+exec node "$ENGINE_DIR/src/bid.mjs" "$@"
