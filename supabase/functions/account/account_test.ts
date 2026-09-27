@@ -1,0 +1,79 @@
+// deno test supabase/functions   (no network, no env: the database is in memory)
+import assert from "node:assert/strict";
+import { FakeDb, fakeDeps, post } from "../_shared/fake_supabase.ts";
+import { createAccountHandler } from "./handler.ts";
+
+const ME = { id: "u-me", email: "me@example.com", created_at: "2026-03-01T00:00:00Z" };
+const OTHER = "u-other";
+
+function world(loggedIn = true) {
+  const db = new FakeDb({
+    profiles: [
+      { user_id: ME.id, email: ME.email, role: "normal", plan: "high" },
+      { user_id: OTHER, email: "other@example.com", role: "normal", plan: "free" },
+    ],
+    subscriptions: [
+      { id: "s1", user_id: ME.id, provider: "paddle", provider_ref: "sub_1", status: "active", tier: "high" },
+      { id: "s2", user_id: ME.id, provider: "manual", provider_ref: null, status: "canceled", tier: "flash" },
+      { id: "s3", user_id: OTHER, provider: "paddle", provider_ref: "sub_9", status: "active", tier: "knight" },
+    ],
+    credit_ledger: [{ user_id: ME.id, delta: 1000000, bucket: "plan", reason: "monthly_grant" }, { user_id: OTHER, delta: 5, bucket: "topup", reason: "admin_grant" }],
+    ai_usage: [{ user_id: ME.id, charged_tokens: 6000, model: "claude-sonnet-5" }],
+    bid_projects: [{ user_id: ME.id, key: "p1", name: "My site" }, { user_id: OTHER, key: "p2", name: "Theirs" }],
+    admin_audit: [],
+  }, loggedIn ? ME : null);
+  return { db, handle: createAccountHandler(fakeDeps(db)) };
+}
+
+Deno.test("account: only POST, JSON and a session", async () => {
+  const { handle } = world();
+  assert.equal((await handle(new Request("http://functions.local/account"))).status, 405);
+  assert.equal((await handle(post("account", "{"))).status, 400);
+  assert.equal((await handle(post("account", { action: "export" }, null))).status, 401);
+  assert.equal((await world(false).handle(post("account", { action: "export" }))).status, 401);
+  assert.equal((await handle(post("account", { action: "teleport" }))).status, 400);
+});
+
+Deno.test("account: export returns only the caller's rows, from every table", async () => {
+  const { handle } = world();
+  const res = await handle(post("account", { action: "export" }));
+  assert.equal(res.status, 200);
+  const j = await res.json();
+  assert.deepEqual(j.user, { id: ME.id, email: ME.email, created_at: ME.created_at });
+  assert.match(j.exportedAt, /^\d{4}-/);
+  assert.equal(j.profile.plan, "high");
+  assert.deepEqual(j.subscriptions.map((s: { id: string }) => s.id), ["s1", "s2"]);
+  assert.equal(j.credit_ledger.length, 1);
+  assert.equal(j.credit_ledger[0].delta, 1000000);
+  assert.equal(j.ai_usage.length, 1);
+  assert.deepEqual(j.projects.map((p: { key: string }) => p.key), ["p1"]);
+});
+
+Deno.test("account: delete cancels active subscriptions, audits and removes the auth user", async () => {
+  const { db, handle } = world();
+  const res = await handle(post("account", { action: "delete" }));
+  assert.equal(res.status, 200);
+  assert.deepEqual(await res.json(), { deleted: true });
+  assert.deepEqual(db.deletedUsers, [ME.id]);
+  // the caller's rows are gone (cascade), the other user's stay
+  assert.equal(db.rows("profiles").length, 1);
+  assert.equal(db.rows("bid_projects")[0].key, "p2");
+  assert.equal(db.rows("subscriptions").find((s) => s.id === "s3")?.status, "active");
+  const audit = db.rows("admin_audit");
+  assert.equal(audit.length, 1);
+  assert.equal(audit[0].action, "delete_me");
+  assert.equal(audit[0].admin_id, ME.id);
+  assert.equal(audit[0].target, ME.id);
+  assert.deepEqual(audit[0].payload, { email: ME.email, subscriptions: 1 });
+});
+
+Deno.test("account: delete marks the subscriptions canceled before the user goes", async () => {
+  const { db, handle } = world();
+  // keep the rows around to inspect the update: no admin API → the handler fails after the update
+  db.auth.admin = undefined as unknown as typeof db.auth.admin;
+  const res = await handle(post("account", { action: "delete" }));
+  assert.equal(res.status, 500);
+  const mine = db.rows("subscriptions").filter((s) => s.user_id === ME.id);
+  assert.ok(mine.every((s) => s.status === "canceled"));
+  assert.ok(mine.find((s) => s.id === "s1")?.cancel_at);
+});
