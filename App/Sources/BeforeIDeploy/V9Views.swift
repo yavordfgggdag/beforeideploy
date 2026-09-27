@@ -20,25 +20,25 @@ struct AuthView: View {
             VStack(alignment: .leading, spacing: 18) {
                 Spacer()
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(mode == 1 ? "Създай акаунт" : mode == 2 ? "Нова парола" : "Добре дошъл отново")
+                    Text(mode == 1 ? L("auth.createAccount") : mode == 2 ? L("auth.newPassword") : L("auth.welcomeBack"))
                         .font(.system(size: 28, weight: .bold)).foregroundColor(Theme.text)
-                    Text(mode == 1 ? "Един акаунт за всички твои сайтове, хостинги и домейни."
-                         : mode == 2 ? "Ще ти изпратим линк за нова парола."
-                         : "Влез, за да продължиш към проектите си.")
+                    Text(mode == 1 ? L("auth.signupSubtitle")
+                         : mode == 2 ? L("auth.recoverSubtitle")
+                         : L("auth.loginSubtitle"))
                         .font(.system(size: 13.5)).foregroundColor(Theme.secondary)
                 }
 
                 if mode != 2 {
-                    SegmentedControl(options: [("Вход", 0), ("Регистрация", 1)], selection: $mode)
+                    SegmentedControl(options: [(L("auth.signIn"), 0), (L("auth.signUp"), 1)], selection: $mode)
                 }
 
                 VStack(spacing: 10) {
                     if mode == 1 {
-                        AuthField(icon: "person", placeholder: "Име", text: $name)
+                        AuthField(icon: "person", placeholder: L("auth.name"), text: $name)
                     }
-                    AuthField(icon: "envelope", placeholder: "Имейл", text: $email)
+                    AuthField(icon: "envelope", placeholder: L("auth.email"), text: $email)
                     if mode != 2 {
-                        AuthField(icon: "lock", placeholder: mode == 1 ? "Парола (поне 8 символа)" : "Парола", text: $password, secure: true)
+                        AuthField(icon: "lock", placeholder: mode == 1 ? L("auth.passwordMin") : L("auth.password"), text: $password, secure: true)
                     }
                 }
 
@@ -56,7 +56,7 @@ struct AuthView: View {
                     HStack {
                         Spacer()
                         if busy { Spinner(size: 13, color: .white) }
-                        Text(mode == 1 ? "Създай акаунт" : mode == 2 ? "Изпрати линк" : "Вход")
+                        Text(mode == 1 ? L("auth.createAccount") : mode == 2 ? L("auth.sendLink") : L("auth.signIn"))
                         Spacer()
                     }
                 }
@@ -67,14 +67,14 @@ struct AuthView: View {
                 if mode != 2 {
                     HStack(spacing: 10) {
                         Rectangle().fill(Theme.hairline).frame(height: 1)
-                        Text("или").font(.system(size: 11.5)).foregroundColor(Theme.tertiary)
+                        Text(L("auth.or")).font(.system(size: 11.5)).foregroundColor(Theme.tertiary)
                         Rectangle().fill(Theme.hairline).frame(height: 1)
                     }
                     Button { model.oauth("github") } label: {
                         HStack {
                             Spacer()
                             Image(systemName: "chevron.left.forwardslash.chevron.right")
-                            Text("Продължи с GitHub")
+                            Text(L("auth.github"))
                             Spacer()
                         }
                     }
@@ -83,18 +83,18 @@ struct AuthView: View {
 
                 HStack {
                     if mode == 0 {
-                        Button("Забравена парола?") { withAnimation { mode = 2; error = nil; info = nil } }
+                        Button(L("auth.forgot")) { withAnimation { mode = 2; error = nil; info = nil } }
                             .buttonStyle(.plain).foregroundColor(Theme.accent).font(.system(size: 12.5))
                     } else if mode == 2 {
-                        Button("← Назад към вход") { withAnimation { mode = 0; error = nil; info = nil } }
+                        Button(L("auth.backToLogin")) { withAnimation { mode = 0; error = nil; info = nil } }
                             .buttonStyle(.plain).foregroundColor(Theme.accent).font(.system(size: 12.5))
                     }
                     Spacer()
-                    Button("Продължи без акаунт") { model.continueOffline() }
+                    Button(L("auth.continueOffline")) { model.continueOffline() }
                         .buttonStyle(.plain).foregroundColor(Theme.tertiary).font(.system(size: 12))
                 }
                 Spacer()
-                Text("Ключовете за Netlify, GitHub, Vercel и т.н. остават само на твоя Mac (Keychain). В акаунта се пазят само имената и статусите на проектите.")
+                Text(L("auth.privacyNote"))
                     .font(.system(size: 11)).foregroundColor(Theme.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -117,13 +117,13 @@ struct AuthView: View {
             case 1:
                 result = await model.signup(email: e, password: password, name: name)
                 if result == "CONFIRM" {
-                    info = "Изпратихме ти имейл за потвърждение. Потвърди го и влез."
+                    info = L("auth.confirmEmail")
                     mode = 0
                     result = nil
                 }
             case 2:
                 result = await model.recover(email: e)
-                if result == nil { info = "Провери пощата си за линк за нова парола." }
+                if result == nil { info = L("auth.checkInbox") }
             default:
                 result = await model.login(email: e, password: password)
             }
@@ -161,13 +161,15 @@ struct AuthField: View {
 }
 
 struct BrandPanel: View {
-    let features: [(String, String, String)] = [
-        ("checkmark.seal.fill", "Проверка преди всеки deploy", "Git, secrets, lint, типове и build — автоматично"),
-        ("globe", "Хостинг по твой избор", "Netlify, Vercel, Cloudflare Pages, GitHub Pages — с цени"),
-        ("network", "Домейни и DNS", "Свързване на домейн с хостинг с един бутон"),
-        ("sparkles", "AI оправя грешките", "ChatGPT, Claude и Codex с готов prompt"),
-        ("creditcard.fill", "Разходи под контрол", "Кредити, бюджети и цена преди всеки deploy"),
-    ]
+    var features: [(String, String, String)] {
+        [
+            ("checkmark.seal.fill", L("welcome.feature.check"), L("welcome.feature.checkDetail")),
+            ("globe", L("welcome.feature.hosting"), L("welcome.feature.hostingDetail")),
+            ("network", L("welcome.feature.domains"), L("welcome.feature.domainsDetail")),
+            ("sparkles", L("welcome.feature.ai"), L("welcome.feature.aiDetail")),
+            ("creditcard.fill", L("welcome.feature.costs"), L("welcome.feature.costsDetail")),
+        ]
+    }
 
     var body: some View {
         ZStack {
@@ -184,10 +186,10 @@ struct BrandPanel: View {
                     .frame(width: 50, height: 50)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Before I Deploy").font(.system(size: 22, weight: .bold)).foregroundColor(.white)
-                        Text("Launchpad за уеб проекти").font(.system(size: 13)).foregroundColor(.white.opacity(0.75))
+                        Text(L("welcome.tagline")).font(.system(size: 13)).foregroundColor(.white.opacity(0.75))
                     }
                 }
-                Text("От код до live сайт —\nбез нито една команда.")
+                Text(L("welcome.headline"))
                     .font(.system(size: 34, weight: .heavy))
                     .foregroundColor(.white)
                     .fixedSize(horizontal: false, vertical: true)
@@ -227,19 +229,19 @@ struct CloudSetupView: View {
             BrandPanel().frame(maxWidth: .infinity, maxHeight: .infinity)
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("Свържи облака за акаунти").font(.system(size: 24, weight: .bold)).foregroundColor(Theme.text)
-                    Text("Прави се само веднъж — от теб като собственик. Приятелите и клиентите ти после само се регистрират.")
+                    Text(L("cloud.title")).font(.system(size: 24, weight: .bold)).foregroundColor(Theme.text)
+                    Text(L("cloud.subtitle"))
                         .font(.system(size: 13)).foregroundColor(Theme.secondary)
                     VStack(alignment: .leading, spacing: 10) {
-                        StepLine(n: 1, text: "Създай безплатен проект в Supabase.")
-                        StepLine(n: 2, text: "SQL Editor → постави схемата (бутонът отдолу я копира) → Run.")
-                        StepLine(n: 3, text: "Project Settings → API: копирай Project URL и anon public key и ги постави тук.")
-                        StepLine(n: 4, text: "По желание: Authentication → Providers → GitHub, и добави beforeideploy://auth-callback в Redirect URLs.")
+                        StepLine(n: 1, text: L("cloud.step1"))
+                        StepLine(n: 2, text: L("cloud.step2"))
+                        StepLine(n: 3, text: L("cloud.step3"))
+                        StepLine(n: 4, text: L("cloud.step4"))
                     }
                     HStack {
-                        Button { model.open("https://supabase.com/dashboard/new") } label: { Label("Отвори Supabase", systemImage: "safari") }
+                        Button { model.open("https://supabase.com/dashboard/new") } label: { Label(L("cloud.openSupabase"), systemImage: "safari") }
                             .bidButton(.secondary, compact: true)
-                        Button { model.copyCloudSchema() } label: { Label("Копирай SQL схемата", systemImage: "doc.on.doc") }
+                        Button { model.copyCloudSchema() } label: { Label(L("cloud.copySchema"), systemImage: "doc.on.doc") }
                             .bidButton(.secondary, compact: true)
                     }
                     BIDTextField(placeholder: "https://xxxx.supabase.co", text: $url, mono: true)
@@ -255,13 +257,13 @@ struct CloudSetupView: View {
                         HStack {
                             Spacer()
                             if busy { Spinner(size: 12, color: .white) }
-                            Text("Свържи")
+                            Text(L("common.connect"))
                             Spacer()
                         }
                     }
                         .bidButton(.primary)
                         .disabled(url.isEmpty || key.isEmpty || busy)
-                    Button("Продължи без акаунт засега") { model.continueOffline() }
+                    Button(L("cloud.continueOffline")) { model.continueOffline() }
                         .buttonStyle(.plain).foregroundColor(Theme.tertiary).font(.system(size: 12))
                 }
                 .padding(48)
@@ -281,11 +283,11 @@ struct AccountBadge: View {
         Menu {
             if a?.loggedIn == true {
                 Text(a?.email ?? "")
-                Button("Синхронизирай проектите") { model.syncNow() }
+                Button(L("account.syncProjects")) { model.syncNow() }
                 Divider()
-                Button("Изход") { model.logout() }
+                Button(L("account.signOut")) { model.logout() }
             } else {
-                Button("Влез / Регистрирай се") { model.offlineMode = false }
+                Button(L("account.signInOrUp")) { model.offlineMode = false }
             }
         } label: {
             HStack(spacing: 9) {
@@ -296,9 +298,9 @@ struct AccountBadge: View {
                 }
                 .frame(width: 26, height: 26)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(a?.loggedIn == true ? (a?.name ?? "Акаунт") : "Офлайн режим")
+                    Text(a?.loggedIn == true ? (a?.name ?? L("common.account")) : L("account.offline"))
                         .font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text).lineLimit(1)
-                    Text(a?.loggedIn == true ? (a?.email ?? "") : "Влез, за да синхронизираш")
+                    Text(a?.loggedIn == true ? (a?.email ?? "") : L("account.signInToSync"))
                         .font(.system(size: 10.5)).foregroundColor(Theme.tertiary).lineLimit(1)
                 }
                 Spacer()
@@ -320,15 +322,15 @@ struct HostingChooserCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            PanelHeader(title: "Къде да се хоства?", icon: "server.rack", trailing: model.advice.map { "\($0.framework ?? "") · \($0.ssr ? "SSR" : "статичен")" })
+            PanelHeader(title: L("hosting.whereTitle"), icon: "server.rack", trailing: model.advice.map { "\($0.framework ?? "") · \($0.ssr ? "SSR" : "статичен")" })
             if let a = model.advice {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 250), spacing: 10)], spacing: 10) {
                     ForEach(a.providers) { p in HostingOptionTile(option: p) }
                 }
-                Text("Цените и условията се променят — провери официалната страница с бутона „Цени“, преди да избереш платен план.")
+                Text(L("hosting.pricesNote"))
                     .font(.system(size: 11)).foregroundColor(Theme.tertiary)
             } else {
-                HStack { Spinner(size: 13); Text("Анализирам проекта…").font(.system(size: 12)).foregroundColor(Theme.secondary) }
+                HStack { Spinner(size: 13); Text(L("hosting.analyzing")).font(.system(size: 12)).foregroundColor(Theme.secondary) }
             }
         }
         .card()
@@ -346,9 +348,9 @@ struct HostingOptionTile: View {
                 Text(option.name).font(.system(size: 14, weight: .bold)).foregroundColor(option.compatible ? Theme.text : Theme.tertiary)
                 Spacer()
                 if option.current {
-                    Tag(text: "ИЗБРАН", tint: Theme.accent)
+                    Tag(text: L("hosting.selectedBadge"), tint: Theme.accent)
                 } else if option.recommended == true {
-                    Tag(text: "ПРЕПОРЪЧАН", tint: Theme.ready)
+                    Tag(text: L("hosting.recommendedBadge"), tint: Theme.ready)
                 }
             }
             Text(option.free).font(.system(size: 11.5)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
@@ -359,15 +361,15 @@ struct HostingOptionTile: View {
             }
             HStack(spacing: 6) {
                 StatusPill(ok: option.installed, text: "CLI")
-                StatusPill(ok: option.loggedIn, text: "вход")
+                StatusPill(ok: option.loggedIn, text: L("hosting.signInLower"))
                 if option.preview { StatusPill(ok: true, text: "preview") }
                 Spacer()
             }
             HStack {
-                Button("Цени") { model.open(option.pricing) }.bidButton(.ghost, compact: true)
+                Button(L("hosting.prices")) { model.open(option.pricing) }.bidButton(.ghost, compact: true)
                 Spacer()
                 if !option.current {
-                    Button("Избери") { model.setHosting(option.id) }
+                    Button(L("hosting.choose")) { model.setHosting(option.id) }
                         .bidButton(option.recommended == true ? .primary : .secondary, compact: true)
                         .disabled(!option.compatible)
                 }
@@ -413,25 +415,25 @@ struct GenericHostingCard: View {
         let h = status.hosting
         let live = h?.liveUrl ?? status.lastProd?.url
         VStack(alignment: .leading, spacing: 14) {
-            PanelHeader(title: h?.name ?? "Хостинг", icon: "globe", status: h?.ready == true ? "pass" : nil,
-                        trailing: h?.loggedIn == true ? "влязъл" : "не си влязъл")
+            PanelHeader(title: h?.name ?? L("common.hosting"), icon: "globe", status: h?.ready == true ? "pass" : nil,
+                        trailing: h?.loggedIn == true ? L("common.signedInLower") : L("common.notSignedInLower"))
             if h?.installed != true || h?.loggedIn != true {
                 HStack {
-                    Text(h?.installed != true ? "\(h?.name ?? "") CLI не е инсталиран." : "Влез в \(h?.name ?? "") — отваря се браузърът.")
+                    Text(h?.installed != true ? L("hosting.cliMissing", h?.name ?? "") : L("hosting.signInHint", h?.name ?? ""))
                         .font(.system(size: 12.5)).foregroundColor(Theme.secondary)
                     Spacer()
-                    Button("Настрой") { model.screen = .setup; Task { await model.loadSetup() } }
+                    Button(L("hosting.setUp")) { model.screen = .setup; Task { await model.loadSetup() } }
                         .bidButton(.primary, compact: true)
                 }
             } else {
                 HStack(alignment: .top, spacing: 24) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("LIVE").font(.system(size: 10, weight: .bold)).tracking(1).foregroundColor(Theme.tertiary)
-                        Text(live.map { Fmt.host($0) } ?? "още няма production")
+                        Text(live.map { Fmt.host($0) } ?? L("hosting.noProductionYet"))
                             .font(.system(size: 15, weight: .semibold)).foregroundColor(live == nil ? Theme.tertiary : Theme.text)
                     }
-                    DeployStat(title: "Последен production", record: status.lastProd, fallback: nil)
-                    DeployStat(title: "Последен preview", record: status.lastDraft, fallback: nil)
+                    DeployStat(title: L("hosting.lastProduction"), record: status.lastProd, fallback: nil)
+                    DeployStat(title: L("hosting.lastPreview"), record: status.lastDraft, fallback: nil)
                     Spacer()
                 }
                 HStack(spacing: 8) {
@@ -441,7 +443,7 @@ struct GenericHostingCard: View {
                     }
                     Spacer()
                     if let live {
-                        Button { model.open(live) } label: { Label("Отвори сайта", systemImage: "safari") }
+                        Button { model.open(live) } label: { Label(L("common.openSite"), systemImage: "safari") }
                             .bidButton(.secondary, compact: true)
                         Button { model.copy(live) } label: { Image(systemName: "doc.on.doc") }
                             .bidButton(.secondary, compact: true)
@@ -469,23 +471,23 @@ struct CommandPalette: View {
 
     var commands: [PaletteCommand] {
         var c: [PaletteCommand] = [
-            PaletteCommand(title: "Mission Control", subtitle: "Всички проекти", icon: "square.grid.2x2.fill") { model.screen = .overview; Task { await model.loadOverview() } },
-            PaletteCommand(title: "Домейни", subtitle: "Spaceship, DNS, изтичане", icon: "network") { model.screen = .domains; Task { await model.loadSpaceship() } },
-            PaletteCommand(title: "Разходи & кредити", subtitle: "Колко струва всичко", icon: "creditcard.fill") { model.screen = .costs; Task { await model.loadCosts() } },
-            PaletteCommand(title: "Настройка", subtitle: "Инструменти и акаунти", icon: "wand.and.stars") { model.screen = .setup; Task { await model.loadSetup() } },
-            PaletteCommand(title: "Добави проект", subtitle: "Избери папка", icon: "plus") { model.addProjectPanel() },
+            PaletteCommand(title: "Mission Control", subtitle: L("common.allProjects"), icon: "square.grid.2x2.fill") { model.screen = .overview; Task { await model.loadOverview() } },
+            PaletteCommand(title: L("common.domains"), subtitle: L("palette.domainsDetail"), icon: "network") { model.screen = .domains; Task { await model.loadSpaceship() } },
+            PaletteCommand(title: L("common.costs"), subtitle: L("palette.costsDetail"), icon: "creditcard.fill") { model.screen = .costs; Task { await model.loadCosts() } },
+            PaletteCommand(title: L("common.setup"), subtitle: L("palette.setupDetail"), icon: "wand.and.stars") { model.screen = .setup; Task { await model.loadSetup() } },
+            PaletteCommand(title: L("common.addProject"), subtitle: L("palette.pickFolder"), icon: "plus") { model.addProjectPanel() },
         ]
         if let p = model.selected {
             c += [
-                PaletteCommand(title: "Провери \(p.name)", subtitle: "Git, secrets, lint, build", icon: "arrow.triangle.2.circlepath") { model.runCheck() },
-                PaletteCommand(title: "Smart Deploy \(p.name)", subtitle: "Проверка → preview", icon: "bolt.fill") { model.smartDeploy() },
-                PaletteCommand(title: "Local Preview \(p.name)", subtitle: "Стартира локален сървър", icon: "desktopcomputer") { model.localStart() },
+                PaletteCommand(title: L("palette.checkProject", p.name), subtitle: "Git, secrets, lint, build", icon: "arrow.triangle.2.circlepath") { model.runCheck() },
+                PaletteCommand(title: "Smart Deploy \(p.name)", subtitle: L("palette.smartDetail"), icon: "bolt.fill") { model.smartDeploy() },
+                PaletteCommand(title: "Local Preview \(p.name)", subtitle: L("palette.localDetail"), icon: "desktopcomputer") { model.localStart() },
                 PaletteCommand(title: "Commit & Push", subtitle: p.name, icon: "arrow.up.circle.fill") { model.sheet = .commit },
-                PaletteCommand(title: "Production \(p.name)", subtitle: "С потвърждение DEPLOY", icon: "paperplane.fill") { model.sheet = .production },
+                PaletteCommand(title: "Production \(p.name)", subtitle: L("palette.productionDetail"), icon: "paperplane.fill") { model.sheet = .production },
             ]
         }
         for p in model.projects {
-            c.append(PaletteCommand(title: p.name, subtitle: "Отвори проекта", icon: "folder.fill") { Task { await model.select(p.key) } })
+            c.append(PaletteCommand(title: p.name, subtitle: L("palette.openProject"), icon: "folder.fill") { Task { await model.select(p.key) } })
         }
         return c
     }
@@ -502,7 +504,7 @@ struct CommandPalette: View {
             VStack(spacing: 0) {
                 HStack(spacing: 10) {
                     Image(systemName: "magnifyingglass").foregroundColor(Theme.tertiary)
-                    TextField("Какво искаш да направиш?", text: $query)
+                    TextField(L("palette.placeholder"), text: $query)
                         .textFieldStyle(.plain)
                         .font(.system(size: 16))
                         .foregroundColor(Theme.text)
@@ -533,7 +535,7 @@ struct CommandPalette: View {
                             .buttonStyle(.plain)
                         }
                         if filtered.isEmpty {
-                            Text("Нищо не намерих").foregroundColor(Theme.tertiary).padding(20)
+                            Text(L("palette.nothingFound")).foregroundColor(Theme.tertiary).padding(20)
                         }
                     }
                     .padding(8)

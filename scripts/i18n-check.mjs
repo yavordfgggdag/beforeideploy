@@ -1,0 +1,158 @@
+#!/usr/bin/env node
+// i18n consistency check for the engine catalogs (engine/i18n/*.json) and the app (App/Resources/*.lproj).
+//   node scripts/i18n-check.mjs [--allow-cyrillic]
+// Fails when: a language misses a key the English catalog has (or has extra ones), placeholders differ,
+// a key used in the code is missing, a catalog key is unused, or Swift code has a hard-coded Cyrillic literal.
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const allowCyrillic = process.argv.includes('--allow-cyrillic');
+const errors = [];
+const warn = [];
+
+// ---------------------------------------------------------------- .strings parser
+
+export function parseStrings(text, file = '') {
+  const out = {};
+  let i = 0;
+  const n = text.length;
+  const skip = () => {
+    for (;;) {
+      while (i < n && /\s/.test(text[i])) i++;
+      if (text.startsWith('/*', i)) {
+        const end = text.indexOf('*/', i + 2);
+        i = end < 0 ? n : end + 2;
+      } else if (text.startsWith('//', i)) {
+        const end = text.indexOf('\n', i);
+        i = end < 0 ? n : end + 1;
+      } else return;
+    }
+  };
+  const str = () => {
+    if (text[i] !== '"') throw new Error(`${file}: expected " at ${i}`);
+    i++;
+    let s = '';
+    while (i < n && text[i] !== '"') {
+      if (text[i] === '\\') {
+        const c = text[i + 1];
+        if (c === 'n') s += '\n';
+        else if (c === 't') s += '\t';
+        else if (c === 'U' || c === 'u') {
+          s += String.fromCharCode(parseInt(text.slice(i + 2, i + 6), 16));
+          i += 4;
+        } else s += c;
+        i += 2;
+      } else s += text[i++];
+    }
+    i++;
+    return s;
+  };
+  for (;;) {
+    skip();
+    if (i >= n) break;
+    const key = str();
+    skip();
+    if (text[i] !== '=') throw new Error(`${file}: expected = after "${key}"`);
+    i++;
+    skip();
+    const value = str();
+    skip();
+    if (text[i] !== ';') throw new Error(`${file}: expected ; after "${key}"`);
+    i++;
+    if (key in out) errors.push(`${file}: duplicate key ${key}`);
+    out[key] = value;
+  }
+  return out;
+}
+
+const cFormats = (s) => (String(s).match(/%(\d+\$)?[@dfs]/g) || []).length;
+const braces = (s) => [...String(s).matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort().join(',');
+
+function compare(label, catalogs, placeholders) {
+  const en = catalogs.en;
+  if (!en) {
+    errors.push(`${label}: no English catalog`);
+    return;
+  }
+  for (const [lang, cat] of Object.entries(catalogs)) {
+    if (lang === 'en') continue;
+    const missing = Object.keys(en).filter((k) => !(k in cat));
+    const extra = Object.keys(cat).filter((k) => !(k in en));
+    if (missing.length) errors.push(`${label} ${lang}: missing ${missing.length} key(s): ${missing.slice(0, 10).join(', ')}`);
+    if (extra.length) errors.push(`${label} ${lang}: ${extra.length} key(s) not in en: ${extra.slice(0, 10).join(', ')}`);
+    for (const k of Object.keys(en)) {
+      if (!(k in cat)) continue;
+      if (typeof cat[k] !== 'string' || !cat[k]) errors.push(`${label} ${lang}: empty ${k}`);
+      else if (placeholders(cat[k]) !== placeholders(en[k])) errors.push(`${label} ${lang}: placeholders differ in ${k}`);
+    }
+  }
+}
+
+// ---------------------------------------------------------------- engine
+
+const engineDir = path.join(ROOT, 'engine', 'i18n');
+const engine = {};
+for (const f of fs.readdirSync(engineDir).filter((f) => f.endsWith('.json'))) {
+  const data = JSON.parse(fs.readFileSync(path.join(engineDir, f), 'utf8'));
+  delete data._meta;
+  engine[f.slice(0, -5)] = data;
+}
+compare('engine', engine, braces);
+
+// ---------------------------------------------------------------- app
+
+const resDir = path.join(ROOT, 'App', 'Resources');
+const app = {};
+if (fs.existsSync(resDir)) {
+  for (const d of fs.readdirSync(resDir).filter((d) => d.endsWith('.lproj'))) {
+    const file = path.join(resDir, d, 'Localizable.strings');
+    if (fs.existsSync(file)) app[d.slice(0, -6)] = parseStrings(fs.readFileSync(file, 'utf8'), path.relative(ROOT, file));
+  }
+}
+compare('app', app, (s) => String(cFormats(s)));
+
+const swiftDir = path.join(ROOT, 'App', 'Sources');
+const swiftFiles = [];
+const walk = (d) => {
+  for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+    const p = path.join(d, e.name);
+    if (e.isDirectory()) walk(p);
+    else if (e.name.endsWith('.swift')) swiftFiles.push(p);
+  }
+};
+walk(swiftDir);
+
+const used = new Set();
+let cyrillic = 0;
+for (const f of swiftFiles) {
+  const text = fs.readFileSync(f, 'utf8');
+  for (const m of text.matchAll(/\bL\(\s*"([^"\\]+)"/g)) used.add(m[1]);
+  // keys passed around as plain strings (e.g. `titleKey: "sheet.commit.title"`) count as used too
+  for (const m of text.matchAll(/"([a-z][a-zA-Z0-9]*(?:\.[a-zA-Z0-9_]+)+)"/g)) if (app.en && m[1] in app.en) used.add(m[1]);
+  text.split('\n').forEach((line, i) => {
+    const code = line.replace(/\/\/.*$/, '');
+    for (const lit of code.match(/"(?:[^"\\]|\\.)*"/g) || []) {
+      if (/[\u0400-\u04FF]/.test(lit)) {
+        cyrillic++;
+        if (!allowCyrillic && cyrillic <= 20) errors.push(`${path.relative(ROOT, f)}:${i + 1}: hard-coded text ${lit.slice(0, 60)}`);
+      }
+    }
+  });
+}
+if (app.en) {
+  const unknown = [...used].filter((k) => !(k in app.en));
+  if (unknown.length) errors.push(`app: ${unknown.length} key(s) used in Swift but missing in en: ${unknown.slice(0, 15).join(', ')}`);
+  const unused = Object.keys(app.en).filter((k) => !used.has(k));
+  if (unused.length) errors.push(`app: ${unused.length} unused key(s): ${unused.slice(0, 15).join(', ')}`);
+}
+if (cyrillic && allowCyrillic) warn.push(`${cyrillic} hard-coded Cyrillic literal(s) left in Swift`);
+if (cyrillic > 20 && !allowCyrillic) errors.push(`… ${cyrillic} hard-coded Cyrillic literals in total`);
+
+const langs = (o) => Object.keys(o).sort().join(', ') || '—';
+console.log(`engine: ${Object.keys(engine.en || {}).length} keys [${langs(engine)}] · app: ${Object.keys(app.en || {}).length} keys [${langs(app)}]`);
+for (const w of warn) console.log(`⚠️  ${w}`);
+for (const e of errors) console.log(`❌ ${e}`);
+if (errors.length) process.exit(1);
+console.log('✅ i18n ok');

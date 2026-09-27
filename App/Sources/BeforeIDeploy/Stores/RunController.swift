@@ -30,7 +30,7 @@ final class RunController: ObservableObject {
                   successTitle: String,
                   onSuccess: (@MainActor (EngineOutcome) -> Void)? = nil) {
         guard run == nil || run?.finished == true else {
-            flash("Изчакай текущата операция да приключи", error: true)
+            flash(L("run.busy"), error: true)
             return
         }
         run = session
@@ -43,10 +43,10 @@ final class RunController: ObservableObject {
                     session.finish(success: true, title: successTitle, message: nil)
                     onSuccess?(outcome)
                 } else {
-                    session.finish(success: false, title: "Спряно", message: outcome.errorMessage)
+                    session.finish(success: false, title: L("run.stopped"), message: outcome.errorMessage)
                 }
             } catch {
-                session.finish(success: false, title: "Грешка", message: error.localizedDescription)
+                session.finish(success: false, title: L("common.error"), message: error.localizedDescription)
             }
             await projects.refreshStatus(quiet: true)
             await projects.loadHistory()
@@ -55,8 +55,8 @@ final class RunController: ObservableObject {
 
     func runCheck() {
         guard let p = selected else { return }
-        let s = RunSession(title: "Проверка", subtitle: p.name, kind: .check)
-        startRun(s, args: ["check", "--project", p.key], successTitle: "Проверката приключи") { outcome in
+        let s = RunSession(title: L("common.checkNoun"), subtitle: p.name, kind: .check)
+        startRun(s, args: ["check", "--project", p.key], successTitle: L("run.checkDone")) { outcome in
             if let check = try? outcome.decode(CheckState.self) {
                 switch check.status {
                 case "ready": s.outcomeTitle = "READY TO DEPLOY"
@@ -65,7 +65,7 @@ final class RunController: ObservableObject {
                     s.outcomeTitle = "DEPLOY BLOCKED"
                     s.success = false
                 }
-                s.outcomeMessage = "\(check.counts?.pass ?? 0) успешни · \(check.counts?.warn ?? 0) предупреждения · \(check.counts?.fail ?? 0) грешки"
+                s.outcomeMessage = L("run.checkCounts", check.counts?.pass ?? 0, check.counts?.warn ?? 0, check.counts?.fail ?? 0)
             }
         }
     }
@@ -73,7 +73,7 @@ final class RunController: ObservableObject {
     func smartDeploy() {
         guard let p = selected else { return }
         let s = RunSession(title: "Smart Deploy", subtitle: "\(p.name) · Git → Secrets → Build → Draft Preview", kind: .smart)
-        startRun(s, args: ["smart", "--project", p.key], successTitle: "Draft Preview е готов") { [weak self] outcome in
+        startRun(s, args: ["smart", "--project", p.key], successTitle: L("run.draftReady")) { [weak self] outcome in
             self?.afterDeploy(outcome, session: s, prod: false)
         }
     }
@@ -83,7 +83,7 @@ final class RunController: ObservableObject {
         guard let p = selected else { return }
         if let c = projects.status?.check, c.status != "blocked", let d = Fmt.date(c.at), Date().timeIntervalSince(d) < 25 * 60 {
             let s = RunSession(title: "Draft Preview", subtitle: p.name, kind: .draft)
-            startRun(s, args: ["deploy", "--project", p.key], successTitle: "Draft Preview е готов") { [weak self] outcome in
+            startRun(s, args: ["deploy", "--project", p.key], successTitle: L("run.draftReady")) { [weak self] outcome in
                 self?.afterDeploy(outcome, session: s, prod: false)
             }
         } else {
@@ -93,7 +93,7 @@ final class RunController: ObservableObject {
 
     func productionDeploy(confirm: String) {
         guard let p = selected, confirm == "DEPLOY" else { return }
-        let s = RunSession(title: "Production Deploy", subtitle: "\(p.name) · пълна проверка → LIVE", kind: .production)
+        let s = RunSession(title: "Production Deploy", subtitle: L("run.productionSubtitle", p.name), kind: .production)
         startRun(s, args: ["smart", "--project", p.key, "--prod", "--confirm", "DEPLOY"], successTitle: "LIVE 🚀") { [weak self] outcome in
             self?.afterDeploy(outcome, session: s, prod: true)
         }
@@ -126,9 +126,9 @@ final class RunController: ObservableObject {
                 if let u = st.url.flatMap(URL.init(string:)) { NSWorkspace.shared.open(u) }
                 flash("Local: \(st.url ?? "")")
             } else {
-                let msg = outcome?.errorMessage ?? "Local Preview не стартира"
+                let msg = outcome?.errorMessage ?? L("run.localFailed")
                 if run == nil || run?.finished == true {
-                    session.finish(success: false, title: "Local Preview не стартира", message: msg)
+                    session.finish(success: false, title: L("run.localFailed"), message: msg)
                     run = session
                 } else {
                     flash(msg, error: true)
@@ -144,7 +144,7 @@ final class RunController: ObservableObject {
         Task {
             defer { busy.remove("local") }
             _ = try? await engine.run(["local", "stop", "--project", p.key])
-            flash("Local Preview е спрян")
+            flash(L("run.localStopped"))
             await projects.refreshStatus(quiet: true)
         }
     }
@@ -155,7 +155,7 @@ final class RunController: ObservableObject {
         Task {
             defer { busy.remove("local") }
             let outcome = try? await engine.run(["local", "restart", "--project", p.key])
-            if outcome?.ok == true { flash("Рестартиран") } else { flash(outcome?.errorMessage ?? "Грешка", error: true) }
+            if outcome?.ok == true { flash(L("run.restarted")) } else { flash(outcome?.errorMessage ?? L("common.error"), error: true) }
             await projects.refreshStatus(quiet: true)
         }
     }
@@ -170,13 +170,13 @@ final class RunController: ObservableObject {
         }
         if push { args.append("--push") }
         let s = RunSession(title: push ? "Commit & Push" : "Commit", subtitle: p.name, kind: .git)
-        startRun(s, args: args, successTitle: push ? "Качено в GitHub" : "Commit е направен")
+        startRun(s, args: args, successTitle: push ? L("run.pushed") : L("run.committed"))
     }
 
     func push() {
         guard let p = selected else { return }
         let s = RunSession(title: "Push", subtitle: p.name, kind: .git)
-        startRun(s, args: ["git", "push", "--project", p.key], successTitle: "Качено в GitHub")
+        startRun(s, args: ["git", "push", "--project", p.key], successTitle: L("run.pushed"))
     }
 
     func fetch() {
@@ -193,7 +193,7 @@ final class RunController: ObservableObject {
         guard let p = selected else { return }
         Task {
             let outcome = try? await engine.run(["git", "remote", "--project", p.key, "--url", url])
-            if outcome?.ok == true { flash("Remote е зададен") } else { flash(outcome?.errorMessage ?? "Грешка", error: true) }
+            if outcome?.ok == true { flash(L("run.remoteSet")) } else { flash(outcome?.errorMessage ?? L("common.error"), error: true) }
             await projects.refreshStatus(quiet: true)
         }
     }
@@ -201,22 +201,22 @@ final class RunController: ObservableObject {
     // MARK: - Netlify
 
     func netlifyLogin(then: (@MainActor () -> Void)? = nil) {
-        let s = RunSession(title: "Вход в Netlify", subtitle: "Потвърди входа в браузъра", kind: .netlify)
-        startRun(s, args: ["netlify", "login"], successTitle: "Влязъл си в Netlify") { _ in then?() }
+        let s = RunSession(title: L("netlify.signIn"), subtitle: L("run.netlifyLoginSubtitle"), kind: .netlify)
+        startRun(s, args: ["netlify", "login"], successTitle: L("run.netlifyLoggedIn")) { _ in then?() }
     }
 
     func netlifyLink(siteId: String) {
         guard let p = selected else { return }
-        let s = RunSession(title: "Свързване с Netlify", subtitle: p.name, kind: .netlify)
-        startRun(s, args: ["netlify", "link", "--project", p.key, "--id", siteId], successTitle: "Netlify е свързан")
+        let s = RunSession(title: L("run.netlifyLinking"), subtitle: p.name, kind: .netlify)
+        startRun(s, args: ["netlify", "link", "--project", p.key, "--id", siteId], successTitle: L("run.netlifyLinked"))
     }
 
     func netlifyCreate(name: String, team: String?) {
         guard let p = selected else { return }
         var args = ["netlify", "create", "--project", p.key, "--name", name]
         if let team, !team.isEmpty { args += ["--team", team] }
-        let s = RunSession(title: "Нов Netlify сайт", subtitle: "\(name).netlify.app", kind: .netlify)
-        startRun(s, args: args, successTitle: "Сайтът е създаден и свързан")
+        let s = RunSession(title: L("run.netlifyNewSite"), subtitle: "\(name).netlify.app", kind: .netlify)
+        startRun(s, args: args, successTitle: L("run.netlifyCreated"))
     }
 
     // MARK: - Fixes
@@ -224,17 +224,17 @@ final class RunController: ObservableObject {
     func applyFix(_ fix: FixItem) {
         guard let p = selected else { return }
         let s = RunSession(title: fix.title, subtitle: p.name, kind: .fix)
-        startRun(s, args: ["fix", "apply", fix.id, "--project", p.key, "--yes"], successTitle: "Готово")
+        startRun(s, args: ["fix", "apply", fix.id, "--project", p.key, "--yes"], successTitle: L("common.done"))
     }
 
     // MARK: - Domains
 
     func applyDomain(_ domain: String) {
         guard let p = selected else { return }
-        let s = RunSession(title: "Свързване на \(domain)", subtitle: "\(p.name) · Spaceship DNS → Netlify", kind: .netlify)
-        startRun(s, args: ["spaceship", "connect-domain", "--project", p.key, "--domain", domain, "--yes"], successTitle: "Домейнът е свързан") { _ in
+        let s = RunSession(title: L("run.domainConnecting", domain), subtitle: "\(p.name) · Spaceship DNS → Netlify", kind: .netlify)
+        startRun(s, args: ["spaceship", "connect-domain", "--project", p.key, "--domain", domain, "--yes"], successTitle: L("run.domainConnected")) { _ in
             s.resultURL = "https://\(domain)"
-            s.outcomeMessage = "SSL сертификатът се активира автоматично (минути до няколко часа)."
+            s.outcomeMessage = L("run.domainSsl")
         }
     }
 
@@ -251,12 +251,12 @@ final class RunController: ObservableObject {
                 }
                 if let cmd = r.commandFile {
                     NSWorkspace.shared.open(URL(fileURLWithPath: cmd))
-                    flash("Отворих \(target == "codex" ? "Codex" : "Claude Code") в папката на проекта")
+                    flash(L("aifix.openedCli", target == "codex" ? "Codex" : "Claude Code"))
                 } else if let url = r.url, let u = URL(string: url) {
                     NSWorkspace.shared.open(u)
-                    flash(r.clipboard ? "Prompt-ът е копиран — постави го с ⌘V" : "Отворих нов чат с готов prompt")
+                    flash(r.clipboard ? L("aifix.copiedPaste") : L("aifix.openedChat"))
                 } else if r.clipboard {
-                    flash("Prompt-ът е копиран (\(r.chars ?? r.prompt.count) символа)")
+                    flash(L("aifix.copiedChars", r.chars ?? r.prompt.count))
                 }
             } catch {
                 feedback?.show(error)

@@ -30,7 +30,7 @@ final class HostingStore: ObservableObject {
         guard let p = projects.selected else { return }
         Task {
             let o = try? await engine.run(["hosting", "set", "--project", p.key, "--provider", id])
-            if o?.ok == true { feedback?.flash("Хостинг: \(advice?.providers.first { $0.id == id }?.name ?? id)", error: false) }
+            if o?.ok == true { feedback?.flash(L("hosting.set", advice?.providers.first { $0.id == id }?.name ?? id), error: false) }
             await loadAdvice()
             await projects.refreshStatus(quiet: true)
             await onSetupChanged?()
@@ -52,10 +52,10 @@ final class HostingStore: ObservableObject {
             let outcome = try await engine.run(["spaceship", "connect"],
                                                env: ["BID_SPACESHIP_KEY": key, "BID_SPACESHIP_SECRET": secret])
             guard outcome.ok else {
-                feedback?.flash(outcome.errorMessage ?? "Spaceship отказа ключа", error: true)
+                feedback?.flash(outcome.errorMessage ?? L("spaceship.keyRejected"), error: true)
                 return false
             }
-            feedback?.flash("Spaceship е свързан", error: false)
+            feedback?.flash(L("spaceship.connected"), error: false)
             await loadSpaceship(refresh: true)
             await onSetupChanged?()
             return true
@@ -79,7 +79,7 @@ final class HostingStore: ObservableObject {
     }
 
     func planDomain(_ domain: String) async throws -> DomainPlan {
-        guard let p = projects.selected else { throw EngineError.failed("Избери проект", nil) }
+        guard let p = projects.selected else { throw EngineError.failed(L("common.pickProject"), nil) }
         return try await engine.call(["spaceship", "connect-domain", "--project", p.key, "--domain", domain], as: ConnectDomainResult.self).plan
     }
 }

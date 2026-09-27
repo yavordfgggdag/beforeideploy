@@ -40,34 +40,34 @@ struct BeforeIDeployApp: App {
         .defaultSize(width: 1280, height: 820)
         .commands {
             CommandGroup(replacing: .newItem) {
-                Button("Добави проект…") { model.addProjectPanel() }
+                Button(L("menu.addProject")) { model.addProjectPanel() }
                     .keyboardShortcut("o")
             }
-            CommandMenu("Действия") {
-                Button("Команди…") { model.showPalette.toggle() }
+            CommandMenu(L("menu.actions")) {
+                Button(L("menu.commands")) { model.showPalette.toggle() }
                     .keyboardShortcut("k")
             }
-            CommandMenu("Проект") {
-                Button("Провери") { model.runCheck() }
+            CommandMenu(L("common.project")) {
+                Button(L("common.check")) { model.runCheck() }
                     .keyboardShortcut("r")
                 Button("Smart Deploy") { model.smartDeploy() }
                     .keyboardShortcut("d")
                 Divider()
                 Button("Local Preview") { model.localStart() }
                     .keyboardShortcut("l")
-                Button("Спри Local Preview") { model.localStop() }
+                Button(L("menu.stopLocal")) { model.localStop() }
                     .keyboardShortcut("l", modifiers: [.command, .shift])
                 Divider()
                 Button("Commit & Push…") { model.sheet = .commit }
                     .keyboardShortcut("k", modifiers: [.command, .shift])
-                Button("История") { model.sheet = .history }
+                Button(L("common.history")) { model.sheet = .history }
                     .keyboardShortcut("y")
                 Divider()
-                Button("Обнови") { Task { await model.refreshStatus() } }
+                Button(L("common.refresh")) { Task { await model.refreshStatus() } }
                     .keyboardShortcut("r", modifiers: [.command, .shift])
             }
             CommandGroup(replacing: .appSettings) {
-                Button("Настройки…") { model.sheet = .settings }
+                Button(L("menu.settings")) { model.sheet = .settings }
                     .keyboardShortcut(",")
             }
         }

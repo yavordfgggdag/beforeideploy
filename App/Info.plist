@@ -8,6 +8,8 @@
     <key>CFBundleExecutable</key><string>BeforeIDeploy</string>
     <key>CFBundleIconFile</key><string>AppIcon</string>
     <key>CFBundlePackageType</key><string>APPL</string>
+    <key>CFBundleDevelopmentRegion</key><string>en</string>
+    <key>CFBundleLocalizations</key><array><string>en</string><string>bg</string></array>
     <key>CFBundleShortVersionString</key><string>9.0.0</string>
     <key>CFBundleVersion</key><string>900</string>
     <key>LSMinimumSystemVersion</key><string>13.0</string>

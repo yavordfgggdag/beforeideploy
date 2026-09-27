@@ -35,7 +35,7 @@ struct LocalCard: View {
 
             HStack(spacing: 10) {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(l.running ? "Работи" : "Спрян")
+                    Text(l.running ? L("local.running") : L("local.stopped"))
                         .font(.system(size: 17, weight: .bold))
                         .foregroundColor(l.running ? Theme.ready : Theme.secondary)
                     if l.running, let url = l.url {
@@ -43,13 +43,13 @@ struct LocalCard: View {
                             .font(.system(size: 12, design: .monospaced))
                             .foregroundColor(Theme.text)
                             .textSelection(.enabled)
-                        Text("\(l.label ?? l.mode ?? "") · от \(Fmt.time(l.startedAt))")
+                        Text(L("local.since", l.label ?? l.mode ?? "", Fmt.time(l.startedAt)))
                             .font(.system(size: 11))
                             .foregroundColor(Theme.tertiary)
                     } else {
                         Text(status.detect.publishReady == true && status.detect.ssr != true
-                             ? "Ще сервира build-а от \(status.detect.publishDir ?? "dist")/"
-                             : "Ще стартира dev сървъра")
+                             ? L("local.willServeBuild", status.detect.publishDir ?? "dist")
+                             : L("local.willStartDev"))
                             .font(.system(size: 11.5))
                             .foregroundColor(Theme.tertiary)
                     }
@@ -60,29 +60,29 @@ struct LocalCard: View {
 
             HStack(spacing: 8) {
                 if l.running {
-                    Button { model.open(l.url) } label: { Label("Отвори", systemImage: "safari") }
+                    Button { model.open(l.url) } label: { Label(L("common.open"), systemImage: "safari") }
                         .bidButton(.primary, compact: true)
                     Button { model.copy(l.url) } label: { Image(systemName: "doc.on.doc") }
-                        .bidButton(.secondary, compact: true).help("Копирай URL")
+                        .bidButton(.secondary, compact: true).help(L("common.copyUrl"))
                     Button { model.localRestart() } label: { Image(systemName: "arrow.clockwise") }
-                        .bidButton(.secondary, compact: true).help("Рестартирай")
-                    Button { model.localStop() } label: { Label("Стоп", systemImage: "stop.fill") }
+                        .bidButton(.secondary, compact: true).help(L("local.restart"))
+                    Button { model.localStop() } label: { Label(L("local.stop"), systemImage: "stop.fill") }
                         .bidButton(.danger, compact: true)
                     if let log = l.log {
                         Spacer()
                         Button { model.openFile(log) } label: { Image(systemName: "doc.text") }
-                            .bidButton(.ghost, compact: true).help("Лог на сървъра")
+                            .bidButton(.ghost, compact: true).help(L("local.serverLog"))
                     }
                 } else {
-                    Button { model.localStart(mode: "auto") } label: { Label("Старт", systemImage: "play.fill") }
+                    Button { model.localStart(mode: "auto") } label: { Label(L("local.start"), systemImage: "play.fill") }
                         .bidButton(.primary, compact: true)
                     if status.detect.hasPackageJson == true {
                         Button("Build preview") { model.localStart(mode: "build") }
                             .bidButton(.secondary, compact: true)
-                            .help("Сервира production build-а")
+                            .help(L("local.servesBuild"))
                         Button("Dev server") { model.localStart(mode: "dev") }
                             .bidButton(.secondary, compact: true)
-                            .help("npm run dev с hot reload")
+                            .help(L("local.devHelp"))
                     }
                 }
             }
@@ -106,20 +106,20 @@ struct GitCard: View {
                         status: g.isRepo ? ((g.changedCount ?? 0) > 0 ? "warn" : "pass") : nil)
 
             if !g.isRepo {
-                Text("Проектът не е Git repository.")
+                Text(L("git.notRepo"))
                     .font(.system(size: 12.5))
                     .foregroundColor(Theme.secondary)
-                Button("Инициализирай Git") { model.requestFix("git.init") }
+                Button(L("git.init")) { model.requestFix("git.init") }
                     .bidButton(.primary, compact: true)
             } else {
                 HStack(spacing: 16) {
                     Metric(value: g.branch ?? "—", label: "branch")
-                    Metric(value: "\(g.changedCount ?? 0)", label: "промени", tint: (g.changedCount ?? 0) > 0 ? Theme.warn : Theme.text)
+                    Metric(value: "\(g.changedCount ?? 0)", label: L("git.changes"), tint: (g.changedCount ?? 0) > 0 ? Theme.warn : Theme.text)
                     if g.hasUpstream == true {
                         Metric(value: "↑\(g.ahead ?? 0) ↓\(g.behind ?? 0)", label: "ahead / behind",
                                tint: (g.behind ?? 0) > 0 ? Theme.warn : Theme.text)
                     } else if g.remote != nil {
-                        Metric(value: "—", label: "не е push-вано")
+                        Metric(value: "—", label: L("git.notPushed"))
                     }
                     Spacer()
                     if model.busy.contains("fetch") { Spinner(size: 13) }
@@ -146,7 +146,7 @@ struct GitCard: View {
                             }
                         }
                         if changed.count > 4 {
-                            Text("+ още \((g.changedCount ?? changed.count) - 4)").font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                            Text(L("git.more", (g.changedCount ?? changed.count) - 4)).font(.system(size: 11)).foregroundColor(Theme.tertiary)
                         }
                     }
                 }
@@ -165,10 +165,10 @@ struct GitCard: View {
                         Button { model.open(url) } label: { Label("GitHub", systemImage: "arrow.up.right") }
                             .bidButton(.ghost, compact: true)
                     } else if status.fixes.contains(where: { $0.id == "github.create" }) {
-                        Button { model.requestFix("github.create") } label: { Label("Създай GitHub repo", systemImage: "plus") }
+                        Button { model.requestFix("github.create") } label: { Label(L("git.createRepo"), systemImage: "plus") }
                             .bidButton(.primary, compact: true)
                     } else {
-                        Button("Добави remote") { model.sheet = .remote }
+                        Button(L("git.addRemote")) { model.sheet = .remote }
                             .bidButton(.ghost, compact: true)
                     }
                 }
@@ -205,24 +205,24 @@ struct NetlifyCard: View {
         VStack(alignment: .leading, spacing: 14) {
             PanelHeader(title: "Netlify", icon: "globe",
                         status: linked ? "pass" : nil,
-                        trailing: auth.loggedIn ? (auth.email ?? "влязъл") : "не си влязъл")
+                        trailing: auth.loggedIn ? (auth.email ?? L("common.signedInLower")) : L("common.notSignedInLower"))
 
             if !auth.loggedIn {
                 HStack {
-                    Text("Влез в Netlify, за да свържеш и публикуваш проекта.")
+                    Text(L("netlify.signInHint"))
                         .font(.system(size: 12.5)).foregroundColor(Theme.secondary)
                     Spacer()
-                    Button("Вход в Netlify") { model.netlifyLogin() }.bidButton(.primary, compact: true)
+                    Button(L("netlify.signIn")) { model.netlifyLogin() }.bidButton(.primary, compact: true)
                 }
             } else if !linked {
                 HStack {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("Проектът не е свързан").font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.text)
-                        Text("Създай нов сайт или свържи съществуващ. CI от GitHub няма да се включи — deploy-ите остават ръчни.")
+                        Text(L("netlify.notLinked")).font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.text)
+                        Text(L("netlify.linkHint"))
                             .font(.system(size: 12)).foregroundColor(Theme.secondary)
                     }
                     Spacer()
-                    Button("Свържи Netlify") { model.sheet = .netlifySetup }.bidButton(.primary, compact: true)
+                    Button(L("netlify.connect")) { model.sheet = .netlifySetup }.bidButton(.primary, compact: true)
                 }
             } else {
                 HStack(alignment: .top, spacing: 24) {
@@ -236,12 +236,12 @@ struct NetlifyCard: View {
                             Text(n?.siteName ?? "—").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.text)
                         }
                         if n?.repoLinked == true {
-                            Label("Сайтът има CI от GitHub — push-овете deploy-ват автоматично", systemImage: "exclamationmark.triangle")
+                            Label(L("netlify.hasCi"), systemImage: "exclamationmark.triangle")
                                 .font(.system(size: 11)).foregroundColor(Theme.warn)
                         }
                     }
-                    DeployStat(title: "Последен production", record: status.lastProd, fallback: n?.lastPublishedAt)
-                    DeployStat(title: "Последен draft", record: status.lastDraft, fallback: nil)
+                    DeployStat(title: L("hosting.lastProduction"), record: status.lastProd, fallback: n?.lastPublishedAt)
+                    DeployStat(title: L("netlify.lastDraft"), record: status.lastDraft, fallback: nil)
                     Spacer()
                 }
 
@@ -249,15 +249,15 @@ struct NetlifyCard: View {
                     Button { model.draftPreview() } label: { Label("Draft Preview", systemImage: "eye") }
                         .bidButton(.secondary, compact: true)
                     if let d = status.lastDraft?.url {
-                        Button { model.open(d) } label: { Label("Последният draft", systemImage: "clock.arrow.circlepath") }
+                        Button { model.open(d) } label: { Label(L("netlify.theLastDraft"), systemImage: "clock.arrow.circlepath") }
                             .bidButton(.ghost, compact: true)
                     }
                     Spacer()
                     if let live {
-                        Button { model.open(live) } label: { Label("Отвори сайта", systemImage: "safari") }
+                        Button { model.open(live) } label: { Label(L("common.openSite"), systemImage: "safari") }
                             .bidButton(.secondary, compact: true)
                         Button { model.copy(live) } label: { Image(systemName: "doc.on.doc") }
-                            .bidButton(.secondary, compact: true).help("Копирай URL")
+                            .bidButton(.secondary, compact: true).help(L("common.copyUrl"))
                     }
                     Button {
                         model.open(n?.adminUrl ?? "https://app.netlify.com/sites/\(n?.siteName ?? "")")

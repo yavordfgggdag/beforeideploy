@@ -11,13 +11,13 @@ struct DomainsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                PageHeader(title: "Домейни", subtitle: "Spaceship — домейни, изтичане, DNS и свързване с Netlify", icon: "network") {
+                PageHeader(title: L("common.domains"), subtitle: L("domains.subtitle"), icon: "network") {
                     HStack(spacing: 8) {
                         if model.loadingSpaceship { Spinner(size: 14) }
                         if model.spaceship?.connected == true {
-                            Button { Task { await model.loadSpaceship(refresh: true) } } label: { Label("Обнови", systemImage: "arrow.clockwise") }
+                            Button { Task { await model.loadSpaceship(refresh: true) } } label: { Label(L("common.refresh"), systemImage: "arrow.clockwise") }
                                 .bidButton(.secondary, compact: true)
-                            Button { model.open("https://www.spaceship.com/domains/") } label: { Label("Купи домейн", systemImage: "cart") }
+                            Button { model.open("https://www.spaceship.com/domains/") } label: { Label(L("domains.buy"), systemImage: "cart") }
                                 .bidButton(.secondary, compact: true)
                         }
                     }
@@ -26,18 +26,18 @@ struct DomainsView: View {
                 if let s = model.spaceship, s.connected {
                     let expiring = s.domains.filter { ($0.daysLeft ?? 999) < 30 }.count
                     HStack(spacing: 12) {
-                        KPITile(value: "\(s.domains.count)", label: "домейна", icon: "network")
-                        KPITile(value: "\(expiring)", label: "изтичат до 30 дни", icon: "calendar.badge.exclamationmark",
+                        KPITile(value: "\(s.domains.count)", label: L("domains.countLabel"), icon: "network")
+                        KPITile(value: "\(expiring)", label: L("domains.expiring30"), icon: "calendar.badge.exclamationmark",
                                 tint: expiring > 0 ? Theme.warn : Theme.text)
-                        KPITile(value: "\(s.domains.filter { !$0.autoRenew }.count)", label: "без auto-renew", icon: "arrow.triangle.2.circlepath",
+                        KPITile(value: "\(s.domains.filter { !$0.autoRenew }.count)", label: L("domains.noAutoRenew"), icon: "arrow.triangle.2.circlepath",
                                 tint: s.domains.contains { !$0.autoRenew } ? Theme.warn : Theme.text)
                     }
 
                     HStack(alignment: .top, spacing: 14) {
                         VStack(alignment: .leading, spacing: 2) {
-                            SectionLabel(text: "Твоите домейни", icon: "list.bullet").padding(.bottom, 8)
+                            SectionLabel(text: L("domains.yours"), icon: "list.bullet").padding(.bottom, 8)
                             if s.domains.isEmpty {
-                                Text("Нямаш домейни в Spaceship.").foregroundColor(Theme.tertiary).font(.system(size: 12.5))
+                                Text(L("domains.none")).foregroundColor(Theme.tertiary).font(.system(size: 12.5))
                             }
                             ForEach(s.domains) { d in
                                 DomainRow(domain: d, selected: selectedDomain == d.name)
@@ -57,16 +57,16 @@ struct DomainsView: View {
                                     Button {
                                         model.domainForConnect = dom
                                         model.sheet = .connectDomain
-                                    } label: { Label("Свържи с проект", systemImage: "link") }
+                                    } label: { Label(L("domains.connectToProject"), systemImage: "link") }
                                         .bidButton(.primary, compact: true)
                                         .disabled(model.selected == nil)
-                                        .help(model.selected == nil ? "Избери проект от страничната лента" : "Свързва с \(model.selected?.name ?? "")")
+                                        .help(model.selected == nil ? L("domains.pickProjectHint") : L("domains.connectsTo", model.selected?.name ?? ""))
                                 }
-                                SectionLabel(text: "DNS записи", icon: "list.dash")
+                                SectionLabel(text: L("domains.dnsRecords"), icon: "list.dash")
                                 if loadingDNS {
-                                    HStack { Spinner(size: 13); Text("Зареждам DNS…").foregroundColor(Theme.secondary).font(.system(size: 12)) }
+                                    HStack { Spinner(size: 13); Text(L("domains.loadingDns")).foregroundColor(Theme.secondary).font(.system(size: 12)) }
                                 } else if records.isEmpty {
-                                    Text("Няма записи.").foregroundColor(Theme.tertiary).font(.system(size: 12))
+                                    Text(L("domains.noRecords")).foregroundColor(Theme.tertiary).font(.system(size: 12))
                                 } else {
                                     VStack(spacing: 0) {
                                         ForEach(records) { r in
@@ -87,7 +87,7 @@ struct DomainsView: View {
                             } else {
                                 VStack(spacing: 10) {
                                     Image(systemName: "hand.point.left").font(.system(size: 26)).foregroundColor(Theme.tertiary)
-                                    Text("Избери домейн, за да видиш DNS записите и да го свържеш с проект.")
+                                    Text(L("domains.pickDomainHint"))
                                         .font(.system(size: 12.5)).foregroundColor(Theme.secondary).multilineTextAlignment(.center)
                                 }
                                 .frame(maxWidth: .infinity, minHeight: 200)
@@ -98,9 +98,9 @@ struct DomainsView: View {
                     }
 
                     HStack {
-                        Text("Ключът се пази в macOS Keychain.").font(.system(size: 11.5)).foregroundColor(Theme.tertiary)
+                        Text(L("domains.keyInKeychain")).font(.system(size: 11.5)).foregroundColor(Theme.tertiary)
                         Spacer()
-                        Button("Прекъсни връзката") { model.disconnectSpaceship() }.bidButton(.ghost, compact: true)
+                        Button(L("domains.disconnect")) { model.disconnectSpaceship() }.bidButton(.ghost, compact: true)
                     }
                 } else {
                     SpaceshipConnectCard()
@@ -138,9 +138,9 @@ struct DomainRow: View {
                 Text(domain.unicodeName ?? domain.name).font(.system(size: 13, weight: .semibold))
                     .foregroundColor(selected ? .white : Theme.text).lineLimit(1)
                 HStack(spacing: 6) {
-                    Text(domain.daysLeft.map { "изтича след \($0) дни" } ?? "—")
+                    Text(domain.daysLeft.map { L("domains.expiresIn", $0) } ?? "—")
                     Text("·")
-                    Text(domain.autoRenew ? "auto-renew" : "без auto-renew")
+                    Text(domain.autoRenew ? "auto-renew" : L("domains.noAutoRenew"))
                 }
                 .font(.system(size: 11))
                 .foregroundColor(selected ? Color.white.opacity(0.8) : (days < 30 ? Theme.warn : Theme.tertiary))
@@ -171,17 +171,17 @@ struct SpaceshipConnectCard: View {
             HStack(spacing: 12) {
                 Image(systemName: "network").font(.system(size: 22, weight: .semibold)).foregroundColor(Theme.accent)
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Свържи Spaceship").font(.system(size: 17, weight: .bold)).foregroundColor(Theme.text)
-                    Text("Виждаш всички домейни, кога изтичат, DNS записите и свързваш домейн с Netlify с един бутон.")
+                    Text(L("spaceship.connect")).font(.system(size: 17, weight: .bold)).foregroundColor(Theme.text)
+                    Text(L("spaceship.connectIntro"))
                         .font(.system(size: 12.5)).foregroundColor(Theme.secondary)
                 }
             }
             VStack(alignment: .leading, spacing: 8) {
-                StepLine(n: 1, text: "Отвори API Manager в Spaceship (бутонът отдолу отваря браузъра).")
-                StepLine(n: 2, text: "Натисни „New API key“, дай име „Before I Deploy“ и права за Domains и DNS records (четене + писане).")
-                StepLine(n: 3, text: "Копирай API Key и API Secret и ги постави тук.")
+                StepLine(n: 1, text: L("spaceship.step1"))
+                StepLine(n: 2, text: L("spaceship.step2"))
+                StepLine(n: 3, text: L("spaceship.step3"))
             }
-            Button { model.open("https://www.spaceship.com/application/api-manager/") } label: { Label("Отвори API Manager", systemImage: "safari") }
+            Button { model.open("https://www.spaceship.com/application/api-manager/") } label: { Label(L("spaceship.openApiManager"), systemImage: "safari") }
                 .bidButton(.secondary)
             HStack(spacing: 10) {
                 BIDTextField(placeholder: "API Key", text: $key, mono: true)
@@ -198,12 +198,12 @@ struct SpaceshipConnectCard: View {
                         busy = false
                     }
                 } label: {
-                    if busy { Spinner(size: 12, color: .white) } else { Text("Свържи") }
+                    if busy { Spinner(size: 12, color: .white) } else { Text(L("common.connect")) }
                 }
                 .bidButton(.primary)
                 .disabled(key.isEmpty || secret.isEmpty || busy)
             }
-            Text("Ключът се проверява веднага и се пази в macOS Keychain — не се записва във файлове.")
+            Text(L("spaceship.keyNote"))
                 .font(.system(size: 11.5)).foregroundColor(Theme.tertiary)
         }
         .card(padding: 22)
@@ -231,7 +231,7 @@ struct SpaceshipConnectSheet: View {
                 .padding(18)
             HStack {
                 Spacer()
-                Button("Затвори") { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
+                Button(L("common.close")) { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
             }
             .padding(.horizontal, 22).padding(.bottom, 16)
         }
@@ -251,20 +251,20 @@ struct DomainProjectCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            PanelHeader(title: "Домейн (Spaceship)", icon: "network",
+            PanelHeader(title: L("domains.projectCardTitle"), icon: "network",
                         status: model.spaceship?.connected == true ? "pass" : nil,
-                        trailing: model.spaceship?.connected == true ? "\(model.spaceship?.domains.count ?? 0) домейна" : "не е свързан")
+                        trailing: model.spaceship?.connected == true ? L("domains.count", model.spaceship?.domains.count ?? 0) : L("common.notConnectedLower"))
             if model.spaceship?.connected != true {
                 HStack {
-                    Text("Свържи Spaceship, за да сложиш собствен домейн на този сайт с един бутон.")
+                    Text(L("domains.connectSpaceshipHint"))
                         .font(.system(size: 12.5)).foregroundColor(Theme.secondary)
                     Spacer()
-                    Button("Свържи Spaceship") { model.sheet = .spaceshipConnect }.bidButton(.primary, compact: true)
+                    Button(L("spaceship.connect")) { model.sheet = .spaceshipConnect }.bidButton(.primary, compact: true)
                 }
             } else if status.detect.netlifyLinked != true {
-                Text("Първо свържи проекта с Netlify (картата отгоре).").font(.system(size: 12.5)).foregroundColor(Theme.secondary)
+                Text(L("domains.linkNetlifyFirst")).font(.system(size: 12.5)).foregroundColor(Theme.secondary)
             } else {
-                Text("Избери домейн — ще настроя DNS в Spaceship (A @ и CNAME www) и ще го добавя в Netlify. SSL се издава автоматично.")
+                Text(L("domains.pickDomainPlan"))
                     .font(.system(size: 12.5)).foregroundColor(Theme.secondary)
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 220), spacing: 8)], spacing: 8) {
                     ForEach(model.spaceship?.domains ?? []) { d in
@@ -300,12 +300,12 @@ struct ConnectDomainSheet: View {
     var domain: String { model.domainForConnect ?? "" }
 
     var body: some View {
-        SheetScaffold(icon: "link", title: "Свържи \(domain)", subtitle: "с \(model.selected?.name ?? "проекта") в Netlify", width: 600) {
+        SheetScaffold(icon: "link", title: L("domains.connectDomainTitle", domain), subtitle: L("domains.withProjectOnNetlify", model.selected?.name ?? L("domains.theProject")), width: 600) {
             VStack(alignment: .leading, spacing: 12) {
                 if let error {
                     Text(error).foregroundColor(Theme.blocked).font(.system(size: 12.5))
                 } else if let plan {
-                    Text("Какво ще направя:").font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.text)
+                    Text(L("domains.whatIWillDo")).font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.text)
                     VStack(alignment: .leading, spacing: 6) {
                         ForEach(plan.add, id: \.self) { r in
                             planRow(symbol: "plus.circle.fill", tint: Theme.ready, r: r)
@@ -322,17 +322,17 @@ struct ConnectDomainSheet: View {
                     .padding(12)
                     .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.bg))
                     if !plan.replace.isEmpty {
-                        Label("Записите в червено ще бъдат премахнати — сегашният сайт на този домейн спира да отговаря.", systemImage: "exclamationmark.triangle.fill")
+                        Label(L("domains.redRecordsWarning"), systemImage: "exclamationmark.triangle.fill")
                             .font(.system(size: 12)).foregroundColor(Theme.warn)
                     }
                     if let n = plan.note { Text(n).font(.system(size: 11.5)).foregroundColor(Theme.tertiary) }
                 } else {
-                    HStack { Spinner(size: 13); Text("Проверявам DNS…").foregroundColor(Theme.secondary).font(.system(size: 12.5)) }
+                    HStack { Spinner(size: 13); Text(L("domains.checkingDns")).foregroundColor(Theme.secondary).font(.system(size: 12.5)) }
                 }
             }
         } actions: {
-            Button("Отказ") { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
-            Button("Свържи домейна") {
+            Button(L("common.cancel")) { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
+            Button(L("domains.connectDomain")) {
                 dismiss()
                 model.applyDomain(domain)
             }
@@ -359,16 +359,16 @@ struct DeviceCodeCard: View {
     var body: some View {
         if let code = session.deviceCode, !session.finished {
             VStack(spacing: 10) {
-                Text("Потвърди в браузъра (\(session.deviceService ?? "GitHub"))").font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.secondary)
+                Text(L("devicecode.title", session.deviceService ?? "GitHub")).font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.secondary)
                 Text(code)
                     .font(.system(size: 34, weight: .bold, design: .monospaced))
                     .tracking(4)
                     .foregroundColor(Theme.text)
                     .textSelection(.enabled)
-                Text("Кодът е копиран — постави го с ⌘V на отворената страница и натисни „Authorize“.")
+                Text(L("devicecode.hint"))
                     .font(.system(size: 12)).foregroundColor(Theme.tertiary)
                 if let u = session.deviceURL, let url = URL(string: u) {
-                    Button { NSWorkspace.shared.open(url) } label: { Label("Отвори страницата отново", systemImage: "safari") }
+                    Button { NSWorkspace.shared.open(url) } label: { Label(L("devicecode.reopen"), systemImage: "safari") }
                         .bidButton(.secondary, compact: true)
                 }
             }

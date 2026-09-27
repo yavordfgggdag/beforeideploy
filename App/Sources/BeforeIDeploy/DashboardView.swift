@@ -1,11 +1,17 @@
 import SwiftUI
 
 enum ProjectTab: String, CaseIterable, Hashable {
-    case overview = "Преглед"
-    case local = "Local"
-    case git = "GitHub"
-    case hosting = "Хостинг & домейн"
-    case history = "История"
+    case overview, local, git, hosting, history
+
+    var title: String {
+        switch self {
+        case .overview: return L("dashboard.tab.overview")
+        case .local: return "Local"
+        case .git: return "GitHub"
+        case .hosting: return L("dashboard.tab.hosting")
+        case .history: return L("common.history")
+        }
+    }
 
     var icon: String {
         switch self {
@@ -40,12 +46,12 @@ struct DashboardView: View {
                         FixesCard(fixes: status.fixes.filter { $0.id != "netlify.link" })
                     }
                     HStack(alignment: .top, spacing: 14) {
-                        MiniStat(title: "Local", value: status.local.running ? Fmt.host(status.local.url) : "спрян",
+                        MiniStat(title: "Local", value: status.local.running ? Fmt.host(status.local.url) : L("dashboard.stopped"),
                                  tint: status.local.running ? Theme.ready : Theme.tertiary, icon: "desktopcomputer") { tab = .local }
-                        MiniStat(title: "GitHub", value: status.git.isRepo ? "\(status.git.changedCount ?? 0) промени" : "няма repo",
+                        MiniStat(title: "GitHub", value: status.git.isRepo ? L("dashboard.changes", status.git.changedCount ?? 0) : L("dashboard.noRepo"),
                                  tint: (status.git.changedCount ?? 0) > 0 ? Theme.warn : Theme.text, icon: "arrow.triangle.branch") { tab = .git }
                         MiniStat(title: "Live · \(status.hosting?.name ?? "Netlify")",
-                                 value: (status.hosting?.liveUrl ?? status.project.netlify?.liveUrl).map { Fmt.host($0) } ?? (status.hosting?.ready == true ? "свързан" : "не е свързан"),
+                                 value: (status.hosting?.liveUrl ?? status.project.netlify?.liveUrl).map { Fmt.host($0) } ?? (status.hosting?.ready == true ? L("common.connectedLower") : L("common.notConnectedLower")),
                                  tint: status.hosting?.ready == true ? Theme.text : Theme.tertiary, icon: "globe") { tab = .hosting }
                     }
                 case .local:
@@ -94,7 +100,7 @@ struct TabStrip: View {
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: t.icon).font(.system(size: 11.5, weight: .semibold))
-                        Text(t.rawValue).font(.system(size: 12.5, weight: .semibold))
+                        Text(t.title).font(.system(size: 12.5, weight: .semibold))
                         if let b = badges[t] {
                             Text(b)
                                 .font(.system(size: 10, weight: .bold))
@@ -187,15 +193,15 @@ struct HeaderView: View {
             }
             Spacer()
             HStack(spacing: 8) {
-                IconButton(symbol: "folder", help: "Покажи във Finder") { model.revealInFinder(status.project.path) }
-                IconButton(symbol: "chevron.left.forwardslash.chevron.right", help: "Отвори в Cursor / VS Code") {
+                IconButton(symbol: "folder", help: L("common.showInFinder")) { model.revealInFinder(status.project.path) }
+                IconButton(symbol: "chevron.left.forwardslash.chevron.right", help: L("dashboard.openInEditor")) {
                     model.openIn(app: ["Cursor", "Visual Studio Code"], path: status.project.path)
                 }
-                IconButton(symbol: "terminal", help: "Отвори в Terminal") { model.openIn(app: ["Terminal"], path: status.project.path) }
+                IconButton(symbol: "terminal", help: L("common.openInTerminal")) { model.openIn(app: ["Terminal"], path: status.project.path) }
                 if model.loadingStatus {
                     Spinner(size: 14).frame(width: 30, height: 30)
                 } else {
-                    IconButton(symbol: "arrow.clockwise", help: "Обнови (⇧⌘R)") { Task { await model.refreshStatus() } }
+                    IconButton(symbol: "arrow.clockwise", help: L("dashboard.refreshShortcut")) { Task { await model.refreshStatus() } }
                 }
             }
         }
@@ -215,7 +221,7 @@ struct HeroCard: View {
         case "ready": return "READY TO DEPLOY"
         case "warnings": return "READY WITH WARNINGS"
         case "blocked": return "DEPLOY BLOCKED"
-        default: return "НЕ Е ПРОВЕРЕН"
+        default: return L("dashboard.notChecked")
         }
     }
 
@@ -243,11 +249,11 @@ struct HeroCard: View {
                         .foregroundColor(Theme.text)
                     HStack(spacing: 6) {
                         if let c = status.check {
-                            Text("Проверено \(Fmt.relative(c.at))")
-                            if stale { Text("· остаряло").foregroundColor(Theme.warn) }
+                            Text(L("dashboard.checkedAgo", Fmt.relative(c.at)))
+                            if stale { Text(L("dashboard.stale")).foregroundColor(Theme.warn) }
                             if let d = c.duration { Text("· \(Fmt.duration(d))") }
                         } else {
-                            Text("Пусни проверка, за да видиш дали проектът е готов")
+                            Text(L("dashboard.runCheckHint"))
                         }
                     }
                     .font(.system(size: 12))
@@ -275,7 +281,7 @@ struct HeroCard: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(issues.map { $0.label ?? $0.id }.joined(separator: " · "))
                                 .font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.text).lineLimit(1)
-                            Text(issues.count == 1 ? (issues[0].summary ?? "") : "\(issues.count) проблема — един prompt за всички")
+                            Text(issues.count == 1 ? (issues[0].summary ?? "") : L("dashboard.issuesOnePrompt", issues.count))
                                 .font(.system(size: 11.5)).foregroundColor(Theme.secondary).lineLimit(1)
                         }
                         Spacer()
@@ -290,7 +296,7 @@ struct HeroCard: View {
                 Button {
                     model.runCheck()
                 } label: {
-                    Label("Провери", systemImage: "arrow.triangle.2.circlepath")
+                    Label(L("common.check"), systemImage: "arrow.triangle.2.circlepath")
                 }
                 .bidButton(.secondary)
                 .help("⌘R — Git, secrets, lint, typecheck, build")
@@ -301,16 +307,16 @@ struct HeroCard: View {
                     Label("Smart Deploy", systemImage: "bolt.fill")
                 }
                 .bidButton(.primary)
-                .help("⌘D — проверка → preview, спира при първата грешка")
+                .help(L("dashboard.smartHelp"))
                 .disabled(status.hosting.map { !$0.ready } ?? (status.detect.netlifyLinked != true))
 
                 Spacer()
 
                 if !(status.hosting?.ready ?? (status.detect.netlifyLinked == true)) {
-                    Text("Свържи хостинга, за да публикуваш")
+                    Text(L("dashboard.connectHostingHelp"))
                         .font(.system(size: 12))
                         .foregroundColor(Theme.tertiary)
-                    Button("Настрой хостинг") {
+                    Button(L("dashboard.setUpHosting")) {
                         if (status.hosting?.provider ?? "netlify") == "netlify" { model.sheet = .netlifySetup } else { model.screen = .setup }
                     }
                         .bidButton(.secondary)
@@ -322,7 +328,7 @@ struct HeroCard: View {
                     }
                     .bidButton(.danger)
                     .disabled(state == "blocked")
-                    .help(state == "blocked" ? "Оправи грешките първо" : "Обновява LIVE сайта — с потвърждение")
+                    .help(state == "blocked" ? L("dashboard.fixErrorsFirst") : L("dashboard.productionHelp"))
                 }
             }
         }
@@ -371,7 +377,7 @@ struct HealthGrid: View {
     let status: ProjectStatus
 
     static let placeholders: [(String, String)] = [
-        ("git", "Git"), ("secrets", "Secrets"), ("deps", "Зависимости"), ("lint", "Lint"),
+        ("git", "Git"), ("secrets", "Secrets"), ("deps", L("common.dependencies")), ("lint", "Lint"),
         ("typecheck", "Typecheck"), ("build", "Build"), ("hosting", "Hosting"),
     ]
 
@@ -486,11 +492,11 @@ struct StepDetailPopover: View {
             }
             HStack {
                 ForEach(step.fixes ?? [], id: \.self) { f in
-                    Button("Оправи") { model.requestFix(f) }.bidButton(.primary, compact: true)
+                    Button(L("common.fix")) { model.requestFix(f) }.bidButton(.primary, compact: true)
                 }
                 Spacer()
                 if let log = step.log {
-                    Button("Отвори лога") { model.openFile(log) }.bidButton(.secondary, compact: true)
+                    Button(L("common.openLog")) { model.openFile(log) }.bidButton(.secondary, compact: true)
                 }
             }
         }
@@ -508,7 +514,7 @@ struct FixesCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionLabel(text: "Безопасни поправки", icon: "wand.and.stars")
+            SectionLabel(text: L("dashboard.safeFixes"), icon: "wand.and.stars")
             ForEach(fixes) { f in
                 HStack(spacing: 12) {
                     Image(systemName: f.risk == "caution" ? "exclamationmark.triangle.fill" : "wand.and.stars")
@@ -519,7 +525,7 @@ struct FixesCard: View {
                         Text(f.description).font(.system(size: 11.5)).foregroundColor(Theme.secondary).lineLimit(2)
                     }
                     Spacer()
-                    Button("Прегледай") { model.requestFix(f.id) }
+                    Button(L("dashboard.review")) { model.requestFix(f.id) }
                         .bidButton(.secondary, compact: true)
                 }
             }
@@ -536,12 +542,12 @@ struct HistoryStrip: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                SectionLabel(text: "История", icon: "clock")
+                SectionLabel(text: L("common.history"), icon: "clock")
                 Spacer()
-                Button("Всичко") { model.sheet = .history }.bidButton(.ghost, compact: true)
+                Button(L("dashboard.all")) { model.sheet = .history }.bidButton(.ghost, compact: true)
             }
             if model.history.isEmpty {
-                Text("Още няма събития за този проект.")
+                Text(L("dashboard.noEvents"))
                     .font(.system(size: 12))
                     .foregroundColor(Theme.tertiary)
                     .padding(.vertical, 6)
@@ -593,7 +599,7 @@ struct HistoryRow: View {
             }
             if let log = entry.log {
                 Button { model.openFile(log) } label: { Image(systemName: "doc.text") }
-                    .buttonStyle(.plain).foregroundColor(Theme.secondary).help("Отвори лога")
+                    .buttonStyle(.plain).foregroundColor(Theme.secondary).help(L("common.openLog"))
             }
         }
         .padding(.vertical, 8)

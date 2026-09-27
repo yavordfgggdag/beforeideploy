@@ -101,7 +101,7 @@ struct RunOverlay: View {
                 if session.steps.isEmpty {
                     HStack(spacing: 8) {
                         Spinner(size: 12)
-                        Text("Стартирам…").font(.system(size: 12)).foregroundColor(Theme.secondary)
+                        Text(L("overlay.starting")).font(.system(size: 12)).foregroundColor(Theme.secondary)
                     }
                     .padding(.top, 16)
                 }
@@ -130,7 +130,7 @@ struct RunOverlay: View {
                     }
                     Spacer()
                     if let log = s.log {
-                        Button("Пълен лог") { model.openFile(log) }.bidButton(.ghost, compact: true)
+                        Button(L("overlay.fullLog")) { model.openFile(log) }.bidButton(.ghost, compact: true)
                     }
                 }
                 .padding(.horizontal, 16)
@@ -141,7 +141,7 @@ struct RunOverlay: View {
                         LazyVStack(alignment: .leading, spacing: 1) {
                             let lines = s.lines.isEmpty ? s.details : s.lines
                             if lines.isEmpty {
-                                Text(s.status == "running" ? "Чакам изход…" : "Няма изход за тази стъпка.")
+                                Text(s.status == "running" ? L("overlay.waitingOutput") : L("overlay.noOutput"))
                                     .foregroundColor(Theme.tertiary)
                             }
                             ForEach(Array(lines.enumerated()), id: \.offset) { i, line in
@@ -183,10 +183,10 @@ struct RunOverlay: View {
 
                 if session.finished, !s.fixes.isEmpty {
                     HStack {
-                        Text("Има безопасна поправка за тази стъпка").font(.system(size: 12)).foregroundColor(Theme.secondary)
+                        Text(L("overlay.safeFix")).font(.system(size: 12)).foregroundColor(Theme.secondary)
                         Spacer()
                         ForEach(s.fixes, id: \.self) { f in
-                            Button("Оправи") {
+                            Button(L("common.fix")) {
                                 model.run = nil
                                 model.requestFix(f)
                             }
@@ -226,8 +226,8 @@ struct RunOverlay: View {
                 Spacer()
                 if let url = session.resultURL {
                     Button { model.copy(url) } label: { Image(systemName: "doc.on.doc") }
-                        .bidButton(.secondary).help("Копирай URL")
-                    Button { model.open(url) } label: { Label("Отвори", systemImage: "safari") }
+                        .bidButton(.secondary).help(L("common.copyUrl"))
+                    Button { model.open(url) } label: { Label(L("common.open"), systemImage: "safari") }
                         .bidButton(.primary)
                 }
                 if session.kind == .check && session.success && model.status?.detect.netlifyLinked == true {
@@ -237,18 +237,18 @@ struct RunOverlay: View {
                     } label: { Label("Draft Preview", systemImage: "eye") }
                         .bidButton(.secondary)
                 }
-                Button("Затвори") { close() }
+                Button(L("common.close")) { close() }
                     .bidButton(session.resultURL == nil ? .primary : .secondary)
                     .keyboardShortcut(.defaultAction)
             } else {
-                Text(session.runningStep.map { "\($0.label)…" } ?? "Работи…")
+                Text(session.runningStep.map { "\($0.label)…" } ?? L("overlay.working"))
                     .font(.system(size: 12.5))
                     .foregroundColor(Theme.secondary)
                 Spacer()
-                Button("Прекъсни") { session.handle.cancel() }
+                Button(L("overlay.cancel")) { session.handle.cancel() }
                     .bidButton(.danger)
                     .disabled(session.kind == .production && session.runningStep?.id == "deploy")
-                    .help(session.kind == .production ? "Не прекъсвай качването на production" : "Спира процеса")
+                    .help(session.kind == .production ? L("overlay.dontCancelProd") : L("overlay.stopsProcess"))
             }
         }
         .padding(.horizontal, 22)

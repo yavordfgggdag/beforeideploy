@@ -53,9 +53,9 @@ struct ProductionSheet: View {
 
     var costText: String {
         if let p = model.costs?.prices.items["netlify:production"] {
-            return p.amount == 0 ? "безплатно" : "~\(CostsView.amount(p.amount)) \(CostsView.unitName(p.unit)) (оценка)"
+            return p.amount == 0 ? L("common.free") : L("production.costEstimate", CostsView.amount(p.amount), CostsView.unitName(p.unit))
         }
-        return "~15 кредита (оценка)"
+        return L("production.costDefault")
     }
 
     var body: some View {
@@ -63,15 +63,15 @@ struct ProductionSheet: View {
         let live = s?.project.netlify?.liveUrl ?? s?.lastProd?.url
         let warnings = s?.check?.steps.filter { $0.status == "warn" } ?? []
         SheetScaffold(icon: "paperplane.fill", iconTint: Theme.blocked, title: "Production Deploy",
-                      subtitle: "Това ще обнови LIVE сайта на \(s?.project.name ?? "")") {
+                      subtitle: L("production.title", s?.project.name ?? "")) {
             VStack(alignment: .leading, spacing: 14) {
                 VStack(alignment: .leading, spacing: 8) {
-                    InfoRow(label: "Сайт", value: live.map(Fmt.host) ?? s?.project.netlify?.siteName ?? "—")
-                    InfoRow(label: "Какво се качва", value: s?.detect.ssr == true || s?.detect.hasFunctions == true
+                    InfoRow(label: L("production.site"), value: live.map(Fmt.host) ?? s?.project.netlify?.siteName ?? "—")
+                    InfoRow(label: L("production.whatUploads"), value: s?.detect.ssr == true || s?.detect.hasFunctions == true
                             ? "Netlify build (framework / functions)"
-                            : "\(s?.detect.publishDir ?? "dist")/ след свеж build")
+                            : L("production.freshBuild", s?.detect.publishDir ?? "dist"))
                     InfoRow(label: "Branch", value: s?.git.branch ?? "—")
-                    InfoRow(label: "Неприбрани промени", value: "\(s?.git.changedCount ?? 0)",
+                    InfoRow(label: L("production.uncommitted"), value: "\(s?.git.changedCount ?? 0)",
                             tint: (s?.git.changedCount ?? 0) > 0 ? Theme.warn : Theme.text)
                 }
                 .padding(14)
@@ -79,16 +79,16 @@ struct ProductionSheet: View {
 
                 HStack(spacing: 10) {
                     Image(systemName: "creditcard.fill").foregroundColor(Theme.accent)
-                    Text("Цена: \(costText)").font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.text)
+                    Text(L("production.price", costText)).font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.text)
                     Spacer()
-                    Button("Разходи") { dismiss(); model.screen = .costs }.bidButton(.ghost, compact: true)
+                    Button(L("production.costs")) { dismiss(); model.screen = .costs }.bidButton(.ghost, compact: true)
                 }
                 .padding(12)
                 .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.accentSoft))
 
                 if !warnings.isEmpty {
                     VStack(alignment: .leading, spacing: 6) {
-                        Label("\(warnings.count) предупреждение(я) от последната проверка", systemImage: "exclamationmark.triangle.fill")
+                        Label(L("production.warnings", warnings.count), systemImage: "exclamationmark.triangle.fill")
                             .font(.system(size: 12.5, weight: .semibold))
                             .foregroundColor(Theme.warn)
                         ForEach(warnings) { w in
@@ -98,20 +98,20 @@ struct ProductionSheet: View {
                     }
                 }
 
-                Text("Преди качването ще мине пълна проверка (Git → Secrets → Lint → Typecheck → Build). При грешка deploy-ът спира. Production може да използва build минути/кредити от Netlify плана ти.")
+                Text(L("production.explain"))
                     .font(.system(size: 12))
                     .foregroundColor(Theme.secondary)
                     .fixedSize(horizontal: false, vertical: true)
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("За да продължиш, напиши DEPLOY")
+                    Text(L("production.typeDeploy"))
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(Theme.text)
                     BIDTextField(placeholder: "DEPLOY", text: $typed, mono: true)
                 }
             }
         } actions: {
-            Button("Отказ") { dismiss() }
+            Button(L("common.cancel")) { dismiss() }
                 .bidButton(.secondary)
                 .keyboardShortcut(.cancelAction)
             Button {
@@ -164,35 +164,35 @@ struct NetlifySetupSheet: View {
     }
 
     var body: some View {
-        SheetScaffold(icon: "globe", title: "Свържи с Netlify",
-                      subtitle: "Без `netlify init` — GitHub CI няма да се включи, deploy-ите остават ръчни",
+        SheetScaffold(icon: "globe", title: L("netlify.connectTitle"),
+                      subtitle: L("netlifySetup.subtitle"),
                       width: 580) {
             VStack(alignment: .leading, spacing: 14) {
                 if !loggedIn {
                     HStack {
-                        Text("Първо влез в Netlify.").foregroundColor(Theme.secondary)
+                        Text(L("netlifySetup.signInFirst")).foregroundColor(Theme.secondary)
                         Spacer()
-                        Button("Вход в Netlify") {
+                        Button(L("netlify.signIn")) {
                             dismiss()
                             model.netlifyLogin { model.sheet = .netlifySetup }
                         }
                         .bidButton(.primary)
                     }
                 } else {
-                    SegmentedControl(options: [("Свържи съществуващ", Mode.link), ("Създай нов", Mode.create)], selection: $mode)
+                    SegmentedControl(options: [(L("netlifySetup.linkExisting"), Mode.link), (L("netlifySetup.createNew"), Mode.create)], selection: $mode)
 
                     if loading {
                         HStack(spacing: 8) {
                             Spinner(size: 14)
-                            Text("Зареждам от Netlify… (първия път през npx може да отнеме минута)")
+                            Text(L("netlifySetup.loading"))
                                 .font(.system(size: 12)).foregroundColor(Theme.secondary)
                         }
                         .frame(maxWidth: .infinity, minHeight: 120)
                     } else if let error {
                         Text(error).foregroundColor(Theme.blocked).font(.system(size: 12.5))
-                        Button("Опитай пак") { Task { await load() } }.bidButton(.secondary, compact: true)
+                        Button(L("common.retry")) { Task { await load() } }.bidButton(.secondary, compact: true)
                     } else if mode == .link {
-                        BIDTextField(placeholder: "Търси сайт…", text: $query)
+                        BIDTextField(placeholder: L("netlifySetup.searchSite"), text: $query)
                         ScrollView {
                             VStack(spacing: 4) {
                                 ForEach(filtered) { site in
@@ -200,7 +200,7 @@ struct NetlifySetupSheet: View {
                                         .onTapGesture { chosenSite = site.id }
                                 }
                                 if filtered.isEmpty {
-                                    Text("Няма намерени сайтове").foregroundColor(Theme.tertiary).font(.system(size: 12)).padding(20)
+                                    Text(L("netlifySetup.noSites")).foregroundColor(Theme.tertiary).font(.system(size: 12)).padding(20)
                                 }
                             }
                         }
@@ -208,7 +208,7 @@ struct NetlifySetupSheet: View {
                         .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.bg))
                     } else {
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("Име на сайта").font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                            Text(L("netlifySetup.siteName")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
                             BIDTextField(placeholder: "moyat-sait", text: $newName, mono: true)
                             Text("\(slug.isEmpty ? "име" : slug).netlify.app").font(.system(size: 11.5, design: .monospaced)).foregroundColor(Theme.tertiary)
                         }
@@ -230,10 +230,10 @@ struct NetlifySetupSheet: View {
                 }
             }
         } actions: {
-            Button("Отказ") { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
+            Button(L("common.cancel")) { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
             if loggedIn {
                 if mode == .link {
-                    Button("Свържи") {
+                    Button(L("common.connect")) {
                         guard let id = chosenSite else { return }
                         dismiss()
                         model.netlifyLink(siteId: id)
@@ -241,7 +241,7 @@ struct NetlifySetupSheet: View {
                     .bidButton(.primary)
                     .disabled(chosenSite == nil)
                 } else {
-                    Button("Създай и свържи") {
+                    Button(L("netlifySetup.createAndLink")) {
                         dismiss()
                         model.netlifyCreate(name: slug, team: team.isEmpty ? nil : team)
                     }
@@ -346,9 +346,9 @@ struct CommitSheet: View {
                       width: 600) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text("\(included.count) от \(files.count) файла").font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                    Text(L("commit.filesCount", included.count, files.count)).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
                     Spacer()
-                    Button(excluded.isEmpty ? "Махни всички" : "Избери всички") {
+                    Button(excluded.isEmpty ? L("commit.deselectAll") : L("commit.selectAll")) {
                         excluded = excluded.isEmpty ? Set(files.map(\.path)) : []
                     }
                     .bidButton(.ghost, compact: true)
@@ -378,17 +378,17 @@ struct CommitSheet: View {
                 .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.bg))
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Съобщение").font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
-                    BIDTextField(placeholder: "Какво промени?", text: $message)
+                    Text(L("commit.message")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                    BIDTextField(placeholder: L("commit.placeholder"), text: $message)
                 }
                 if model.status?.git.remote == nil {
-                    Label("Няма GitHub remote — ще направя само commit.", systemImage: "info.circle")
+                    Label(L("commit.noRemote"), systemImage: "info.circle")
                         .font(.system(size: 12)).foregroundColor(Theme.secondary)
                 }
             }
         } actions: {
-            Button("Отказ") { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
-            Button("Само commit") {
+            Button(L("common.cancel")) { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
+            Button(L("commit.commitOnly")) {
                 dismiss()
                 model.commit(message: finalMessage, files: excluded.isEmpty ? nil : included, push: false)
             }
@@ -423,17 +423,17 @@ struct RemoteSheet: View {
     @Local private var url = ""
 
     var body: some View {
-        SheetScaffold(icon: "link", title: "GitHub remote", subtitle: "Свържи проекта с GitHub repository") {
+        SheetScaffold(icon: "link", title: "GitHub remote", subtitle: L("remote.title")) {
             VStack(alignment: .leading, spacing: 10) {
-                Text("1. Създай празно repo в GitHub (без README).\n2. Постави URL-а му тук.")
+                Text(L("remote.steps"))
                     .font(.system(size: 12.5)).foregroundColor(Theme.secondary)
-                Button { model.open("https://github.com/new") } label: { Label("Отвори github.com/new", systemImage: "arrow.up.right") }
+                Button { model.open("https://github.com/new") } label: { Label(L("remote.openNew"), systemImage: "arrow.up.right") }
                     .bidButton(.ghost, compact: true)
                 BIDTextField(placeholder: "https://github.com/user/repo.git", text: $url, mono: true)
             }
         } actions: {
-            Button("Отказ") { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
-            Button("Запази") {
+            Button(L("common.cancel")) { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
+            Button(L("common.save")) {
                 dismiss()
                 model.setRemote(url.trimmingCharacters(in: .whitespaces))
             }
@@ -468,8 +468,8 @@ struct FixConfirmSheet: View {
                 }
             }
         } actions: {
-            Button("Отказ") { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
-            Button("Приложи") {
+            Button(L("common.cancel")) { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
+            Button(L("fix.apply")) {
                 dismiss()
                 model.applyFix(fix)
             }
@@ -488,10 +488,10 @@ struct HistorySheet: View {
     @Local private var entries: [HistoryEntry] = []
 
     var body: some View {
-        SheetScaffold(icon: "clock.arrow.circlepath", title: "Deploy история",
-                      subtitle: all ? "Всички проекти" : model.selected?.name, width: 760) {
+        SheetScaffold(icon: "clock.arrow.circlepath", title: L("historySheet.title"),
+                      subtitle: all ? L("common.allProjects") : model.selected?.name, width: 760) {
             VStack(alignment: .leading, spacing: 10) {
-                SegmentedControl(options: [("Този проект", false), ("Всички проекти", true)], selection: $all)
+                SegmentedControl(options: [(L("historySheet.thisProject"), false), (L("common.allProjects"), true)], selection: $all)
                     .frame(width: 320)
                 ScrollView {
                     VStack(spacing: 0) {
@@ -499,14 +499,14 @@ struct HistorySheet: View {
                             HistoryRow(entry: e, showProject: all)
                         }
                         if entries.isEmpty {
-                            Text("Няма записи").foregroundColor(Theme.tertiary).padding(30)
+                            Text(L("historySheet.empty")).foregroundColor(Theme.tertiary).padding(30)
                         }
                     }
                 }
                 .frame(height: 420)
             }
         } actions: {
-            Button("Затвори") { dismiss() }.bidButton(.primary).keyboardShortcut(.defaultAction)
+            Button(L("common.close")) { dismiss() }.bidButton(.primary).keyboardShortcut(.defaultAction)
         }
         .task(id: all) { await load() }
     }
@@ -529,35 +529,35 @@ struct SettingsSheet: View {
     @Local private var doctor: DoctorInfo?
 
     var body: some View {
-        SheetScaffold(icon: "gearshape.fill", title: "Настройки", subtitle: "Before I Deploy V9", width: 600) {
+        SheetScaffold(icon: "gearshape.fill", title: L("common.settings"), subtitle: "Before I Deploy V9", width: 600) {
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 10) {
-                    SectionLabel(text: "Поведение")
-                    ToggleRow(title: "Отваряй preview автоматично", subtitle: "След успешен Draft / Production deploy", isOn: $autoOpenPreview)
-                    ToggleRow(title: "Проверявай при избор на проект", subtitle: "Пуска пълна проверка (с build) щом избереш проект", isOn: $checkOnSelect)
-                    ToggleRow(title: "macOS известия", subtitle: "Когато build / deploy приключи", isOn: $notificationsEnabled)
+                    SectionLabel(text: L("settings.behavior"))
+                    ToggleRow(title: L("settings.autoOpenPreview"), subtitle: L("settings.autoOpenPreviewHint"), isOn: $autoOpenPreview)
+                    ToggleRow(title: L("settings.checkOnSelect"), subtitle: L("settings.checkOnSelectHint"), isOn: $checkOnSelect)
+                    ToggleRow(title: L("settings.notifications"), subtitle: L("settings.notificationsHint"), isOn: $notificationsEnabled)
                 }
                 VStack(alignment: .leading, spacing: 8) {
-                    SectionLabel(text: "Среда")
+                    SectionLabel(text: L("settings.environment"))
                     if let d = doctor {
                         InfoRow(label: "Engine", value: "v\(d.engine)")
                         InfoRow(label: "Node", value: d.node.version)
                         InfoRow(label: "npm", value: d.npm?.version ?? "—")
                         if let p = d.pnpm { InfoRow(label: "pnpm", value: p.version) }
-                        InfoRow(label: "git", value: d.git?.version ?? "няма", tint: d.git == nil ? Theme.blocked : Theme.text)
-                        InfoRow(label: "Netlify CLI", value: d.netlify?.version ?? (d.npx != nil ? "през npx" : "няма"))
-                        InfoRow(label: "Netlify акаунт", value: d.netlifyAuth.email ?? (d.netlifyAuth.loggedIn ? "влязъл" : "не си влязъл"))
+                        InfoRow(label: "git", value: d.git?.version ?? L("common.none"), tint: d.git == nil ? Theme.blocked : Theme.text)
+                        InfoRow(label: "Netlify CLI", value: d.netlify?.version ?? (d.npx != nil ? L("settings.viaNpx") : L("common.none")))
+                        InfoRow(label: L("settings.netlifyAccount"), value: d.netlifyAuth.email ?? (d.netlifyAuth.loggedIn ? L("common.signedInLower") : L("common.notSignedInLower")))
                         HStack {
-                            Button("Папка с данни") { model.openFile(d.appDir) }.bidButton(.ghost, compact: true)
-                            Button("Логове") { model.openFile(d.cacheDir) }.bidButton(.ghost, compact: true)
+                            Button(L("settings.dataFolder")) { model.openFile(d.appDir) }.bidButton(.ghost, compact: true)
+                            Button(L("settings.logs")) { model.openFile(d.cacheDir) }.bidButton(.ghost, compact: true)
                         }
                     } else {
-                        HStack { Spinner(size: 12); Text("Проверявам…").foregroundColor(Theme.secondary).font(.system(size: 12)) }
+                        HStack { Spinner(size: 12); Text(L("settings.checking")).foregroundColor(Theme.secondary).font(.system(size: 12)) }
                     }
                 }
             }
         } actions: {
-            Button("Готово") { dismiss() }.bidButton(.primary).keyboardShortcut(.defaultAction)
+            Button(L("common.done")) { dismiss() }.bidButton(.primary).keyboardShortcut(.defaultAction)
         }
         .task { doctor = try? await model.engine.call(["doctor"], as: DoctorInfo.self) }
     }

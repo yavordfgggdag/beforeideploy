@@ -272,9 +272,9 @@ enum Fmt {
     static func relative(_ s: String?) -> String {
         guard let d = date(s) else { return "—" }
         let secs = Date().timeIntervalSince(d)
-        if secs < 45 { return "току-що" }
-        if secs < 3600 { return "преди \(Int(secs / 60)) мин" }
-        if secs < 86400 { return "преди \(Int(secs / 3600)) ч" }
+        if secs < 45 { return L("time.justNow") }
+        if secs < 3600 { return L("time.minutesAgo", Int(secs / 60)) }
+        if secs < 86400 { return L("time.hoursAgo", Int(secs / 3600)) }
         let f = DateFormatter()
         f.locale = Locale(identifier: "bg_BG")
         f.dateFormat = "d MMM, HH:mm"

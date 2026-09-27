@@ -204,8 +204,8 @@ final class AppModel: ObservableObject, Feedback {
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = true
-        panel.prompt = "Добави"
-        panel.message = "Избери папката на проекта"
+        panel.prompt = L("library.addButton")
+        panel.message = L("library.pickFolder")
         guard panel.runModal() == .OK else { return }
         let urls = panel.urls
         Task {
@@ -338,14 +338,14 @@ final class AppModel: ObservableObject, Feedback {
                 if p.terminationStatus == 0 { return }
             } catch {}
         }
-        flash("Не намерих \(names.first ?? "приложението")", error: true)
+        flash(L("open.appNotFound", names.first ?? L("open.theApp")), error: true)
     }
 
     func copy(_ text: String?) {
         guard let text else { return }
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(text, forType: .string)
-        flash("Копирано")
+        flash(L("common.copied"))
     }
 
     // MARK: - Mission Control / Costs / Setup
@@ -375,7 +375,7 @@ final class AppModel: ObservableObject, Feedback {
     func setBudget(netlifyMin: Double) {
         Task {
             _ = try? await engine.run(["budget", "--netlify-min", String(Int(netlifyMin))])
-            flash("Бюджетът е запазен")
+            flash(L("costs.budgetSaved"))
             await loadCosts()
         }
     }
@@ -384,8 +384,8 @@ final class AppModel: ObservableObject, Feedback {
         guard let a = item.action else { return }
         switch a.type {
         case "run":
-            let s = RunSession(title: "Инсталирам \(item.title)", subtitle: a.display ?? "", kind: .fix)
-            runController.startRun(s, args: ["setup", "run", item.id, "--yes"], successTitle: "\(item.title) е готов") { [weak self] _ in
+            let s = RunSession(title: L("setup.installing", item.title), subtitle: a.display ?? "", kind: .fix)
+            runController.startRun(s, args: ["setup", "run", item.id, "--yes"], successTitle: L("setup.itemReady", item.title)) { [weak self] _ in
                 Task { await self?.loadSetup() }
             }
         case "terminal":
@@ -393,7 +393,7 @@ final class AppModel: ObservableObject, Feedback {
                 do {
                     let r = try await engine.call(["setup", "terminal", item.id], as: CommandFileResult.self)
                     openCommand(r.commandFile)
-                    flash("Довърши в Terminal, после натисни „Обнови“")
+                    flash(L("setup.finishInTerminal"))
                 } catch { show(error) }
             }
         case "open":
@@ -407,20 +407,20 @@ final class AppModel: ObservableObject, Feedback {
     }
 
     func setupAuto() {
-        let s = RunSession(title: "Автоматична настройка", subtitle: "Инсталира всичко липсващо, после отваря Terminal за входовете", kind: .fix)
-        runController.startRun(s, args: ["setup", "auto", "--yes"], successTitle: "Настройката приключи") { [weak self] outcome in
+        let s = RunSession(title: L("setup.autoTitle"), subtitle: L("setup.autoSubtitle"), kind: .fix)
+        runController.startRun(s, args: ["setup", "auto", "--yes"], successTitle: L("setup.autoDone")) { [weak self] outcome in
             guard let self else { return }
             if let r = try? outcome.decode(SetupAutoResult.self) {
                 self.setup = r.status
                 if let f = r.commandFile {
-                    s.outcomeMessage = "Остава вход в някои акаунти — отворих Terminal."
+                    s.outcomeMessage = L("setup.autoSignInsLeft")
                     self.openCommand(f)
                 } else if r.status.ready {
-                    s.outcomeMessage = "Всичко задължително е настроено ✓"
+                    s.outcomeMessage = L("setup.autoAllSet")
                 }
             }
             if self.setup?.items.contains(where: { !$0.ok && $0.action?.appAction == "netlify-login" }) == true {
-                s.outcomeMessage = (s.outcomeMessage ?? "") + " Влез и в Netlify от картата му."
+                s.outcomeMessage = (s.outcomeMessage ?? "") + L("setup.autoNetlifyToo")
             }
         }
     }

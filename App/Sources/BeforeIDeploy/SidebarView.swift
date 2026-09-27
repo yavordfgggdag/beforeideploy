@@ -27,16 +27,16 @@ struct SidebarView: View {
                     model.screen = .overview
                     Task { await model.loadOverview() }
                 }
-                NavRow(symbol: "network", title: "Домейни", selected: model.screen == .domains,
+                NavRow(symbol: "network", title: L("common.domains"), selected: model.screen == .domains,
                        badge: expiring > 0 ? "\(expiring)" : nil) {
                     model.screen = .domains
                     Task { await model.loadSpaceship() }
                 }
-                NavRow(symbol: "creditcard.fill", title: "Разходи & кредити", selected: model.screen == .costs) {
+                NavRow(symbol: "creditcard.fill", title: L("common.costs"), selected: model.screen == .costs) {
                     model.screen = .costs
                     Task { await model.loadCosts() }
                 }
-                NavRow(symbol: "wand.and.stars", title: "Настройка", selected: model.screen == .setup,
+                NavRow(symbol: "wand.and.stars", title: L("common.setup"), selected: model.screen == .setup,
                        badge: (model.setup?.missingRequired ?? 0) > 0 ? "\(model.setup?.missingRequired ?? 0)" : nil) {
                     model.screen = .setup
                     Task { await model.loadSetup() }
@@ -46,7 +46,7 @@ struct SidebarView: View {
             .padding(.bottom, 18)
 
             HStack {
-                SectionLabel(text: "Проекти")
+                SectionLabel(text: L("common.projects"))
                 Spacer()
                 Text("\(model.projects.count)")
                     .font(.system(size: 10.5, weight: .semibold))
@@ -61,11 +61,11 @@ struct SidebarView: View {
                         ProjectRow(project: p, selected: model.screen == .project && p.key == model.selectedKey)
                             .onTapGesture { Task { await model.select(p.key) } }
                             .contextMenu {
-                                Button("Покажи във Finder") { model.revealInFinder(p.path) }
-                                Button("Отвори в Cursor") { model.openIn(app: ["Cursor", "Visual Studio Code"], path: p.path) }
-                                Button("Отвори в Terminal") { model.openIn(app: ["Terminal"], path: p.path) }
+                                Button(L("common.showInFinder")) { model.revealInFinder(p.path) }
+                                Button(L("sidebar.openInCursor")) { model.openIn(app: ["Cursor", "Visual Studio Code"], path: p.path) }
+                                Button(L("common.openInTerminal")) { model.openIn(app: ["Terminal"], path: p.path) }
                                 Divider()
-                                Button("Премахни от библиотеката") { model.removeProject(p.key) }
+                                Button(L("sidebar.remove")) { model.removeProject(p.key) }
                             }
                     }
                 }
@@ -80,7 +80,7 @@ struct SidebarView: View {
                 } label: {
                     HStack {
                         Image(systemName: "plus")
-                        Text("Добави проект")
+                        Text(L("common.addProject"))
                         Spacer()
                         Text("⌘O").foregroundColor(Theme.tertiary).font(.system(size: 11))
                     }
@@ -91,7 +91,7 @@ struct SidebarView: View {
                 Button { model.showPalette = true } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "magnifyingglass")
-                        Text("Търси или действай…")
+                        Text(L("sidebar.search"))
                         Spacer()
                         Text("⌘K").foregroundColor(Theme.tertiary).font(.system(size: 11))
                     }
@@ -103,8 +103,8 @@ struct SidebarView: View {
                 .buttonStyle(.plain)
                 AccountBadge()
                 HStack(spacing: 8) {
-                    SidebarFooterButton(symbol: "clock.arrow.circlepath", title: "История") { model.sheet = .history }
-                    SidebarFooterButton(symbol: "gearshape", title: "Настройки") { model.sheet = .settings }
+                    SidebarFooterButton(symbol: "clock.arrow.circlepath", title: L("common.history")) { model.sheet = .history }
+                    SidebarFooterButton(symbol: "gearshape", title: L("common.settings")) { model.sheet = .settings }
                 }
             }
             .padding(14)
@@ -161,7 +161,7 @@ struct ProjectRow: View {
                     .font(.system(size: 13, weight: selected ? .semibold : .medium))
                     .foregroundColor(project.exists == false ? Theme.tertiary : Theme.text)
                     .lineLimit(1)
-                Text(project.exists == false ? "папката липсва" : (subtitle.isEmpty ? "—" : subtitle))
+                Text(project.exists == false ? L("sidebar.folderMissing") : (subtitle.isEmpty ? "—" : subtitle))
                     .font(.system(size: 10.5))
                     .foregroundColor(Theme.tertiary)
                     .lineLimit(1)

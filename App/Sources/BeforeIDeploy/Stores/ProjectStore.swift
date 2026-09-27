@@ -81,7 +81,7 @@ final class ProjectStore: ObservableObject {
         do {
             let p = try await engine.call(["project", "add", "--path", path], as: Project.self)
             await loadProjects()
-            feedback?.flash("Добавен: \(p.name)", error: false)
+            feedback?.flash(L("library.added", p.name), error: false)
             return p
         } catch {
             feedback?.show(error)

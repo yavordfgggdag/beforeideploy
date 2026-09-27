@@ -73,7 +73,7 @@ final class AccountStore: ObservableObject {
             if kv.count == 2 { params[kv[0]] = kv[1].removingPercentEncoding ?? kv[1] }
         }
         guard let access = params["access_token"] else {
-            feedback?.flash(params["error_description"]?.replacingOccurrences(of: "+", with: " ") ?? "Входът беше отказан", error: true)
+            feedback?.flash(params["error_description"]?.replacingOccurrences(of: "+", with: " ") ?? L("auth.denied"), error: true)
             return
         }
         do {
@@ -86,7 +86,7 @@ final class AccountStore: ObservableObject {
 
     private func afterLogin() async {
         offlineMode = false
-        feedback?.flash("Здравей, \(account?.name ?? account?.email ?? "")!", error: false)
+        feedback?.flash(L("auth.hello", account?.name ?? account?.email ?? ""), error: false)
         await onLogin?()
         Task { _ = try? await engine.run(["account", "sync"]) }
     }
@@ -103,9 +103,9 @@ final class AccountStore: ObservableObject {
         Task {
             let o = try? await engine.run(["account", "sync"])
             if o?.ok == true {
-                feedback?.flash("Синхронизирано", error: false)
+                feedback?.flash(L("account.synced"), error: false)
             } else {
-                feedback?.flash(o?.errorMessage ?? "Синхронизацията не успя", error: true)
+                feedback?.flash(o?.errorMessage ?? L("account.syncFailed"), error: true)
             }
         }
     }

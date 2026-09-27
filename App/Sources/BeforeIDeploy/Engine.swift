@@ -26,7 +26,7 @@ struct EngineOutcome {
         guard let d = resultData,
               let obj = try? JSONSerialization.jsonObject(with: d) as? [String: Any] else {
             let tail = stderr.trimmingCharacters(in: .whitespacesAndNewlines)
-            return tail.isEmpty ? "Engine-ът не отговори (код \(exitCode))" : tail
+            return tail.isEmpty ? L("engine.noResponse", exitCode) : tail
         }
         return obj["error"] as? String
     }
@@ -38,10 +38,10 @@ struct EngineOutcome {
     }
 
     func decode<T: Decodable>(_ type: T.Type) throws -> T {
-        guard let d = resultData else { throw EngineError.failed(errorMessage ?? "Няма резултат", nil) }
+        guard let d = resultData else { throw EngineError.failed(errorMessage ?? L("engine.noResult"), nil) }
         let env = try JSONDecoder().decode(ResultEnvelope<T>.self, from: d)
-        guard env.ok else { throw EngineError.failed(env.error ?? "Неизвестна грешка", env.code) }
-        guard let v = env.data else { throw EngineError.failed("Празен резултат", nil) }
+        guard env.ok else { throw EngineError.failed(env.error ?? L("engine.unknownError"), env.code) }
+        guard let v = env.data else { throw EngineError.failed(L("engine.emptyResult"), nil) }
         return v
     }
 }
@@ -60,7 +60,7 @@ enum EngineError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .failed(let m, _): return m
-        case .missing(let p): return "Engine-ът не е инсталиран: \(p). Пусни install.sh."
+        case .missing(let p): return L("engine.missingAt", p)
         }
     }
 
@@ -90,10 +90,9 @@ final class EngineClient {
 
     var isInstalled: Bool { FileManager.default.isExecutableFile(atPath: enginePath) }
 
-    /// Language for engine messages (BID_LANG). The "locale" setting arrives with the language picker (WP1 app);
-    /// until then the app stays Bulgarian, as in V9.
+    /// Language for engine messages (BID_LANG) — the same one the app uses.
     static var engineLanguage: String {
-        UserDefaults.standard.string(forKey: "locale") ?? "bg"
+        Localization.current
     }
 
     /// Runs `bid <args>`; streams every event to `onEvent` on the main actor.

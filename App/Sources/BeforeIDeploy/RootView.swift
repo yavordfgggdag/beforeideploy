@@ -48,7 +48,7 @@ struct RootView: View {
                 } else {
                     VStack(spacing: 12) {
                         Spinner(size: 22)
-                        Text("Зареждам проекта…").foregroundColor(Theme.secondary).font(.system(size: 13))
+                        Text(L("root.loadingProject")).foregroundColor(Theme.secondary).font(.system(size: 13))
                     }
                 }
             }
@@ -130,14 +130,14 @@ struct WelcomeView: View {
             Text("Before I Deploy")
                 .font(.system(size: 30, weight: .bold))
                 .foregroundColor(Theme.text)
-            Text("Добави първия си проект — ще разпозная framework, package manager,\nGitHub и Netlify автоматично и ще ги запомня.")
+            Text(L("root.emptyHint"))
                 .multilineTextAlignment(.center)
                 .font(.system(size: 14))
                 .foregroundColor(Theme.secondary)
             Button {
                 model.addProjectPanel()
             } label: {
-                Label("Добави проект", systemImage: "plus")
+                Label(L("common.addProject"), systemImage: "plus")
             }
             .bidButton(.primary)
             .padding(.top, 6)
@@ -153,17 +153,17 @@ struct EngineMissingView: View {
             Image(systemName: "shippingbox")
                 .font(.system(size: 40))
                 .foregroundColor(Theme.accent)
-            Text("Engine-ът не е инсталиран")
+            Text(L("root.engineMissing"))
                 .font(.system(size: 22, weight: .bold))
                 .foregroundColor(Theme.text)
-            Text("Пусни install.sh от папката BeforeIDeploy-V6 и отвори приложението отново.\nОчаквам го тук:")
+            Text(L("root.engineMissingHint"))
                 .multilineTextAlignment(.center)
                 .foregroundColor(Theme.secondary)
             Text(model.engine.enginePath)
                 .font(.system(size: 12, design: .monospaced))
                 .foregroundColor(Theme.tertiary)
                 .textSelection(.enabled)
-            Button("Опитай пак") { Task { await model.start() } }
+            Button(L("common.retry")) { Task { await model.start() } }
                 .bidButton(.secondary)
         }
         .padding(40)

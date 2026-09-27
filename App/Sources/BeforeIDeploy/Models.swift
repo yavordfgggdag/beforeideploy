@@ -165,14 +165,14 @@ struct HistoryEntry: Codable, Identifiable, Hashable {
 
     var title: String {
         switch kind {
-        case "production": return status == "ok" ? "Production" : "Production — грешка"
-        case "draft": return status == "ok" ? "Draft preview" : "Draft — грешка"
-        case "check": return status == "ok" ? "Проверка" : "Проверка — blocked"
+        case "production": return status == "ok" ? "Production" : L("history.productionFailed")
+        case "draft": return status == "ok" ? "Draft preview" : L("history.draftFailed")
+        case "check": return status == "ok" ? L("common.checkNoun") : L("history.checkBlocked")
         case "commit": return "Commit"
-        case "push": return status == "ok" ? "Push" : "Push — грешка"
+        case "push": return status == "ok" ? "Push" : L("history.pushFailed")
         case "fix": return "Auto-fix"
-        case "netlify-link": return "Netlify свързан"
-        case "netlify-create": return "Netlify сайт създаден"
+        case "netlify-link": return L("history.netlifyLinked")
+        case "netlify-create": return L("history.netlifyCreated")
         default: return kind
         }
     }

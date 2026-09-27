@@ -16,6 +16,10 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN_DIR/BeforeIDeploy" "$APP/Contents/MacOS/BeforeIDeploy"
 cp "$ROOT/App/Info.plist" "$APP/Contents/Info.plist"
 printf 'APPL????' > "$APP/Contents/PkgInfo"
+# translations (read via Bundle.main — see Localization.swift)
+for LPROJ in "$ROOT/App/Resources/"*.lproj(N); do
+  cp -R "$LPROJ" "$APP/Contents/Resources/"
+done
 
 echo "▸ Икона…"
 ICONSET="$(mktemp -d)/AppIcon.iconset"
