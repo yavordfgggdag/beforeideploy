@@ -5,6 +5,9 @@ const path = require('path');
 
 const root = path.resolve(process.argv[2] || '.');
 const port = Number(process.argv[3] || 4173);
+// Project key: every response carries X-BID-Project so the engine can recognise (and adopt) a server it
+// lost track of, and DELETE /__bid__/stop with the matching X-BID-Key shuts it down without a pid.
+const projectKey = process.argv[4] || '';
 
 const types = {
   '.html': 'text/html; charset=utf-8',
@@ -43,6 +46,16 @@ function resolveFile(url) {
 
 http
   .createServer((req, res) => {
+    if (projectKey) res.setHeader('X-BID-Project', projectKey);
+    if (req.method === 'DELETE' && req.url === '/__bid__/stop') {
+      if (!projectKey || req.headers['x-bid-key'] !== projectKey) {
+        res.statusCode = 403;
+        return res.end('Forbidden');
+      }
+      res.end('stopping');
+      setTimeout(() => process.exit(0), 50);
+      return;
+    }
     let file = resolveFile(req.url);
     if (!file) {
       res.statusCode = 403;

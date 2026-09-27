@@ -1,8 +1,9 @@
 // Local Preview: start / stop / restart / status
 import fs from 'node:fs';
 import path from 'node:path';
+import http from 'node:http';
 import { spawn } from 'node:child_process';
-import { ENGINE_DIR, EngineError, ev, findFreePort, httpAlive, logDir, nowISO, pidAlive, sleep, exists } from './util.mjs';
+import { ENGINE_DIR, EngineError, ev, findFreePort, httpAlive, logDir, nowISO, pidAlive, sleep, exists, sh, which } from './util.mjs';
 import { detect, pmRunArgs } from './detect.mjs';
 import { getState, setState, updateProject } from './store.mjs';
 import { t, msg } from './i18n.mjs';
@@ -14,6 +15,55 @@ export function localStatus(project) {
   }
   if (st) setState(project.key, { local: undefined });
   return { running: false };
+}
+
+// ---------------------------------------------------------------- orphans (WP6.4)
+// A static preview server outlives the app when the app is killed. It answers with X-BID-Project, so a
+// later `start` adopts it instead of failing on a busy port, and `stop` can shut it down via its endpoint.
+
+const PORT_FROM = 4173;
+const PORT_TO = 4300;
+
+function probe(url, { method = 'HEAD', headers = {}, timeout = 400 } = {}) {
+  return new Promise((resolve) => {
+    const req = http.request(url, { method, headers, timeout }, (res) => {
+      res.resume();
+      resolve({ status: res.statusCode, headers: res.headers });
+    });
+    req.on('timeout', () => {
+      req.destroy();
+      resolve(null);
+    });
+    req.on('error', () => resolve(null));
+    req.end();
+  });
+}
+
+function pidOnPort(port) {
+  if (!which('lsof')) return null;
+  const r = sh('lsof', ['-ti', `tcp:${port}`, '-sTCP:LISTEN'], { timeout: 5000 });
+  const pid = Number(r.stdout.trim().split('\n')[0]);
+  return r.code === 0 && pid > 0 ? pid : null;
+}
+
+/** Scans the preview port range for a static server that reports this project's key. */
+export async function findOrphan(project) {
+  for (let port = PORT_FROM; port < PORT_TO; port++) {
+    const url = `http://127.0.0.1:${port}`;
+    const r = await probe(url);
+    if (r?.headers?.['x-bid-project'] === project.key) return { port, url, pid: pidOnPort(port) };
+  }
+  return null;
+}
+
+async function adoptOrphan(project) {
+  const orphan = await findOrphan(project);
+  if (!orphan) return null;
+  const state = { pid: orphan.pid, port: orphan.port, url: orphan.url, mode: 'build', label: t('local.adoptedLabel'), adopted: true, startedAt: nowISO(), log: null };
+  setState(project.key, { local: state });
+  updateProject(project.key, { lastPort: orphan.port });
+  ev.step('local', { label: 'Local Preview', status: 'pass', summary: t('local.adopted', { port: orphan.port }) });
+  return { running: true, ...state };
 }
 
 function plan(project, d, port, mode) {
@@ -45,7 +95,7 @@ function plan(project, d, port, mode) {
         mode: 'build',
         label: `Build output (${d.publishDir})`,
         cmd: process.execPath,
-        args: [path.join(ENGINE_DIR, 'src', 'static-server.cjs'), staticDir, String(port)],
+        args: [path.join(ENGINE_DIR, 'src', 'static-server.cjs'), staticDir, String(port), project.key],
       };
     }
     if (mode === 'build' && has('preview')) {
@@ -76,7 +126,7 @@ function plan(project, d, port, mode) {
       mode: 'build',
       label: 'static files',
       cmd: process.execPath,
-      args: [path.join(ENGINE_DIR, 'src', 'static-server.cjs'), dir, String(port)],
+      args: [path.join(ENGINE_DIR, 'src', 'static-server.cjs'), dir, String(port), project.key],
     };
   }
   throw new EngineError(msg('local.noServer'), 'no_server');
@@ -85,6 +135,8 @@ function plan(project, d, port, mode) {
 export async function localStart(project, { mode = 'auto' } = {}) {
   const cur = localStatus(project);
   if (cur.running) return cur;
+  const adopted = await adoptOrphan(project);
+  if (adopted) return adopted;
 
   const d = detect(project.path);
   const port = await findFreePort(project.lastPort);
@@ -150,6 +202,19 @@ export async function localStart(project, { mode = 'auto' } = {}) {
 
 export async function localStop(project) {
   const st = getState(project.key).local;
+  // an adopted server is asked to stop through its own endpoint (we may not know its pid)
+  if (st?.adopted && st.url) {
+    const r = await probe(`${st.url}/__bid__/stop`, { method: 'DELETE', headers: { 'x-bid-key': project.key }, timeout: 1500 });
+    for (let i = 0; i < 20 && (await httpAlive(st.url, 300)); i++) await sleep(150);
+    const alive = await httpAlive(st.url, 300);
+    if (alive && st.pid && pidAlive(st.pid)) {
+      try {
+        process.kill(st.pid, 'SIGTERM');
+      } catch {}
+    }
+    setState(project.key, { local: undefined });
+    return { running: false, stopped: !!r || !alive };
+  }
   if (!st?.pid || !pidAlive(st.pid)) {
     setState(project.key, { local: undefined });
     return { running: false, stopped: false };

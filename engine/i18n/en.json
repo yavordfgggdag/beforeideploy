@@ -251,6 +251,8 @@
   "hosting.unknown": "Unknown hosting: {provider}",
   "hosting.vercel.free": "Hobby — free, but only for personal/non-commercial projects",
   "hosting.vercel.note": "Client sites need a paid Pro plan.",
+  "local.adopted": "Found a running preview server on port {port} and took it over",
+  "local.adoptedLabel": "static (adopted)",
   "local.failedSeeLog": "The local server failed to start. See the log.",
   "local.failedWithReason": "The local server failed to start: {reason}",
   "local.noBuild": "No build output. Run a check/build first or start the Dev server.",

@@ -251,6 +251,8 @@
   "hosting.unknown": "Непознат хостинг: {provider}",
   "hosting.vercel.free": "Hobby — безплатен, но само за лични/некомерсиални проекти",
   "hosting.vercel.note": "За сайтове на клиенти е нужен платен Pro план.",
+  "local.adopted": "Намерих работещ preview сървър на порт {port} и го поех",
+  "local.adoptedLabel": "static (поет)",
   "local.failedSeeLog": "Локалният сървър не успя да стартира. Виж лога.",
   "local.failedWithReason": "Локалният сървър не успя да стартира: {reason}",
   "local.noBuild": "Няма build output. Пусни проверка/build първо или стартирай Dev server.",

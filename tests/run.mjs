@@ -756,6 +756,23 @@ ta('local: start сервира dist, stop спира процеса', async () 
   bid('local', 'stop', '--project', viteApp);
 });
 
+ta('local: сирак (сървър без state) се осиновява при start и спира със stop', async () => {
+  const key = bid('project', 'list').data.find((p) => p.path === viteApp).key;
+  // a static server left behind by a killed app: no state, but it answers with X-BID-Project
+  const orphan = spawnChild(process.execPath, [path.join(ROOT, 'engine', 'src', 'static-server.cjs'), path.join(viteApp, 'dist'), '4180', key], { stdio: 'ignore', detached: true });
+  orphan.unref();
+  await new Promise((r) => setTimeout(r, 600));
+  assert((await httpGet('http://127.0.0.1:4180')).status === 200, 'orphan not up');
+  const s = bid('local', 'start', '--project', viteApp);
+  assert(s.result.ok && s.data.running && s.data.port === 4180 && s.data.adopted === true, JSON.stringify(s.data));
+  assert(bid('local', 'status', '--project', viteApp).data.port === 4180, 'status should show the adopted server');
+  const stop = bid('local', 'stop', '--project', viteApp);
+  assert(stop.data.stopped, JSON.stringify(stop.data));
+  await new Promise((r) => setTimeout(r, 400));
+  assert((await httpGet('http://127.0.0.1:4180')).status === 0, 'orphan still alive after stop');
+  try { process.kill(orphan.pid); } catch {}
+});
+
 ta('local: dev mode използва dev script', async () => {
   const devApp = mk('dev-app', {
     'package.json': JSON.stringify({
