@@ -5,19 +5,10 @@ import { HOME, ENGINE_DIR, EngineError, sh, which, logDir, readJSON, exists } fr
 import { detect } from './detect.mjs';
 import { getState } from './store.mjs';
 import { recordCost } from './costs.mjs';
-import { msg } from './i18n.mjs';
+import { t, msg } from './i18n.mjs';
 
-const STEP_NAMES = {
-  git: 'Git проверка',
-  secrets: 'проверка за secrets',
-  deps: 'инсталиране на зависимости',
-  lint: 'lint',
-  typecheck: 'typecheck',
-  build: 'production build',
-  hosting: 'Netlify hosting',
-  deploy: 'Netlify deploy',
-  local: 'локален сървър',
-};
+const STEP_KEYS = { git: 'aifix.step.git', secrets: 'aifix.step.secrets', deps: 'aifix.step.deps', lint: 'aifix.step.lint', typecheck: 'aifix.step.typecheck', build: 'aifix.step.build', hosting: 'aifix.step.hosting', deploy: 'aifix.step.deploy', local: 'aifix.step.local' };
+export const stepName = (id) => (STEP_KEYS[id] ? t(STEP_KEYS[id]) : id);
 
 // ---------------------------------------------------------------- redaction
 
@@ -111,9 +102,9 @@ function stepBlock(project, stepId) {
   const isWarn = step?.status === 'warn';
   const log = logFile ? tailFile(logFile, isWarn ? 40 : 80) : '';
   const parts = [];
-  parts.push(`### ${isWarn ? '⚠️ Предупреждение' : '❌ Грешка'}: ${STEP_NAMES[stepId] || stepId}${step?.summary ? ` — ${step.summary}` : ''}`);
+  parts.push(`### ${t(isWarn ? 'aifix.prompt.warning' : 'aifix.prompt.error')}: ${stepName(stepId)}${step?.summary ? ` — ${step.summary}` : ''}`);
   if (step?.details?.length) parts.push(step.details.slice(0, 20).map((l) => `- ${l}`).join('\n'));
-  if (log) parts.push(`Лог (последните редове):\n\`\`\`\n${log}\n\`\`\``);
+  if (log) parts.push(`${t('aifix.prompt.logTail')}\n\`\`\`\n${log}\n\`\`\``);
   return { text: parts.join('\n\n'), log: `${log}\n${(step?.details || []).join('\n')}`, isWarn };
 }
 
@@ -135,29 +126,24 @@ export function buildPrompt(project, stepId) {
   const files = mentionedFiles(dir, blocks.map((b) => b.log).join('\n'));
 
   const parts = [];
-  parts.push(
-    `Ти си senior full-stack web developer и DevOps инженер. Помогни ми да ${onlyWarnings ? 'изчистя предупрежденията' : 'оправя грешката'} в моя уеб проект, преди да го публикувам. Отговаряй на български, кратко и конкретно.`
-  );
-  parts.push(
-    `## Среда\n- macOS, deploy ръчно с Netlify CLI (без CI от GitHub)\n- Framework: ${d.framework}\n- Package manager: ${d.packageManager || '—'}\n- Node: ${node}\n- Build output: ${d.publishDir}\n- Git: ${d.git.isRepo ? `${d.git.branch}${d.git.remote ? ', има GitHub remote' : ', без remote'}` : 'няма repo'}`
-  );
-  parts.push(`## Проблеми от проверката „Before I Deploy“\n\n${blocks.map((b) => b.text).join('\n\n')}`);
+  parts.push(t(onlyWarnings ? 'aifix.prompt.introWarnings' : 'aifix.prompt.introErrors'));
+  const git = d.git.isRepo ? `${d.git.branch}${t(d.git.remote ? 'aifix.prompt.gitRemote' : 'aifix.prompt.gitNoRemote')}` : t('aifix.prompt.gitNoRepo');
+  parts.push(t('aifix.prompt.environment', { framework: d.framework, pm: d.packageManager || '—', node, publishDir: d.publishDir, git }));
+  parts.push(`${t('aifix.prompt.problems')}\n\n${blocks.map((b) => b.text).join('\n\n')}`);
   if (pkg) {
     const deps = { ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) };
     parts.push(
-      `## package.json\nScripts:\n\`\`\`json\n${JSON.stringify(pkg.scripts || {}, null, 2)}\n\`\`\`\nЗависимости: ${Object.entries(deps)
+      `## package.json\nScripts:\n\`\`\`json\n${JSON.stringify(pkg.scripts || {}, null, 2)}\n\`\`\`\n${t('aifix.prompt.dependencies')}: ${Object.entries(deps)
         .slice(0, 40)
         .map(([k, v]) => `${k}@${v}`)
         .join(', ')}`
     );
   }
-  for (const f of files) parts.push(`## Файл: ${f.rel}${f.line ? ` (около ред ${f.line})` : ''}\n\`\`\`\n${f.body}\n\`\`\``);
-  if (diffStat) parts.push(`## Неприбрани промени (git diff --stat)\n\`\`\`\n${diffStat}\n\`\`\``);
-  if (recent) parts.push(`## Последни commit-и\n${recent}`);
-  parts.push(
-    `## Как да отговориш\n1. **Причина** — 1–3 изречения какво точно не е наред.\n2. **Поправка** — минималната промяна като diff или пълен код на засегнатия участък. Не пипай несвързани файлове и не сменяй framework/версии без нужда.\n3. **Команди** — ако трябва (install, git и т.н.), точно какво да пусна в Terminal в папката на проекта.\n4. **Проверка** — как да се уверя, че е оправено (в Before I Deploy натискам „Провери“).\n5. Ако ти липсва информация — кажи точно кой файл да ти покажа.\nНикога не ми предлагай да слагам ключове/пароли в кода или в Git.`
-  );
-  const label = ids.length > 1 ? `${ids.length} проблема` : STEP_NAMES[ids[0]] || ids[0];
+  for (const f of files) parts.push(`## ${t('aifix.prompt.file')}: ${f.rel}${f.line ? ` (${t('aifix.prompt.aroundLine', { line: f.line })})` : ''}\n\`\`\`\n${f.body}\n\`\`\``);
+  if (diffStat) parts.push(`## ${t('aifix.prompt.uncommitted')}\n\`\`\`\n${diffStat}\n\`\`\``);
+  if (recent) parts.push(`## ${t('aifix.prompt.recentCommits')}\n${recent}`);
+  parts.push(t('aifix.prompt.howToAnswer'));
+  const label = ids.length > 1 ? t('aifix.prompt.problemsCount', { count: ids.length }) : stepName(ids[0]);
   return { prompt: redact(parts.join('\n\n')), stepLabel: label };
 }
 
@@ -188,7 +174,7 @@ export function aifix(project, { step, target }) {
       out.clipboard = true;
       out.url =
         base +
-        encodeURIComponent(`Ще ти поставя (Cmd+V) пълния контекст за грешка при ${stepLabel} в моя ${detect(project.path).framework} проект. Изчакай го и тогава отговори.`);
+        encodeURIComponent(t('aifix.pasteIntro', { step: stepLabel, framework: detect(project.path).framework }));
     }
   } else if (t === 'codex' || t === 'claude-code') {
     const bin = t === 'codex' ? 'codex' : 'claude';
@@ -207,7 +193,7 @@ export function aifix(project, { step, target }) {
         `[ -f ${shellQuote(path.join(ENGINE_DIR, 'env.zsh'))} ] && source ${shellQuote(path.join(ENGINE_DIR, 'env.zsh'))}`,
         `cd ${shellQuote(project.path)} || exit 1`,
         'clear',
-        `echo "🤖 ${bin} — поправка на: ${stepLabel}"`,
+        `echo "🤖 ${bin} — ${t('aifix.command.fixing', { step: stepLabel })}"`,
         'echo',
         `${bin} "$(cat ${shellQuote(promptFile)})"`,
         '',

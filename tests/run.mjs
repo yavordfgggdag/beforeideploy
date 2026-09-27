@@ -169,8 +169,9 @@ t('i18n: всеки ключ в engine/src съществува в катало�
   const en = catalog('en');
   const src = path.join(ROOT, 'engine', 'src');
   const used = new Set();
-  for (const f of fs.readdirSync(src).filter((f) => f.endsWith('.mjs'))) {
-    const text = fs.readFileSync(path.join(src, f), 'utf8');
+  const mjs = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? mjs(path.join(dir, e.name)) : e.name.endsWith('.mjs') ? [path.join(dir, e.name)] : []));
+  for (const f of mjs(src)) {
+    const text = fs.readFileSync(f, 'utf8');
     for (const m of text.matchAll(/\b(?:t|msg)\(\s*'([a-zA-Z0-9_.]+)'/g)) used.add(m[1]);
     for (const m of text.matchAll(/'([a-z]+(?:\.[a-zA-Z0-9_]+)+)'/g)) if (m[1] in en) used.add(m[1]);
   }
@@ -472,11 +473,28 @@ const http=require('http');const port=Number(process.argv[2]);const users={};let
 const profiles={};const ledger=[];const audit=[];
 const tok=(e)=>({access_token:'AT-'+e,refresh_token:'RT-'+e,expires_in:3600,user:{id:'u-'+e,email:e,user_metadata:{full_name:'Test'},app_metadata:{provider:'email'}}});
 const caller=(q)=>{const m=/^Bearer AT-(.+)$/.exec(q.headers.authorization||'');return m?profiles['u-'+m[1]]:null;};
+const ANSWER='The build fails because src/app.js has a syntax error: a + ; is missing the right operand.\\n\\n<<<FILE src/app.js>>>\\n<<<<<<< SEARCH\\nconst c = a + ;\\n=======\\nconst c = a + b;\\n>>>>>>> REPLACE\\n<<<NEW FILE src/notes.txt>>>\\nfixed by ai\\n<<<END FILE>>>\\n<<<FILE ../outside.js>>>\\n<<<<<<< SEARCH\\nx\\n=======\\ny\\n>>>>>>> REPLACE\\n';
+const ANSWER_PARTS=[ANSWER.slice(0,40),ANSWER.slice(40,120),ANSWER.slice(120)];
 const balance=(id)=>ledger.filter(l=>l.user_id===id).reduce((a,l)=>a+l.delta,0);
 http.createServer((q,r)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{r.setHeader('content-type','application/json');
  if(q.url.startsWith('/v1/models')){if(q.headers['x-api-key']!=='sk-ant-good-key-123'){r.statusCode=401;return r.end('{}');}return r.end('{"data":[]}');}
+ if(q.url==='/v1/messages'){if(q.headers['x-api-key']!=='sk-ant-good-key-123'){r.statusCode=401;return r.end('{"type":"error","error":{"message":"invalid x-api-key"}}');}
+   r.setHeader('content-type','text/event-stream');const ev=(o)=>r.write('event: '+o.type+'\\ndata: '+JSON.stringify(o)+'\\n\\n');
+   ev({type:'message_start',message:{model:'claude-sonnet-5',usage:{input_tokens:4500,output_tokens:1}}});ev({type:'content_block_start',index:0,content_block:{type:'text',text:''}});
+   for(const part of ANSWER_PARTS)ev({type:'content_block_delta',index:0,delta:{type:'text_delta',text:part}});
+   ev({type:'content_block_stop',index:0});ev({type:'message_delta',delta:{stop_reason:'end_turn'},usage:{output_tokens:1500}});ev({type:'message_stop'});return r.end();}
  if(q.headers.apikey!=='ANON'){r.statusCode=401;return r.end('{"message":"no apikey"}');}
  const j=b?JSON.parse(b):{};
+ if(q.url==='/functions/v1/ai-fix'){const me=caller(q);if(!me){r.statusCode=401;return r.end('{"error":"no session"}');}
+   if(me.ai_disabled){r.statusCode=403;return r.end('{"error":"disabled","code":"disabled"}');}
+   if(me.role==='normal'&&me.plan==='free'){r.statusCode=403;return r.end('{"error":"plan","code":"no_plan"}');}
+   const bal=balance(me.user_id);if(bal<=0){r.statusCode=402;return r.end(JSON.stringify({error:'no credits',code:'quota_exhausted',renewsAt:'2026-10-01T00:00:00Z',balance:bal}));}
+   if(!j.prompt||j.prompt.length>60000){r.statusCode=413;return r.end('{"error":"prompt"}');}
+   r.setHeader('content-type','text/event-stream');const send=(o)=>r.write('data: '+JSON.stringify(o)+'\\n\\n');
+   for(const part of ANSWER_PARTS)send({type:'delta',text:part});
+   const charged=6000*(j.deep?5:1);ledger.push({user_id:me.user_id,delta:-charged,reason:'ai_fix'});
+   send({type:'usage',input:4500,output:1500,model:'claude-sonnet-5',charged:charged,balance:balance(me.user_id)});send({type:'done'});return r.end();}
+ if(q.url.startsWith('/rest/v1/settings')){if(!caller(q)){r.statusCode=401;return r.end('{}');}return r.end('[]');}
  if(q.url==='/auth/v1/signup'){if(users[j.email]){r.statusCode=400;return r.end('{"msg":"User already registered"}');}users[j.email]=j.password;
    profiles['u-'+j.email]={user_id:'u-'+j.email,email:j.email,role:Object.keys(profiles).length?'normal':'admin',plan:'free',locale:(j.data&&j.data.locale)||'en',ai_disabled:false,display_name:j.data&&j.data.full_name||null};
    return r.end(JSON.stringify(tok(j.email)));}
@@ -584,8 +602,78 @@ t('акаунт: регистрация, вход, грешна парола, sy
     bid('account', 'logout');
     bid('account', 'login', '--email', 'yavor@example.com', '--password', 'supersecret1');
   } finally {
-    try { process.kill(-sb.pid); } catch {}
+    // the mock stays up for the AI tests below; it is killed at exit
   }
+});
+process.on('exit', () => { try { process.kill(-sb.pid); } catch {} });
+
+// ---- Built-in AI Fix (fake Anthropic + fake ai-fix function live in the mock Supabase server)
+// node_modules/.keep: the deps step must pass so that only the build decides blocked/ready
+const aiFixture = { 'package.json': JSON.stringify({ name: 'ai-app', scripts: { build: 'node src/app.js' } }), 'node_modules/.keep': '', 'src/app.js': 'const a = 1;\nconst b = 2;\nconst c = a + ;\nconsole.log(c);\n' };
+const aiApp = mk('ai-app', aiFixture);
+
+t('ai: собствен ключ → patch, прилагане само с --yes, файл извън проекта се отхвърля', () => {
+  const chk = bid('check', '--project', aiApp);
+  assert(chk.data.status === 'blocked', 'fixture must fail to build');
+  const none = bid('ai', 'fix', '--project', aiApp, '--step', 'build');
+  assert(none.result.code === 'ai_unavailable' && none.result.key === 'ai.unavailable.noKey', JSON.stringify(none.result));
+  spawnSync(BID, ['account', 'keys', 'set', '--provider', 'anthropic'], { env: { ...ENV, BID_AI_KEY: 'sk-ant-good-key-123' }, encoding: 'utf8' });
+  const fix = bid('ai', 'fix', '--project', aiApp, '--step', 'build');
+  assert(fix.result.ok, fix.result?.error + ' ' + fix.stderr);
+  assert(fix.data.provider === 'anthropic' && fix.data.usage.input === 4500 && fix.data.usage.output === 1500, JSON.stringify(fix.data.usage));
+  assert(fix.events.filter((e) => e.type === 'ai' && e.delta).length >= 3, 'streamed ai events');
+  assert(fix.events.some((e) => e.type === 'step' && e.id === 'ai' && e.status === 'pass'), 'ai step event');
+  const app = fix.data.files.find((f) => f.path === 'src/app.js');
+  assert(app && app.applicable && app.additions === 1 && app.deletions === 1 && app.diff.includes('+const c = a + b;'), JSON.stringify(app));
+  assert(fix.data.files.find((f) => f.path === '../outside.js').error === 'outside_project', 'outside file must be rejected');
+  assert(fix.data.files.find((f) => f.path === 'src/notes.txt').applicable === true, 'new file');
+  assert(fix.data.explanation.includes('syntax error'), 'explanation');
+  const noYes = bid('ai', 'apply', '--project', aiApp, '--patch-file', fix.data.patchFile);
+  assert(noYes.result.code === 'confirm_required', 'apply without --yes must refuse');
+  assert(fs.readFileSync(path.join(aiApp, 'src/app.js'), 'utf8').includes('a + ;'), 'file changed without --yes');
+  const foreign = bid('ai', 'apply', '--project', viteApp, '--patch-file', fix.data.patchFile, '--yes');
+  assert(foreign.result.code === 'bad_patch', 'a patch for another project must be refused');
+  const applied = bid('ai', 'apply', '--project', aiApp, '--patch-file', fix.data.patchFile, '--files', 'src/app.js', '--yes', '--commit');
+  assert(applied.result.ok && applied.data.applied.join() === 'src/app.js', JSON.stringify(applied.result));
+  assert(applied.data.skipped.some((x) => x.path === '../outside.js' && x.reason === 'outside_project'), JSON.stringify(applied.data.skipped));
+  assert(fs.readFileSync(path.join(aiApp, 'src/app.js'), 'utf8').includes('const c = a + b;'), 'edit applied');
+  assert(!fs.existsSync(path.join(aiApp, 'src/notes.txt')), 'unselected file must not be created');
+  assert(/AI fix \(build\)/.test(git(aiApp, 'log', '-1', '--format=%s')), 'commit');
+  assert(bid('check', '--project', aiApp).data.status !== 'blocked', 'build passes after the fix');
+  const usage = bid('ai', 'usage');
+  assert(usage.data.local.tokens >= 6000 && usage.data.local.byProvider.anthropic, JSON.stringify(usage.data.local));
+  const explain = bid('ai', 'explain', '--project', aiApp, '--step', 'build');
+  assert(explain.result.ok && explain.data.mode === 'explain' && explain.data.explanation.length > 10, JSON.stringify(explain.result));
+  bid('account', 'keys', 'delete', '--provider', 'anthropic');
+});
+
+t('ai: cloud път — план, кредити, quota_exhausted → exit 8, free → недостъпно', () => {
+  const cloudApp = mk('ai-cloud-app', aiFixture);
+  bid('project', 'add', '--path', cloudApp);
+  assert(bid('check', '--project', cloudApp).data.status === 'blocked', 'fixture');
+  bid('admin', 'set_role', '--user', 'u-friend@example.com', '--role', 'normal');
+  bid('admin', 'set_plan_manual', '--user', 'u-friend@example.com', '--plan', 'high');
+  const login = (email, pw) => { bid('account', 'logout'); return bid('account', 'login', '--email', email, '--password', pw); };
+  const f = login('friend@example.com', 'supersecret2');
+  assert(f.data.features['ai.cloud'] === true && f.data.credits.balance === 250000, JSON.stringify(f.data));
+  const fix = bid('ai', 'fix', '--project', cloudApp, '--step', 'build');
+  assert(fix.result.ok, fix.result?.error);
+  assert(fix.data.provider === 'cloud' && fix.data.usage.charged === 6000 && fix.data.usage.balance === 244000, JSON.stringify(fix.data.usage));
+  assert(bid('account', 'status').data.credits.balance === 244000, 'balance after fix');
+  assert(fix.data.files.find((x) => x.path === 'src/app.js').applicable, 'cloud patch');
+  const own = bid('ai', 'fix', '--project', cloudApp, '--step', 'build', '--provider', 'anthropic');
+  assert(own.result.code === 'ai_unavailable' && own.result.key === 'ai.unavailable.ownKeyRole', JSON.stringify(own.result));
+  login('yavor@example.com', 'supersecret1');
+  bid('admin', 'grant_credits', '--user', 'u-friend@example.com', '--delta', '-244000', '--reason', 'test');
+  login('friend@example.com', 'supersecret2');
+  const out = bid('ai', 'fix', '--project', cloudApp, '--step', 'build');
+  assert(out.code === 8 && out.result.code === 'quota_exhausted' && out.result.key === 'ai.quotaExhausted', JSON.stringify(out.result) + ' exit=' + out.code);
+  login('yavor@example.com', 'supersecret1');
+  bid('admin', 'set_plan_manual', '--user', 'u-friend@example.com', '--plan', 'free');
+  login('friend@example.com', 'supersecret2');
+  const free = bid('ai', 'fix', '--project', cloudApp, '--step', 'build');
+  assert(free.result.code === 'ai_unavailable' && free.result.key === 'ai.unavailable.noPlan', JSON.stringify(free.result));
+  login('yavor@example.com', 'supersecret1');
 });
 
 t('хостинг: съветник — SSR изключва статичните хостинги', () => {

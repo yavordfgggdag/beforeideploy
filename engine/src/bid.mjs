@@ -18,6 +18,7 @@ import { accountStatus, signup, login, logout, recover, oauthUrl, completeOAuth,
 import { aiKeysStatus, aiKeySet, aiKeyDelete } from './aikeys.mjs';
 import { adminCommand, ADMIN_ACTIONS } from './admin.mjs';
 import { features as featureGates } from './features.mjs';
+import { aiFix, aiApply, aiUsage } from './ai/index.mjs';
 import { hostingStatus, advise, setHosting, deployProject, hostingReady, providerStatus } from './hosting.mjs';
 import { spaceshipConnect, spaceshipDisconnect, spaceshipDomains, spaceshipDns, connectDomainToNetlify } from './spaceship.mjs';
 import { t, msg } from './i18n.mjs';
@@ -40,6 +41,8 @@ const HELP = `Before I Deploy engine ${VERSION}
   bid fix     list --project P | apply ID --project P --yes
   bid history [--project P] [--limit N]
   bid aifix   --project P --step ID --target chatgpt|claude|codex|claude-code|copy
+  bid ai      fix --project P --step ID [--deep] [--model M] [--provider anthropic|openai|cloud]   built-in AI Fix (streams 'ai' events)
+  bid ai      explain --project P --step ID | apply --project P --patch-file F --yes [--files a,b] [--commit] | usage
   bid costs   [--refresh]          costs, credits, price table, budgets
   bid usage   [--refresh]          real limits from the providers
   bid budget  --netlify-min N
@@ -243,6 +246,15 @@ async function main() {
 
     case 'aifix':
       return ok(aifix(proj(), { step: flags.step, target: flags.target }));
+
+    case 'ai': {
+      if (sub === 'usage') return ok(await aiUsage());
+      const p = proj();
+      if (sub === 'fix') return ok(await aiFix(p, { step: flags.step, model: flags.model, deep: !!flags.deep, provider: flags.provider }));
+      if (sub === 'explain') return ok(await aiFix(p, { step: flags.step, model: flags.model, provider: flags.provider, mode: 'explain' }));
+      if (sub === 'apply') return ok(await aiApply(p, { patchFile: flags['patch-file'], files: flags.files, yes: !!flags.yes, commit: !!flags.commit }));
+      throw new EngineError(msg('cli.unknownCommand', { command: `ai ${sub}` }), 'usage', 2);
+    }
 
     case 'costs':
       return ok(await costSummary({ refresh: !!flags.refresh }));

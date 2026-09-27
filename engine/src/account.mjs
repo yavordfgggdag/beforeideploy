@@ -122,9 +122,10 @@ async function loadProfile(session) {
   if (!id) return null;
   const cached = readJSON(PROFILE_CACHE(), null);
   try {
-    const [rows, balance] = await Promise.all([
+    const [rows, balance, settingsRows] = await Promise.all([
       rest(`/profiles?select=role,plan,locale,ai_disabled,display_name&user_id=eq.${encodeURIComponent(id)}`, { token: session.accessToken }),
       rest(`/credit_balance?select=balance&user_id=eq.${encodeURIComponent(id)}`, { token: session.accessToken }).catch(() => []),
+      rest('/settings?select=key,value', { token: session.accessToken }).catch(() => []),
     ]);
     const row = Array.isArray(rows) ? rows[0] : null;
     if (!row) return cached?.userId === id ? cached : { ...DEFAULT_PROFILE, userId: id, stale: true };
@@ -136,6 +137,7 @@ async function loadProfile(session) {
       aiDisabled: !!row.ai_disabled,
       displayName: row.display_name || null,
       credits: { balance: Number(balance?.[0]?.balance ?? 0) },
+      settings: Object.fromEntries((Array.isArray(settingsRows) ? settingsRows : []).map((r) => [r.key, r.value])),
       fetchedAt: nowISO(),
     };
     writeJSON(PROFILE_CACHE(), profile);
@@ -157,6 +159,7 @@ function withFeatures(user, profile) {
     locale: p.locale,
     aiDisabled: p.aiDisabled,
     credits: p.credits,
+    settings: p.settings || {},
     profileStale: !!p.stale,
     hasOwnKey,
     features: features({ role: p.role, plan: p.plan, aiDisabled: p.aiDisabled, hasOwnKey }),

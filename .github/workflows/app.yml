@@ -20,6 +20,9 @@ jobs:
     name: swift build (release)
     runs-on: macos-15
     timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v4
       - name: Swift version
