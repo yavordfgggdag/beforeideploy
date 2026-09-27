@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Hardened runtime with no exceptions (scripts/release.sh signs with these): the app spawns zsh and
+	     Node as separate processes and keeps secrets in the Keychain, so it needs no JIT, unsigned-memory
+	     or library-validation exceptions. The App Store build (V10.5) adds the sandbox entitlements. -->
+</dict>
+</plist>
