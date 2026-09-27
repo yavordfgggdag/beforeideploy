@@ -1,0 +1,266 @@
+import AppKit
+import SwiftUI
+
+/// Engine operations shown in the RunOverlay (check, deploy, git, Netlify, fixes, domains),
+/// Local Preview and AI Fix for the selected project.
+@MainActor
+final class RunController: ObservableObject {
+    @Published var run: RunSession?
+    @Published var busy: Set<String> = []
+    @AppStorage("autoOpenPreview") var autoOpenPreview = true
+
+    let engine: EngineClient
+    let projects: ProjectStore
+    weak var feedback: Feedback?
+
+    init(engine: EngineClient, projects: ProjectStore) {
+        self.engine = engine
+        self.projects = projects
+    }
+
+    private var selected: Project? { projects.selected }
+
+    private func flash(_ text: String, error: Bool = false) {
+        feedback?.flash(text, error: error)
+    }
+
+    // MARK: - Runs
+
+    func startRun(_ session: RunSession, args: [String],
+                  successTitle: String,
+                  onSuccess: (@MainActor (EngineOutcome) -> Void)? = nil) {
+        guard run == nil || run?.finished == true else {
+            flash("Изчакай текущата операция да приключи", error: true)
+            return
+        }
+        run = session
+        Task {
+            do {
+                let outcome = try await engine.run(args, handle: session.handle) { [weak session] ev in
+                    session?.handle(ev)
+                }
+                if outcome.ok {
+                    session.finish(success: true, title: successTitle, message: nil)
+                    onSuccess?(outcome)
+                } else {
+                    session.finish(success: false, title: "Спряно", message: outcome.errorMessage)
+                }
+            } catch {
+                session.finish(success: false, title: "Грешка", message: error.localizedDescription)
+            }
+            await projects.refreshStatus(quiet: true)
+            await projects.loadHistory()
+        }
+    }
+
+    func runCheck() {
+        guard let p = selected else { return }
+        let s = RunSession(title: "Проверка", subtitle: p.name, kind: .check)
+        startRun(s, args: ["check", "--project", p.key], successTitle: "Проверката приключи") { outcome in
+            if let check = try? outcome.decode(CheckState.self) {
+                switch check.status {
+                case "ready": s.outcomeTitle = "READY TO DEPLOY"
+                case "warnings": s.outcomeTitle = "READY WITH WARNINGS"
+                default:
+                    s.outcomeTitle = "DEPLOY BLOCKED"
+                    s.success = false
+                }
+                s.outcomeMessage = "\(check.counts?.pass ?? 0) успешни · \(check.counts?.warn ?? 0) предупреждения · \(check.counts?.fail ?? 0) грешки"
+            }
+        }
+    }
+
+    func smartDeploy() {
+        guard let p = selected else { return }
+        let s = RunSession(title: "Smart Deploy", subtitle: "\(p.name) · Git → Secrets → Build → Draft Preview", kind: .smart)
+        startRun(s, args: ["smart", "--project", p.key], successTitle: "Draft Preview е готов") { [weak self] outcome in
+            self?.afterDeploy(outcome, session: s, prod: false)
+        }
+    }
+
+    /// Draft only — reuses a fresh passing check, otherwise runs the full Smart flow.
+    func draftPreview() {
+        guard let p = selected else { return }
+        if let c = projects.status?.check, c.status != "blocked", let d = Fmt.date(c.at), Date().timeIntervalSince(d) < 25 * 60 {
+            let s = RunSession(title: "Draft Preview", subtitle: p.name, kind: .draft)
+            startRun(s, args: ["deploy", "--project", p.key], successTitle: "Draft Preview е готов") { [weak self] outcome in
+                self?.afterDeploy(outcome, session: s, prod: false)
+            }
+        } else {
+            smartDeploy()
+        }
+    }
+
+    func productionDeploy(confirm: String) {
+        guard let p = selected, confirm == "DEPLOY" else { return }
+        let s = RunSession(title: "Production Deploy", subtitle: "\(p.name) · пълна проверка → LIVE", kind: .production)
+        startRun(s, args: ["smart", "--project", p.key, "--prod", "--confirm", "DEPLOY"], successTitle: "LIVE 🚀") { [weak self] outcome in
+            self?.afterDeploy(outcome, session: s, prod: true)
+        }
+    }
+
+    private func afterDeploy(_ outcome: EngineOutcome, session: RunSession, prod: Bool) {
+        struct DeployOut: Decodable { let url: String? }
+        struct SmartOut: Decodable { let deploy: DeployOut? }
+        let url = (try? outcome.decode(SmartOut.self))?.deploy?.url ?? (try? outcome.decode(DeployOut.self))?.url
+        if let url {
+            session.resultURL = url
+            session.outcomeMessage = url
+            if autoOpenPreview, let u = URL(string: url) { NSWorkspace.shared.open(u) }
+        }
+    }
+
+    // MARK: - Local preview
+
+    func localStart(mode: String = "auto") {
+        guard let p = selected else { return }
+        busy.insert("local")
+        Task {
+            defer { busy.remove("local") }
+            // collect steps silently; the overlay (with log tail + AI Fix) is shown only on failure
+            let session = RunSession(title: "Local Preview", subtitle: p.name, kind: .local)
+            let outcome = try? await engine.run(["local", "start", "--project", p.key, "--mode", mode]) { [weak session] ev in
+                session?.handle(ev)
+            }
+            if let outcome, outcome.ok, let st = try? outcome.decode(LocalState.self) {
+                if let u = st.url.flatMap(URL.init(string:)) { NSWorkspace.shared.open(u) }
+                flash("Local: \(st.url ?? "")")
+            } else {
+                let msg = outcome?.errorMessage ?? "Local Preview не стартира"
+                if run == nil || run?.finished == true {
+                    session.finish(success: false, title: "Local Preview не стартира", message: msg)
+                    run = session
+                } else {
+                    flash(msg, error: true)
+                }
+            }
+            await projects.refreshStatus(quiet: true)
+        }
+    }
+
+    func localStop() {
+        guard let p = selected else { return }
+        busy.insert("local")
+        Task {
+            defer { busy.remove("local") }
+            _ = try? await engine.run(["local", "stop", "--project", p.key])
+            flash("Local Preview е спрян")
+            await projects.refreshStatus(quiet: true)
+        }
+    }
+
+    func localRestart() {
+        guard let p = selected else { return }
+        busy.insert("local")
+        Task {
+            defer { busy.remove("local") }
+            let outcome = try? await engine.run(["local", "restart", "--project", p.key])
+            if outcome?.ok == true { flash("Рестартиран") } else { flash(outcome?.errorMessage ?? "Грешка", error: true) }
+            await projects.refreshStatus(quiet: true)
+        }
+    }
+
+    // MARK: - Git
+
+    func commit(message: String, files: [String]?, push: Bool) {
+        guard let p = selected else { return }
+        var args = ["git", "commit", "--project", p.key, "--message", message]
+        if let files, let data = try? JSONEncoder().encode(files), let json = String(data: data, encoding: .utf8) {
+            args += ["--files-json", json]
+        }
+        if push { args.append("--push") }
+        let s = RunSession(title: push ? "Commit & Push" : "Commit", subtitle: p.name, kind: .git)
+        startRun(s, args: args, successTitle: push ? "Качено в GitHub" : "Commit е направен")
+    }
+
+    func push() {
+        guard let p = selected else { return }
+        let s = RunSession(title: "Push", subtitle: p.name, kind: .git)
+        startRun(s, args: ["git", "push", "--project", p.key], successTitle: "Качено в GitHub")
+    }
+
+    func fetch() {
+        guard let p = selected else { return }
+        busy.insert("fetch")
+        Task {
+            defer { busy.remove("fetch") }
+            _ = try? await engine.run(["git", "fetch", "--project", p.key])
+            await projects.refreshStatus(quiet: true)
+        }
+    }
+
+    func setRemote(_ url: String) {
+        guard let p = selected else { return }
+        Task {
+            let outcome = try? await engine.run(["git", "remote", "--project", p.key, "--url", url])
+            if outcome?.ok == true { flash("Remote е зададен") } else { flash(outcome?.errorMessage ?? "Грешка", error: true) }
+            await projects.refreshStatus(quiet: true)
+        }
+    }
+
+    // MARK: - Netlify
+
+    func netlifyLogin(then: (@MainActor () -> Void)? = nil) {
+        let s = RunSession(title: "Вход в Netlify", subtitle: "Потвърди входа в браузъра", kind: .netlify)
+        startRun(s, args: ["netlify", "login"], successTitle: "Влязъл си в Netlify") { _ in then?() }
+    }
+
+    func netlifyLink(siteId: String) {
+        guard let p = selected else { return }
+        let s = RunSession(title: "Свързване с Netlify", subtitle: p.name, kind: .netlify)
+        startRun(s, args: ["netlify", "link", "--project", p.key, "--id", siteId], successTitle: "Netlify е свързан")
+    }
+
+    func netlifyCreate(name: String, team: String?) {
+        guard let p = selected else { return }
+        var args = ["netlify", "create", "--project", p.key, "--name", name]
+        if let team, !team.isEmpty { args += ["--team", team] }
+        let s = RunSession(title: "Нов Netlify сайт", subtitle: "\(name).netlify.app", kind: .netlify)
+        startRun(s, args: args, successTitle: "Сайтът е създаден и свързан")
+    }
+
+    // MARK: - Fixes
+
+    func applyFix(_ fix: FixItem) {
+        guard let p = selected else { return }
+        let s = RunSession(title: fix.title, subtitle: p.name, kind: .fix)
+        startRun(s, args: ["fix", "apply", fix.id, "--project", p.key, "--yes"], successTitle: "Готово")
+    }
+
+    // MARK: - Domains
+
+    func applyDomain(_ domain: String) {
+        guard let p = selected else { return }
+        let s = RunSession(title: "Свързване на \(domain)", subtitle: "\(p.name) · Spaceship DNS → Netlify", kind: .netlify)
+        startRun(s, args: ["spaceship", "connect-domain", "--project", p.key, "--domain", domain, "--yes"], successTitle: "Домейнът е свързан") { _ in
+            s.resultURL = "https://\(domain)"
+            s.outcomeMessage = "SSL сертификатът се активира автоматично (минути до няколко часа)."
+        }
+    }
+
+    // MARK: - AI Fix
+
+    func aiFix(step: String, target: String) {
+        guard let p = selected else { return }
+        Task {
+            do {
+                let r = try await engine.call(["aifix", "--project", p.key, "--step", step, "--target", target], as: AIFixResult.self)
+                if r.clipboard {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(r.prompt, forType: .string)
+                }
+                if let cmd = r.commandFile {
+                    NSWorkspace.shared.open(URL(fileURLWithPath: cmd))
+                    flash("Отворих \(target == "codex" ? "Codex" : "Claude Code") в папката на проекта")
+                } else if let url = r.url, let u = URL(string: url) {
+                    NSWorkspace.shared.open(u)
+                    flash(r.clipboard ? "Prompt-ът е копиран — постави го с ⌘V" : "Отворих нов чат с готов prompt")
+                } else if r.clipboard {
+                    flash("Prompt-ът е копиран (\(r.chars ?? r.prompt.count) символа)")
+                }
+            } catch {
+                feedback?.show(error)
+            }
+        }
+    }
+}
