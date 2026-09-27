@@ -93,6 +93,7 @@
 "aikeys.remove" = "Премахни";
 "aikeys.saved" = "Ключът е проверен и запазен в Keychain";
 
+"auth.apple" = "Вход с Apple";
 "auth.backToLogin" = "← Назад към вход";
 "auth.checkInbox" = "Провери пощата си за линк за нова парола.";
 "auth.confirmEmail" = "Изпратихме ти имейл за потвърждение. Потвърди го и влез.";
@@ -267,6 +268,15 @@
 "engine.noResponse" = "Engine-ът не отговори (код %@)";
 "engine.noResult" = "Няма резултат";
 "engine.unknownError" = "Неизвестна грешка";
+
+"firstSteps.add" = "Добави проект";
+"firstSteps.addHint" = "Папка с уебсайт — framework-ът, package manager-ът и хостингът се откриват автоматично.";
+"firstSteps.check" = "Пусни проверка";
+"firstSteps.checkHint" = "Седем стъпки преди всеки deploy; грешките идват с поправка.";
+"firstSteps.deploy" = "Публикувай";
+"firstSteps.deployHint" = "Първо draft preview; production само след като напишеш DEPLOY.";
+"firstSteps.setupHint" = "Липсват задължителни инструменти — Настройка ги инсталира.";
+"firstSteps.title" = "Първи стъпки";
 
 "fix.apply" = "Приложи";
 
@@ -523,6 +533,27 @@
 "time.hoursAgo" = "преди %@ ч";
 "time.justNow" = "току-що";
 "time.minutesAgo" = "преди %@ мин";
+
+"tour.1.b1" = "Git, тайни, зависимости, lint, типове, build и хостинг";
+"tour.1.b2" = "Нищо не е променено? Втората проверка отнема секунди.";
+"tour.1.b3" = "Всяка стъпка показва какво е намерила и как се оправя";
+"tour.1.text" = "Едно натискане прави проверките, които внимателен разработчик би направил — преди сайтът да е на живо.";
+"tour.1.title" = "Провери, преди да публикуваш";
+"tour.2.b1" = "Netlify, Vercel, Cloudflare Pages или GitHub Pages";
+"tour.2.b2" = "Local Preview и Git commit-и без терминал";
+"tour.2.b3" = "Домейни и DNS с един бутон (Spaceship)";
+"tour.2.text" = "Първо preview, production само след потвърждение — с цената, показана предварително.";
+"tour.2.title" = "Публикувай и свържи домейн";
+"tour.3.b1" = "Вграден AI Fix с diff-ове или ChatGPT, Claude и Codex с готов prompt";
+"tour.3.b2" = "Ключовете ти за хостинг остават в Keychain на Mac-а";
+"tour.3.b3" = "Акаунтът синхронизира имена и статуси на проекти — нищо друго";
+"tour.3.text" = "Провалена стъпка получава обяснение и предложени промени по файловете; нищо не се записва, докато не одобриш.";
+"tour.3.title" = "Оправяй с AI, запази контрола";
+"tour.back" = "Назад";
+"tour.next" = "Напред";
+"tour.pageOf" = "Страница %@ от %@";
+"tour.skip" = "Пропусни";
+"tour.start" = "Започни";
 
 "update.available" = "Нова версия %@";
 "update.checkNow" = "Провери за нова версия";

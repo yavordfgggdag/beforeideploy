@@ -63,6 +63,7 @@ enum Localization {
         let library = support?.appendingPathComponent("BeforeIDeploy/projects.json").path ?? ""
         if v9Keys.contains(where: { defaults.object(forKey: $0) != nil }) || FileManager.default.fileExists(atPath: library) {
             set("bg")
+            defaults.set(true, forKey: Onboarding.tourSeenKey) // an upgrade is not a first launch
         }
     }
 

@@ -223,11 +223,43 @@ export async function currentSession({ refresh = true } = {}) {
   return s;
 }
 
+const PROVIDERS_CACHE = () => path.join(APP_DIR, 'auth-providers.json'); // last answer of /auth/v1/settings — used offline
+const OAUTH_PROVIDERS = ['github', 'apple', 'google'];
+
+/**
+ * OAuth providers enabled in the Supabase project (WP5). `GET /auth/v1/settings` is public and reports
+ * `external: {github: true, apple: false, …}`, so the sign-in screen shows exactly the buttons that work;
+ * the owner enables a provider in the Supabase dashboard and nothing in the app has to change.
+ */
+export async function authProviders() {
+  const c = cloudConfig();
+  if (!c) return [];
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 4000);
+  try {
+    const res = await fetch(`${c.url}/auth/v1/settings`, { headers: { apikey: c.anonKey }, signal: ctl.signal });
+    if (res.ok) {
+      const j = await res.json();
+      const providers = OAUTH_PROVIDERS.filter((p) => j?.external?.[p] === true);
+      writeJSON(PROVIDERS_CACHE(), { providers, checkedAt: nowISO() });
+      return providers;
+    }
+  } catch {
+    // offline or blocked — fall back to the last answer
+  } finally {
+    clearTimeout(timer);
+  }
+  const cached = readJSON(PROVIDERS_CACHE(), null);
+  return Array.isArray(cached?.providers) ? cached.providers : ['github'];
+}
+
 export async function accountStatus() {
   const configured = !!cloudConfig();
   if (!configured) return { configured: false, loggedIn: false };
   const s = await currentSession();
-  return { configured: true, ...(await publicUser(s)) };
+  const user = await publicUser(s);
+  if (!user.loggedIn) user.providers = await authProviders();
+  return { configured: true, ...user };
 }
 
 /** Saves the app language to the cloud profile (the app calls this on every language change). */

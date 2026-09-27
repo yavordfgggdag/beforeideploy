@@ -34,6 +34,18 @@ final class ModelsTests: XCTestCase {
         XCTAssertTrue(a.isAdmin)
     }
 
+    func testAnonymousAccountStateCarriesTheEnabledProviders() throws {
+        let a = try Fixtures.decode("account-status-anon", as: AccountState.self)
+        XCTAssertFalse(a.loggedIn)
+        XCTAssertEqual(a.configured, true)
+        XCTAssertEqual(a.providers, ["github"])
+        XCTAssertEqual(a.oauthProviders, ["github"])
+        // an engine without the list (V9 shape) keeps the GitHub button
+        let legacy = try JSONDecoder().decode(AccountState.self, from: Data(#"{"configured":true,"loggedIn":false}"#.utf8))
+        XCTAssertNil(legacy.providers)
+        XCTAssertEqual(legacy.oauthProviders, ["github"])
+    }
+
     func testFeaturesDecodeDottedKeys() throws {
         let json = #"{"ai.cloud":true,"ai.ownKey":false,"ai.builtin":true,"ai.external":true,"ai.deep":false,"cloud.sync":true,"admin.panel":false,"billing.plans":true,"projects.max":5}"#
         let f = try JSONDecoder().decode(AccountState.Features.self, from: Data(json.utf8))

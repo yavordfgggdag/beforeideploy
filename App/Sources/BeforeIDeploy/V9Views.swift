@@ -64,21 +64,26 @@ struct AuthView: View {
                 .keyboardShortcut(.defaultAction)
                 .disabled(busy || email.isEmpty || (mode != 2 && password.isEmpty))
 
-                if mode != 2 {
+                if mode != 2 && !providers.isEmpty {
                     HStack(spacing: 10) {
                         Rectangle().fill(Theme.hairline).frame(height: 1)
                         Text(L("auth.or")).font(.system(size: 11.5)).foregroundColor(Theme.tertiary)
                         Rectangle().fill(Theme.hairline).frame(height: 1)
                     }
-                    Button { model.oauth("github") } label: {
-                        HStack {
-                            Spacer()
-                            Image(systemName: "chevron.left.forwardslash.chevron.right")
-                            Text(L("auth.github"))
-                            Spacer()
+                    if providers.contains("github") {
+                        Button { model.oauth("github") } label: {
+                            HStack {
+                                Spacer()
+                                Image(systemName: "chevron.left.forwardslash.chevron.right")
+                                Text(L("auth.github"))
+                                Spacer()
+                            }
                         }
+                        .bidButton(.secondary)
                     }
-                    .bidButton(.secondary)
+                    if providers.contains("apple") {
+                        AppleSignInButton { model.oauth("apple") }
+                    }
                 }
 
                 HStack {
@@ -104,6 +109,11 @@ struct AuthView: View {
             .background(Theme.bg)
         }
         .onChange(of: mode) { _ in error = nil; info = nil }
+    }
+
+    /// Sign-in buttons the cloud project has enabled (engine reads Supabase's public auth settings).
+    var providers: [String] {
+        (model.account?.oauthProviders ?? ["github"]).filter { $0 == "github" || $0 == "apple" }
     }
 
     func submit() {

@@ -1,0 +1,7 @@
+{
+  "configured": true,
+  "loggedIn": false,
+  "providers": [
+    "github"
+  ]
+}

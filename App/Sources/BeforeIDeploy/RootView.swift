@@ -3,11 +3,14 @@ import SwiftUI
 struct RootView: View {
     @EnvironmentObject var model: AppModel
     @AppStorage(Localization.storageKey) private var locale = ""
+    @AppStorage(Onboarding.tourSeenKey) private var tourSeen = false
 
     var body: some View {
         Group {
             if locale.isEmpty {
                 WelcomeLanguageView()
+            } else if !tourSeen {
+                WelcomeTourView()
             } else if model.mustAuthenticate {
                 if model.account?.configured == true {
                     AuthView()
@@ -21,6 +24,7 @@ struct RootView: View {
         .background(Theme.bg)
         .ignoresSafeArea()
         .animation(.easeInOut(duration: 0.25), value: model.mustAuthenticate)
+        .animation(.easeInOut(duration: 0.25), value: tourSeen)
     }
 
     var mainView: some View {
@@ -153,6 +157,8 @@ struct WelcomeView: View {
             }
             .bidButton(.primary)
             .padding(.top, 6)
+            FirstStepsCard()
+                .padding(.top, 18)
         }
         .padding(40)
     }

@@ -535,6 +535,7 @@ http.createServer((q,r)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{r.setHea
    if(j.action==='delete'){delete users[me.email];delete profiles[me.user_id];rows=rows.filter(x=>x.user_id!==me.user_id);audit.push({admin:me.user_id,action:'delete_me',target:me.user_id});return r.end('{"deleted":true}');}
    r.statusCode=400;return r.end('{"error":"unknown action"}');}
  if(q.url.startsWith('/rest/v1/settings')){if(!caller(q)){r.statusCode=401;return r.end('{}');}return r.end('[]');}
+ if(q.url==='/auth/v1/settings'){return r.end('{"external":{"apple":false,"github":true,"google":false,"email":true}}');}
  if(q.url==='/auth/v1/signup'){if(users[j.email]){r.statusCode=400;return r.end('{"msg":"User already registered"}');}users[j.email]=j.password;
    profiles['u-'+j.email]={user_id:'u-'+j.email,email:j.email,role:Object.keys(profiles).length?'normal':'admin',plan:'free',locale:(j.data&&j.data.locale)||'en',ai_disabled:false,display_name:j.data&&j.data.full_name||null};
    return r.end(JSON.stringify(tok(j.email)));}
@@ -587,6 +588,9 @@ t('акаунт: регистрация, вход, грешна парола, sy
     assert(weak.result.code === 'weak_password' && weak.result.key === 'account.weakPassword', weak.result.code);
     bid('account', 'logout');
     assert(bid('account', 'status').data.loggedIn === false, 'still logged in');
+    const anon = bid('account', 'status');
+    assert(JSON.stringify(anon.data.providers) === '["github"]', 'providers from /auth/v1/settings: ' + JSON.stringify(anon.data));
+    fixture('account-status-anon', anon.data);
     const bad = bid('account', 'login', '--email', 'yavor@example.com', '--password', 'wrong-pass');
     assert(bad.result.key === 'account.auth.invalidCredentials', JSON.stringify(bad.result));
     const badBg = bidEnv({ BID_LANG: 'bg' }, 'account', 'login', '--email', 'yavor@example.com', '--password', 'wrong-pass');

@@ -569,6 +569,8 @@ struct AccountState: Codable {
     var profileStale: Bool?
     var hasOwnKey: Bool?
     var features: Features?
+    /// OAuth providers enabled in the cloud project (engine: GET /auth/v1/settings) — present before login.
+    var providers: [String]?
 
     struct Credits: Codable, Hashable {
         var balance: Int
@@ -594,6 +596,8 @@ struct AccountState: Codable {
 
     var isAdmin: Bool { features?.adminPanel == true }
     var canUseOwnKey: Bool { features?.aiOwnKey == true }
+    /// Buttons the sign-in screen shows; V9 behaviour (GitHub) when the engine did not report a list.
+    var oauthProviders: [String] { providers ?? ["github"] }
 }
 
 struct AIKeyStatus: Codable, Identifiable, Hashable {

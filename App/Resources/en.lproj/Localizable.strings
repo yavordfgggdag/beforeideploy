@@ -93,6 +93,7 @@
 "aikeys.remove" = "Remove";
 "aikeys.saved" = "The key is verified and stored in the Keychain";
 
+"auth.apple" = "Sign in with Apple";
 "auth.backToLogin" = "← Back to sign in";
 "auth.checkInbox" = "Check your inbox for a new-password link.";
 "auth.confirmEmail" = "We sent you a confirmation email. Confirm it and sign in.";
@@ -267,6 +268,15 @@
 "engine.noResponse" = "The engine did not respond (exit code %@)";
 "engine.noResult" = "No result";
 "engine.unknownError" = "Unknown error";
+
+"firstSteps.add" = "Add a project";
+"firstSteps.addHint" = "A folder with a website — the framework, package manager and hosting are detected.";
+"firstSteps.check" = "Run a check";
+"firstSteps.checkHint" = "Seven steps before every deploy; errors come with a fix.";
+"firstSteps.deploy" = "Deploy";
+"firstSteps.deployHint" = "Draft preview first; production only after you type DEPLOY.";
+"firstSteps.setupHint" = "Some required tools are missing — Setup installs them.";
+"firstSteps.title" = "First steps";
 
 "fix.apply" = "Apply";
 
@@ -523,6 +533,27 @@
 "time.hoursAgo" = "%@ h ago";
 "time.justNow" = "just now";
 "time.minutesAgo" = "%@ min ago";
+
+"tour.1.b1" = "Git, secrets, dependencies, lint, types, build and hosting";
+"tour.1.b2" = "Nothing changed? The second check takes seconds.";
+"tour.1.b3" = "Every step shows what it found and how to fix it";
+"tour.1.text" = "One click runs the checks a careful developer would run — before the site goes live.";
+"tour.1.title" = "Check before you deploy";
+"tour.2.b1" = "Netlify, Vercel, Cloudflare Pages or GitHub Pages";
+"tour.2.b2" = "Local Preview and Git commits without the terminal";
+"tour.2.b3" = "Domains and DNS with one button (Spaceship)";
+"tour.2.text" = "Preview first, production only after you confirm — with the price shown up front.";
+"tour.2.title" = "Deploy and connect a domain";
+"tour.3.b1" = "Built-in AI Fix with diffs, or ChatGPT, Claude and Codex with a ready prompt";
+"tour.3.b2" = "Your hosting keys stay in the Mac Keychain";
+"tour.3.b3" = "An account syncs project names and statuses — nothing else";
+"tour.3.text" = "A failed step gets an explanation and proposed file changes; nothing is written until you approve.";
+"tour.3.title" = "Fix with AI, keep control";
+"tour.back" = "Back";
+"tour.next" = "Next";
+"tour.pageOf" = "Page %@ of %@";
+"tour.skip" = "Skip";
+"tour.start" = "Get started";
 
 "update.available" = "New version %@";
 "update.checkNow" = "Check for updates";
