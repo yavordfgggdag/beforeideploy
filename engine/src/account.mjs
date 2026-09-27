@@ -4,6 +4,7 @@ import path from 'node:path';
 import { APP_DIR, ENGINE_DIR, EngineError, readJSON, writeJSON, nowISO } from './util.mjs';
 import { getSecret, setSecret, deleteSecret } from './secrets.mjs';
 import { listProjects } from './store.mjs';
+import { msg } from './i18n.mjs';
 
 const USER_CONFIG = () => path.join(APP_DIR, 'cloud.json');
 const BUNDLED_CONFIG = () => path.join(ENGINE_DIR, 'cloud.json');
@@ -16,9 +17,9 @@ export function cloudConfig() {
 }
 
 export function setCloudConfig({ url, anonKey }) {
-  if (!url || !anonKey || url === true || anonKey === true) throw new EngineError('Липсват URL и anon key', 'usage', 2);
+  if (!url || !anonKey || url === true || anonKey === true) throw new EngineError(msg('account.cloud.missingArgs'), 'usage', 2);
   if (!/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(url.trim()) && !/^http:\/\/127\.0\.0\.1/.test(url)) {
-    throw new EngineError('URL-ът трябва да е във формат https://xxxx.supabase.co', 'usage', 2);
+    throw new EngineError(msg('account.cloud.badUrl'), 'usage', 2);
   }
   writeJSON(USER_CONFIG(), { url: url.trim().replace(/\/$/, ''), anonKey: anonKey.trim(), savedAt: nowISO() });
   return { configured: true };
@@ -26,7 +27,7 @@ export function setCloudConfig({ url, anonKey }) {
 
 function cfg() {
   const c = cloudConfig();
-  if (!c) throw new EngineError('Облакът не е настроен.', 'not_configured', 7);
+  if (!c) throw new EngineError(msg('account.cloud.notConfigured'), 'not_configured', 7);
   return c;
 }
 
@@ -45,7 +46,7 @@ async function auth(p, { method = 'POST', body, token } = {}) {
       body: body ? JSON.stringify(body) : undefined,
     });
   } catch (e) {
-    throw new EngineError(`Няма връзка със сървъра за акаунти: ${e.message}`, 'network');
+    throw new EngineError(msg('account.network', { error: e.message }), 'network');
   }
   const text = await res.text();
   let data = null;
@@ -59,14 +60,14 @@ async function auth(p, { method = 'POST', body, token } = {}) {
   return data;
 }
 
-function translate(msg) {
-  const m = String(msg);
-  if (/invalid login credentials/i.test(m)) return 'Грешен имейл или парола.';
-  if (/email not confirmed/i.test(m)) return 'Имейлът още не е потвърден — провери пощата си.';
-  if (/user already registered/i.test(m)) return 'Вече има акаунт с този имейл — влез.';
-  if (/password should be at least/i.test(m)) return 'Паролата трябва да е поне 8 символа.';
-  if (/rate limit/i.test(m)) return 'Твърде много опити — изчакай малко.';
-  if (/unable to validate email/i.test(m)) return 'Невалиден имейл.';
+function translate(raw) {
+  const m = String(raw);
+  if (/invalid login credentials/i.test(m)) return msg('account.auth.invalidCredentials');
+  if (/email not confirmed/i.test(m)) return msg('account.auth.emailNotConfirmed');
+  if (/user already registered/i.test(m)) return msg('account.auth.alreadyRegistered');
+  if (/password should be at least/i.test(m)) return msg('account.weakPassword');
+  if (/rate limit/i.test(m)) return msg('account.auth.rateLimited');
+  if (/unable to validate email/i.test(m)) return msg('account.auth.invalidEmail');
   return m;
 }
 
@@ -87,21 +88,21 @@ function publicUser(session) {
 }
 
 export async function signup({ email, password, name }) {
-  if (!email || !password || email === true || password === true) throw new EngineError('Липсват имейл и парола', 'usage', 2);
-  if (String(password).length < 8) throw new EngineError('Паролата трябва да е поне 8 символа.', 'weak_password');
+  if (!email || !password || email === true || password === true) throw new EngineError(msg('account.missingCredentials'), 'usage', 2);
+  if (String(password).length < 8) throw new EngineError(msg('account.weakPassword'), 'weak_password');
   const r = await auth('/signup', { body: { email, password, data: name && name !== true ? { full_name: name } : {} } });
   if (r?.access_token) return { ...publicUser(saveSession(r)), confirmEmail: false };
   return { configured: true, loggedIn: false, confirmEmail: true, email };
 }
 
 export async function login({ email, password }) {
-  if (!email || !password || email === true || password === true) throw new EngineError('Липсват имейл и парола', 'usage', 2);
+  if (!email || !password || email === true || password === true) throw new EngineError(msg('account.missingCredentials'), 'usage', 2);
   const r = await auth('/token?grant_type=password', { body: { email, password } });
   return publicUser(saveSession(r));
 }
 
 export async function recover({ email }) {
-  if (!email || email === true) throw new EngineError('Липсва имейл', 'usage', 2);
+  if (!email || email === true) throw new EngineError(msg('account.missingEmail'), 'usage', 2);
   await auth('/recover', { body: { email } });
   return { sent: true };
 }
@@ -115,7 +116,7 @@ export function oauthUrl({ provider = 'github' }) {
 
 /** Called by the app with the tokens from the callback URL fragment. */
 export async function completeOAuth({ access, refresh }) {
-  if (!access || access === true) throw new EngineError('Липсва access token', 'usage', 2);
+  if (!access || access === true) throw new EngineError(msg('account.missingAccessToken'), 'usage', 2);
   const user = await auth('/user', { method: 'GET', token: access });
   return publicUser(saveSession({ access_token: access, refresh_token: refresh, expires_in: 3600, user }));
 }
@@ -158,7 +159,7 @@ export async function logout() {
 
 export async function syncProjects() {
   const s = await currentSession();
-  if (!s) throw new EngineError('Не си влязъл в акаунта.', 'not_logged_in', 5);
+  if (!s) throw new EngineError(msg('account.notLoggedIn'), 'not_logged_in', 5);
   const c = cfg();
   const rows = listProjects().map((p) => ({
     user_id: s.user?.id,
@@ -185,8 +186,8 @@ export async function syncProjects() {
       body: JSON.stringify(rows),
     });
   } catch (e) {
-    throw new EngineError(`Синхронизацията не успя: ${e.message}`, 'network');
+    throw new EngineError(msg('account.sync.network', { error: e.message }), 'network');
   }
-  if (!res.ok) throw new EngineError(`Синхронизацията не успя (HTTP ${res.status}). Пусна ли SQL схемата?`, 'sync_failed');
+  if (!res.ok) throw new EngineError(msg('account.sync.http', { status: res.status }), 'sync_failed');
   return { synced: rows.length, at: nowISO() };
 }

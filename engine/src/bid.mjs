@@ -15,6 +15,7 @@ import { overview } from './overview.mjs';
 import { accountStatus, signup, login, logout, recover, oauthUrl, completeOAuth, syncProjects, setCloudConfig, cloudConfig } from './account.mjs';
 import { hostingStatus, advise, setHosting, deployProject, hostingReady, providerStatus } from './hosting.mjs';
 import { spaceshipConnect, spaceshipDisconnect, spaceshipDomains, spaceshipDns, connectDomainToNetlify } from './spaceship.mjs';
+import { t, msg } from './i18n.mjs';
 
 const VERSION = '9.0.0';
 
@@ -131,7 +132,7 @@ async function main() {
           return ok(updateProject(p.key, { customName: flags.name, name: flags.name }));
         }
         default:
-          throw new EngineError(`Непозната команда: project ${sub}`, 'usage', 2);
+          throw new EngineError(msg('cli.unknownCommand', { command: `project ${sub}` }), 'usage', 2);
       }
     }
 
@@ -144,23 +145,23 @@ async function main() {
     case 'check': {
       const p = proj();
       const check = await runChecks(p, { stopOnFail: !!flags['stop-on-fail'] });
-      if (check.status === 'blocked') ev.notify(`❌ ${p.name}`, 'Проверката откри грешки — deploy е блокиран', null);
+      if (check.status === 'blocked') ev.notify(`❌ ${p.name}`, t('check.notify.blocked'), null);
       return ok(check);
     }
 
     case 'smart': {
       const p = proj();
       const prod = !!flags.prod;
-      if (prod && flags.confirm !== 'DEPLOY') throw new EngineError('Production изисква --confirm DEPLOY', 'confirm_required', 2);
+      if (prod && flags.confirm !== 'DEPLOY') throw new EngineError(msg('smart.confirmRequired'), 'confirm_required', 2);
       const check = await runChecks(p, { stopOnFail: true });
       if (check.status === 'blocked') {
-        ev.step('deploy', { label: prod ? 'Production deploy' : 'Draft preview', category: 'Hosting', status: 'skipped', summary: 'Спряно — има грешки' });
-        ev.notify(`❌ ${p.name}`, 'Smart Deploy спря — има грешки', null);
-        throw new EngineError('Smart Deploy спря: проверката откри грешки.', 'blocked', 3);
+        ev.step('deploy', { label: t(prod ? 'deploy.label.production' : 'deploy.label.draft'), category: 'Hosting', status: 'skipped', summary: t('smart.step.stopped') });
+        ev.notify(`❌ ${p.name}`, t('smart.notify.stopped'), null);
+        throw new EngineError(msg('smart.blocked'), 'blocked', 3);
       }
       if (!hostingReady(p)) {
-        ev.step('deploy', { label: 'Хостинг', category: 'Hosting', status: 'skipped', summary: 'Хостингът не е свързан' });
-        throw new EngineError('Проверките минаха, но хостингът не е свързан. Свържи го и опитай пак.', 'not_linked', 4);
+        ev.step('deploy', { label: t('smart.step.hosting'), category: 'Hosting', status: 'skipped', summary: t('smart.step.hostingNotLinked') });
+        throw new EngineError(msg('smart.notLinked'), 'not_linked', 4);
       }
       const deploy = await deployProject(p, { prod, confirm: flags.confirm });
       return ok({ check, deploy });
@@ -173,7 +174,7 @@ async function main() {
       if (sub === 'stop') return ok(await localStop(p));
       if (sub === 'restart') return ok(await localRestart(p, { mode: flags.mode }));
       if (sub === 'status') return ok(localStatus(p));
-      throw new EngineError(`Непозната команда: local ${sub}`, 'usage', 2);
+      throw new EngineError(msg('cli.unknownCommand', { command: `local ${sub}` }), 'usage', 2);
     }
 
     case 'git': {
@@ -186,7 +187,7 @@ async function main() {
           try {
             files = JSON.parse(flags['files-json']);
           } catch {
-            throw new EngineError('Невалиден --files-json', 'usage', 2);
+            throw new EngineError(msg('git.badFilesJson'), 'usage', 2);
           }
         }
         const r = await gitCommit(p, { message: flags.message, files });
@@ -199,7 +200,7 @@ async function main() {
         upsertProject(p.path);
         return ok(r);
       }
-      throw new EngineError(`Непозната команда: git ${sub}`, 'usage', 2);
+      throw new EngineError(msg('cli.unknownCommand', { command: `git ${sub}` }), 'usage', 2);
     }
 
     case 'netlify': {
@@ -221,7 +222,7 @@ async function main() {
         case 'deploy':
           return ok(await netlifyDeploy(proj(), { prod: !!flags.prod, confirm: flags.confirm }));
         default:
-          throw new EngineError(`Непозната команда: netlify ${sub}`, 'usage', 2);
+          throw new EngineError(msg('cli.unknownCommand', { command: `netlify ${sub}` }), 'usage', 2);
       }
     }
 
@@ -229,7 +230,7 @@ async function main() {
       const p = proj();
       if (sub === 'list') return ok(listFixes(p.path));
       if (sub === 'apply') return ok(await applyFix(p, positional[1] || flags.id, { yes: !!flags.yes }));
-      throw new EngineError(`Непозната команда: fix ${sub}`, 'usage', 2);
+      throw new EngineError(msg('cli.unknownCommand', { command: `fix ${sub}` }), 'usage', 2);
     }
 
     case 'aifix':
@@ -252,7 +253,7 @@ async function main() {
       if (sub === 'run') return ok(await setupRun(positional[1] || flags.id, { yes: !!flags.yes }));
       if (sub === 'auto') return ok(await setupAuto({ yes: !!flags.yes, includeOptional: !!flags.optional }));
       if (sub === 'terminal') return ok(setupTerminal(positional[1] || flags.id || 'all'));
-      throw new EngineError(`Непозната команда: setup ${sub}`, 'usage', 2);
+      throw new EngineError(msg('cli.unknownCommand', { command: `setup ${sub}` }), 'usage', 2);
     }
 
     case 'spaceship': {
@@ -261,7 +262,7 @@ async function main() {
       if (sub === 'disconnect') return ok(spaceshipDisconnect());
       if (sub === 'dns') return ok(await spaceshipDns(flags.domain));
       if (sub === 'connect-domain') return ok(await connectDomainToNetlify(proj(), { domain: flags.domain, yes: !!flags.yes }));
-      throw new EngineError(`Непозната команда: spaceship ${sub}`, 'usage', 2);
+      throw new EngineError(msg('cli.unknownCommand', { command: `spaceship ${sub}` }), 'usage', 2);
     }
 
     case 'account': {
@@ -275,7 +276,7 @@ async function main() {
       if (sub === 'oauth') return ok(oauthUrl({ provider: flags.provider || 'github' }));
       if (sub === 'session') return ok(await completeOAuth({ access: flags.access || process.env.BID_ACCESS, refresh: flags.refresh || process.env.BID_REFRESH }));
       if (sub === 'sync') return ok(await syncProjects());
-      throw new EngineError(`Непозната команда: account ${sub}`, 'usage', 2);
+      throw new EngineError(msg('cli.unknownCommand', { command: `account ${sub}` }), 'usage', 2);
     }
 
     case 'cloud': {
@@ -287,7 +288,7 @@ async function main() {
       if (!sub || sub === 'status') return ok(hostingStatus());
       if (sub === 'advise') return ok(advise(proj()));
       if (sub === 'set') return ok(setHosting(proj(), flags.provider));
-      throw new EngineError(`Непозната команда: hosting ${sub}`, 'usage', 2);
+      throw new EngineError(msg('cli.unknownCommand', { command: `hosting ${sub}` }), 'usage', 2);
     }
 
     case 'deploy':
@@ -303,7 +304,7 @@ async function main() {
     }
 
     default:
-      throw new EngineError(`Непозната команда: ${cmd}\n\n${HELP}`, 'usage', 2);
+      throw new EngineError(msg('cli.unknownCommandHelp', { command: cmd, help: HELP }), 'usage', 2);
   }
 }
 

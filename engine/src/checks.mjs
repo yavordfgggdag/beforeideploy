@@ -4,15 +4,16 @@ import path from 'node:path';
 import { ev, sh, which, runStream, logDir, nowISO, exists } from './util.mjs';
 import { detect, pmRunArgs } from './detect.mjs';
 import { setState, addHistory, updateProject } from './store.mjs';
+import { t } from './i18n.mjs';
 
 export const STEPS = [
-  { id: 'git', label: 'Git', category: 'Source Control' },
-  { id: 'secrets', label: 'Secrets', category: 'Security' },
-  { id: 'deps', label: 'Зависимости', category: 'Dependencies' },
-  { id: 'lint', label: 'Lint', category: 'Code Quality' },
-  { id: 'typecheck', label: 'Typecheck', category: 'Code Quality' },
-  { id: 'build', label: 'Build', category: 'Build' },
-  { id: 'hosting', label: 'Hosting', category: 'Hosting' },
+  { id: 'git', label: t('check.step.git'), category: 'Source Control' },
+  { id: 'secrets', label: t('check.step.secrets'), category: 'Security' },
+  { id: 'deps', label: t('check.step.deps'), category: 'Dependencies' },
+  { id: 'lint', label: t('check.step.lint'), category: 'Code Quality' },
+  { id: 'typecheck', label: t('check.step.typecheck'), category: 'Code Quality' },
+  { id: 'build', label: t('check.step.build'), category: 'Build' },
+  { id: 'hosting', label: t('check.step.hosting'), category: 'Hosting' },
 ];
 
 const ENV_FILE_RE = /(^|\/)\.env(\.[^/]+)?$/;
@@ -132,25 +133,25 @@ function isIgnored(dir, rel) {
 
 async function stepGit(ctx) {
   const { dir, d } = ctx;
-  if (!which('git')) return { status: 'warn', summary: 'Git не е инсталиран' };
-  if (!d.git.isRepo) return { status: 'info', summary: 'Проектът не е Git repository', fixes: ['git.init'] };
+  if (!which('git')) return { status: 'warn', summary: t('check.git.notInstalled') };
+  if (!d.git.isRepo) return { status: 'info', summary: t('git.notRepo'), fixes: ['git.init'] };
   const details = [];
   const conflicts = sh('git', ['diff', '--name-only', '--diff-filter=U'], { cwd: dir }).stdout.trim();
   if (conflicts) {
     const list = conflicts.split('\n');
-    return { status: 'fail', summary: `${list.length} Git conflict(s)`, details: list.slice(0, 20) };
+    return { status: 'fail', summary: t('check.git.conflicts', { count: list.length }), details: list.slice(0, 20) };
   }
   details.push(`Branch: ${d.git.branch}`);
-  details.push(d.git.remote ? `Remote: ${d.git.githubUrl || d.git.remote}` : 'Няма origin remote');
+  details.push(d.git.remote ? `Remote: ${d.git.githubUrl || d.git.remote}` : t('check.git.noRemote'));
   const changes = sh('git', ['status', '--porcelain'], { cwd: dir }).stdout.split('\n').filter(Boolean);
   if (changes.length) {
     return {
       status: 'warn',
-      summary: `${changes.length} неприбрани промени`,
+      summary: t('check.git.uncommitted', { count: changes.length }),
       details: [...details, ...changes.slice(0, 15).map((l) => l.trim())],
     };
   }
-  return { status: 'pass', summary: 'Чист working tree', details };
+  return { status: 'pass', summary: t('check.git.clean'), details };
 }
 
 async function stepSecrets(ctx) {
@@ -165,7 +166,7 @@ async function stepSecrets(ctx) {
       .filter((f) => ENV_FILE_RE.test(f) && !ENV_SAFE_RE.test(f));
     if (tracked.length) {
       status = 'fail';
-      details.push(...tracked.map((f) => `Проследява се от Git: ${f}`));
+      details.push(...tracked.map((f) => t('check.secrets.tracked', { file: f })));
       fixes.push('env.untrack');
     }
   }
@@ -180,7 +181,7 @@ async function stepSecrets(ctx) {
         });
     if (unignored.length) {
       if (status !== 'fail') status = 'warn';
-      details.push(...unignored.map((f) => `${f} не е в .gitignore`));
+      details.push(...unignored.map((f) => t('check.secrets.notIgnored', { file: f })));
       fixes.push(d.hasGitignore ? 'gitignore.env' : 'gitignore.create');
     }
   }
@@ -193,38 +194,38 @@ async function stepSecrets(ctx) {
 
   const summary =
     status === 'pass'
-      ? 'Няма открити secrets'
+      ? t('check.secrets.none')
       : findings.length
-        ? `Открити ${findings.length} възможни ключа в кода`
+        ? t('check.secrets.found', { count: findings.length })
         : status === 'fail'
-          ? '.env файл се проследява от Git'
-          : '.env не е защитен от .gitignore';
+          ? t('check.secrets.envTracked')
+          : t('check.secrets.envNotIgnored');
   return { status, summary, details, fixes };
 }
 
 async function stepDeps(ctx) {
   const { d } = ctx;
   if (!d.hasPackageJson) {
-    return { status: 'info', summary: d.framework === 'static' ? 'Статичен сайт — без зависимости' : 'Няма package.json' };
+    return { status: 'info', summary: d.framework === 'static' ? t('check.deps.static') : t('check.deps.noPackageJson') };
   }
   const details = [];
   const node = which('node');
-  if (!node) return { status: 'fail', summary: 'Node.js не е намерен' };
+  if (!node) return { status: 'fail', summary: t('check.deps.noNode') };
   details.push(`Node ${sh('node', ['--version']).stdout.trim()}`);
   if (!which(d.packageManager)) {
-    return { status: 'fail', summary: `${d.packageManager} не е инсталиран`, details };
+    return { status: 'fail', summary: t('check.deps.pmMissing', { pm: d.packageManager }), details };
   }
   details.push(`Package manager: ${d.packageManager}`);
   if (!d.hasNodeModules) {
     const needs = d.buildScript || d.lintScript || d.typecheckScript;
     return {
       status: needs ? 'fail' : 'warn',
-      summary: 'Зависимостите не са инсталирани',
+      summary: t('check.deps.notInstalled'),
       details,
       fixes: ['deps.install'],
     };
   }
-  return { status: 'pass', summary: `${d.packageManager} · node_modules е наред`, details };
+  return { status: 'pass', summary: t('check.deps.ok', { pm: d.packageManager }), details };
 }
 
 async function runScript(ctx, stepId, script, okText) {
@@ -235,7 +236,7 @@ async function runScript(ctx, stepId, script, okText) {
   if (r.code === 0) return { status: 'pass', summary: okText, log: logFile, duration: r.duration };
   return {
     status: 'fail',
-    summary: `${script} се провали (код ${r.code})`,
+    summary: t('check.script.failed', { script, code: r.code }),
     details: r.tail.slice(-25),
     log: logFile,
     duration: r.duration,
@@ -243,24 +244,24 @@ async function runScript(ctx, stepId, script, okText) {
 }
 
 async function stepLint(ctx) {
-  if (!ctx.d.lintScript) return { status: 'info', summary: 'Lint не е конфигуриран' };
-  return runScript(ctx, 'lint', ctx.d.lintScript, 'Lint мина успешно');
+  if (!ctx.d.lintScript) return { status: 'info', summary: t('check.lint.none') };
+  return runScript(ctx, 'lint', ctx.d.lintScript, t('check.lint.pass'));
 }
 
 async function stepTypecheck(ctx) {
-  if (!ctx.d.typecheckScript) return { status: 'info', summary: 'Typecheck не е конфигуриран' };
-  return runScript(ctx, 'typecheck', ctx.d.typecheckScript, 'Типовете са наред');
+  if (!ctx.d.typecheckScript) return { status: 'info', summary: t('check.typecheck.none') };
+  return runScript(ctx, 'typecheck', ctx.d.typecheckScript, t('check.typecheck.pass'));
 }
 
 async function stepBuild(ctx) {
   const { d, dir } = ctx;
   if (!d.buildScript) {
     if (exists(path.join(dir, d.publishDir || '.', 'index.html'))) {
-      return { status: 'pass', summary: 'Статичен сайт — няма нужда от build' };
+      return { status: 'pass', summary: t('check.build.static') };
     }
-    return { status: 'info', summary: 'Няма build script' };
+    return { status: 'info', summary: t('check.build.noScript') };
   }
-  const r = await runScript(ctx, 'build', d.buildScript, 'Production build мина успешно');
+  const r = await runScript(ctx, 'build', d.buildScript, t('check.build.pass'));
   if (r.status === 'pass') {
     const after = detect(dir);
     ctx.d = after;
@@ -268,7 +269,7 @@ async function stepBuild(ctx) {
       return {
         ...r,
         status: 'warn',
-        summary: `Build мина, но няма index.html в ${after.publishDir}`,
+        summary: t('check.build.noIndex', { dir: after.publishDir }),
       };
     }
     r.details = [`Output: ${after.publishDir}`];
@@ -284,16 +285,16 @@ async function stepHosting(ctx) {
   const id = proj?.hosting || 'netlify';
   const st = providerStatus(id);
   if (id !== 'netlify') {
-    if (!st.installed) return { status: 'warn', summary: `${st.name} CLI не е инсталиран`, details: ['Инсталирай го от „Настройка“'] };
-    if (!st.loggedIn) return { status: 'warn', summary: `Не си влязъл в ${st.name}` };
-    if ((d.ssr || d.hasFunctions) && !PROVIDERS[id].ssr) return { status: 'fail', summary: `${st.name} не поддържа сървърно рендиране/функции` };
+    if (!st.installed) return { status: 'warn', summary: t('check.hosting.cliMissing', { name: st.name }), details: [t('check.hosting.installFromSetup')] };
+    if (!st.loggedIn) return { status: 'warn', summary: t('check.hosting.notLoggedIn', { name: st.name }) };
+    if ((d.ssr || d.hasFunctions) && !PROVIDERS[id].ssr) return { status: 'fail', summary: t('check.hosting.noSsr', { name: st.name }) };
     const link = projectLink(proj, id);
-    return { status: 'pass', summary: `${st.name}${link.linked ? ' — свързан' : ' — ще се създаде при първия deploy'}`, details: [PROVIDERS[id].free] };
+    return { status: 'pass', summary: t(link.linked ? 'check.hosting.linked' : 'check.hosting.willCreate', { name: st.name }), details: [PROVIDERS[id].free] };
   }
   const cli = which('netlify') ? 'netlify' : which('npx') ? 'npx netlify-cli' : null;
-  if (!cli) return { status: 'warn', summary: 'Няма Netlify CLI (нито npx)' };
-  if (!d.netlifyLinked) return { status: 'info', summary: 'Netlify не е свързан', fixes: ['netlify.link'] };
-  return { status: 'pass', summary: 'Netlify е свързан', details: [`Site ID: ${d.siteId}`, `CLI: ${cli}`] };
+  if (!cli) return { status: 'warn', summary: t('check.hosting.noNetlifyCli') };
+  if (!d.netlifyLinked) return { status: 'info', summary: t('check.hosting.netlifyNotLinked'), fixes: ['netlify.link'] };
+  return { status: 'pass', summary: t('check.hosting.netlifyLinked'), details: [`Site ID: ${d.siteId}`, `CLI: ${cli}`] };
 }
 
 const RUNNERS = {
@@ -326,7 +327,7 @@ export async function runChecks(project, { stopOnFail = false, skip = [] } = {})
 
   for (const s of STEPS) {
     if (halted || skip.includes(s.id)) {
-      const r = { id: s.id, label: s.label, category: s.category, status: 'skipped', summary: halted ? 'Пропуснато след грешка' : 'Пропуснато' };
+      const r = { id: s.id, label: s.label, category: s.category, status: 'skipped', summary: halted ? t('check.skippedAfterFail') : t('check.skipped') };
       results.push(r);
       ev.step(s.id, r);
       continue;
@@ -337,7 +338,7 @@ export async function runChecks(project, { stopOnFail = false, skip = [] } = {})
     try {
       r = await RUNNERS[s.id](ctx);
     } catch (e) {
-      r = { status: 'fail', summary: `Вътрешна грешка: ${e.message}` };
+      r = { status: 'fail', summary: t('check.internalError', { error: e.message }) };
     }
     const full = {
       id: s.id,
@@ -362,7 +363,7 @@ export async function runChecks(project, { stopOnFail = false, skip = [] } = {})
     projectName: project.name,
     kind: 'check',
     status: status === 'blocked' ? 'fail' : 'ok',
-    message: status === 'ready' ? 'Ready to deploy' : status === 'warnings' ? `${counts.warn} предупреждения` : `${counts.fail} грешки`,
+    message: status === 'ready' ? t('check.history.ready') : status === 'warnings' ? t('check.history.warnings', { count: counts.warn }) : t('check.history.errors', { count: counts.fail }),
     duration: check.duration,
     log: results.find((r) => r.status === 'fail' && r.log)?.log || null,
   });

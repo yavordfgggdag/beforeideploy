@@ -6,6 +6,7 @@ import { HOME, ENGINE_DIR, CACHE_DIR, EngineError, ev, emit, sh, which, runStrea
 import { netlifyAuth, netlifyLogin } from './netlify.mjs';
 import { spaceshipConnected } from './spaceship.mjs';
 import { providerStatus } from './hosting.mjs';
+import { t, msg } from './i18n.mjs';
 
 function fileHas(file, re) {
   try {
@@ -136,21 +137,21 @@ function writeCommand(name, body) {
 export function setupTerminal(id) {
   const st = setupStatus();
   const todo = id === 'all' ? st.items.filter((i) => !i.ok && i.action?.type === 'terminal' && !i.optional) : st.items.filter((i) => i.id === id);
-  if (!todo.length) throw new EngineError('Няма какво да се настройва в Terminal.', 'nothing');
+  if (!todo.length) throw new EngineError(msg('setup.terminal.nothing'), 'nothing');
   const body = todo
     .filter((i) => i.action?.type === 'terminal')
     .map((i) => `echo "━━━ ${i.title} ━━━"\n${i.action.script}\necho`)
     .join('\n');
-  if (!body) throw new EngineError('Тази стъпка не се прави в Terminal.', 'usage', 2);
+  if (!body) throw new EngineError(msg('setup.terminal.notTerminal'), 'usage', 2);
   return { commandFile: writeCommand(id, body) };
 }
 
 export async function setupRun(id, { yes = false } = {}) {
-  if (!yes) throw new EngineError('Инсталацията изисква потвърждение (--yes).', 'confirm_required', 2);
+  if (!yes) throw new EngineError(msg('setup.run.confirmRequired'), 'confirm_required', 2);
   const item = setupStatus().items.find((i) => i.id === id);
-  if (!item) throw new EngineError(`Непозната стъпка: ${id}`, 'usage', 2);
+  if (!item) throw new EngineError(msg('setup.unknownStep', { id }), 'usage', 2);
   if (item.ok) return { id, ok: true, skipped: true };
-  if (item.action?.type !== 'run') throw new EngineError('Тази стъпка се прави в Terminal или в браузъра.', 'not_runnable');
+  if (item.action?.type !== 'run') throw new EngineError(msg('setup.notRunnable'), 'not_runnable');
   if (id === 'gh-auth') return ghDeviceLogin();
   if (id === 'git-identity') return gitIdentityFromGitHub();
   if (id === 'netlify-login') {
@@ -160,14 +161,14 @@ export async function setupRun(id, { yes = false } = {}) {
   ev.step(id, { label: item.title, status: 'running', summary: item.action.display });
   const r = await runStream(item.action.cmd, item.action.args, { step: id, cwd: HOME, logFile: path.join(setupDir(), `${id}.log`), timeout: 10 * 60 * 1000 });
   const ok = r.code === 0;
-  ev.step(id, { label: item.title, status: ok ? 'pass' : 'fail', summary: ok ? 'Инсталирано' : `Грешка (код ${r.code})`, details: ok ? [] : r.tail.slice(-10) });
-  if (!ok) throw new EngineError(`${item.title}: инсталацията се провали.`, 'install_failed');
+  ev.step(id, { label: item.title, status: ok ? 'pass' : 'fail', summary: ok ? t('setup.installed') : t('setup.errorCode', { code: r.code }), details: ok ? [] : r.tail.slice(-10) });
+  if (!ok) throw new EngineError(msg('setup.installFailed', { title: item.title }), 'install_failed');
   return { id, ok: true };
 }
 
 /** Installs every missing non-interactive item, then returns what still needs a Terminal/browser/app step. */
 export async function setupAuto({ yes = false, includeOptional = false } = {}) {
-  if (!yes) throw new EngineError('Изисква потвърждение (--yes).', 'confirm_required', 2);
+  if (!yes) throw new EngineError(msg('setup.auto.confirmRequired'), 'confirm_required', 2);
   const st = setupStatus();
   const ORDER = ['netlify-cli', 'gh', 'vercel', 'wrangler', 'codex', 'claude-code', 'gh-auth', 'git-identity', 'netlify-login'];
   const rank = (id) => (ORDER.includes(id) ? ORDER.indexOf(id) : 50);
@@ -196,8 +197,8 @@ export async function setupAuto({ yes = false, includeOptional = false } = {}) {
 // ---------------------------------------------------------------- GitHub device login (browser, no typing)
 
 export async function ghDeviceLogin() {
-  if (!which('gh')) throw new EngineError('Първо инсталирай GitHub CLI.', 'missing_cli');
-  ev.step('gh-auth', { label: 'GitHub вход', status: 'running', summary: 'Отварям браузъра…' });
+  if (!which('gh')) throw new EngineError(msg('setup.gh.installFirst'), 'missing_cli');
+  ev.step('gh-auth', { label: t('setup.gh.label'), status: 'running', summary: t('setup.gh.opening') });
   let announced = false;
   const r = await new Promise((resolve) => {
     const child = spawn('gh', ['auth', 'login', '--web', '--hostname', 'github.com', '--git-protocol', 'https'], {
@@ -211,25 +212,25 @@ export async function ghDeviceLogin() {
       if (code && !announced) {
         announced = true;
         emit({ type: 'devicecode', service: 'GitHub', code: code[1], url: 'https://github.com/login/device' });
-        ev.step('gh-auth', { label: 'GitHub вход', status: 'running', summary: `Код ${code[1]} — потвърди в браузъра` });
+        ev.step('gh-auth', { label: t('setup.gh.label'), status: 'running', summary: t('setup.gh.code', { code: code[1] }) });
       }
       if (/Press Enter/i.test(text)) child.stdin.write('\n');
     };
     child.stdout.on('data', onData);
     child.stderr.on('data', onData);
-    const t = setTimeout(() => child.kill('SIGTERM'), 5 * 60 * 1000);
+    const timer = setTimeout(() => child.kill('SIGTERM'), 5 * 60 * 1000);
     child.on('close', (code) => {
-      clearTimeout(t);
+      clearTimeout(timer);
       resolve(code);
     });
   });
   const ok = sh('gh', ['auth', 'status'], { timeout: 15000 }).code === 0;
   if (!ok) {
-    ev.step('gh-auth', { label: 'GitHub вход', status: 'fail', summary: `Входът не беше потвърден (код ${r})` });
-    throw new EngineError('GitHub входът не беше потвърден.', 'login_failed');
+    ev.step('gh-auth', { label: t('setup.gh.label'), status: 'fail', summary: t('setup.gh.notConfirmed', { code: r }) });
+    throw new EngineError(msg('setup.gh.failed'), 'login_failed');
   }
   sh('gh', ['auth', 'setup-git'], { timeout: 15000 });
-  ev.step('gh-auth', { label: 'GitHub вход', status: 'pass', summary: 'Свързан — git ползва GitHub акаунта ти' });
+  ev.step('gh-auth', { label: t('setup.gh.label'), status: 'pass', summary: t('setup.gh.connected') });
   const id = sh('git', ['config', '--global', 'user.email']).stdout.trim();
   if (!id) await gitIdentityFromGitHub();
   return { id: 'gh-auth', ok: true };
@@ -237,21 +238,21 @@ export async function ghDeviceLogin() {
 
 export async function gitIdentityFromGitHub() {
   if (!which('gh') || sh('gh', ['auth', 'status'], { timeout: 15000 }).code !== 0) {
-    ev.step('git-identity', { label: 'Git име и имейл', status: 'running', summary: 'Нужен е GitHub вход първо' });
+    ev.step('git-identity', { label: t('setup.identity.label'), status: 'running', summary: t('setup.identity.needsLogin') });
     await ghDeviceLogin();
   }
-  ev.step('git-identity', { label: 'Git име и имейл', status: 'running', summary: 'Чета GitHub профила…' });
+  ev.step('git-identity', { label: t('setup.identity.label'), status: 'running', summary: t('setup.identity.reading') });
   const r = sh('gh', ['api', 'user'], { timeout: 20000 });
   let u = null;
   try {
     u = JSON.parse(r.stdout);
   } catch {}
-  if (!u?.login) throw new EngineError('Не успях да прочета GitHub профила.', 'github_failed');
+  if (!u?.login) throw new EngineError(msg('setup.identity.failed'), 'github_failed');
   const name = u.name || u.login;
   // GitHub's private noreply address — commits still count for your profile, your real email stays hidden
   const email = u.email || `${u.id}+${u.login}@users.noreply.github.com`;
   sh('git', ['config', '--global', 'user.name', name]);
   sh('git', ['config', '--global', 'user.email', email]);
-  ev.step('git-identity', { label: 'Git име и имейл', status: 'pass', summary: `${name} <${email}>` });
+  ev.step('git-identity', { label: t('setup.identity.label'), status: 'pass', summary: `${name} <${email}>` });
   return { id: 'git-identity', ok: true, name, email };
 }

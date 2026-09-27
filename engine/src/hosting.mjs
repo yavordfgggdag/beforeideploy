@@ -6,6 +6,7 @@ import { detect } from './detect.mjs';
 import { getState, setState, updateProject, addHistory, findProject } from './store.mjs';
 import { netlifyAuth, netlifyDeploy, deployGuard } from './netlify.mjs';
 import { recordCost } from './costs.mjs';
+import { t, msg } from './i18n.mjs';
 
 function fileHas(file, re) {
   try {
@@ -166,9 +167,9 @@ export function advise(project) {
 }
 
 export function setHosting(project, provider) {
-  if (!PROVIDERS[provider]) throw new EngineError(`Непознат хостинг: ${provider}`, 'usage', 2);
+  if (!PROVIDERS[provider]) throw new EngineError(msg('hosting.unknown', { provider }), 'usage', 2);
   updateProject(project.key, { hosting: provider });
-  addHistory({ project: project.key, projectName: project.name, kind: 'hosting', status: 'ok', message: `Хостинг → ${PROVIDERS[provider].name}` });
+  addHistory({ project: project.key, projectName: project.name, kind: 'hosting', status: 'ok', message: t('hosting.history.set', { name: PROVIDERS[provider].name }) });
   return { hosting: provider };
 }
 
@@ -188,22 +189,22 @@ function finishDeploy(project, provider, { prod, url, duration, logFile }) {
   if (prod) updateProject(project.key, { liveUrl: url });
   addHistory({ project: project.key, projectName: project.name, kind: prod ? 'production' : 'draft', status: 'ok', url, duration, log: logFile, message: PROVIDERS[provider].name });
   const cost = recordCost({ project: project.key, projectName: project.name, service: provider, op: prod ? 'production' : 'draft' });
-  ev.step('deploy', { label: prod ? 'Production deploy' : 'Draft preview', category: 'Hosting', status: 'pass', summary: url, duration, log: logFile });
-  ev.notify(prod ? `🚀 ${project.name} е LIVE` : `✅ ${project.name} — Preview`, `${PROVIDERS[provider].name}: ${url}`, url);
+  ev.step('deploy', { label: t(prod ? 'deploy.label.production' : 'deploy.label.draft'), category: 'Hosting', status: 'pass', summary: url, duration, log: logFile });
+  ev.notify(prod ? t('deploy.notify.live', { project: project.name }) : t('hosting.notify.preview', { project: project.name }), `${PROVIDERS[provider].name}: ${url}`, url);
   return { prod, url, provider, duration, cost };
 }
 
-function failDeploy(project, provider, { prod, r, logFile, duration, msg }) {
-  ev.step('deploy', { label: prod ? 'Production deploy' : 'Draft preview', category: 'Hosting', status: 'fail', summary: msg || 'Deploy се провали', details: r?.tail?.slice(-15) || [], log: logFile, duration });
+function failDeploy(project, provider, { prod, r, logFile, duration, reason }) {
+  ev.step('deploy', { label: t(prod ? 'deploy.label.production' : 'deploy.label.draft'), category: 'Hosting', status: 'fail', summary: reason || t('deploy.failed'), details: r?.tail?.slice(-15) || [], log: logFile, duration });
   addHistory({ project: project.key, projectName: project.name, kind: prod ? 'production' : 'draft', status: 'fail', log: logFile, message: PROVIDERS[provider].name });
-  throw new EngineError(`${PROVIDERS[provider].name}: ${msg || 'deploy се провали'}. Виж лога.`, 'deploy_failed');
+  throw new EngineError(msg('hosting.deployFailed', { provider: PROVIDERS[provider].name, reason: reason || t('hosting.deployFailedReason') }), 'deploy_failed');
 }
 
 async function vercelDeploy(project, { prod }) {
   const logFile = path.join(logDir(project.key), `vercel-${prod ? 'prod' : 'draft'}.log`);
   const args = ['deploy', '--yes'];
   if (prod) args.push('--prod');
-  ev.step('deploy', { label: prod ? 'Production deploy' : 'Draft preview', category: 'Hosting', status: 'running', summary: 'Vercel build + upload' });
+  ev.step('deploy', { label: t(prod ? 'deploy.label.production' : 'deploy.label.draft'), category: 'Hosting', status: 'running', summary: 'Vercel build + upload' });
   const t0 = Date.now();
   const r = await runStream('vercel', args, { cwd: project.path, step: 'deploy', logFile, captureStdout: true, timeout: 20 * 60 * 1000 });
   const duration = (Date.now() - t0) / 1000;
@@ -214,15 +215,15 @@ async function vercelDeploy(project, { prod }) {
 
 async function cloudflareDeploy(project, { prod }) {
   const d = detect(project.path);
-  if (d.ssr || d.hasFunctions) throw new EngineError('Cloudflare Pages тук поддържа само статични сайтове.', 'unsupported');
-  if (!d.publishReady) throw new EngineError(`Няма build в ${d.publishDir}/ — пусни проверката първо.`, 'no_build');
+  if (d.ssr || d.hasFunctions) throw new EngineError(msg('hosting.cloudflare.staticOnly'), 'unsupported');
+  if (!d.publishReady) throw new EngineError(msg('hosting.noBuild', { dir: d.publishDir }), 'no_build');
   const logFile = path.join(logDir(project.key), `cloudflare-${prod ? 'prod' : 'draft'}.log`);
   let name = project.cloudflare?.projectName;
-  ev.step('deploy', { label: prod ? 'Production deploy' : 'Draft preview', category: 'Hosting', status: 'running', summary: 'Cloudflare Pages upload' });
+  ev.step('deploy', { label: t(prod ? 'deploy.label.production' : 'deploy.label.draft'), category: 'Hosting', status: 'running', summary: 'Cloudflare Pages upload' });
   if (!name) {
     name = slugify(project.name === 'ПОРТФОЛИО' ? 'portfolio' : project.name);
     const c = await runStream('wrangler', ['pages', 'project', 'create', name, '--production-branch=main'], { cwd: project.path, step: 'deploy', logFile, timeout: 120000 });
-    if (c.code !== 0 && !c.tail.join('\n').match(/already exists/i)) return failDeploy(project, 'cloudflare', { prod, r: c, logFile, msg: 'не успях да създам Pages проект' });
+    if (c.code !== 0 && !c.tail.join('\n').match(/already exists/i)) return failDeploy(project, 'cloudflare', { prod, r: c, logFile, reason: t('hosting.cloudflare.createFailed') });
     updateProject(project.key, { cloudflare: { projectName: name } });
   }
   const t0 = Date.now();
@@ -239,15 +240,15 @@ async function cloudflareDeploy(project, { prod }) {
 }
 
 async function ghPagesDeploy(project, { prod }) {
-  if (!prod) throw new EngineError('GitHub Pages няма preview — направи Local Preview или избери друг хостинг за чернови.', 'unsupported');
+  if (!prod) throw new EngineError(msg('hosting.ghpages.noPreview'), 'unsupported');
   const d = detect(project.path);
-  if (d.ssr || d.hasFunctions) throw new EngineError('GitHub Pages е само за статични сайтове.', 'unsupported');
-  if (!d.publishReady) throw new EngineError(`Няма build в ${d.publishDir}/ — пусни проверката първо.`, 'no_build');
+  if (d.ssr || d.hasFunctions) throw new EngineError(msg('hosting.ghpages.staticOnly'), 'unsupported');
+  if (!d.publishReady) throw new EngineError(msg('hosting.noBuild', { dir: d.publishDir }), 'no_build');
   const m = (d.git.githubUrl || '').match(/github\.com\/([^/]+)\/([^/]+)/);
-  if (!m) throw new EngineError('Нужно е GitHub repo (origin).', 'no_remote');
+  if (!m) throw new EngineError(msg('hosting.ghpages.needsRepo'), 'no_remote');
   const [, owner, repo] = m;
   const logFile = path.join(logDir(project.key), 'ghpages.log');
-  ev.step('deploy', { label: 'Production deploy', category: 'Hosting', status: 'running', summary: `gh-pages ← ${d.publishDir}/` });
+  ev.step('deploy', { label: t('deploy.label.production'), category: 'Hosting', status: 'running', summary: `gh-pages ← ${d.publishDir}/` });
   if (!exists(path.join(project.path, d.publishDir, '.nojekyll'))) fs.writeFileSync(path.join(project.path, d.publishDir, '.nojekyll'), '');
   const t0 = Date.now();
   const r = await runStream('npx', ['--yes', 'gh-pages', '-d', d.publishDir, '-t', '-m', `Before I Deploy — ${new Date().toISOString()}`], {
@@ -268,16 +269,16 @@ async function ghPagesDeploy(project, { prod }) {
 export async function deployProject(project, { prod = false, confirm = null } = {}) {
   const provider = (findProject(project.key) || project).hosting || 'netlify';
   if (provider === 'netlify') return netlifyDeploy(project, { prod, confirm });
-  if (prod && confirm !== 'DEPLOY') throw new EngineError('Production deploy изисква --confirm DEPLOY', 'confirm_required', 2);
+  if (prod && confirm !== 'DEPLOY') throw new EngineError(msg('deploy.confirmRequired'), 'confirm_required', 2);
   deployGuard(project);
   const st = providerStatus(provider);
-  if (!st.installed) throw new EngineError(`${st.name} CLI не е инсталиран — инсталирай го от „Настройка“.`, 'no_cli');
-  if (!st.loggedIn) throw new EngineError(`Не си влязъл в ${st.name}.`, 'not_logged_in', 5);
+  if (!st.installed) throw new EngineError(msg('hosting.cliMissing', { name: st.name }), 'no_cli');
+  if (!st.loggedIn) throw new EngineError(msg('hosting.notLoggedIn', { name: st.name }), 'not_logged_in', 5);
   const p = findProject(project.key) || project;
   if (provider === 'vercel') return vercelDeploy(p, { prod });
   if (provider === 'cloudflare') return cloudflareDeploy(p, { prod });
   if (provider === 'ghpages') return ghPagesDeploy(p, { prod });
-  throw new EngineError(`Непознат хостинг: ${provider}`, 'usage', 2);
+  throw new EngineError(msg('hosting.unknown', { provider }), 'usage', 2);
 }
 
 export function hostingReady(project) {

@@ -90,6 +90,12 @@ final class EngineClient {
 
     var isInstalled: Bool { FileManager.default.isExecutableFile(atPath: enginePath) }
 
+    /// Language for engine messages (BID_LANG). The "locale" setting arrives with the language picker (WP1 app);
+    /// until then the app stays Bulgarian, as in V9.
+    static var engineLanguage: String {
+        UserDefaults.standard.string(forKey: "locale") ?? "bg"
+    }
+
     /// Runs `bid <args>`; streams every event to `onEvent` on the main actor.
     func run(_ args: [String],
              handle: EngineHandle? = nil,
@@ -103,6 +109,7 @@ final class EngineClient {
         process.standardInput = FileHandle.nullDevice
         var env = ProcessInfo.processInfo.environment
         env["BID_CLIENT"] = "app"
+        if env["BID_LANG"] == nil { env["BID_LANG"] = Self.engineLanguage }
         for (k, v) in extra { env[k] = v }
         process.environment = env
 

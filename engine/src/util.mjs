@@ -7,6 +7,7 @@ import http from 'node:http';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { spawn, spawnSync } from 'node:child_process';
+import { t, msg, isMsg } from './i18n.mjs';
 
 export const HOME = os.homedir();
 export const APP_DIR = process.env.BID_APP_DIR || path.join(HOME, 'Library', 'Application Support', 'BeforeIDeploy');
@@ -33,10 +34,13 @@ export const ev = {
 };
 
 export class EngineError extends Error {
+  /** `message` is plain text or `msg(key, params)`; a key is translated with BID_LANG and kept for the app. */
   constructor(message, code = 'error', exitCode = 1) {
-    super(message);
+    super(isMsg(message) ? t(message.key, message.params) : message);
     this.code = code;
     this.exitCode = exitCode;
+    this.key = isMsg(message) ? message.key : null;
+    this.params = isMsg(message) ? message.params : null;
   }
 }
 
@@ -46,7 +50,12 @@ export function ok(data) {
 
 export function fail(err) {
   const message = err?.message || String(err);
-  emit({ type: 'result', ok: false, error: message, code: err?.code || 'error' });
+  const out = { type: 'result', ok: false, error: message, code: err?.code || 'error' };
+  if (err?.key) {
+    out.key = err.key;
+    if (err.params) out.params = err.params;
+  }
+  emit(out);
   return err?.exitCode || 1;
 }
 
@@ -169,7 +178,7 @@ function killTree(child, signal = 'SIGTERM') {
 for (const sig of ['SIGTERM', 'SIGINT', 'SIGHUP']) {
   process.on(sig, () => {
     killTree(currentChild, 'SIGTERM');
-    emit({ type: 'result', ok: false, error: 'Прекъснато от потребителя', code: 'cancelled' });
+    emit({ type: 'result', ok: false, error: t('run.cancelled'), code: 'cancelled', key: 'run.cancelled' });
     process.exit(130);
   });
 }
@@ -230,7 +239,7 @@ export function runStream(cmd, args, { cwd, env, logFile, step, captureStdout = 
     let timer = null;
     if (timeout > 0) {
       timer = setTimeout(() => {
-        pushLine(`⏱ Времето изтече (${Math.round(timeout / 1000)}s) — спирам процеса.`);
+        pushLine(t('run.timeout', { seconds: Math.round(timeout / 1000) }));
         killTree(child, 'SIGTERM');
       }, timeout);
     }
@@ -271,7 +280,7 @@ export async function findFreePort(preferred) {
   for (let p = 4173; p < 4300; p++) {
     if (await usable(p)) return p;
   }
-  throw new EngineError('Няма свободен порт между 4173 и 4300');
+  throw new EngineError(msg('local.noFreePort', { from: 4173, to: 4300 }));
 }
 
 export function httpAlive(url, timeoutMs = 1200) {

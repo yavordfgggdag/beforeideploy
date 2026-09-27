@@ -5,6 +5,7 @@ import { spawn } from 'node:child_process';
 import { ENGINE_DIR, EngineError, ev, findFreePort, httpAlive, logDir, nowISO, pidAlive, sleep, exists } from './util.mjs';
 import { detect, pmRunArgs } from './detect.mjs';
 import { getState, setState, updateProject } from './store.mjs';
+import { t, msg } from './i18n.mjs';
 
 export function localStatus(project) {
   const st = getState(project.key).local;
@@ -55,7 +56,7 @@ function plan(project, d, port, mode) {
       const [cmd, args] = pmRunArgs(d.packageManager, 'start', d.framework === 'next' ? ['-p', String(port)] : []);
       return { mode: 'build', label: 'start script', cmd, args };
     }
-    if (mode === 'build') throw new EngineError('Няма build output. Пусни проверка/build първо или стартирай Dev server.', 'no_build');
+    if (mode === 'build') throw new EngineError(msg('local.noBuild'), 'no_build');
   }
 
   if (has('dev')) {
@@ -78,7 +79,7 @@ function plan(project, d, port, mode) {
       args: [path.join(ENGINE_DIR, 'src', 'static-server.cjs'), dir, String(port)],
     };
   }
-  throw new EngineError('Не намерих build output или dev/start/preview script.', 'no_server');
+  throw new EngineError(msg('local.noServer'), 'no_server');
 }
 
 export async function localStart(project, { mode = 'auto' } = {}) {
@@ -92,7 +93,7 @@ export async function localStart(project, { mode = 'auto' } = {}) {
   const fd = fs.openSync(logFile, 'w');
   fs.writeSync(fd, `$ ${p.cmd} ${p.args.join(' ')}\n# ${nowISO()}\n\n`);
 
-  ev.step('local', { label: 'Local Preview', status: 'running', summary: `Стартирам ${p.label} на порт ${port}` });
+  ev.step('local', { label: 'Local Preview', status: 'running', summary: t('local.starting', { label: p.label, port }) });
 
   const child = spawn(p.cmd, p.args, {
     cwd: project.path,
@@ -132,10 +133,10 @@ export async function localStart(project, { mode = 'auto' } = {}) {
       process.kill(-child.pid, 'SIGTERM');
     } catch {}
     const tail = fs.readFileSync(logFile, 'utf8').trim().split('\n').slice(-20);
-    ev.step('local', { label: 'Local Preview', status: 'fail', summary: 'Сървърът не стартира', details: tail, log: logFile });
+    ev.step('local', { label: 'Local Preview', status: 'fail', summary: t('local.stepFailed'), details: tail, log: logFile });
     const lines = tail.filter((l) => l.trim() && !l.startsWith('$') && !l.startsWith('#') && !/^Node\.js v\d/.test(l.trim()));
     const last = lines.find((l) => /error/i.test(l)) || lines.slice(-1)[0];
-    throw new EngineError(`Локалният сървър не успя да стартира${last ? `: ${last.trim().slice(0, 200)}` : '. Виж лога.'}`, 'local_failed');
+    throw new EngineError(last ? msg('local.failedWithReason', { reason: last.trim().slice(0, 200) }) : msg('local.failedSeeLog'), 'local_failed');
   }
 
   const realPort = Number(new URL(url).port);

@@ -21,6 +21,7 @@ const ENV = {
   HOME: path.join(TMP, 'home'), // isolates Netlify auth lookup
   BID_NO_KEYCHAIN: '1', // never touch the real Keychain in tests
   BID_NO_BUNDLED_CLOUD: '1', // never talk to the real Supabase in tests
+  BID_LANG: 'en', // assertions check message keys; texts come from engine/i18n/en.json
 };
 fs.mkdirSync(ENV.HOME, { recursive: true });
 
@@ -28,7 +29,11 @@ let passed = 0;
 let failed = 0;
 
 function bid(...args) {
-  const r = spawnSync(BID, args, { env: ENV, encoding: 'utf8', timeout: 120000 });
+  return bidEnv({}, ...args);
+}
+
+function bidEnv(extra, ...args) {
+  const r = spawnSync(BID, args, { env: { ...ENV, ...extra }, encoding: 'utf8', timeout: 120000 });
   const lines = (r.stdout || '').trim().split('\n').filter(Boolean);
   const events = [];
   for (const l of lines) {
@@ -133,6 +138,57 @@ t('project add / list / remove', () => {
 t('project add отказва несъществуваща папка', () => {
   const r = bid('project', 'add', '--path', path.join(TMP, 'nope'));
   assert(r.result.ok === false && r.code !== 0, 'should fail');
+  assert(r.result.key === 'project.folderNotFound' && r.result.params?.path === path.join(TMP, 'nope'), JSON.stringify(r.result));
+});
+
+// ---------------------------------------------------------------- i18n
+
+const I18N = path.join(ROOT, 'engine', 'i18n');
+const catalog = (lang) => JSON.parse(fs.readFileSync(path.join(I18N, `${lang}.json`), 'utf8'));
+const placeholders = (s) => [...String(s).matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort().join(',');
+
+t('i18n: en и bg имат едни и същи ключове и placeholders', () => {
+  const en = catalog('en');
+  const bg = catalog('bg');
+  const ek = Object.keys(en).filter((k) => k !== '_meta');
+  const bk = Object.keys(bg).filter((k) => k !== '_meta');
+  const missing = ek.filter((k) => !(k in bg)).concat(bk.filter((k) => !(k in en)));
+  assert(!missing.length, `missing: ${missing.join(', ')}`);
+  for (const k of ek) {
+    assert(typeof en[k] === 'string' && en[k] && typeof bg[k] === 'string' && bg[k], `empty: ${k}`);
+    assert(placeholders(en[k]) === placeholders(bg[k]), `placeholders differ: ${k}`);
+  }
+});
+
+t('i18n: всеки ключ в engine/src съществува в каталога, няма неизползвани', () => {
+  const en = catalog('en');
+  const src = path.join(ROOT, 'engine', 'src');
+  const used = new Set();
+  for (const f of fs.readdirSync(src).filter((f) => f.endsWith('.mjs'))) {
+    const text = fs.readFileSync(path.join(src, f), 'utf8');
+    for (const m of text.matchAll(/\b(?:t|msg)\(\s*'([a-zA-Z0-9_.]+)'/g)) used.add(m[1]);
+    for (const m of text.matchAll(/'([a-z]+(?:\.[a-zA-Z0-9_]+)+)'/g)) if (m[1] in en) used.add(m[1]);
+  }
+  const unknown = [...used].filter((k) => /^[a-z]+\.[a-zA-Z]/.test(k) && !(k in en) && !/\.(mjs|cjs|json|log|md|command|html|zsh)$/.test(k));
+  assert(!unknown.length, `not in catalog: ${unknown.join(', ')}`);
+  const unused = Object.keys(en).filter((k) => k !== '_meta' && !used.has(k));
+  assert(!unused.length, `unused keys: ${unused.join(', ')}`);
+});
+
+t('i18n: BID_LANG=bg дава текстовете от V9, непознат език → en', () => {
+  const nope = path.join(TMP, 'nope');
+  const bg = bidEnv({ BID_LANG: 'bg' }, 'project', 'add', '--path', nope);
+  assert(bg.result.error === `Папката не съществува: ${nope}`, bg.result.error);
+  assert(bg.result.key === 'project.folderNotFound' && bg.result.code === 'not_found', JSON.stringify(bg.result));
+  const locale = bidEnv({ BID_LANG: 'bg_BG.UTF-8' }, 'project', 'add', '--path', nope);
+  assert(locale.result.error.startsWith('Папката не съществува'), locale.result.error);
+  const de = bidEnv({ BID_LANG: 'de' }, 'project', 'add', '--path', nope);
+  assert(de.result.error === `The folder does not exist: ${nope}`, de.result.error);
+  const unset = bidEnv({ BID_LANG: '' }, 'project', 'add', '--path', nope);
+  assert(unset.result.error.startsWith('The folder does not exist'), unset.result.error);
+  const usage = bidEnv({ BID_LANG: 'bg' }, 'project', 'wat');
+  assert(usage.code === 2 && usage.result.key === 'cli.unknownCommand' && usage.result.params?.command === 'project wat', JSON.stringify(usage.result));
+  assert(usage.result.error === 'Непозната команда: project wat', usage.result.error);
 });
 
 t('detect: vite, npm, dist, скриптове', () => {
@@ -412,25 +468,30 @@ t('акаунт: без облак → configured:false', () => {
 });
 
 t('акаунт: регистрация, вход, грешна парола, sync, изход', () => {
-  const c = bid('cloud', 'config', '--url', `http://127.0.0.1:${sbPort}`, '--anon-key', 'ANON');
-  assert(c.result.ok, c.result?.error);
-  const s = bid('account', 'signup', '--email', 'yavor@example.com', '--password', 'supersecret1', '--name', 'Yavor');
-  assert(s.data.loggedIn && s.data.email === 'yavor@example.com', JSON.stringify(s.data));
-  const dup = bid('account', 'signup', '--email', 'yavor@example.com', '--password', 'supersecret1');
-  assert(/Вече има акаунт/.test(dup.result.error), dup.result.error);
-  const weak = bid('account', 'signup', '--email', 'x@example.com', '--password', '123');
-  assert(weak.result.code === 'weak_password', weak.result.code);
-  bid('account', 'logout');
-  assert(bid('account', 'status').data.loggedIn === false, 'still logged in');
-  const bad = bid('account', 'login', '--email', 'yavor@example.com', '--password', 'wrong-pass');
-  assert(/Грешен имейл или парола/.test(bad.result.error), bad.result.error);
-  const good = bid('account', 'login', '--email', 'yavor@example.com', '--password', 'supersecret1');
-  assert(good.data.loggedIn, 'login');
-  const sync = bid('account', 'sync');
-  assert(sync.result.ok && sync.data.synced >= 3, JSON.stringify(sync.result));
-  const o = bid('account', 'oauth');
-  assert(o.data.url.includes('/auth/v1/authorize?provider=github') && o.data.url.includes('beforeideploy'), o.data.url);
-  try { process.kill(-sb.pid); } catch {}
+  try {
+    const c = bid('cloud', 'config', '--url', `http://127.0.0.1:${sbPort}`, '--anon-key', 'ANON');
+    assert(c.result.ok, c.result?.error);
+    const s = bid('account', 'signup', '--email', 'yavor@example.com', '--password', 'supersecret1', '--name', 'Yavor');
+    assert(s.data.loggedIn && s.data.email === 'yavor@example.com', JSON.stringify(s.data));
+    const dup = bid('account', 'signup', '--email', 'yavor@example.com', '--password', 'supersecret1');
+    assert(dup.result.key === 'account.auth.alreadyRegistered', JSON.stringify(dup.result));
+    const weak = bid('account', 'signup', '--email', 'x@example.com', '--password', '123');
+    assert(weak.result.code === 'weak_password' && weak.result.key === 'account.weakPassword', weak.result.code);
+    bid('account', 'logout');
+    assert(bid('account', 'status').data.loggedIn === false, 'still logged in');
+    const bad = bid('account', 'login', '--email', 'yavor@example.com', '--password', 'wrong-pass');
+    assert(bad.result.key === 'account.auth.invalidCredentials', JSON.stringify(bad.result));
+    const badBg = bidEnv({ BID_LANG: 'bg' }, 'account', 'login', '--email', 'yavor@example.com', '--password', 'wrong-pass');
+    assert(badBg.result.error === 'Грешен имейл или парола.', badBg.result.error);
+    const good = bid('account', 'login', '--email', 'yavor@example.com', '--password', 'supersecret1');
+    assert(good.data.loggedIn, 'login');
+    const sync = bid('account', 'sync');
+    assert(sync.result.ok && sync.data.synced >= 3, JSON.stringify(sync.result));
+    const o = bid('account', 'oauth');
+    assert(o.data.url.includes('/auth/v1/authorize?provider=github') && o.data.url.includes('beforeideploy'), o.data.url);
+  } finally {
+    try { process.kill(-sb.pid); } catch {}
+  }
 });
 
 t('хостинг: съветник — SSR изключва статичните хостинги', () => {

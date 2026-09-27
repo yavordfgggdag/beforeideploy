@@ -5,6 +5,7 @@ import { HOME, ENGINE_DIR, EngineError, sh, which, logDir, readJSON, exists } fr
 import { detect } from './detect.mjs';
 import { getState } from './store.mjs';
 import { recordCost } from './costs.mjs';
+import { msg } from './i18n.mjs';
 
 const STEP_NAMES = {
   git: 'Git проверка',
@@ -124,7 +125,7 @@ export function buildPrompt(project, stepId) {
     stepId === 'all'
       ? (check?.steps || []).filter((s) => s.status === 'fail' || s.status === 'warn').map((s) => s.id)
       : [stepId];
-  if (!ids.length) throw new EngineError('Няма грешки или предупреждения в последната проверка.', 'nothing');
+  if (!ids.length) throw new EngineError(msg('aifix.nothing'), 'nothing');
   const blocks = ids.map((id) => stepBlock(project, id));
   const onlyWarnings = blocks.every((b) => b.isWarn);
   const pkg = readJSON(path.join(dir, 'package.json'), null);
@@ -169,7 +170,7 @@ function shellQuote(s) {
 }
 
 export function aifix(project, { step, target }) {
-  if (!step || step === true) throw new EngineError('Липсва --step', 'usage', 2);
+  if (!step || step === true) throw new EngineError(msg('aifix.missingStep'), 'usage', 2);
   const t = target && target !== true ? target : 'chatgpt';
   const { prompt, stepLabel } = buildPrompt(project, step);
   const dir = logDir(project.key);
@@ -193,7 +194,7 @@ export function aifix(project, { step, target }) {
     const bin = t === 'codex' ? 'codex' : 'claude';
     if (!which(bin)) {
       throw new EngineError(
-        `${bin} CLI не е инсталиран. Инсталирай го от „Настройка“ (npm i -g ${t === 'codex' ? '@openai/codex' : '@anthropic-ai/claude-code'}).`,
+        msg('aifix.cliMissing', { bin, pkg: t === 'codex' ? '@openai/codex' : '@anthropic-ai/claude-code' }),
         'missing_cli'
       );
     }
@@ -217,7 +218,7 @@ export function aifix(project, { step, target }) {
   } else if (t === 'copy') {
     out.clipboard = true;
   } else {
-    throw new EngineError(`Непознат target: ${t}`, 'usage', 2);
+    throw new EngineError(msg('aifix.unknownTarget', { target: t }), 'usage', 2);
   }
 
   if (t !== 'copy') {

@@ -4,6 +4,7 @@ import path from 'node:path';
 import { EngineError, ev, sh, exists, runStream, logDir, which } from './util.mjs';
 import { detect } from './detect.mjs';
 import { addHistory } from './store.mjs';
+import { t, msg } from './i18n.mjs';
 
 const BG = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'h', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'sht', ъ: 'a', ь: 'y', ю: 'yu', я: 'ya' };
 
@@ -143,7 +144,7 @@ function ensureGitignore(dir) {
 }
 
 export async function applyFix(project, id, { yes = false } = {}) {
-  if (!yes) throw new EngineError('Auto-fix изисква потвърждение (--yes).', 'confirm_required', 2);
+  if (!yes) throw new EngineError(msg('fix.confirmRequired'), 'confirm_required', 2);
   const dir = project.path;
   const d = detect(dir);
   ev.step('fix', { label: id, status: 'running' });
@@ -153,7 +154,7 @@ export async function applyFix(project, id, { yes = false } = {}) {
     case 'gitignore.create':
     case 'gitignore.env': {
       const added = ensureGitignore(dir);
-      summary = added.length ? `Добавени: ${added.join(', ')}` : '.gitignore вече е наред';
+      summary = added.length ? t('fix.gitignore.added', { files: added.join(', ') }) : t('fix.gitignore.ok');
       break;
     }
     case 'env.untrack': {
@@ -161,44 +162,44 @@ export async function applyFix(project, id, { yes = false } = {}) {
       ensureGitignore(dir);
       if (tracked.length) {
         const r = sh('git', ['rm', '--cached', '--quiet', '--', ...tracked], { cwd: dir });
-        if (r.code !== 0) throw new EngineError(r.stderr.trim() || 'git rm --cached се провали', 'fix_failed');
+        if (r.code !== 0) throw new EngineError(r.stderr.trim() || msg('fix.untrack.failed'), 'fix_failed');
       }
-      summary = `Махнати от индекса: ${tracked.join(', ')}. Направи commit, за да влезе в сила.`;
+      summary = t('fix.untrack.done', { files: tracked.join(', ') });
       break;
     }
     case 'git.init': {
       if (d.git.isRepo) {
-        summary = 'Вече е Git repository';
+        summary = t('fix.gitInit.already');
         break;
       }
       ensureGitignore(dir);
       let r = sh('git', ['init', '-b', 'main'], { cwd: dir });
       if (r.code !== 0) r = sh('git', ['init'], { cwd: dir });
-      if (r.code !== 0) throw new EngineError(r.stderr.trim() || 'git init се провали', 'fix_failed');
-      summary = 'Git е инициализиран (branch main)';
+      if (r.code !== 0) throw new EngineError(r.stderr.trim() || msg('fix.gitInit.failed'), 'fix_failed');
+      summary = t('fix.gitInit.done');
       break;
     }
     case 'deps.install': {
       const logFile = path.join(logDir(project.key), 'install.log');
       const r = await runStream(d.packageManager || 'npm', ['install'], { cwd: dir, step: 'fix', logFile, timeout: 15 * 60 * 1000 });
       if (r.code !== 0) {
-        ev.step('fix', { label: id, status: 'fail', summary: 'install се провали', details: r.tail.slice(-15), log: logFile });
-        throw new EngineError('Инсталацията на зависимостите се провали.', 'fix_failed');
+        ev.step('fix', { label: id, status: 'fail', summary: t('fix.deps.stepFailed'), details: r.tail.slice(-15), log: logFile });
+        throw new EngineError(msg('fix.deps.failed'), 'fix_failed');
       }
-      summary = 'Зависимостите са инсталирани';
+      summary = t('fix.deps.done');
       break;
     }
     case 'github.create': {
-      if (!which('gh')) throw new EngineError('Няма GitHub CLI — инсталирай го от „Настройка“.', 'missing_cli');
+      if (!which('gh')) throw new EngineError(msg('fix.github.noCli'), 'missing_cli');
       if (d.git.remote) {
-        summary = 'Вече има origin remote';
+        summary = t('fix.github.hasRemote');
         break;
       }
       if (sh('git', ['rev-parse', 'HEAD'], { cwd: dir }).code !== 0) {
         ensureGitignore(dir);
         sh('git', ['add', '-A'], { cwd: dir });
         const c = sh('git', ['commit', '-m', 'Initial commit'], { cwd: dir });
-        if (c.code !== 0) throw new EngineError(c.stderr.trim() || 'Initial commit се провали', 'fix_failed');
+        if (c.code !== 0) throw new EngineError(c.stderr.trim() || msg('fix.github.initialCommitFailed'), 'fix_failed');
       }
       const repo = repoSlug(path.basename(dir));
       const logFile = path.join(logDir(project.key), 'github-create.log');
@@ -209,16 +210,16 @@ export async function applyFix(project, id, { yes = false } = {}) {
         timeout: 180000,
       });
       if (r.code !== 0) {
-        ev.step('fix', { label: id, status: 'fail', summary: 'gh repo create се провали', details: r.tail.slice(-10), log: logFile });
-        throw new EngineError('GitHub repo не беше създадено (може името да е заето).', 'fix_failed');
+        ev.step('fix', { label: id, status: 'fail', summary: t('fix.github.stepFailed'), details: r.tail.slice(-10), log: logFile });
+        throw new EngineError(msg('fix.github.failed'), 'fix_failed');
       }
-      summary = `Създадено частно repo ${repo} и кодът е качен`;
+      summary = t('fix.github.done', { repo });
       break;
     }
     case 'netlify.link':
-      throw new EngineError('Свързването с Netlify става от панела Netlify Setup.', 'ui_action');
+      throw new EngineError(msg('fix.netlifyLink.ui'), 'ui_action');
     default:
-      throw new EngineError(`Непознат fix: ${id}`, 'usage', 2);
+      throw new EngineError(msg('fix.unknown', { id }), 'usage', 2);
   }
   ev.step('fix', { label: id, status: 'pass', summary });
   addHistory({ project: project.key, projectName: project.name, kind: 'fix', status: 'ok', message: `${id}: ${summary}` });

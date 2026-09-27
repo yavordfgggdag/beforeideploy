@@ -56,7 +56,7 @@
 
 Exit codes: `0` ok · `2` usage / липсва confirm · `3` blocked или stale check · `4` проектът не е linked · `5` не си влязъл (Netlify/акаунт) · `6` Spaceship не е свързан · `7` облакът не е конфигуриран · `127` няма Node.
 
-Важно: всички човешки текстове в `error` са на български; приложението ги показва директно.
+Важно: човешките текстове в `error` и в `step` идват от каталога `engine/i18n/<lang>.json` на езика от `BID_LANG` (fallback en; приложението подава `bg`, докато няма избор на език); приложението ги показва директно. При грешка `result` носи и `key` (+ `params`), за да може приложението да превежда самостоятелно. (V10 WP1)
 
 ### 2.2 Къде живеят данните
 
@@ -72,7 +72,7 @@ Exit codes: `0` ok · `2` usage / липсва confirm · `3` blocked или sta
 | Secrets | macOS Keychain, service `BeforeIDeploy`, accounts: `session`, `spaceship` (fallback: 0600 файл само без `security`, т.е. в тестове на Linux) |
 | Launcher за Shortcuts | `…/BeforeIDeploy/launcher/launch.zsh` |
 
-Env override-и за тестове: `BID_APP_DIR`, `BID_CACHE_DIR`, `BID_NO_KEYCHAIN=1`, `BID_NO_BUNDLED_CLOUD=1`, `BID_SUPABASE_URL/ANON_KEY`, `BID_SPACESHIP_API`, `BID_CLIENT=app`.
+Env override-и за тестове: `BID_APP_DIR`, `BID_CACHE_DIR`, `BID_NO_KEYCHAIN=1`, `BID_NO_BUNDLED_CLOUD=1`, `BID_SUPABASE_URL/ANON_KEY`, `BID_SPACESHIP_API`, `BID_CLIENT=app`, `BID_LANG` (език на съобщенията на engine-а; тестовете ползват `en`).
 
 ### 2.3 Файлова структура
 
