@@ -310,7 +310,7 @@ final class AppModel: ObservableObject, Feedback {
 
     // MARK: - Runs
 
-    func runCheck() { runController.runCheck() }
+    func runCheck(force: Bool = false) { runController.runCheck(force: force) }
     func smartDeploy() { runController.smartDeploy() }
     func draftPreview() { runController.draftPreview() }
     func productionDeploy(confirm: String) { runController.productionDeploy(confirm: confirm) }

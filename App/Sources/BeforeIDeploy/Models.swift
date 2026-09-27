@@ -27,6 +27,7 @@ struct Project: Codable, Identifiable, Hashable {
 }
 
 struct StepResult: Codable, Identifiable, Hashable {
+    var cached: Bool?
     var id: String
     var label: String?
     var category: String?

@@ -101,6 +101,7 @@
   "check.build.noScript": "Няма build script",
   "check.build.pass": "Production build мина успешно",
   "check.build.static": "Статичен сайт — няма нужда от build",
+  "check.cachedSummary": "{summary} · от кеша",
   "check.deps.noNode": "Node.js не е намерен",
   "check.deps.noPackageJson": "Няма package.json",
   "check.deps.notInstalled": "Зависимостите не са инсталирани",

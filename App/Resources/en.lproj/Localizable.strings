@@ -315,6 +315,7 @@
 "menu.actions" = "Actions";
 "menu.addProject" = "Add project…";
 "menu.commands" = "Commands…";
+"menu.fullCheck" = "Full check (no cache)";
 "menu.settings" = "Settings…";
 "menu.stopLocal" = "Stop Local Preview";
 
@@ -341,6 +342,7 @@
 "open.appNotFound" = "Could not find %@";
 "open.theApp" = "the app";
 
+"overlay.cached" = "cached";
 "overlay.cancel" = "Cancel";
 "overlay.dontCancelProd" = "Do not interrupt a production upload";
 "overlay.fullLog" = "Full log";

@@ -13,6 +13,7 @@ struct RunStep: Identifiable, Equatable {
     var fixes: [String] = []
     var log: String?
     var duration: Double?
+    var cached = false
     var lines: [String] = []
 }
 
@@ -68,6 +69,7 @@ final class RunSession: ObservableObject, Identifiable {
                 if let v = e.strings("fixes") { s.fixes = v }
                 if let v = e.string("log") { s.log = v }
                 if let v = e.double("duration") { s.duration = v }
+                if let v = e.raw["cached"] as? Bool { s.cached = v }
                 steps[i] = s
             } else {
                 steps.append(RunStep(
@@ -81,6 +83,7 @@ final class RunSession: ObservableObject, Identifiable {
                     log: e.string("log"),
                     duration: e.double("duration")
                 ))
+                if let v = e.raw["cached"] as? Bool { steps[steps.count - 1].cached = v }
             }
             if e.string("status") == "running" { selectedStep = id }
             if e.string("status") == "fail" { selectedStep = id }

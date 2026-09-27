@@ -236,6 +236,24 @@ t('check: vite app — build създава dist, статус ready', () => {
   assert(r.data.status === 'ready', `status=${r.data.status}`);
 });
 
+t('check: инкрементално — непроменен проект ползва кеша, промяна или --force → пълна проверка', () => {
+  const again = bid('check', '--project', viteApp);
+  for (const id of ['lint', 'typecheck', 'build']) assert(stepOf(again.data, id).cached === true && stepOf(again.data, id).status === 'pass', `${id} should be cached: ${JSON.stringify(stepOf(again.data, id))}`);
+  assert(!stepOf(again.data, 'git').cached && !stepOf(again.data, 'secrets').cached, 'git/secrets are never cached');
+  assert(again.data.status === 'ready' && again.data.cached.includes('build'), JSON.stringify(again.data.cached));
+  const forced = bid('check', '--project', viteApp, '--force');
+  assert(!stepOf(forced.data, 'build').cached && stepOf(forced.data, 'build').status === 'pass', '--force must run the build');
+  fs.appendFileSync(path.join(viteApp, 'build.js'), '\n// touched\n');
+  const changed = bid('check', '--project', viteApp);
+  assert(!stepOf(changed.data, 'build').cached && stepOf(changed.data, 'build').status === 'pass', 'a changed tree must rebuild');
+  assert(stepOf(bid('check', '--project', viteApp).data, 'build').cached === true, 'cached again once the change is recorded');
+  // leave the fixture clean (later tests expect a ready project): commit → new HEAD → full run → ready
+  git(viteApp, 'add', '-A');
+  git(viteApp, 'commit', '-qm', 'touch build');
+  const clean = bid('check', '--project', viteApp);
+  assert(!stepOf(clean.data, 'build').cached && clean.data.status === 'ready', `after commit: ${clean.data.status}`);
+});
+
 t('check: провален build → blocked + лог', () => {
   const r = bid('check', '--project', failingBuild);
   const b = stepOf(r.data, 'build');

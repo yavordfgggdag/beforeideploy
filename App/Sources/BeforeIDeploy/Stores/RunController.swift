@@ -53,10 +53,11 @@ final class RunController: ObservableObject {
         }
     }
 
-    func runCheck() {
+    /// `force` ignores the incremental cache (lint/typecheck/build reused while nothing changed).
+    func runCheck(force: Bool = false) {
         guard let p = selected else { return }
         let s = RunSession(title: L("common.checkNoun"), subtitle: p.name, kind: .check)
-        startRun(s, args: ["check", "--project", p.key], successTitle: L("run.checkDone")) { outcome in
+        startRun(s, args: ["check", "--project", p.key] + (force ? ["--force"] : []), successTitle: L("run.checkDone")) { outcome in
             if let check = try? outcome.decode(CheckState.self) {
                 switch check.status {
                 case "ready": s.outcomeTitle = "READY TO DEPLOY"

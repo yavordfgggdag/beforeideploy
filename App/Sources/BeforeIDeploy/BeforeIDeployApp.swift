@@ -54,6 +54,8 @@ struct BeforeIDeployApp: App {
             CommandMenu(L("common.project")) {
                 Button(L("common.check")) { model.runCheck() }
                     .keyboardShortcut("r")
+                Button(L("menu.fullCheck")) { model.runCheck(force: true) }
+                    .keyboardShortcut("r", modifiers: [.command, .option])
                 Button("Smart Deploy") { model.smartDeploy() }
                     .keyboardShortcut("d")
                 Divider()

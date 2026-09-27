@@ -30,8 +30,8 @@ const HELP = `Before I Deploy engine ${VERSION}
   bid project list | add --path P | remove --project K | touch --project K | rename --project K --name N
   bid status  --project P            dashboard snapshot (fast)
   bid detect  --project P
-  bid check   --project P [--stop-on-fail]
-  bid smart   --project P [--prod --confirm DEPLOY]   check → draft (or production)
+  bid check   --project P [--stop-on-fail] [--force]     --force ignores the incremental cache
+  bid smart   --project P [--prod --confirm DEPLOY] [--force]   check → draft (or production)
   bid local   start|stop|restart|status --project P [--mode auto|build|dev]
   bid git     status|fetch|push --project P
   bid git     commit --project P --message M [--files-json '["a","b"]']
@@ -155,7 +155,7 @@ async function main() {
 
     case 'check': {
       const p = proj();
-      const check = await runChecks(p, { stopOnFail: !!flags['stop-on-fail'] });
+      const check = await runChecks(p, { stopOnFail: !!flags['stop-on-fail'], force: !!flags.force });
       if (check.status === 'blocked') ev.notify(`❌ ${p.name}`, t('check.notify.blocked'), null);
       return ok(check);
     }
@@ -164,7 +164,7 @@ async function main() {
       const p = proj();
       const prod = !!flags.prod;
       if (prod && flags.confirm !== 'DEPLOY') throw new EngineError(msg('smart.confirmRequired'), 'confirm_required', 2);
-      const check = await runChecks(p, { stopOnFail: true });
+      const check = await runChecks(p, { stopOnFail: true, force: !!flags.force });
       if (check.status === 'blocked') {
         ev.step('deploy', { label: t(prod ? 'deploy.label.production' : 'deploy.label.draft'), category: 'Hosting', status: 'skipped', summary: t('smart.step.stopped') });
         ev.notify(`❌ ${p.name}`, t('smart.notify.stopped'), null);

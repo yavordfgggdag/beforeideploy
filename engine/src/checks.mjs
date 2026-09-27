@@ -1,9 +1,10 @@
 // Pre-deploy checks: Git → Secrets → Dependencies → Lint → Typecheck → Build → Hosting
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { ev, sh, which, runStream, logDir, nowISO, exists } from './util.mjs';
 import { detect, pmRunArgs } from './detect.mjs';
-import { setState, addHistory, updateProject } from './store.mjs';
+import { getState, setState, addHistory, updateProject } from './store.mjs';
 import { t } from './i18n.mjs';
 
 export const STEPS = [
@@ -307,6 +308,38 @@ const RUNNERS = {
   hosting: stepHosting,
 };
 
+// ---------------------------------------------------------------- incremental check (WP6.2)
+
+/** Steps whose passing result may be reused while the source tree and toolchain are unchanged. */
+const CACHEABLE = new Set(['lint', 'typecheck', 'build']);
+const LOCKFILES = ['package-lock.json', 'pnpm-lock.yaml', 'yarn.lock', 'bun.lock', 'bun.lockb'];
+
+function statSig(dir, rel) {
+  try {
+    const st = fs.statSync(path.join(dir, rel));
+    return `${rel}:${st.size}:${Math.round(st.mtimeMs)}`;
+  } catch {
+    return `${rel}:-`;
+  }
+}
+
+/** Identity of the source tree (HEAD + working-tree diff + untracked files), lockfiles, project config and Node. */
+export function fingerprint(dir, d) {
+  const parts = [];
+  if (d.git.isRepo) {
+    parts.push(sh('git', ['rev-parse', 'HEAD'], { cwd: dir }).stdout.trim());
+    parts.push(sh('git', ['diff', 'HEAD', '--no-color', '--no-ext-diff'], { cwd: dir }).stdout);
+    const untracked = sh('git', ['ls-files', '--others', '--exclude-standard', '-z'], { cwd: dir }).stdout.split('\0').filter(Boolean);
+    for (const f of untracked.slice(0, 5000)) parts.push(statSig(dir, f));
+  } else {
+    for (const f of listCandidateFiles(dir, false)) parts.push(statSig(dir, f));
+  }
+  for (const lock of LOCKFILES) if (exists(path.join(dir, lock))) parts.push(statSig(dir, lock));
+  if (exists(path.join(dir, 'bid.config.json'))) parts.push(fs.readFileSync(path.join(dir, 'bid.config.json'), 'utf8'));
+  parts.push(sh('node', ['--version']).stdout.trim());
+  return crypto.createHash('sha1').update(parts.join('\u0000')).digest('hex');
+}
+
 // ---------------------------------------------------------------- orchestration
 
 export function overallStatus(steps) {
@@ -316,12 +349,16 @@ export function overallStatus(steps) {
   return { status, counts };
 }
 
-export async function runChecks(project, { stopOnFail = false, skip = [] } = {}) {
+export async function runChecks(project, { stopOnFail = false, skip = [], force = false } = {}) {
   const dir = project.path;
   const ctx = { dir, key: project.key, d: detect(dir) };
   const started = Date.now();
   const results = [];
   let halted = false;
+  // lint/typecheck/build are reused from the last passing run while nothing relevant changed (--force runs everything)
+  const prevCache = getState(project.key).stepCache || {};
+  const stepCache = { ...prevCache };
+  const fp = fingerprint(dir, ctx.d);
 
   for (const s of STEPS) ev.step(s.id, { label: s.label, category: s.category, status: 'pending' });
 
@@ -330,6 +367,13 @@ export async function runChecks(project, { stopOnFail = false, skip = [] } = {})
       const r = { id: s.id, label: s.label, category: s.category, status: 'skipped', summary: halted ? t('check.skippedAfterFail') : t('check.skipped') };
       results.push(r);
       ev.step(s.id, r);
+      continue;
+    }
+    const hit = !force && CACHEABLE.has(s.id) ? prevCache[s.id] : null;
+    if (hit && hit.fingerprint === fp && hit.result?.status === 'pass' && (s.id !== 'build' || ctx.d.ssr || ctx.d.publishReady)) {
+      const full = { id: s.id, label: s.label, category: s.category, details: [], fixes: [], ...hit.result, duration: 0, cached: true, summary: t('check.cachedSummary', { summary: hit.result.summary || '' }) };
+      results.push(full);
+      ev.step(s.id, full);
       continue;
     }
     ev.step(s.id, { label: s.label, category: s.category, status: 'running' });
@@ -351,12 +395,16 @@ export async function runChecks(project, { stopOnFail = false, skip = [] } = {})
     };
     results.push(full);
     ev.step(s.id, full);
+    if (CACHEABLE.has(s.id)) {
+      if (full.status === 'pass') stepCache[s.id] = { fingerprint: fp, result: { status: full.status, summary: full.summary, details: full.details, log: full.log, duration: full.duration } };
+      else delete stepCache[s.id];
+    }
     if (full.status === 'fail' && stopOnFail) halted = true;
   }
 
   const { status, counts } = overallStatus(results);
-  const check = { status, at: nowISO(), counts, steps: results, duration: (Date.now() - started) / 1000 };
-  setState(project.key, { check });
+  const check = { status, at: nowISO(), counts, steps: results, duration: (Date.now() - started) / 1000, cached: results.filter((r) => r.cached).map((r) => r.id) };
+  setState(project.key, { check, stepCache });
   updateProject(project.key, { framework: ctx.d.framework, packageManager: ctx.d.packageManager, publishDir: ctx.d.publishDir });
   addHistory({
     project: project.key,

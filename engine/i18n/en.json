@@ -101,6 +101,7 @@
   "check.build.noScript": "No build script",
   "check.build.pass": "Production build passed",
   "check.build.static": "Static site — no build needed",
+  "check.cachedSummary": "{summary} · cached",
   "check.deps.noNode": "Node.js was not found",
   "check.deps.noPackageJson": "No package.json",
   "check.deps.notInstalled": "Dependencies are not installed",

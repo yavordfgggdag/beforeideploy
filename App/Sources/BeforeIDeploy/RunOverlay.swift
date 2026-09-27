@@ -284,6 +284,11 @@ struct RunStepRow: View {
                 }
             }
             Spacer()
+            if step.cached {
+                Text(L("overlay.cached")).font(.system(size: 10, weight: .semibold)).foregroundColor(Theme.tertiary)
+                    .padding(.horizontal, 6).padding(.vertical, 1)
+                    .background(Capsule().fill(Theme.elevated))
+            }
             if let d = step.duration, d >= 1 {
                 Text(Fmt.duration(d)).font(.system(size: 10.5, design: .monospaced)).foregroundColor(Theme.tertiary)
             }

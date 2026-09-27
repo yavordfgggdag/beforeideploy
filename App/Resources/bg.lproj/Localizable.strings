@@ -315,6 +315,7 @@
 "menu.actions" = "Действия";
 "menu.addProject" = "Добави проект…";
 "menu.commands" = "Команди…";
+"menu.fullCheck" = "Пълна проверка (без кеш)";
 "menu.settings" = "Настройки…";
 "menu.stopLocal" = "Спри Local Preview";
 
@@ -341,6 +342,7 @@
 "open.appNotFound" = "Не намерих %@";
 "open.theApp" = "приложението";
 
+"overlay.cached" = "от кеша";
 "overlay.cancel" = "Прекъсни";
 "overlay.dontCancelProd" = "Не прекъсвай качването на production";
 "overlay.fullLog" = "Пълен лог";
