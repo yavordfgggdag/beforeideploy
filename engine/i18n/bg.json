@@ -381,5 +381,10 @@
   "spaceship.notLinked": "Проектът не е свързан с Netlify — свържи го първо.",
   "spaceship.notify.connected": "Свързан с {project}. SSL ще се активира автоматично.",
   "spaceship.plan.note": "Netlify издава SSL сертификат автоматично след като DNS-ът се разпространи (обикновено минути, до няколко часа).",
-  "spaceship.unauthorized": "Spaceship отказа ключа (провери API key/secret и правата му)."
+  "spaceship.unauthorized": "Spaceship отказа ключа (провери API key/secret и правата му).",
+  "update.badFeed": "Невалиден latest.json.",
+  "update.corrupt": "Изтегленият файл не съвпада с подписа (sha256) — изтрит е. Опитай пак.",
+  "update.http": "Сървърът за версии върна HTTP {status}.",
+  "update.network": "Няма връзка с сървъра за версии: {error}",
+  "update.nothing": "Няма нова версия за изтегляне."
 }

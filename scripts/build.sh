@@ -15,6 +15,10 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN_DIR/BeforeIDeploy" "$APP/Contents/MacOS/BeforeIDeploy"
 cp "$ROOT/App/Info.plist" "$APP/Contents/Info.plist"
+# engine/VERSION is the single source of the version (WP6.3); CFBundleVersion must be numeric
+VERSION="$(tr -d '[:space:]' < "$ROOT/engine/VERSION")"
+/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$APP/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${VERSION%%-*}" "$APP/Contents/Info.plist"
 printf 'APPL????' > "$APP/Contents/PkgInfo"
 # translations (read via Bundle.main — see Localization.swift)
 for LPROJ in "$ROOT/App/Resources/"*.lproj(N); do

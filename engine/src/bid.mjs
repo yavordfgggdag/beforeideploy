@@ -19,11 +19,20 @@ import { aiKeysStatus, aiKeySet, aiKeyDelete } from './aikeys.mjs';
 import { adminCommand, ADMIN_ACTIONS } from './admin.mjs';
 import { features as featureGates } from './features.mjs';
 import { aiFix, aiApply, aiUsage } from './ai/index.mjs';
+import { updateCheck, updateDownload } from './update.mjs';
+import { logEvent, logTail, redactArgv, createReport, LOG_FILE } from './log.mjs';
 import { hostingStatus, advise, setHosting, deployProject, hostingReady, providerStatus } from './hosting.mjs';
 import { spaceshipConnect, spaceshipDisconnect, spaceshipDomains, spaceshipDns, connectDomainToNetlify } from './spaceship.mjs';
 import { t, msg } from './i18n.mjs';
 
-const VERSION = '9.0.0';
+// engine/VERSION is the single source of the product version (build.sh writes it into Info.plist)
+const VERSION = (() => {
+  try {
+    return readFileSync(join(ENGINE_DIR, 'VERSION'), 'utf8').trim();
+  } catch {
+    return '0.0.0';
+  }
+})();
 
 const HELP = `Before I Deploy engine ${VERSION}
 
@@ -56,6 +65,9 @@ const HELP = `Before I Deploy engine ${VERSION}
   bid account locale --set L | keys status | keys set --provider anthropic|openai (env BID_AI_KEY) | keys delete --provider P
   bid admin   <action> [--user ID] [--json '{…}']   (admin only) actions: ${ADMIN_ACTIONS.join(', ')}
   bid features [--role R --plan P]                 feature gates for a role/plan
+  bid update  check [--force] [--channel beta] | download        release feed from settings.release.url / BID_UPDATE_URL
+  bid logs    [--tail N]                          engine.log entries (argv redacted)
+  bid report                                      support report (zip) with redacted logs + doctor
   bid cloud config --url U --anon-key K | schema
   bid hosting status | advise --project P | set --project P --provider netlify|vercel|cloudflare|ghpages
   bid deploy  --project P [--prod --confirm DEPLOY]        with the selected hosting
@@ -105,6 +117,7 @@ function doctor() {
     npx: which('npx'),
     netlifyAuth: netlifyAuth(),
     path: process.env.PATH,
+    log: LOG_FILE(),
   };
 }
 
@@ -323,6 +336,19 @@ async function main() {
     case 'features':
       return ok(featureGates({ role: flags.role, plan: flags.plan, aiDisabled: !!flags['ai-disabled'], hasOwnKey: !!flags['own-key'] }));
 
+    case 'update': {
+      const channel = flags.channel && flags.channel !== true ? flags.channel : 'stable';
+      if (!sub || sub === 'check') return ok(await updateCheck({ current: VERSION, force: !!flags.force, channel }));
+      if (sub === 'download') return ok(await updateDownload({ current: VERSION, channel }));
+      throw new EngineError(msg('cli.unknownCommand', { command: `update ${sub}` }), 'usage', 2);
+    }
+
+    case 'logs':
+      return ok({ file: LOG_FILE(), entries: logTail(Number(flags.tail) || 200) });
+
+    case 'report':
+      return ok(createReport({ doctor: doctor(), version: VERSION }));
+
     case 'hosting': {
       if (!sub || sub === 'status') return ok(hostingStatus());
       if (sub === 'advise') return ok(advise(proj()));
@@ -347,6 +373,23 @@ async function main() {
   }
 }
 
+// every command leaves one line in engine.log (WP6.9); crashes are reported as a result line, never a stack trace
+const startedAt = Date.now();
+const argvForLog = redactArgv(process.argv.slice(2));
+const logOutcome = (extra) => logEvent({ cmd: argvForLog[0] || 'help', argv: argvForLog, ms: Date.now() - startedAt, ...extra });
+const crash = (e) => {
+  logOutcome({ ok: false, code: e?.code || 'crash', error: String(e?.message || e), stack: e?.stack ? String(e.stack).split('\n').slice(0, 5) : undefined });
+  process.exit(fail(e));
+};
+process.on('unhandledRejection', crash);
+process.on('uncaughtException', crash);
+
 main()
-  .then((code) => process.exit(typeof code === 'number' ? code : 0))
-  .catch((e) => process.exit(fail(e)));
+  .then((code) => {
+    logOutcome({ ok: true, exit: typeof code === 'number' ? code : 0 });
+    process.exit(typeof code === 'number' ? code : 0);
+  })
+  .catch((e) => {
+    logOutcome({ ok: false, code: e?.code || 'error', error: String(e?.message || e) });
+    process.exit(fail(e));
+  });

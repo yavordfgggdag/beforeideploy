@@ -120,7 +120,7 @@ console.log(`\nBefore I Deploy — engine tests\n  tmp: ${TMP}\n`);
 t('doctor връща версия и node', () => {
   const r = bid('doctor');
   assert(r.result?.ok, 'doctor failed');
-  assert(r.data.engine === '9.0.0', 'bad version');
+  assert(/^\d+\.\d+\.\d+(-[\w.]+)?$/.test(r.data.engine), 'bad version');
 });
 
 t('project add / list / remove', () => {
@@ -495,6 +495,9 @@ const ANSWER='The build fails because src/app.js has a syntax error: a + ; is mi
 const ANSWER_PARTS=[ANSWER.slice(0,40),ANSWER.slice(40,120),ANSWER.slice(120)];
 const balance=(id)=>ledger.filter(l=>l.user_id===id).reduce((a,l)=>a+l.delta,0);
 http.createServer((q,r)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{r.setHeader('content-type','application/json');
+ if(q.url==='/releases/latest.json'){const dmg='dmg-bytes';const sha=require('crypto').createHash('sha256').update(dmg).digest('hex');
+   return r.end(JSON.stringify({version:'10.1.0',minVersion:'9.0.0',url:'http://127.0.0.1:'+port+'/releases/bid.dmg',sha256:sha,notes:{en:'Fixes',bg:'Поправки'},publishedAt:'2026-10-01T00:00:00Z',beta:{version:'10.2.0-beta.1',url:'http://127.0.0.1:'+port+'/releases/bid.dmg',sha256:sha}}));}
+ if(q.url==='/releases/bid.dmg'){r.setHeader('content-type','application/octet-stream');return r.end('dmg-bytes');}
  if(q.url.startsWith('/v1/models')){if(q.headers['x-api-key']!=='sk-ant-good-key-123'){r.statusCode=401;return r.end('{}');}return r.end('{"data":[]}');}
  if(q.url==='/v1/messages'){if(q.headers['x-api-key']!=='sk-ant-good-key-123'){r.statusCode=401;return r.end('{"type":"error","error":{"message":"invalid x-api-key"}}');}
    r.setHeader('content-type','text/event-stream');const ev=(o)=>r.write('event: '+o.type+'\\ndata: '+JSON.stringify(o)+'\\n\\n');
@@ -692,6 +695,35 @@ t('ai: cloud път — план, кредити, quota_exhausted → exit 8, fr
   const free = bid('ai', 'fix', '--project', cloudApp, '--step', 'build');
   assert(free.result.code === 'ai_unavailable' && free.result.key === 'ai.unavailable.noPlan', JSON.stringify(free.result));
   login('yavor@example.com', 'supersecret1');
+});
+
+t('update: latest.json → налична версия, beta канал, изтегляне със sha256; без feed → configured:false', () => {
+  const feed = `http://127.0.0.1:${sbPort}/releases/latest.json`;
+  const none = bidEnv({ BID_UPDATE_URL: '' }, 'update', 'check');
+  assert(none.data.configured === false && none.data.available === false, JSON.stringify(none.data));
+  const r = bidEnv({ BID_UPDATE_URL: feed }, 'update', 'check');
+  assert(r.result.ok && r.data.current === '10.0.0-dev' && r.data.latest === '10.1.0' && r.data.available === true && r.data.mandatory === false, JSON.stringify(r.data));
+  assert(r.data.notes.bg === 'Поправки', 'notes');
+  const cached = bidEnv({ BID_UPDATE_URL: feed }, 'update', 'check');
+  assert(cached.data.fromCache === true, 'second check should use the 6h cache');
+  const beta = bidEnv({ BID_UPDATE_URL: feed }, 'update', 'check', '--channel', 'beta');
+  assert(beta.data.latest === '10.2.0-beta.1' && beta.data.available === true, JSON.stringify(beta.data));
+  const dl = bidEnv({ BID_UPDATE_URL: feed }, 'update', 'download');
+  assert(dl.result.ok && fs.existsSync(dl.data.path) && fs.readFileSync(dl.data.path, 'utf8') === 'dmg-bytes', JSON.stringify(dl.result));
+  assert(dl.data.path.startsWith(path.join(ENV.HOME, 'Downloads')), 'must land in ~/Downloads');
+});
+
+t('logs & report: engine.log пази командите с маскирани пароли; докладът е без secrets', () => {
+  const logs = bid('logs', '--tail', '400');
+  assert(logs.data.entries.length > 20 && logs.data.entries.every((e) => e.cmd && typeof e.ms === 'number'), 'entries');
+  const text = JSON.stringify(logs.data.entries);
+  assert(text.includes('"signup"') && text.includes('***') && !text.includes('supersecret'), 'password must be masked in argv');
+  assert(logs.data.entries.some((e) => e.ok === false && e.code), 'failed commands are logged with their code');
+  const rep = bid('report');
+  assert(rep.result.ok && fs.existsSync(rep.data.path) && rep.data.files.includes('engine-log.ndjson') && rep.data.files.includes('doctor.json'), JSON.stringify(rep.result));
+  const bundle = fs.readdirSync(rep.data.dir).map((f) => fs.readFileSync(path.join(rep.data.dir, f), 'utf8')).join('\n');
+  assert(!bundle.includes('supersecret') && !bundle.includes('sk-ant-good-key-123') && !bundle.includes('yavor@example.com'), 'report leaks secrets or emails');
+  assert(JSON.parse(fs.readFileSync(path.join(rep.data.dir, 'doctor.json'), 'utf8')).version === '10.0.0-dev', 'doctor version');
 });
 
 t('хостинг: съветник — SSR изключва статичните хостинги', () => {

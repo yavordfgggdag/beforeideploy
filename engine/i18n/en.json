@@ -381,5 +381,10 @@
   "spaceship.notLinked": "The project is not connected to Netlify — connect it first.",
   "spaceship.notify.connected": "Connected to {project}. SSL will be activated automatically.",
   "spaceship.plan.note": "Netlify issues an SSL certificate automatically once DNS propagates (usually minutes, up to a few hours).",
-  "spaceship.unauthorized": "Spaceship rejected the key (check the API key/secret and its permissions)."
+  "spaceship.unauthorized": "Spaceship rejected the key (check the API key/secret and its permissions).",
+  "update.badFeed": "Invalid latest.json.",
+  "update.corrupt": "The downloaded file does not match its sha256 — it was deleted. Try again.",
+  "update.http": "The release server returned HTTP {status}.",
+  "update.network": "Cannot reach the release server: {error}",
+  "update.nothing": "No new version to download."
 }
