@@ -50,6 +50,12 @@ export function gitStatus(dir) {
   };
 }
 
+/** Full sha of HEAD, or null outside a repo / before the first commit. */
+export function gitHead(dir) {
+  const r = sh('git', ['rev-parse', 'HEAD'], { cwd: dir });
+  return r.code === 0 ? r.stdout.trim() : null;
+}
+
 export async function gitFetch(project) {
   const r = await runStream('git', ['fetch', '--quiet', 'origin'], { cwd: project.path, env: GIT_ENV(), step: 'fetch', timeout: 20000, quiet: true });
   return { fetched: r.code === 0, status: gitStatus(project.path) };

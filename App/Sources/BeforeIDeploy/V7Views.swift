@@ -62,9 +62,24 @@ struct AIFixBar: View {
                         .font(.system(size: 11.5)).foregroundColor(Theme.secondary)
                 }
             }
+            let builtin = model.account?.features?.aiBuiltin == true
             HStack(spacing: 6) {
+                if builtin {
+                    Button { model.aiStore.start(step: step) } label: { Label(L("ai.fixButton"), systemImage: "sparkles") }
+                        .bidButton(.primary, compact: true)
+                        .help(L("ai.fixHelp"))
+                    if model.account?.features?.aiDeep == true {
+                        Button { model.aiStore.start(step: step, deep: true) } label: { Label(L("ai.deepButton"), systemImage: "brain") }
+                            .bidButton(.secondary, compact: true)
+                            .help(L("ai.deepHelp"))
+                    }
+                } else if model.account?.features?.billingPlans == true {
+                    Button { model.flash(L("ai.needsPlan"), error: false) } label: { Label(L("ai.fixButton"), systemImage: "sparkles") }
+                        .bidButton(.ghost, compact: true)
+                        .help(L("ai.needsPlan"))
+                }
                 Button { model.aiFix(step: step, target: "chatgpt") } label: { Label(L("aifix.chatgpt"), systemImage: "bubble.left.and.bubble.right.fill") }
-                    .bidButton(.primary, compact: true)
+                    .bidButton(builtin ? .secondary : .primary, compact: true)
                     .help(L("aifix.chatgptHelp"))
                 Button { model.aiFix(step: step, target: "claude") } label: { Label("Claude", systemImage: "sparkle") }
                     .bidButton(.secondary, compact: true)

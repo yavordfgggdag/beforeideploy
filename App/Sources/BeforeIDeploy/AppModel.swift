@@ -33,6 +33,7 @@ final class AppModel: ObservableObject, Feedback {
     let hostingStore: HostingStore
     let runController: RunController
     let adminStore: AdminStore
+    let aiStore: AIStore
 
     @Published var sheet: SheetKind?
     @Published var pendingFix: PendingFix?
@@ -64,12 +65,20 @@ final class AppModel: ObservableObject, Feedback {
         hostingStore = HostingStore(engine: engine, projects: projects)
         runController = RunController(engine: engine, projects: projects)
         adminStore = AdminStore(engine: engine)
+        aiStore = AIStore(engine: engine, projects: projects)
 
         projectStore.feedback = self
         accountStore.feedback = self
         hostingStore.feedback = self
         runController.feedback = self
         adminStore.feedback = self
+        aiStore.feedback = self
+        aiStore.onApplied = { [weak self] in
+            guard let self else { return }
+            self.aiStore.dismiss()
+            self.run = nil
+            self.runCheck()
+        }
 
         accountStore.onLogin = { [weak self] in
             guard let self else { return }
@@ -89,6 +98,7 @@ final class AppModel: ObservableObject, Feedback {
             forward(hostingStore.objectWillChange),
             forward(runController.objectWillChange),
             forward(adminStore.objectWillChange),
+            forward(aiStore.objectWillChange),
         ]
     }
 

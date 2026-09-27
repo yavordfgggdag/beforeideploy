@@ -6,6 +6,7 @@ import { detect } from './detect.mjs';
 import { getState, setState, updateProject, addHistory, findProject } from './store.mjs';
 import { netlifyAuth, netlifyDeploy, deployGuard } from './netlify.mjs';
 import { recordCost } from './costs.mjs';
+import { gitHead } from './git.mjs';
 import { t, msg } from './i18n.mjs';
 
 function fileHas(file, re) {
@@ -184,7 +185,7 @@ const slugify = (s) =>
     .slice(0, 50) || 'site';
 
 function finishDeploy(project, provider, { prod, url, duration, logFile }) {
-  const record = { url, at: nowISO(), provider };
+  const record = { url, at: nowISO(), provider, sha: gitHead(project.path) };
   setState(project.key, prod ? { lastProd: record } : { lastDraft: record });
   if (prod) updateProject(project.key, { liveUrl: url });
   addHistory({ project: project.key, projectName: project.name, kind: prod ? 'production' : 'draft', status: 'ok', url, duration, log: logFile, message: PROVIDERS[provider].name });

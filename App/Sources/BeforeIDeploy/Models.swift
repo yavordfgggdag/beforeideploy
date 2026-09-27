@@ -237,6 +237,53 @@ struct AIFixResult: Codable {
     var chars: Int?
 }
 
+// Built-in AI Fix (engine `bid ai fix|explain|apply`)
+struct AIFixOutcome: Codable {
+    var provider: String
+    var model: String?
+    var mode: String
+    var step: String
+    var stepLabel: String?
+    var answer: String?
+    var explanation: String?
+    var patchFile: String?
+    var files: [AIPatchFile]?
+    var applicable: Int?
+    var usage: AIUsage?
+    var duration: Double?
+}
+
+struct AIPatchFile: Codable, Identifiable, Hashable {
+    var path: String
+    var action: String
+    var additions: Int
+    var deletions: Int
+    var diff: String
+    var applicable: Bool
+    var error: String?
+    var id: String { path }
+}
+
+struct AIUsage: Codable, Hashable {
+    var input: Int?
+    var output: Int?
+    var model: String?
+    var charged: Int?
+    var balance: Int?
+}
+
+struct AISkipped: Codable, Hashable {
+    var path: String
+    var reason: String
+}
+
+struct AIApplyResult: Codable {
+    var applied: [String]
+    var skipped: [AISkipped]
+    var committed: String?
+    var changedSince: [String]?
+}
+
 struct SetupAction: Codable, Hashable {
     var type: String
     var label: String

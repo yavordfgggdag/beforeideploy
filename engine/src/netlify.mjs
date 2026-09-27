@@ -4,6 +4,7 @@ import { HOME, EngineError, ev, which, runStream, logDir, readJSON, extractJSON,
 import { detect } from './detect.mjs';
 import { getState, setState, updateProject, addHistory } from './store.mjs';
 import { recordCost } from './costs.mjs';
+import { gitHead } from './git.mjs';
 import { t, msg } from './i18n.mjs';
 
 const CHECK_MAX_AGE_MIN = 30;
@@ -214,7 +215,7 @@ export async function netlifyDeploy(project, { prod = false, confirm = null } = 
   }
 
   const url = prod ? json.url || json.deploy_url : json.deploy_url || json.url;
-  const record = { url, at: nowISO(), deployId: json.deploy_id || null, logs: json.logs || null };
+  const record = { url, at: nowISO(), deployId: json.deploy_id || null, logs: json.logs || null, sha: gitHead(project.path) };
   if (prod) {
     setState(project.key, { lastProd: record });
     updateProject(project.key, { netlify: { liveUrl: json.url || url, siteName: json.site_name || undefined } });

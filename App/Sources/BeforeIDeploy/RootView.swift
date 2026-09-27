@@ -67,6 +67,12 @@ struct RootView: View {
             }
         }
         .overlay {
+            if let ai = model.aiStore.current {
+                AIFixOverlay(state: ai)
+                    .transition(.opacity)
+            }
+        }
+        .overlay {
             if model.showPalette {
                 CommandPalette()
                     .transition(.opacity)
