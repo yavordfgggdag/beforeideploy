@@ -1,0 +1,24 @@
+# Engine tests + i18n consistency on every push (Linux is enough: the engine is plain Node).
+name: engine
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  engine:
+    name: node tests/run.mjs + i18n-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # engine/bid is a zsh launcher (macOS always has zsh; Ubuntu runners do not)
+      - name: Install zsh
+        run: sudo apt-get update -q && sudo apt-get install -y -q zsh
+      - name: Engine tests
+        run: node tests/run.mjs
+      - name: i18n check
+        run: node scripts/i18n-check.mjs

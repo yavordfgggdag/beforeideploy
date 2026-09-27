@@ -1,0 +1,31 @@
+# Type-checks (and later tests) the Supabase Edge Functions with Deno.
+name: functions
+
+on:
+  push:
+    paths:
+      - 'supabase/functions/**'
+      - '.github/workflows/functions.yml'
+  pull_request:
+    paths:
+      - 'supabase/functions/**'
+      - '.github/workflows/functions.yml'
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: deno check + test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Type check
+        run: |
+          set -e
+          for f in supabase/functions/*/index.ts; do echo "▸ $f"; deno check "$f"; done
+      - name: Tests
+        run: |
+          if ls supabase/functions/*/*_test.ts >/dev/null 2>&1; then deno test --allow-env --allow-net supabase/functions; else echo "no function tests yet"; fi
