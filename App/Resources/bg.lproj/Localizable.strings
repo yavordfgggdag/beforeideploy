@@ -1,5 +1,9 @@
 /* Before I Deploy — Български. Keys are used from Swift via L("key"); formats use %@. */
 
+"account.deleteButton" = "Изтрий акаунта…";
+"account.export" = "Експортирай данните ми…";
+"account.exportHint" = "Експортът е JSON с всичко, което облакът пази за теб. Изтриването маха акаунта и абонамента; проектите на този Mac остават.";
+"account.exported" = "Експортът е готов — показвам го във Finder";
 "account.offline" = "Офлайн режим";
 "account.rolePlan" = "%@ · %@ · %@ токена";
 "account.signInOrUp" = "Влез / Регистрирай се";
@@ -216,6 +220,13 @@
 "dashboard.stopped" = "спрян";
 "dashboard.tab.hosting" = "Хостинг & домейн";
 "dashboard.tab.overview" = "Преглед";
+
+"deleteAccount.confirm" = "Изтрий завинаги";
+"deleteAccount.deleting" = "Изтривам…";
+"deleteAccount.done" = "Акаунтът е изтрит. Проектите на този Mac остават.";
+"deleteAccount.explain" = "Това изтрива акаунта ти в облака: профил, абонамент, AI кредити и синхронизираните имена на проектите. Не може да се отмени. Проектите и настройките на този Mac остават.";
+"deleteAccount.title" = "Изтриване на акаунта";
+"deleteAccount.typeDelete" = "За да продължиш, напиши DELETE";
 
 "devicecode.hint" = "Кодът е копиран — постави го с ⌘V на отворената страница и натисни „Authorize“.";
 "devicecode.reopen" = "Отвори страницата отново";
@@ -456,6 +467,7 @@
 "run.smartSubtitle" = "%@ · Git → Secrets → Build → Draft Preview";
 "run.stopped" = "Спряно";
 
+"settings.account" = "Акаунт";
 "settings.autoOpenPreview" = "Отваряй preview автоматично";
 "settings.autoOpenPreviewHint" = "След успешен Draft / Production deploy";
 "settings.behavior" = "Поведение";

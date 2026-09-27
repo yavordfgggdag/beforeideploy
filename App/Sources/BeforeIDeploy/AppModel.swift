@@ -5,7 +5,7 @@ import SwiftUI
 enum Screen: Hashable { case overview, project, domains, costs, setup, admin }
 
 enum SheetKind: Identifiable {
-    case production, netlifySetup, commit, history, settings, remote, spaceshipConnect, connectDomain
+    case production, netlifySetup, commit, history, settings, remote, spaceshipConnect, connectDomain, deleteAccount
     var id: Int { hashValue }
 }
 
@@ -473,6 +473,33 @@ final class AppModel: ObservableObject, Feedback {
 
     func openCommand(_ path: String) {
         NSWorkspace.shared.open(URL(fileURLWithPath: path))
+    }
+
+    // MARK: - GDPR: export & delete (WP5)
+
+    func exportAccountData() {
+        Task {
+            do {
+                let r = try await engine.call(["account", "export"], as: ExportResult.self)
+                revealInFinder(r.path)
+                flash(L("account.exported"))
+            } catch { show(error) }
+        }
+    }
+
+    /// Deletes the cloud account once the user typed DELETE; projects on this Mac stay. True on success.
+    func deleteAccount(confirm: String) async -> Bool {
+        guard confirm == "DELETE" else { return false }
+        do {
+            _ = try await engine.call(["account", "delete", "--confirm", "DELETE"], as: DeleteAccountResult.self)
+            offlineMode = false
+            await loadAccount()
+            flash(L("deleteAccount.done"))
+            return true
+        } catch {
+            show(error)
+            return false
+        }
     }
 
     // MARK: - Updates & support (WP6.3, WP6.6)

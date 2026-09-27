@@ -11,6 +11,7 @@
   "account.cloud.badUrl": "The URL must look like https://xxxx.supabase.co",
   "account.cloud.missingArgs": "Missing URL and anon key",
   "account.cloud.notConfigured": "The cloud is not configured.",
+  "account.delete.confirmRequired": "Deleting the account requires --confirm DELETE.",
   "account.missingAccessToken": "Missing access token",
   "account.missingCredentials": "Missing email and password",
   "account.missingEmail": "Missing email",

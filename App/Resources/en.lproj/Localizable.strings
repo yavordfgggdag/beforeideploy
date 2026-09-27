@@ -1,5 +1,9 @@
 /* Before I Deploy — English. Keys are used from Swift via L("key"); formats use %@. */
 
+"account.deleteButton" = "Delete account…";
+"account.export" = "Export my data…";
+"account.exportHint" = "The export is a JSON file with everything the cloud holds for you. Deleting removes the account and subscription; the projects on this Mac stay.";
+"account.exported" = "Export ready — showing it in Finder";
 "account.offline" = "Offline mode";
 "account.rolePlan" = "%@ · %@ · %@ tokens";
 "account.signInOrUp" = "Sign in / Sign up";
@@ -216,6 +220,13 @@
 "dashboard.stopped" = "stopped";
 "dashboard.tab.hosting" = "Hosting & domain";
 "dashboard.tab.overview" = "Overview";
+
+"deleteAccount.confirm" = "Delete permanently";
+"deleteAccount.deleting" = "Deleting…";
+"deleteAccount.done" = "Account deleted. The projects on this Mac stay.";
+"deleteAccount.explain" = "This deletes your cloud account: profile, subscription, AI credits and the synced project names. It cannot be undone. The projects and settings on this Mac stay.";
+"deleteAccount.title" = "Delete account";
+"deleteAccount.typeDelete" = "To continue, type DELETE";
 
 "devicecode.hint" = "The code is copied — paste it with ⌘V on the opened page and press “Authorize”.";
 "devicecode.reopen" = "Open the page again";
@@ -456,6 +467,7 @@
 "run.smartSubtitle" = "%@ · Git → Secrets → Build → Draft Preview";
 "run.stopped" = "Stopped";
 
+"settings.account" = "Account";
 "settings.autoOpenPreview" = "Open previews automatically";
 "settings.autoOpenPreviewHint" = "After a successful Draft / Production deploy";
 "settings.behavior" = "Behavior";

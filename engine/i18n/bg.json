@@ -11,6 +11,7 @@
   "account.cloud.badUrl": "URL-ът трябва да е във формат https://xxxx.supabase.co",
   "account.cloud.missingArgs": "Липсват URL и anon key",
   "account.cloud.notConfigured": "Облакът не е настроен.",
+  "account.delete.confirmRequired": "Изтриването на акаунта изисква --confirm DELETE.",
   "account.missingAccessToken": "Липсва access token",
   "account.missingCredentials": "Липсват имейл и парола",
   "account.missingEmail": "Липсва имейл",

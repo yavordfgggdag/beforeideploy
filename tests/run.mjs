@@ -530,6 +530,10 @@ http.createServer((q,r)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{r.setHea
    for(const part of ANSWER_PARTS)send({type:'delta',text:part});
    const charged=6000*(j.deep?5:1);ledger.push({user_id:me.user_id,delta:-charged,reason:'ai_fix'});
    send({type:'usage',input:4500,output:1500,model:'claude-sonnet-5',charged:charged,balance:balance(me.user_id)});send({type:'done'});return r.end();}
+ if(q.url==='/functions/v1/account'){const me=caller(q);if(!me){r.statusCode=401;return r.end('{"error":"no session"}');}
+   if(j.action==='export')return r.end(JSON.stringify({user:{id:me.user_id,email:me.email},profile:me,subscriptions:[],credit_ledger:ledger.filter(l=>l.user_id===me.user_id),ai_usage:[],projects:rows.filter(x=>x.user_id===me.user_id)}));
+   if(j.action==='delete'){delete users[me.email];delete profiles[me.user_id];rows=rows.filter(x=>x.user_id!==me.user_id);audit.push({admin:me.user_id,action:'delete_me',target:me.user_id});return r.end('{"deleted":true}');}
+   r.statusCode=400;return r.end('{"error":"unknown action"}');}
  if(q.url.startsWith('/rest/v1/settings')){if(!caller(q)){r.statusCode=401;return r.end('{}');}return r.end('[]');}
  if(q.url==='/auth/v1/signup'){if(users[j.email]){r.statusCode=400;return r.end('{"msg":"User already registered"}');}users[j.email]=j.password;
    profiles['u-'+j.email]={user_id:'u-'+j.email,email:j.email,role:Object.keys(profiles).length?'normal':'admin',plan:'free',locale:(j.data&&j.data.locale)||'en',ai_disabled:false,display_name:j.data&&j.data.full_name||null};
@@ -744,6 +748,24 @@ t('logs & report: engine.log пази командите с маскирани �
   const bundle = fs.readdirSync(rep.data.dir).map((f) => fs.readFileSync(path.join(rep.data.dir, f), 'utf8')).join('\n');
   assert(!bundle.includes('supersecret') && !bundle.includes('sk-ant-good-key-123') && !bundle.includes('yavor@example.com'), 'report leaks secrets or emails');
   assert(JSON.parse(fs.readFileSync(path.join(rep.data.dir, 'doctor.json'), 'utf8')).version === '10.0.0-dev', 'doctor version');
+});
+
+t('акаунт: експорт на данните и изтриване с --confirm DELETE', () => {
+  bid('account', 'logout');
+  const gone = bid('account', 'signup', '--email', 'gone@example.com', '--password', 'supersecret3', '--name', 'Gone');
+  assert(gone.data.loggedIn, JSON.stringify(gone.result));
+  const exp = bid('account', 'export');
+  assert(exp.result.ok && fs.existsSync(exp.data.path) && exp.data.path.startsWith(path.join(ENV.HOME, 'Downloads')), JSON.stringify(exp.result));
+  const dump = JSON.parse(fs.readFileSync(exp.data.path, 'utf8'));
+  assert(dump.user.email === 'gone@example.com' && Array.isArray(dump.projects) && dump.exportedAt, 'export content');
+  const refused = bid('account', 'delete');
+  assert(refused.result.code === 'confirm_required' && bid('account', 'status').data.loggedIn === true, 'delete without DELETE must refuse');
+  const del = bid('account', 'delete', '--confirm', 'DELETE');
+  assert(del.result.ok && del.data.deleted === true, JSON.stringify(del.result));
+  assert(bid('account', 'status').data.loggedIn === false, 'session must be gone');
+  const again = bid('account', 'login', '--email', 'gone@example.com', '--password', 'supersecret3');
+  assert(again.result.ok === false, 'the user must not exist any more');
+  bid('account', 'login', '--email', 'yavor@example.com', '--password', 'supersecret1');
 });
 
 t('хостинг: съветник — SSR изключва статичните хостинги', () => {

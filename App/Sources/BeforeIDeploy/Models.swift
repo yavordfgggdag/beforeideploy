@@ -305,6 +305,15 @@ struct UpdateDownload: Codable {
     var version: String
 }
 
+struct ExportResult: Codable {
+    var path: String
+    var tables: [String]?
+}
+
+struct DeleteAccountResult: Codable {
+    var deleted: Bool
+}
+
 struct ReportResult: Codable {
     var path: String
     var dir: String?

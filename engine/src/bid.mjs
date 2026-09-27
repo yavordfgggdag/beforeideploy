@@ -14,7 +14,7 @@ import { aifix } from './aifix.mjs';
 import { costSummary, providerUsage, setBudgets, getPrices } from './costs.mjs';
 import { setupStatus, setupRun, setupAuto, setupTerminal } from './setup.mjs';
 import { overview } from './overview.mjs';
-import { accountStatus, signup, login, logout, recover, oauthUrl, completeOAuth, syncProjects, setCloudConfig, cloudConfig, setLocale } from './account.mjs';
+import { accountStatus, signup, login, logout, recover, oauthUrl, completeOAuth, syncProjects, setCloudConfig, cloudConfig, setLocale, exportAccount, deleteAccount } from './account.mjs';
 import { aiKeysStatus, aiKeySet, aiKeyDelete } from './aikeys.mjs';
 import { adminCommand, ADMIN_ACTIONS } from './admin.mjs';
 import { features as featureGates } from './features.mjs';
@@ -62,6 +62,7 @@ const HELP = `Before I Deploy engine ${VERSION}
   bid spaceship connect-domain --project P --domain D [--yes]   A @ + CNAME www → Netlify
   bid account status | signup --email E --password P [--name N] | login --email E --password P
   bid account logout | recover --email E | oauth [--provider github] | session --access A --refresh R | sync
+  bid account export | delete --confirm DELETE      GDPR: data export to ~/Downloads / delete the cloud account
   bid account locale --set L | keys status | keys set --provider anthropic|openai (env BID_AI_KEY) | keys delete --provider P
   bid admin   <action> [--user ID] [--json '{…}']   (admin only) actions: ${ADMIN_ACTIONS.join(', ')}
   bid features [--role R --plan P]                 feature gates for a role/plan
@@ -310,6 +311,8 @@ async function main() {
       if (sub === 'session') return ok(await completeOAuth({ access: flags.access || process.env.BID_ACCESS, refresh: flags.refresh || process.env.BID_REFRESH }));
       if (sub === 'sync') return ok(await syncProjects());
       if (sub === 'locale') return ok(await setLocale(flags.set));
+      if (sub === 'export') return ok(await exportAccount());
+      if (sub === 'delete') return ok(await deleteAccount({ confirm: flags.confirm }));
       if (sub === 'keys') {
         const action = positional[1] || 'status';
         if (action === 'status') return ok(aiKeysStatus());

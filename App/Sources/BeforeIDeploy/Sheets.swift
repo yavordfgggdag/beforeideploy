@@ -569,11 +569,51 @@ struct SettingsSheet: View {
                     }
                     Text(L("report.hint")).font(.system(size: 11)).foregroundColor(Theme.tertiary)
                 }
+                if model.account?.loggedIn == true {
+                    VStack(alignment: .leading, spacing: 8) {
+                        SectionLabel(text: L("settings.account"))
+                        HStack {
+                            Button(L("account.export")) { model.exportAccountData() }.bidButton(.secondary, compact: true)
+                            Button(L("account.deleteButton")) { model.sheet = .deleteAccount }.bidButton(.danger, compact: true)
+                        }
+                        Text(L("account.exportHint")).font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                    }
+                }
             }
         } actions: {
             Button(L("common.done")) { dismiss() }.bidButton(.primary).keyboardShortcut(.defaultAction)
         }
         .task { doctor = try? await model.engine.call(["doctor"], as: DoctorInfo.self) }
+    }
+}
+
+// MARK: - Delete account (GDPR, WP5)
+
+struct DeleteAccountSheet: View {
+    @EnvironmentObject var model: AppModel
+    @Environment(\.dismiss) private var dismiss
+    @Local private var confirm = ""
+    @Local private var busy = false
+
+    var body: some View {
+        SheetScaffold(icon: "person.crop.circle.badge.xmark", iconTint: Theme.blocked, title: L("deleteAccount.title"), subtitle: model.account?.email ?? "", width: 520) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(L("deleteAccount.explain")).font(.system(size: 12.5)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
+                Text(L("deleteAccount.typeDelete")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                BIDTextField(placeholder: "DELETE", text: $confirm, mono: true)
+            }
+        } actions: {
+            Button(L("common.cancel")) { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
+            Button(busy ? L("deleteAccount.deleting") : L("deleteAccount.confirm")) {
+                busy = true
+                Task {
+                    if await model.deleteAccount(confirm: confirm) { dismiss() }
+                    busy = false
+                }
+            }
+            .bidButton(.danger)
+            .disabled(confirm != "DELETE" || busy)
+        }
     }
 }
 

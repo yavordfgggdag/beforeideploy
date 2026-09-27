@@ -1,8 +1,9 @@
 // Account — Supabase Auth (email/password + GitHub), session in Keychain, project metadata sync.
 // Service tokens (Netlify, Vercel, …) NEVER leave the Mac; only project metadata is synced.
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
-import { APP_DIR, ENGINE_DIR, EngineError, readJSON, writeJSON, nowISO } from './util.mjs';
+import { APP_DIR, ENGINE_DIR, EngineError, readJSON, writeJSON, nowISO, ensureDir } from './util.mjs';
 import { getSecret, setSecret, deleteSecret } from './secrets.mjs';
 import { listProjects } from './store.mjs';
 import { msg, currentLang } from './i18n.mjs';
@@ -238,6 +239,50 @@ export async function setLocale(locale) {
   const cached = readJSON(PROFILE_CACHE(), null);
   if (cached?.userId === s.user.id) writeJSON(PROFILE_CACHE(), { ...cached, locale });
   return { saved: true, locale };
+}
+
+// ---------------------------------------------------------------- GDPR: export & delete (WP5)
+
+async function accountFunction(session, action) {
+  const c = cfg();
+  let res;
+  try {
+    res = await fetch(`${c.url}/functions/v1/account`, {
+      method: 'POST',
+      headers: { apikey: c.anonKey, Authorization: `Bearer ${session.accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action }),
+    });
+  } catch (e) {
+    throw new EngineError(msg('account.network', { error: e.message }), 'network');
+  }
+  const data = await res.json().catch(() => null);
+  if (res.status === 401) throw new EngineError(msg('account.notLoggedIn'), 'not_logged_in', 5);
+  if (!res.ok) throw new EngineError(msg('account.rest.http', { status: res.status, detail: data?.error || '' }), 'account_failed');
+  return data;
+}
+
+/** Everything the cloud holds for this user → a JSON file in ~/Downloads. */
+export async function exportAccount() {
+  const s = await currentSession();
+  if (!s) throw new EngineError(msg('account.notLoggedIn'), 'not_logged_in', 5);
+  const data = await accountFunction(s, 'export');
+  const dir = ensureDir(path.join(os.homedir(), 'Downloads'));
+  const file = path.join(dir, `before-i-deploy-export-${new Date().toISOString().slice(0, 10)}.json`);
+  fs.writeFileSync(file, JSON.stringify({ exportedAt: nowISO(), ...data }, null, 2));
+  return { path: file, tables: Object.keys(data || {}) };
+}
+
+/** Deletes the cloud account (needs --confirm DELETE). Projects and settings on this Mac stay. */
+export async function deleteAccount({ confirm }) {
+  if (confirm !== 'DELETE') throw new EngineError(msg('account.delete.confirmRequired'), 'confirm_required', 2);
+  const s = await currentSession();
+  if (!s) throw new EngineError(msg('account.notLoggedIn'), 'not_logged_in', 5);
+  const r = await accountFunction(s, 'delete');
+  deleteSecret('session');
+  try {
+    fs.unlinkSync(PROFILE_CACHE());
+  } catch {}
+  return { deleted: true, ...(r || {}), loggedIn: false };
 }
 
 export async function logout() {
