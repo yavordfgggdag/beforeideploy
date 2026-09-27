@@ -468,18 +468,49 @@ t('overview: изтичащ домейн е в „внимание“', () => {
 const SB = path.join(TMP, 'mock-supabase.cjs');
 fs.writeFileSync(SB, `
 const http=require('http');const port=Number(process.argv[2]);const users={};let rows=[];
+// v10: profiles (first signup = owner/admin), credit ledger, admin function, audit log; plus a fake Anthropic /v1/models
+const profiles={};const ledger=[];const audit=[];
 const tok=(e)=>({access_token:'AT-'+e,refresh_token:'RT-'+e,expires_in:3600,user:{id:'u-'+e,email:e,user_metadata:{full_name:'Test'},app_metadata:{provider:'email'}}});
+const caller=(q)=>{const m=/^Bearer AT-(.+)$/.exec(q.headers.authorization||'');return m?profiles['u-'+m[1]]:null;};
+const balance=(id)=>ledger.filter(l=>l.user_id===id).reduce((a,l)=>a+l.delta,0);
 http.createServer((q,r)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{r.setHeader('content-type','application/json');
+ if(q.url.startsWith('/v1/models')){if(q.headers['x-api-key']!=='sk-ant-good-key-123'){r.statusCode=401;return r.end('{}');}return r.end('{"data":[]}');}
  if(q.headers.apikey!=='ANON'){r.statusCode=401;return r.end('{"message":"no apikey"}');}
  const j=b?JSON.parse(b):{};
- if(q.url==='/auth/v1/signup'){if(users[j.email]){r.statusCode=400;return r.end('{"msg":"User already registered"}');}users[j.email]=j.password;return r.end(JSON.stringify(tok(j.email)));}
+ if(q.url==='/auth/v1/signup'){if(users[j.email]){r.statusCode=400;return r.end('{"msg":"User already registered"}');}users[j.email]=j.password;
+   profiles['u-'+j.email]={user_id:'u-'+j.email,email:j.email,role:Object.keys(profiles).length?'normal':'admin',plan:'free',locale:(j.data&&j.data.locale)||'en',ai_disabled:false,display_name:j.data&&j.data.full_name||null};
+   return r.end(JSON.stringify(tok(j.email)));}
+ if(q.url.startsWith('/rest/v1/profiles')){const me=caller(q);if(!me){r.statusCode=401;return r.end('{}');}
+   const id=decodeURIComponent((/user_id=eq\.([^&]+)/.exec(q.url)||[])[1]||'');if(id!==me.user_id){return r.end('[]');}
+   if(q.method==='PATCH'){if(j.locale)me.locale=j.locale;r.statusCode=204;return r.end();}
+   return r.end(JSON.stringify([me]));}
+ if(q.url.startsWith('/rest/v1/credit_balance')){const me=caller(q);if(!me){r.statusCode=401;return r.end('{}');}return r.end(JSON.stringify([{user_id:me.user_id,balance:balance(me.user_id)}]));}
+ if(q.url==='/functions/v1/admin'){const me=caller(q);if(!me){r.statusCode=401;return r.end('{"error":"no session"}');}
+   if(me.role!=='admin'){r.statusCode=403;return r.end('{"error":"admin only"}');}
+   const t=profiles[j.user_id];audit.push({admin:me.user_id,action:j.action,target:j.user_id||null});
+   if(j.action==='list_users')return r.end(JSON.stringify({users:Object.values(profiles).map(p=>({...p,balance:balance(p.user_id)}))}));
+   if(!t&&j.action!=='audit_log'){r.statusCode=404;return r.end('{"error":"no such user"}');}
+   if(j.action==='set_role'){t.role=j.role;return r.end(JSON.stringify({user:t}));}
+   if(j.action==='set_plan_manual'){t.plan=j.plan;return r.end(JSON.stringify({user:t}));}
+   if(j.action==='grant_credits'){ledger.push({user_id:t.user_id,delta:j.delta,reason:'admin_grant'});return r.end(JSON.stringify({balance:balance(t.user_id)}));}
+   if(j.action==='disable_ai'){t.ai_disabled=!!j.disabled;return r.end(JSON.stringify({user:t}));}
+   if(j.action==='audit_log')return r.end(JSON.stringify({entries:audit}));
+   r.statusCode=400;return r.end('{"error":"unknown action"}');}
  if(q.url.startsWith('/auth/v1/token?grant_type=password')){if(users[j.email]!==j.password){r.statusCode=400;return r.end('{"error_description":"Invalid login credentials"}');}return r.end(JSON.stringify(tok(j.email)));}
  if(q.url==='/auth/v1/logout'){r.statusCode=204;return r.end();}
  if(q.url.startsWith('/rest/v1/bid_projects')){if(!/^Bearer AT-/.test(q.headers.authorization||'')){r.statusCode=401;return r.end('{}');}rows=JSON.parse(b);r.statusCode=201;return r.end();}
  r.statusCode=404;r.end('{}');});}).listen(port,'127.0.0.1');`);
 const sbPort = 4798;
 const sb = spawnChild(process.execPath, [SB, String(sbPort)], { stdio: 'ignore', detached: true });
+ENV.BID_ANTHROPIC_API = `http://127.0.0.1:${sbPort}`;
 spawnSync('sleep', ['0.6']);
+
+t('cloud schema: engine-ът връща supabase/schema.sql', () => {
+  const r = bid('cloud', 'schema');
+  assert(r.data.sql && r.data.sql.includes('create table if not exists public.profiles'), 'schema missing');
+  const f = bid('features', '--role', 'normal', '--plan', 'knight');
+  assert(f.data['ai.cloud'] === true && f.data['ai.deep'] === true && f.data['projects.max'] === null, JSON.stringify(f.data));
+});
 
 t('акаунт: без облак → configured:false', () => {
   const r = bid('account', 'status');
@@ -504,10 +535,54 @@ t('акаунт: регистрация, вход, грешна парола, sy
     assert(badBg.result.error === 'Грешен имейл или парола.', badBg.result.error);
     const good = bid('account', 'login', '--email', 'yavor@example.com', '--password', 'supersecret1');
     assert(good.data.loggedIn, 'login');
+    assert(good.data.role === 'admin' && good.data.plan === 'free' && good.data.locale === 'en', JSON.stringify(good.data));
+    assert(good.data.features['admin.panel'] === true && good.data.features['ai.ownKey'] === true && good.data.features['cloud.sync'] === true, JSON.stringify(good.data.features));
     const sync = bid('account', 'sync');
     assert(sync.result.ok && sync.data.synced >= 3, JSON.stringify(sync.result));
     const o = bid('account', 'oauth');
     assert(o.data.url.includes('/auth/v1/authorize?provider=github') && o.data.url.includes('beforeideploy'), o.data.url);
+
+    // language → cloud profile
+    const loc = bid('account', 'locale', '--set', 'bg');
+    assert(loc.data.saved === true && bid('account', 'status').data.locale === 'bg', JSON.stringify(loc.result));
+
+    // own AI key (vip/admin): rejected key is not stored, good key is verified and stored (masked in status)
+    const badKey = spawnSync(BID, ['account', 'keys', 'set', '--provider', 'anthropic'], { env: { ...ENV, BID_AI_KEY: 'sk-ant-wrong' }, encoding: 'utf8' });
+    assert(/"code":"unauthorized"/.test(badKey.stdout), badKey.stdout.slice(-200));
+    assert(bid('account', 'keys', 'status').data.every((k) => !k.connected), 'bad key stored');
+    const goodKey = spawnSync(BID, ['account', 'keys', 'set', '--provider', 'anthropic'], { env: { ...ENV, BID_AI_KEY: 'sk-ant-good-key-123' }, encoding: 'utf8' });
+    assert(/"connected":true/.test(goodKey.stdout), goodKey.stdout.slice(-200));
+    const ks = bid('account', 'keys', 'status').data.find((k) => k.provider === 'anthropic');
+    assert(ks.connected && ks.hint && !ks.hint.includes('good-key'), JSON.stringify(ks));
+    assert(!fs.readFileSync(path.join(ENV.BID_APP_DIR, 'profile.json'), 'utf8').includes('sk-ant'), 'key leaked into profile cache');
+    assert(bid('account', 'status').data.features['ai.builtin'] === true, 'own key should enable built-in AI');
+    bid('account', 'keys', 'delete', '--provider', 'anthropic');
+
+    // admin panel: list users, roles, credits, audit; a normal user is refused
+    const users = bid('admin', 'list_users');
+    assert(users.result.ok && users.data.users.length === 1, JSON.stringify(users.result));
+    bid('account', 'logout');
+    const friend = bid('account', 'signup', '--email', 'friend@example.com', '--password', 'supersecret2', '--name', 'Friend');
+    assert(friend.data.role === 'normal' && friend.data.features['admin.panel'] === false && friend.data.features['cloud.sync'] === false, JSON.stringify(friend.data));
+    assert(friend.data.features['projects.max'] === 2, 'free plan limit');
+    const skipped = bid('account', 'sync');
+    assert(skipped.result.ok && skipped.data.synced === 0 && skipped.data.skipped === 'plan', JSON.stringify(skipped.result));
+    const refused = bid('admin', 'list_users');
+    assert(refused.result.code === 'forbidden' && refused.result.key === 'admin.forbidden', JSON.stringify(refused.result));
+    bid('account', 'logout');
+    bid('account', 'login', '--email', 'yavor@example.com', '--password', 'supersecret1');
+    const vip = bid('admin', 'set_role', '--user', 'u-friend@example.com', '--role', 'vip');
+    assert(vip.result.ok && vip.data.user.role === 'vip', JSON.stringify(vip.result));
+    const grant = bid('admin', 'grant_credits', '--user', 'u-friend@example.com', '--delta', '250000', '--reason', 'test');
+    assert(grant.data.balance === 250000, JSON.stringify(grant.result));
+    const log = bid('admin', 'audit_log');
+    assert(log.data.entries.some((e) => e.action === 'set_role'), 'audit');
+    bid('account', 'logout');
+    const friend2 = bid('account', 'login', '--email', 'friend@example.com', '--password', 'supersecret2');
+    assert(friend2.data.role === 'vip' && friend2.data.credits.balance === 250000 && friend2.data.features['ai.ownKey'] === true && friend2.data.features['cloud.sync'] === true, JSON.stringify(friend2.data));
+    assert(bid('account', 'sync').data.synced >= 3, 'vip syncs');
+    bid('account', 'logout');
+    bid('account', 'login', '--email', 'yavor@example.com', '--password', 'supersecret1');
   } finally {
     try { process.kill(-sb.pid); } catch {}
   }

@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
 // Before I Deploy V6 — engine entrypoint. Every command prints NDJSON; the last line is {"type":"result",...}.
 import { parseArgs, ok, fail, ev, sh, which, EngineError, APP_DIR, CACHE_DIR, ENGINE_DIR, ensureDir } from './util.mjs';
 import { detect } from './detect.mjs';
@@ -12,7 +14,10 @@ import { aifix } from './aifix.mjs';
 import { costSummary, providerUsage, setBudgets, getPrices } from './costs.mjs';
 import { setupStatus, setupRun, setupAuto, setupTerminal } from './setup.mjs';
 import { overview } from './overview.mjs';
-import { accountStatus, signup, login, logout, recover, oauthUrl, completeOAuth, syncProjects, setCloudConfig, cloudConfig } from './account.mjs';
+import { accountStatus, signup, login, logout, recover, oauthUrl, completeOAuth, syncProjects, setCloudConfig, cloudConfig, setLocale } from './account.mjs';
+import { aiKeysStatus, aiKeySet, aiKeyDelete } from './aikeys.mjs';
+import { adminCommand, ADMIN_ACTIONS } from './admin.mjs';
+import { features as featureGates } from './features.mjs';
 import { hostingStatus, advise, setHosting, deployProject, hostingReady, providerStatus } from './hosting.mjs';
 import { spaceshipConnect, spaceshipDisconnect, spaceshipDomains, spaceshipDns, connectDomainToNetlify } from './spaceship.mjs';
 import { t, msg } from './i18n.mjs';
@@ -45,7 +50,10 @@ const HELP = `Before I Deploy engine ${VERSION}
   bid spaceship connect-domain --project P --domain D [--yes]   A @ + CNAME www → Netlify
   bid account status | signup --email E --password P [--name N] | login --email E --password P
   bid account logout | recover --email E | oauth [--provider github] | session --access A --refresh R | sync
-  bid cloud config --url U --anon-key K
+  bid account locale --set L | keys status | keys set --provider anthropic|openai (env BID_AI_KEY) | keys delete --provider P
+  bid admin   <action> [--user ID] [--json '{…}']   (admin only) actions: ${ADMIN_ACTIONS.join(', ')}
+  bid features [--role R --plan P]                 feature gates for a role/plan
+  bid cloud config --url U --anon-key K | schema
   bid hosting status | advise --project P | set --project P --provider netlify|vercel|cloudflare|ghpages
   bid deploy  --project P [--prod --confirm DEPLOY]        with the selected hosting
   bid doctor`;
@@ -276,13 +284,32 @@ async function main() {
       if (sub === 'oauth') return ok(oauthUrl({ provider: flags.provider || 'github' }));
       if (sub === 'session') return ok(await completeOAuth({ access: flags.access || process.env.BID_ACCESS, refresh: flags.refresh || process.env.BID_REFRESH }));
       if (sub === 'sync') return ok(await syncProjects());
+      if (sub === 'locale') return ok(await setLocale(flags.set));
+      if (sub === 'keys') {
+        const action = positional[1] || 'status';
+        if (action === 'status') return ok(aiKeysStatus());
+        if (action === 'set') return ok(await aiKeySet(flags.provider));
+        if (action === 'delete') return ok(aiKeyDelete(flags.provider));
+        throw new EngineError(msg('cli.unknownCommand', { command: `account keys ${action}` }), 'usage', 2);
+      }
       throw new EngineError(msg('cli.unknownCommand', { command: `account ${sub}` }), 'usage', 2);
     }
 
     case 'cloud': {
       if (sub === 'config') return ok(setCloudConfig({ url: flags.url, anonKey: flags['anon-key'] }));
+      if (sub === 'schema') {
+        // installed engine: engine/supabase/schema.sql (copied by install.sh); dev checkout: ../supabase/schema.sql
+        const file = [join(ENGINE_DIR, 'supabase', 'schema.sql'), join(ENGINE_DIR, '..', 'supabase', 'schema.sql')].find((f) => existsSync(f));
+        return ok({ sql: file ? readFileSync(file, 'utf8') : null, file: file || null });
+      }
       return ok({ configured: !!cloudConfig() });
     }
+
+    case 'admin':
+      return ok(await adminCommand(sub, flags));
+
+    case 'features':
+      return ok(featureGates({ role: flags.role, plan: flags.plan, aiDisabled: !!flags['ai-disabled'], hasOwnKey: !!flags['own-key'] }));
 
     case 'hosting': {
       if (!sub || sub === 'status') return ok(hostingStatus());

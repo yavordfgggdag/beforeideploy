@@ -30,6 +30,7 @@ bold "2. Engine"
 mkdir -p "$SUPPORT"
 rm -rf "$ENGINE.new"
 cp -R "$ROOT/engine" "$ENGINE.new"
+cp -R "$ROOT/supabase" "$ENGINE.new/supabase"   # schema.sql for `bid cloud schema` (Cloud setup screen)
 rm -rf "$ENGINE"
 mv "$ENGINE.new" "$ENGINE"
 chmod +x "$ENGINE/bid"

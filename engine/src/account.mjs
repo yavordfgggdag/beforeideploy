@@ -1,12 +1,15 @@
 // Account — Supabase Auth (email/password + GitHub), session in Keychain, project metadata sync.
 // Service tokens (Netlify, Vercel, …) NEVER leave the Mac; only project metadata is synced.
+import fs from 'node:fs';
 import path from 'node:path';
 import { APP_DIR, ENGINE_DIR, EngineError, readJSON, writeJSON, nowISO } from './util.mjs';
 import { getSecret, setSecret, deleteSecret } from './secrets.mjs';
 import { listProjects } from './store.mjs';
-import { msg } from './i18n.mjs';
+import { msg, currentLang } from './i18n.mjs';
+import { features, AI_KEY_PROVIDERS } from './features.mjs';
 
 const USER_CONFIG = () => path.join(APP_DIR, 'cloud.json');
+const PROFILE_CACHE = () => path.join(APP_DIR, 'profile.json'); // last profile seen — used offline; no secrets
 const BUNDLED_CONFIG = () => path.join(ENGINE_DIR, 'cloud.json');
 
 export function cloudConfig() {
@@ -60,6 +63,28 @@ async function auth(p, { method = 'POST', body, token } = {}) {
   return data;
 }
 
+/** PostgREST call with the user's token; returns parsed JSON (null on 204). */
+export async function rest(p, { method = 'GET', body, token, headers = {} } = {}) {
+  const c = cfg();
+  let res;
+  try {
+    res = await fetch(`${c.url}/rest/v1${p}`, {
+      method,
+      headers: { apikey: c.anonKey, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...headers },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+  } catch (e) {
+    throw new EngineError(msg('account.network', { error: e.message }), 'network');
+  }
+  const text = await res.text();
+  let data = null;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {}
+  if (!res.ok) throw new EngineError(msg('account.rest.http', { status: res.status, detail: data?.message || data?.hint || '' }), res.status === 401 ? 'not_logged_in' : 'rest_failed', res.status === 401 ? 5 : 1);
+  return data;
+}
+
 function translate(raw) {
   const m = String(raw);
   if (/invalid login credentials/i.test(m)) return msg('account.auth.invalidCredentials');
@@ -83,15 +108,72 @@ function saveSession(s) {
   return session;
 }
 
-function publicUser(session) {
-  return session?.user ? { configured: true, loggedIn: true, ...session.user } : { configured: !!cloudConfig(), loggedIn: false };
+// ---------------------------------------------------------------- profile (role, plan, credits)
+
+const DEFAULT_PROFILE = { role: 'normal', plan: 'free', locale: null, aiDisabled: false, credits: { balance: 0 } };
+
+function hasOwnAiKey() {
+  return AI_KEY_PROVIDERS.some((p) => !!getSecret(`ai-${p}`)?.key);
+}
+
+/** Reads profiles + credit_balance for the session's user; falls back to the cached copy when offline. */
+async function loadProfile(session) {
+  const id = session?.user?.id;
+  if (!id) return null;
+  const cached = readJSON(PROFILE_CACHE(), null);
+  try {
+    const [rows, balance] = await Promise.all([
+      rest(`/profiles?select=role,plan,locale,ai_disabled,display_name&user_id=eq.${encodeURIComponent(id)}`, { token: session.accessToken }),
+      rest(`/credit_balance?select=balance&user_id=eq.${encodeURIComponent(id)}`, { token: session.accessToken }).catch(() => []),
+    ]);
+    const row = Array.isArray(rows) ? rows[0] : null;
+    if (!row) return cached?.userId === id ? cached : { ...DEFAULT_PROFILE, userId: id, stale: true };
+    const profile = {
+      userId: id,
+      role: row.role || 'normal',
+      plan: row.plan || 'free',
+      locale: row.locale || null,
+      aiDisabled: !!row.ai_disabled,
+      displayName: row.display_name || null,
+      credits: { balance: Number(balance?.[0]?.balance ?? 0) },
+      fetchedAt: nowISO(),
+    };
+    writeJSON(PROFILE_CACHE(), profile);
+    return profile;
+  } catch (e) {
+    if (e.code === 'network' && cached?.userId === id) return { ...cached, stale: true };
+    if (e.code === 'network') return { ...DEFAULT_PROFILE, userId: id, stale: true };
+    throw e;
+  }
+}
+
+function withFeatures(user, profile) {
+  const p = profile || DEFAULT_PROFILE;
+  const hasOwnKey = hasOwnAiKey();
+  return {
+    ...user,
+    role: p.role,
+    plan: p.plan,
+    locale: p.locale,
+    aiDisabled: p.aiDisabled,
+    credits: p.credits,
+    profileStale: !!p.stale,
+    hasOwnKey,
+    features: features({ role: p.role, plan: p.plan, aiDisabled: p.aiDisabled, hasOwnKey }),
+  };
+}
+
+async function publicUser(session) {
+  if (!session?.user) return { configured: !!cloudConfig(), loggedIn: false };
+  return withFeatures({ configured: true, loggedIn: true, ...session.user }, await loadProfile(session));
 }
 
 export async function signup({ email, password, name }) {
   if (!email || !password || email === true || password === true) throw new EngineError(msg('account.missingCredentials'), 'usage', 2);
   if (String(password).length < 8) throw new EngineError(msg('account.weakPassword'), 'weak_password');
-  const r = await auth('/signup', { body: { email, password, data: name && name !== true ? { full_name: name } : {} } });
-  if (r?.access_token) return { ...publicUser(saveSession(r)), confirmEmail: false };
+  const data = { locale: currentLang(), ...(name && name !== true ? { full_name: name } : {}) };
+  const r = await auth('/signup', { body: { email, password, data } });
+  if (r?.access_token) return { ...(await publicUser(saveSession(r))), confirmEmail: false };
   return { configured: true, loggedIn: false, confirmEmail: true, email };
 }
 
@@ -141,7 +223,18 @@ export async function accountStatus() {
   const configured = !!cloudConfig();
   if (!configured) return { configured: false, loggedIn: false };
   const s = await currentSession();
-  return { configured: true, ...publicUser(s) };
+  return { configured: true, ...(await publicUser(s)) };
+}
+
+/** Saves the app language to the cloud profile (the app calls this on every language change). */
+export async function setLocale(locale) {
+  if (!locale || locale === true) throw new EngineError(msg('account.missingLocale'), 'usage', 2);
+  const s = await currentSession();
+  if (!s) return { saved: false, reason: 'not_logged_in' };
+  await rest(`/profiles?user_id=eq.${encodeURIComponent(s.user.id)}`, { method: 'PATCH', token: s.accessToken, body: { locale }, headers: { Prefer: 'return=minimal' } });
+  const cached = readJSON(PROFILE_CACHE(), null);
+  if (cached?.userId === s.user.id) writeJSON(PROFILE_CACHE(), { ...cached, locale });
+  return { saved: true, locale };
 }
 
 export async function logout() {
@@ -152,6 +245,9 @@ export async function logout() {
     } catch {}
   }
   deleteSecret('session');
+  try {
+    fs.unlinkSync(PROFILE_CACHE());
+  } catch {}
   return { configured: !!cloudConfig(), loggedIn: false };
 }
 
@@ -160,6 +256,8 @@ export async function logout() {
 export async function syncProjects() {
   const s = await currentSession();
   if (!s) throw new EngineError(msg('account.notLoggedIn'), 'not_logged_in', 5);
+  const me = await publicUser(s);
+  if (!me.features['cloud.sync']) return { synced: 0, skipped: 'plan', plan: me.plan };
   const c = cfg();
   const rows = listProjects().map((p) => ({
     user_id: s.user?.id,
