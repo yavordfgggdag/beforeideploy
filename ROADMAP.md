@@ -67,7 +67,7 @@
 | # | Какво | Защо е важно |
 |---|---|---|
 | L1 | ~~`swift build` на Swift кода от седмици 1–3~~ — **готово**: CI (`app.yml`) компилира на macos-15 при всеки push; първият run мина | — |
-| L2 | Английските литерали в Swift („Smart Deploy“, „READY TO DEPLOY“, „Mission Control“) през `L()` | преди трети език |
+| L2 | ~~Английските литерали в Swift през `L()`~~ — **готово** | — |
 | L3 | Бадж „бета превод“ за непрегледани езици (`_meta.reviewed = false`) | преди машинни преводи |
 | L4 | `.stringsdict` плурали (сега: „%@ предупреждения“) | езици с други плурали |
 | L5 | Ръчно пускане на `schema.sql` и `supabase functions deploy admin` в продуктовия облак; `update profiles set role='admin'` | без това Admin панелът не работи |
