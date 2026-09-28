@@ -117,6 +117,31 @@ final class ModelsTests: XCTestCase {
         XCTAssertTrue(r.users.contains { $0.role == "admin" })
     }
 
+    func testBillingCatalog() throws {
+        let c = try Fixtures.decode("billing-catalog", as: BillingCatalog.self)
+        XCTAssertEqual(c.currency, "EUR")
+        XCTAssertEqual(c.plans.map(\.id), ["flash", "high", "knight"])
+        XCTAssertEqual(c.plans.first { $0.id == "high" }?.tokens, 1_000_000)
+        XCTAssertFalse(c.plans.first { $0.id == "knight" }?.available ?? true)
+        XCTAssertEqual(c.trial?.days, 7)
+    }
+
+    func testBillingStatusAfterTrial() throws {
+        let s = try Fixtures.decode("billing-status", as: BillingStatus.self)
+        XCTAssertEqual(s.plan, "high")
+        XCTAssertEqual(s.subscription?.provider, "trial")
+        XCTAssertEqual(s.balance.plan, 150_000)
+        XCTAssertFalse(s.trialAvailable)
+        XCTAssertEqual(s.usage.first?.tokens, 6000)
+    }
+
+    func testBillingMoneyFormatUsesTheCurrency() {
+        let s = BillingFormat.money(9.99, currency: "EUR")
+        XCTAssertTrue(s.contains("9"), s)
+        XCTAssertTrue(s.contains("€") || s.contains("EUR"), s)
+        XCTAssertEqual(BillingFormat.money(nil, currency: "EUR"), "—")
+    }
+
     func testAIKeys() throws {
         let k = try Fixtures.decode("ai-keys", as: [AIKeyStatus].self)
         XCTAssertEqual(k.map(\.provider).sorted(), ["anthropic", "openai"])

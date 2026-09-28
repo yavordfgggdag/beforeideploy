@@ -69,6 +69,7 @@
 "ai.selectAll" = "Select all";
 "ai.thinking" = "Thinking…";
 "ai.title" = "Fix with AI";
+"ai.tokensCount" = "%@ tokens";
 "ai.tokensUsed" = "%@ tokens (own key)";
 "ai.viaProvider" = "%@ · %@";
 
@@ -119,6 +120,47 @@
 "auth.signUp" = "Sign up";
 "auth.signupSubtitle" = "One account for all your sites, hosting and domains.";
 "auth.welcomeBack" = "Welcome back";
+
+"billing.choose" = "Choose";
+"billing.currentButton" = "Current plan";
+"billing.currentPlan" = "Current plan: %@";
+"billing.endsOn" = "%@ · ends %@";
+"billing.feature.builtin" = "Built-in AI Fix with diffs and one-click apply";
+"billing.feature.deep" = "Deep fix with the strongest model";
+"billing.feature.projects5" = "Up to 5 projects";
+"billing.feature.sync" = "Projects synced across your Macs";
+"billing.feature.unlimited" = "Unlimited projects";
+"billing.free" = "Free";
+"billing.fromPacks" = "%@ extra";
+"billing.fromPlan" = "%@ from the plan";
+"billing.legal" = "Prices include VAT where it applies. Payment, invoices and cancellation are handled by Paddle, our reseller. Plans renew monthly; cancel any time from Manage subscription. Unused plan tokens do not roll over; extra tokens stay for 12 months.";
+"billing.loading" = "Loading plans…";
+"billing.manage" = "Manage subscription";
+"billing.menu" = "Plan & credits…";
+"billing.noPlanLine" = "Free — the external AI buttons always work.";
+"billing.packHint" = "One-time, valid 12 months";
+"billing.packTokens" = "+%@ tokens";
+"billing.packs" = "Extra tokens";
+"billing.pastDue" = "%@ · the last payment failed — update the card in Manage subscription";
+"billing.perMonth" = "/ month";
+"billing.plans" = "Plans";
+"billing.recentUsage" = "Recent AI use";
+"billing.recommended" = "RECOMMENDED";
+"billing.renewsOn" = "%@ · renews %@";
+"billing.soon" = "Soon";
+"billing.startTrial" = "Start the trial";
+"billing.starting" = "Starting…";
+"billing.subtitle" = "AI tokens for the built-in AI Fix";
+"billing.title" = "Plan & credits";
+"billing.tokensLeft" = "AI tokens left";
+"billing.tokensPerMonth" = "%@ AI tokens a month";
+"billing.trialDetail" = "%@ tokens for the built-in AI Fix, no card needed.";
+"billing.trialEnds" = "%@ trial · ends %@";
+"billing.trialStarted" = "Trial started — enjoy the built-in AI Fix.";
+"billing.trialTitle" = "Try %@ free for %@ days";
+"billing.updated" = "Your plan is updated.";
+"billing.waiting" = "Waiting for the payment confirmation…";
+"billing.waitingHint" = "Finish the payment in the browser; the plan switches here by itself.";
 
 "cloud.anonKeyPlaceholder" = "anon public key";
 "cloud.continueOffline" = "Continue without an account for now";

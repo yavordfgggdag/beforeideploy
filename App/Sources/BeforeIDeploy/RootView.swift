@@ -106,6 +106,7 @@ struct RootView: View {
                 case .spaceshipConnect: SpaceshipConnectSheet()
                 case .connectDomain: ConnectDomainSheet()
                 case .deleteAccount: DeleteAccountSheet()
+                case .plans: PlansSheet()
                 }
             }
             .environmentObject(model)

@@ -296,6 +296,9 @@ struct AccountBadge: View {
                 if let role = a?.role, let plan = a?.plan {
                     Text(L("account.rolePlan", role, plan, Fmt.tokens(a?.credits?.balance ?? 0)))
                 }
+                if a?.features?.billingPlans == true {
+                    Button(L("billing.menu")) { model.sheet = .plans }
+                }
                 Button(L("account.syncProjects")) { model.syncNow() }
                 Divider()
                 Button(L("account.signOut")) { model.logout() }

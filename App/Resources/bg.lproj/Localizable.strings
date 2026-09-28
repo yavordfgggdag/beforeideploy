@@ -69,6 +69,7 @@
 "ai.selectAll" = "Избери всички";
 "ai.thinking" = "Мисля…";
 "ai.title" = "Оправи с AI";
+"ai.tokensCount" = "%@ токена";
 "ai.tokensUsed" = "%@ токена (собствен ключ)";
 "ai.viaProvider" = "%@ · %@";
 
@@ -119,6 +120,47 @@
 "auth.signUp" = "Регистрация";
 "auth.signupSubtitle" = "Един акаунт за всички твои сайтове, хостинги и домейни.";
 "auth.welcomeBack" = "Добре дошъл отново";
+
+"billing.choose" = "Избери";
+"billing.currentButton" = "Текущ план";
+"billing.currentPlan" = "Текущ план: %@";
+"billing.endsOn" = "%@ · изтича на %@";
+"billing.feature.builtin" = "Вграден AI Fix с diff и прилагане с един клик";
+"billing.feature.deep" = "Дълбока поправка с най-силния модел";
+"billing.feature.projects5" = "До 5 проекта";
+"billing.feature.sync" = "Проектите се синхронизират между Mac-овете ти";
+"billing.feature.unlimited" = "Неограничен брой проекти";
+"billing.free" = "Безплатен";
+"billing.fromPacks" = "%@ допълнителни";
+"billing.fromPlan" = "%@ от плана";
+"billing.legal" = "Цените включват ДДС, където се дължи. Плащането, фактурите и прекратяването се обслужват от Paddle, наш дистрибутор. Плановете се подновяват месечно; прекратяваш по всяко време от „Управление на абонамента“. Неизползваните токени от плана не се прехвърлят; допълнителните важат 12 месеца.";
+"billing.loading" = "Зареждам плановете…";
+"billing.manage" = "Управление на абонамента";
+"billing.menu" = "План и кредити…";
+"billing.noPlanLine" = "Безплатен — външните AI бутони работят винаги.";
+"billing.packHint" = "Еднократно, важи 12 месеца";
+"billing.packTokens" = "+%@ токена";
+"billing.packs" = "Допълнителни токени";
+"billing.pastDue" = "%@ · последното плащане не мина — обнови картата от „Управление на абонамента“";
+"billing.perMonth" = "/ месец";
+"billing.plans" = "Планове";
+"billing.recentUsage" = "Последно ползване на AI";
+"billing.recommended" = "ПРЕПОРЪЧАН";
+"billing.renewsOn" = "%@ · подновява се на %@";
+"billing.soon" = "Скоро";
+"billing.startTrial" = "Започни пробния период";
+"billing.starting" = "Стартирам…";
+"billing.subtitle" = "AI токени за вградения AI Fix";
+"billing.title" = "План и кредити";
+"billing.tokensLeft" = "оставащи AI токени";
+"billing.tokensPerMonth" = "%@ AI токена на месец";
+"billing.trialDetail" = "%@ токена за вградения AI Fix, без карта.";
+"billing.trialEnds" = "%@ пробен · до %@";
+"billing.trialStarted" = "Пробният период започна — приятна работа с вградения AI Fix.";
+"billing.trialTitle" = "Пробвай %@ безплатно за %@ дни";
+"billing.updated" = "Планът ти е обновен.";
+"billing.waiting" = "Чакам потвърждение на плащането…";
+"billing.waitingHint" = "Довърши плащането в браузъра; планът тук ще се смени сам.";
 
 "cloud.anonKeyPlaceholder" = "anon public key";
 "cloud.continueOffline" = "Продължи без акаунт засега";

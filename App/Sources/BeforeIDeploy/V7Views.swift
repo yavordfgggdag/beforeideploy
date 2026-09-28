@@ -80,7 +80,7 @@ struct AIFixBar: View {
                             .help(L("ai.deepHelp"))
                     }
                 } else if model.account?.features?.billingPlans == true {
-                    Button { model.flash(L("ai.needsPlan"), error: false) } label: { Label(L("ai.fixButton"), systemImage: "sparkles") }
+                    Button { model.sheet = .plans } label: { Label(L("ai.fixButton"), systemImage: "sparkles") }
                         .bidButton(.ghost, compact: true)
                         .help(L("ai.needsPlan"))
                 }

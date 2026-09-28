@@ -675,3 +675,62 @@ struct HostingAdvice: Codable {
     var current: String
     var providers: [HostingOption]
 }
+
+// MARK: - Billing (V10 WP4) — engine `bid billing …`
+
+struct BillingCatalog: Codable, Hashable {
+    struct Plan: Codable, Hashable, Identifiable {
+        var id: String
+        var price: Double?
+        var tokens: Int
+        var available: Bool
+    }
+    struct Pack: Codable, Hashable, Identifiable {
+        var id: String
+        var tokens: Int
+        var price: Double?
+        var available: Bool
+    }
+    struct Trial: Codable, Hashable {
+        var days: Int
+        var plan: String
+        var tokens: Int
+    }
+    var currency: String
+    var plans: [Plan]
+    var packs: [Pack]
+    var trial: Trial?
+}
+
+struct BillingStatus: Codable, Hashable {
+    struct Subscription: Codable, Hashable {
+        var provider: String
+        var tier: String
+        var status: String
+        var renewsAt: String?
+        var endsAt: String?
+        var manageable: Bool
+    }
+    struct Balance: Codable, Hashable {
+        var plan: Int
+        var topup: Int
+        var total: Int
+    }
+    struct Usage: Codable, Hashable, Identifiable {
+        var at: String
+        var step: String?
+        var model: String?
+        var tokens: Int
+        var project: String?
+        var id: String { at + (step ?? "") }
+    }
+    var plan: String
+    var subscription: Subscription?
+    var balance: Balance
+    var trialAvailable: Bool
+    var usage: [Usage]
+}
+
+struct BillingURL: Codable, Hashable {
+    var url: String
+}

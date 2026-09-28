@@ -5,7 +5,7 @@ import SwiftUI
 enum Screen: Hashable { case overview, project, domains, costs, setup, admin }
 
 enum SheetKind: Identifiable {
-    case production, netlifySetup, commit, history, settings, remote, spaceshipConnect, connectDomain, deleteAccount
+    case production, netlifySetup, commit, history, settings, remote, spaceshipConnect, connectDomain, deleteAccount, plans
     var id: Int { hashValue }
 }
 
@@ -37,6 +37,7 @@ final class AppModel: ObservableObject, Feedback {
     let runController: RunController
     let adminStore: AdminStore
     let aiStore: AIStore
+    let billingStore: BillingStore
 
     @Published var sheet: SheetKind?
     @Published var pendingFix: PendingFix?
@@ -70,6 +71,7 @@ final class AppModel: ObservableObject, Feedback {
         runController = RunController(engine: engine, projects: projects)
         adminStore = AdminStore(engine: engine)
         aiStore = AIStore(engine: engine, projects: projects)
+        billingStore = BillingStore(engine: engine)
 
         projectStore.feedback = self
         accountStore.feedback = self
@@ -77,6 +79,8 @@ final class AppModel: ObservableObject, Feedback {
         runController.feedback = self
         adminStore.feedback = self
         aiStore.feedback = self
+        billingStore.feedback = self
+        billingStore.onChanged = { [weak self] in await self?.accountStore.loadAccount() }
         aiStore.onApplied = { [weak self] in
             guard let self else { return }
             self.aiStore.dismiss()
@@ -103,6 +107,7 @@ final class AppModel: ObservableObject, Feedback {
             forward(runController.objectWillChange),
             forward(adminStore.objectWillChange),
             forward(aiStore.objectWillChange),
+            forward(billingStore.objectWillChange),
         ]
     }
 
