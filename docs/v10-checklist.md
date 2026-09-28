@@ -4,8 +4,8 @@
 пази. Легенда: ✅ готово · 🟡 частично (виж бележката) · ⏳ чака собственика (акаунт/решение, не код) ·
 ➡️ отложено за по-късна версия с причина. Статус към 2026-09-28, клон `claude/nifty-edison-1195gi`.
 
-Автоматични проверки (всички зелени в CI): engine `node tests/run.mjs` — 58 · Swift `swift test` — 34 ·
-Edge Functions `deno test supabase/functions` — 49 · `scripts/i18n-check.mjs` · `scripts/error-codes.mjs`.
+Автоматични проверки (всички зелени в CI): engine `node tests/run.mjs` — 59 · Swift `swift test` — 34 ·
+Edge Functions `deno test supabase/functions` — 51 · `scripts/i18n-check.mjs` · `scripts/error-codes.mjs`.
 
 ## WP1 — Интернационализация и избор на език
 
@@ -62,7 +62,7 @@ Edge Functions `deno test supabase/functions` — 49 · `scripts/i18n-check.mjs`
 | Грант при подновяване + изтичане на неизползваното; refund отнема остатъка; отказ важи от края на периода | ✅ | `billing/handler.ts` | Deno тестове (6 сценария) |
 | Страница „План и кредити“: баланс, история, подновяване, пакети, портал | ✅ | `BillingViews.swift` (`PlansSheet`), `BillingStore` | Swift фикстури `billing-*` |
 | Пръстен за кредитите в AccountBadge | ✅ | `AccountBadge` | Swift `testCreditsCarry…` |
-| Годишен вариант (−20 %) | ➡️ V10.1 — годишният абонамент има нужда от месечни грантове по график (pg_cron); месечните работят напълно | — | — |
+| Годишен вариант (−20 %) | ✅ (месечните токени на годишния план се дават лениво, веднъж на месец, без cron; цените 47.90/95.90/191.90 чакат Paddle price id-та) | `_shared/credits.ts` `ensureMonthlyGrant`, превключвател в `PlansSheet` | Deno yearly (2) |
 | `BillingProvider` протокол (Paddle / StoreKit) | 🟡 Paddle е `BillingStore` + `billing` функцията; StoreKit идва с Xcode track (V10.5), тогава се изважда протоколът | — | — |
 | Реален sandbox тест < 30 s | ⏳ нужни са Paddle акаунт, продукти и `PADDLE_*` secrets (виж `supabase/functions/README.md`) | — | ръчен QA 3.10 |
 
@@ -80,7 +80,7 @@ Edge Functions `deno test supabase/functions` — 49 · `scripts/i18n-check.mjs`
 | Точка | Статус | Къде | Тест |
 |---|---|---|---|
 | 6.1 AppModel → stores (Project, Account, Hosting, Run, Admin, AI, Billing) | ✅ | `Stores/` | Swift + CI build |
-| 6.2 Инкрементален check, „Пълна проверка“ ⌥⌘R | ✅; паралелни lint+typecheck ➡️ V10.1 (оптимизация) | `checks.mjs` | engine `incremental` |
+| 6.2 Инкрементален check, „Пълна проверка“ ⌥⌘R, паралелни lint + typecheck | ✅ | `checks.mjs` (`PARALLEL_GROUPS`) | engine `incremental`, `паралелно` |
 | 6.3 VERSION, self-update feed, sha256, beta канал | ✅ | `engine/VERSION`, `update.mjs`, Settings | engine `update` |
 | 6.4 Сираци на Local Preview | ✅ | `local.mjs`, `static-server.cjs` | engine тест |
 | 6.5 Реални тестове Vercel / Cloudflare / GH Pages | ⏳ нужни са тестови акаунти (ръчен QA 5.2) | — | — |
@@ -98,8 +98,8 @@ Edge Functions `deno test supabase/functions` — 49 · `scripts/i18n-check.mjs`
 | Грешки с код, копиране, линк към помощ; каталог на кодовете | ✅ | `ToastView`, `docs/errors.md` |
 | Клавиатура: ⌘1–⌘4, ⌘] ⌘[, ⌘R, ⌥⌘R, ⌘D, ⌘K | ✅ | `BeforeIDeployApp` |
 | VoiceOver етикети на икон-бутоните | ✅ | `IconButton` |
-| Отделна страница „Акаунт“ в sidebar-а | 🟡 съдържанието е разделено между „План и кредити“ и Settings → Акаунт | — |
-| Месечно/годишно превключване | ➡️ с годишния план (V10.1) | — |
+| Отделна страница „Акаунт“ в sidebar-а | ✅ | `AccountView.swift` |
+| Месечно/годишно превключване | ✅ | `PlansSheet` |
 | Светла тема | ➡️ V11 WP17 (решение в ROADMAP §9) | — |
 
 ## WP8-A — Пускане (Developer ID)

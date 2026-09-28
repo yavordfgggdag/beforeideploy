@@ -16,6 +16,7 @@ All notable changes, newest first. Versions come from `engine/VERSION`. Each ent
 - Errors show their code with copy and a help link; every code is documented (docs/errors.md).
 - Plans & credits: Flash / High / Knight via Paddle, token packs, a 7-day High trial, credits ring in the account badge, renewal date in the AI panel, customer portal; plan tokens are spent before packs; refunds take back the unused rest.
 - Admin: invite friends by email (VIP by default), per-user AI usage, a global settings editor (prices, catalog, models, limits, release feed, help pages).
+- Yearly plans (−20 %) with monthly tokens; an Account page; lint and typecheck run in parallel.
 - Correct plural forms for counts; bilingual sign-up, password and invitation emails; beta update channel; crash notes in the support report.
 - Keyboard: View menu ⌘1–⌘4, next/previous project ⌘] ⌘[.
 - New look: lit surfaces with depth, a backdrop whose light follows the project's state, a colour avatar per project, a progress ring around the check result, sliding tabs, a frosted run window; all motion follows Reduce motion.
@@ -33,6 +34,7 @@ All notable changes, newest first. Versions come from `engine/VERSION`. Each ent
 - Грешките показват кода си с копиране и линк към помощ; всеки код е документиран (docs/errors.md).
 - План и кредити: Flash / High / Knight през Paddle, пакети токени, 7 дни пробен High, пръстен с кредитите в акаунта, дата на подновяване в AI панела, портал за абонамента; първо се харчат токените от плана, после пакетите; при refund се отнема неизползваното.
 - Админ: покана по имейл (VIP по подразбиране), AI употреба по потребител, редактор на глобалните настройки (цени, каталог, модели, лимити, release feed, помощни страници).
+- Годишни планове (−20 %) с месечни токени; страница „Акаунт“; lint и typecheck вървят паралелно.
 - Правилни форми за числата („1 домейн“ / „5 домейна“); двуезични имейли за регистрация, парола и покана; бета канал за обновления; бележки за срив в доклада за поддръжка.
 - Клавиатура: меню „Изглед“ ⌘1–⌘4, следващ/предишен проект ⌘] ⌘[.
 - Нов облик: осветени повърхности с дълбочина, фон, чиято светлина следва състоянието на проекта, цветен аватар за всеки проект, пръстен с прогреса около резултата от проверката, плъзгащи се табове, матово стъкло зад прозореца на изпълнение; всички анимации спазват „Намалено движение“.
