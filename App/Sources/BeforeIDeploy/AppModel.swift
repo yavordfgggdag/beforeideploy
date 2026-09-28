@@ -55,6 +55,13 @@ final class AppModel: ObservableObject, Feedback {
     @Published var update: UpdateInfo?
 
     @AppStorage("checkOnSelect") var checkOnSelect = false
+    /// "stable" or "beta" (WP6.3) — beta testers get pre-releases from the same feed.
+    @Published var updateChannel: String = UserDefaults.standard.string(forKey: "updateChannel") ?? "stable" {
+        didSet {
+            UserDefaults.standard.set(updateChannel, forKey: "updateChannel")
+            Task { await checkForUpdates(force: true) }
+        }
+    }
 
     let engine = EngineClient.shared
     private var pendingURL: URL?
@@ -526,7 +533,7 @@ final class AppModel: ObservableObject, Feedback {
 
     /// Reads the release feed (dormant until settings.release.url is set); `announce` shows the outcome as a toast.
     func checkForUpdates(force: Bool = false, announce: Bool = false) async {
-        var args = ["update", "check"]
+        var args = ["update", "check", "--channel", updateChannel]
         if force { args.append("--force") }
         do {
             let u = try await engine.call(args, as: UpdateInfo.self)
@@ -544,7 +551,7 @@ final class AppModel: ObservableObject, Feedback {
         Task {
             defer { busy.remove("update") }
             do {
-                let r = try await engine.call(["update", "download"], as: UpdateDownload.self)
+                let r = try await engine.call(["update", "download", "--channel", updateChannel], as: UpdateDownload.self)
                 flash(L("update.downloaded", r.version))
                 openFile(r.path)
             } catch { show(error) }

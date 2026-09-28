@@ -213,6 +213,20 @@ t('release: бележки от CHANGELOG и latest.json (release-notes.mjs, rel
   assert(bad.status === 2, 'bad sha must exit 2');
 });
 
+const { fitPrompt, PROMPT_MAX_CHARS } = await import(path.join(ROOT, 'engine', 'src', 'ai', 'fit.mjs'));
+t('ai: prompt над 60 000 символа се съкращава — пази началото, края и редовете с грешки', () => {
+  const small = 'intro\nbody\nend';
+  assert(fitPrompt(small) === small, 'short prompts stay');
+  const noise = Array.from({ length: 5000 }, (_, i) => `vite v5 transforming module ${i} ok`).join('\n');
+  const big = `## Intro\ncontext line\n${noise}\nsrc/app.js:12:5 TypeError: x is not a function\n${noise}\n## How to answer\nSEARCH/REPLACE blocks`;
+  const fit = fitPrompt(big);
+  assert(big.length > PROMPT_MAX_CHARS && fit.length <= PROMPT_MAX_CHARS, `length ${fit.length}`);
+  assert(fit.includes('## Intro') && fit.includes('TypeError: x is not a function') && fit.includes('SEARCH/REPLACE blocks'), 'kept the important parts');
+  assert(/lines left out/.test(fit), 'marks what was dropped');
+  const allErrors = Array.from({ length: 9000 }, (_, i) => `error ${i}: something failed in a very long line of output`).join('\n');
+  assert(fitPrompt(allErrors).length <= PROMPT_MAX_CHARS, 'hard cap');
+});
+
 t('имейл шаблони: всеки има en и bg клон по .Data.locale и линка за потвърждение', () => {
   const dir = path.join(ROOT, 'supabase', 'email-templates');
   const files = fs.readdirSync(dir).filter((f) => f.endsWith('.html'));

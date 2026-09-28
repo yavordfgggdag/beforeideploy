@@ -51,6 +51,8 @@
 "admin.usage" = "Ползване на AI";
 "admin.usageEmpty" = "Още няма ползване на AI.";
 
+"ai.addKeyButton" = "Добави AI ключ";
+"ai.addKeyHelp" = "Вграденият AI Fix ползва твоя Anthropic или OpenAI ключ — добави го в Настройка → AI ключове.";
 "ai.applied.one" = "Приложен %@ файл";
 "ai.applied.other" = "Приложени %@ файла";
 "ai.applySelected" = "Приложи избраните (%@)";
@@ -649,6 +651,8 @@
 "tour.start" = "Започни";
 
 "update.available" = "Нова версия %@";
+"update.betaChannel" = "Бета версии";
+"update.betaChannelHint" = "Получавай предварителните версии седмица по-рано (за тестери).";
 "update.checkNow" = "Провери за нова версия";
 "update.download" = "Изтегли";
 "update.downloaded" = "Изтеглих версия %@ — отварям DMG-то";

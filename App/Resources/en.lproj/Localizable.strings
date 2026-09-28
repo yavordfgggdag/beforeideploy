@@ -51,6 +51,8 @@
 "admin.usage" = "AI use";
 "admin.usageEmpty" = "No AI use yet.";
 
+"ai.addKeyButton" = "Add an AI key";
+"ai.addKeyHelp" = "The built-in AI Fix uses your own Anthropic or OpenAI key — add it in Setup → AI keys.";
 "ai.applied.one" = "%@ file applied";
 "ai.applied.other" = "%@ files applied";
 "ai.applySelected" = "Apply selected (%@)";
@@ -649,6 +651,8 @@
 "tour.start" = "Get started";
 
 "update.available" = "New version %@";
+"update.betaChannel" = "Beta versions";
+"update.betaChannelHint" = "Get pre-releases a week early (for testers).";
 "update.checkNow" = "Check for updates";
 "update.download" = "Download";
 "update.downloaded" = "Downloaded version %@ — opening the DMG";

@@ -79,6 +79,10 @@ struct AIFixBar: View {
                             .bidButton(.secondary, compact: true)
                             .help(L("ai.deepHelp"))
                     }
+                } else if model.account?.canUseOwnKey == true {
+                    Button { model.screen = .setup } label: { Label(L("ai.addKeyButton"), systemImage: "key.fill") }
+                        .bidButton(.ghost, compact: true)
+                        .help(L("ai.addKeyHelp"))
                 } else if model.account?.features?.billingPlans == true {
                     Button { model.sheet = .plans } label: { Label(L("ai.fixButton"), systemImage: "sparkles") }
                         .bidButton(.ghost, compact: true)

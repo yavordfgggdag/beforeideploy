@@ -565,6 +565,8 @@ struct SettingsSheet: View {
                 VStack(alignment: .leading, spacing: 8) {
                     SectionLabel(text: L("settings.support"))
                     InfoRow(label: L("settings.version"), value: doctor.map { "v\($0.engine)" } ?? "—")
+                    ToggleRow(title: L("update.betaChannel"), subtitle: L("update.betaChannelHint"),
+                              isOn: Binding(get: { model.updateChannel == "beta" }, set: { model.updateChannel = $0 ? "beta" : "stable" }))
                     if let u = model.update, u.available { UpdateBanner(info: u) }
                     HStack {
                         Button(L("update.checkNow")) { Task { await model.checkForUpdates(force: true, announce: true) } }.bidButton(.secondary, compact: true)

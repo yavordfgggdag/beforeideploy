@@ -1,5 +1,6 @@
 // AI Fix — builds a redacted, self-contained prompt for a failed step and hands it to ChatGPT / Claude / Codex / Claude Code
 import fs from 'node:fs';
+import { fitPrompt } from './ai/fit.mjs';
 import path from 'node:path';
 import { HOME, ENGINE_DIR, EngineError, sh, which, logDir, readJSON, exists } from './util.mjs';
 import { detect } from './detect.mjs';
@@ -144,7 +145,7 @@ export function buildPrompt(project, stepId) {
   if (recent) parts.push(`## ${t('aifix.prompt.recentCommits')}\n${recent}`);
   parts.push(t('aifix.prompt.howToAnswer'));
   const label = ids.length > 1 ? t('aifix.prompt.problemsCount', { count: ids.length }) : stepName(ids[0]);
-  return { prompt: redact(parts.join('\n\n')), stepLabel: label };
+  return { prompt: fitPrompt(redact(parts.join('\n\n'))), stepLabel: label };
 }
 
 // ---------------------------------------------------------------- launch
