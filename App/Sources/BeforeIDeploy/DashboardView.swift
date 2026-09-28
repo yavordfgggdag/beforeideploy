@@ -6,7 +6,7 @@ enum ProjectTab: String, CaseIterable, Hashable {
     var title: String {
         switch self {
         case .overview: return L("dashboard.tab.overview")
-        case .local: return "Local"
+        case .local: return L("dashboard.tab.local")
         case .git: return "GitHub"
         case .hosting: return L("dashboard.tab.hosting")
         case .history: return L("common.history")
@@ -224,9 +224,9 @@ struct HeroCard: View {
 
     var title: String {
         switch state {
-        case "ready": return "READY TO DEPLOY"
-        case "warnings": return "READY WITH WARNINGS"
-        case "blocked": return "DEPLOY BLOCKED"
+        case "ready": return L("status.readyToDeploy")
+        case "warnings": return L("status.readyWithWarnings")
+        case "blocked": return L("status.deployBlocked")
         default: return L("dashboard.notChecked")
         }
     }

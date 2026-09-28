@@ -280,6 +280,7 @@
 "dashboard.stale" = "· остаряло";
 "dashboard.stopped" = "спрян";
 "dashboard.tab.hosting" = "Хостинг & домейн";
+"dashboard.tab.local" = "Локално";
 "dashboard.tab.overview" = "Преглед";
 
 "deleteAccount.confirm" = "Изтрий завинаги";
@@ -464,7 +465,9 @@
 "overview.blockedCaption" = "блокирани";
 "overview.daysShort" = "%@д";
 "overview.failing" = "Грешки: %@";
+"overview.liveAgo" = "НА ЖИВО %@";
 "overview.loading" = "Събирам статуса на всички проекти…";
+"overview.localRunning" = "локално";
 "overview.missingSetup.one" = "%@ нещо не е настроено";
 "overview.missingSetup.other" = "%@ неща не са настроени";
 "overview.missingSetupHint" = "Мога да ги инсталирам и свържа автоматично.";
@@ -608,6 +611,13 @@
 "spaceship.step1" = "Отвори API Manager в Spaceship (бутонът отдолу отваря браузъра).";
 "spaceship.step2" = "Натисни „New API key“, дай име „Before I Deploy“ и права за Domains и DNS records (четене + писане).";
 "spaceship.step3" = "Копирай API Key и API Secret и ги постави тук.";
+
+"status.blocked" = "БЛОКИРАН";
+"status.deployBlocked" = "DEPLOY-ЪТ Е БЛОКИРАН";
+"status.ready" = "ГОТОВ";
+"status.readyToDeploy" = "ГОТОВ ЗА DEPLOY";
+"status.readyWithWarnings" = "ГОТОВ С ПРЕДУПРЕЖДЕНИЯ";
+"status.warnings" = "ПРЕДУПРЕЖДЕНИЯ";
 
 "time.hoursAgo" = "преди %@ ч";
 "time.justNow" = "току-що";

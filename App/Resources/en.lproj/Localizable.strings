@@ -280,6 +280,7 @@
 "dashboard.stale" = "· stale";
 "dashboard.stopped" = "stopped";
 "dashboard.tab.hosting" = "Hosting & domain";
+"dashboard.tab.local" = "Local";
 "dashboard.tab.overview" = "Overview";
 
 "deleteAccount.confirm" = "Delete permanently";
@@ -464,7 +465,9 @@
 "overview.blockedCaption" = "blocked";
 "overview.daysShort" = "%@d";
 "overview.failing" = "Errors: %@";
+"overview.liveAgo" = "LIVE %@";
 "overview.loading" = "Collecting the status of all projects…";
+"overview.localRunning" = "local";
 "overview.missingSetup.one" = "%@ thing is not set up";
 "overview.missingSetup.other" = "%@ things are not set up";
 "overview.missingSetupHint" = "I can install and connect them automatically.";
@@ -608,6 +611,13 @@
 "spaceship.step1" = "Open the API Manager in Spaceship (the button below opens the browser).";
 "spaceship.step2" = "Press “New API key”, name it “Before I Deploy” and grant Domains and DNS records (read + write).";
 "spaceship.step3" = "Copy the API Key and API Secret and paste them here.";
+
+"status.blocked" = "BLOCKED";
+"status.deployBlocked" = "DEPLOY BLOCKED";
+"status.ready" = "READY";
+"status.readyToDeploy" = "READY TO DEPLOY";
+"status.readyWithWarnings" = "READY WITH WARNINGS";
+"status.warnings" = "WARNINGS";
 
 "time.hoursAgo" = "%@ h ago";
 "time.justNow" = "just now";

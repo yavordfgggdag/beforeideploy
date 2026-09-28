@@ -212,9 +212,9 @@ struct ProjectOverviewCard: View {
 
     var statusText: String {
         switch card.status {
-        case "ready": return "READY"
-        case "warnings": return "WARNINGS"
-        case "blocked": return "BLOCKED"
+        case "ready": return L("status.ready")
+        case "warnings": return L("status.warnings")
+        case "blocked": return L("status.blocked")
         default: return L("overview.unchecked")
         }
     }
@@ -256,9 +256,9 @@ struct ProjectOverviewCard: View {
                 HStack(spacing: 14) {
                     Label("\(card.changed)", systemImage: "pencil.line").foregroundColor(card.changed > 0 ? Theme.warn : Theme.tertiary)
                     if let a = card.ahead, let b = card.behind { Text("↑\(a) ↓\(b)").foregroundColor(Theme.tertiary) }
-                    if card.local != nil { Label("local", systemImage: "desktopcomputer").foregroundColor(Theme.ready) }
+                    if card.local != nil { Label(L("overview.localRunning"), systemImage: "desktopcomputer").foregroundColor(Theme.ready) }
                     Spacer()
-                    Text(card.lastProd != nil ? "LIVE \(Fmt.relative(card.lastProd))" : L("overview.noProduction"))
+                    Text(card.lastProd != nil ? L("overview.liveAgo", Fmt.relative(card.lastProd)) : L("overview.noProduction"))
                         .foregroundColor(Theme.tertiary)
                 }
                 .font(.system(size: 11.5))
