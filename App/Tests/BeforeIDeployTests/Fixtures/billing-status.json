@@ -1,0 +1,26 @@
+{
+  "plan": "high",
+  "subscription": {
+    "provider": "trial",
+    "tier": "high",
+    "status": "trial",
+    "renewsAt": null,
+    "endsAt": "2026-10-17T12:00:00.000Z",
+    "manageable": false
+  },
+  "balance": {
+    "plan": 150000,
+    "topup": 0,
+    "total": 150000
+  },
+  "trialAvailable": false,
+  "usage": [
+    {
+      "at": "2026-10-09T10:00:00Z",
+      "step": "build",
+      "model": "claude-sonnet-5",
+      "tokens": 6000,
+      "project": "p1"
+    }
+  ]
+}

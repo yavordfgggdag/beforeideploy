@@ -77,3 +77,19 @@ Deno.test("account: delete marks the subscriptions canceled before the user goes
   assert.ok(mine.every((s) => s.status === "canceled"));
   assert.ok(mine.find((s) => s.id === "s1")?.cancel_at);
 });
+
+Deno.test("account: delete cancels the Paddle subscription at the provider first", async () => {
+  const { db } = world();
+  const cancelled: string[] = [];
+  const handle = createAccountHandler({ ...fakeDeps(db), cancelPaddleSubscription: (id) => { cancelled.push(id); return Promise.resolve(); } });
+  assert.equal((await handle(post("account", { action: "delete" }))).status, 200);
+  assert.deepEqual(cancelled, ["sub_1"]);
+});
+
+Deno.test("account: a failing provider cancel stops the deletion", async () => {
+  const { db } = world();
+  const handle = createAccountHandler({ ...fakeDeps(db), cancelPaddleSubscription: () => Promise.reject(new Error("Paddle down")) });
+  const res = await handle(post("account", { action: "delete" }));
+  assert.equal(res.status, 500);
+  assert.deepEqual(db.deletedUsers, []);
+});

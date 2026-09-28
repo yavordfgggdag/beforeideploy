@@ -130,6 +130,19 @@ drop policy if exists "read own subscriptions" on public.subscriptions;
 create policy "read own subscriptions" on public.subscriptions
   for select using (auth.uid() = user_id);
 
+-- Paddle webhook deliveries already processed (idempotency: Paddle retries until it gets a 2xx).
+create table if not exists public.billing_events (
+  id           text primary key,             -- Paddle event_id
+  provider     text not null default 'paddle',
+  type         text not null,
+  payload      jsonb,
+  processed_at timestamptz not null default now()
+);
+alter table public.billing_events enable row level security;   -- no policies: service role only
+
+alter table public.subscriptions add column if not exists customer_ref text;   -- Paddle customer id (portal)
+create unique index if not exists subscriptions_provider_ref_idx on public.subscriptions (provider, provider_ref) where provider_ref is not null;
+
 -- ---------------------------------------------------------------- AI credits (tokens)
 
 create table if not exists public.credit_ledger (
@@ -197,6 +210,25 @@ alter table public.settings enable row level security;
 drop policy if exists "read settings" on public.settings;
 create policy "read settings" on public.settings
   for select to authenticated using (true);
+
+-- Default catalog (WP4). Prices are what the plans screen shows; the Paddle price ids connect each plan and
+-- pack to the product in Paddle (Catalog → Prices). Edit from the Admin panel or here; the app needs no update.
+insert into public.settings (key, value) values
+  ('plans', '{"flash":{"tokens":250000},"high":{"tokens":1000000},"knight":{"tokens":2500000}}'),
+  ('billing.catalog', '{
+     "currency": "EUR",
+     "trial": {"days": 7, "plan": "high", "tokens": 150000},
+     "plans": {
+       "flash":  {"price": 4.99,  "paddlePriceId": null},
+       "high":   {"price": 9.99,  "paddlePriceId": null},
+       "knight": {"price": 19.99, "paddlePriceId": null}
+     },
+     "packs": [
+       {"id": "pack-500k", "tokens": 500000,  "price": 4.99,  "paddlePriceId": null},
+       {"id": "pack-2m",   "tokens": 2000000, "price": 14.99, "paddlePriceId": null}
+     ]
+   }')
+on conflict (key) do nothing;
 
 -- ---------------------------------------------------------------- owner
 -- Make yourself admin once (replace the email):

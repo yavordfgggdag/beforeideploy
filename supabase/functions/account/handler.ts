@@ -6,7 +6,12 @@
 //                            Local projects on the Mac are untouched (the engine only drops its session).
 import { callerOf, type Deps, json, readJson } from "../_shared/db.ts";
 
-export function createAccountHandler(deps: Deps): (req: Request) => Promise<Response> {
+export interface AccountDeps extends Deps {
+  /** Cancels a Paddle subscription immediately (index.ts calls the Paddle API); absent → local cancel only. */
+  cancelPaddleSubscription?: (subscriptionId: string) => Promise<void>;
+}
+
+export function createAccountHandler(deps: AccountDeps): (req: Request) => Promise<Response> {
   return async (req) => {
     if (req.method !== "POST") return json(405, { error: "POST only" });
     const body = await readJson<{ action?: string }>(req);
@@ -43,8 +48,11 @@ export function createAccountHandler(deps: Deps): (req: Request) => Promise<Resp
           });
         }
         case "delete": {
-          // WP4: also cancel an active subscription at the provider (Paddle / App Store) before deleting.
+          // cancel at the provider first, so a deleted account is never charged again
           const { data: active } = await db.from("subscriptions").select("id,provider,provider_ref").eq("user_id", user.id).in("status", ["active", "trial", "past_due"]);
+          for (const sub of active ?? []) {
+            if (sub.provider === "paddle" && sub.provider_ref && deps.cancelPaddleSubscription) await deps.cancelPaddleSubscription(sub.provider_ref);
+          }
           if (active?.length) {
             await db.from("subscriptions").update({ status: "canceled", cancel_at: new Date().toISOString() }).eq("user_id", user.id);
           }

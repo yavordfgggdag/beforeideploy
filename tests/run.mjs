@@ -568,6 +568,16 @@ http.createServer((q,r)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{r.setHea
    for(const part of ANSWER_PARTS)send({type:'delta',text:part});
    const charged=6000*(j.deep?5:1);ledger.push({user_id:me.user_id,delta:-charged,reason:'ai_fix'});
    send({type:'usage',input:4500,output:1500,model:'claude-sonnet-5',charged:charged,balance:balance(me.user_id)});send({type:'done'});return r.end();}
+ if(q.url==='/functions/v1/billing'){const me=caller(q);if(!me){r.statusCode=401;return r.end('{"error":"no session"}');}
+   const cat={currency:'EUR',plans:[{id:'flash',price:4.99,tokens:250000,available:true},{id:'high',price:9.99,tokens:1000000,available:true},{id:'knight',price:19.99,tokens:2500000,available:false}],packs:[{id:'pack-500k',tokens:500000,price:4.99,available:true}],trial:{days:7,plan:'high',tokens:150000}};
+   const st=()=>{const mine=ledger.filter(l=>l.user_id===me.user_id);const pl=mine.filter(l=>l.bucket==='plan').reduce((a,l)=>a+l.delta,0);const top=mine.filter(l=>l.bucket!=='plan').reduce((a,l)=>a+l.delta,0);
+     return {plan:me.plan,subscription:me.trialEnds?{provider:'trial',tier:'high',status:'trial',renewsAt:null,endsAt:me.trialEnds,manageable:false}:null,balance:{plan:Math.max(0,pl),topup:Math.max(0,top),total:Math.max(0,pl+top)},trialAvailable:!me.trialEnds,usage:[{at:'2026-10-09T10:00:00Z',step:'build',model:'claude-sonnet-5',tokens:6000,project:'p1'}]};};
+   if(j.action==='catalog')return r.end(JSON.stringify(cat));
+   if(j.action==='status')return r.end(JSON.stringify(st()));
+   if(j.action==='trial'){if(me.trialEnds){r.statusCode=409;return r.end('{"error":"used","code":"trial_used"}');}me.trialEnds='2026-10-17T12:00:00.000Z';me.plan='high';ledger.push({user_id:me.user_id,delta:150000,bucket:'plan',reason:'trial_grant'});return r.end(JSON.stringify(st()));}
+   if(j.action==='checkout'){const it=cat.plans.find(x=>x.id===j.plan)||cat.packs.find(x=>x.id===j.pack);if(!it){r.statusCode=400;return r.end('{"error":"unknown"}');}if(!it.available){r.statusCode=409;return r.end('{"error":"x","code":"not_available"}');}return r.end(JSON.stringify({url:'https://pay.example/checkout?_ptxn=txn_'+(j.plan||j.pack),transaction:'txn_1'}));}
+   if(j.action==='portal'){r.statusCode=404;return r.end('{"error":"none","code":"no_subscription"}');}
+   r.statusCode=400;return r.end('{"error":"unknown action"}');}
  if(q.url==='/functions/v1/account'){const me=caller(q);if(!me){r.statusCode=401;return r.end('{"error":"no session"}');}
    if(j.action==='export')return r.end(JSON.stringify({user:{id:me.user_id,email:me.email},profile:me,subscriptions:[],credit_ledger:ledger.filter(l=>l.user_id===me.user_id),ai_usage:[],projects:rows.filter(x=>x.user_id===me.user_id)}));
    if(j.action==='delete'){delete users[me.email];delete profiles[me.user_id];rows=rows.filter(x=>x.user_id!==me.user_id);audit.push({admin:me.user_id,action:'delete_me',target:me.user_id});return r.end('{"deleted":true}');}
@@ -759,6 +769,37 @@ t('ai: cloud път — план, кредити, quota_exhausted → exit 8, fr
   login('friend@example.com', 'supersecret2');
   const free = bid('ai', 'fix', '--project', cloudApp, '--step', 'build');
   assert(free.result.code === 'ai_unavailable' && free.result.key === 'ai.unavailable.noPlan', JSON.stringify(free.result));
+  login('yavor@example.com', 'supersecret1');
+});
+
+t('billing: каталог, статус, пробен период веднъж, checkout URL, неналичен план, портал', () => {
+  const login = (email, pw) => { bid('account', 'logout'); return bid('account', 'login', '--email', email, '--password', pw); };
+  login('friend@example.com', 'supersecret2');
+  const cat = bid('billing', 'catalog');
+  assert(cat.result.ok && cat.data.plans.length === 3 && cat.data.currency === 'EUR' && cat.data.trial.days === 7, JSON.stringify(cat.result));
+  fixture('billing-catalog', cat.data);
+  const st = bid('billing', 'status');
+  assert(st.data.plan === 'free' && st.data.trialAvailable === true, JSON.stringify(st.data));
+  const trial = bid('billing', 'trial');
+  assert(trial.data.plan === 'high' && trial.data.balance.plan === 150000 && trial.data.subscription.provider === 'trial', JSON.stringify(trial.data));
+  fixture('billing-status', trial.data);
+  const again = bid('billing', 'trial');
+  assert(again.result.code === 'billing_failed' && again.result.key === 'billing.trialUsed', JSON.stringify(again.result));
+  const againBg = bidEnv({ BID_LANG: 'bg' }, 'billing', 'trial');
+  assert(againBg.result.error === 'Безплатният пробен период вече е използван за този акаунт.', againBg.result.error);
+  const co = bid('billing', 'checkout', '--plan', 'high');
+  assert(co.data.url.startsWith('https://pay.example/checkout'), JSON.stringify(co.result));
+  assert(bid('billing', 'checkout', '--pack', 'pack-500k').data.url.includes('pack-500k'), 'pack checkout');
+  const knight = bid('billing', 'checkout', '--plan', 'knight');
+  assert(knight.result.key === 'billing.notAvailable', JSON.stringify(knight.result));
+  const both = bid('billing', 'checkout');
+  assert(both.code === 2 && both.result.key === 'billing.checkoutArgs', JSON.stringify(both.result));
+  assert(bid('billing', 'portal').result.key === 'billing.noSubscription', 'portal without subscription');
+  assert(bid('billing', 'refund').code === 2, 'unknown action');
+  login('yavor@example.com', 'supersecret1');
+  bid('admin', 'set_plan_manual', '--user', 'u-friend@example.com', '--plan', 'free');
+  bid('account', 'logout');
+  assert(bid('billing', 'status').result.code === 'not_logged_in', 'needs a session');
   login('yavor@example.com', 'supersecret1');
 });
 

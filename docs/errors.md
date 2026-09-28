@@ -28,6 +28,7 @@ quota, 127 Node missing; everything else exits 1.
 | `rest_failed` | 1 | A cloud table request failed (RLS, schema not applied, network mid-request). | Owner: check `supabase/schema.sql` is applied; users: retry, then send a support report. |
 | `sync_failed` | 1 | Cloud sync of the project list failed. | Retry from the account menu; local projects are never lost. |
 | `account_failed` | 1 | The `account` Edge Function (export / delete) returned an error. | Retry; owner: `supabase functions deploy account`. |
+| `billing_failed` | 1 | A billing request failed: item not on sale, trial already used, no subscription, payments not set up, or the provider did not answer. | The message says which; the plans screen shows only what can be bought. |
 | `admin_failed` | 1 | The `admin` Edge Function returned an error. | The message has the server's text; owner: function deployed and caller is `admin`? |
 | `aikey_failed` | 1 | Storing or checking an AI key in the Keychain failed. | Retry; if Keychain prompts appear, allow BeforeIDeploy. |
 | `unauthorized` | 1 | The provider rejected the credentials (AI key, Spaceship key). | Re-enter the key; for Spaceship also check the API secret. |
@@ -84,4 +85,9 @@ Returned as `code` in the JSON body; the engine maps them to the codes above (`q
 | `rate_limited` | 429 | More than 6 requests a minute or 60 an hour. |
 | `prompt_too_long` | 413 | Prompt above `ai.promptMaxChars` (60 000 by default). |
 | `upstream` | 502 | The model API failed (network or 5xx). |
-| `not_configured` | 500 | `ANTHROPIC_API_KEY` secret is missing on the function. |
+| `bad_signature` | 401 | A billing webhook without a valid Paddle signature (not from Paddle, or a wrong `PADDLE_WEBHOOK_SECRET`). |
+| `not_available` | 409 | Checkout for a plan or pack that has no Paddle price id in `billing.catalog`. |
+| `trial_used` | 409 | The one-time trial was already used (or the account has paid before). |
+| `no_subscription` | 404 | Customer portal asked for an account without a Paddle customer. |
+| `provider_error` | 502 | The Paddle API answered with an error or without the expected URL. |
+| `not_configured` | 500 / 503 | `ANTHROPIC_API_KEY` (ai-fix) or `PADDLE_API_KEY` (billing) secret is missing on the function. |
