@@ -633,8 +633,9 @@ struct ToggleRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(.system(size: 13, weight: .medium)).foregroundColor(Theme.text)
                 Text(subtitle).font(.system(size: 11.5)).foregroundColor(Theme.tertiary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            Spacer()
+            Spacer(minLength: 16)
             Toggle("", isOn: $isOn)
                 .toggleStyle(.switch)
                 .labelsHidden()
