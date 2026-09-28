@@ -12,7 +12,10 @@ All notable changes, newest first. Versions come from `engine/VERSION`. Each ent
 - Local Preview adopts servers left behind by a killed app.
 - Update banner (release feed), support report with redacted logs, engine log.
 - GDPR: export my data, delete account.
-- Engineering: AppModel split into stores, CI (engine tests on Linux, `swift build`/`swift test` on macOS, `deno check`), Swift tests against engine fixtures.
+- Onboarding: a three-screen tour on first launch; sign-in buttons follow the providers enabled in the cloud (GitHub, Sign in with Apple); first-steps card on the empty screen.
+- Errors show their code with copy and a help link; every code is documented (docs/errors.md).
+- Keyboard: View menu ⌘1–⌘4, next/previous project ⌘] ⌘[.
+- Engineering: AppModel split into stores, CI (engine tests on Linux, `swift build`/`swift test` on macOS, `deno check` + `deno test`), Swift tests against engine fixtures, Deno tests for the Edge Functions, release scripts (signed DMG, notarization, update feed, Homebrew cask).
 
 ### Български
 - Акаунти с роли (normal / VIP / admin), планове и AI кредити; Админ панел.
@@ -22,7 +25,10 @@ All notable changes, newest first. Versions come from `engine/VERSION`. Each ent
 - Local Preview поема сървъри, останали след убито приложение.
 - Банер за нова версия (release feed), доклад за поддръжка с редактирани логове, лог на engine-а.
 - GDPR: експорт на данните, изтриване на акаунта.
-- Инженерни: AppModel е разделен на stores, CI (engine тестове на Linux, `swift build`/`swift test` на macOS, `deno check`), Swift тестове върху фикстури от engine-а.
+- Onboarding: тур от три екрана при първо пускане; бутоните за вход следват включените в облака доставчици (GitHub, Вход с Apple); карта „Първи стъпки“ на празния екран.
+- Грешките показват кода си с копиране и линк към помощ; всеки код е документиран (docs/errors.md).
+- Клавиатура: меню „Изглед“ ⌘1–⌘4, следващ/предишен проект ⌘] ⌘[.
+- Инженерни: AppModel е разделен на stores, CI (engine тестове на Linux, `swift build`/`swift test` на macOS, `deno check` + `deno test`), Swift тестове върху фикстури от engine-а, Deno тестове за Edge функциите, release скриптове (подписан DMG, notarization, feed за обновяване, Homebrew cask).
 
 ## 9.0.0
 

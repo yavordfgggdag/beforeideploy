@@ -64,3 +64,10 @@ Secrets скенерът пропуска ред, който съдържа ко
 zsh ~/Desktop/BeforeIDeploy-V6/scripts/uninstall.sh        # пази библиотеката
 zsh ~/Desktop/BeforeIDeploy-V6/scripts/uninstall.sh --all  # трие всичко
 ```
+
+## Документи
+
+- `ROADMAP.md` — стратегия и пълен план V10 → V12; `docs/execution-plan.md` — какво се прави сега, в какъв ред (за следващите сесии).
+- `AUDIT.md` — архитектура и инварианти; `V10-PLAN.md` — историческият план за V10.
+- `docs/errors.md` — всички кодове на грешки; `docs/manual-qa.md` — ръчният QA чеклист; `CHANGELOG.md`.
+- `supabase/functions/README.md` — Edge функциите, deploy и тестове; `scripts/release.sh --help` — release.

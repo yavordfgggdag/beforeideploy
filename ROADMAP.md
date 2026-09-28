@@ -62,7 +62,11 @@
 - **WP1** — `engine/src/i18n.mjs`, `engine/i18n/{en,bg}.json` (313 ключа), `Localization.swift` + `L()`, `App/Resources/{en,bg}.lproj` (417 ключа), `WelcomeLanguageView`, смяна на езика без рестарт, `scripts/i18n-{check,lib,translate}.mjs`.
 - **WP2** — `supabase/schema.sql` v10, `features.mjs`, `aikeys.mjs`, `admin.mjs`, `supabase/functions/admin`, `AdminView`, AI ключове в Настройка, `profiles.locale`.
 
-Незавършени от седмици 1–3 (влизат в седмица 4):
+Готово в седмици 4–5 (виж AUDIT.md §6a): WP6.8 CI, WP3, WP6.2–6.4, WP6.6/6.7/6.9, WP5 (export/delete, тур,
+доставчици за вход от облака, първи стъпки), WP7 (грешки с код, клавиатура, каталог на грешките), L6, WP8-A
+част 1. **Планът за следващите сесии е в `docs/execution-plan.md`** (S1–S10, в ред на изпълнение).
+
+Незавършени от седмици 1–3:
 
 | # | Какво | Защо е важно |
 |---|---|---|
@@ -71,7 +75,7 @@
 | L3 | Бадж „бета превод“ за непрегледани езици (`_meta.reviewed = false`) | преди машинни преводи |
 | L4 | `.stringsdict` плурали (сега: „%@ предупреждения“) | езици с други плурали |
 | L5 | Ръчно пускане на `schema.sql` и `supabase functions deploy admin` в продуктовия облак; `update profiles set role='admin'` | без това Admin панелът не работи |
-| L6 | Deno `check`/тестове на `admin` функцията | функцията е писана без изпълнение |
+| L6 | ~~Deno `check`/тестове на `admin` функцията~~ — **готово** (седмица 5): 32 теста за трите функции | — |
 
 ---
 
@@ -317,10 +321,10 @@
 
 | Слой | Инструмент | Днес | Цел V10.0 | Цел V11 |
 |---|---|---|---|---|
-| Engine | `node tests/run.mjs` (mock Supabase, Spaceship, Anthropic) | 46 | 80 (AI, billing, update, cache) | 130 (site, dns, rollback, daemon по двата пътя) |
+| Engine | `node tests/run.mjs` (mock Supabase, Spaceship, Anthropic) | 54 | 80 (AI, billing, update, cache) | 130 (site, dns, rollback, daemon по двата пътя) |
 | i18n | `scripts/i18n-check.mjs` | ✓ | + плурали, + бета бадж | + всички езици |
-| Swift | `swift test` (парсери, модели от NDJSON фикстури, Localization, Features, Billing mock) | 0 | 30 | 60 |
-| Edge Functions | `deno check` + `deno test` с фикстури (JWT, Paddle/Apple webhooks) | 0 | 15 | 30 |
+| Swift | `swift test` (парсери, модели от NDJSON фикстури, Localization, Features, Billing mock) | 25 | 30 | 60 |
+| Edge Functions | `deno check` + `deno test` с фикстури (JWT, Paddle/Apple webhooks) | 32 | 15 | 30 |
 | Записани CLI изходи | „replay“ фикстури от реалните `netlify/vercel/wrangler/gh` изходи за парсерите | 0 | 10 | 20 |
 | CI | GitHub Actions: ubuntu (engine, i18n, deno), macos (swift build/test, node tests) | — | задължителни проверки | + nightly пълен QA скрипт |
 
