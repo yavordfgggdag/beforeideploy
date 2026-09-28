@@ -23,7 +23,11 @@ enum Theme {
     static let hairline = Color(hex: 0x38383A)
     static let text = Color(hex: 0xF5F5F7)
     static let secondary = Color(hex: 0x98989D)
-    static let tertiary = Color(hex: 0x6E6E73)
+    /// ≥ 4.5:1 on the window and panel backgrounds (WCAG AA, audit A12); with Increase Contrast it
+    /// becomes the secondary grey.
+    static var tertiary: Color {
+        NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast ? secondary : Color(hex: 0x8E8E93)
+    }
     static let accent = Color(nsColor: .systemBlue)
     static let accentSoft = Color(nsColor: .systemBlue).opacity(0.16)
     static let ready = Color(nsColor: .systemGreen)

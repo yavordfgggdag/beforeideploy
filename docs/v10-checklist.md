@@ -111,9 +111,21 @@ Edge Functions `deno test supabase/functions` — 51 · `scripts/i18n-check.mjs`
 | Apple Developer Program, сертификат, сайт, Privacy/Terms/Refund, Paddle продукти | ⏳ собственикът (ROADMAP §9) | — |
 | WP8-B App Store | ➡️ V10.5 (Xcode track) | ROADMAP §4.2 |
 
+## Одит V10 и надграждане (docs/AUDIT-V10.md)
+
+| Партида | Статус | Какво |
+|---|---|---|
+| 1 — сигурност на engine-а | ✅ | Keychain през stdin, AI промени без `.git`/hooks, Local Preview без dotfiles и чужд Host, чисто копие за GitHub Pages / Cloudflare, HTTPS + sha256 за обновления |
+| 2 — облак и пари | ✅ | резервация на кредити, веднъж-само грантове, trial на имейл, частичен refund, миграция на схемата (проверена в Postgres) |
+| 3 — приложение | ✅ | потвърждение за линкове, защита на входа, без блокиране на нишки, без двойни проверки, crash отчети |
+| 4 — готово за пускане | ✅ | engine в .app и самоинсталация, екран за Node, universal build, обновления без акаунт, задължително обновление, правни линкове, съгласие за AI, checkout страница |
+| 5 — коректност на engine-а | ✅ | deploy само на провереният код, кирилица в Git, DNS без прекъсване, AI промени „всичко или нищо“, изтекъл SSL |
+| 6 — документи и CI | ✅ | README на английски + български, release dry-run (universal DMG), синтактични проверки, engine-macos на PR |
+
 ## Какво остава преди публичен V10.0
 
 Само неща извън кода (собственикът): Supabase — `schema.sql`, `supabase functions deploy admin ai-fix account billing`,
 secrets `ANTHROPIC_API_KEY`, `PADDLE_API_KEY`, `PADDLE_WEBHOOK_SECRET`, `PADDLE_ENV`; Paddle продукти и price id-та в
 `settings.billing.catalog`; имейл шаблоните; Apple Developer Program; домейн, сайт и правни страници; ръчният QA
-чеклист на bg и en (`docs/manual-qa.md`); после `docs/release.md`.
+чеклист на bg и en (`docs/manual-qa.md`); Privacy / Terms / Refund линковете и имейл за поддръжка в
+настройките, `site/checkout.html` с клиентския токен на Paddle; после `docs/release.md`.

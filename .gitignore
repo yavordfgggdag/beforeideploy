@@ -9,3 +9,6 @@ build/
 
 # release artifacts (scripts/release.sh) — uploaded to the release host, not versioned
 releases/
+
+# local test output (install.sh)
+tests/last-run.txt

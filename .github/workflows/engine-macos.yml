@@ -9,6 +9,11 @@ on:
       - 'tests/**'
       - 'scripts/**'
       - '.github/workflows/engine-macos.yml'
+  pull_request:
+    paths:
+      - 'engine/**'
+      - 'tests/**'
+      - 'scripts/**'
   workflow_dispatch:
 
 jobs:

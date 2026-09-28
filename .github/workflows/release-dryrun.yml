@@ -1,0 +1,35 @@
+# Release dry run (audit R9): the whole release.sh path without the owner's certificates — tests, a
+# universal (arm64 + x86_64) app with the engine inside, the DMG and latest.json. Signing and notarization
+# need the owner's Developer ID and run on the release Mac (docs/release.md). Manual or on a version tag.
+name: release-dryrun
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+jobs:
+  dmg:
+    name: universal DMG (unsigned)
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # CFBundleVersion = commit count
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: release.sh (no signing, no notarization)
+        run: zsh scripts/release.sh --skip-notarize --allow-dev --allow-dirty
+      - name: The binary runs on Apple silicon and Intel
+        run: |
+          set -e
+          APP="build/Before I Deploy.app"
+          lipo -archs "$APP/Contents/MacOS/BeforeIDeploy" | tee /dev/stderr | grep -q 'x86_64 arm64\|arm64 x86_64'
+          "$APP/Contents/Resources/engine/bid" version | grep -q '"ok":true'
+          ls -la releases/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-dryrun
+          path: releases/
