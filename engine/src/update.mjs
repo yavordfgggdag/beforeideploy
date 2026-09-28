@@ -77,6 +77,17 @@ export async function updateCheck({ current, force = false, channel = 'stable' }
 export async function updateDownload({ current, channel = 'stable' } = {}) {
   const r = await updateCheck({ current, force: true, channel });
   if (!r.available || !r.url) throw new EngineError(msg('update.nothing'), 'nothing');
+  // a release must be HTTPS and carry its sha256 (plain http only for a local test feed)
+  let u;
+  try {
+    u = new URL(r.url);
+  } catch {
+    throw new EngineError(msg('update.insecure'), 'update_failed');
+  }
+  const local = u.protocol === 'http:' && ['127.0.0.1', 'localhost'].includes(u.hostname);
+  if ((u.protocol !== 'https:' && !local) || !/^[0-9a-f]{64}$/i.test(String(r.sha256 || ''))) {
+    throw new EngineError(msg('update.insecure'), 'update_failed');
+  }
   let res;
   try {
     res = await fetch(r.url);
@@ -86,7 +97,7 @@ export async function updateDownload({ current, channel = 'stable' } = {}) {
   if (!res.ok) throw new EngineError(msg('update.http', { status: res.status }), 'update_failed');
   const bytes = Buffer.from(await res.arrayBuffer());
   const sha256 = crypto.createHash('sha256').update(bytes).digest('hex');
-  if (r.sha256 && sha256 !== String(r.sha256).toLowerCase()) throw new EngineError(msg('update.corrupt'), 'update_corrupt');
+  if (sha256 !== String(r.sha256).toLowerCase()) throw new EngineError(msg('update.corrupt'), 'update_corrupt');
   const dir = ensureDir(path.join(os.homedir(), 'Downloads'));
   const file = path.join(dir, `Before I Deploy ${r.latest}.dmg`);
   fs.writeFileSync(file, bytes);

@@ -29,7 +29,10 @@ export const REASON_KEYS = {
   not_selected: 'ai.apply.reason.not_selected',
 };
 export const reasonKey = (reason) => REASON_KEYS[reason] || 'ai.apply.reason.other';
-const BLOCKED_DIRS = new Set(['node_modules', '.git', '.netlify', '.vercel', '.next', 'dist', 'build']);
+// Compared case-insensitively: the default macOS volume (APFS) is case-insensitive, so `.GIT/config` IS `.git/config`.
+const BLOCKED_DIRS = new Set(['node_modules', '.git', '.netlify', '.vercel', '.next', 'dist', 'build', '.husky', '.github']);
+// files that make tools run commands (git hooks via config, npm script-shell, yarn plugins)
+const BLOCKED_FILES = new Set(['.gitmodules', '.npmrc', '.yarnrc', '.yarnrc.yml', '.pnpmfile.cjs']);
 
 /** Splits the model answer into { explanation, files[] } without touching the disk. */
 export function parseAnswer(text) {
@@ -106,7 +109,9 @@ export function safePath(dir, rel) {
   const root = path.resolve(dir) + path.sep;
   if (!abs.startsWith(root)) return null;
   const parts = path.relative(dir, abs).split(path.sep);
-  if (parts.some((p) => BLOCKED_DIRS.has(p) || p === '..')) return null;
+  const lower = parts.map((p) => p.toLowerCase());
+  if (lower.some((p) => BLOCKED_DIRS.has(p) || p === '..')) return null;
+  if (BLOCKED_FILES.has(lower[lower.length - 1])) return null;
   // a symlink anywhere on the way could point outside the project
   let probe = path.resolve(dir);
   for (const p of parts) {

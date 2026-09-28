@@ -495,6 +495,63 @@ t('demo: примерен проект — създава се, добавя с�
   bid('project', 'remove', '--project', r.data.key);
 });
 
+// engine modules imported directly write only into the test sandbox
+process.env.BID_APP_DIR = ENV.BID_APP_DIR;
+process.env.BID_CACHE_DIR = ENV.BID_CACHE_DIR;
+process.env.BID_NO_KEYCHAIN = '1';
+const patchMod = await import(path.join(ROOT, 'engine', 'src', 'ai', 'patch.mjs'));
+const aifixMod = await import(path.join(ROOT, 'engine', 'src', 'aifix.mjs'));
+const hostingMod = await import(path.join(ROOT, 'engine', 'src', 'hosting.mjs'));
+
+t('сигурност: AI промени не могат да пипнат .git, node_modules, .npmrc и workflows — и с друг регистър', () => {
+  const dir = mk('safe-path', { 'src/app.js': 'x' });
+  for (const bad of ['.GIT/config', '.git/hooks/pre-commit', 'Node_Modules/x/index.js', '.npmrc', 'sub/.NPMRC', '.github/workflows/ci.yml', '.Husky/pre-commit', '../x', '/etc/passwd']) {
+    assert(patchMod.safePath(dir, bad) === null, 'must refuse ' + bad);
+  }
+  assert(patchMod.safePath(dir, 'src/app.js') === path.join(dir, 'src/app.js'), 'normal file allowed');
+  assert(patchMod.safePath(dir, '.gitignore') !== null, '.gitignore is allowed');
+});
+
+t('сигурност: redaction маха ключове в JSON, Bearer, sb_secret, *_KEY=, пароли в URL', () => {
+  const raw = [
+    '{"apiKey": "abcd1234efgh5678"}',
+    'Authorization: Bearer abcdefghijklmnop.qrstuv',
+    'SUPABASE=sb_secret_ABCDEFGHIJKLMNOP12',
+    'stripe sk_test_ABCDEFGHIJKL',
+    'MY_SERVICE_KEY=hunter2hunter2',
+    'DATABASE_URL=postgres://admin:s3cr3tpass@db.example.com:5432/app',
+    "const password = 'correcthorse'",
+  ].join('\n');
+  const out = aifixMod.redact(raw);
+  for (const secret of ['abcd1234efgh5678', 'abcdefghijklmnop', 'sb_secret_ABCDEFGHIJKLMNOP12', 'sk_test_ABCDEFGHIJKL', 'hunter2hunter2', 's3cr3tpass', 'correcthorse']) {
+    assert(!out.includes(secret), 'leaked ' + secret + ' in: ' + out);
+  }
+  assert(out.includes('db.example.com'), 'keeps the non-secret part of the URL');
+});
+
+t('сигурност: публикуване от корена на проекта качва копие без dotfiles и node_modules', () => {
+  const dir = mk('root-site', { 'index.html': '<h1>x</h1>', '.env': 'SECRET=1', '.git-keep/x': 'y', 'node_modules/a/i.js': '', 'img/logo.svg': '<svg/>', '.well-known/security.txt': 'x' });
+  const out = hostingMod.stagePublicCopy(dir, '.');
+  assert(out !== dir && fs.existsSync(path.join(out, 'index.html')) && fs.existsSync(path.join(out, 'img', 'logo.svg')), 'copied the site');
+  for (const gone of ['.env', '.git-keep', 'node_modules']) assert(!fs.existsSync(path.join(out, gone)), gone + ' must not be published');
+  assert(fs.existsSync(path.join(out, '.well-known', 'security.txt')), '.well-known stays');
+  assert(hostingMod.stagePublicCopy(dir, 'dist') === 'dist', 'a build folder is published as it is');
+});
+
+t('сигурност: macOS Keychain — тайната минава през stdin и се чете обратно непроменена (само на Mac в CI)', () => {
+  if (process.platform !== 'darwin' || !process.env.CI) return;
+  const script = `import { setSecret, getSecret, deleteSecret } from ${JSON.stringify(path.join(ROOT, 'engine', 'src', 'secrets.mjs'))};
+const v = { key: 'sk-test "quoted" \\\\ back\\\\slash ünicode ключ', n: 1 };
+setSecret('bid-test-secret', v);
+const back = getSecret('bid-test-secret');
+deleteSecret('bid-test-secret');
+if (JSON.stringify(back) !== JSON.stringify(v)) { console.error('mismatch', JSON.stringify(back)); process.exit(1); }`;
+  const env = { ...process.env };
+  delete env.BID_NO_KEYCHAIN;
+  const r = spawnSync(process.execPath, ['--input-type=module', '-e', script], { env, encoding: 'utf8' });
+  assert(r.status === 0, r.stderr || r.stdout);
+});
+
 t('engine: никой не засенчва t() с локална променлива „t“', () => {
   const offenders = [];
   const walk = (d) => { for (const e of fs.readdirSync(d, { withFileTypes: true })) { const p = path.join(d, e.name); if (e.isDirectory()) walk(p); else if (p.endsWith('.mjs')) { fs.readFileSync(p, 'utf8').split('\n').forEach((l, i) => { if (/\b(const|let|var)\s+t\s*=|\(\s*t\s*(,|\))\s*=>|\[\s*\w+\s*,\s*t\s*\]/.test(l)) offenders.push(`${path.relative(ROOT, p)}:${i + 1}`); }); } } };
@@ -604,6 +661,8 @@ const balance=(id)=>ledger.filter(l=>l.user_id===id).reduce((a,l)=>a+l.delta,0);
 http.createServer((q,r)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{r.setHeader('content-type','application/json');
  if(q.url==='/releases/latest.json'){const dmg='dmg-bytes';const sha=require('crypto').createHash('sha256').update(dmg).digest('hex');
    return r.end(JSON.stringify({version:'10.1.0',minVersion:'9.0.0',url:'http://127.0.0.1:'+port+'/releases/bid.dmg',sha256:sha,notes:{en:'Fixes',bg:'Поправки'},publishedAt:'2026-10-01T00:00:00Z',beta:{version:'10.2.0-beta.1',url:'http://127.0.0.1:'+port+'/releases/bid.dmg',sha256:sha}}));}
+ if(q.url==='/releases/insecure.json'){return r.end(JSON.stringify({version:'99.0.0',url:'http://example.com/x.dmg',sha256:'a'.repeat(64)}));}
+ if(q.url==='/releases/nosha.json'){return r.end(JSON.stringify({version:'99.0.0',url:'https://example.com/x.dmg'}));}
  if(q.url==='/releases/bid.dmg'){r.setHeader('content-type','application/octet-stream');return r.end('dmg-bytes');}
  if(q.url.startsWith('/v1/models')){if(q.headers['x-api-key']!=='sk-ant-good-key-123'){r.statusCode=401;return r.end('{}');}return r.end('{"data":[]}');}
  if(q.url==='/v1/messages'){if(q.headers['x-api-key']!=='sk-ant-good-key-123'){r.statusCode=401;return r.end('{"type":"error","error":{"message":"invalid x-api-key"}}');}
@@ -907,6 +966,10 @@ t('update: latest.json → налична версия, beta канал, изт�
   const dl = bidEnv({ BID_UPDATE_URL: feed }, 'update', 'download');
   assert(dl.result.ok && fs.existsSync(dl.data.path) && fs.readFileSync(dl.data.path, 'utf8') === 'dmg-bytes', JSON.stringify(dl.result));
   assert(dl.data.path.startsWith(path.join(ENV.HOME, 'Downloads')), 'must land in ~/Downloads');
+  for (const bad of ['insecure', 'nosha']) {
+    const x = bidEnv({ BID_UPDATE_URL: `http://127.0.0.1:${sbPort}/releases/${bad}.json` }, 'update', 'download');
+    assert(x.result.key === 'update.insecure', bad + ': ' + JSON.stringify(x.result));
+  }
 });
 
 t('logs & report: engine.log пази командите с маскирани пароли; докладът е без secrets', () => {
@@ -1020,6 +1083,30 @@ ta('local: сирак (сървър без state) се осиновява при
   await new Promise((r) => setTimeout(r, 400));
   assert((await httpGet('http://127.0.0.1:4180')).status === 0, 'orphan still alive after stop');
   try { process.kill(orphan.pid); } catch {}
+});
+
+ta('сигурност: Local Preview не дава .env/.git, отказва чужд Host, спира само с тайния ключ', async () => {
+  const dir = mk('dotfile-site', { 'index.html': '<h1>ok</h1>', '.env': 'SECRET=1', '.git/config': '[core]', '.well-known/security.txt': 'contact' }, { repo: false });
+  const srv = spawnChild(process.execPath, [path.join(ROOT, 'engine', 'src', 'static-server.cjs'), dir, '4191', 'proj-key', 'secret-token'], { stdio: 'ignore', detached: true });
+  srv.unref();
+  await new Promise((r) => setTimeout(r, 600));
+  const req = (p, { method = 'GET', headers = {} } = {}) => new Promise((resolve) => {
+    const rq = http.request({ host: '127.0.0.1', port: 4191, path: p, method, headers }, (res) => { res.resume(); res.on('end', () => resolve(res.statusCode)); });
+    rq.on('error', () => resolve(0));
+    rq.end();
+  });
+  try {
+    assert((await req('/')) === 200, 'index');
+    assert((await req('/.env')) === 404, '.env must not be served');
+    assert((await req('/.git/config')) === 404, '.git must not be served');
+    assert((await req('/%2e%65nv')) === 404, 'encoded .env');
+    assert((await req('/.well-known/security.txt')) === 200, '.well-known allowed');
+    assert((await req('/', { headers: { host: 'evil.example.com' } })) === 421, 'DNS rebinding host must be refused');
+    assert((await req('/__bid__/stop', { method: 'DELETE', headers: { 'x-bid-key': 'proj-key' } })) === 403, 'the public project key must not stop it');
+    assert((await req('/__bid__/stop', { method: 'DELETE', headers: { 'x-bid-key': 'secret-token' } })) === 200, 'the token stops it');
+  } finally {
+    try { process.kill(srv.pid); } catch {}
+  }
 });
 
 ta('local: dev mode използва dev script', async () => {

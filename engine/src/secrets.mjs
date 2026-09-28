@@ -9,11 +9,21 @@ function fallbackFile(account) {
   return path.join(ensureDir(path.join(APP_DIR, 'secrets')), `${account}.json`);
 }
 
+/** Quotes one argument for `security -i` (its parser understands double quotes and backslash escapes). */
+export function securityQuote(value) {
+  return `"${String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+}
+
 export function setSecret(account, value) {
   const data = JSON.stringify(value);
   if (which('security') && !process.env.BID_NO_KEYCHAIN) {
-    const r = sh('security', ['add-generic-password', '-U', '-s', SERVICE, '-a', account, '-w', data]);
-    if (r.code !== 0) throw new Error(`Keychain: ${r.stderr.trim()}`);
+    // the secret goes through stdin (`security -i`), never argv — argv is visible to every process via `ps`
+    const line = ['add-generic-password', '-U', '-s', securityQuote(SERVICE), '-a', securityQuote(account), '-w', securityQuote(data)].join(' ');
+    const r = sh('security', ['-i'], { input: `${line}\n` });
+    if (r.code !== 0 || /error|usage/i.test(r.stderr)) throw new Error(`Keychain: ${(r.stderr || r.stdout).trim()}`);
+    // read back: the interactive parser must have stored exactly this value
+    const check = sh('security', ['find-generic-password', '-s', SERVICE, '-a', account, '-w']);
+    if (check.code !== 0 || check.stdout.trim() !== data) throw new Error('Keychain: the saved value could not be read back');
     return;
   }
   const f = fallbackFile(account);

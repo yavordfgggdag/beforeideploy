@@ -126,9 +126,10 @@ function setupDir() {
 function writeCommand(name, body) {
   const file = path.join(setupDir(), `${name}.command`);
   const envFile = path.join(ENGINE_DIR, 'env.zsh');
+  const q = (v) => `'${String(v).replace(/'/g, `'\\''`)}'`; // a home folder with ' in its name must not break the script
   fs.writeFileSync(
     file,
-    `#!/bin/zsh\n# Before I Deploy — ${t('setup.command.title')}\n[ -f '${envFile}' ] && source '${envFile}'\nclear\n${body}\necho\necho "${t('setup.command.done')}"\n`
+    `#!/bin/zsh\n# Before I Deploy — ${t('setup.command.title')}\n[ -f ${q(envFile)} ] && source ${q(envFile)}\nclear\n${body}\necho\necho ${q(t('setup.command.done'))}\n`
   );
   fs.chmodSync(file, 0o755);
   return file;

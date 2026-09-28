@@ -25,9 +25,14 @@ const REDACTIONS = [
   [/\b[MNO][A-Za-z\d_-]{23,27}\.[A-Za-z\d_-]{6}\.[A-Za-z\d_-]{27,}/g, '[DISCORD_TOKEN]'],
   [/eyJ[A-Za-z0-9_-]{15,}\.[A-Za-z0-9_-]{15,}\.[A-Za-z0-9_-]{10,}/g, '[JWT]'],
   [/-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/g, '[PRIVATE_KEY]'],
-  [/((?:api|secret|token|password|passwd|pwd|auth)[_-]?(?:key)?\s*[:=]\s*)["']?[^\s"'`]{6,}["']?/gi, '$1[REDACTED]'],
+  [/\bsb_(?:secret|publishable)_[A-Za-z0-9_-]{10,}/g, '[SUPABASE_KEY]'],
+  [/\b(sk|rk|pk)_test_[0-9a-zA-Z]{8,}/g, '[STRIPE_KEY]'],
+  [/\b(bearer|basic)\s+[A-Za-z0-9._~+/=-]{12,}/gi, '$1 [REDACTED]'],
+  // key = value, "key": "value", KEY=value — also *_KEY / *_TOKEN / *_SECRET names and quoted JSON keys
+  [/((?:api|secret|token|password|passwd|pwd|auth|access|private|client)[_-]?(?:key|secret|token)?["']?\s*[:=]\s*)["']?[^\s"'`,}]{6,}["']?/gi, '$1[REDACTED]'],
+  [/(\b[A-Z][A-Z0-9_]*(?:KEY|TOKEN|SECRET|PASSWORD)\s*=\s*)[^\s"'`]{4,}/g, '$1[REDACTED]'],
+  [/\b([a-z][a-z0-9+.-]*:\/\/)[^\s:/@]+:[^\s@/]+@/gi, '$1[creds]@'],
   [/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, '[email]'],
-  [/https?:\/\/[^\s/]*:[^\s@/]+@/g, 'https://[creds]@'],
 ];
 
 export function redact(text) {
@@ -58,7 +63,9 @@ function mentionedFiles(dir, log) {
   FILE_RE.lastIndex = 0;
   while ((m = FILE_RE.exec(log)) && found.size < 3) {
     const rel = m[1].replace(/^\.\//, '');
-    if (!found.has(rel) && exists(path.join(dir, rel))) found.set(rel, m[2] ? Number(m[2]) : null);
+    const abs = path.resolve(dir, rel);
+    if (!abs.startsWith(path.resolve(dir) + path.sep) || rel.split('/').includes('..')) continue; // never outside the project
+    if (!found.has(rel) && exists(abs)) found.set(rel, m[2] ? Number(m[2]) : null);
   }
   const out = [];
   for (const [rel, line] of found) {
@@ -156,8 +163,12 @@ function shellQuote(s) {
   return `'${String(s).replace(/'/g, `'\\''`)}'`;
 }
 
+const KNOWN_STEPS = new Set(['all', 'git', 'secrets', 'deps', 'lint', 'typecheck', 'build', 'hosting']);
+
 export function aifix(project, { step, target }) {
   if (!step || step === true) throw new EngineError(msg('aifix.missingStep'), 'usage', 2);
+  // the step id ends up in a file name and in a shell script — only known ids
+  if (!KNOWN_STEPS.has(step)) throw new EngineError(msg('aifix.missingStep'), 'usage', 2);
   const tgt = target && target !== true ? target : 'chatgpt';
   const { prompt, stepLabel } = buildPrompt(project, step);
   const dir = logDir(project.key);

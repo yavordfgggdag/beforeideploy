@@ -1,5 +1,6 @@
 // Local Preview: start / stop / restart / status
 import fs from 'node:fs';
+import crypto from 'node:crypto';
 import path from 'node:path';
 import http from 'node:http';
 import { spawn } from 'node:child_process';
@@ -66,7 +67,7 @@ async function adoptOrphan(project) {
   return { running: true, ...state };
 }
 
-function plan(project, d, port, mode) {
+function plan(project, d, port, mode, stopToken = '') {
   const dir = project.path;
   const staticDir = path.resolve(dir, d.publishDir || '.');
   const canStatic = !d.ssr && exists(path.join(staticDir, 'index.html'));
@@ -95,7 +96,7 @@ function plan(project, d, port, mode) {
         mode: 'build',
         label: `Build output (${d.publishDir})`,
         cmd: process.execPath,
-        args: [path.join(ENGINE_DIR, 'src', 'static-server.cjs'), staticDir, String(port), project.key],
+        args: [path.join(ENGINE_DIR, 'src', 'static-server.cjs'), staticDir, String(port), project.key, stopToken],
       };
     }
     if (mode === 'build' && has('preview')) {
@@ -126,7 +127,7 @@ function plan(project, d, port, mode) {
       mode: 'build',
       label: 'static files',
       cmd: process.execPath,
-      args: [path.join(ENGINE_DIR, 'src', 'static-server.cjs'), dir, String(port), project.key],
+      args: [path.join(ENGINE_DIR, 'src', 'static-server.cjs'), dir, String(port), project.key, stopToken],
     };
   }
   throw new EngineError(msg('local.noServer'), 'no_server');
@@ -140,7 +141,8 @@ export async function localStart(project, { mode = 'auto' } = {}) {
 
   const d = detect(project.path);
   const port = await findFreePort(project.lastPort);
-  const p = plan(project, d, port, mode);
+  const stopToken = crypto.randomBytes(16).toString('hex');
+  const p = plan(project, d, port, mode, stopToken);
   const logFile = path.join(logDir(project.key), 'local.log');
   const fd = fs.openSync(logFile, 'w');
   fs.writeSync(fd, `$ ${p.cmd} ${p.args.join(' ')}\n# ${nowISO()}\n\n`);
@@ -192,7 +194,7 @@ export async function localStart(project, { mode = 'auto' } = {}) {
   }
 
   const realPort = Number(new URL(url).port);
-  const state = { pid: child.pid, port: realPort, url, mode: p.mode, label: p.label, startedAt: nowISO(), log: logFile };
+  const state = { pid: child.pid, port: realPort, url, mode: p.mode, label: p.label, startedAt: nowISO(), log: logFile, stopToken };
   setState(project.key, { local: state });
   updateProject(project.key, { lastPort: realPort });
   ev.step('local', { label: 'Local Preview', status: 'pass', summary: url });
@@ -204,16 +206,22 @@ export async function localStop(project) {
   const st = getState(project.key).local;
   // an adopted server is asked to stop through its own endpoint (we may not know its pid)
   if (st?.adopted && st.url) {
-    const r = await probe(`${st.url}/__bid__/stop`, { method: 'DELETE', headers: { 'x-bid-key': project.key }, timeout: 1500 });
-    for (let i = 0; i < 20 && (await httpAlive(st.url, 300)); i++) await sleep(150);
-    const alive = await httpAlive(st.url, 300);
-    if (alive && st.pid && pidAlive(st.pid)) {
-      try {
-        process.kill(st.pid, 'SIGTERM');
-      } catch {}
+    // we never learned its stop token: stop the process listening on the port, but only after the server
+    // proved it is ours (X-BID-Project) — a reused port must not take an unrelated process down
+    const who = await probe(st.url, { timeout: 800 });
+    let stopped = false;
+    if (who?.headers?.['x-bid-project'] === project.key) {
+      const pid = pidOnPort(st.port) || st.pid;
+      if (pid && pidAlive(pid)) {
+        try {
+          process.kill(pid, 'SIGTERM');
+          stopped = true;
+        } catch {}
+      }
+      for (let i = 0; i < 20 && (await httpAlive(st.url, 300)); i++) await sleep(150);
     }
     setState(project.key, { local: undefined });
-    return { running: false, stopped: !!r || !alive };
+    return { running: false, stopped: stopped || !(await httpAlive(st.url, 300)) };
   }
   if (!st?.pid || !pidAlive(st.pid)) {
     setState(project.key, { local: undefined });

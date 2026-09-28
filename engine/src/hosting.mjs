@@ -1,7 +1,7 @@
 // Hosting adapters — Netlify, Vercel, Cloudflare Pages, GitHub Pages behind one interface.
 import fs from 'node:fs';
 import path from 'node:path';
-import { HOME, EngineError, ev, sh, which, runStream, logDir, readJSON, exists, nowISO } from './util.mjs';
+import { HOME, CACHE_DIR, EngineError, ev, sh, which, runStream, logDir, readJSON, exists, nowISO } from './util.mjs';
 import { detect } from './detect.mjs';
 import { getState, setState, updateProject, addHistory, findProject } from './store.mjs';
 import { netlifyAuth, netlifyDeploy, deployGuard } from './netlify.mjs';
@@ -230,7 +230,7 @@ async function cloudflareDeploy(project, { prod }) {
   const t0 = Date.now();
   const r = await runStream(
     'wrangler',
-    ['pages', 'deploy', d.publishDir, `--project-name=${name}`, `--branch=${prod ? 'main' : 'preview'}`, '--commit-dirty=true'],
+    ['pages', 'deploy', stagePublicCopy(project.path, d.publishDir), `--project-name=${name}`, `--branch=${prod ? 'main' : 'preview'}`, '--commit-dirty=true'],
     { cwd: project.path, step: 'deploy', logFile, captureStdout: true, timeout: 20 * 60 * 1000 }
   );
   const duration = (Date.now() - t0) / 1000;
@@ -238,6 +238,30 @@ async function cloudflareDeploy(project, { prod }) {
   const url = (all.match(/https:\/\/[^\s]+\.pages\.dev/g) || []).pop();
   if (r.code !== 0 || !url) return failDeploy(project, 'cloudflare', { prod, r, logFile, duration });
   return finishDeploy(project, 'cloudflare', { prod, url: prod ? `https://${name}.pages.dev` : url, duration, logFile });
+}
+
+/**
+ * What may be published from a project folder. A build folder (dist/, out/ …) is published as it is; when the
+ * site lives in the project root, a copy without dotfiles, node_modules and tooling goes out instead —
+ * otherwise `.env`, `.git` or keys next to index.html would end up on a public host.
+ */
+export function stagePublicCopy(projectDir, publishDir) {
+  if (publishDir && publishDir !== '.' && publishDir !== './') return publishDir;
+  const out = path.join(CACHE_DIR, 'publish', path.basename(projectDir).replace(/[^\w.-]/g, '_'));
+  fs.rmSync(out, { recursive: true, force: true });
+  const skip = new Set(['node_modules', 'package.json', 'package-lock.json', 'pnpm-lock.yaml', 'yarn.lock', 'bun.lockb', 'bid.config.json']);
+  const copy = (from, to) => {
+    fs.mkdirSync(to, { recursive: true });
+    for (const e of fs.readdirSync(from, { withFileTypes: true })) {
+      if ((e.name.startsWith('.') && e.name !== '.well-known') || skip.has(e.name)) continue;
+      const a = path.join(from, e.name);
+      const b = path.join(to, e.name);
+      if (e.isDirectory()) copy(a, b);
+      else if (e.isFile()) fs.copyFileSync(a, b);
+    }
+  };
+  copy(projectDir, out);
+  return out;
 }
 
 async function ghPagesDeploy(project, { prod }) {
@@ -250,9 +274,10 @@ async function ghPagesDeploy(project, { prod }) {
   const [, owner, repo] = m;
   const logFile = path.join(logDir(project.key), 'ghpages.log');
   ev.step('deploy', { label: t('deploy.label.production'), category: 'Hosting', status: 'running', summary: `gh-pages ← ${d.publishDir}/` });
-  if (!exists(path.join(project.path, d.publishDir, '.nojekyll'))) fs.writeFileSync(path.join(project.path, d.publishDir, '.nojekyll'), '');
   const t0 = Date.now();
-  const r = await runStream('npx', ['--yes', 'gh-pages', '-d', d.publishDir, '-t', '-m', `Before I Deploy — ${new Date().toISOString()}`], {
+  // no -t (dotfiles); --nojekyll adds the marker on the gh-pages branch instead of in the user's folder
+  const publish = stagePublicCopy(project.path, d.publishDir);
+  const r = await runStream('npx', ['--yes', 'gh-pages', '-d', publish, '--nojekyll', '-m', `Before I Deploy — ${new Date().toISOString()}`], {
     cwd: project.path,
     step: 'deploy',
     logFile,
