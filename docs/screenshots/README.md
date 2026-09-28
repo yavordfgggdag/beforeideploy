@@ -9,4 +9,4 @@
 | ![](03-mission-control.png) Mission Control | ![](04-project.png) Проект |
 | ![](05-check.png) Проверка | ![](06-command-palette.png) Палитра ⌘K |
 | ![](07-costs.png) Разходи | ![](08-settings.png) Настройки |
-| ![](09-setup.png) Настройка | |
+| ![](09-setup.png) Настройка | ![](10-loading.png) Зареждане |
