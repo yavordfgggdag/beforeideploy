@@ -735,6 +735,21 @@ process.on('exit', () => { try { process.kill(-sb.pid); } catch {} });
 
 // ---- Built-in AI Fix (fake Anthropic + fake ai-fix function live in the mock Supabase server)
 // node_modules/.keep: the deps step must pass so that only the build decides blocked/ready
+t('check: lint и typecheck вървят паралелно, редът на стъпките се пази', () => {
+  const slow = 'node -e "setTimeout(() => {}, 1500)"';
+  const par = mk('parallel-app', { 'package.json': JSON.stringify({ name: 'parallel-app', scripts: { lint: slow, typecheck: slow } }), 'node_modules/.keep': '', 'index.html': '<h1>hi</h1>' });
+  bid('project', 'add', '--path', par);
+  const r = bid('check', '--project', par, '--force');
+  assert(r.result.ok, r.result?.error);
+  const ids = r.data.steps.map((x) => x.id);
+  assert(ids.indexOf('lint') + 1 === ids.indexOf('typecheck'), 'order: ' + ids.join(','));
+  const lint = r.data.steps.find((x) => x.id === 'lint');
+  const tc = r.data.steps.find((x) => x.id === 'typecheck');
+  assert(lint.status === 'pass' && tc.status === 'pass', `${lint.status}/${tc.status}`);
+  assert(lint.duration >= 1.4 && tc.duration >= 1.4, 'each step waited');
+  assert(r.data.duration < lint.duration + tc.duration - 0.8, `ran in parallel: total ${r.data.duration}s vs ${lint.duration}+${tc.duration}`);
+});
+
 const aiFixture = { 'package.json': JSON.stringify({ name: 'ai-app', scripts: { build: 'node src/app.js' } }), 'node_modules/.keep': '', 'src/app.js': 'const a = 1;\nconst b = 2;\nconst c = a + ;\nconsole.log(c);\n' };
 const aiApp = mk('ai-app', aiFixture);
 

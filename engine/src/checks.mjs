@@ -312,6 +312,8 @@ const RUNNERS = {
 
 /** Steps whose passing result may be reused while the source tree and toolchain are unchanged. */
 const CACHEABLE = new Set(['lint', 'typecheck', 'build']);
+/** Consecutive steps that may run concurrently (neither writes to the project). */
+const PARALLEL_GROUPS = [['lint', 'typecheck']];
 const LOCKFILES = ['package-lock.json', 'pnpm-lock.yaml', 'yarn.lock', 'bun.lock', 'bun.lockb'];
 
 function statSig(dir, rel) {
@@ -362,19 +364,18 @@ export async function runChecks(project, { stopOnFail = false, skip = [], force 
 
   for (const s of STEPS) ev.step(s.id, { label: s.label, category: s.category, status: 'pending' });
 
-  for (const s of STEPS) {
+  // One step: skipped, reused from the cache, or run. Returns the full result (events are emitted here).
+  const execute = async (s) => {
     if (halted || skip.includes(s.id)) {
       const r = { id: s.id, label: s.label, category: s.category, status: 'skipped', summary: halted ? t('check.skippedAfterFail') : t('check.skipped') };
-      results.push(r);
       ev.step(s.id, r);
-      continue;
+      return r;
     }
     const hit = !force && CACHEABLE.has(s.id) ? prevCache[s.id] : null;
     if (hit && hit.fingerprint === fp && hit.result?.status === 'pass' && (s.id !== 'build' || ctx.d.ssr || ctx.d.publishReady)) {
       const full = { id: s.id, label: s.label, category: s.category, details: [], fixes: [], ...hit.result, duration: 0, cached: true, summary: t('check.cachedSummary', { summary: hit.result.summary || '' }) };
-      results.push(full);
       ev.step(s.id, full);
-      continue;
+      return full;
     }
     ev.step(s.id, { label: s.label, category: s.category, status: 'running' });
     const t0 = Date.now();
@@ -384,22 +385,26 @@ export async function runChecks(project, { stopOnFail = false, skip = [], force 
     } catch (e) {
       r = { status: 'fail', summary: t('check.internalError', { error: e.message }) };
     }
-    const full = {
-      id: s.id,
-      label: s.label,
-      category: s.category,
-      details: [],
-      fixes: [],
-      duration: (Date.now() - t0) / 1000,
-      ...r,
-    };
-    results.push(full);
+    const full = { id: s.id, label: s.label, category: s.category, details: [], fixes: [], duration: (Date.now() - t0) / 1000, ...r };
     ev.step(s.id, full);
     if (CACHEABLE.has(s.id)) {
       if (full.status === 'pass') stepCache[s.id] = { fingerprint: fp, result: { status: full.status, summary: full.summary, details: full.details, log: full.log, duration: full.duration } };
       else delete stepCache[s.id];
     }
-    if (full.status === 'fail' && stopOnFail) halted = true;
+    return full;
+  };
+
+  // Steps in one group only read the project, so they run at the same time (lint + typecheck, V10.1);
+  // results keep the STEPS order, and stop-on-fail applies after the whole group.
+  for (let i = 0; i < STEPS.length; ) {
+    const group = PARALLEL_GROUPS.find((g) => g[0] === STEPS[i].id && STEPS.slice(i, i + g.length).every((st, k) => st.id === g[k]));
+    const batch = group ? STEPS.slice(i, i + group.length) : [STEPS[i]];
+    const out = await Promise.all(batch.map(execute));
+    for (const full of out) {
+      results.push(full);
+      if (full.status === 'fail' && stopOnFail) halted = true;
+    }
+    i += batch.length;
   }
 
   const { status, counts } = overallStatus(results);
