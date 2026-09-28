@@ -15,7 +15,8 @@ final class AdminStore: ObservableObject {
 
     /// Keys the panel offers even before they exist in the table.
     static let knownSettings = ["billing.catalog", "plans", "ai.models", "ai.multipliers", "ai.dailyCapPercent",
-                                "ai.rate", "ai.promptMaxChars", "release.url", "help.url"]
+                                "ai.rate", "ai.promptMaxChars", "ai.prices", "release.url", "help.url",
+                                "legal.privacy", "legal.terms", "legal.refund", "support.email"]
 
     let engine: EngineClient
     weak var feedback: Feedback?

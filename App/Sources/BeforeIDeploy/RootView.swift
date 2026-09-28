@@ -24,6 +24,12 @@ struct RootView: View {
         }
         .background(Theme.bg)
         .ignoresSafeArea()
+        .overlay {
+            // below minVersion the app must not be used until it is updated (audit R4)
+            if let u = model.update, u.mandatory == true, u.available {
+                MandatoryUpdateView(info: u)
+            }
+        }
         .animation(.easeInOut(duration: 0.25), value: model.mustAuthenticate)
         .animation(.easeInOut(duration: 0.25), value: tourSeen)
     }
@@ -43,6 +49,8 @@ struct RootView: View {
                 AmbientBackground(tint: backdropTint)
                 if model.engineMissing {
                     EngineMissingView()
+                } else if model.nodeMissing {
+                    NodeMissingView()
                 } else if model.screen == .overview {
                     MissionControlView()
                 } else if model.screen == .domains {
@@ -237,6 +245,80 @@ struct EngineMissingView: View {
                 .textSelection(.enabled)
             Button(L("common.retry")) { Task { await model.start() } }
                 .bidButton(.secondary)
+        }
+        .padding(40)
+    }
+}
+
+/// Full-window notice when this version is below the feed's minVersion: only Download is offered.
+struct MandatoryUpdateView: View {
+    @EnvironmentObject var model: AppModel
+    let info: UpdateInfo
+    var body: some View {
+        ZStack {
+            Theme.bg.opacity(0.94).ignoresSafeArea()
+            VStack(spacing: 14) {
+                Image(systemName: "arrow.down.circle.fill")
+                    .font(.system(size: 44))
+                    .foregroundColor(Theme.accent)
+                Text(L("update.required.title"))
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundColor(Theme.text)
+                Text(L("update.required.body", info.latest ?? ""))
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(Theme.secondary)
+                    .frame(maxWidth: 440)
+                if let n = info.notes?[Localization.current] ?? info.notes?["en"] {
+                    Text(n).font(.system(size: 12)).foregroundColor(Theme.tertiary).frame(maxWidth: 440)
+                }
+                Button(L("update.download")) { model.downloadUpdate() }
+                    .bidButton(.primary)
+                    .disabled(model.busy.contains("update"))
+            }
+            .padding(40)
+        }
+    }
+}
+
+/// Node.js is missing or too old: where to get it, the Homebrew command, and a re-check (audit B4).
+struct NodeMissingView: View {
+    @EnvironmentObject var model: AppModel
+    /// A shell command, the same in every language.
+    private let brewCommand = "brew install node"
+    var body: some View {
+        VStack(spacing: 14) {
+            Image(systemName: "cube.transparent")
+                .font(.system(size: 40))
+                .foregroundColor(Theme.accent)
+            Text(L("node.missing.title"))
+                .font(.system(size: 22, weight: .bold))
+                .foregroundColor(Theme.text)
+            Text(L("node.missing.body"))
+                .multilineTextAlignment(.center)
+                .foregroundColor(Theme.secondary)
+                .frame(maxWidth: 460)
+            HStack(spacing: 8) {
+                Text(brewCommand)
+                    .font(.system(size: 12.5, design: .monospaced))
+                    .foregroundColor(Theme.text)
+                    .textSelection(.enabled)
+                Button { model.copy(brewCommand) } label: { Image(systemName: "doc.on.doc") }
+                    .buttonStyle(.plain)
+                    .foregroundColor(Theme.secondary)
+                    .help(L("common.copy"))
+                    .accessibilityLabel(L("common.copy"))
+            }
+            .padding(.horizontal, 12).padding(.vertical, 8)
+            .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.panel))
+            HStack(spacing: 10) {
+                Button(L("node.missing.download")) {
+                    if let u = URL(string: "https://nodejs.org/en/download") { NSWorkspace.shared.open(u) }
+                }
+                .bidButton(.primary)
+                Button(L("node.missing.recheck")) { Task { await model.start() } }
+                    .bidButton(.secondary)
+            }
+            .padding(.top, 4)
         }
         .padding(40)
     }

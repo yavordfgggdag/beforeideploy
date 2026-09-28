@@ -15,10 +15,14 @@ import { msg } from './i18n.mjs';
 const CACHE = () => path.join(APP_DIR, 'update-cache.json');
 const CACHE_TTL_MS = 6 * 3600 * 1000;
 
+/** Feed URL: BID_UPDATE_URL → the cloud setting (Admin panel) → release.json written into the engine by
+ * the release build, so people who never sign in still get updates (audit R3). */
 export function updateUrl() {
   if (process.env.BID_UPDATE_URL) return process.env.BID_UPDATE_URL;
   const profile = readJSON(path.join(APP_DIR, 'profile.json'), null);
-  return profile?.settings?.release?.url || null;
+  if (profile?.settings?.release?.url) return profile.settings.release.url;
+  const bundled = readJSON(new URL('../release.json', import.meta.url), null);
+  return bundled?.url || null;
 }
 
 /** Semver-ish compare: 1.2.3 < 1.2.4; a prerelease (10.0.0-dev) is lower than its release (10.0.0). */

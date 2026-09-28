@@ -65,6 +65,9 @@
 "ai.applying" = "Прилагам…";
 "ai.changes" = "Предложени промени";
 "ai.commitAfter" = "Commit след прилагане";
+"ai.consent.accept" = "Изпрати и продължи";
+"ai.consent.body" = "AI поправката изпраща лога на неуспешната стъпка (без ключове и пароли) и файловете от проекта, които той споменава, към AI модела — Anthropic през облака на Before I Deploy или доставчика на твоя собствен ключ. В проекта не се променя нищо, докато не приложиш предложените промени. Питам само веднъж.";
+"ai.consent.title" = "Да изпратя ли грешката към AI?";
 "ai.creditsLeft" = "Остават %@ токена";
 "ai.deepButton" = "Дълбока поправка";
 "ai.deepHelp" = "Най-силният модел (×5 токени) за трудни грешки";
@@ -135,7 +138,7 @@
 "auth.or" = "или";
 "auth.password" = "Парола";
 "auth.passwordMin" = "Парола (поне 8 символа)";
-"auth.privacyNote" = "Ключовете за Netlify, GitHub, Vercel и т.н. остават само на твоя Mac (Keychain). В акаунта се пазят само имената и статусите на проектите.";
+"auth.privacyNote" = "Ключовете за Netlify, GitHub, Vercel и т.н. остават на твоя Mac (Keychain). Акаунтът пази имената, framework-а, хостинга, live адресите, домейните и резултатите от проверките на проектите ти, плана и употребата на AI — никога кода или ключовете ти. Можеш да го експортираш или изтриеш по всяко време от Настройки.";
 "auth.recoverSubtitle" = "Ще ти изпратим линк за нова парола.";
 "auth.sendLink" = "Изпрати линк";
 "auth.signIn" = "Вход";
@@ -223,6 +226,7 @@
 "common.connect" = "Свържи";
 "common.connectedLower" = "свързан";
 "common.copied" = "Копирано";
+"common.copy" = "Копирай";
 "common.copyUrl" = "Копирай URL";
 "common.costs" = "Разходи & кредити";
 "common.creditsUnit" = "кредита";
@@ -350,6 +354,7 @@
 "domains.yours" = "Твоите домейни";
 
 "engine.emptyResult" = "Празен резултат";
+"engine.installFailed" = "Engine-ът не можа да се инсталира: %@";
 "engine.missingAt" = "Engine-ът не е инсталиран: %@. Пусни install.sh.";
 "engine.noResponse" = "Engine-ът не отговори (код %@)";
 "engine.noResult" = "Няма резултат";
@@ -413,6 +418,11 @@
 "language.subtitle" = "Можеш да го смениш по всяко време от Настройки.";
 "language.title" = "Избери език";
 
+"legal.contact" = "Пиши на поддръжката";
+"legal.privacy" = "Поверителност";
+"legal.refund" = "Възстановяване на суми";
+"legal.terms" = "Условия";
+
 "library.addButton" = "Добави";
 "library.added" = "Добавен: %@";
 "library.pickFolder" = "Избери папката на проекта";
@@ -473,6 +483,11 @@
 "netlifySetup.siteName" = "Име на сайта";
 "netlifySetup.subtitle" = "Без `netlify init` — GitHub CI няма да се включи, deploy-ите остават ръчни";
 "netlifySetup.team" = "Екип";
+
+"node.missing.body" = "Before I Deploy проверява и build-ва проектите ти с Node.js (версия 18 или по-нова). Инсталирай го от nodejs.org или с Homebrew и натисни „Провери отново“.";
+"node.missing.download" = "Изтегли Node.js";
+"node.missing.recheck" = "Провери отново";
+"node.missing.title" = "Нужен е Node.js";
 
 "open.appNotFound" = "Не намерих %@";
 "open.theApp" = "приложението";
@@ -548,7 +563,7 @@
 
 "root.emptyHint" = "Добави първия си проект — ще разпозная framework, package manager,\nGitHub и Netlify автоматично и ще ги запомня.";
 "root.engineMissing" = "Engine-ът не е инсталиран";
-"root.engineMissingHint" = "Пусни install.sh от папката BeforeIDeploy-V6 и отвори приложението отново.\nОчаквам го тук:";
+"root.engineMissingHint" = "Engine-ът идва с приложението и се инсталира сам. Изтегли приложението отново от сайта или пиши на поддръжката.\nОчаквам го тук:";
 "root.loadingProject" = "Зареждам проекта…";
 
 "run.busy" = "Изчакай текущата операция да приключи";
@@ -669,7 +684,7 @@
 "tour.2.title" = "Публикувай и свържи домейн";
 "tour.3.b1" = "Вграден AI Fix с diff-ове или ChatGPT, Claude и Codex с готов prompt";
 "tour.3.b2" = "Ключовете ти за хостинг остават в Keychain на Mac-а";
-"tour.3.b3" = "Акаунтът синхронизира имена и статуси на проекти — нищо друго";
+"tour.3.b3" = "Акаунтът синхронизира имена, статуси и live адреси на проектите — никога код или ключове";
 "tour.3.text" = "Провалена стъпка получава обяснение и предложени промени по файловете; нищо не се записва, докато не одобриш.";
 "tour.3.title" = "Оправяй с AI, запази контрола";
 "tour.back" = "Назад";
@@ -685,6 +700,8 @@
 "update.download" = "Изтегли";
 "update.downloaded" = "Изтеглих версия %@ — отварям DMG-то";
 "update.notConfigured" = "Проверката за нови версии още не е настроена";
+"update.required.body" = "Тази версия вече не може да се ползва. Изтегли версия %@ — проектите и настройките ти остават непроменени.";
+"update.required.title" = "Нужно е обновление";
 "update.upToDate" = "Имаш най-новата версия";
 
 "welcome.feature.ai" = "AI оправя грешките";

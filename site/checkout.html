@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Before I Deploy — Checkout</title>
+<meta name="robots" content="noindex">
+<!--
+  Paddle "default payment link" page (audit B7). Paddle opens https://<your-site>/checkout?_ptxn=txn_…
+  after the app creates a transaction; Paddle.js on this page shows the checkout for that transaction.
+
+  Setup (owner):
+  1. Host this file on the domain approved in Paddle (e.g. https://beforeideploy.app/checkout).
+  2. Paddle → Checkout → Checkout settings → Default payment link = that URL.
+  3. Replace the two values below: the CLIENT-SIDE token from Paddle → Developer tools → Authentication
+     (it starts with live_ or test_ and is meant to be public) and the environment.
+  Never put the API key (pdl_…) or the webhook secret here.
+-->
+<script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+<style>
+  :root { color-scheme: light dark; --bg: #f6f6f4; --text: #1b1b1f; --muted: #6b6b73; --accent: #e8913a; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #111114; --text: #f1f1f3; --muted: #9a9aa3; } }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: var(--bg); color: var(--text);
+         font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; padding: 16px; box-sizing: border-box; }
+  main { max-width: 440px; text-align: center; }
+  h1 { font-size: 22px; margin: 0 0 8px; }
+  p { color: var(--muted); margin: 0 0 12px; }
+  .mark { width: 56px; height: 56px; border-radius: 16px; margin: 0 auto 18px; background: linear-gradient(135deg, #f0a24d, #d9702a); }
+  [hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <div class="mark" aria-hidden="true"></div>
+  <section id="loading"><h1>Opening secure checkout…</h1><p>Payment is handled by Paddle, our reseller.</p></section>
+  <section id="done" hidden><h1>Thank you!</h1><p>Go back to Before I Deploy — your plan appears there in a few seconds.</p></section>
+  <section id="missing" hidden><h1>Nothing to pay here</h1><p>Open Plans &amp; credits in the Before I Deploy app and choose a plan.</p></section>
+</main>
+<script>
+  const PADDLE_CLIENT_TOKEN = "REPLACE_WITH_CLIENT_SIDE_TOKEN"; // live_… or test_…
+  const PADDLE_ENVIRONMENT = "sandbox"; // "sandbox" while testing, "production" when live
+
+  const show = (id) => { for (const s of document.querySelectorAll("section")) s.hidden = s.id !== id; };
+  if (!new URLSearchParams(location.search).get("_ptxn")) show("missing");
+  if (PADDLE_ENVIRONMENT === "sandbox") Paddle.Environment.set("sandbox");
+  Paddle.Initialize({
+    token: PADDLE_CLIENT_TOKEN,
+    eventCallback(e) {
+      if (e.name === "checkout.completed") show("done");
+    },
+  });
+  // with ?_ptxn= in the URL Paddle.js opens the checkout for that transaction by itself
+</script>
+</body>
+</html>

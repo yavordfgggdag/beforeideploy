@@ -352,8 +352,10 @@ async function main() {
 
     case 'update': {
       const channel = flags.channel && flags.channel !== true ? flags.channel : 'stable';
-      if (!sub || sub === 'check') return ok(await updateCheck({ current: VERSION, force: !!flags.force, channel }));
-      if (sub === 'download') return ok(await updateDownload({ current: VERSION, channel }));
+      // the app passes its own version: that is what an update replaces (audit B5)
+      const current = flags.current && flags.current !== true ? String(flags.current) : VERSION;
+      if (!sub || sub === 'check') return ok(await updateCheck({ current, force: !!flags.force, channel }));
+      if (sub === 'download') return ok(await updateDownload({ current, channel }));
       throw new EngineError(msg('cli.unknownCommand', { command: `update ${sub}` }), 'usage', 2);
     }
 

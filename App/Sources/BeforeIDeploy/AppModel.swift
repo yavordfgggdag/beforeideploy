@@ -43,6 +43,7 @@ final class AppModel: ObservableObject, Feedback {
     @Published var pendingFix: PendingFix?
     @Published var toast: Toast?
     @Published var engineMissing = false
+    @Published var nodeMissing = false
     @Published var lastError: String?
     @Published var screen: Screen = .overview
     @Published var overview: Overview?
@@ -214,8 +215,17 @@ final class AppModel: ObservableObject, Feedback {
     func start() async {
         // RootView is rebuilt on a language change and its .task calls start() again
         guard !started else { return }
+        // the engine inside the app is installed / updated first (audit B1/B2)
+        let target = URL(fileURLWithPath: engine.enginePath).deletingLastPathComponent()
+        if case .failed(let why) = await EngineInstaller.installIfNeeded(into: target) {
+            flash(L("engine.installFailed", why), error: true)
+        }
         engineMissing = !engine.isInstalled
         guard !engineMissing else { return }
+        // Node.js is the one thing the app cannot bring along: say so with a way out (audit B4)
+        let probe = try? await engine.run(["version"])
+        nodeMissing = probe?.errorCode == "no_node"
+        guard !nodeMissing else { return }
         await loadAccount()
         await loadProjects()
         started = true
@@ -599,9 +609,16 @@ final class AppModel: ObservableObject, Feedback {
 
     // MARK: - Updates & support (WP6.3, WP6.6)
 
+    /// The app's own version decides whether an update is new (audit B5); a development build from
+    /// `swift run` has no Info.plist and falls back to the engine's version.
+    static var currentVersionArgs: [String] {
+        guard let v = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String, !v.isEmpty else { return [] }
+        return ["--current", v]
+    }
+
     /// Reads the release feed (dormant until settings.release.url is set); `announce` shows the outcome as a toast.
     func checkForUpdates(force: Bool = false, announce: Bool = false) async {
-        var args = ["update", "check", "--channel", updateChannel]
+        var args = ["update", "check", "--channel", updateChannel] + Self.currentVersionArgs
         if force { args.append("--force") }
         do {
             let u = try await engine.call(args, as: UpdateInfo.self)
@@ -619,7 +636,7 @@ final class AppModel: ObservableObject, Feedback {
         Task {
             defer { busy.remove("update") }
             do {
-                let r = try await engine.call(["update", "download", "--channel", updateChannel], as: UpdateDownload.self)
+                let r = try await engine.call(["update", "download", "--channel", updateChannel] + Self.currentVersionArgs, as: UpdateDownload.self)
                 flash(L("update.downloaded", r.version))
                 openFile(r.path)
             } catch { show(error) }

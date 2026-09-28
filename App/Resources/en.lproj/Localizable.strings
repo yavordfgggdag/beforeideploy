@@ -65,6 +65,9 @@
 "ai.applying" = "Applying…";
 "ai.changes" = "Proposed changes";
 "ai.commitAfter" = "Commit after applying";
+"ai.consent.accept" = "Send and continue";
+"ai.consent.body" = "AI Fix sends the failed step's log (with keys and passwords removed) and the project files it names to the AI model — Anthropic through the Before I Deploy cloud, or the provider of your own key. Nothing is changed in your project until you apply the proposed changes. This is asked once.";
+"ai.consent.title" = "Send this error to the AI?";
 "ai.creditsLeft" = "%@ tokens left";
 "ai.deepButton" = "Deep fix";
 "ai.deepHelp" = "The strongest model (×5 tokens) for hard errors";
@@ -135,7 +138,7 @@
 "auth.or" = "or";
 "auth.password" = "Password";
 "auth.passwordMin" = "Password (at least 8 characters)";
-"auth.privacyNote" = "Keys for Netlify, GitHub, Vercel etc. stay on your Mac only (Keychain). The account stores only project names and statuses.";
+"auth.privacyNote" = "Keys for Netlify, GitHub, Vercel etc. stay on your Mac (Keychain). The account stores your projects' names, frameworks, hosting, live URLs, domains and check results, plus your plan and AI usage — never your code or keys. Export or delete it any time in Settings.";
 "auth.recoverSubtitle" = "We will send you a link for a new password.";
 "auth.sendLink" = "Send link";
 "auth.signIn" = "Sign in";
@@ -223,6 +226,7 @@
 "common.connect" = "Connect";
 "common.connectedLower" = "connected";
 "common.copied" = "Copied";
+"common.copy" = "Copy";
 "common.copyUrl" = "Copy URL";
 "common.costs" = "Costs & credits";
 "common.creditsUnit" = "credits";
@@ -350,6 +354,7 @@
 "domains.yours" = "Your domains";
 
 "engine.emptyResult" = "Empty result";
+"engine.installFailed" = "Could not install the engine: %@";
 "engine.missingAt" = "The engine is not installed: %@. Run install.sh.";
 "engine.noResponse" = "The engine did not respond (exit code %@)";
 "engine.noResult" = "No result";
@@ -413,6 +418,11 @@
 "language.subtitle" = "You can change it any time in Settings.";
 "language.title" = "Choose your language";
 
+"legal.contact" = "Contact support";
+"legal.privacy" = "Privacy";
+"legal.refund" = "Refund policy";
+"legal.terms" = "Terms";
+
 "library.addButton" = "Add";
 "library.added" = "Added: %@";
 "library.pickFolder" = "Choose the project folder";
@@ -473,6 +483,11 @@
 "netlifySetup.siteName" = "Site name";
 "netlifySetup.subtitle" = "No `netlify init` — GitHub CI will not be enabled, deploys stay manual";
 "netlifySetup.team" = "Team";
+
+"node.missing.body" = "Before I Deploy checks and builds your projects with Node.js (version 18 or newer). Install it from nodejs.org or with Homebrew, then press Check again.";
+"node.missing.download" = "Download Node.js";
+"node.missing.recheck" = "Check again";
+"node.missing.title" = "Node.js is needed";
 
 "open.appNotFound" = "Could not find %@";
 "open.theApp" = "the app";
@@ -548,7 +563,7 @@
 
 "root.emptyHint" = "Add your first project — I will detect the framework, package manager,\nGitHub and Netlify automatically and remember them.";
 "root.engineMissing" = "The engine is not installed";
-"root.engineMissingHint" = "Run install.sh from the BeforeIDeploy-V6 folder and open the app again.\nI expect it here:";
+"root.engineMissingHint" = "The engine comes with the app and installs itself. Download the app again from the website, or ask support.\nI expect it here:";
 "root.loadingProject" = "Loading the project…";
 
 "run.busy" = "Wait for the current operation to finish";
@@ -669,7 +684,7 @@
 "tour.2.title" = "Deploy and connect a domain";
 "tour.3.b1" = "Built-in AI Fix with diffs, or ChatGPT, Claude and Codex with a ready prompt";
 "tour.3.b2" = "Your hosting keys stay in the Mac Keychain";
-"tour.3.b3" = "An account syncs project names and statuses — nothing else";
+"tour.3.b3" = "An account syncs project names, statuses and live URLs — never code or keys";
 "tour.3.text" = "A failed step gets an explanation and proposed file changes; nothing is written until you approve.";
 "tour.3.title" = "Fix with AI, keep control";
 "tour.back" = "Back";
@@ -685,6 +700,8 @@
 "update.download" = "Download";
 "update.downloaded" = "Downloaded version %@ — opening the DMG";
 "update.notConfigured" = "Update checks are not configured yet";
+"update.required.body" = "This version can no longer be used. Download version %@ — your projects and settings stay as they are.";
+"update.required.title" = "Update required";
 "update.upToDate" = "You have the latest version";
 
 "welcome.feature.ai" = "AI fixes the errors";

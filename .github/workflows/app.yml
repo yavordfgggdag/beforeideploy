@@ -6,6 +6,7 @@ on:
   push:
     paths:
       - 'App/**'
+      - 'engine/bid'
       - 'scripts/build.sh'
       - '.github/workflows/app.yml'
   pull_request:
@@ -36,6 +37,15 @@ jobs:
           if [ -d Tests ]; then swift test 2>&1 | tee ../test.log; else echo "no Swift tests yet (WP6.7)"; fi
       - name: Localizations are complete
         run: node scripts/i18n-check.mjs
+      - name: The .app carries a working engine (audit B1)
+        run: |
+          set -e
+          zsh scripts/build.sh
+          APP="build/Before I Deploy.app"
+          "$APP/Contents/Resources/engine/bid" version | tee /dev/stderr | grep -q '"ok":true'
+          test -f "$APP/Contents/Resources/engine/supabase/schema.sql"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$APP/Contents/Info.plist"
+          codesign --verify --deep "$APP"
       - uses: actions/upload-artifact@v4
         if: always()
         with:

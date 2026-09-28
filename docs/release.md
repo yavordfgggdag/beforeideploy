@@ -22,6 +22,27 @@ The script is `scripts/release.sh`; this page is the one-time setup and the chec
    bid admin set_settings --json '{"settings":{"release.url":"https://<domain>/releases/latest.json","help.url":"https://<domain>/help/errors"}}'
    ```
 5. Optional **Homebrew tap**: a repo `homebrew-tap` with a `Casks/` folder.
+6. **Legal pages and support** (Paddle requires them before approving the account): publish Privacy,
+   Terms and Refund policy pages on your domain, then set them once — the app shows them in Settings,
+   on the sign-in screen and under the plans:
+   ```bash
+   bid admin set_settings --json '{"settings":{"legal.privacy":"https://<domain>/privacy","legal.terms":"https://<domain>/terms","legal.refund":"https://<domain>/refund","support.email":"support@<domain>"}}'
+   ```
+   For people who never sign in, add the same values under `"links"` in `engine/cloud.json`
+   (keys `legal.privacy`, `legal.terms`, `legal.refund`, `support.email`, `help.url`).
+7. **Paddle checkout page**: host `site/checkout.html` at `https://<domain>/checkout`, put the
+   client-side token (`live_…`, public by design) into it, and set it as the default payment link in
+   Paddle → Checkout settings.
+
+## What the build contains
+
+- One universal binary (Apple silicon + Intel): `release.sh` builds each architecture and joins them.
+- The engine in `Contents/Resources/engine` — on first launch and after every update the app installs it
+  into `~/Library/Application Support/BeforeIDeploy/engine`. Customers only need Node.js 18+; without it
+  the app shows a "Node.js is needed" screen with the download link and the Homebrew command.
+- `release.json` in that engine points at `BID_RELEASE_BASE_URL/latest.json`, so the update banner works
+  without an account. The version compared is the app's own (`CFBundleShortVersionString`).
+- `CFBundleVersion` is the commit count, so every build (betas too) is newer than the last.
 
 Keep in the shell profile of the release Mac (never in the repo):
 

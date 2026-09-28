@@ -167,6 +167,14 @@ async function loadProfile(session) {
   }
 }
 
+/** Privacy / Terms / Refund pages, support e-mail and help pages: the cloud settings (Admin panel) win,
+ * `links` in the bundled cloud.json covers people who never sign in (audit B6/R6). Unset → null. */
+export function publicLinks(settings = {}) {
+  const bundled = readJSON(BUNDLED_CONFIG(), null)?.links || {};
+  const pick = (k) => (typeof settings?.[k] === 'string' && settings[k].trim()) || (typeof bundled[k] === 'string' && bundled[k].trim()) || null;
+  return { privacy: pick('legal.privacy'), terms: pick('legal.terms'), refund: pick('legal.refund'), support: pick('support.email'), help: pick('help.url') };
+}
+
 function withFeatures(user, profile) {
   const p = profile || DEFAULT_PROFILE;
   const hasOwnKey = hasOwnAiKey();
@@ -179,6 +187,7 @@ function withFeatures(user, profile) {
     credits: p.credits,
     settings: p.settings || {},
     helpUrl: typeof p.settings?.['help.url'] === 'string' ? p.settings['help.url'] : null,
+    links: publicLinks(p.settings),
     profileStale: !!p.stale,
     hasOwnKey,
     features: features({ role: p.role, plan: p.plan, aiDisabled: p.aiDisabled, hasOwnKey }),
@@ -186,7 +195,7 @@ function withFeatures(user, profile) {
 }
 
 async function publicUser(session) {
-  if (!session?.user) return { configured: !!cloudConfig(), loggedIn: false };
+  if (!session?.user) return { configured: !!cloudConfig(), loggedIn: false, links: publicLinks() };
   return withFeatures({ configured: true, loggedIn: true, ...session.user }, await loadProfile(session));
 }
 

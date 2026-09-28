@@ -573,6 +573,16 @@ struct AccountState: Codable {
     var providers: [String]?
     /// Base URL of the error help pages (cloud `settings.help.url`); toasts link `<helpUrl>/<code>`.
     var helpUrl: String?
+    /// Privacy / Terms / Refund pages and the support address (engine `publicLinks`).
+    var links: Links?
+
+    struct Links: Codable, Hashable {
+        var privacy: String?
+        var terms: String?
+        var refund: String?
+        var support: String?
+        var help: String?
+    }
 
     struct Credits: Codable, Hashable {
         var balance: Int

@@ -18,6 +18,11 @@ jobs:
       # engine/bid is a zsh launcher (macOS always has zsh; Ubuntu runners do not)
       - name: Install zsh
         run: sudo apt-get update -q && sudo apt-get install -y -q zsh
+      - name: Syntax of every engine module and shell script (audit R9)
+        run: |
+          set -e
+          find engine/src scripts -name '*.mjs' -o -name '*.cjs' | xargs -n1 node --check
+          for f in engine/bid scripts/*.sh scripts/*.zsh *.command; do zsh -n "$f"; done
       - name: Engine tests
         run: node tests/run.mjs
       - name: i18n check

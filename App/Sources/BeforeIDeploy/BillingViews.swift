@@ -44,6 +44,7 @@ struct PlansSheet: View {
                         Text(L("billing.legal"))
                             .font(.system(size: 11)).foregroundColor(Theme.tertiary)
                             .fixedSize(horizontal: false, vertical: true)
+                        LegalLinks()
                     } else if store.loading {
                         HStack { Spinner(size: 16); Text(L("billing.loading")).foregroundColor(Theme.secondary) }
                             .frame(maxWidth: .infinity, minHeight: 240)

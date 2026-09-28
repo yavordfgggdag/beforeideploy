@@ -102,6 +102,7 @@ struct AuthView: View {
                 Text(L("auth.privacyNote"))
                     .font(.system(size: 11)).foregroundColor(Theme.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
+                LegalLinks()
             }
             .padding(48)
             .frame(width: 460)

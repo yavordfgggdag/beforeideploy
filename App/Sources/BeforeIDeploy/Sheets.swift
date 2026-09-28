@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 // MARK: - Shared sheet chrome
@@ -575,6 +576,7 @@ struct SettingsSheet: View {
                         Button(L("report.save")) { model.saveReport() }.bidButton(.secondary, compact: true).disabled(model.busy.contains("report"))
                     }
                     Text(L("report.hint")).font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                    LegalLinks()
                 }
                 if model.account?.loggedIn == true {
                     VStack(alignment: .leading, spacing: 8) {
@@ -591,6 +593,35 @@ struct SettingsSheet: View {
             Button(L("common.done")) { dismiss() }.bidButton(.primary).keyboardShortcut(.defaultAction)
         }
         .task { doctor = try? await model.engine.call(["doctor"], as: DoctorInfo.self) }
+    }
+}
+
+/// Privacy, Terms, Refund policy and "Contact support" — each only when its link is configured (audit B6/R6).
+struct LegalLinks: View {
+    @EnvironmentObject var model: AppModel
+    private struct Item: Identifiable {
+        let id: String
+        let url: URL
+    }
+    var body: some View {
+        let l = model.account?.links
+        let items: [(String, URL?)] = [
+            (L("legal.privacy"), l?.privacy.flatMap(URL.init(string:))),
+            (L("legal.terms"), l?.terms.flatMap(URL.init(string:))),
+            (L("legal.refund"), l?.refund.flatMap(URL.init(string:))),
+            (L("legal.contact"), l?.support.flatMap { $0.contains("@") ? URL(string: "mailto:\($0)") : URL(string: $0) }),
+        ]
+        let shown = items.compactMap { title, url in url.map { Item(id: title, url: $0) } }
+        if !shown.isEmpty {
+            HStack(spacing: 14) {
+                ForEach(shown) { item in
+                    Button(item.id) { NSWorkspace.shared.open(item.url) }
+                        .buttonStyle(.plain)
+                        .font(.system(size: 11.5, weight: .medium))
+                        .foregroundColor(Theme.accent)
+                }
+            }
+        }
     }
 }
 

@@ -970,6 +970,9 @@ t('update: latest.json → налична версия, beta канал, изт�
     const x = bidEnv({ BID_UPDATE_URL: `http://127.0.0.1:${sbPort}/releases/${bad}.json` }, 'update', 'download');
     assert(x.result.key === 'update.insecure', bad + ': ' + JSON.stringify(x.result));
   }
+  // the app's own version decides (audit B5): an app already on 10.1.0 is up to date
+  const same = bidEnv({ BID_UPDATE_URL: feed }, 'update', 'check', '--current', '10.1.0', '--force');
+  assert(same.data.current === '10.1.0' && same.data.available === false, JSON.stringify(same.data));
 });
 
 t('logs & report: engine.log пази командите с маскирани пароли; докладът е без secrets', () => {
@@ -1045,6 +1048,14 @@ const asyncTests = [];
 function ta(name, fn) {
   asyncTests.push([name, fn]);
 }
+
+ta('правни линкове: облачните настройки печелят, cloud.json links е резервата (B6/R6)', async () => {
+  const { publicLinks } = await import(path.join(ROOT, 'engine', 'src', 'account.mjs'));
+  const l = publicLinks({ 'legal.privacy': 'https://x.test/privacy', 'support.email': 'help@x.test', 'legal.terms': '  ' });
+  assert(l.privacy === 'https://x.test/privacy' && l.support === 'help@x.test', JSON.stringify(l));
+  assert(l.terms === null && l.refund === null, 'blank or missing → null: ' + JSON.stringify(l));
+  assert(JSON.stringify(Object.keys(publicLinks())) === '["privacy","terms","refund","support","help"]');
+});
 
 ta('local: start сервира dist, stop спира процеса', async () => {
   const s = bid('local', 'start', '--project', viteApp);

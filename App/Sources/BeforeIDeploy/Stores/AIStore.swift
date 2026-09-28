@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// Built-in AI Fix (V10 WP3): streams `bid ai fix|explain`, holds the proposed patch and applies the
@@ -40,8 +41,24 @@ final class AIStore: ObservableObject {
         recheckAfterApply = d.object(forKey: "aiRecheckAfterApply") as? Bool ?? true
     }
 
+    static let consentKey = "ai.consentGiven"
+
+    /// Once, before the first AI request: what leaves the Mac and where it goes (audit R5).
+    static func hasConsent() -> Bool {
+        if UserDefaults.standard.bool(forKey: consentKey) { return true }
+        let alert = NSAlert()
+        alert.messageText = L("ai.consent.title")
+        alert.informativeText = L("ai.consent.body")
+        alert.addButton(withTitle: L("ai.consent.accept"))
+        alert.addButton(withTitle: L("common.cancel"))
+        guard alert.runModal() == .alertFirstButtonReturn else { return false }
+        UserDefaults.standard.set(true, forKey: consentKey)
+        return true
+    }
+
     func start(step: String, mode: String = "fix", deep: Bool = false) {
         guard let p = projects.selected else { return }
+        guard Self.hasConsent() else { return }
         current?.handle.cancel()
         let state = FixState(projectKey: p.key, projectName: p.name, step: step, mode: mode, deep: deep)
         current = state

@@ -76,7 +76,8 @@ ok "i18n and error codes consistent"
 echo
 
 bold "3. Build"
-zsh scripts/build.sh >/dev/null || die "build.sh failed"
+# one binary for Apple silicon and Intel; the feed URL goes into the bundled engine (audit R1/R3)
+BID_UNIVERSAL=1 BID_RELEASE_BASE_URL="${BID_RELEASE_BASE_URL:-}" zsh scripts/build.sh >/dev/null || die "build.sh failed"
 [[ -d "$APP" ]] || die "no app at $APP"
 BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Contents/Info.plist")"
 (cd App && swift test 2>&1 | tail -1) || die "swift test failed"
@@ -112,8 +113,10 @@ if [[ $SKIP_NOTARIZE -eq 1 ]]; then
 else
   xcrun notarytool submit "$DMG" --keychain-profile "$PROFILE" --wait || die "notarization failed — xcrun notarytool log <id> --keychain-profile $PROFILE"
   xcrun stapler staple "$DMG" || die "stapler failed"
-  spctl -a -t open --context context:primary-signature -v "$DMG" 2>&1 | sed 's/^/  /' || true
-  ok "notarized and stapled"
+  # Gatekeeper must accept the stapled DMG, otherwise customers see "cannot be opened" (audit R10)
+  spctl -a -t open --context context:primary-signature -v "$DMG" 2>&1 | sed 's/^/  /'
+  [[ ${pipestatus[1]} -eq 0 ]] || die "Gatekeeper (spctl) rejected the DMG"
+  ok "notarized, stapled and accepted by Gatekeeper"
 fi
 echo
 

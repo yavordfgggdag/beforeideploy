@@ -1,5 +1,5 @@
 #!/bin/zsh
-# Before I Deploy V6 — engine launcher. Sets up a login-like PATH, then runs the Node engine.
+# Before I Deploy — engine launcher. Sets up a login-like PATH, then runs the Node engine.
 ENGINE_DIR="${0:A:h}"
 
 # PATH captured by install.sh from your real Terminal session
@@ -30,6 +30,18 @@ if ! command -v node >/dev/null 2>&1; then
     print -r -- '{"type":"result","ok":false,"code":"no_node","key":"engine.noNode","error":"Node.js не е намерен. Инсталирай го от nodejs.org или с Homebrew."}'
   else
     print -r -- '{"type":"result","ok":false,"code":"no_node","key":"engine.noNode","error":"Node.js was not found. Install it from nodejs.org or with Homebrew."}'
+  fi
+  exit 127
+fi
+
+# the engine needs Node 18+ (fetch, structuredClone); an older one would fail with a confusing syntax error
+NODE_V="$(node --version 2>/dev/null)"
+NODE_MAJOR="${${NODE_V#v}%%.*}"
+if [[ "$NODE_MAJOR" == <-> ]] && (( NODE_MAJOR < 18 )); then
+  if [[ "${BID_LANG:-en}" == bg* ]]; then
+    print -r -- "{\"type\":\"result\",\"ok\":false,\"code\":\"no_node\",\"key\":\"engine.oldNode\",\"error\":\"Node.js $NODE_V е твърде стар — нужна е версия 18 или по-нова.\"}"
+  else
+    print -r -- "{\"type\":\"result\",\"ok\":false,\"code\":\"no_node\",\"key\":\"engine.oldNode\",\"error\":\"Node.js $NODE_V is too old — version 18 or newer is needed.\"}"
   fi
   exit 127
 fi
