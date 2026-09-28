@@ -34,7 +34,9 @@ function ping(url, timeout = 6000) {
 
 function sslDays(host, timeout = 6000) {
   return new Promise((resolve) => {
-    const sock = tls.connect({ host, port: 443, servername: host, timeout }, () => {
+    // rejectUnauthorized: false only to READ an expired certificate (nothing is sent) — otherwise the
+    // handshake fails and an expired site looks like "no data" (audit E18)
+    const sock = tls.connect({ host, port: 443, servername: host, timeout, rejectUnauthorized: false }, () => {
       const cert = sock.getPeerCertificate();
       sock.end();
       if (!cert?.valid_to) return resolve(null);
@@ -102,7 +104,8 @@ export async function overview({ network = true } = {}) {
       if (!c.lastProd && c.uptime.status === 404) attention.push({ key: c.key, level: 'info', text: t('overview.noProduction', { name: c.name }) });
       else attention.push({ key: c.key, level: 'fail', text: t('overview.down', { name: c.name, reason: c.uptime.status || c.uptime.error }) });
     }
-    if (c.sslDays !== null && c.sslDays < 14) attention.push({ key: c.key, level: 'warn', text: t('overview.sslExpiring', { name: c.name, days: c.sslDays }) });
+    if (c.sslDays !== null && c.sslDays < 0) attention.push({ key: c.key, level: 'fail', text: t('overview.sslExpired', { name: c.name, days: -c.sslDays }) });
+    else if (c.sslDays !== null && c.sslDays < 14) attention.push({ key: c.key, level: 'warn', text: t('overview.sslExpiring', { name: c.name, days: c.sslDays }) });
     if (c.behind) attention.push({ key: c.key, level: 'warn', text: t('overview.behind', { name: c.name, count: c.behind }) });
     if (c.changed > 0 && c.checkedAt && Date.now() - Date.parse(c.checkedAt) > 3 * 86400000)
       attention.push({ key: c.key, level: 'warn', text: t('overview.staleChanges', { name: c.name, count: c.changed }) });

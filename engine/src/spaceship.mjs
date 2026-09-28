@@ -146,14 +146,7 @@ export async function connectDomainToNetlify(project, { domain, yes = false }) {
   };
   if (!yes) return { applied: false, plan };
 
-  ev.step('dns', { label: t('spaceship.dns.label'), status: 'running', summary: `${domain} → ${target}` });
-  if (conflicts.length) {
-    const del = conflicts.map((c) => ({ ...c.raw }));
-    await api('DELETE', `/dns/records/${encodeURIComponent(domain)}`, del);
-  }
-  await api('PUT', `/dns/records/${encodeURIComponent(domain)}`, { force: true, items: wanted });
-  ev.step('dns', { label: t('spaceship.dns.label'), status: 'pass', summary: `A @ → ${NETLIFY_LB_IP} · CNAME www → ${target}` });
-
+  // Netlify accepts the domain first: if it refuses, the DNS stays exactly as it was (audit E14)
   ev.step('netlify-domain', { label: t('spaceship.netlifyDomain.label'), status: 'running' });
   const c = netlifyCli();
   const body = JSON.stringify({ site_id: d.siteId, body: { custom_domain: domain, domain_aliases: [`www.${domain}`] } });
@@ -164,6 +157,18 @@ export async function connectDomainToNetlify(project, { domain, yes = false }) {
     throw new EngineError(msg('spaceship.netlifyRejected'), 'netlify_failed');
   }
   ev.step('netlify-domain', { label: t('spaceship.netlifyDomain.label'), status: 'pass', summary: `https://${domain}` });
+  ev.step('dns', { label: t('spaceship.dns.label'), status: 'running', summary: `${domain} → ${target}` });
+  const del = conflicts.map((c) => ({ ...c.raw }));
+  if (del.length) await api('DELETE', `/dns/records/${encodeURIComponent(domain)}`, del);
+  try {
+    await api('PUT', `/dns/records/${encodeURIComponent(domain)}`, { force: true, items: wanted });
+  } catch (e) {
+    // put the old records back rather than leave the domain pointing nowhere
+    if (del.length) await api('PUT', `/dns/records/${encodeURIComponent(domain)}`, { force: true, items: del }).catch(() => {});
+    throw e;
+  }
+  ev.step('dns', { label: t('spaceship.dns.label'), status: 'pass', summary: `A @ → ${NETLIFY_LB_IP} · CNAME www → ${target}` });
+
   updateProject(project.key, { domain, netlify: { liveUrl: `https://${domain}` } });
   addHistory({ project: project.key, projectName: project.name, kind: 'domain', status: 'ok', url: `https://${domain}`, message: `${domain} → ${target}` });
   ev.notify(`🌐 ${domain}`, t('spaceship.notify.connected', { project: project.name }), `https://${domain}`);

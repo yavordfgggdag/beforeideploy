@@ -396,5 +396,7 @@
   "update.insecure": "This update has no secure download (HTTPS and a checksum are required) — it was not downloaded.",
   "update.network": "Cannot reach the release server: {error}",
   "update.nothing": "No new version to download.",
-  "account.delete.subscriptionActive": "Cancel your subscription first (Plans → Manage subscription), then delete the account."
+  "account.delete.subscriptionActive": "Cancel your subscription first (Plans → Manage subscription), then delete the account.",
+  "deploy.changedSinceCheck": "The project changed after the last check — run the check again before deploying.",
+  "overview.sslExpired": "{name}: the SSL certificate expired {days} days ago — visitors see a security warning"
 }

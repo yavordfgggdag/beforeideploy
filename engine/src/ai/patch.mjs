@@ -202,10 +202,13 @@ export function plan(dir, parsed) {
   });
 }
 
-/** Writes the planned changes for `selected` paths (all applicable ones when null). Returns { applied, skipped }. */
+/** Writes the planned changes for `selected` paths (all applicable ones when null). Returns { applied, skipped }.
+ * All or nothing (audit E15): if one write fails, the files already written are put back as they were. */
 export function apply(dir, planned, selected = null) {
   const applied = [];
   const skipped = [];
+  const undo = []; // { abs, before } — before === null means the file did not exist
+  const writes = [];
   for (const p of planned) {
     // the real problem is more useful to the user than "not selected"
     if (!p.applicable) {
@@ -221,12 +224,30 @@ export function apply(dir, planned, selected = null) {
       skipped.push({ path: p.path, reason: 'outside_project' });
       continue;
     }
-    if (p.action === 'delete') fs.unlinkSync(abs);
-    else {
-      fs.mkdirSync(path.dirname(abs), { recursive: true });
-      fs.writeFileSync(abs, p.after);
+    writes.push({ p, abs });
+  }
+  try {
+    for (const { p, abs } of writes) {
+      let before = null;
+      try {
+        before = fs.readFileSync(abs);
+      } catch {}
+      undo.push({ abs, before });
+      if (p.action === 'delete') fs.unlinkSync(abs);
+      else {
+        fs.mkdirSync(path.dirname(abs), { recursive: true });
+        fs.writeFileSync(abs, p.after);
+      }
+      applied.push(p.path);
     }
-    applied.push(p.path);
+  } catch (e) {
+    for (const { abs, before } of undo.reverse()) {
+      try {
+        if (before === null) fs.rmSync(abs, { force: true });
+        else fs.writeFileSync(abs, before);
+      } catch {}
+    }
+    throw e;
   }
   return { applied, skipped };
 }

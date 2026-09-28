@@ -59,7 +59,7 @@ async function auth(p, { method = 'POST', body, token } = {}) {
   } catch {}
   if (!res.ok) {
     const raw = data?.error_description || data?.msg || data?.message || data?.error || `HTTP ${res.status}`;
-    throw new EngineError(translate(raw), 'auth_error');
+    throw Object.assign(new EngineError(translate(raw), 'auth_error'), { status: res.status });
   }
   return data;
 }
@@ -243,8 +243,12 @@ export async function currentSession({ refresh = true } = {}) {
       return saveSession(r);
     } catch (e) {
       if (e.code === 'network') return s; // offline: keep the session, app still works locally
-      deleteSecret('session');
-      return null;
+      // only a refused refresh token ends the session; an outage (5xx) or rate limit (429) must not log out (audit E13)
+      if (e.status && e.status >= 400 && e.status < 500 && e.status !== 429) {
+        deleteSecret('session');
+        return null;
+      }
+      return s;
     }
   }
   return s;

@@ -2,6 +2,7 @@
 import path from 'node:path';
 import { HOME, EngineError, ev, which, runStream, logDir, readJSON, extractJSON, nowISO } from './util.mjs';
 import { detect } from './detect.mjs';
+import { fingerprint } from './checks.mjs';
 import { getState, setState, updateProject, addHistory } from './store.mjs';
 import { recordCost } from './costs.mjs';
 import { gitHead } from './git.mjs';
@@ -172,8 +173,13 @@ export function deployGuard(project) {
   const check = getState(project.key).check;
   if (!check) throw new EngineError(msg('deploy.needsCheck'), 'needs_check', 3);
   const age = (Date.now() - Date.parse(check.at)) / 60000;
-  if (age > CHECK_MAX_AGE_MIN) throw new EngineError(msg('deploy.staleCheck', { minutes: Math.round(age) }), 'stale_check', 3);
+  // an unreadable date counts as stale, never as fresh
+  if (!Number.isFinite(age) || age > CHECK_MAX_AGE_MIN) throw new EngineError(msg('deploy.staleCheck', { minutes: Number.isFinite(age) ? Math.round(age) : '?' }), 'stale_check', 3);
   if (check.status === 'blocked') throw new EngineError(msg('deploy.blocked'), 'blocked', 3);
+  // the code must still be the code that was checked (audit E7)
+  if (check.fingerprint && fingerprint(project.path, detect(project.path)) !== check.fingerprint) {
+    throw new EngineError(msg('deploy.changedSinceCheck'), 'stale_check', 3);
+  }
   return check;
 }
 

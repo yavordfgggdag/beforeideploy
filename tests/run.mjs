@@ -367,6 +367,17 @@ t('deploy: без проверка → отказ', () => {
   assert(r.code === 3 && r.result.code === 'needs_check', `${r.code} ${r.result?.code}`);
 });
 
+t('deploy: код, променен след проверката → отказ, докато не се провери отново (E7)', () => {
+  const site = mk('changed-after-check', { 'index.html': HTML });
+  const c = bid('check', '--project', site);
+  assert(c.data?.fingerprint, 'the check stores a fingerprint');
+  const before = bid('netlify', 'deploy', '--project', site);
+  assert(before.result.code !== 'stale_check' && before.result.code !== 'needs_check', 'fresh check passes the guard: ' + before.result.code);
+  fs.writeFileSync(path.join(site, 'index.html'), HTML + '<!-- edit -->');
+  const after = bid('netlify', 'deploy', '--project', site);
+  assert(after.code === 3 && after.result.code === 'stale_check' && after.result.key === 'deploy.changedSinceCheck', JSON.stringify(after.result));
+});
+
 t('deploy: без Netlify вход → отказ (код 5)', () => {
   const r = bid('netlify', 'deploy', '--project', viteApp);
   assert(r.code === 5 && r.result.code === 'not_logged_in', `${r.code} ${r.result?.code}`);
@@ -434,6 +445,17 @@ t('git: commit само на избрани файлове', () => {
   const c = bid('git', 'commit', '--project', staticSite, '--message', 'only a', '--files-json', '["a.html"]');
   assert(c.result.ok, c.result?.error);
   assert(c.data.changed.some((f) => f.path === 'b.html') && !c.data.changed.some((f) => f.path === 'a.html'), JSON.stringify(c.data.changed));
+});
+
+t('git: файлове с кирилица и интервали — статус и commit само на тях (E11)', () => {
+  const name = 'за нас.html';
+  fs.writeFileSync(path.join(staticSite, name), HTML);
+  fs.writeFileSync(path.join(staticSite, 'other.html'), HTML);
+  const s = bid('git', 'status', '--project', staticSite);
+  assert(s.data.changed.some((f) => f.path === name), JSON.stringify(s.data.changed));
+  const c = bid('git', 'commit', '--project', staticSite, '--message', 'Cyrillic', '--files-json', JSON.stringify([name]));
+  assert(c.result.ok, c.result?.error);
+  assert(!c.data.changed.some((f) => f.path === name) && c.data.changed.some((f) => f.path === 'other.html'), JSON.stringify(c.data.changed));
 });
 
 t('git: push без remote → ясна грешка', () => {
@@ -510,6 +532,25 @@ t('сигурност: AI промени не могат да пипнат .git,
   }
   assert(patchMod.safePath(dir, 'src/app.js') === path.join(dir, 'src/app.js'), 'normal file allowed');
   assert(patchMod.safePath(dir, '.gitignore') !== null, '.gitignore is allowed');
+});
+
+t('ai apply: всичко или нищо — при грешка вече записаните файлове се връщат (E15)', () => {
+  const dir = mk('apply-undo', { 'keep.txt': 'old' });
+  fs.mkdirSync(path.join(dir, 'blocker'));
+  const planned = [
+    { path: 'keep.txt', action: 'edit', applicable: true, after: 'new' },
+    { path: 'fresh.txt', action: 'create', applicable: true, after: 'x' },
+    { path: 'blocker', action: 'edit', applicable: true, after: 'cannot write a folder' },
+  ];
+  let threw = false;
+  try {
+    patchMod.apply(dir, planned);
+  } catch {
+    threw = true;
+  }
+  assert(threw, 'the failing write is reported');
+  assert(fs.readFileSync(path.join(dir, 'keep.txt'), 'utf8') === 'old', 'edited file restored');
+  assert(!fs.existsSync(path.join(dir, 'fresh.txt')), 'created file removed');
 });
 
 t('сигурност: redaction маха ключове в JSON, Bearer, sb_secret, *_KEY=, пароли в URL', () => {

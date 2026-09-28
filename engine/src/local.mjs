@@ -5,13 +5,26 @@ import path from 'node:path';
 import http from 'node:http';
 import { spawn } from 'node:child_process';
 import { ENGINE_DIR, EngineError, ev, findFreePort, httpAlive, logDir, nowISO, pidAlive, sleep, exists, sh, which } from './util.mjs';
+
+/** Start time of a process as `ps` prints it — with the pid it identifies the process even after pid reuse. */
+function procStart(pid) {
+  if (!pid) return null;
+  const r = sh('ps', ['-o', 'lstart=', '-p', String(pid)]);
+  return r.code === 0 ? r.stdout.trim() || null : null;
+}
+
+/** The saved pid is still the server we started — not another program that got the same pid later (audit E8). */
+function ourProcess(st) {
+  if (!st?.pid || !pidAlive(st.pid)) return false;
+  return !st.procStart || procStart(st.pid) === st.procStart;
+}
 import { detect, pmRunArgs } from './detect.mjs';
 import { getState, setState, updateProject } from './store.mjs';
 import { t, msg } from './i18n.mjs';
 
 export function localStatus(project) {
   const st = getState(project.key).local;
-  if (st?.pid && pidAlive(st.pid)) {
+  if (st?.pid && ourProcess(st)) {
     return { running: true, ...st };
   }
   if (st) setState(project.key, { local: undefined });
@@ -60,7 +73,7 @@ export async function findOrphan(project) {
 async function adoptOrphan(project) {
   const orphan = await findOrphan(project);
   if (!orphan) return null;
-  const state = { pid: orphan.pid, port: orphan.port, url: orphan.url, mode: 'build', label: t('local.adoptedLabel'), adopted: true, startedAt: nowISO(), log: null };
+  const state = { pid: orphan.pid, port: orphan.port, url: orphan.url, mode: 'build', label: t('local.adoptedLabel'), adopted: true, startedAt: nowISO(), log: null, procStart: procStart(orphan.pid) };
   setState(project.key, { local: state });
   updateProject(project.key, { lastPort: orphan.port });
   ev.step('local', { label: 'Local Preview', status: 'pass', summary: t('local.adopted', { port: orphan.port }) });
@@ -194,7 +207,7 @@ export async function localStart(project, { mode = 'auto' } = {}) {
   }
 
   const realPort = Number(new URL(url).port);
-  const state = { pid: child.pid, port: realPort, url, mode: p.mode, label: p.label, startedAt: nowISO(), log: logFile, stopToken };
+  const state = { pid: child.pid, port: realPort, url, mode: p.mode, label: p.label, startedAt: nowISO(), log: logFile, stopToken, procStart: procStart(child.pid) };
   setState(project.key, { local: state });
   updateProject(project.key, { lastPort: realPort });
   ev.step('local', { label: 'Local Preview', status: 'pass', summary: url });
@@ -223,7 +236,7 @@ export async function localStop(project) {
     setState(project.key, { local: undefined });
     return { running: false, stopped: stopped || !(await httpAlive(st.url, 300)) };
   }
-  if (!st?.pid || !pidAlive(st.pid)) {
+  if (!st?.pid || !ourProcess(st)) {
     setState(project.key, { local: undefined });
     return { running: false, stopped: false };
   }

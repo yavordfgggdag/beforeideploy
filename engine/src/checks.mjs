@@ -329,14 +329,24 @@ function statSig(dir, rel) {
 export function fingerprint(dir, d) {
   const parts = [];
   if (d.git.isRepo) {
-    parts.push(sh('git', ['rev-parse', 'HEAD'], { cwd: dir }).stdout.trim());
-    parts.push(sh('git', ['diff', 'HEAD', '--no-color', '--no-ext-diff'], { cwd: dir }).stdout);
+    const head = sh('git', ['rev-parse', '--verify', '-q', 'HEAD'], { cwd: dir });
+    if (head.code === 0) {
+      parts.push(head.stdout.trim());
+      parts.push(sh('git', ['diff', 'HEAD', '--no-color', '--no-ext-diff'], { cwd: dir }).stdout);
+    } else {
+      // a repository without a first commit: the index and every tracked file stand in for HEAD (audit E6)
+      parts.push(sh('git', ['diff', '--cached', '--no-color', '--no-ext-diff'], { cwd: dir }).stdout);
+      const tracked = sh('git', ['ls-files', '-z'], { cwd: dir }).stdout.split('\0').filter(Boolean);
+      for (const f of tracked.slice(0, 5000)) parts.push(statSig(dir, f));
+    }
     const untracked = sh('git', ['ls-files', '--others', '--exclude-standard', '-z'], { cwd: dir }).stdout.split('\0').filter(Boolean);
     for (const f of untracked.slice(0, 5000)) parts.push(statSig(dir, f));
   } else {
     for (const f of listCandidateFiles(dir, false)) parts.push(statSig(dir, f));
   }
   for (const lock of LOCKFILES) if (exists(path.join(dir, lock))) parts.push(statSig(dir, lock));
+  // .env files are usually git-ignored, yet they change what a build produces
+  for (const f of fs.readdirSync(dir).filter((n) => /^\.env(\..+)?$/.test(n)).sort()) parts.push(statSig(dir, f));
   if (exists(path.join(dir, 'bid.config.json'))) parts.push(fs.readFileSync(path.join(dir, 'bid.config.json'), 'utf8'));
   parts.push(sh('node', ['--version']).stdout.trim());
   return crypto.createHash('sha1').update(parts.join('\u0000')).digest('hex');
@@ -408,7 +418,8 @@ export async function runChecks(project, { stopOnFail = false, skip = [], force 
   }
 
   const { status, counts } = overallStatus(results);
-  const check = { status, at: nowISO(), counts, steps: results, duration: (Date.now() - started) / 1000, cached: results.filter((r) => r.cached).map((r) => r.id) };
+  // the fingerprint lets a deploy see whether the code changed after this check (audit E7)
+  const check = { status, at: nowISO(), counts, steps: results, duration: (Date.now() - started) / 1000, cached: results.filter((r) => r.cached).map((r) => r.id), fingerprint: fp };
   setState(project.key, { check, stepCache });
   updateProject(project.key, { framework: ctx.d.framework, packageManager: ctx.d.packageManager, publishDir: ctx.d.publishDir });
   addHistory({

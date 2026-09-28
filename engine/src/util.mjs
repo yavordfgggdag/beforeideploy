@@ -162,7 +162,8 @@ export function sh(cmd, args, opts = {}) {
   };
 }
 
-let currentChild = null;
+// every running child: lint and typecheck run in parallel, a cancel must stop all of them (audit E5)
+const children = new Set();
 
 function killTree(child, signal = 'SIGTERM') {
   if (!child || child.exitCode !== null) return;
@@ -177,7 +178,7 @@ function killTree(child, signal = 'SIGTERM') {
 
 for (const sig of ['SIGTERM', 'SIGINT', 'SIGHUP']) {
   process.on(sig, () => {
-    killTree(currentChild, 'SIGTERM');
+    for (const c of children) killTree(c, 'SIGTERM');
     emit({ type: 'result', ok: false, error: t('run.cancelled'), code: 'cancelled', key: 'run.cancelled' });
     process.exit(130);
   });
@@ -206,7 +207,7 @@ export function runStream(cmd, args, { cwd, env, logFile, step, captureStdout = 
       if (logStream) logStream.end(String(e));
       return resolve({ code: 127, stdout: '', tail: [String(e.message)], duration: 0 });
     }
-    currentChild = child;
+    children.add(child);
 
     const tail = [];
     let stdoutBuf = '';
@@ -241,6 +242,8 @@ export function runStream(cmd, args, { cwd, env, logFile, step, captureStdout = 
       timer = setTimeout(() => {
         pushLine(t('run.timeout', { seconds: Math.round(timeout / 1000) }));
         killTree(child, 'SIGTERM');
+        // a tool that ignores SIGTERM (watch modes, stuck servers) must not hang the check forever
+        setTimeout(() => killTree(child, 'SIGKILL'), 5000).unref();
       }, timeout);
     }
 
@@ -249,7 +252,7 @@ export function runStream(cmd, args, { cwd, env, logFile, step, captureStdout = 
       if (timer) clearTimeout(timer);
       if (partial.out) pushLine(partial.out);
       if (partial.err) pushLine(partial.err);
-      currentChild = null;
+      children.delete(child);
       const done = () =>
         resolve({ code: code ?? 1, stdout: stdoutBuf, tail, duration: (Date.now() - started) / 1000 });
       if (logStream) logStream.end(`\n# exit ${code}\n`, done);

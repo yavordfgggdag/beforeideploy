@@ -12,13 +12,19 @@ export function gitStatus(dir) {
   const base = gitBasics(dir);
   if (!base.isRepo) return { ...base, installed: true };
 
-  const porcelain = sh('git', ['status', '--porcelain=v1', '-uall'], { cwd: dir }).stdout.split('\n').filter(Boolean);
-  const changed = porcelain.slice(0, 300).map((l) => {
-    const code = l.slice(0, 2);
-    let file = l.slice(3);
-    if (file.includes(' -> ')) file = file.split(' -> ')[1];
-    return { path: file.replace(/^"|"$/g, ''), code: code.trim() || '?' };
-  });
+  // -z: file names come raw — no quoting or \ooo escapes for Cyrillic, spaces or quotes (audit E11)
+  const entries = sh('git', ['status', '--porcelain=v1', '-uall', '-z'], { cwd: dir }).stdout.split('\0');
+  const changed = [];
+  let changedCount = 0;
+  for (let i = 0; i < entries.length; i++) {
+    const e = entries[i];
+    if (!e) continue;
+    const code = e.slice(0, 2);
+    // a rename / copy is followed by its old name, which is not a separate change
+    if (code[0] === 'R' || code[0] === 'C') i++;
+    changedCount++;
+    if (changed.length < 300) changed.push({ path: e.slice(3), code: code.trim() || '?' });
+  }
 
   let ahead = null;
   let behind = null;
@@ -41,7 +47,7 @@ export function gitStatus(dir) {
     ...base,
     installed: true,
     changed,
-    changedCount: porcelain.length,
+    changedCount,
     hasUpstream,
     upstream: hasUpstream ? up.stdout.trim() : null,
     ahead,

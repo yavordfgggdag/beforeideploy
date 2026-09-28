@@ -5,7 +5,9 @@ ENGINE_DIR="${0:A:h}"
 # PATH captured by install.sh from your real Terminal session
 [ -f "$ENGINE_DIR/env.zsh" ] && source "$ENGINE_DIR/env.zsh"
 
-export PATH="/opt/homebrew/bin:/usr/local/bin:$HOME/.volta/bin:$HOME/.bun/bin:$HOME/.local/bin:$HOME/Library/pnpm:$PATH:/usr/bin:/bin:/usr/sbin:/sbin"
+# the PATH from env.zsh (your Terminal) comes first, so nvm / asdf / volta pick the Node you chose;
+# the usual install places are only a fallback (audit E12)
+export PATH="$PATH:$HOME/.volta/bin:$HOME/.asdf/shims:/opt/homebrew/bin:/usr/local/bin:$HOME/.bun/bin:$HOME/.local/bin:$HOME/Library/pnpm:/usr/bin:/bin:/usr/sbin:/sbin"
 export LANG="en_US.UTF-8" LC_ALL="en_US.UTF-8"
 
 # nvm without the slow nvm.sh: prefer the default alias, else the newest installed version
