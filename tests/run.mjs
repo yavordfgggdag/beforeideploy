@@ -582,7 +582,8 @@ http.createServer((q,r)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{r.setHea
    if(j.action==='export')return r.end(JSON.stringify({user:{id:me.user_id,email:me.email},profile:me,subscriptions:[],credit_ledger:ledger.filter(l=>l.user_id===me.user_id),ai_usage:[],projects:rows.filter(x=>x.user_id===me.user_id)}));
    if(j.action==='delete'){delete users[me.email];delete profiles[me.user_id];rows=rows.filter(x=>x.user_id!==me.user_id);audit.push({admin:me.user_id,action:'delete_me',target:me.user_id});return r.end('{"deleted":true}');}
    r.statusCode=400;return r.end('{"error":"unknown action"}');}
- if(q.url.startsWith('/rest/v1/settings')){if(!caller(q)){r.statusCode=401;return r.end('{}');}return r.end('[]');}
+ if(q.url.startsWith('/rest/v1/settings')){if(!caller(q)){r.statusCode=401;return r.end('{}');}return r.end(JSON.stringify([{key:'plans',value:{flash:{tokens:250000},high:{tokens:1000000},knight:{tokens:2500000}}}]));}
+ if(q.url.startsWith('/rest/v1/subscriptions')){const me=caller(q);if(!me){r.statusCode=401;return r.end('{}');}return r.end(JSON.stringify(me.plan!=='free'?[{provider:'manual',status:'active',period_end:'2026-11-01T00:00:00Z',cancel_at:null}]:[]));}
  if(q.url==='/auth/v1/settings'){return r.end('{"external":{"apple":false,"github":true,"google":false,"email":true}}');}
  if(q.url==='/auth/v1/signup'){if(users[j.email]){r.statusCode=400;return r.end('{"msg":"User already registered"}');}users[j.email]=j.password;
    profiles['u-'+j.email]={user_id:'u-'+j.email,email:j.email,role:Object.keys(profiles).length?'normal':'admin',plan:'free',locale:(j.data&&j.data.locale)||'en',ai_disabled:false,display_name:j.data&&j.data.full_name||null};
@@ -756,6 +757,8 @@ t('ai: cloud път — план, кредити, quota_exhausted → exit 8, fr
   const login = (email, pw) => { bid('account', 'logout'); return bid('account', 'login', '--email', email, '--password', pw); };
   const f = login('friend@example.com', 'supersecret2');
   assert(f.data.features['ai.cloud'] === true && f.data.credits.balance === 250000, JSON.stringify(f.data));
+  assert(f.data.credits.monthlyGrant === 1000000 && f.data.credits.renewsAt === '2026-11-01T00:00:00Z', 'credits: ' + JSON.stringify(f.data.credits));
+  fixture('account-status-high', f.data);
   const fix = bid('ai', 'fix', '--project', cloudApp, '--step', 'build');
   assert(fix.result.ok, fix.result?.error);
   assert(fix.data.provider === 'cloud' && fix.data.usage.charged === 6000 && fix.data.usage.balance === 244000, JSON.stringify(fix.data.usage));

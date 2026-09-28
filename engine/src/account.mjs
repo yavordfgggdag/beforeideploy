@@ -117,16 +117,33 @@ function hasOwnAiKey() {
   return AI_KEY_PROVIDERS.some((p) => !!getSecret(`ai-${p}`)?.key);
 }
 
+/**
+ * `{ balance, monthlyGrant, renewsAt, endsAt }` — the monthly grant comes from `settings.plans` (the same table
+ * the ai-fix function bills against), the dates from the newest active subscription (RLS: own rows only).
+ */
+function creditsOf(plan, balance, settingsRows, subs) {
+  const settings = Object.fromEntries((Array.isArray(settingsRows) ? settingsRows : []).map((r) => [r.key, r.value]));
+  const monthlyGrant = Number(settings.plans?.[plan]?.tokens ?? 0) || null;
+  const active = (Array.isArray(subs) ? subs : []).find((s) => ['active', 'trial', 'past_due'].includes(s.status));
+  return {
+    balance: Number(balance?.[0]?.balance ?? 0),
+    monthlyGrant,
+    renewsAt: active && !active.cancel_at && active.provider !== 'trial' ? active.period_end || null : null,
+    endsAt: active ? active.cancel_at || (active.provider === 'trial' ? active.period_end : null) || null : null,
+  };
+}
+
 /** Reads profiles + credit_balance for the session's user; falls back to the cached copy when offline. */
 async function loadProfile(session) {
   const id = session?.user?.id;
   if (!id) return null;
   const cached = readJSON(PROFILE_CACHE(), null);
   try {
-    const [rows, balance, settingsRows] = await Promise.all([
+    const [rows, balance, settingsRows, subs] = await Promise.all([
       rest(`/profiles?select=role,plan,locale,ai_disabled,display_name&user_id=eq.${encodeURIComponent(id)}`, { token: session.accessToken }),
       rest(`/credit_balance?select=balance&user_id=eq.${encodeURIComponent(id)}`, { token: session.accessToken }).catch(() => []),
       rest('/settings?select=key,value', { token: session.accessToken }).catch(() => []),
+      rest(`/subscriptions?select=provider,status,period_end,cancel_at&user_id=eq.${encodeURIComponent(id)}&order=updated_at.desc&limit=5`, { token: session.accessToken }).catch(() => []),
     ]);
     const row = Array.isArray(rows) ? rows[0] : null;
     if (!row) return cached?.userId === id ? cached : { ...DEFAULT_PROFILE, userId: id, stale: true };
@@ -137,7 +154,7 @@ async function loadProfile(session) {
       locale: row.locale || null,
       aiDisabled: !!row.ai_disabled,
       displayName: row.display_name || null,
-      credits: { balance: Number(balance?.[0]?.balance ?? 0) },
+      credits: creditsOf(row.plan || 'free', balance, settingsRows, subs),
       settings: Object.fromEntries((Array.isArray(settingsRows) ? settingsRows : []).map((r) => [r.key, r.value])),
       fetchedAt: nowISO(),
     };

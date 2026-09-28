@@ -34,6 +34,15 @@ final class ModelsTests: XCTestCase {
         XCTAssertTrue(a.isAdmin)
     }
 
+    func testCreditsCarryTheMonthlyGrantAndRenewal() throws {
+        let a = try Fixtures.decode("account-status-high", as: AccountState.self)
+        let c = try XCTUnwrap(a.credits)
+        XCTAssertEqual(c.monthlyGrant, 1_000_000)
+        XCTAssertEqual(c.renewsAt, "2026-11-01T00:00:00Z")
+        XCTAssertEqual(c.fraction ?? -1, 0.25, accuracy: 0.0001)
+        XCTAssertNil(AccountState.Credits(balance: 5, monthlyGrant: nil).fraction)
+    }
+
     func testAnonymousAccountStateCarriesTheEnabledProviders() throws {
         let a = try Fixtures.decode("account-status-anon", as: AccountState.self)
         XCTAssertFalse(a.loggedIn)

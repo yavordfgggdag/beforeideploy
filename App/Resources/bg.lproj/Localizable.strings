@@ -2,6 +2,7 @@
 
 "_meta.reviewed" = "true";
 
+"account.creditsHelp" = "Остават %@ AI токена";
 "account.deleteButton" = "Изтрий акаунта…";
 "account.export" = "Експортирай данните ми…";
 "account.exportHint" = "Експортът е JSON с всичко, което облакът пази за теб. Изтриването маха акаунта и абонамента; проектите на този Mac остават.";
@@ -78,6 +79,7 @@
 "ai.reason.outside_project" = "пътят е извън проекта";
 "ai.reason.search_not_found" = "търсеният текст не е намерен (файлът е променен?)";
 "ai.recheckAfter" = "Провери отново след прилагане";
+"ai.renewsOn" = "подновява се на %@";
 "ai.selectAll" = "Избери всички";
 "ai.thinking" = "Мисля…";
 "ai.title" = "Оправи с AI";
@@ -379,6 +381,7 @@
 "hosting.setUp" = "Настрой";
 "hosting.signInHint" = "Влез в %@ — отваря се браузърът.";
 "hosting.signInLower" = "вход";
+"hosting.staticSite" = "статичен";
 "hosting.whereTitle" = "Къде да се хоства?";
 
 "language.beta" = "БЕТА";

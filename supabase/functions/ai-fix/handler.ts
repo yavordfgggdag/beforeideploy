@@ -150,7 +150,17 @@ export function createAiFixHandler(deps: AiFixDeps): (req: Request) => Promise<R
         .insert({ user_id: user.id, project_key: body.project?.key ?? null, step: body.step ?? null, model: usedModel, input_tokens: input, output_tokens: output, cost_usd: costUsd, charged_tokens: charged, status })
         .select("id")
         .maybeSingle();
-      if (charged > 0) await db.from("credit_ledger").insert({ user_id: user.id, delta: -charged, bucket: "plan", reason: "ai_fix", ref: usage?.id ?? null });
+      if (charged > 0) {
+        // the monthly plan tokens are spent first, then the top-up packs (they last 12 months)
+        const { data: planRows } = await db.from("credit_ledger").select("delta").eq("user_id", user.id).eq("bucket", "plan");
+        const planLeft = Math.max(0, (planRows ?? []).reduce((a: number, r: Row) => a + Number(r.delta ?? 0), 0));
+        const fromPlan = Math.min(charged, planLeft);
+        const fromTopup = charged - fromPlan;
+        const rows: Row[] = [];
+        if (fromPlan > 0) rows.push({ user_id: user.id, delta: -fromPlan, bucket: "plan", reason: "ai_fix", ref: usage?.id ?? null });
+        if (fromTopup > 0) rows.push({ user_id: user.id, delta: -fromTopup, bucket: "topup", reason: "ai_fix", ref: usage?.id ?? null });
+        await db.from("credit_ledger").insert(rows);
+      }
       return { charged, balance: balance - charged };
     };
 

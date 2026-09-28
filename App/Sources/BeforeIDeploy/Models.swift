@@ -576,6 +576,16 @@ struct AccountState: Codable {
 
     struct Credits: Codable, Hashable {
         var balance: Int
+        /// Tokens the plan grants each month (nil on Free / vip / admin).
+        var monthlyGrant: Int?
+        var renewsAt: String?
+        var endsAt: String?
+
+        /// 0…1 for the credits ring; nil when there is no monthly grant to compare with.
+        var fraction: Double? {
+            guard let g = monthlyGrant, g > 0 else { return nil }
+            return min(1, max(0, Double(balance) / Double(g)))
+        }
     }
 
     /// Feature gates computed by engine/src/features.mjs — the app only renders them.

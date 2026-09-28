@@ -5,6 +5,7 @@
 //    subscription.*       → upsert `subscriptions`, set `profiles.plan` (active/trialing/past_due → tier, else free)
 //    transaction.completed → plan price: monthly grant (expires the unused rest of the previous grant);
 //                            pack price: top-up tokens. Idempotent by transaction id as well.
+//    adjustment.* (approved refund) → takes back what is left of that transaction's grant.
 // 2. The engine with the user's JWT, `{ "action": … }`:
 //    catalog  → plans (price, tokens), packs, currency, trial offer
 //    status   → plan, subscription, balances by bucket, renewal date, whether the trial is still available;
@@ -190,6 +191,26 @@ async function handleWebhook(req: Request, deps: BillingDeps): Promise<Response>
         }
         result = { transaction: txn, granted };
       }
+    }
+    else if ((type === "adjustment.created" || type === "adjustment.updated") && d.action === "refund" && d.status === "approved") {
+      // a refund takes back what is left of the tokens that transaction granted (spent tokens stay spent)
+      const txn = String(d.transaction_id ?? "");
+      const { data: grants } = await db.from("credit_ledger").select("user_id,delta,bucket,reason").eq("ref", txn);
+      const granted = (grants ?? []).filter((g: Row) => g.reason === "plan_grant" || g.reason === "topup");
+      const refundRef = `refund:${d.id ?? txn}`;
+      const { data: done } = await db.from("credit_ledger").select("id").eq("ref", refundRef);
+      const taken: Row[] = [];
+      if (!(done ?? []).length) {
+        for (const g of granted) {
+          const left = await bucketBalance(db, g.user_id, g.bucket);
+          const take = Math.min(Number(g.delta), Math.max(0, left));
+          if (take > 0) {
+            await db.from("credit_ledger").insert({ user_id: g.user_id, delta: -take, bucket: g.bucket, reason: "refund", ref: refundRef });
+            taken.push({ bucket: g.bucket, tokens: take });
+          }
+        }
+      }
+      result = { refund: txn, taken };
     }
     await db.from("billing_events").insert({ id: eventId, provider: "paddle", type, payload: event });
     return json(200, { ok: true, ...result });

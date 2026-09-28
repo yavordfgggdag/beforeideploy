@@ -49,6 +49,7 @@ interface WorldOpts {
   noProfile?: boolean;
   upstream?: UpstreamOpts;
   key?: string;
+  ledger?: Row[];
 }
 
 function world(o: WorldOpts = {}) {
@@ -56,7 +57,7 @@ function world(o: WorldOpts = {}) {
     profiles: o.noProfile ? [] : [{ user_id: USER.id, email: USER.email, role: o.role ?? "normal", plan: o.plan ?? "high", ai_disabled: !!o.aiDisabled }],
     credit_balance: [{ user_id: USER.id, balance: o.balance ?? 100000 }],
     ai_usage: o.usage ?? [],
-    credit_ledger: [],
+    credit_ledger: o.ledger ?? [{ user_id: USER.id, delta: o.balance ?? 100000, bucket: "plan", reason: "plan_grant", ref: "t0" }],
     settings: o.settings ?? [],
   }, o.user === undefined ? USER : o.user);
   const up = fakeAnthropic(o.upstream);
@@ -164,11 +165,10 @@ Deno.test("ai-fix: streams deltas, bills the real tokens and records usage", asy
   assert.equal(rows[0].output_tokens, 2000);
   assert.equal(rows[0].charged_tokens, 6000);
   assert.ok(Math.abs(rows[0].cost_usd - 0.028) < 1e-9);
-  const ledger = db.rows("credit_ledger");
+  const ledger = db.rows("credit_ledger").filter((r) => r.reason === "ai_fix");
   assert.equal(ledger.length, 1);
   assert.equal(ledger[0].delta, -6000);
   assert.equal(ledger[0].bucket, "plan");
-  assert.equal(ledger[0].reason, "ai_fix");
   assert.equal(ledger[0].ref, rows[0].id);
 
   assert.equal(up.calls.length, 1);
@@ -187,12 +187,12 @@ Deno.test("ai-fix: deep fix uses the strongest model at ×5 for Knight, is ignor
   assert.equal(knight.up.calls[0].body.model, "claude-opus-5");
   assert.deepEqual(knight.up.calls[0].body.output_config, { effort: "high" });
   assert.equal(ev.find((e) => e.type === "usage")!.charged, 30000); // stream reports sonnet as usedModel; multiplier ×5 on 6000
-  assert.equal(knight.db.rows("credit_ledger")[0].delta, -30000);
+  assert.equal(knight.db.rows("credit_ledger").find((r) => r.reason === "ai_fix")!.delta, -30000);
 
   const high = world({ plan: "high" });
   await events(await high.handle(post("ai-fix", { ...PROMPT, deep: true })));
   assert.equal(high.up.calls[0].body.model, "claude-sonnet-5");
-  assert.equal(high.db.rows("credit_ledger")[0].delta, -6000);
+  assert.equal(high.db.rows("credit_ledger").find((r) => r.reason === "ai_fix")!.delta, -6000);
 });
 
 Deno.test("ai-fix: explain mode takes the fast model without output_config", async () => {
@@ -217,7 +217,7 @@ Deno.test("ai-fix: the settings table overrides models, multipliers and limits",
 
   const k = world({ plan: "knight", settings });
   await events(await k.handle(post("ai-fix", { ...PROMPT, deep: true })));
-  assert.equal(k.db.rows("credit_ledger")[0].delta, -18000);
+  assert.equal(k.db.rows("credit_ledger").find((r) => r.reason === "ai_fix")!.delta, -18000);
 });
 
 Deno.test("ai-fix: an upstream failure is a 502 and bills nothing", async () => {
@@ -252,4 +252,14 @@ Deno.test("ai-fix: truncated and refused answers are marked", async () => {
   const w = world({ upstream: { body } });
   const ev = await events(await w.handle(post("ai-fix", PROMPT)));
   assert.deepEqual(ev.at(-1), { type: "done", stopReason: "truncated" });
+});
+
+Deno.test("ai-fix: plan tokens are spent first, the rest comes from top-up packs", async () => {
+  const w = world({ ledger: [
+    { user_id: USER.id, delta: 2000, bucket: "plan", reason: "plan_grant", ref: "t" },
+    { user_id: USER.id, delta: 10000, bucket: "topup", reason: "topup", ref: "p" },
+  ] });
+  await events(await w.handle(post("ai-fix", PROMPT)));
+  const charges = w.db.rows("credit_ledger").filter((r) => r.reason === "ai_fix");
+  assert.deepEqual(charges.map((r) => [r.bucket, r.delta]), [["plan", -2000], ["topup", -4000]]);
 });

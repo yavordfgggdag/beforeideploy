@@ -195,6 +195,13 @@ final class AppModel: ObservableObject, Feedback {
         Task { await loadCosts() }
         Task { await loadSpaceship() }
         Task { await checkForUpdates() }
+        // role, plan and credits can change on the server (purchase, admin) — refresh every 15 minutes
+        Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 15 * 60 * 1_000_000_000)
+                await self?.loadAccount()
+            }
+        }
         if selectedKey == nil {
             let lastSelectedKey = projectStore.lastSelectedKey
             if !lastSelectedKey.isEmpty, projects.contains(where: { $0.key == lastSelectedKey }) {

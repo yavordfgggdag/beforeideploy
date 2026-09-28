@@ -52,6 +52,9 @@ struct AIFixOverlay: View {
                 VStack(alignment: .trailing, spacing: 2) {
                     if let b = u.balance {
                         Label(L("ai.creditsLeft", Fmt.tokens(b)), systemImage: "bolt.fill").font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                        if let renews = model.account?.credits?.renewsAt {
+                            Text(L("ai.renewsOn", BillingFormat.day(renews))).font(.system(size: 10.5)).foregroundColor(Theme.tertiary)
+                        }
                     } else {
                         Label(L("ai.tokensUsed", Fmt.tokens((u.input ?? 0) + (u.output ?? 0))), systemImage: "bolt").font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
                     }

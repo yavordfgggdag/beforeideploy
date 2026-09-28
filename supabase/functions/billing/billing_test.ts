@@ -208,3 +208,19 @@ Deno.test("billing: portal needs a Paddle customer", async () => {
   assert.equal((await ok.json()).url, "https://customer-portal.paddle.com/x");
   assert.equal(w.calls[0].url, "https://sandbox-api.paddle.test/customers/ctm_1/portal-sessions");
 });
+
+Deno.test("billing: an approved refund takes back what is left of the transaction's grant, once", async () => {
+  const { db, handle } = world({ ledger: [
+    { user_id: USER.id, delta: 500000, bucket: "topup", reason: "topup", ref: "txn_pack" },
+    { user_id: USER.id, delta: -200000, bucket: "topup", reason: "ai_fix", ref: "u1" },
+  ] });
+  const refund = { event_id: "evt_ref", event_type: "adjustment.updated", data: { id: "adj_1", action: "refund", status: "approved", transaction_id: "txn_pack" } };
+  const r = await (await webhook(handle, refund)).json();
+  assert.deepEqual(r.taken, [{ bucket: "topup", tokens: 300000 }]);
+  assert.equal(sum(db.rows("credit_ledger"), "topup"), 0);
+  await webhook(handle, { ...refund, event_id: "evt_ref2" });
+  assert.equal(db.rows("credit_ledger").filter((x) => x.reason === "refund").length, 1, "same adjustment is not applied twice");
+  // a pending refund changes nothing
+  const pending = await (await webhook(handle, { event_id: "evt_p", event_type: "adjustment.created", data: { id: "adj_2", action: "refund", status: "pending_approval", transaction_id: "txn_pack" } })).json();
+  assert.equal(pending.ignored, true);
+});

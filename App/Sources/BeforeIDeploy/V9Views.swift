@@ -308,11 +308,20 @@ struct AccountBadge: View {
         } label: {
             HStack(spacing: 9) {
                 ZStack {
-                    Circle().fill(Theme.accentGradient)
+                    Circle().fill(Theme.accentGradient).frame(width: 26, height: 26)
                     Text(String((a?.name ?? a?.email ?? "?").prefix(1)).uppercased())
                         .font(.system(size: 12, weight: .bold)).foregroundColor(.white)
+                    // credits ring: what is left of this month's plan tokens
+                    if let f = a?.credits?.fraction {
+                        Circle().stroke(Theme.elevated, lineWidth: 2.5).frame(width: 32, height: 32)
+                        Circle().trim(from: 0, to: max(0.02, f))
+                            .stroke(f < 0.1 ? Theme.warn : Theme.ready, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
+                            .rotationEffect(.degrees(-90))
+                            .frame(width: 32, height: 32)
+                    }
                 }
-                .frame(width: 26, height: 26)
+                .frame(width: 32, height: 32)
+                .help(a?.credits.map { L("account.creditsHelp", Fmt.tokens($0.balance)) } ?? "")
                 VStack(alignment: .leading, spacing: 1) {
                     Text(a?.loggedIn == true ? (a?.name ?? L("common.account")) : L("account.offline"))
                         .font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text).lineLimit(1)
@@ -338,7 +347,7 @@ struct HostingChooserCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            PanelHeader(title: L("hosting.whereTitle"), icon: "server.rack", trailing: model.advice.map { "\($0.framework ?? "") · \($0.ssr ? "SSR" : "статичен")" })
+            PanelHeader(title: L("hosting.whereTitle"), icon: "server.rack", trailing: model.advice.map { "\($0.framework ?? "") · \($0.ssr ? "SSR" : L("hosting.staticSite"))" })
             if let a = model.advice {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 250), spacing: 10)], spacing: 10) {
                     ForEach(a.providers) { p in HostingOptionTile(option: p) }

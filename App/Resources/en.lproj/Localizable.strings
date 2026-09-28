@@ -2,6 +2,7 @@
 
 "_meta.reviewed" = "true";
 
+"account.creditsHelp" = "%@ AI tokens left";
 "account.deleteButton" = "Delete account…";
 "account.export" = "Export my data…";
 "account.exportHint" = "The export is a JSON file with everything the cloud holds for you. Deleting removes the account and subscription; the projects on this Mac stay.";
@@ -78,6 +79,7 @@
 "ai.reason.outside_project" = "path outside the project";
 "ai.reason.search_not_found" = "search text not found (file changed?)";
 "ai.recheckAfter" = "Check again after applying";
+"ai.renewsOn" = "renews %@";
 "ai.selectAll" = "Select all";
 "ai.thinking" = "Thinking…";
 "ai.title" = "Fix with AI";
@@ -379,6 +381,7 @@
 "hosting.setUp" = "Set up";
 "hosting.signInHint" = "Sign in to %@ — the browser opens.";
 "hosting.signInLower" = "sign in";
+"hosting.staticSite" = "static";
 "hosting.whereTitle" = "Where to host?";
 
 "language.beta" = "BETA";
