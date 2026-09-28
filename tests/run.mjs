@@ -213,6 +213,18 @@ t('release: бележки от CHANGELOG и latest.json (release-notes.mjs, rel
   assert(bad.status === 2, 'bad sha must exit 2');
 });
 
+t('имейл шаблони: всеки има en и bg клон по .Data.locale и линка за потвърждение', () => {
+  const dir = path.join(ROOT, 'supabase', 'email-templates');
+  const files = fs.readdirSync(dir).filter((f) => f.endsWith('.html'));
+  assert(['confirmation.html', 'recovery.html', 'invite.html', 'magic_link.html'].every((f) => files.includes(f)), files.join(','));
+  for (const f of files) {
+    const html = fs.readFileSync(path.join(dir, f), 'utf8');
+    assert(html.includes('{{ if eq .Data.locale "bg" }}') && html.includes('{{ else }}') && html.includes('{{ end }}'), f + ': language branches');
+    assert((html.match(/\{\{ \.ConfirmationURL \}\}/g) || []).length === 2, f + ': link in both languages');
+    assert(/[\u0400-\u04FF]/.test(html) && !html.includes('__'), f + ': Bulgarian text filled in');
+  }
+});
+
 t('i18n: всеки ключ в engine/src съществува в каталога, няма неизползвани', () => {
   const en = catalog('en');
   const src = path.join(ROOT, 'engine', 'src');

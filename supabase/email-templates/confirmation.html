@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#1c1c1e">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:32px 12px">
+<tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:16px;padding:32px">
+<tr><td>
+<div style="font-size:15px;font-weight:700;color:#0a6ef0;margin-bottom:20px">Before I Deploy</div>
+{{ if eq .Data.locale "bg" }}
+<h1 style="font-size:22px;margin:0 0 12px">Потвърди имейла си</h1>
+<p style="font-size:15px;line-height:1.5;margin:0 0 24px">Благодарим за регистрацията. Потвърди този адрес и влез в Before I Deploy.</p>
+<a href="{{ .ConfirmationURL }}" style="display:inline-block;background:#0a6ef0;color:#ffffff;text-decoration:none;font-weight:600;padding:12px 22px;border-radius:10px">Потвърди имейла</a>
+<p style="font-size:12px;color:#6e6e73;line-height:1.5;margin:24px 0 0">Ако не си създавал акаунт, игнорирай този имейл.</p>
+{{ else }}
+<h1 style="font-size:22px;margin:0 0 12px">Confirm your email</h1>
+<p style="font-size:15px;line-height:1.5;margin:0 0 24px">Thanks for signing up. Confirm this address and sign in to Before I Deploy.</p>
+<a href="{{ .ConfirmationURL }}" style="display:inline-block;background:#0a6ef0;color:#ffffff;text-decoration:none;font-weight:600;padding:12px 22px;border-radius:10px">Confirm email</a>
+<p style="font-size:12px;color:#6e6e73;line-height:1.5;margin:24px 0 0">If you did not create an account, ignore this email.</p>
+{{ end }}
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>
