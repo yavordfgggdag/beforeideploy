@@ -44,6 +44,8 @@
 
 ## 1. Състояние към 2026-09-28
 
+> Актуалната проверка точка по точка е в `docs/v10-checklist.md` — започни оттам.
+
 Готово и зелено в CI (engine 54 теста, Swift 25, Deno 32): WP6.1, WP1, WP2, WP6.8 CI, WP3 (вграден AI Fix,
 own-key + cloud), WP6.2 инкрементален check, WP6.3 версии/self-update, WP6.4 сираци на Local Preview,
 WP6.6/6.9 логове и доклад, WP6.7 Swift тестове, WP5 (export/delete, тур, providers от облака, първи
@@ -140,7 +142,7 @@ Sheets (Settings, Production, Commit), Domains, Costs графика на раз
 5. Решенията от ROADMAP §9: цени/квоти (1), Paddle vs Lemon Squeezy (2), домейн/фирма/имейл (4),
    beta тестери (11). Без 1, 2 и 4 WP4 не започва.
 
-### S7. WP4: планове, кредити, `BillingProvider` (7 дни, след решенията)
+### S7. WP4: планове, кредити, `BillingProvider` (7 дни, след решенията) — ✅ код готов с препоръчаните цени (в `settings`, сменят се без версия); остава Paddle акаунтът. Годишният план е за V10.1
 
 Схемата вече има `subscriptions`, `credit_ledger` (bucket `plan`/`topup`), `credit_balance`, `settings.plans`.
 Ред на работа:
@@ -163,7 +165,7 @@ Sheets (Settings, Production, Commit), Domains, Costs графика на раз
 5. `account delete` вече анулира локално; добави извикване на Paddle API за реално анулиране.
 - Готово когато: sandbox абонамент активира High за < 30 s; QA ред за refund; Deno тестове ≥ 8.
 
-### S8. WP7 остатък (1 ден)
+### S8. WP7 остатък (1 ден) — ✅ VoiceOver етикети, статуси и последните английски/български литерали през каталога
 
 - Празни състояния: одит на всеки екран без данни (Costs преди зареждане — има спинер; Domains без Spaceship —
   има; Admin — има; Dashboard без история — има). Добави `EmptyStateView` само където липсва.

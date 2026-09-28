@@ -4,7 +4,8 @@
 |---|---|---|
 | `admin` | `bid admin <action>` (Admin panel) | role-gated user/plan/credit management, written to `admin_audit` |
 | `ai-fix` | `bid ai fix` for normal users on a plan | metered AI proxy: plan/credits/rate checks, streams the model, bills real tokens |
-| `account` | `bid account export` / `bid account delete` | GDPR export of the caller's rows; account deletion |
+| `account` | `bid account export` / `bid account delete` | GDPR export of the caller's rows; account deletion (cancels the Paddle subscription first) |
+| `billing` | `bid billing …` and Paddle webhooks | catalog, status, checkout, trial, customer portal; subscription / grant / refund webhooks |
 
 Deploy from the repo root with the Supabase CLI (once per change):
 
@@ -12,7 +13,9 @@ Deploy from the repo root with the Supabase CLI (once per change):
 supabase login
 supabase link --project-ref <your-project-ref>
 supabase functions deploy admin ai-fix account
-supabase secrets set ANTHROPIC_API_KEY=sk-ant-…     # ai-fix only
+supabase functions deploy billing --no-verify-jwt    # Paddle webhooks carry no JWT; user actions are checked inside
+supabase secrets set ANTHROPIC_API_KEY=sk-ant-…     # ai-fix
+supabase secrets set PADDLE_API_KEY=… PADDLE_WEBHOOK_SECRET=… PADDLE_ENV=sandbox   # billing + account
 ```
 
 The functions read `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY`, which Supabase
@@ -26,7 +29,7 @@ Each function is `index.ts` (reads env, builds the real supabase-js clients, `De
 fake Anthropic stream — no network, no secrets:
 
 ```bash
-deno test supabase/functions                     # 32 tests
+deno test supabase/functions                     # 49 tests
 for f in supabase/functions/*/index.ts; do deno check "$f"; done
 ```
 
@@ -34,3 +37,13 @@ CI (`.github/workflows/functions.yml`) runs both on every change under `supabase
 local Deno install: `npm install deno@2` in a scratch folder and use `node_modules/.bin/deno`.
 
 Local run against the engine: `supabase functions serve` and `BID_SUPABASE_URL=http://127.0.0.1:54321`.
+
+## Paddle (billing)
+
+1. Paddle → Catalog: products for Flash / High / Knight (monthly prices) and the two token packs.
+2. Put each price id into `settings.billing.catalog` (Admin panel → Global settings → `billing.catalog`):
+   `plans.<tier>.paddlePriceId`, `packs[].paddlePriceId`. Items without an id show as "Soon" in the app.
+3. Developer tools → Notifications → new destination `<SUPABASE_URL>/functions/v1/billing`, events
+   `subscription.*`, `transaction.completed`, `adjustment.created`, `adjustment.updated`; copy its secret
+   into `PADDLE_WEBHOOK_SECRET`.
+4. Test in sandbox (`PADDLE_ENV=sandbox`), then switch to `live`.

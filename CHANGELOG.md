@@ -14,6 +14,9 @@ All notable changes, newest first. Versions come from `engine/VERSION`. Each ent
 - GDPR: export my data, delete account.
 - Onboarding: a three-screen tour on first launch; sign-in buttons follow the providers enabled in the cloud (GitHub, Sign in with Apple); first-steps card on the empty screen.
 - Errors show their code with copy and a help link; every code is documented (docs/errors.md).
+- Plans & credits: Flash / High / Knight via Paddle, token packs, a 7-day High trial, credits ring in the account badge, renewal date in the AI panel, customer portal; plan tokens are spent before packs; refunds take back the unused rest.
+- Admin: invite friends by email (VIP by default), per-user AI usage, a global settings editor (prices, catalog, models, limits, release feed, help pages).
+- Correct plural forms for counts; bilingual sign-up, password and invitation emails; beta update channel; crash notes in the support report.
 - Keyboard: View menu ⌘1–⌘4, next/previous project ⌘] ⌘[.
 - New look: lit surfaces with depth, a backdrop whose light follows the project's state, a colour avatar per project, a progress ring around the check result, sliding tabs, a frosted run window; all motion follows Reduce motion.
 - Engineering: AppModel split into stores, CI (engine tests on Linux, `swift build`/`swift test` on macOS, `deno check` + `deno test`), Swift tests against engine fixtures, Deno tests for the Edge Functions, release scripts (signed DMG, notarization, update feed, Homebrew cask).
@@ -28,6 +31,9 @@ All notable changes, newest first. Versions come from `engine/VERSION`. Each ent
 - GDPR: експорт на данните, изтриване на акаунта.
 - Onboarding: тур от три екрана при първо пускане; бутоните за вход следват включените в облака доставчици (GitHub, Вход с Apple); карта „Първи стъпки“ на празния екран.
 - Грешките показват кода си с копиране и линк към помощ; всеки код е документиран (docs/errors.md).
+- План и кредити: Flash / High / Knight през Paddle, пакети токени, 7 дни пробен High, пръстен с кредитите в акаунта, дата на подновяване в AI панела, портал за абонамента; първо се харчат токените от плана, после пакетите; при refund се отнема неизползваното.
+- Админ: покана по имейл (VIP по подразбиране), AI употреба по потребител, редактор на глобалните настройки (цени, каталог, модели, лимити, release feed, помощни страници).
+- Правилни форми за числата („1 домейн“ / „5 домейна“); двуезични имейли за регистрация, парола и покана; бета канал за обновления; бележки за срив в доклада за поддръжка.
 - Клавиатура: меню „Изглед“ ⌘1–⌘4, следващ/предишен проект ⌘] ⌘[.
 - Нов облик: осветени повърхности с дълбочина, фон, чиято светлина следва състоянието на проекта, цветен аватар за всеки проект, пръстен с прогреса около резултата от проверката, плъзгащи се табове, матово стъкло зад прозореца на изпълнение; всички анимации спазват „Намалено движение“.
 - Езиците с машинен, непрегледан превод имат бадж „БЕТА“.
