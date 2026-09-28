@@ -111,7 +111,7 @@ class FakeQuery implements Query {
         return this.finish(out);
       }
       case "insert": {
-        const inserted = this.payload.map((r) => ({ id: crypto.randomUUID(), created_at: new Date().toISOString(), ...r }));
+        const inserted = this.payload.map((r) => ({ id: crypto.randomUUID(), created_at: this.db.nextTimestamp(), ...r }));
         rows.push(...inserted);
         return this.finish(inserted);
       }
@@ -177,6 +177,13 @@ export class FakeDb implements DbClient {
 
   rows(table: string): Row[] {
     return this.tables[table] ?? [];
+  }
+
+  private lastTs = 0;
+  /** Strictly increasing `created_at` values, so "order by created_at" is stable even within one millisecond. */
+  nextTimestamp(): string {
+    this.lastTs = Math.max(Date.now(), this.lastTs + 1);
+    return new Date(this.lastTs).toISOString();
   }
 }
 
