@@ -826,7 +826,9 @@ t('logs & report: engine.log пази командите с маскирани �
   const text = JSON.stringify(logs.data.entries);
   assert(text.includes('"signup"') && text.includes('***') && !text.includes('supersecret'), 'password must be masked in argv');
   assert(logs.data.entries.some((e) => e.ok === false && e.code), 'failed commands are logged with their code');
+  fs.writeFileSync(path.join(ENV.BID_APP_DIR, 'logs', 'crash-2026-10-01-120000.txt'), 'Before I Deploy crashed: uncaught exception\nreason: user yavor@example.com\n');
   const rep = bid('report');
+  assert(rep.data.files.includes('app-crash-2026-10-01-120000.txt'), 'app crash file in the report: ' + rep.data.files.join(','));
   assert(rep.result.ok && fs.existsSync(rep.data.path) && rep.data.files.includes('engine-log.ndjson') && rep.data.files.includes('doctor.json'), JSON.stringify(rep.result));
   const bundle = fs.readdirSync(rep.data.dir).map((f) => fs.readFileSync(path.join(rep.data.dir, f), 'utf8')).join('\n');
   assert(!bundle.includes('supersecret') && !bundle.includes('sk-ant-good-key-123') && !bundle.includes('yavor@example.com'), 'report leaks secrets or emails');

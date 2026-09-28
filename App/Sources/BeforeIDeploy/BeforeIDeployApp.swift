@@ -3,6 +3,7 @@ import SwiftUI
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillFinishLaunching(_ notification: Notification) {
+        CrashReporter.install()
         NSApp.appearance = NSAppearance(named: .darkAqua)
     }
 

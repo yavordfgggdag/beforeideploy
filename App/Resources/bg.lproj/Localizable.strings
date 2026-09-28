@@ -280,6 +280,8 @@
 "devicecode.reopen" = "Отвори страницата отново";
 "devicecode.title" = "Потвърди в браузъра (%@)";
 
+"diagnostics.crashedLastTime" = "Before I Deploy се затвори неочаквано миналия път. Настройки → „Запази доклад за поддръжка“ съдържа подробностите.";
+
 "domains.buy" = "Купи домейн";
 "domains.checkingDns" = "Проверявам DNS…";
 "domains.connectDomain" = "Свържи домейна";

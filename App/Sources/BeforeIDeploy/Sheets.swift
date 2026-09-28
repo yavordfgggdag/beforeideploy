@@ -16,9 +16,12 @@ struct SheetScaffold<Content: View, Actions: View>: View {
             HStack(spacing: 12) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 11, style: .continuous).fill(iconTint.opacity(0.14))
+                    RoundedRectangle(cornerRadius: 11, style: .continuous).strokeBorder(iconTint.opacity(0.22), lineWidth: 1)
                     Image(systemName: icon).font(.system(size: 16, weight: .semibold)).foregroundColor(iconTint)
                 }
                 .frame(width: 38, height: 38)
+                .shadow(color: iconTint.opacity(0.25), radius: 8, y: 2)
+                .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title).font(.system(size: 17, weight: .bold)).foregroundColor(Theme.text)
                     if let subtitle { Text(subtitle).font(.system(size: 12)).foregroundColor(Theme.secondary) }
@@ -40,7 +43,7 @@ struct SheetScaffold<Content: View, Actions: View>: View {
             .padding(.vertical, 14)
         }
         .frame(width: width)
-        .background(Theme.panel)
+        .background(ZStack { Theme.panel; Theme.sheen })
     }
 }
 

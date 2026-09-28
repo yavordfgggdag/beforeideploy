@@ -280,6 +280,8 @@
 "devicecode.reopen" = "Open the page again";
 "devicecode.title" = "Confirm in the browser (%@)";
 
+"diagnostics.crashedLastTime" = "Before I Deploy closed unexpectedly last time. Settings → Save support report includes the details.";
+
 "domains.buy" = "Buy a domain";
 "domains.checkingDns" = "Checking DNS…";
 "domains.connectDomain" = "Connect the domain";

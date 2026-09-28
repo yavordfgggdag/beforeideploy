@@ -135,6 +135,12 @@ final class EngineClient {
 
         let errData = await errTask.value
         process.waitUntilExit()
+        let name = AppLog.commandName(args)
+        if process.terminationStatus == 0 {
+            AppLog.engine.debug("\(name, privacy: .public) ok")
+        } else {
+            AppLog.engine.error("\(name, privacy: .public) exit \(process.terminationStatus, privacy: .public)")
+        }
         return EngineOutcome(
             exitCode: process.terminationStatus,
             resultData: resultLine,

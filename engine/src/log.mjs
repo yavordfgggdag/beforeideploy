@@ -97,6 +97,12 @@ export function createReport({ doctor, version }) {
     } catch {}
     for (const f of logs) put(`${e.name}-${f}`, tailText(path.join(CACHE_DIR, e.name, f), 300));
   }
+  // app crash reports (App/…/Diagnostics.swift writes them next to engine.log), newest three
+  try {
+    const logsDir = path.dirname(LOG_FILE());
+    const crashes = fs.readdirSync(logsDir).filter((f) => f.startsWith('crash-')).sort().slice(-3);
+    for (const f of crashes) put(`app-${f}`, redact(tailText(path.join(logsDir, f), 400)));
+  } catch {}
   put(
     'README.txt',
     ['Before I Deploy — support report', `created: ${nowISO()}`, `engine: ${version || '?'}`, '', 'Secrets, emails and home paths were redacted before writing these files.', 'Attach this archive to your support request.', ''].join('\n')

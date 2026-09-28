@@ -92,6 +92,7 @@ final class AppModel: ObservableObject, Feedback {
             guard let self else { return }
             if !self.started { await self.start() }
             self.adoptProfileLanguage()
+            self.offerPlansOnce()
         }
         hostingStore.onSetupChanged = { [weak self] in
             await self?.loadSetup()
@@ -203,6 +204,10 @@ final class AppModel: ObservableObject, Feedback {
             }
         }
         screen = .overview
+        if !CrashReporter.newCrashesSinceLastLaunch().isEmpty {
+            AppLog.ui.notice("previous session crashed")
+            flash(L("diagnostics.crashedLastTime"), error: true)
+        }
         if let url = pendingURL {
             pendingURL = nil
             await handleURL(url)
@@ -656,6 +661,18 @@ final class AppModel: ObservableObject, Feedback {
             try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
             if toast == t { withAnimation(.easeOut(duration: 0.25)) { toast = nil } }
         }
+    }
+
+    // MARK: - Onboarding: plan step (WP5)
+
+    /// First sign-in of a normal user on Free: show "Plan & credits" once (trial offer, "continue with Free"
+    /// is simply closing the sheet). Never again after that, never for vip/admin.
+    private func offerPlansOnce() {
+        let key = "onboarding.plansShown"
+        guard account?.features?.billingPlans == true, account?.plan == "free",
+              !UserDefaults.standard.bool(forKey: key), sheet == nil else { return }
+        UserDefaults.standard.set(true, forKey: key)
+        sheet = .plans
     }
 
     // MARK: - Keyboard navigation
