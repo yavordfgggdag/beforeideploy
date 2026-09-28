@@ -46,7 +46,8 @@ struct SidebarView: View {
                         model.screen = .account
                     }
                 }
-                if model.account?.isAdmin == true {, title: L("admin.title"), selected: model.screen == .admin) {
+                if model.account?.isAdmin == true {
+                    NavRow(symbol: "person.2.badge.gearshape.fill", title: L("admin.title"), selected: model.screen == .admin) {
                         model.screen = .admin
                     }
                 }
