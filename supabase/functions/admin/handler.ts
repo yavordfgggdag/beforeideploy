@@ -1,7 +1,13 @@
 // Before I Deploy — `admin` Edge Function, request handler (V10 WP2, testable since L6).
 // Every request carries the caller's user JWT; we check profiles.role = 'admin', then act with the
 // service role and write a row to admin_audit. The engine calls it via `bid admin <action>`.
-import { callerOf, type DbClient, type Deps, json, readJson } from "../_shared/db.ts";
+import { callerOf, type DbClient, type Deps, internalError, json, readJson } from "../_shared/db.ts";
+
+/** Settings an admin may change (audit C14); anything else is a typo or an attempt to plant data. */
+export const SETTINGS_KEYS = [
+  "billing.catalog", "plans", "ai.models", "ai.multipliers", "ai.dailyCapPercent", "ai.rate", "ai.promptMaxChars", "ai.prices",
+  "release.url", "help.url", "legal.privacy", "legal.terms", "legal.refund", "support.email",
+];
 
 export type Role = "normal" | "vip" | "admin";
 export type Plan = "free" | "flash" | "high" | "knight";
@@ -57,7 +63,9 @@ export function createAdminHandler(deps: Deps): (req: Request) => Promise<Respon
       switch (body.action) {
         case "list_users": {
           let q = db.from("profiles").select("*").order("created_at", { ascending: false }).limit(Math.min(body.limit ?? 200, 1000));
-          if (body.query) q = q.or(`email.ilike.%${body.query}%,display_name.ilike.%${body.query}%`);
+          // PostgREST filter syntax: commas, brackets and wildcards in the search text would change the filter
+          const term = String(body.query ?? "").replace(/[,()%*\\]/g, "").trim().slice(0, 100);
+          if (term) q = q.or(`email.ilike.%${term}%,display_name.ilike.%${term}%`);
           const { data: users, error } = await q;
           if (error) throw error;
           const { data: balances } = await db.from("credit_balance").select("user_id,balance");
@@ -130,6 +138,8 @@ export function createAdminHandler(deps: Deps): (req: Request) => Promise<Respon
         case "set_settings": {
           const entries = Object.entries(body.settings ?? {});
           if (!entries.length) return json(400, { error: "settings required" });
+          const unknown = entries.map(([k]) => k).filter((k) => !SETTINGS_KEYS.includes(k));
+          if (unknown.length) return json(400, { error: `unknown settings: ${unknown.join(", ")}`, code: "unknown_setting" });
           const rows = entries.map(([key, value]) => ({ key, value, updated_at: new Date().toISOString() }));
           const { error } = await db.from("settings").upsert(rows, { onConflict: "key" });
           if (error) throw error;
@@ -162,8 +172,7 @@ export function createAdminHandler(deps: Deps): (req: Request) => Promise<Respon
           return json(400, { error: `unknown action: ${body.action}` });
       }
     } catch (e) {
-      console.error(e);
-      return json(500, { error: (e as Error).message ?? "internal error" });
+      return internalError("admin", e);
     }
   };
 }

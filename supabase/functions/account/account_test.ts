@@ -6,6 +6,12 @@ import { createAccountHandler } from "./handler.ts";
 const ME = { id: "u-me", email: "me@example.com", created_at: "2026-03-01T00:00:00Z" };
 const OTHER = "u-other";
 
+const cancelled: string[] = [];
+const cancelOk = (id: string) => {
+  cancelled.push(id);
+  return Promise.resolve();
+};
+
 function world(loggedIn = true) {
   const db = new FakeDb({
     profiles: [
@@ -21,8 +27,9 @@ function world(loggedIn = true) {
     ai_usage: [{ user_id: ME.id, charged_tokens: 6000, model: "claude-sonnet-5" }],
     bid_projects: [{ user_id: ME.id, key: "p1", name: "My site" }, { user_id: OTHER, key: "p2", name: "Theirs" }],
     admin_audit: [],
+    billing_events: [{ id: "evt_me", user_id: ME.id, payload: { data: { address: "x" } } }, { id: "evt_other", user_id: OTHER, payload: {} }],
   }, loggedIn ? ME : null);
-  return { db, handle: createAccountHandler(fakeDeps(db)) };
+  return { db, handle: createAccountHandler({ ...fakeDeps(db), cancelPaddleSubscription: cancelOk }) };
 }
 
 Deno.test("account: only POST, JSON and a session", async () => {
@@ -64,7 +71,10 @@ Deno.test("account: delete cancels active subscriptions, audits and removes the 
   assert.equal(audit[0].action, "delete_me");
   assert.equal(audit[0].admin_id, ME.id);
   assert.equal(audit[0].target, ME.id);
-  assert.deepEqual(audit[0].payload, { email: ME.email, subscriptions: 1 });
+  assert.equal(audit[0].payload.subscriptions, 1);
+  assert.match(audit[0].payload.email_hash, /^[0-9a-f]{64}$/);
+  assert.ok(!JSON.stringify(audit).includes(ME.email), "the audit row keeps no address");
+  assert.deepEqual(db.rows("billing_events").map((e) => e.id), ["evt_other"]);
 });
 
 Deno.test("account: delete marks the subscriptions canceled before the user goes", async () => {
@@ -92,4 +102,22 @@ Deno.test("account: a failing provider cancel stops the deletion", async () => {
   const res = await handle(post("account", { action: "delete" }));
   assert.equal(res.status, 500);
   assert.deepEqual(db.deletedUsers, []);
+});
+
+Deno.test("account: without a way to cancel at Paddle the deletion is refused, nothing changes", async () => {
+  const { db } = world();
+  const handle = createAccountHandler(fakeDeps(db));
+  const res = await handle(post("account", { action: "delete" }));
+  assert.equal(res.status, 409);
+  assert.equal((await res.json()).code, "subscription_active");
+  assert.deepEqual(db.deletedUsers, []);
+  assert.equal(db.rows("subscriptions").find((s) => s.id === "s1")?.status, "active");
+});
+
+Deno.test("account: errors do not leak database details", async () => {
+  const { db, handle } = world();
+  db.failures.ai_usage = { message: "relation ai_usage is on fire" };
+  const res = await handle(post("account", { action: "export" }));
+  assert.equal(res.status, 500);
+  assert.deepEqual(await res.json(), { error: "internal error", code: "internal" });
 });

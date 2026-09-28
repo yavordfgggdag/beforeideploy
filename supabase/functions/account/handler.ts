@@ -1,10 +1,11 @@
 // Before I Deploy — `account` Edge Function, request handler (V10 WP5, testable since L6):
 //   { "action": "export" } → every row the cloud holds for the caller (profile, subscriptions,
 //                            credit ledger, AI usage, project metadata)
-//   { "action": "delete" } → cancels active subscriptions, writes an audit row and deletes the auth
+//   { "action": "delete" } → cancels active subscriptions (409 when a Paddle one cannot be cancelled here),
+//                            writes an audit row (e-mail hashed), drops billing events and deletes the auth
 //                            user; profiles/subscriptions/credit_ledger/ai_usage/bid_projects cascade.
 //                            Local projects on the Mac are untouched (the engine only drops its session).
-import { callerOf, type Deps, json, readJson } from "../_shared/db.ts";
+import { callerOf, type Deps, internalError, json, must, readJson, sha256Hex } from "../_shared/db.ts";
 
 export interface AccountDeps extends Deps {
   /** Cancels a Paddle subscription immediately (index.ts calls the Paddle API); absent → local cancel only. */
@@ -48,15 +49,21 @@ export function createAccountHandler(deps: AccountDeps): (req: Request) => Promi
           });
         }
         case "delete": {
-          // cancel at the provider first, so a deleted account is never charged again
-          const { data: active } = await db.from("subscriptions").select("id,provider,provider_ref").eq("user_id", user.id).in("status", ["active", "trial", "past_due"]);
-          for (const sub of active ?? []) {
-            if (sub.provider === "paddle" && sub.provider_ref && deps.cancelPaddleSubscription) await deps.cancelPaddleSubscription(sub.provider_ref);
+          // cancel at the provider first, so a deleted account is never charged again (audit C11)
+          const { data: active } = await db.from("subscriptions").select("id,provider,provider_ref").eq("user_id", user.id).in("status", ["active", "trial", "past_due", "paused"]);
+          const paddleSubs = (active ?? []).filter((s) => s.provider === "paddle" && s.provider_ref);
+          if (paddleSubs.length && !deps.cancelPaddleSubscription) {
+            return json(409, { error: "cancel the subscription first (Manage subscription), then delete the account", code: "subscription_active" });
           }
+          for (const sub of paddleSubs) await deps.cancelPaddleSubscription!(sub.provider_ref);
           if (active?.length) {
-            await db.from("subscriptions").update({ status: "canceled", cancel_at: new Date().toISOString() }).eq("user_id", user.id);
+            must(await db.from("subscriptions").update({ status: "canceled", cancel_at: new Date().toISOString() }).eq("user_id", user.id));
           }
-          await db.from("admin_audit").insert({ admin_id: user.id, action: "delete_me", target: user.id, payload: { email: user.email, subscriptions: active?.length ?? 0 } });
+          // the audit row outlives the account: it keeps only a hash of the address, not the address
+          const emailHash = user.email ? await sha256Hex(user.email.trim().toLowerCase()) : null;
+          must(await db.from("admin_audit").insert({ admin_id: user.id, action: "delete_me", target: user.id, payload: { email_hash: emailHash, subscriptions: active?.length ?? 0 } }));
+          // billing events carry the payment payload (address, country) and do not cascade
+          must(await db.from("billing_events").delete().eq("user_id", user.id));
           if (!db.auth.admin) throw new Error("service client without admin API");
           const { error: delErr } = await db.auth.admin.deleteUser(user.id);
           if (delErr) throw delErr;
@@ -66,8 +73,7 @@ export function createAccountHandler(deps: AccountDeps): (req: Request) => Promi
           return json(400, { error: `unknown action: ${body.action}` });
       }
     } catch (e) {
-      console.error(e);
-      return json(500, { error: (e as Error).message ?? "internal error" });
+      return internalError("account", e);
     }
   };
 }

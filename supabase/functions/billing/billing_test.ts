@@ -255,3 +255,73 @@ Deno.test("billing: a yearly plan grants the monthly tokens every month, once ea
   await at("2027-12-01T00:00:00Z")(post("billing", { action: "status" }));
   assert.equal(db.rows("credit_ledger").filter((r) => r.reason === "plan_grant").length, 2, "nothing after the paid year");
 });
+
+// ---------------------------------------------------------------- audit batch 2 (C4–C6, C12)
+
+Deno.test("billing: an older subscription event does not undo a newer one", async () => {
+  const { db, handle } = world();
+  await webhook(handle, { ...subEvent("evt_new", "active"), occurred_at: "2026-10-10T12:00:00Z" });
+  const late = await (await webhook(handle, { ...subEvent("evt_old", "canceled"), occurred_at: "2026-10-01T12:00:00Z" })).json();
+  assert.match(late.ignored, /older/);
+  assert.equal(db.rows("subscriptions")[0].status, "active");
+  assert.equal(db.rows("profiles")[0].plan, "high");
+});
+
+Deno.test("billing: a failed write is a 500, and Paddle's retry processes the event again", async () => {
+  const { db, handle } = world();
+  const txn = { event_id: "evt_f", event_type: "transaction.completed", data: { id: "txn_f", custom_data: { user_id: USER.id }, items: [{ price: { id: "pri_pack" } }] } };
+  db.writeFailures.credit_ledger = { message: "disk full" };
+  const res = await webhook(handle, txn);
+  assert.equal(res.status, 500);
+  assert.deepEqual(await res.json(), { error: "internal error", code: "internal" }, "no database details leak");
+  assert.equal(db.rows("billing_events").length, 0, "the claim is removed");
+  delete db.writeFailures.credit_ledger;
+  assert.equal((await webhook(handle, txn)).status, 200);
+  assert.equal(sum(db.rows("credit_ledger"), "topup"), 500000);
+});
+
+Deno.test("billing: two deliveries of one transaction at the same time grant once", async () => {
+  const { db, handle } = world();
+  const txn = (id: string) => ({ event_id: id, event_type: "transaction.completed", data: { id: "txn_c", custom_data: { user_id: USER.id }, items: [{ price: { id: "pri_high" } }] } });
+  await Promise.all([webhook(handle, txn("evt_c1")), webhook(handle, txn("evt_c2")), webhook(handle, txn("evt_c1"))]);
+  assert.equal(sum(db.rows("credit_ledger")), 1000000);
+});
+
+Deno.test("billing: a proration charge on a plan change does not buy a new month", async () => {
+  const { db, handle } = world();
+  const r = await (await webhook(handle, { event_id: "evt_pr", event_type: "transaction.completed", data: { id: "txn_pr", origin: "subscription_update", custom_data: { user_id: USER.id }, items: [{ price: { id: "pri_high" } }] } })).json();
+  assert.match(r.ignored, /origin/);
+  assert.equal(db.rows("credit_ledger").length, 0);
+});
+
+Deno.test("billing: a partial refund takes back its share of the grant", async () => {
+  const { db, handle } = world();
+  await webhook(handle, { event_id: "evt_pk", event_type: "transaction.completed", data: { id: "txn_pk", custom_data: { user_id: USER.id }, details: { totals: { total: "1000" } }, items: [{ price: { id: "pri_pack" } }] } });
+  const r = await (await webhook(handle, { event_id: "evt_half", event_type: "adjustment.updated", data: { id: "adj_h", action: "refund", status: "approved", transaction_id: "txn_pk", totals: { total: "500" } } })).json();
+  assert.equal(r.share, 0.5);
+  assert.equal(sum(db.rows("credit_ledger"), "topup"), 250000);
+});
+
+Deno.test("billing: one trial per e-mail, even after the account is deleted and created again", async () => {
+  const { db, handle } = world();
+  assert.equal((await handle(post("billing", { action: "trial" }))).status, 200);
+  await db.auth.admin.deleteUser(USER.id);
+  // same address, new account
+  const again: AuthUser = { id: "u-2", email: "Ivan@Example.com" };
+  db.user = again;
+  db.tables.profiles.push({ user_id: again.id, email: again.email, role: "normal", plan: "free" });
+  const st = await (await handle(post("billing", { action: "status" }))).json();
+  assert.equal(st.trialAvailable, false);
+  const res = await handle(post("billing", { action: "trial" }));
+  assert.equal(res.status, 409);
+  assert.equal((await res.json()).code, "trial_used");
+  assert.equal(db.rows("trial_claims").length, 1);
+  assert.ok(!JSON.stringify(db.rows("trial_claims")).includes("example.com"), "only a hash is stored");
+});
+
+Deno.test("billing: two trial requests at once start one trial", async () => {
+  const { db, handle } = world();
+  const rs = await Promise.all([handle(post("billing", { action: "trial" })), handle(post("billing", { action: "trial" }))]);
+  assert.deepEqual(rs.map((r) => r.status).sort(), [200, 409]);
+  assert.equal(sum(db.rows("credit_ledger"), "plan"), 150000);
+});

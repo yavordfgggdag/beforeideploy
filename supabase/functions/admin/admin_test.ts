@@ -131,6 +131,17 @@ Deno.test("admin: set_settings upserts by key; get_settings reads back", async (
   assert.equal(settings["ai.dailyCapPercent"], 25);
   assert.deepEqual(settings["ai.rate"], { perMinute: 3 });
   assert.equal((await handle(post("admin", { action: "set_settings", settings: {} }))).status, 400);
+  const bad = await handle(post("admin", { action: "set_settings", settings: { "ai.rate": {}, "evil.key": 1 } }));
+  assert.equal(bad.status, 400);
+  assert.equal((await bad.json()).code, "unknown_setting");
+  assert.equal(db.rows("settings").length, 2, "nothing is saved when one key is unknown");
+});
+
+Deno.test("admin: list_users search text cannot inject PostgREST filters", async () => {
+  const { handle } = world();
+  const res = await handle(post("admin", { action: "list_users", query: "x%,role.eq.admin" }));
+  assert.equal(res.status, 200);
+  assert.equal((await res.json()).users.length, 0);
 });
 
 Deno.test("admin: audit_log lists newest first", async () => {
@@ -150,12 +161,12 @@ Deno.test("admin: unknown action → 400, get_user on a missing user → 404", a
   assert.equal((await res.json()).user.balance, 1200);
 });
 
-Deno.test("admin: a database error becomes 500 with the message", async () => {
+Deno.test("admin: a database error becomes a generic 500 (details stay in the log)", async () => {
   const { db, handle } = world();
   db.failures.credit_ledger = { message: "relation is on fire" };
   const res = await handle(post("admin", { action: "grant_credits", user_id: NORMAL.id, delta: 10 }));
   assert.equal(res.status, 500);
-  assert.equal((await res.json()).error, "relation is on fire");
+  assert.deepEqual(await res.json(), { error: "internal error", code: "internal" });
 });
 
 Deno.test("admin: invite creates the user with the role, audits, refuses duplicates and bad input", async () => {

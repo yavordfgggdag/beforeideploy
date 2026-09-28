@@ -29,6 +29,7 @@ export interface Query extends PromiseLike<Result> {
   insert(rows: Row | Row[]): Query;
   update(patch: Row): Query;
   upsert(rows: Row[], opts?: { onConflict?: string }): Query;
+  delete(): Query;
 }
 
 export interface AuthUser {
@@ -76,4 +77,24 @@ export async function callerOf(req: Request, deps: Deps): Promise<{ user: AuthUs
   const { data: { user }, error } = await asUser.auth.getUser();
   if (error || !user) return null;
   return { user, asUser };
+}
+
+/** Throws when a write failed — supabase-js reports errors in the result instead of throwing (audit C3). */
+export function must<T>(r: Result<T>): Result<T> {
+  if (r.error) throw Object.assign(new Error(r.error.message), { code: r.error.code });
+  return r;
+}
+
+/** Postgres unique violation: "already done" for idempotent writes. */
+export const isDuplicate = (e: unknown) => (e as { code?: string })?.code === "23505";
+
+/** Logs the details, answers with a generic message and a code (audit C13: no internal text to clients). */
+export function internalError(where: string, e: unknown): Response {
+  console.error(where, e);
+  return json(500, { error: "internal error", code: "internal" });
+}
+
+export async function sha256Hex(text: string): Promise<string> {
+  const d = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)));
+  return [...d].map((b) => b.toString(16).padStart(2, "0")).join("");
 }

@@ -28,6 +28,7 @@ quota, 127 Node missing; everything else exits 1.
 | `rest_failed` | 1 | A cloud table request failed (RLS, schema not applied, network mid-request). | Owner: check `supabase/schema.sql` is applied; users: retry, then send a support report. |
 | `sync_failed` | 1 | Cloud sync of the project list failed. | Retry from the account menu; local projects are never lost. |
 | `account_failed` | 1 | The `account` Edge Function (export / delete) returned an error. | Retry; owner: `supabase functions deploy account`. |
+| `subscription_active` | 1 | Account deletion was refused because a paid subscription is still running and the cloud cannot cancel it. | Cancel it in Plans → Manage subscription, then delete the account again. |
 | `billing_failed` | 1 | A billing request failed: item not on sale, trial already used, no subscription, payments not set up, or the provider did not answer. | The message says which; the plans screen shows only what can be bought. |
 | `admin_failed` | 1 | The `admin` Edge Function returned an error. | The message has the server's text; owner: function deployed and caller is `admin`? |
 | `aikey_failed` | 1 | Storing or checking an AI key in the Keychain failed. | Retry; if Keychain prompts appear, allow BeforeIDeploy. |
@@ -83,7 +84,10 @@ Returned as `code` in the JSON body; the engine maps them to the codes above (`q
 | `daily_cap` | 403 | Daily AI cap reached. |
 | `quota_exhausted` | 402 | No credits left. |
 | `rate_limited` | 429 | More than 6 requests a minute or 60 an hour. |
-| `prompt_too_long` | 413 | Prompt above `ai.promptMaxChars` (60 000 by default). |
+| `prompt_too_long` | 413 | Prompt plus system prompt above `ai.promptMaxChars` (60 000 by default) + 8 000. |
+| `model_error` | stream | The model reported an error mid-answer; what was produced is billed, the details are in the function log. |
+| `interrupted` | stream | The answer broke off (network or the app closed it); only what was produced is billed. |
+| `unknown_setting` | 400 | Admin → Global settings: a key outside the allowed list (see `SETTINGS_KEYS` in `admin/handler.ts`). |
 | `upstream` | 502 | The model API failed (network or 5xx). |
 | `invite_failed` | 409 | Supabase refused the invitation (the email is already registered, or SMTP is not set up). |
 | `bad_signature` | 401 | A billing webhook without a valid Paddle signature (not from Paddle, or a wrong `PADDLE_WEBHOOK_SECRET`). |

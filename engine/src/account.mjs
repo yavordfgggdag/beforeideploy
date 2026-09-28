@@ -307,6 +307,7 @@ async function accountFunction(session, action) {
   }
   const data = await res.json().catch(() => null);
   if (res.status === 401) throw new EngineError(msg('account.notLoggedIn'), 'not_logged_in', 5);
+  if (data?.code === 'subscription_active') throw new EngineError(msg('account.delete.subscriptionActive'), 'subscription_active');
   if (!res.ok) throw new EngineError(msg('account.rest.http', { status: res.status, detail: data?.error || '' }), 'account_failed');
   return data;
 }

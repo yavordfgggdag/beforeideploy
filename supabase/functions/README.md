@@ -47,3 +47,10 @@ Local run against the engine: `supabase functions serve` and `BID_SUPABASE_URL=h
    `subscription.*`, `transaction.completed`, `adjustment.created`, `adjustment.updated`; copy its secret
    into `PADDLE_WEBHOOK_SECRET`.
 4. Test in sandbox (`PADDLE_ENV=sandbox`), then switch to `live`.
+
+### Upgrading an existing database (V10 audit)
+
+Run `supabase/schema.sql` again in the SQL editor — every statement is idempotent. It adds `trial_claims`,
+`billing_events.user_id/ref`, `subscriptions.event_at`, the `credit_bucket_balance` view and the unique index
+`credit_ledger_once` (each grant / refund / expiry once per reference). If that index fails, the ledger already
+has duplicates; the query in the comment above it lists them. Then redeploy all four functions.

@@ -5,13 +5,16 @@ import type { AuthUser, DbClient, DbError, Query, Result, Row } from "./db.ts";
 
 type Filter = (row: Row) => boolean;
 
+/** Ledger reasons that must happen once per ref (unique index credit_ledger_once in schema.sql). */
+export const GRANT_REASONS = ["plan_grant", "trial_grant", "topup", "refund", "expiry"];
+
 function ilike(pattern: string): (value: unknown) => boolean {
   const re = new RegExp("^" + pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/%/g, ".*") + "$", "i");
   return (v) => re.test(String(v ?? ""));
 }
 
 class FakeQuery implements Query {
-  private op: "select" | "insert" | "update" | "upsert" = "select";
+  private op: "select" | "insert" | "update" | "upsert" | "delete" = "select";
   private filters: Filter[] = [];
   private orderBy: { column: string; ascending: boolean } | null = null;
   private limitN: number | null = null;
@@ -80,6 +83,10 @@ class FakeQuery implements Query {
     this.patch = patch;
     return this;
   }
+  delete(): Query {
+    this.op = "delete";
+    return this;
+  }
   upsert(rows: Row[], opts?: { onConflict?: string }): Query {
     this.op = "upsert";
     this.payload = rows;
@@ -95,9 +102,12 @@ class FakeQuery implements Query {
   }
 
   private run(): Result {
-    const fail = this.db.failures[this.table];
+    const fail = this.db.failures[this.table] ?? (this.op !== "select" ? this.db.writeFailures[this.table] : undefined);
     if (fail) return { data: null, error: fail };
-    const rows = (this.db.tables[this.table] ??= []);
+    // credit_balance is a view over credit_ledger (schema.sql) unless a test seeds it directly
+    const rows = this.table === "credit_balance" && !this.db.tables.credit_balance
+      ? this.db.balances()
+      : this.table === "credit_bucket_balance" ? this.db.balances(true) : (this.db.tables[this.table] ??= []);
     this.db.log.push({ table: this.table, op: this.op });
     switch (this.op) {
       case "select": {
@@ -110,7 +120,21 @@ class FakeQuery implements Query {
         if (this.counting && this.head) return { data: null, error: null, count: out.length };
         return this.finish(out);
       }
+      case "delete": {
+        const gone = rows.filter((r) => this.filters.every((f) => f(r)));
+        this.db.tables[this.table] = rows.filter((r) => !gone.includes(r));
+        return this.finish(gone);
+      }
       case "insert": {
+        // unique keys declared per table (like the real schema) → Postgres error 23505
+        const uniq = this.db.unique[this.table] ?? [];
+        for (const r of this.payload) {
+          for (const u of uniq) {
+            if (u.when && !u.when(r)) continue;
+            const clash = rows.some((x) => (!u.when || u.when(x)) && u.cols.every((c) => x[c] !== undefined && x[c] === r[c]));
+            if (clash) return { data: null, error: { message: `duplicate key (${u.cols.join(",")})`, code: "23505" } };
+          }
+        }
         const inserted = this.payload.map((r) => ({ id: crypto.randomUUID(), created_at: this.db.nextTimestamp(), ...r }));
         rows.push(...inserted);
         return this.finish(inserted);
@@ -148,6 +172,15 @@ export class FakeDb implements DbClient {
   tables: Record<string, Row[]>;
   /** Table → error every query on it returns (to test the 500 path). */
   failures: Record<string, DbError> = {};
+  /** Table → failing only writes (insert/update/upsert/delete). */
+  writeFailures: Record<string, DbError> = {};
+  /** Table → column sets that must be unique (mirrors the unique indexes in schema.sql). */
+  unique: Record<string, { cols: string[]; when?: (r: Row) => boolean }[]> = {
+    billing_events: [{ cols: ["id"] }],
+    trial_claims: [{ cols: ["email_hash"] }],
+    credit_ledger: [{ cols: ["user_id", "ref", "reason"], when: (r) => GRANT_REASONS.includes(String(r.reason)) && r.ref != null }],
+    subscriptions: [{ cols: ["user_id", "provider"], when: (r) => r.provider === "trial" }],
+  };
   log: { table: string; op: string }[] = [];
   deletedUsers: string[] = [];
   invited: { email: string; data: Row }[] = [];
@@ -185,6 +218,19 @@ export class FakeDb implements DbClient {
       },
     },
   };
+
+  /** Same as the credit_balance view (per user, holds included) or credit_bucket_balance (per user and bucket). */
+  balances(byBucket = false): Row[] {
+    const sums = new Map<string, Row>();
+    for (const r of this.rows("credit_ledger")) {
+      const bucket = String(r.bucket ?? "plan");
+      const k = byBucket ? `${r.user_id}\u0000${bucket}` : String(r.user_id);
+      const row = sums.get(k) ?? { user_id: r.user_id, ...(byBucket ? { bucket } : {}), balance: 0 };
+      row.balance += Number(r.delta ?? 0);
+      sums.set(k, row);
+    }
+    return [...sums.values()];
+  }
 
   rows(table: string): Row[] {
     return this.tables[table] ?? [];

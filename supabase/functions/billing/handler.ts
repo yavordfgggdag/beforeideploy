@@ -15,8 +15,8 @@
 //    portal   → Paddle customer portal URL (change card, cancel, invoices)
 //
 // Prices and Paddle price ids live in `settings.billing.catalog`, token amounts in `settings.plans`.
-import { callerOf, type DbClient, type Deps, json, type Row } from "../_shared/db.ts";
-import { bucketBalance, ensureMonthlyGrant, grantPlanTokens } from "../_shared/credits.ts";
+import { callerOf, type DbClient, type Deps, internalError, isDuplicate, json, must, type Row, sha256Hex } from "../_shared/db.ts";
+import { bucketBalance, ensureMonthlyGrant, expireDue, grantPlanTokens, insertOnce } from "../_shared/credits.ts";
 
 export type Plan = "free" | "flash" | "high" | "knight";
 const PAID: Plan[] = ["flash", "high", "knight"];
@@ -71,11 +71,15 @@ function safeEqual(a: string, b: string): boolean {
 /** Paddle-Signature: `ts=1671552777;h1=<hex>` — h1 = HMAC-SHA256(secret, `${ts}:${body}`), 5 min tolerance. */
 export async function verifyPaddleSignature(header: string | null, body: string, secret: string, now = new Date()): Promise<boolean> {
   if (!header || !secret) return false;
-  const parts = Object.fromEntries(header.split(";").map((p) => p.split("=", 2) as [string, string]));
-  const ts = Number(parts.ts);
-  if (!parts.h1 || !Number.isFinite(ts)) return false;
+  const pairs = header.split(";").map((p) => p.split("=", 2) as [string, string]);
+  const tsText = pairs.find(([k]) => k === "ts")?.[1] ?? "";
+  const ts = Number(tsText);
+  // several h1 values arrive while the webhook secret is being rotated — any match is enough
+  const signatures = pairs.filter(([k, v]) => k === "h1" && v).map(([, v]) => v);
+  if (!signatures.length || !Number.isFinite(ts)) return false;
   if (Math.abs(now.getTime() / 1000 - ts) > 300) return false;
-  return safeEqual(await hmacHex(secret, `${parts.ts}:${body}`), parts.h1);
+  const expected = await hmacHex(secret, `${tsText}:${body}`);
+  return signatures.some((h) => safeEqual(expected, h));
 }
 
 export async function signPaddle(body: string, secret: string, now = new Date()): Promise<string> {
@@ -102,10 +106,6 @@ function packForPrice(catalog: Catalog, priceId: string | undefined) {
   return priceId ? catalog.packs.find((p) => p.paddlePriceId === priceId) ?? null : null;
 }
 
-async function alreadyGranted(db: DbClient, userId: string, ref: string): Promise<boolean> {
-  const { data } = await db.from("credit_ledger").select("id,reason").eq("user_id", userId).eq("ref", ref);
-  return (data ?? []).some((r: Row) => r.reason !== "expiry");
-}
 
 const ACTIVE = ["active", "trialing", "past_due"];
 
@@ -127,47 +127,70 @@ async function handleWebhook(req: Request, deps: BillingDeps): Promise<Response>
   const eventId = String(event.event_id ?? "");
   const type = String(event.event_type ?? "");
   if (!eventId || !type) return json(400, { error: "event_id and event_type required" });
-  const { data: seen } = await db.from("billing_events").select("id").eq("id", eventId).maybeSingle();
-  if (seen) return json(200, { ok: true, duplicate: true });
 
   const d = (event.data ?? {}) as Row;
   const userId: string | undefined = d.custom_data?.user_id;
+
+  // Idempotency (audit C4): claim the event first — a concurrent or repeated delivery hits the primary
+  // key and stops here. If processing fails the claim is removed, so Paddle's retry runs it again.
+  const ref = type.startsWith("transaction.") ? String(d.id ?? "") || null : null;
+  const claim = await db.from("billing_events").insert({ id: eventId, provider: "paddle", type, user_id: userId ?? null, ref, payload: event });
+  if (claim.error) {
+    if (isDuplicate(claim.error)) return json(200, { ok: true, duplicate: true });
+    return internalError("billing claim", claim.error);
+  }
+  const { data: seenBefore } = await db.from("billing_events").select("id").eq("id", eventId);
+  if ((seenBefore ?? []).length > 1) return json(200, { ok: true, duplicate: true });
+
   const { catalog, planTokens } = await loadCatalog(db);
   let result: Row = { ignored: true };
+  const occurredAt = String(event.occurred_at ?? d.updated_at ?? now.toISOString());
 
   try {
     if (type.startsWith("subscription.")) {
-      if (!userId) return json(200, { ok: true, ignored: "no custom_data.user_id" });
       const priceId = d.items?.[0]?.price?.id;
       const tier = tierForPrice(catalog, priceId);
-      if (!tier) return json(200, { ok: true, ignored: `unknown price ${priceId}` });
-      const status = String(d.status ?? "active");
-      const row = {
-        user_id: userId,
-        provider: "paddle",
-        provider_ref: String(d.id),
-        customer_ref: d.customer_id ?? null,
-        tier,
-        status: status === "trialing" ? "trial" : status,
-        period_start: d.current_billing_period?.starts_at ?? null,
-        period_end: d.current_billing_period?.ends_at ?? null,
-        cancel_at: d.scheduled_change?.action === "cancel" ? d.scheduled_change.effective_at : (d.canceled_at ?? null),
-        raw: d,
-        updated_at: now.toISOString(),
-      };
-      const { data: existing } = await db.from("subscriptions").select("id").eq("provider", "paddle").eq("provider_ref", row.provider_ref).maybeSingle();
-      if (existing) await db.from("subscriptions").update(row).eq("id", existing.id);
-      else await db.from("subscriptions").insert(row);
-      const plan: Plan = ACTIVE.includes(status) ? tier : "free";
-      await db.from("profiles").update({ plan }).eq("user_id", userId);
-      result = { subscription: row.provider_ref, plan };
+      if (!userId) result = { ignored: "no custom_data.user_id" };
+      else if (!tier) result = { ignored: `unknown price ${priceId}` };
+      else {
+        const status = String(d.status ?? "active");
+        const row = {
+          user_id: userId,
+          provider: "paddle",
+          provider_ref: String(d.id),
+          customer_ref: d.customer_id ?? null,
+          tier,
+          status: status === "trialing" ? "trial" : status,
+          period_start: d.current_billing_period?.starts_at ?? null,
+          period_end: d.current_billing_period?.ends_at ?? null,
+          cancel_at: d.scheduled_change?.action === "cancel" ? d.scheduled_change.effective_at : (d.canceled_at ?? null),
+          event_at: occurredAt,
+          raw: d,
+          updated_at: now.toISOString(),
+        };
+        const { data: existing } = await db.from("subscriptions").select("id,event_at").eq("provider", "paddle").eq("provider_ref", row.provider_ref).maybeSingle();
+        // Paddle does not promise order: an older event must not undo a newer one (audit C5)
+        if (existing?.event_at && new Date(existing.event_at).getTime() > new Date(occurredAt).getTime()) {
+          result = { ignored: "older than the stored state", subscription: row.provider_ref };
+        } else {
+          if (existing) must(await db.from("subscriptions").update(row).eq("id", existing.id));
+          else must(await db.from("subscriptions").insert(row));
+          const plan: Plan = ACTIVE.includes(status) ? tier : "free";
+          // a VIP/admin keeps the plan an admin gave them; normal users follow the subscription
+          const { data: prof } = await db.from("profiles").select("role").eq("user_id", userId).maybeSingle();
+          if ((prof?.role ?? "normal") === "normal" || plan !== "free") must(await db.from("profiles").update({ plan }).eq("user_id", userId));
+          result = { subscription: row.provider_ref, plan };
+        }
+      }
     } else if (type === "transaction.completed") {
-      if (!userId) return json(200, { ok: true, ignored: "no custom_data.user_id" });
       const txn = String(d.id);
-      if (await alreadyGranted(db, userId, txn)) {
-        result = { duplicateTransaction: txn };
-      } else {
+      // proration charges on a plan change must not buy a whole new month of tokens (audit C12)
+      const grantable = !d.origin || ["web", "api", "subscription_recurring", "subscription_charge"].includes(String(d.origin));
+      if (!userId) result = { ignored: "no custom_data.user_id" };
+      else if (!grantable) result = { ignored: `origin ${d.origin}`, transaction: txn };
+      else {
         const granted: Row[] = [];
+        let duplicate = false;
         for (const item of (d.items ?? []) as Row[]) {
           const priceId = item.price?.id ?? item.price_id;
           const qty = Number(item.quantity ?? 1);
@@ -175,41 +198,44 @@ async function handleWebhook(req: Request, deps: BillingDeps): Promise<Response>
           const pack = packForPrice(catalog, priceId);
           if (tier) {
             const tokens = planTokens[tier]?.tokens ?? 0;
-            await grantPlanTokens(db, userId, tokens, "plan_grant", txn);
-            granted.push({ tier, tokens });
+            if (await grantPlanTokens(db, userId, tokens, "plan_grant", txn)) granted.push({ tier, tokens });
+            else duplicate = true;
           } else if (pack) {
-            await db.from("credit_ledger").insert({ user_id: userId, delta: pack.tokens * qty, bucket: "topup", reason: "topup", ref: txn });
-            granted.push({ pack: pack.id, tokens: pack.tokens * qty });
+            if (await insertOnce(db, { user_id: userId, delta: pack.tokens * qty, bucket: "topup", reason: "topup", ref: `${txn}:${priceId}` })) {
+              granted.push({ pack: pack.id, tokens: pack.tokens * qty });
+            } else duplicate = true;
           }
         }
-        result = { transaction: txn, granted };
+        result = duplicate && !granted.length ? { duplicateTransaction: txn } : { transaction: txn, granted };
       }
-    }
-    else if ((type === "adjustment.created" || type === "adjustment.updated") && d.action === "refund" && d.status === "approved") {
-      // a refund takes back what is left of the tokens that transaction granted (spent tokens stay spent)
+    } else if ((type === "adjustment.created" || type === "adjustment.updated") && d.action === "refund" && d.status === "approved") {
+      // a refund takes back what is left of the tokens that transaction granted (spent tokens stay spent),
+      // in proportion when only part of the payment is refunded (audit C12)
       const txn = String(d.transaction_id ?? "");
-      const { data: grants } = await db.from("credit_ledger").select("user_id,delta,bucket,reason").eq("ref", txn);
-      const granted = (grants ?? []).filter((g: Row) => g.reason === "plan_grant" || g.reason === "topup");
-      const refundRef = `refund:${d.id ?? txn}`;
-      const { data: done } = await db.from("credit_ledger").select("id").eq("ref", refundRef);
+      const { data: paid } = await db.from("billing_events").select("user_id,payload").eq("type", "transaction.completed").eq("ref", txn).limit(1);
+      const originalEvent = (paid ?? [])[0] as Row | undefined;
+      const original = originalEvent?.payload?.data as Row | undefined;
+      // every ref this transaction can have granted under: the plan (txn) and each pack (txn:price)
+      const refs = [txn, ...catalog.packs.filter((p) => p.paddlePriceId).map((p) => `${txn}:${p.paddlePriceId}`)];
+      const { data: rows } = await db.from("credit_ledger").select("user_id,delta,bucket,reason,ref").in("ref", refs);
+      const granted = (rows ?? []).filter((g: Row) => g.reason === "plan_grant" || g.reason === "topup");
+      const refunded = Number(d.totals?.total ?? 0);
+      const total = Number(original?.details?.totals?.total ?? original?.totals?.total ?? 0);
+      const share = refunded > 0 && total > 0 ? Math.min(1, refunded / total) : 1;
       const taken: Row[] = [];
-      if (!(done ?? []).length) {
-        for (const g of granted) {
-          const left = await bucketBalance(db, g.user_id, g.bucket);
-          const take = Math.min(Number(g.delta), Math.max(0, left));
-          if (take > 0) {
-            await db.from("credit_ledger").insert({ user_id: g.user_id, delta: -take, bucket: g.bucket, reason: "refund", ref: refundRef });
-            taken.push({ bucket: g.bucket, tokens: take });
-          }
+      for (const g of granted) {
+        const left = await bucketBalance(db, g.user_id, g.bucket);
+        const take = Math.min(Math.round(Number(g.delta) * share), Math.max(0, left));
+        if (take > 0 && (await insertOnce(db, { user_id: g.user_id, delta: -take, bucket: g.bucket, reason: "refund", ref: `refund:${d.id ?? txn}:${g.ref}` }))) {
+          taken.push({ bucket: g.bucket, tokens: take });
         }
       }
-      result = { refund: txn, taken };
+      result = { refund: txn, taken, share };
     }
-    await db.from("billing_events").insert({ id: eventId, provider: "paddle", type, payload: event });
     return json(200, { ok: true, ...result });
   } catch (e) {
-    console.error("billing webhook", e);
-    return json(500, { error: (e as Error).message ?? "internal error" }); // Paddle retries
+    await db.from("billing_events").delete().eq("id", eventId); // let Paddle's retry process it again
+    return internalError("billing webhook", e);
   }
 }
 
@@ -229,24 +255,15 @@ async function paddle(deps: BillingDeps, path: string, body: unknown): Promise<R
 
 // ---------------------------------------------------------------- user actions
 
-async function statusOf(db: DbClient, userId: string, catalog: Catalog, now: Date) {
+async function statusOf(db: DbClient, userId: string, email: string | null, catalog: Catalog, now: Date) {
   const { data: profile } = await db.from("profiles").select("plan,role").eq("user_id", userId).maybeSingle();
+  // an ended trial or subscription expires here too (shared with ai-fix, audit C5/C10)
+  const plan = ((await expireDue(db, userId, now)) ?? profile?.plan ?? "free") as Plan;
   const { data: subs } = await db.from("subscriptions").select("*").eq("user_id", userId).order("updated_at", { ascending: false });
   const list = (subs ?? []) as Row[];
-  let plan = (profile?.plan ?? "free") as Plan;
-  let current = list.find((s) => ["active", "trial", "past_due"].includes(s.status)) ?? null;
-
-  // lazy expiry: a trial or a subscription whose period ended without a renewal webhook
-  if (current?.period_end && new Date(current.period_end).getTime() < now.getTime() && (current.provider === "trial" || current.status === "past_due")) {
-    await db.from("subscriptions").update({ status: "expired", updated_at: now.toISOString() }).eq("id", current.id);
-    const rest = await bucketBalance(db, userId, "plan");
-    if (rest > 0) await db.from("credit_ledger").insert({ user_id: userId, delta: -rest, bucket: "plan", reason: "expiry", ref: String(current.id) });
-    if (profile?.role === "normal" || !profile?.role) {
-      await db.from("profiles").update({ plan: "free" }).eq("user_id", userId);
-      plan = "free";
-    }
-    current = null;
-  }
+  const current = list.find((s) => ["active", "trial", "past_due"].includes(s.status)) ?? null;
+  const emailHash = email ? await sha256Hex(email.trim().toLowerCase()) : null;
+  const { data: claim } = emailHash ? await db.from("trial_claims").select("email_hash").eq("email_hash", emailHash).maybeSingle() : { data: null };
 
   const planBalance = await bucketBalance(db, userId, "plan");
   const topupBalance = await bucketBalance(db, userId, "topup");
@@ -257,7 +274,7 @@ async function statusOf(db: DbClient, userId: string, catalog: Catalog, now: Dat
       ? { provider: current.provider, tier: current.tier, status: current.status, interval: current.raw?.billing_cycle?.interval ?? "month", renewsAt: current.cancel_at ? null : current.period_end, endsAt: current.cancel_at ?? (current.provider === "trial" ? current.period_end : null), manageable: current.provider === "paddle" && !!current.customer_ref }
       : null,
     balance: { plan: Math.max(0, planBalance), topup: Math.max(0, topupBalance), total: Math.max(0, planBalance + topupBalance) },
-    trialAvailable: !!catalog.trial && !list.some((s) => s.provider === "trial" || s.provider === "paddle"),
+    trialAvailable: !!catalog.trial && !claim && !list.some((s) => s.provider === "trial" || s.provider === "paddle"),
     usage: (usage ?? []).map((u: Row) => ({ at: u.created_at, step: u.step, model: u.model, tokens: Number(u.charged_tokens ?? 0), project: u.project_key })),
   };
 }
@@ -276,6 +293,7 @@ export function createBillingHandler(deps: BillingDeps): (req: Request) => Promi
     const who = await callerOf(req, deps);
     if (!who) return json(401, { error: "no session" });
     const userId = who.user.id;
+    const email: string | null = who.user.email ?? null;
     const db = deps.service();
     const now = deps.now?.() ?? new Date();
     const { catalog, planTokens } = await loadCatalog(db);
@@ -299,7 +317,7 @@ export function createBillingHandler(deps: BillingDeps): (req: Request) => Promi
 
         case "status":
           await ensureMonthlyGrant(db, userId, planTokens, now);
-          return json(200, await statusOf(db, userId, catalog, now));
+          return json(200, await statusOf(db, userId, email, catalog, now));
 
         case "checkout": {
           const planId = typeof body.plan === "string" ? body.plan : null;
@@ -321,16 +339,26 @@ export function createBillingHandler(deps: BillingDeps): (req: Request) => Promi
         }
 
         case "trial": {
-          const st = await statusOf(db, userId, catalog, now);
-          if (!st.trialAvailable || !catalog.trial) return json(409, { error: "the trial was already used", code: "trial_used" });
+          const st = await statusOf(db, userId, email, catalog, now);
+          if (!st.trialAvailable || !catalog.trial || !email) return json(409, { error: "the trial was already used", code: "trial_used" });
           const t = catalog.trial;
+          // one trial per e-mail address, even after the account is deleted and created again (audit C6)
+          const claim = await db.from("trial_claims").insert({ email_hash: await sha256Hex(email.trim().toLowerCase()), claimed_at: now.toISOString() });
+          if (claim.error) {
+            if (isDuplicate(claim.error)) return json(409, { error: "the trial was already used", code: "trial_used" });
+            must(claim);
+          }
           const end = new Date(now.getTime() + t.days * 86400_000).toISOString();
-          const { data: sub } = await db.from("subscriptions").insert({
+          const sub = await db.from("subscriptions").insert({
             user_id: userId, provider: "trial", tier: t.plan, status: "trial", period_start: now.toISOString(), period_end: end, updated_at: now.toISOString(),
           }).select("id").maybeSingle();
-          await db.from("profiles").update({ plan: t.plan }).eq("user_id", userId);
-          await grantPlanTokens(db, userId, t.tokens, "trial_grant", String(sub?.id ?? "trial"));
-          return json(200, await statusOf(db, userId, catalog, now));
+          if (sub.error) {
+            if (isDuplicate(sub.error)) return json(409, { error: "the trial was already used", code: "trial_used" });
+            must(sub);
+          }
+          must(await db.from("profiles").update({ plan: t.plan }).eq("user_id", userId));
+          await grantPlanTokens(db, userId, t.tokens, "trial_grant", String(sub.data?.id ?? `trial:${userId}`));
+          return json(200, await statusOf(db, userId, email, catalog, now));
         }
 
         case "portal": {
@@ -349,8 +377,7 @@ export function createBillingHandler(deps: BillingDeps): (req: Request) => Promi
     } catch (e) {
       const err = e as Error & { status?: number; code?: string };
       if (err.status) return json(err.status, { error: err.message, code: err.code });
-      console.error("billing", e);
-      return json(500, { error: err.message ?? "internal error" });
+      return internalError("billing", e);
     }
   };
 }

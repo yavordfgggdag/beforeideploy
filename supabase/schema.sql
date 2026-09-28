@@ -62,11 +62,13 @@ drop policy if exists "update own profile" on public.profiles;
 create policy "update own profile" on public.profiles
   for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+-- Not security definer: current_user must be the caller's role. A client session (anon/authenticated) may not
+-- touch these columns; the service role (Edge Functions) and the owner in the SQL editor may (audit C7 — the
+-- earlier auth.role() check also blocked the owner's "make yourself admin" update below).
 create or replace function public.profiles_protect_columns()
-returns trigger language plpgsql security definer set search_path = public as $$
+returns trigger language plpgsql security invoker set search_path = public as $$
 begin
-  -- service role (Edge Functions) may change anything; a user session may not touch these
-  if coalesce(auth.role(), '') <> 'service_role' then
+  if current_user in ('anon', 'authenticated') then
     new.role := old.role;
     new.plan := old.plan;
     new.ai_disabled := old.ai_disabled;
@@ -150,7 +152,8 @@ create table if not exists public.credit_ledger (
   user_id    uuid not null references public.profiles(user_id) on delete cascade,
   delta      bigint not null,                -- + grant, − usage
   bucket     text not null default 'plan',   -- 'plan' (monthly, expires) | 'topup' (packs, 12 months)
-  reason     text not null,                  -- plan_grant | topup | ai_fix | admin_grant | refund | expiry
+                                             -- | 'hold' (an AI request in flight; replaced by the real charge)
+  reason     text not null,                  -- plan_grant | trial_grant | topup | ai_fix | hold | admin_grant | refund | expiry
   ref        text,                           -- ai_usage.id / order id
   created_at timestamptz not null default now()
 );
@@ -167,6 +170,13 @@ create or replace view public.credit_balance
   select user_id, sum(delta)::bigint as balance
   from public.credit_ledger
   group by user_id;
+
+-- per bucket, summed in Postgres: the Edge Functions never page through ledger rows (audit C8)
+create or replace view public.credit_bucket_balance
+  with (security_invoker = true) as
+  select user_id, bucket, sum(delta)::bigint as balance
+  from public.credit_ledger
+  group by user_id, bucket;
 
 create table if not exists public.ai_usage (
   id             uuid primary key default gen_random_uuid(),
@@ -229,6 +239,32 @@ insert into public.settings (key, value) values
      ]
    }')
 on conflict (key) do nothing;
+
+-- ---------------------------------------------------------------- V10 audit migration (batch 2)
+-- Safe to run again. On an existing database, first check for duplicates the unique indexes would reject:
+--   select user_id, ref, reason, count(*) from public.credit_ledger group by 1,2,3 having count(*) > 1;
+
+-- one trial per e-mail address, surviving account deletion (only a SHA-256 of the lower-cased address)
+create table if not exists public.trial_claims (
+  email_hash text primary key,
+  claimed_at timestamptz not null default now()
+);
+alter table public.trial_claims enable row level security;   -- no policies: service role only
+create unique index if not exists subscriptions_one_trial on public.subscriptions (user_id) where provider = 'trial';
+
+-- webhook idempotency and ordering (C4/C5); user_id lets account deletion remove the payment payloads
+alter table public.billing_events add column if not exists user_id uuid;
+alter table public.billing_events add column if not exists ref text;   -- the transaction id (refund lookup)
+create index if not exists billing_events_ref_idx on public.billing_events (type, ref);
+create index if not exists billing_events_user_idx on public.billing_events (user_id);
+alter table public.subscriptions add column if not exists event_at timestamptz;
+
+-- every grant, refund and expiry happens once per reference, even with concurrent deliveries (C3)
+create unique index if not exists credit_ledger_once on public.credit_ledger (user_id, ref, reason)
+  where reason in ('plan_grant', 'trial_grant', 'topup', 'refund', 'expiry') and ref is not null;
+create index if not exists credit_ledger_ref_idx on public.credit_ledger (ref);
+create index if not exists credit_ledger_bucket_idx on public.credit_ledger (user_id, bucket);
+create index if not exists admin_audit_created_idx on public.admin_audit (created_at desc);
 
 -- ---------------------------------------------------------------- owner
 -- Make yourself admin once (replace the email):
