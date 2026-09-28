@@ -70,6 +70,7 @@ struct LanguageTile: View {
                     Text(code).font(.system(size: 11, design: .monospaced)).foregroundColor(Theme.tertiary)
                 }
                 Spacer(minLength: 0)
+                if !Localization.isReviewed(code) { BetaBadge() }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
@@ -96,12 +97,25 @@ struct LanguageRow: View {
             Spacer()
             Picker("", selection: Binding(get: { Localization.current }, set: { model.setLanguage($0) })) {
                 ForEach(Localization.available, id: \.self) { code in
-                    Text(Localization.nativeName(code)).tag(code)
+                    Text(Localization.isReviewed(code) ? Localization.nativeName(code) : L("language.betaName", Localization.nativeName(code))).tag(code)
                 }
             }
             .labelsHidden()
             .pickerStyle(.menu)
             .frame(width: 180)
         }
+    }
+}
+
+/// "Beta" chip for languages whose texts were machine translated and not reviewed yet.
+struct BetaBadge: View {
+    var body: some View {
+        Text(L("language.beta"))
+            .font(.system(size: 9.5, weight: .heavy))
+            .tracking(0.6)
+            .foregroundColor(Theme.warn)
+            .padding(.horizontal, 6).padding(.vertical, 2)
+            .background(Capsule().fill(Theme.warn.opacity(0.14)))
+            .help(L("language.betaHelp"))
     }
 }

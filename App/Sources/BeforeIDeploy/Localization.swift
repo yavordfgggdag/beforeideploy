@@ -82,6 +82,13 @@ enum Localization {
         return b
     }
 
+    /// False for machine-translated catalogs nobody has reviewed yet (`"_meta.reviewed" = "false"`, written by
+    /// scripts/i18n-translate.mjs) and for languages without a catalog; the language picker shows a beta badge.
+    static func isReviewed(_ code: String) -> Bool {
+        guard let b = bundle(for: code) else { return false }
+        return b.localizedString(forKey: "_meta.reviewed", value: missing, table: nil) == "true"
+    }
+
     /// Text for `key` in `lang` (the active language by default), then English, else the key itself.
     static func string(_ key: String, in lang: String? = nil) -> String {
         for code in [lang ?? current, fallback] {

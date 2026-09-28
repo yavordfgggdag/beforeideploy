@@ -100,7 +100,11 @@ for (const f of swiftFiles) {
 if (app.en) {
   const unknown = [...used].filter((k) => !(k in app.en));
   if (unknown.length) errors.push(`app: ${unknown.length} key(s) used in Swift but missing in en: ${unknown.slice(0, 15).join(', ')}`);
-  const unused = Object.keys(app.en).filter((k) => !used.has(k));
+  // `_meta.*` keys describe the catalog itself (e.g. `_meta.reviewed`), the app reads them by name
+  const unused = Object.keys(app.en).filter((k) => !used.has(k) && !k.startsWith('_meta.'));
+  for (const [lang, cat] of Object.entries(app)) {
+    if (!['true', 'false'].includes(cat['_meta.reviewed'])) errors.push(`app ${lang}: "_meta.reviewed" must be "true" or "false"`);
+  }
   if (unused.length) errors.push(`app: ${unused.length} unused key(s): ${unused.slice(0, 15).join(', ')}`);
 }
 if (cyrillic && allowCyrillic) warn.push(`${cyrillic} hard-coded Cyrillic literal(s) left in Swift`);

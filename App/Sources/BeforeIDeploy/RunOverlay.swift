@@ -12,7 +12,9 @@ struct RunOverlay: View {
 
     var body: some View {
         ZStack {
-            Color.black.opacity(0.55)
+            // frosted scrim: the app stays visible, blurred, behind the run
+            Rectangle().fill(.ultraThinMaterial)
+                .overlay(Color.black.opacity(0.38))
                 .ignoresSafeArea()
                 .onTapGesture { if session.finished { close() } }
 
@@ -30,19 +32,25 @@ struct RunOverlay: View {
             }
             .frame(width: 900, height: 600)
             .background(
-                RoundedRectangle(cornerRadius: 20, style: .continuous).fill(Theme.panel)
+                ZStack {
+                    RoundedRectangle(cornerRadius: 20, style: .continuous).fill(Theme.panel)
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(LinearGradient(colors: [headerTint.opacity(0.10), .clear], startPoint: .top, endPoint: .center))
+                        .animation(Motion.gentle, value: session.finished)
+                }
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1)
+                RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(Theme.edgeHighlight, lineWidth: 1)
             )
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .shadow(color: .black.opacity(0.5), radius: 40, y: 16)
+            .shadow(color: .black.opacity(0.25), radius: 2, y: 1)
+            .shadow(color: .black.opacity(0.5), radius: 44, y: 18)
         }
         .onExitCommand { if session.finished { close() } }
     }
 
     private func close() {
-        withAnimation(.spring(response: 0.3)) { model.run = nil }
+        withAnimation(Motion.spring) { model.run = nil }
     }
 
     // MARK: header
@@ -51,6 +59,7 @@ struct RunOverlay: View {
         HStack(spacing: 14) {
             ZStack {
                 Circle().fill(headerTint.opacity(0.14)).frame(width: 40, height: 40)
+                    .shadow(color: headerTint.opacity(session.finished ? 0.45 : 0), radius: 10)
                 if session.finished {
                     Image(systemName: session.success ? "checkmark" : "xmark")
                         .font(.system(size: 16, weight: .bold))
@@ -80,10 +89,11 @@ struct RunOverlay: View {
         .padding(.vertical, 16)
         .overlay(alignment: .bottom) {
             GeometryReader { geo in
-                Rectangle()
-                    .fill(headerTint)
+                Capsule()
+                    .fill(LinearGradient(colors: [headerTint.opacity(0.6), headerTint], startPoint: .leading, endPoint: .trailing))
                     .frame(width: geo.size.width * session.progress, height: 2)
-                    .animation(.easeInOut(duration: 0.4), value: session.progress)
+                    .shadow(color: headerTint.opacity(0.8), radius: 3)
+                    .animation(Motion.gentle, value: session.progress)
             }
             .frame(height: 2)
         }

@@ -1,5 +1,7 @@
 /* Before I Deploy — Български. Keys are used from Swift via L("key"); formats use %@. */
 
+"_meta.reviewed" = "true";
+
 "account.deleteButton" = "Изтрий акаунта…";
 "account.export" = "Експортирай данните ми…";
 "account.exportHint" = "Експортът е JSON с всичко, което облакът пази за теб. Изтриването маха акаунта и абонамента; проектите на този Mac остават.";
@@ -320,6 +322,9 @@
 "hosting.signInLower" = "вход";
 "hosting.whereTitle" = "Къде да се хоства?";
 
+"language.beta" = "БЕТА";
+"language.betaHelp" = "Машинен превод, който още не е прегледан — някои текстове може да звучат неестествено.";
+"language.betaName" = "%@ (бета)";
 "language.continue" = "Продължи";
 "language.subtitle" = "Можеш да го смениш по всяко време от Настройки.";
 "language.title" = "Избери език";

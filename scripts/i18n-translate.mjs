@@ -161,7 +161,7 @@ for (const lang of langs) {
   const engine = engineCatalog(lang);
   const engineTodo = Object.fromEntries(Object.entries(engineEn).filter(([k]) => force || !(k in engine.entries)));
   const app = readStrings(appFile(lang));
-  const appTodo = Object.fromEntries(Object.entries(appEn).filter(([k]) => force || !(k in app)));
+  const appTodo = Object.fromEntries(Object.entries(appEn).filter(([k]) => !k.startsWith('_meta.') && (force || !(k in app))));
   console.log(`${lang} (${name}): ${Object.keys(engineTodo).length} engine + ${Object.keys(appTodo).length} app texts to translate`);
   if (dryRun) continue;
 
@@ -171,6 +171,8 @@ for (const lang of langs) {
   // drop keys that no longer exist in English; keep the rest
   const engineOut = Object.fromEntries(Object.entries({ ...engine.entries, ...e.done }).filter(([k]) => k in engineEn));
   const appOut = Object.fromEntries(Object.entries({ ...app, ...a.done }).filter(([k]) => k in appEn));
+  // the app shows a "beta translation" badge until a person reviews the texts and sets this to "true"
+  appOut['_meta.reviewed'] = Object.keys(a.done).length ? 'false' : (app['_meta.reviewed'] ?? 'false');
   const meta = { language: name, reviewed: false, ...(engine.meta || {}), machineTranslated: MODEL };
   if (Object.keys(e.done).length) meta.reviewed = false; // new machine texts need a review again
   writeEngine(lang, engineOut, meta);

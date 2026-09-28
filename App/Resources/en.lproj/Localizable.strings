@@ -1,5 +1,7 @@
 /* Before I Deploy — English. Keys are used from Swift via L("key"); formats use %@. */
 
+"_meta.reviewed" = "true";
+
 "account.deleteButton" = "Delete account…";
 "account.export" = "Export my data…";
 "account.exportHint" = "The export is a JSON file with everything the cloud holds for you. Deleting removes the account and subscription; the projects on this Mac stay.";
@@ -320,6 +322,9 @@
 "hosting.signInLower" = "sign in";
 "hosting.whereTitle" = "Where to host?";
 
+"language.beta" = "BETA";
+"language.betaHelp" = "Machine translated and not reviewed yet — some texts may sound unnatural.";
+"language.betaName" = "%@ (beta)";
 "language.continue" = "Continue";
 "language.subtitle" = "You can change it any time in Settings.";
 "language.title" = "Choose your language";

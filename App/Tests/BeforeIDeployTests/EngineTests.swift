@@ -60,6 +60,10 @@ final class LocalizationTests: XCTestCase {
         XCTAssertNil(Localization.stored)
     }
 
+    func testLanguageWithoutCatalogIsNotReviewed() {
+        XCTAssertFalse(Localization.isReviewed("xx"))
+    }
+
     func testTokensFormatterGroupsDigits() {
         UserDefaults.standard.set("en", forKey: Localization.storageKey)
         let s = Fmt.tokens(1_000_000)
