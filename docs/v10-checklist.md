@@ -4,7 +4,7 @@
 пази. Легенда: ✅ готово · 🟡 частично (виж бележката) · ⏳ чака собственика (акаунт/решение, не код) ·
 ➡️ отложено за по-късна версия с причина. Статус към 2026-09-28, клон `claude/nifty-edison-1195gi`.
 
-Автоматични проверки (всички зелени в CI): engine `node tests/run.mjs` — 59 · Swift `swift test` — 34 ·
+Автоматични проверки (всички зелени в CI): engine `node tests/run.mjs` — 61 (Linux и macOS) · Swift `swift test` — 34 ·
 Edge Functions `deno test supabase/functions` — 51 · `scripts/i18n-check.mjs` · `scripts/error-codes.mjs`.
 
 ## WP1 — Интернационализация и избор на език
@@ -86,7 +86,7 @@ Edge Functions `deno test supabase/functions` — 51 · `scripts/i18n-check.mjs`
 | 6.5 Реални тестове Vercel / Cloudflare / GH Pages | ⏳ нужни са тестови акаунти (ръчен QA 5.2) | — | — |
 | 6.6 os_log, crash отчет, доклад за поддръжка с redaction | ✅; изпращане по имейл (Edge `support` + Resend) ➡️ WP9 — докладът се запазва като zip | `Diagnostics.swift`, `log.mjs` | engine `logs & report` |
 | 6.7 Swift тестове (`swift test` в CI) | ✅ 34 | `App/Tests` | CI app.yml |
-| 6.8 CI: engine, app, functions | ✅ | `.github/workflows/` | — |
+| 6.8 CI: engine (Linux + macOS), app, functions, screenshots | ✅ | `.github/workflows/` | — |
 
 ## WP7 — Дизайн и UX
 
