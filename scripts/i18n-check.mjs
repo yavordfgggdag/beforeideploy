@@ -90,13 +90,11 @@ for (const f of swiftFiles) {
   for (const m of text.matchAll(/"([a-z][a-zA-Z0-9]*(?:\.[a-zA-Z0-9_]+)+)"/g)) if (app.en && m[1] in app.en) used.add(m[1]);
   text.split('\n').forEach((line, i) => {
     const code = line.replace(/\/\/.*$/, '');
-    // quotes nested in \( … ) interpolation split literals oddly, so also test every quoted run on its own
-    const runs = [...(code.match(/"(?:[^"\\]|\\.)*"/g) || []), ...(code.split('"').filter((_, i) => i % 2 === 1).map((x) => `"${x}"`))];
-    for (const lit of [...new Set(runs)]) {
-      if (/[\u0400-\u04FF]/.test(lit)) {
-        cyrillic++;
-        if (!allowCyrillic && cyrillic <= 20) errors.push(`${path.relative(ROOT, f)}:${i + 1}: hard-coded text ${lit.slice(0, 60)}`);
-      }
+    // Swift code has no business containing Cyrillic outside comments: every visible text is a catalog key.
+    // (Checking whole lines, not literals, also catches quotes nested inside \( … ) interpolation.)
+    if (/[\u0400-\u04FF]/.test(code)) {
+      cyrillic++;
+      if (!allowCyrillic && cyrillic <= 20) errors.push(`${path.relative(ROOT, f)}:${i + 1}: hard-coded text ${code.trim().slice(0, 70)}`);
     }
     // English sentences handed straight to the UI (`Text("ready to deploy")`, `label: "blocked"`) — the
     // catalogs must own every visible word, otherwise the other languages silently show English.

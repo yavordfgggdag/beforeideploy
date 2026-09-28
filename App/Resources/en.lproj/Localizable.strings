@@ -437,6 +437,7 @@
 "netlifySetup.createNew" = "Create new";
 "netlifySetup.linkExisting" = "Connect existing";
 "netlifySetup.loading" = "Loading from Netlify… (the first time via npx can take a minute)";
+"netlifySetup.namePlaceholder" = "name";
 "netlifySetup.noSites" = "No sites found";
 "netlifySetup.searchSite" = "Search sites…";
 "netlifySetup.signInFirst" = "Sign in to Netlify first.";

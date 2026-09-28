@@ -437,6 +437,7 @@
 "netlifySetup.createNew" = "Създай нов";
 "netlifySetup.linkExisting" = "Свържи съществуващ";
 "netlifySetup.loading" = "Зареждам от Netlify… (първия път през npx може да отнеме минута)";
+"netlifySetup.namePlaceholder" = "име";
 "netlifySetup.noSites" = "Няма намерени сайтове";
 "netlifySetup.searchSite" = "Търси сайт…";
 "netlifySetup.signInFirst" = "Първо влез в Netlify.";

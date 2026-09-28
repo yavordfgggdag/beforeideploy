@@ -213,7 +213,7 @@ struct NetlifySetupSheet: View {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(L("netlifySetup.siteName")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
                             BIDTextField(placeholder: "moyat-sait", text: $newName, mono: true)
-                            Text("\(slug.isEmpty ? "име" : slug).netlify.app").font(.system(size: 11.5, design: .monospaced)).foregroundColor(Theme.tertiary)
+                            Text("\(slug.isEmpty ? L("netlifySetup.namePlaceholder") : slug).netlify.app").font(.system(size: 11.5, design: .monospaced)).foregroundColor(Theme.tertiary)
                         }
                         if teams.count > 1 {
                             VStack(alignment: .leading, spacing: 6) {
