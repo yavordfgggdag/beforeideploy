@@ -293,6 +293,21 @@ final class AppModel: ObservableObject, Feedback {
 
     // MARK: - Library
 
+    /// Onboarding: a small real website to try everything on (engine `bid demo create`), then a check.
+    func createDemoProject() {
+        busy.insert("demo")
+        Task {
+            defer { busy.remove("demo") }
+            do {
+                let p = try await engine.call(["demo", "create"], as: Project.self)
+                await loadProjects()
+                await select(p.key)
+                runCheck()
+                Task { await loadOverview() }
+            } catch { show(error) }
+        }
+    }
+
     func addProjectPanel() {
         let panel = NSOpenPanel()
         panel.canChooseDirectories = true
@@ -447,6 +462,10 @@ final class AppModel: ObservableObject, Feedback {
     func loadOverview(network: Bool = true) async {
         loadingOverview = true
         defer { loadingOverview = false }
+        // first paint from local state right away; the live check of sites and SSL follows
+        if network, overview == nil, let fast = try? await engine.call(["overview", "--no-network"], as: Overview.self) {
+            overview = fast
+        }
         var args = ["overview"]
         if !network { args.append("--no-network") }
         if let o = try? await engine.call(args, as: Overview.self) { overview = o }

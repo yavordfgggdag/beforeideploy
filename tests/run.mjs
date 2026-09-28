@@ -483,6 +483,18 @@ t('aifix: codex — без CLI ясна грешка, с CLI .command файл (
   assert(cmd.includes('codex "$(cat') && cmd.includes('AI Fix (codex)'), cmd.slice(0, 300));
 });
 
+t('demo: примерен проект — създава се, добавя се, проверката минава с предупреждение за Git', () => {
+  const r = bid('demo', 'create');
+  assert(r.result.ok && r.data.created === true && r.data.path.endsWith(path.join('Before I Deploy Demo', 'demo-site')), JSON.stringify(r.result));
+  const again = bid('demo', 'create');
+  assert(again.data.created === false && again.data.key === r.data.key, 'idempotent');
+  const c = bid('check', '--project', r.data.key);
+  const st = (id) => c.data.steps.find((s) => s.id === id)?.status;
+  assert(st('build') === 'pass' && st('git') === 'warn', JSON.stringify(c.data.steps.map((s) => [s.id, s.status])));
+  assert(fs.existsSync(path.join(r.data.path, 'dist', 'index.html')), 'built');
+  bid('project', 'remove', '--project', r.data.key);
+});
+
 t('engine: никой не засенчва t() с локална променлива „t“', () => {
   const offenders = [];
   const walk = (d) => { for (const e of fs.readdirSync(d, { withFileTypes: true })) { const p = path.join(d, e.name); if (e.isDirectory()) walk(p); else if (p.endsWith('.mjs')) { fs.readFileSync(p, 'utf8').split('\n').forEach((l, i) => { if (/\b(const|let|var)\s+t\s*=|\(\s*t\s*(,|\))\s*=>|\[\s*\w+\s*,\s*t\s*\]/.test(l)) offenders.push(`${path.relative(ROOT, p)}:${i + 1}`); }); } } };

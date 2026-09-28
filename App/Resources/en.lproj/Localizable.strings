@@ -308,6 +308,9 @@
 "deleteAccount.title" = "Delete account";
 "deleteAccount.typeDelete" = "To continue, type DELETE";
 
+"demo.try" = "Try a sample project";
+"demo.tryHelp" = "Creates a small website in Documents/Before I Deploy Demo and checks it — nothing is published.";
+
 "devicecode.hint" = "The code is copied — paste it with ⌘V on the opened page and press “Authorize”.";
 "devicecode.reopen" = "Open the page again";
 "devicecode.title" = "Confirm in the browser (%@)";

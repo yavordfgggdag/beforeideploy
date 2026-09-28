@@ -18,6 +18,7 @@ import { accountStatus, signup, login, logout, recover, oauthUrl, completeOAuth,
 import { aiKeysStatus, aiKeySet, aiKeyDelete } from './aikeys.mjs';
 import { adminCommand, ADMIN_ACTIONS } from './admin.mjs';
 import { billingCommand } from './billing.mjs';
+import { demoCreate } from './demo.mjs';
 import { features as featureGates } from './features.mjs';
 import { aiFix, aiApply, aiUsage } from './ai/index.mjs';
 import { updateCheck, updateDownload } from './update.mjs';
@@ -53,6 +54,7 @@ const HELP = `Before I Deploy engine ${VERSION}
   bid aifix   --project P --step ID --target chatgpt|claude|codex|claude-code|copy
   bid ai      fix --project P --step ID [--deep] [--model M] [--provider anthropic|openai|cloud]   built-in AI Fix (streams 'ai' events)
   bid ai      explain --project P --step ID | apply --project P --patch-file F --yes [--files a,b] [--commit] | usage
+  bid demo create                  sample website in ~/Documents/Before I Deploy Demo, added to the list
   bid billing catalog | status | trial | portal | checkout --plan flash|high|knight [--yearly] | checkout --pack ID
   bid costs   [--refresh]          costs, credits, price table, budgets
   bid usage   [--refresh]          real limits from the providers
@@ -340,6 +342,10 @@ async function main() {
 
     case 'billing':
       return ok(await billingCommand(sub, flags));
+
+    case 'demo':
+      if (!sub || sub === 'create') return ok(demoCreate());
+      throw new EngineError(msg('cli.unknownCommand', { command: `demo ${sub}` }), 'usage', 2);
 
     case 'features':
       return ok(featureGates({ role: flags.role, plan: flags.plan, aiDisabled: !!flags['ai-disabled'], hasOwnKey: !!flags['own-key'] }));

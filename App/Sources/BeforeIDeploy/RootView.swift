@@ -193,12 +193,22 @@ struct WelcomeView: View {
                 .multilineTextAlignment(.center)
                 .font(.system(size: 14))
                 .foregroundColor(Theme.secondary)
-            Button {
-                model.addProjectPanel()
-            } label: {
-                Label(L("common.addProject"), systemImage: "plus")
+            HStack(spacing: 10) {
+                Button {
+                    model.addProjectPanel()
+                } label: {
+                    Label(L("common.addProject"), systemImage: "plus")
+                }
+                .bidButton(.primary)
+                Button {
+                    model.createDemoProject()
+                } label: {
+                    Label(L("demo.try"), systemImage: "wand.and.stars")
+                }
+                .bidButton(.secondary)
+                .disabled(model.busy.contains("demo"))
+                .help(L("demo.tryHelp"))
             }
-            .bidButton(.primary)
             .padding(.top, 6)
             FirstStepsCard()
                 .padding(.top, 18)

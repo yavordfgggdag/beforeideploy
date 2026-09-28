@@ -308,6 +308,9 @@
 "deleteAccount.title" = "Изтриване на акаунта";
 "deleteAccount.typeDelete" = "За да продължиш, напиши DELETE";
 
+"demo.try" = "Пробвай с примерен проект";
+"demo.tryHelp" = "Създава малък сайт в Documents/Before I Deploy Demo и го проверява — нищо не се публикува.";
+
 "devicecode.hint" = "Кодът е копиран — постави го с ⌘V на отворената страница и натисни „Authorize“.";
 "devicecode.reopen" = "Отвори страницата отново";
 "devicecode.title" = "Потвърди в браузъра (%@)";
