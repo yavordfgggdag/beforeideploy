@@ -53,11 +53,19 @@ WP8-A част 1 (release скриптове). Последен commit: виж `
 Не е готово: L3, L4, L5 (собственик), WP6.5 (нужни акаунти), WP4 (чака решения), WP8-A част 2 (runbook +
 тестове), QA седмица, самият release. Светла тема, Xcode track и всичко от V11 остават както в ROADMAP.
 
+## 1a. Визуален език на V10 (готово, 2026-09-28)
+
+`Theme.swift` е единственият източник: `Card` (sheen, осветен ръб `edgeHighlight`, двуслойна сянка,
+`tint:` за статус), `AmbientBackground` (светлината следва статуса на проекта), `ProjectAvatar`
+(стабилен градиент по име), `StatusRing`, `Motion` (spring/quick/gentle → nil при „Намалено движение“).
+Нов екран или карта ползва тези, не собствени цветове/сенки. Следващи кандидати за полиране:
+Sheets (Settings, Production, Commit), Domains, Costs графика на разходите, Setup редовете.
+
 ## 2. Стъпки в ред на изпълнение
 
 Формат: **цел → файлове → какво точно → тестове → готово когато → оценка**.
 
-### S1. WP8-A част 2: runbook и тестове на release скриптовете (0.5 ден)
+### S1. WP8-A част 2: runbook и тестове на release скриптовете (0.5 ден) — ✅ готово (`docs/release.md`, тест в `tests/run.mjs`)
 
 - Файлове: `docs/release.md` (нов), `tests/run.mjs` (нов тест), `README.md` (линк).
 - `docs/release.md` описва еднократната настройка и всеки release:
@@ -78,7 +86,7 @@ WP8-A част 1 (release скриптове). Последен commit: виж `
   stable маха по-стара beta. Ползвай `mk('release-feed', {})` за папката и `spawnSync(process.execPath, …)`.
 - Готово когато: тестът е зелен, `docs/release.md` е линкнат от README и ROADMAP §4.1 WP8-A.
 
-### S2. L3: бадж „бета превод“ (0.5 ден)
+### S2. L3: бадж „бета превод“ (0.5 ден) — ✅ готово
 
 - Файлове: `App/Resources/{en,bg}.lproj/Localizable.strings` (ключ `_meta.reviewed` = `"true"`),
   `App/Sources/BeforeIDeploy/Localization.swift` (`static func isReviewed(_ code: String) -> Bool`, чете

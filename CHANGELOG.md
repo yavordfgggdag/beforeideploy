@@ -15,6 +15,7 @@ All notable changes, newest first. Versions come from `engine/VERSION`. Each ent
 - Onboarding: a three-screen tour on first launch; sign-in buttons follow the providers enabled in the cloud (GitHub, Sign in with Apple); first-steps card on the empty screen.
 - Errors show their code with copy and a help link; every code is documented (docs/errors.md).
 - Keyboard: View menu ⌘1–⌘4, next/previous project ⌘] ⌘[.
+- New look: lit surfaces with depth, a backdrop whose light follows the project's state, a colour avatar per project, a progress ring around the check result, sliding tabs, a frosted run window; all motion follows Reduce motion.
 - Engineering: AppModel split into stores, CI (engine tests on Linux, `swift build`/`swift test` on macOS, `deno check` + `deno test`), Swift tests against engine fixtures, Deno tests for the Edge Functions, release scripts (signed DMG, notarization, update feed, Homebrew cask).
 
 ### Български
@@ -28,6 +29,8 @@ All notable changes, newest first. Versions come from `engine/VERSION`. Each ent
 - Onboarding: тур от три екрана при първо пускане; бутоните за вход следват включените в облака доставчици (GitHub, Вход с Apple); карта „Първи стъпки“ на празния екран.
 - Грешките показват кода си с копиране и линк към помощ; всеки код е документиран (docs/errors.md).
 - Клавиатура: меню „Изглед“ ⌘1–⌘4, следващ/предишен проект ⌘] ⌘[.
+- Нов облик: осветени повърхности с дълбочина, фон, чиято светлина следва състоянието на проекта, цветен аватар за всеки проект, пръстен с прогреса около резултата от проверката, плъзгащи се табове, матово стъкло зад прозореца на изпълнение; всички анимации спазват „Намалено движение“.
+- Езиците с машинен, непрегледан превод имат бадж „БЕТА“.
 - Инженерни: AppModel е разделен на stores, CI (engine тестове на Linux, `swift build`/`swift test` на macOS, `deno check` + `deno test`), Swift тестове върху фикстури от engine-а, Deno тестове за Edge функциите, release скриптове (подписан DMG, notarization, feed за обновяване, Homebrew cask).
 
 ## 9.0.0
