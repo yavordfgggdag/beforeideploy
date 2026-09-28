@@ -47,6 +47,13 @@ struct AdminView: View {
                 }
             }
 
+            HStack(alignment: .top, spacing: 16) {
+                AdminInviteCard()
+                    .frame(maxWidth: 420)
+                AdminSettingsCard()
+                    .frame(maxWidth: .infinity)
+            }
+
             VStack(alignment: .leading, spacing: 6) {
                 SectionLabel(text: L("admin.audit"), icon: "list.bullet.rectangle").padding(.bottom, 4)
                 if store.audit.isEmpty {
@@ -154,8 +161,113 @@ struct AdminUserDetail: View {
                 .bidButton(.primary, compact: true).disabled(busy || Int(grantAmount.replacingOccurrences(of: " ", with: "")) == nil)
             }
             Text(L("admin.grantHint")).font(.system(size: 11)).foregroundColor(Theme.tertiary)
+
+            SectionLabel(text: L("admin.usage"), icon: "sparkles")
+            if store.usage.isEmpty {
+                Text(L("admin.usageEmpty")).font(.system(size: 12)).foregroundColor(Theme.tertiary)
+            } else {
+                VStack(spacing: 4) {
+                    ForEach(store.usage.prefix(12)) { u in
+                        HStack(spacing: 10) {
+                            Text(Fmt.relative(u.createdAt)).font(.system(size: 11)).foregroundColor(Theme.tertiary).frame(width: 110, alignment: .leading)
+                            Text(u.step ?? "—").font(.system(size: 12, weight: .medium)).foregroundColor(Theme.text)
+                            Text(u.model ?? "").font(.system(size: 11, design: .monospaced)).foregroundColor(Theme.tertiary)
+                            if let st = u.status, st != "ok" { Chip(text: st, tint: Theme.warn) }
+                            Spacer()
+                            Text(L("ai.tokensCount", Fmt.tokens(u.chargedTokens ?? 0)))
+                                .font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.secondary).monospacedDigit()
+                        }
+                    }
+                }
+            }
         }
         .card(padding: 20)
+        .task(id: user.userId) { await store.loadUsage(user) }
+    }
+}
+
+/// Invite a friend or client by email with a role (VIP by default) — Supabase sends the invitation.
+struct AdminInviteCard: View {
+    @EnvironmentObject var model: AppModel
+    @Local private var email = ""
+    @Local private var role = "vip"
+    @Local private var busy = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionLabel(text: L("admin.invite"), icon: "envelope.badge.fill")
+            Text(L("admin.inviteHint")).font(.system(size: 11.5)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
+            BIDTextField(placeholder: L("auth.email"), text: $email)
+            HStack {
+                Picker(L("admin.role"), selection: $role) {
+                    ForEach(["vip", "normal", "admin"], id: \.self) { Text($0).tag($0) }
+                }
+                .pickerStyle(.menu).frame(width: 180)
+                Spacer()
+                Button(busy ? L("admin.inviting") : L("admin.sendInvite")) {
+                    busy = true
+                    Task {
+                        if await model.adminStore.invite(email: email.trimmingCharacters(in: .whitespaces), role: role) { email = "" }
+                        busy = false
+                    }
+                }
+                .bidButton(.primary, compact: true)
+                .disabled(busy || !email.contains("@"))
+            }
+        }
+        .card(padding: 18)
+    }
+}
+
+/// Global settings (prices, catalog, models, limits, release feed, help pages) as JSON per key.
+struct AdminSettingsCard: View {
+    @EnvironmentObject var model: AppModel
+    @Local private var key = "billing.catalog"
+    @Local private var text = ""
+    @Local private var error: String?
+    @Local private var busy = false
+
+    private var store: AdminStore { model.adminStore }
+    private var keys: [String] { Array(Set(AdminStore.knownSettings).union(store.settings.keys)).sorted() }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                SectionLabel(text: L("admin.settings"), icon: "slider.horizontal.3")
+                Spacer()
+                Picker("", selection: $key) {
+                    ForEach(keys, id: \.self) { Text($0).tag($0) }
+                }
+                .labelsHidden().pickerStyle(.menu).frame(width: 200)
+            }
+            TextEditor(text: $text)
+                .font(.system(size: 11.5, design: .monospaced))
+                .scrollContentBackground(.hidden)
+                .padding(8)
+                .frame(minHeight: 150, maxHeight: 220)
+                .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.bg))
+                .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(error == nil ? Theme.hairline : Theme.blocked.opacity(0.6), lineWidth: 1))
+            HStack {
+                if let error {
+                    Label(error, systemImage: "exclamationmark.circle.fill").font(.system(size: 11.5)).foregroundColor(Theme.blocked).lineLimit(2)
+                } else {
+                    Text(L("admin.settingsHint")).font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                }
+                Spacer()
+                Button(L("common.save")) {
+                    busy = true
+                    Task {
+                        error = await store.saveSetting(key: key, json: text)
+                        busy = false
+                    }
+                }
+                .bidButton(.primary, compact: true)
+                .disabled(busy || text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+        }
+        .card(padding: 18)
+        .task { await store.loadSettings(); text = store.settings[key] ?? "" }
+        .onChange(of: key) { k in text = store.settings[k] ?? ""; error = nil }
     }
 }
 

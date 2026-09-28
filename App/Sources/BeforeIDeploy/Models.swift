@@ -631,6 +631,25 @@ struct AdminUser: Codable, Identifiable, Hashable {
     }
 }
 
+struct AdminUsage: Codable, Identifiable, Hashable {
+    var id: String
+    var createdAt: String
+    var step: String?
+    var model: String?
+    var inputTokens: Int?
+    var outputTokens: Int?
+    var chargedTokens: Int?
+    var status: String?
+    var projectKey: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id, createdAt = "created_at", step, model, inputTokens = "input_tokens", outputTokens = "output_tokens"
+        case chargedTokens = "charged_tokens", status, projectKey = "project_key"
+    }
+}
+
+struct AdminUsageResult: Codable { var usage: [AdminUsage] }
+
 struct AdminUsersResult: Codable { var users: [AdminUser] }
 struct AdminUserResult: Codable { var user: AdminUser }
 struct AdminGrantResult: Codable { var balance: Int }

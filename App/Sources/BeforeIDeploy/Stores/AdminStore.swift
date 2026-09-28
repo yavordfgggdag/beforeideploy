@@ -9,6 +9,13 @@ final class AdminStore: ObservableObject {
     @Published var loading = false
     @Published var query = ""
     @Published var selectedId: String?
+    @Published var usage: [AdminUsage] = []
+    /// Global settings as pretty-printed JSON per key (the cloud `settings` table).
+    @Published var settings: [String: String] = [:]
+
+    /// Keys the panel offers even before they exist in the table.
+    static let knownSettings = ["billing.catalog", "plans", "ai.models", "ai.multipliers", "ai.dailyCapPercent",
+                                "ai.rate", "ai.promptMaxChars", "release.url", "help.url"]
 
     let engine: EngineClient
     weak var feedback: Feedback?
@@ -65,6 +72,62 @@ final class AdminStore: ObservableObject {
             replace(u)
             feedback?.flash(L("admin.granted", Fmt.tokens(delta), user.email), error: false)
         } catch { feedback?.show(error) }
+    }
+
+    func loadUsage(_ user: AdminUser) async {
+        usage = (try? await engine.call(["admin", "get_usage", "--user", user.userId, "--limit", "50"], as: AdminUsageResult.self))?.usage ?? []
+    }
+
+    func invite(email: String, role: String) async -> Bool {
+        do {
+            let r = try await engine.call(["admin", "invite", "--email", email, "--role", role, "--locale", Localization.current], as: AdminUserResult.self)
+            replace(r.user)
+            selectedId = r.user.userId
+            feedback?.flash(L("admin.invited", email), error: false)
+            await loadAudit()
+            return true
+        } catch {
+            feedback?.show(error)
+            return false
+        }
+    }
+
+    func loadSettings() async {
+        guard let outcome = try? await engine.run(["admin", "get_settings"]), outcome.ok,
+              let d = outcome.resultData,
+              let obj = try? JSONSerialization.jsonObject(with: d) as? [String: Any],
+              let data = obj["data"] as? [String: Any],
+              let values = data["settings"] as? [String: Any] else { return }
+        var out: [String: String] = [:]
+        for (k, v) in values { out[k] = Self.pretty(v) }
+        settings = out
+    }
+
+    /// Validates the JSON and saves one key; returns an error text for the editor, nil on success.
+    func saveSetting(key: String, json: String) async -> String? {
+        guard let value = try? JSONSerialization.jsonObject(with: Data(json.utf8), options: [.fragmentsAllowed]) else {
+            return L("admin.settingsInvalid")
+        }
+        guard let payload = try? JSONSerialization.data(withJSONObject: ["settings": [key: value]]),
+              let text = String(data: payload, encoding: .utf8) else { return L("admin.settingsInvalid") }
+        do {
+            _ = try await engine.call(["admin", "set_settings", "--json", text], as: [String: Int].self)
+            settings[key] = Self.pretty(value)
+            feedback?.flash(L("admin.settingsSaved", key), error: false)
+            await loadAudit()
+            return nil
+        } catch {
+            return error.localizedDescription
+        }
+    }
+
+    static func pretty(_ value: Any) -> String {
+        if JSONSerialization.isValidJSONObject(value),
+           let d = try? JSONSerialization.data(withJSONObject: value, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]),
+           let s = String(data: d, encoding: .utf8) { return s }
+        if let d = try? JSONSerialization.data(withJSONObject: value, options: [.fragmentsAllowed, .withoutEscapingSlashes]),
+           let s = String(data: d, encoding: .utf8) { return s }
+        return "\(value)"
     }
 
     func setAIDisabled(_ user: AdminUser, _ disabled: Bool) async {

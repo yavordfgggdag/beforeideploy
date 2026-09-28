@@ -24,6 +24,10 @@
 "admin.grant" = "Grant credits";
 "admin.grantHint" = "A negative number takes credits away. Recorded in credit_ledger as admin_grant.";
 "admin.granted" = "%@ tokens for %@";
+"admin.invite" = "Invite";
+"admin.inviteHint" = "Supabase emails an invitation link; the person sets a password and starts with this role (VIP: free, own API keys).";
+"admin.invited" = "Invitation sent to %@";
+"admin.inviting" = "Sending…";
 "admin.lastAi" = "Last AI Fix";
 "admin.locale" = "Language";
 "admin.noUsers" = "No users";
@@ -35,9 +39,16 @@
 "admin.roleAndPlan" = "Role and plan";
 "admin.roleSet" = "%@ → role %@";
 "admin.search" = "Search by email or name…";
+"admin.sendInvite" = "Send invitation";
+"admin.settings" = "Global settings";
+"admin.settingsHint" = "JSON per key — prices, plans, models, limits, release feed, help pages. Takes effect without an app update.";
+"admin.settingsInvalid" = "This is not valid JSON.";
+"admin.settingsSaved" = "Saved: %@";
 "admin.subtitle" = "Users, roles, plans and credits — every action is logged";
 "admin.title" = "Admin";
 "admin.tokens" = "tokens";
+"admin.usage" = "AI use";
+"admin.usageEmpty" = "No AI use yet.";
 
 "ai.applied.one" = "%@ file applied";
 "ai.applied.other" = "%@ files applied";

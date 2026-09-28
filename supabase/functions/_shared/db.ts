@@ -41,7 +41,10 @@ export interface DbClient {
   from(table: string): Query;
   auth: {
     getUser(): Promise<{ data: { user: AuthUser | null }; error: DbError | null }>;
-    admin?: { deleteUser(id: string): Promise<{ error: DbError | null }> };
+    admin?: {
+      deleteUser(id: string): Promise<{ error: DbError | null }>;
+      inviteUserByEmail?(email: string, opts?: { data?: Row }): Promise<{ data: { user: AuthUser | null }; error: DbError | null }>;
+    };
   };
 }
 

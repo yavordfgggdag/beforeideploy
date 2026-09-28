@@ -19,6 +19,8 @@ export interface AdminBody {
   disabled?: boolean;
   settings?: Record<string, unknown>;
   limit?: number;
+  email?: string;
+  locale?: string;
 }
 
 async function balanceOf(db: DbClient, userId: string): Promise<number> {
@@ -133,6 +135,21 @@ export function createAdminHandler(deps: Deps): (req: Request) => Promise<Respon
           if (error) throw error;
           await audit(null, { keys: entries.map(([k]) => k) });
           return json(200, { saved: entries.length });
+        }
+
+        case "invite": {
+          // WP5: friends and clients get an invitation email instead of signing up themselves
+          const email = String(body.email ?? "").trim().toLowerCase();
+          if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return json(400, { error: "a valid email is required" });
+          const role = (body.role ?? "vip") as Role;
+          if (!ROLES.includes(role)) return json(400, { error: "unknown role" });
+          if (!db.auth.admin?.inviteUserByEmail) throw new Error("service client without admin API");
+          const { data, error } = await db.auth.admin.inviteUserByEmail(email, { data: { locale: body.locale ?? "en" } });
+          if (error || !data.user) return json(409, { error: error?.message ?? "invite failed", code: "invite_failed" });
+          const { error: upErr } = await db.from("profiles").update({ role }).eq("user_id", data.user.id);
+          if (upErr) throw upErr;
+          await audit(data.user.id, { email, role });
+          return json(200, { user: await userRow(db, data.user.id) });
         }
 
         case "audit_log": {

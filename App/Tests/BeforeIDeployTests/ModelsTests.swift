@@ -142,6 +142,19 @@ final class ModelsTests: XCTestCase {
         XCTAssertEqual(BillingFormat.money(nil, currency: "EUR"), "—")
     }
 
+    func testAdminUsage() throws {
+        let r = try Fixtures.decode("admin-usage", as: AdminUsageResult.self)
+        XCTAssertEqual(r.usage.first?.chargedTokens, 6000)
+        XCTAssertEqual(r.usage.first?.step, "build")
+    }
+
+    @MainActor
+    func testAdminSettingsPrettyPrinting() {
+        XCTAssertEqual(AdminStore.pretty(15), "15")
+        XCTAssertEqual(AdminStore.pretty("https://x"), "\"https://x\"")
+        XCTAssertTrue(AdminStore.pretty(["b": 1, "a": 2]).hasPrefix("{"))
+    }
+
     func testAIKeys() throws {
         let k = try Fixtures.decode("ai-keys", as: [AIKeyStatus].self)
         XCTAssertEqual(k.map(\.provider).sorted(), ["anthropic", "openai"])

@@ -24,6 +24,10 @@
 "admin.grant" = "Дай кредити";
 "admin.grantHint" = "Отрицателно число взима кредити. Записва се в credit_ledger като admin_grant.";
 "admin.granted" = "%@ токена за %@";
+"admin.invite" = "Покани";
+"admin.inviteHint" = "Supabase изпраща имейл с линк за покана; човекът задава парола и започва с тази роля (VIP: безплатно, собствени API ключове).";
+"admin.invited" = "Поканата е изпратена до %@";
+"admin.inviting" = "Изпращам…";
 "admin.lastAi" = "Последен AI Fix";
 "admin.locale" = "Език";
 "admin.noUsers" = "Няма потребители";
@@ -35,9 +39,16 @@
 "admin.roleAndPlan" = "Роля и план";
 "admin.roleSet" = "%@ → роля %@";
 "admin.search" = "Търси по имейл или име…";
+"admin.sendInvite" = "Изпрати покана";
+"admin.settings" = "Глобални настройки";
+"admin.settingsHint" = "JSON по ключ — цени, планове, модели, лимити, release feed, помощни страници. Важи без обновяване на приложението.";
+"admin.settingsInvalid" = "Това не е валиден JSON.";
+"admin.settingsSaved" = "Записано: %@";
 "admin.subtitle" = "Потребители, роли, планове и кредити — всяко действие се записва";
 "admin.title" = "Админ";
 "admin.tokens" = "токени";
+"admin.usage" = "Ползване на AI";
+"admin.usageEmpty" = "Още няма ползване на AI.";
 
 "ai.applied.one" = "Приложен %@ файл";
 "ai.applied.other" = "Приложени %@ файла";

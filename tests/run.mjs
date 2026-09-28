@@ -596,6 +596,10 @@ http.createServer((q,r)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{r.setHea
    if(me.role!=='admin'){r.statusCode=403;return r.end('{"error":"admin only"}');}
    const t=profiles[j.user_id];audit.push({admin:me.user_id,action:j.action,target:j.user_id||null});
    if(j.action==='list_users')return r.end(JSON.stringify({users:Object.values(profiles).map(p=>({...p,balance:balance(p.user_id)}))}));
+   if(j.action==='invite'){if(Object.values(profiles).some(p=>p.email===j.email)){r.statusCode=409;return r.end('{"error":"already registered","code":"invite_failed"}');}const id='u-'+j.email;profiles[id]={user_id:id,email:j.email,role:j.role||'vip',plan:'free',locale:j.locale||'en',ai_disabled:false,display_name:null};return r.end(JSON.stringify({user:{...profiles[id],balance:0}}));}
+   if(j.action==='get_usage')return r.end(JSON.stringify({usage:[{id:'x1',user_id:j.user_id,created_at:'2026-10-09T10:00:00Z',step:'build',model:'claude-sonnet-5',input_tokens:4500,output_tokens:1500,charged_tokens:6000,status:'ok',project_key:'p1'}]}));
+   if(j.action==='get_settings')return r.end(JSON.stringify({settings:{'ai.dailyCapPercent':15,'help.url':'https://example.com/help'}}));
+   if(j.action==='set_settings')return r.end(JSON.stringify({saved:Object.keys(j.settings||{}).length}));
    if(!t&&j.action!=='audit_log'){r.statusCode=404;return r.end('{"error":"no such user"}');}
    if(j.action==='set_role'){t.role=j.role;return r.end(JSON.stringify({user:t}));}
    if(j.action==='set_plan_manual'){t.plan=j.plan;return r.end(JSON.stringify({user:t}));}
@@ -801,6 +805,18 @@ t('billing: каталог, статус, пробен период веднъж
   bid('account', 'logout');
   assert(bid('billing', 'status').result.code === 'not_logged_in', 'needs a session');
   login('yavor@example.com', 'supersecret1');
+  // admin: invite a VIP, per-user AI usage, global settings
+  const inv = bid('admin', 'invite', '--email', 'vip.friend@example.com', '--role', 'vip', '--locale', 'bg');
+  assert(inv.data.user.role === 'vip' && inv.data.user.locale === 'bg', JSON.stringify(inv.result));
+  const dupInv = bid('admin', 'invite', '--email', 'vip.friend@example.com');
+  assert(dupInv.result.code === 'admin_failed', JSON.stringify(dupInv.result));
+  const usage = bid('admin', 'get_usage', '--user', 'u-friend@example.com');
+  assert(usage.data.usage[0].charged_tokens === 6000, JSON.stringify(usage.result));
+  fixture('admin-usage', usage.data);
+  const settings = bid('admin', 'get_settings');
+  assert(settings.data.settings['ai.dailyCapPercent'] === 15, JSON.stringify(settings.result));
+  const saved = bid('admin', 'set_settings', '--json', JSON.stringify({ settings: { 'help.url': 'https://example.com/help/errors' } }));
+  assert(saved.data.saved === 1, JSON.stringify(saved.result));
 });
 
 t('update: latest.json → налична версия, beta канал, изтегляне със sha256; без feed → configured:false', () => {

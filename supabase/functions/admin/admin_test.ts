@@ -157,3 +157,20 @@ Deno.test("admin: a database error becomes 500 with the message", async () => {
   assert.equal(res.status, 500);
   assert.equal((await res.json()).error, "relation is on fire");
 });
+
+Deno.test("admin: invite creates the user with the role, audits, refuses duplicates and bad input", async () => {
+  const { db, handle } = world();
+  const res = await handle(post("admin", { action: "invite", email: "Friend@Example.com", role: "vip", locale: "bg" }));
+  assert.equal(res.status, 200);
+  const { user } = await res.json();
+  assert.equal(user.email, "friend@example.com");
+  assert.equal(user.role, "vip");
+  assert.equal(user.locale, "bg");
+  assert.deepEqual(db.invited[0], { email: "friend@example.com", data: { locale: "bg" } });
+  assert.equal(db.rows("admin_audit")[0].action, "invite");
+  const dup = await handle(post("admin", { action: "invite", email: NORMAL.email }));
+  assert.equal(dup.status, 409);
+  assert.equal((await dup.json()).code, "invite_failed");
+  assert.equal((await handle(post("admin", { action: "invite", email: "nope" }))).status, 400);
+  assert.equal((await handle(post("admin", { action: "invite", email: "a@b.co", role: "king" }))).status, 400);
+});

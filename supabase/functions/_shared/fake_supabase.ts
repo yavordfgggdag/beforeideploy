@@ -150,6 +150,7 @@ export class FakeDb implements DbClient {
   failures: Record<string, DbError> = {};
   log: { table: string; op: string }[] = [];
   deletedUsers: string[] = [];
+  invited: { email: string; data: Row }[] = [];
   user: AuthUser | null;
 
   constructor(tables: Record<string, Row[]> = {}, user: AuthUser | null = null) {
@@ -167,6 +168,16 @@ export class FakeDb implements DbClient {
         this.user ? { data: { user: this.user }, error: null } : { data: { user: null }, error: { message: "invalid JWT" } },
       ),
     admin: {
+      inviteUserByEmail: (email: string, opts?: { data?: Row }) => {
+        if (this.rows("profiles").some((p) => p.email === email)) {
+          return Promise.resolve({ data: { user: null }, error: { message: "A user with this email address has already been registered" } });
+        }
+        const id = `u-invited-${this.invited.length + 1}`;
+        this.invited.push({ email, data: opts?.data ?? {} });
+        // the handle_new_user trigger creates the profile
+        (this.tables.profiles ??= []).push({ user_id: id, email, role: "normal", plan: "free", locale: opts?.data?.locale ?? "en", ai_disabled: false });
+        return Promise.resolve({ data: { user: { id, email } }, error: null });
+      },
       deleteUser: (id: string) => {
         this.deletedUsers.push(id);
         for (const t of Object.keys(this.tables)) this.tables[t] = this.tables[t].filter((r) => r.user_id !== id);

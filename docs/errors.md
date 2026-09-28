@@ -85,6 +85,7 @@ Returned as `code` in the JSON body; the engine maps them to the codes above (`q
 | `rate_limited` | 429 | More than 6 requests a minute or 60 an hour. |
 | `prompt_too_long` | 413 | Prompt above `ai.promptMaxChars` (60 000 by default). |
 | `upstream` | 502 | The model API failed (network or 5xx). |
+| `invite_failed` | 409 | Supabase refused the invitation (the email is already registered, or SMTP is not set up). |
 | `bad_signature` | 401 | A billing webhook without a valid Paddle signature (not from Paddle, or a wrong `PADDLE_WEBHOOK_SECRET`). |
 | `not_available` | 409 | Checkout for a plan or pack that has no Paddle price id in `billing.catalog`. |
 | `trial_used` | 409 | The one-time trial was already used (or the account has paid before). |
