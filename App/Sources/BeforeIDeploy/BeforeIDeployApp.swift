@@ -11,6 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
         Notifier.shared.setup()
+        Snapshot.scheduleIfRequested()
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {

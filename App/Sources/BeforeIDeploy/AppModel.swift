@@ -218,6 +218,7 @@ final class AppModel: ObservableObject, Feedback {
             }
         }
         screen = .overview
+        await openRequestedScreen()
         if !CrashReporter.newCrashesSinceLastLaunch().isEmpty {
             AppLog.ui.notice("previous session crashed")
             flash(L("diagnostics.crashedLastTime"), error: true)
@@ -675,6 +676,26 @@ final class AppModel: ObservableObject, Feedback {
             try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
             if toast == t { withAnimation(.easeOut(duration: 0.25)) { toast = nil } }
         }
+    }
+
+    // MARK: - Start screen (screenshots, deep links)
+
+    /// `open "Before I Deploy.app" --args -BIDScreen costs` opens a given screen at launch (the value lands in
+    /// UserDefaults' argument domain). Used by the screenshot workflow; harmless for everyone else.
+    private func openRequestedScreen() async {
+        guard let name = UserDefaults.standard.string(forKey: "BIDScreen") else { return }
+        switch name {
+        case "project": if let first = projects.first { await select(first.key) }
+        case "domains": screen = .domains
+        case "costs": screen = .costs
+        case "setup": screen = .setup
+        case "account": screen = .account
+        case "plans": sheet = .plans
+        case "settings": sheet = .settings
+        case "palette": showPalette = true
+        default: screen = .overview
+        }
+        if UserDefaults.standard.bool(forKey: "BIDRunCheck") { runCheck() }
     }
 
     // MARK: - Onboarding: plan step (WP5)

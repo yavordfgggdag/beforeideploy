@@ -97,3 +97,33 @@ enum CrashReporter {
         return f.string(from: Date())
     }
 }
+
+/// Screenshot mode (CI and docs): `open "Before I Deploy.app" --args -BIDSnapshot /tmp/x.png [-BIDSnapshotDelay 6]`
+/// renders the main window into a PNG after the delay and quits. The app draws itself, so no screen-recording
+/// permission is needed. Does nothing unless the argument is given.
+enum Snapshot {
+    static func scheduleIfRequested() {
+        guard let path = UserDefaults.standard.string(forKey: "BIDSnapshot"), !path.isEmpty else { return }
+        let delay = UserDefaults.standard.double(forKey: "BIDSnapshotDelay")
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: UInt64((delay > 0 ? delay : 6) * 1_000_000_000))
+            write(to: URL(fileURLWithPath: path))
+            NSApp.terminate(nil)
+        }
+    }
+
+    @MainActor
+    static func write(to url: URL) {
+        guard let window = NSApp.windows.first(where: { $0.isVisible && $0.contentView != nil }),
+              let view = window.contentView?.superview ?? window.contentView,
+              let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else {
+            AppLog.ui.error("snapshot: no window")
+            return
+        }
+        view.cacheDisplay(in: view.bounds, to: rep)
+        if let png = rep.representation(using: .png, properties: [:]) {
+            try? png.write(to: url)
+            AppLog.ui.notice("snapshot written")
+        }
+    }
+}
