@@ -70,9 +70,9 @@ jobs:
           mkdir -p "$OUT"
           shoot() { # name, extra args…
             local name="$1"; shift
-            open -n -W "$APP" --args -BIDSnapshot "$OUT/$name.png" -BIDSnapshotDelay 9 "$@" &
+            open -n -W "$APP" --args -BIDSnapshot "$OUT/$name.png" -BIDSnapshotDelay 12 "$@" &
             local pid=$!
-            for i in $(seq 1 40); do [ -f "$OUT/$name.png" ] && break; sleep 1; done
+            for i in $(seq 1 50); do [ -f "$OUT/$name.png" ] && break; sleep 1; done
             sleep 1
             pkill -f "Before I Deploy.app/Contents/MacOS/BeforeIDeploy" || true
             wait $pid 2>/dev/null || true
