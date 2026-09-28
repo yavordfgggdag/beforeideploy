@@ -35,14 +35,20 @@ struct KPITile: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Image(systemName: icon).font(.system(size: 12, weight: .semibold)).foregroundColor(tint.opacity(0.9))
+                Image(systemName: icon)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(tint == Theme.text ? Theme.accent : tint)
+                    .frame(width: 26, height: 26)
+                    .background(RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill((tint == Theme.text ? Theme.accent : tint).opacity(0.14)))
                 Spacer()
             }
-            Text(value).font(.system(size: 28, weight: .bold)).foregroundColor(tint).monospacedDigit()
+            Text(value).font(.system(size: 28, weight: .bold, design: .rounded)).foregroundColor(tint).monospacedDigit()
             Text(label).font(.system(size: 11.5)).foregroundColor(Theme.tertiary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .card(padding: 16)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -216,11 +222,7 @@ struct ProjectOverviewCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 10) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Theme.accentSoft)
-                    Text(String(card.name.prefix(1)).uppercased()).font(.system(size: 14, weight: .bold)).foregroundColor(Theme.accent)
-                }
-                .frame(width: 32, height: 32)
+                ProjectAvatar(name: card.name, size: 32)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(card.name).font(.system(size: 14.5, weight: .bold)).foregroundColor(Theme.text).lineLimit(1)
                     Text([card.framework, card.branch].compactMap { $0 }.joined(separator: " · "))
@@ -266,16 +268,16 @@ struct ProjectOverviewCard: View {
                 }
             }
         }
-        .padding(16)
-        .background(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).fill(hover ? Theme.elevated : Theme.panel))
+        .card(padding: 16, fill: hover ? Theme.elevated : Theme.panel,
+              tint: card.status == "blocked" ? Theme.blocked : (card.status == "ready" ? Theme.ready : nil))
         .overlay(
             RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
-                .strokeBorder(card.status == "blocked" ? Theme.blocked.opacity(0.4) : (hover ? Theme.accent.opacity(0.35) : Theme.hairline), lineWidth: 1)
+                .strokeBorder(card.status == "blocked" ? Theme.blocked.opacity(0.4) : (hover ? Theme.accent.opacity(0.35) : .clear), lineWidth: 1)
         )
-        .shadow(color: .black.opacity(0.25), radius: 12, y: 4)
+        .offset(y: hover && !Motion.reduced ? -2 : 0)
         .contentShape(Rectangle())
         .onHover { hover = $0 }
-        .animation(.easeOut(duration: 0.15), value: hover)
+        .animation(Motion.quick, value: hover)
     }
 }
 

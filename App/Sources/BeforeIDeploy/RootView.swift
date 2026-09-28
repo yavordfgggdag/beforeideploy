@@ -28,15 +28,19 @@ struct RootView: View {
         .animation(.easeInOut(duration: 0.25), value: tourSeen)
     }
 
+    /// The backdrop's light follows the selected project's state: green when ready, red when blocked.
+    var backdropTint: Color {
+        guard model.screen == .project, let state = model.status?.check?.status else { return Theme.accent }
+        return Theme.color(for: state)
+    }
+
     var mainView: some View {
         HStack(spacing: 0) {
             SidebarView()
                 .frame(width: 248)
             Rectangle().fill(Theme.hairline).frame(width: 1)
             ZStack {
-                Theme.bg
-                RadialGradient(colors: [Theme.accent.opacity(0.06), .clear], center: .topTrailing, startRadius: 0, endRadius: 700)
-                    .allowsHitTesting(false)
+                AmbientBackground(tint: backdropTint)
                 if model.engineMissing {
                     EngineMissingView()
                 } else if model.screen == .overview {

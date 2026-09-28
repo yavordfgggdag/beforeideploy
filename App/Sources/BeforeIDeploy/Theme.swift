@@ -40,6 +40,35 @@ enum Theme {
     static let radius: CGFloat = 16
     static let smallRadius: CGFloat = 10
 
+    /// Top-lit edge of every raised surface: light catches the upper border, the lower one fades out.
+    static let edgeHighlight = LinearGradient(
+        colors: [Color.white.opacity(0.11), Color.white.opacity(0.035)],
+        startPoint: .top, endPoint: .bottom
+    )
+
+    /// A soft sheen over a surface's upper half — the "glass" in the V10 look.
+    static let sheen = LinearGradient(
+        colors: [Color.white.opacity(0.035), Color.white.opacity(0)],
+        startPoint: .top, endPoint: .center
+    )
+
+    /// Stable, pleasant gradient per project name, so every project is recognizable at a glance.
+    static func avatarGradient(for name: String) -> LinearGradient {
+        let palette: [(UInt32, UInt32)] = [
+            (0x5AA9FF, 0x2A6BF2), // blue
+            (0x7C7BFF, 0x4B3FD6), // indigo
+            (0xB57BFF, 0x7A3FD6), // violet
+            (0xFF7EB6, 0xD63F83), // pink
+            (0xFF9F5A, 0xE0602A), // orange
+            (0xFFD35A, 0xD69A1F), // amber
+            (0x5BE0A0, 0x1FA36A), // green
+            (0x4FD8E0, 0x1C97B3), // teal
+        ]
+        let hash = name.unicodeScalars.reduce(UInt32(5381)) { ($0 &* 33) &+ $1.value }
+        let pair = palette[Int(hash % UInt32(palette.count))]
+        return LinearGradient(colors: [Color(hex: pair.0), Color(hex: pair.1)], startPoint: .topLeading, endPoint: .bottomTrailing)
+    }
+
     static func color(for status: String?) -> Color {
         switch status {
         case "pass", "ready", "ok", "running-ok": return ready
@@ -64,29 +93,109 @@ enum Theme {
     }
 }
 
+// MARK: - Motion
+
+/// Animations that respect System Settings → Accessibility → Reduce motion (nil = no animation).
+enum Motion {
+    static var reduced: Bool { NSWorkspace.shared.accessibilityDisplayShouldReduceMotion }
+    static var spring: Animation? { reduced ? nil : .spring(response: 0.38, dampingFraction: 0.82) }
+    static var quick: Animation? { reduced ? nil : .easeOut(duration: 0.16) }
+    static var gentle: Animation? { reduced ? nil : .easeInOut(duration: 0.6) }
+}
+
 // MARK: - Surfaces
 
+/// A raised surface: fill + sheen + top-lit edge + two-layer shadow (contact and ambient).
+/// `tint` washes the surface with a status color from the top-left corner.
 struct Card: ViewModifier {
     var padding: CGFloat = 18
     var fill: Color = Theme.panel
+    var tint: Color? = nil
     func body(content: Content) -> some View {
-        content
+        let shape = RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
+        return content
             .padding(padding)
             .background(
-                RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
-                    .fill(fill)
+                ZStack {
+                    shape.fill(fill)
+                    if let tint {
+                        shape.fill(LinearGradient(colors: [tint.opacity(0.16), tint.opacity(0.03), .clear],
+                                                  startPoint: .topLeading, endPoint: .bottomTrailing))
+                    }
+                    shape.fill(Theme.sheen)
+                }
             )
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
-                    .strokeBorder(Theme.hairline, lineWidth: 1)
-            )
-            .shadow(color: .black.opacity(0.22), radius: 12, x: 0, y: 4)
+            .overlay(shape.strokeBorder(Theme.edgeHighlight, lineWidth: 1))
+            .shadow(color: .black.opacity(0.20), radius: 1.5, x: 0, y: 1)
+            .shadow(color: .black.opacity(0.24), radius: 18, x: 0, y: 8)
     }
 }
 
 extension View {
-    func card(padding: CGFloat = 18, fill: Color = Theme.panel) -> some View {
-        modifier(Card(padding: padding, fill: fill))
+    func card(padding: CGFloat = 18, fill: Color = Theme.panel, tint: Color? = nil) -> some View {
+        modifier(Card(padding: padding, fill: fill, tint: tint))
+    }
+}
+
+/// The window backdrop: the base color with two slow, faint light pools (accent top-right, violet bottom-left).
+struct AmbientBackground: View {
+    var tint: Color = Theme.accent
+    var body: some View {
+        ZStack {
+            Theme.bg
+            RadialGradient(colors: [tint.opacity(0.10), .clear], center: .topTrailing, startRadius: 0, endRadius: 760)
+            RadialGradient(colors: [Color(hex: 0x7A3FD6).opacity(0.06), .clear], center: .bottomLeading, startRadius: 0, endRadius: 640)
+        }
+        .allowsHitTesting(false)
+        .animation(Motion.gentle, value: tint)
+    }
+}
+
+/// Letter avatar in the project's own gradient.
+struct ProjectAvatar: View {
+    let name: String
+    var size: CGFloat = 28
+    var dimmed = false
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: size * 0.3, style: .continuous)
+                .fill(Theme.avatarGradient(for: name))
+            RoundedRectangle(cornerRadius: size * 0.3, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.18), lineWidth: 1)
+            Text(String(name.prefix(1)).uppercased())
+                .font(.system(size: size * 0.45, weight: .bold, design: .rounded))
+                .foregroundColor(.white)
+                .shadow(color: .black.opacity(0.25), radius: 1, y: 1)
+        }
+        .frame(width: size, height: size)
+        .opacity(dimmed ? 0.45 : 1)
+        .accessibilityHidden(true)
+    }
+}
+
+/// Circular progress around a status symbol (the share of passed steps).
+struct StatusRing: View {
+    let fraction: Double
+    let tint: Color
+    let symbol: String
+    var size: CGFloat = 54
+    var body: some View {
+        ZStack {
+            Circle().fill(tint.opacity(0.12))
+                .blur(radius: 10)
+                .frame(width: size + 8, height: size + 8)
+            Circle().stroke(Theme.elevated, lineWidth: 4)
+            Circle()
+                .trim(from: 0, to: max(0.001, min(1, fraction)))
+                .stroke(tint, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+                .shadow(color: tint.opacity(0.5), radius: 4)
+                .animation(Motion.gentle, value: fraction)
+            Image(systemName: symbol)
+                .font(.system(size: size * 0.36, weight: .bold))
+                .foregroundColor(tint)
+        }
+        .frame(width: size, height: size)
     }
 }
 

@@ -179,14 +179,7 @@ struct ProjectRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(selected ? Theme.accentSoft : Theme.elevated)
-                Text(String(project.name.prefix(1)).uppercased())
-                    .font(.system(size: 12.5, weight: .bold))
-                    .foregroundColor(selected ? Theme.accent : Theme.secondary)
-            }
-            .frame(width: 28, height: 28)
+            ProjectAvatar(name: project.name, size: 28, dimmed: project.exists == false)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(project.name)
@@ -207,13 +200,22 @@ struct ProjectRow: View {
             RoundedRectangle(cornerRadius: 11, style: .continuous)
                 .fill(selected ? Theme.elevated : (hover ? Theme.panel : .clear))
         )
+        .overlay(
+            RoundedRectangle(cornerRadius: 11, style: .continuous)
+                .strokeBorder(selected ? Theme.edgeHighlight : LinearGradient(colors: [.clear], startPoint: .top, endPoint: .bottom), lineWidth: 1)
+        )
         .overlay(alignment: .leading) {
             if selected {
-                Capsule().fill(Theme.accent).frame(width: 3, height: 18).offset(x: -6)
+                Capsule().fill(Theme.accentGradient).frame(width: 3, height: 18).offset(x: -6)
+                    .shadow(color: Theme.accent.opacity(0.7), radius: 4)
             }
         }
         .contentShape(Rectangle())
         .onHover { hover = $0 }
+        .animation(Motion.quick, value: hover)
+        .animation(Motion.quick, value: selected)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(selected ? [.isSelected, .isButton] : .isButton)
     }
 }
 
@@ -249,11 +251,20 @@ struct NavRow: View {
             .padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(selected ? Theme.accentSoft : (hover ? Theme.panel : .clear))
+                    .fill(selected
+                          ? LinearGradient(colors: [Theme.accent.opacity(0.26), Theme.accent.opacity(0.10)], startPoint: .leading, endPoint: .trailing)
+                          : LinearGradient(colors: [hover ? Theme.panel : .clear], startPoint: .leading, endPoint: .trailing))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(Theme.accent.opacity(selected ? 0.28 : 0), lineWidth: 1)
             )
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .onHover { hover = $0 }
+        .animation(Motion.quick, value: hover)
+        .animation(Motion.quick, value: selected)
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }

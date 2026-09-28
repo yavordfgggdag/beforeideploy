@@ -91,12 +91,13 @@ struct DashboardView: View {
 struct TabStrip: View {
     @Binding var selection: ProjectTab
     var badges: [ProjectTab: String] = [:]
+    @Namespace private var pill
 
     var body: some View {
         HStack(spacing: 4) {
             ForEach(ProjectTab.allCases, id: \.self) { t in
                 Button {
-                    withAnimation(.easeOut(duration: 0.15)) { selection = t }
+                    withAnimation(Motion.spring) { selection = t }
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: t.icon).font(.system(size: 11.5, weight: .semibold))
@@ -112,19 +113,24 @@ struct TabStrip: View {
                     .foregroundColor(selection == t ? .white : Theme.secondary)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 7)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .fill(selection == t ? Theme.accent : Color.clear)
-                    )
+                    .background {
+                        if selection == t {
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .fill(Theme.accentGradient)
+                                .shadow(color: Theme.accent.opacity(0.35), radius: 6, y: 2)
+                                .matchedGeometryEffect(id: "tab", in: pill)
+                        }
+                    }
                     .contentShape(Rectangle())
                 }
+                .accessibilityAddTraits(selection == t ? .isSelected : [])
                 .buttonStyle(.plain)
             }
             Spacer()
         }
         .padding(4)
         .background(RoundedRectangle(cornerRadius: 11, style: .continuous).fill(Theme.panel))
-        .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous).strokeBorder(Theme.edgeHighlight, lineWidth: 1))
     }
 }
 
@@ -225,6 +231,14 @@ struct HeroCard: View {
         }
     }
 
+    /// Share of steps that passed (skipped steps do not count), drawn as the ring around the status symbol.
+    var passFraction: Double {
+        guard let steps = status.check?.steps else { return 0 }
+        let counted = steps.filter { $0.status != "skipped" }
+        guard !counted.isEmpty else { return 0 }
+        return Double(counted.filter { $0.status == "pass" || $0.status == "info" }.count) / Double(counted.count)
+    }
+
     var stale: Bool {
         guard let d = Fmt.date(status.check?.at) else { return true }
         return Date().timeIntervalSince(d) > 30 * 60
@@ -234,14 +248,9 @@ struct HeroCard: View {
         let tint = state == "unknown" ? Theme.idle : Theme.color(for: state)
         VStack(alignment: .leading, spacing: 18) {
             HStack(alignment: .center, spacing: 16) {
-                ZStack {
-                    Circle().fill(tint.opacity(0.16)).frame(width: 54, height: 54)
-                        .blur(radius: state == "unknown" ? 0 : 8)
-                    Circle().fill(tint.opacity(0.14)).frame(width: 46, height: 46)
-                    Image(systemName: state == "unknown" ? "questionmark" : Theme.symbol(for: state))
-                        .font(.system(size: 21, weight: .bold))
-                        .foregroundColor(tint)
-                }
+                StatusRing(fraction: passFraction, tint: tint,
+                           symbol: state == "unknown" ? "questionmark" : Theme.symbol(for: state))
+                    .accessibilityLabel(title)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
                         .font(.system(size: 20, weight: .heavy))
@@ -332,11 +341,12 @@ struct HeroCard: View {
                 }
             }
         }
-        .card(padding: 22)
+        .card(padding: 22, tint: state == "unknown" ? nil : tint)
         .overlay(
             RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
                 .strokeBorder(tint.opacity(state == "unknown" ? 0 : 0.25), lineWidth: 1)
         )
+        .animation(Motion.gentle, value: state)
     }
 }
 
@@ -361,9 +371,10 @@ struct HealthBar: View {
     var body: some View {
         HStack(spacing: 4) {
             ForEach(steps) { s in
-                RoundedRectangle(cornerRadius: 3, style: .continuous)
+                Capsule(style: .continuous)
                     .fill(s.status == "skipped" ? Theme.elevated : Theme.color(for: s.status).opacity(s.status == "info" ? 0.45 : 0.9))
                     .frame(height: 6)
+                    .shadow(color: s.status == "fail" ? Theme.blocked.opacity(0.6) : .clear, radius: 4)
                     .help("\(s.label ?? s.id): \(s.summary ?? s.status)")
             }
         }
