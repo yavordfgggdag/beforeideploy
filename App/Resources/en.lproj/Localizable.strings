@@ -39,7 +39,8 @@
 "admin.title" = "Admin";
 "admin.tokens" = "tokens";
 
-"ai.applied" = "%@ files applied";
+"ai.applied.one" = "%@ file applied";
+"ai.applied.other" = "%@ files applied";
 "ai.applySelected" = "Apply selected (%@)";
 "ai.applying" = "Applying…";
 "ai.changes" = "Proposed changes";
@@ -244,7 +245,8 @@
 "costs.unitTasks" = "tasks";
 
 "dashboard.all" = "All";
-"dashboard.changes" = "%@ changes";
+"dashboard.changes.one" = "%@ change";
+"dashboard.changes.other" = "%@ changes";
 "dashboard.checkedAgo" = "Checked %@";
 "dashboard.connectHostingHelp" = "Connect hosting to publish";
 "dashboard.fixErrorsFirst" = "Fix the errors first";
@@ -285,11 +287,13 @@
 "domains.connectSpaceshipHint" = "Connect Spaceship to put your own domain on this site with one button.";
 "domains.connectToProject" = "Connect to a project";
 "domains.connectsTo" = "Connects to %@";
-"domains.count" = "%@ domains";
+"domains.count.one" = "%@ domain";
+"domains.count.other" = "%@ domains";
 "domains.countLabel" = "domains";
 "domains.disconnect" = "Disconnect";
 "domains.dnsRecords" = "DNS records";
-"domains.expiresIn" = "expires in %@ days";
+"domains.expiresIn.one" = "expires in %@ day";
+"domains.expiresIn.other" = "expires in %@ days";
 "domains.expiring30" = "expire within 30 days";
 "domains.keyInKeychain" = "The key is stored in the macOS Keychain.";
 "domains.linkNetlifyFirst" = "Connect the project to Netlify first (the card above).";
@@ -444,7 +448,8 @@
 "overview.daysShort" = "%@d";
 "overview.failing" = "Errors: %@";
 "overview.loading" = "Collecting the status of all projects…";
-"overview.missingSetup" = "%@ things are not set up";
+"overview.missingSetup.one" = "%@ thing is not set up";
+"overview.missingSetup.other" = "%@ things are not set up";
 "overview.missingSetupHint" = "I can install and connect them automatically.";
 "overview.noLiveSite" = "No live site";
 "overview.noProduction" = "no production";
@@ -480,7 +485,8 @@
 "production.title" = "This will update the LIVE site of %@";
 "production.typeDeploy" = "To continue, type DEPLOY";
 "production.uncommitted" = "Uncommitted changes";
-"production.warnings" = "%@ warning(s) from the last check";
+"production.warnings.one" = "%@ warning from the last check";
+"production.warnings.other" = "%@ warnings from the last check";
 "production.whatUploads" = "What is uploaded";
 
 "remote.openNew" = "Open github.com/new";
@@ -563,8 +569,10 @@
 "setup.finishInTerminal" = "Finish in Terminal, then press “Refresh”";
 "setup.installing" = "Installing %@";
 "setup.itemReady" = "%@ is ready";
-"setup.missingOptional" = "%@ extra things (AI assistants, Spaceship) can be added if you like.";
-"setup.missingRequired" = "%@ required things are missing";
+"setup.missingOptional.one" = "%@ extra thing (AI assistants, Spaceship) can be added if you like.";
+"setup.missingOptional.other" = "%@ extra things (AI assistants, Spaceship) can be added if you like.";
+"setup.missingRequired.one" = "%@ required thing is missing";
+"setup.missingRequired.other" = "%@ required things are missing";
 "setup.optional" = "optional";
 "setup.subtitle" = "Everything the workflow depends on — with a button for automatic setup";
 

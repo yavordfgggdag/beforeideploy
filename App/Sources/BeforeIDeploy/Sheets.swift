@@ -88,7 +88,7 @@ struct ProductionSheet: View {
 
                 if !warnings.isEmpty {
                     VStack(alignment: .leading, spacing: 6) {
-                        Label(L("production.warnings", warnings.count), systemImage: "exclamationmark.triangle.fill")
+                        Label(L("production.warnings", count: warnings.count), systemImage: "exclamationmark.triangle.fill")
                             .font(.system(size: 12.5, weight: .semibold))
                             .foregroundColor(Theme.warn)
                         ForEach(warnings) { w in

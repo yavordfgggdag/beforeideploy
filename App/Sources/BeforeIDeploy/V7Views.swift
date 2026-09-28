@@ -194,7 +194,7 @@ struct SetupBanner: View {
         HStack(spacing: 12) {
             Image(systemName: "wand.and.stars").font(.system(size: 16, weight: .bold)).foregroundColor(Theme.accent)
             VStack(alignment: .leading, spacing: 2) {
-                Text(L("overview.missingSetup", missing)).font(.system(size: 13.5, weight: .semibold)).foregroundColor(Theme.text)
+                Text(L("overview.missingSetup", count: missing)).font(.system(size: 13.5, weight: .semibold)).foregroundColor(Theme.text)
                 Text(L("overview.missingSetupHint")).font(.system(size: 12)).foregroundColor(Theme.secondary)
             }
             Spacer()
@@ -560,9 +560,9 @@ struct SetupView: View {
                         }
                         .frame(width: 64, height: 64)
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(s.ready ? L("setup.allRequiredSet") : L("setup.missingRequired", s.missingRequired))
+                            Text(s.ready ? L("setup.allRequiredSet") : L("setup.missingRequired", count: s.missingRequired))
                                 .font(.system(size: 17, weight: .bold)).foregroundColor(Theme.text)
-                            Text(L("setup.missingOptional", s.missingOptional))
+                            Text(L("setup.missingOptional", count: s.missingOptional))
                                 .font(.system(size: 12.5)).foregroundColor(Theme.secondary)
                         }
                         Spacer()

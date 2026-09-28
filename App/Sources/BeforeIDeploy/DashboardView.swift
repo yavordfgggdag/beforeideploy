@@ -48,7 +48,7 @@ struct DashboardView: View {
                     HStack(alignment: .top, spacing: 14) {
                         MiniStat(title: L("dashboard.localTitle"), value: status.local.running ? Fmt.host(status.local.url) : L("dashboard.stopped"),
                                  tint: status.local.running ? Theme.ready : Theme.tertiary, icon: "desktopcomputer") { tab = .local }
-                        MiniStat(title: "GitHub", value: status.git.isRepo ? L("dashboard.changes", status.git.changedCount ?? 0) : L("dashboard.noRepo"),
+                        MiniStat(title: "GitHub", value: status.git.isRepo ? L("dashboard.changes", count: status.git.changedCount ?? 0) : L("dashboard.noRepo"),
                                  tint: (status.git.changedCount ?? 0) > 0 ? Theme.warn : Theme.text, icon: "arrow.triangle.branch") { tab = .git }
                         MiniStat(title: "Live · \(status.hosting?.name ?? "Netlify")",
                                  value: (status.hosting?.liveUrl ?? status.project.netlify?.liveUrl).map { Fmt.host($0) } ?? (status.hosting?.ready == true ? L("common.connectedLower") : L("common.notConnectedLower")),

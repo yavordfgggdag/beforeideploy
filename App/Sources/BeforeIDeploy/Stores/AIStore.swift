@@ -91,7 +91,7 @@ final class AIStore: ObservableObject {
             do {
                 let res = try await engine.call(args, as: AIApplyResult.self)
                 current?.applied = res
-                feedback?.flash(L("ai.applied", res.applied.count), error: res.applied.isEmpty)
+                feedback?.flash(L("ai.applied", count: res.applied.count), error: res.applied.isEmpty)
                 await projects.refreshStatus(quiet: true)
                 await projects.loadHistory()
                 current?.applying = false

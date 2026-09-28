@@ -141,7 +141,7 @@ struct AIFixOverlay: View {
                 Toggle(L("ai.recheckAfter"), isOn: Binding(get: { store.recheckAfterApply }, set: { store.recheckAfterApply = $0 })).toggleStyle(.checkbox)
             }
             if let a = state.applied {
-                Label(L("ai.applied", a.applied.count), systemImage: "checkmark.circle.fill").font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.ready)
+                Label(L("ai.applied", count: a.applied.count), systemImage: "checkmark.circle.fill").font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.ready)
                 if let c = a.committed { Text("commit \(c)").font(.system(size: 11.5, design: .monospaced)).foregroundColor(Theme.tertiary) }
             }
             Spacer()

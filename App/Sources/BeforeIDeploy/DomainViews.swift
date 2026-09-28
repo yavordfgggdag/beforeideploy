@@ -138,7 +138,7 @@ struct DomainRow: View {
                 Text(domain.unicodeName ?? domain.name).font(.system(size: 13, weight: .semibold))
                     .foregroundColor(selected ? .white : Theme.text).lineLimit(1)
                 HStack(spacing: 6) {
-                    Text(domain.daysLeft.map { L("domains.expiresIn", $0) } ?? "—")
+                    Text(domain.daysLeft.map { L("domains.expiresIn", count: $0) } ?? "—")
                     Text("·")
                     Text(domain.autoRenew ? "auto-renew" : L("domains.noAutoRenew"))
                 }
@@ -253,7 +253,7 @@ struct DomainProjectCard: View {
         VStack(alignment: .leading, spacing: 14) {
             PanelHeader(title: L("domains.projectCardTitle"), icon: "network",
                         status: model.spaceship?.connected == true ? "pass" : nil,
-                        trailing: model.spaceship?.connected == true ? L("domains.count", model.spaceship?.domains.count ?? 0) : L("common.notConnectedLower"))
+                        trailing: model.spaceship?.connected == true ? L("domains.count", count: model.spaceship?.domains.count ?? 0) : L("common.notConnectedLower"))
             if model.spaceship?.connected != true {
                 HStack {
                     Text(L("domains.connectSpaceshipHint"))

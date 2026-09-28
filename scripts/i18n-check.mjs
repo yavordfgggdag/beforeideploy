@@ -29,8 +29,10 @@ function compare(label, catalogs, placeholders) {
   }
   for (const [lang, cat] of Object.entries(catalogs)) {
     if (lang === 'en') continue;
-    const missing = Object.keys(en).filter((k) => !(k in cat));
-    const extra = Object.keys(cat).filter((k) => !(k in en));
+    // plural categories differ by language (pl has few/many, ja only other) — only `.other` is mandatory
+    const isCategory = (k, other) => /\.(zero|one|two|few|many)$/.test(k) && `${k.replace(/\.[a-z]+$/, '')}.other` in other;
+    const missing = Object.keys(en).filter((k) => !(k in cat) && !isCategory(k, cat));
+    const extra = Object.keys(cat).filter((k) => !(k in en) && !isCategory(k, en));
     if (missing.length) errors.push(`${label} ${lang}: missing ${missing.length} key(s): ${missing.slice(0, 10).join(', ')}`);
     if (extra.length) errors.push(`${label} ${lang}: ${extra.length} key(s) not in en: ${extra.slice(0, 10).join(', ')}`);
     for (const k of Object.keys(en)) {
@@ -76,10 +78,14 @@ const walk = (d) => {
 walk(swiftDir);
 
 const used = new Set();
+const pluralBases = new Set();
 let cyrillic = 0;
 for (const f of swiftFiles) {
   const text = fs.readFileSync(f, 'utf8');
-  for (const m of text.matchAll(/\bL\(\s*"([^"\\]+)"/g)) used.add(m[1]);
+  // L("key", count: n) → plural forms `key.one`, `key.few`, `key.many`, `key.other` (V10 L4)
+  const pluralHere = new Set([...text.matchAll(/\bL\(\s*"([^"\\]+)"\s*,\s*count:/g)].map((m) => m[1]));
+  for (const k of pluralHere) pluralBases.add(k);
+  for (const m of text.matchAll(/\bL\(\s*"([^"\\]+)"/g)) if (!pluralHere.has(m[1])) used.add(m[1]);
   // keys passed around as plain strings (e.g. `titleKey: "sheet.commit.title"`) count as used too
   for (const m of text.matchAll(/"([a-z][a-zA-Z0-9]*(?:\.[a-zA-Z0-9_]+)+)"/g)) if (app.en && m[1] in app.en) used.add(m[1]);
   text.split('\n').forEach((line, i) => {
@@ -97,7 +103,14 @@ for (const f of swiftFiles) {
     }
   });
 }
+const PLURAL_CATEGORIES = ['zero', 'one', 'two', 'few', 'many', 'other'];
 if (app.en) {
+  for (const base of pluralBases) {
+    for (const [lang, cat] of Object.entries(app)) {
+      if (!(`${base}.other` in cat)) errors.push(`app ${lang}: plural "${base}" needs "${base}.other"`);
+    }
+    for (const c of PLURAL_CATEGORIES) if (`${base}.${c}` in app.en) used.add(`${base}.${c}`);
+  }
   const unknown = [...used].filter((k) => !(k in app.en));
   if (unknown.length) errors.push(`app: ${unknown.length} key(s) used in Swift but missing in en: ${unknown.slice(0, 15).join(', ')}`);
   // `_meta.*` keys describe the catalog itself (e.g. `_meta.reviewed`), the app reads them by name

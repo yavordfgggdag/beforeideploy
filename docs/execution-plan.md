@@ -97,7 +97,7 @@ Sheets (Settings, Production, Commit), Domains, Costs графика на раз
   (`Localization.isReviewed("xx") == false` без каталог).
 - Готово когато: i18n-check зелен, app CI зелен, ключът присъства и в двата каталога.
 
-### S3. L4: плурали със `.stringsdict` (1 ден)
+### S3. L4: плурали (1 ден) — ✅ готово с ключове `<key>.one/.few/.many/.other` и `L(key, count:)` (правила по CLDR в `Plural`), вместо `.stringsdict` — виж коментара в `Localization.plural`
 
 - Файлове: `App/Resources/{en,bg}.lproj/Localizable.stringsdict` (нови), `Localization.swift`
   (`func L(_ key: String, count: Int, _ args: Any...)` — подава `count` като `Int` за `%d`, останалите

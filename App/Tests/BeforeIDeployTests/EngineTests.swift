@@ -60,6 +60,27 @@ final class LocalizationTests: XCTestCase {
         XCTAssertNil(Localization.stored)
     }
 
+    func testPluralCategories() {
+        XCTAssertEqual(Plural.category(1, language: "en"), "one")
+        XCTAssertEqual(Plural.category(0, language: "en"), "other")
+        XCTAssertEqual(Plural.category(5, language: "bg"), "other")
+        XCTAssertEqual(Plural.category(1, language: "bg"), "one")
+        XCTAssertEqual(Plural.category(0, language: "fr"), "one")
+        XCTAssertEqual(Plural.category(1, language: "pt-BR"), "one")
+        XCTAssertEqual(Plural.category(3, language: "pl"), "few")
+        XCTAssertEqual(Plural.category(12, language: "pl"), "many")
+        XCTAssertEqual(Plural.category(22, language: "pl"), "few")
+        XCTAssertEqual(Plural.category(21, language: "ru"), "one")
+        XCTAssertEqual(Plural.category(0, language: "ro"), "few")
+        XCTAssertEqual(Plural.category(20, language: "ro"), "other")
+        XCTAssertEqual(Plural.category(1, language: "ja"), "other")
+    }
+
+    func testPluralWithoutCatalogFallsBackToTheKey() {
+        // no .lproj in the test bundle: the key is the format and gets no argument slot
+        XCTAssertEqual(L("files.count", count: 3), "files.count")
+    }
+
     func testLanguageWithoutCatalogIsNotReviewed() {
         XCTAssertFalse(Localization.isReviewed("xx"))
     }

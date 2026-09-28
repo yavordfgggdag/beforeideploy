@@ -39,7 +39,8 @@
 "admin.title" = "Админ";
 "admin.tokens" = "токени";
 
-"ai.applied" = "Приложени %@ файла";
+"ai.applied.one" = "Приложен %@ файл";
+"ai.applied.other" = "Приложени %@ файла";
 "ai.applySelected" = "Приложи избраните (%@)";
 "ai.applying" = "Прилагам…";
 "ai.changes" = "Предложени промени";
@@ -244,7 +245,8 @@
 "costs.unitTasks" = "задачи";
 
 "dashboard.all" = "Всичко";
-"dashboard.changes" = "%@ промени";
+"dashboard.changes.one" = "%@ промяна";
+"dashboard.changes.other" = "%@ промени";
 "dashboard.checkedAgo" = "Проверено %@";
 "dashboard.connectHostingHelp" = "Свържи хостинга, за да публикуваш";
 "dashboard.fixErrorsFirst" = "Оправи грешките първо";
@@ -285,11 +287,13 @@
 "domains.connectSpaceshipHint" = "Свържи Spaceship, за да сложиш собствен домейн на този сайт с един бутон.";
 "domains.connectToProject" = "Свържи с проект";
 "domains.connectsTo" = "Свързва с %@";
-"domains.count" = "%@ домейна";
+"domains.count.one" = "%@ домейн";
+"domains.count.other" = "%@ домейна";
 "domains.countLabel" = "домейна";
 "domains.disconnect" = "Прекъсни връзката";
 "domains.dnsRecords" = "DNS записи";
-"domains.expiresIn" = "изтича след %@ дни";
+"domains.expiresIn.one" = "изтича след %@ ден";
+"domains.expiresIn.other" = "изтича след %@ дни";
 "domains.expiring30" = "изтичат до 30 дни";
 "domains.keyInKeychain" = "Ключът се пази в macOS Keychain.";
 "domains.linkNetlifyFirst" = "Първо свържи проекта с Netlify (картата отгоре).";
@@ -444,7 +448,8 @@
 "overview.daysShort" = "%@д";
 "overview.failing" = "Грешки: %@";
 "overview.loading" = "Събирам статуса на всички проекти…";
-"overview.missingSetup" = "%@ неща не са настроени";
+"overview.missingSetup.one" = "%@ нещо не е настроено";
+"overview.missingSetup.other" = "%@ неща не са настроени";
 "overview.missingSetupHint" = "Мога да ги инсталирам и свържа автоматично.";
 "overview.noLiveSite" = "Няма live сайт";
 "overview.noProduction" = "без production";
@@ -480,7 +485,8 @@
 "production.title" = "Това ще обнови LIVE сайта на %@";
 "production.typeDeploy" = "За да продължиш, напиши DEPLOY";
 "production.uncommitted" = "Неприбрани промени";
-"production.warnings" = "%@ предупреждение(я) от последната проверка";
+"production.warnings.one" = "%@ предупреждение от последната проверка";
+"production.warnings.other" = "%@ предупреждения от последната проверка";
 "production.whatUploads" = "Какво се качва";
 
 "remote.openNew" = "Отвори github.com/new";
@@ -563,8 +569,10 @@
 "setup.finishInTerminal" = "Довърши в Terminal, после натисни „Обнови“";
 "setup.installing" = "Инсталирам %@";
 "setup.itemReady" = "%@ е готов";
-"setup.missingOptional" = "%@ допълнителни неща (AI помощници, Spaceship) можеш да добавиш по желание.";
-"setup.missingRequired" = "%@ задължителни неща липсват";
+"setup.missingOptional.one" = "%@ допълнително нещо (AI помощници, Spaceship) можеш да добавиш по желание.";
+"setup.missingOptional.other" = "%@ допълнителни неща (AI помощници, Spaceship) можеш да добавиш по желание.";
+"setup.missingRequired.one" = "%@ задължително нещо липсва";
+"setup.missingRequired.other" = "%@ задължителни неща липсват";
 "setup.optional" = "по желание";
 "setup.subtitle" = "Всичко, от което зависи workflow-ът — с бутон за автоматична настройка";
 
