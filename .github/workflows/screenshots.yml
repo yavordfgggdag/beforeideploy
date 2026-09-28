@@ -9,6 +9,9 @@ on:
       - 'App/**'
       - '.github/workflows/screenshots.yml'
 
+permissions:
+  contents: write
+
 jobs:
   shots:
     runs-on: macos-15
@@ -104,3 +107,21 @@ jobs:
         with:
           name: screenshots
           path: screenshots/
+      # Also publish the PNGs on a separate orphan branch <branch>-screenshots (no code, so no CI on it),
+      # so they can be fetched with git where artifact downloads are blocked.
+      - name: Publish to a screenshots branch
+        if: always()
+        run: |
+          set -e
+          [ -d screenshots ] && ls screenshots/*.png >/dev/null 2>&1 || { echo "no screenshots"; exit 0; }
+          BR="${GITHUB_REF_NAME}-screenshots"
+          TMP="$(mktemp -d)"
+          cp screenshots/*.png "$TMP/"
+          cd "$TMP"
+          git init -q -b "$BR"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          printf '# Screenshots of %s\n\nCommit %s, run %s.\n' "$GITHUB_REF_NAME" "$GITHUB_SHA" "$GITHUB_RUN_ID" > README.md
+          git add -A
+          git commit -qm "Screenshots for ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" "$BR"
