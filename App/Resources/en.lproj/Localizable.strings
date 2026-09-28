@@ -417,6 +417,10 @@
 "library.added" = "Added: %@";
 "library.pickFolder" = "Choose the project folder";
 
+"link.addFolder.add" = "Add folder";
+"link.addFolder.body" = "A link asked Before I Deploy to add and check this folder:\n\n%@\n\nChecking runs the project's own scripts. Add it only if you trust where the link came from.";
+"link.addFolder.title" = "Add this folder from a link?";
+
 "local.buildPreview" = "Build preview";
 "local.devHelp" = "npm run dev with hot reload";
 "local.devServer" = "Dev server";

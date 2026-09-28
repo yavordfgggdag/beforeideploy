@@ -20,7 +20,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
+    /// The menu bar icon keeps watching projects after the window closes; the Dock icon or the menu reopens it (audit A6).
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 }
 
 @main
@@ -29,6 +30,10 @@ struct BeforeIDeployApp: App {
     @StateObject private var model = AppModel.shared
     /// Changing the language rebuilds the window content, so every L() text is read again.
     @AppStorage(Localization.storageKey) private var locale = ""
+    @AppStorage(Onboarding.tourSeenKey) private var tourSeen = false
+
+    /// Project commands only while the main screen is showing — never behind the sign-in or the tour (audit A8).
+    private var projectCommandsOff: Bool { locale.isEmpty || !tourSeen || model.mustAuthenticate || model.selectedKey == nil }
 
     var body: some Scene {
         Window("Before I Deploy", id: "main") {
@@ -43,6 +48,8 @@ struct BeforeIDeployApp: App {
                 .task { await model.start() }
         }
         .windowStyle(.hiddenTitleBar)
+        .defaultSize(width: 1280, height: 820)
+        .commands { commands }
 
         MenuBarExtra {
             MenuBarView()
@@ -51,10 +58,12 @@ struct BeforeIDeployApp: App {
                 .preferredColorScheme(.dark)
         } label: {
             Image(systemName: model.menuBarSymbol)
+                .accessibilityLabel("Before I Deploy")
         }
         .menuBarExtraStyle(.window)
-        .defaultSize(width: 1280, height: 820)
-        .commands {
+    }
+
+    @CommandsBuilder private var commands: some Commands {
             CommandGroup(replacing: .newItem) {
                 Button(L("menu.addProject")) { model.addProjectPanel() }
                     .keyboardShortcut("o")
@@ -66,18 +75,24 @@ struct BeforeIDeployApp: App {
             CommandMenu(L("common.project")) {
                 Button(L("common.check")) { model.runCheck() }
                     .keyboardShortcut("r")
+                    .disabled(projectCommandsOff)
                 Button(L("menu.fullCheck")) { model.runCheck(force: true) }
                     .keyboardShortcut("r", modifiers: [.command, .option])
+                    .disabled(projectCommandsOff)
                 Button(L("run.smartDeploy")) { model.smartDeploy() }
                     .keyboardShortcut("d")
+                    .disabled(projectCommandsOff)
                 Divider()
                 Button(L("run.localPreview")) { model.localStart() }
                     .keyboardShortcut("l")
+                    .disabled(projectCommandsOff)
                 Button(L("menu.stopLocal")) { model.localStop() }
                     .keyboardShortcut("l", modifiers: [.command, .shift])
+                    .disabled(projectCommandsOff)
                 Divider()
                 Button(L("menu.commitPush")) { model.sheet = .commit }
                     .keyboardShortcut("k", modifiers: [.command, .shift])
+                    .disabled(projectCommandsOff)
                 Button(L("common.history")) { model.sheet = .history }
                     .keyboardShortcut("y")
                 Divider()
@@ -103,6 +118,5 @@ struct BeforeIDeployApp: App {
                 Button(L("menu.settings")) { model.sheet = .settings }
                     .keyboardShortcut(",")
             }
-        }
     }
 }

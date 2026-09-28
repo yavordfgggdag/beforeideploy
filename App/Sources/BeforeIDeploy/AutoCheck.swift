@@ -7,10 +7,14 @@ import SwiftUI
 final class ProjectWatcher {
     private var stream: FSEventStreamRef?
     private let path: String
+    /// The real path (FSEvents reports resolved paths, e.g. /private/var for /var).
+    fileprivate var root: String { (path as NSString).resolvingSymlinksInPath }
     private let onChange: () -> Void
 
     static let ignored = ["/node_modules/", "/.git/", "/dist/", "/build/", "/.next/", "/.nuxt/", "/.svelte-kit/",
                           "/.output/", "/.vercel/", "/.netlify/", "/out/", "/.cache/", "/coverage/", "/.turbo/", ".DS_Store"]
+    /// Files the check itself (tsc, eslint, editors) rewrites — they must not start another check.
+    static let ignoredSuffixes = [".tsbuildinfo", ".eslintcache", ".swp", "~", ".log"]
 
     init(path: String, onChange: @escaping () -> Void) {
         self.path = path
@@ -20,8 +24,13 @@ final class ProjectWatcher {
     deinit { stop() }
 
     /// True when at least one changed path is a real source change (not build output / deps / VCS).
-    static func isRelevant(_ paths: [String]) -> Bool {
-        paths.contains { p in !ignored.contains { p.contains($0) } }
+    /// Paths are judged relative to the project root, so a project that lives under …/build/… still works (audit A10).
+    static func isRelevant(_ paths: [String], root: String = "") -> Bool {
+        let base = root.hasSuffix("/") ? root : root + "/"
+        return paths.contains { p in
+            let rel = !root.isEmpty && p.hasPrefix(base) ? "/" + p.dropFirst(base.count) : p
+            return !ignored.contains { rel.contains($0) } && !ignoredSuffixes.contains { rel.hasSuffix($0) }
+        }
     }
 
     func start() {
@@ -31,7 +40,7 @@ final class ProjectWatcher {
             guard let info else { return }
             let watcher = Unmanaged<ProjectWatcher>.fromOpaque(info).takeUnretainedValue()
             let list = (Unmanaged<CFArray>.fromOpaque(paths).takeUnretainedValue() as NSArray as? [String]) ?? []
-            if count > 0, ProjectWatcher.isRelevant(list) { watcher.onChange() }
+            if count > 0, ProjectWatcher.isRelevant(list, root: watcher.root) { watcher.onChange() }
         }
         let flags = UInt32(kFSEventStreamCreateFlagUseCFTypes | kFSEventStreamCreateFlagFileEvents | kFSEventStreamCreateFlagNoDefer)
         guard let s = FSEventStreamCreate(kCFAllocatorDefault, callback, &context, [path] as CFArray,

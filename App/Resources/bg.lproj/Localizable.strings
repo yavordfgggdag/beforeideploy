@@ -417,6 +417,10 @@
 "library.added" = "Добавен: %@";
 "library.pickFolder" = "Избери папката на проекта";
 
+"link.addFolder.add" = "Добави папката";
+"link.addFolder.body" = "Линк поиска от Before I Deploy да добави и провери тази папка:\n\n%@\n\nПроверката пуска скриптовете на проекта. Добави я само ако имаш доверие на източника на линка.";
+"link.addFolder.title" = "Да добавя ли тази папка от линк?";
+
 "local.buildPreview" = "Преглед на build-а";
 "local.devHelp" = "npm run dev с hot reload";
 "local.devServer" = "Dev server";

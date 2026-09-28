@@ -6,6 +6,8 @@ import SwiftUI
 @MainActor
 final class RunController: ObservableObject {
     @Published var run: RunSession?
+    /// Called before a run starts (the facade stops a quiet auto-check here).
+    var beforeRun: (@MainActor () -> Void)?
     @Published var busy: Set<String> = []
     @AppStorage("autoOpenPreview") var autoOpenPreview = true
 
@@ -33,6 +35,7 @@ final class RunController: ObservableObject {
             flash(L("run.busy"), error: true)
             return
         }
+        beforeRun?()
         run = session
         Task {
             do {

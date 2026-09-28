@@ -123,5 +123,10 @@ final class AutoCheckTests: XCTestCase {
         XCTAssertFalse(ProjectWatcher.isRelevant(["/p/node_modules/x/index.js", "/p/dist/index.html", "/p/.git/index"]))
         XCTAssertTrue(ProjectWatcher.isRelevant(["/p/dist/a.js", "/p/index.html"]))
         XCTAssertFalse(ProjectWatcher.isRelevant(["/p/.next/cache/x", "/p/.DS_Store"]))
+        // a project under a folder called build/ still reacts to its own sources
+        XCTAssertTrue(ProjectWatcher.isRelevant(["/Users/a/build/site/src/app.js"], root: "/Users/a/build/site"))
+        XCTAssertFalse(ProjectWatcher.isRelevant(["/Users/a/build/site/dist/app.js"], root: "/Users/a/build/site"))
+        // files the check writes itself do not start another check
+        XCTAssertFalse(ProjectWatcher.isRelevant(["/p/tsconfig.tsbuildinfo", "/p/.eslintcache"], root: "/p"))
     }
 }

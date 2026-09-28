@@ -118,11 +118,22 @@ final class EngineClient {
         process.standardError = err
         handle?.process = process
 
-        try process.run()
-
-        let errTask = Task.detached { () -> Data in
-            err.fileHandleForReading.readDataToEndOfFile()
+        // stderr and the exit are collected by callbacks, never by a blocking read: blocking calls would park
+        // threads of Swift's small cooperative pool and, with a few engine calls at once, hang all of them (audit A3)
+        let errBuffer = PipeBuffer()
+        err.fileHandleForReading.readabilityHandler = { h in
+            let chunk = h.availableData
+            if chunk.isEmpty {
+                h.readabilityHandler = nil
+                errBuffer.finish()
+            } else {
+                errBuffer.append(chunk)
+            }
         }
+        let exit = ExitSignal()
+        process.terminationHandler = { p in exit.fire(p.terminationStatus) }
+
+        try process.run()
 
         var resultLine: Data? = nil
         for try await line in out.fileHandleForReading.bytes.lines {
@@ -133,16 +144,16 @@ final class EngineClient {
             if let onEvent { await onEvent(event) }
         }
 
-        let errData = await errTask.value
-        process.waitUntilExit()
+        let status = await exit.wait()
+        let errData = await errBuffer.drained()
         let name = AppLog.commandName(args)
-        if process.terminationStatus == 0 {
+        if status == 0 {
             AppLog.engine.debug("\(name, privacy: .public) ok")
         } else {
-            AppLog.engine.error("\(name, privacy: .public) exit \(process.terminationStatus, privacy: .public)")
+            AppLog.engine.error("\(name, privacy: .public) exit \(status, privacy: .public)")
         }
         return EngineOutcome(
-            exitCode: process.terminationStatus,
+            exitCode: status,
             resultData: resultLine,
             stderr: String(decoding: errData, as: UTF8.self)
         )
@@ -154,5 +165,55 @@ final class EngineClient {
                             onEvent: (@MainActor (EngineEvent) -> Void)? = nil) async throws -> T {
         let outcome = try await run(args, env: env, onEvent: onEvent)
         return try outcome.decode(T.self)
+    }
+}
+
+/// Collects a pipe's output from its readability handler (a background queue) without blocking anyone.
+final class PipeBuffer: @unchecked Sendable {
+    private let lock = NSLock()
+    private var data = Data()
+    private var done = false
+
+    func append(_ chunk: Data) { lock.lock(); data.append(chunk); lock.unlock() }
+    func finish() { lock.lock(); done = true; lock.unlock() }
+
+    /// Everything written so far; waits briefly for end-of-file (a detached grandchild may keep the pipe open).
+    func drained() async -> Data {
+        for _ in 0..<20 {
+            lock.lock(); let finished = done; lock.unlock()
+            if finished { break }
+            try? await Task.sleep(nanoseconds: 25_000_000)
+        }
+        lock.lock(); defer { lock.unlock() }
+        return data
+    }
+}
+
+/// The process exit as something to `await` (terminationHandler may fire before or after the wait starts).
+final class ExitSignal: @unchecked Sendable {
+    private let lock = NSLock()
+    private var status: Int32?
+    private var waiter: CheckedContinuation<Int32, Never>?
+
+    func fire(_ code: Int32) {
+        lock.lock()
+        status = code
+        let w = waiter
+        waiter = nil
+        lock.unlock()
+        w?.resume(returning: code)
+    }
+
+    func wait() async -> Int32 {
+        await withCheckedContinuation { (c: CheckedContinuation<Int32, Never>) in
+            lock.lock()
+            if let status {
+                lock.unlock()
+                c.resume(returning: status)
+            } else {
+                waiter = c
+                lock.unlock()
+            }
+        }
     }
 }

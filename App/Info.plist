@@ -16,6 +16,10 @@
     <key>LSApplicationCategoryType</key><string>public.app-category.developer-tools</string>
     <key>NSHighResolutionCapable</key><true/>
     <key>NSSupportsAutomaticTermination</key><false/>
+    <key>NSHumanReadableCopyright</key><string>© 2026 Yavor. All rights reserved.</string>
+    <key>NSDesktopFolderUsageDescription</key><string>Before I Deploy checks and builds the projects you add from your Desktop.</string>
+    <key>NSDocumentsFolderUsageDescription</key><string>Before I Deploy checks and builds the projects you add from Documents.</string>
+    <key>NSDownloadsFolderUsageDescription</key><string>Before I Deploy saves your data export and support reports to Downloads.</string>
     <key>CFBundleURLTypes</key>
     <array>
         <dict>

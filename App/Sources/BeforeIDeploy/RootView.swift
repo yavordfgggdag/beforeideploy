@@ -168,7 +168,8 @@ struct ToastView: View {
             }
             .buttonStyle(.plain)
             .help(L("common.close"))
-            .keyboardShortcut(.cancelAction)
+            .accessibilityLabel(L("common.close"))
+            // no Esc here: Esc belongs to the sheet or run window on top, the toast fades by itself (audit A13)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 11)

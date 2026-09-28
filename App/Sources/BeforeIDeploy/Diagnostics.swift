@@ -67,8 +67,21 @@ enum CrashReporter {
             let file = CrashReporter.logsDir.appendingPathComponent("crash-\(CrashReporter.stamp()).txt")
             try? text.write(to: file, atomically: true, encoding: .utf8)
         }
+        // AppKit swallows exceptions thrown on the main thread unless told to crash (audit A11)
+        UserDefaults.standard.register(defaults: ["NSApplicationCrashOnExceptions": true])
+        // a stack overflow can only be reported from a separate signal stack
+        let altSize = 128 * 1024
+        var alt = stack_t()
+        alt.ss_sp = UnsafeMutableRawPointer.allocate(byteCount: altSize, alignment: 16)
+        alt.ss_size = altSize
+        alt.ss_flags = 0
+        sigaltstack(&alt, nil)
         for sig in [SIGSEGV, SIGBUS, SIGILL, SIGTRAP, SIGABRT, SIGFPE] {
-            signal(sig) { writeSignalCrash($0) }
+            var action = sigaction()
+            action.__sigaction_u.__sa_handler = { writeSignalCrash($0) }
+            action.sa_flags = SA_ONSTACK
+            sigemptyset(&action.sa_mask)
+            sigaction(sig, &action, nil)
         }
     }
 
@@ -102,8 +115,12 @@ enum CrashReporter {
 /// renders the main window into a PNG after the delay and quits. The app draws itself, so no screen-recording
 /// permission is needed. Does nothing unless the argument is given.
 enum Snapshot {
+    /// Only a command-line argument counts — a value someone wrote into the app's defaults must not keep the
+    /// app quitting after every launch (audit A16).
+    static func argument(_ name: String) -> Bool { ProcessInfo.processInfo.arguments.contains("-\(name)") }
+
     static func scheduleIfRequested() {
-        guard let path = UserDefaults.standard.string(forKey: "BIDSnapshot"), !path.isEmpty else { return }
+        guard argument("BIDSnapshot"), let path = UserDefaults.standard.string(forKey: "BIDSnapshot"), !path.isEmpty else { return }
         let delay = UserDefaults.standard.double(forKey: "BIDSnapshotDelay")
         Task { @MainActor in
             try? await Task.sleep(nanoseconds: UInt64((delay > 0 ? delay : 6) * 1_000_000_000))

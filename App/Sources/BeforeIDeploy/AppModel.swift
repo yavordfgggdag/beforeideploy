@@ -66,6 +66,7 @@ final class AppModel: ObservableObject, Feedback {
     @Published var autoChecking = false
     private var watcher: ProjectWatcher?
     private var autoCheckTask: Task<Void, Never>?
+    private var quietCheck: EngineHandle?
     private var lastAutoCheck = Date.distantPast
 
     /// Menu bar icon: the worst state among all projects.
@@ -104,6 +105,7 @@ final class AppModel: ObservableObject, Feedback {
         accountStore.feedback = self
         hostingStore.feedback = self
         runController.feedback = self
+        runController.beforeRun = { [weak self] in self?.stopQuietCheck() }
         adminStore.feedback = self
         aiStore.feedback = self
         billingStore.feedback = self
@@ -350,15 +352,35 @@ final class AppModel: ObservableObject, Feedback {
         let path = items.first { $0.name == "path" }?.value
         var key: String? = selectedKey
         if let path, !path.isEmpty {
-            key = await addProject(path: path)?.key
+            let wanted = (path as NSString).standardizingPath
+            if let known = projects.first(where: { ($0.path as NSString).standardizingPath == wanted }) {
+                key = known.key
+            } else {
+                // any web page can open a beforeideploy:// link: a new folder is added only after the user agrees (audit A1)
+                guard confirmLinkedFolder(wanted) else { return }
+                key = await addProject(path: wanted)?.key
+            }
         }
         guard let key else { return }
         await select(key)
         switch url.host {
+        // a check only reads and builds a project that is already on the list
         case "check": runCheck()
-        case "smart": smartDeploy()
+        // a link never deploys: it opens the project and the user presses Smart Deploy
+        case "smart": break
         default: break
         }
+    }
+
+    private func confirmLinkedFolder(_ path: String) -> Bool {
+        let alert = NSAlert()
+        alert.messageText = L("link.addFolder.title")
+        alert.informativeText = L("link.addFolder.body", path)
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: L("link.addFolder.add"))
+        alert.addButton(withTitle: L("common.cancel"))
+        NSApp.activate(ignoringOtherApps: true)
+        return alert.runModal() == .alertFirstButtonReturn
     }
 
     func enqueueURL(_ url: URL) {
@@ -436,18 +458,24 @@ final class AppModel: ObservableObject, Feedback {
     }
 
     func openIn(app names: [String], path: String) {
-        for name in names {
-            let p = Process()
-            p.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-            p.arguments = ["-a", name, path]
-            p.standardError = FileHandle.nullDevice
-            do {
-                try p.run()
-                p.waitUntilExit()
-                if p.terminationStatus == 0 { return }
-            } catch {}
+        Task {
+            for name in names {
+                if await Self.open(app: name, path: path) { return }
+            }
+            flash(L("open.appNotFound", names.first ?? L("open.theApp")), error: true)
         }
-        flash(L("open.appNotFound", names.first ?? L("open.theApp")), error: true)
+    }
+
+    /// `open -a <app> <path>` without blocking the main thread while Launch Services looks for the app.
+    nonisolated private static func open(app name: String, path: String) async -> Bool {
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+        p.arguments = ["-a", name, path]
+        p.standardError = FileHandle.nullDevice
+        let exit = ExitSignal()
+        p.terminationHandler = { exit.fire($0.terminationStatus) }
+        do { try p.run() } catch { return false }
+        return await exit.wait() == 0
     }
 
     func copy(_ text: String?) {
@@ -731,6 +759,14 @@ final class AppModel: ObservableObject, Feedback {
         watcher = w
     }
 
+    /// A run the user starts wins: the quiet check on the same project stops, so two engine
+    /// processes never build the same folder at once (audit A5).
+    func stopQuietCheck() {
+        autoCheckTask?.cancel()
+        quietCheck?.cancel()
+        quietCheck = nil
+    }
+
     /// Debounced: 4 s after the last change, at most every 20 s, never while another run is on screen.
     private func scheduleAutoCheck(for key: String) {
         autoCheckTask?.cancel()
@@ -747,10 +783,17 @@ final class AppModel: ObservableObject, Feedback {
     private func runQuietCheck(_ key: String) async {
         autoChecking = true
         lastAutoCheck = Date()
-        defer { autoChecking = false }
+        let handle = EngineHandle()
+        quietCheck = handle
+        defer {
+            autoChecking = false
+            if quietCheck === handle { quietCheck = nil }
+        }
         let before = projects.first { $0.key == key }?.lastStatus
         AppLog.ui.debug("auto-check")
-        _ = try? await engine.run(["check", "--project", key])
+        _ = try? await engine.run(["check", "--project", key], handle: handle)
+        // a run the user started stopped this one: its verdict is not worth a notification
+        guard quietCheck === handle else { return }
         await loadProjects()
         await refreshStatus(quiet: true)
         let after = status?.check?.status
@@ -767,7 +810,7 @@ final class AppModel: ObservableObject, Feedback {
     /// `open "Before I Deploy.app" --args -BIDScreen costs` opens a given screen at launch (the value lands in
     /// UserDefaults' argument domain). Used by the screenshot workflow; harmless for everyone else.
     private func openRequestedScreen() async {
-        guard let name = UserDefaults.standard.string(forKey: "BIDScreen") else { return }
+        guard Snapshot.argument("BIDScreen"), let name = UserDefaults.standard.string(forKey: "BIDScreen") else { return }
         switch name {
         case "project": if let first = projects.first { await select(first.key) }
         case "domains": screen = .domains
@@ -779,7 +822,7 @@ final class AppModel: ObservableObject, Feedback {
         case "palette": showPalette = true
         default: screen = .overview
         }
-        if UserDefaults.standard.bool(forKey: "BIDRunCheck") { runCheck() }
+        if Snapshot.argument("BIDRunCheck"), UserDefaults.standard.bool(forKey: "BIDRunCheck") { runCheck() }
     }
 
     // MARK: - Onboarding: plan step (WP5)

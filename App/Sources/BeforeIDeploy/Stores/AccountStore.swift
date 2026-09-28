@@ -7,7 +7,12 @@ final class AccountStore: ObservableObject {
     @Published var account: AccountState?
     @Published var accountChecked = false
     @Published var aiKeys: [AIKeyStatus] = []
-    @AppStorage("offlineMode") var offlineMode = false
+    /// @Published, not @AppStorage: @AppStorage inside an ObservableObject does not refresh views (audit A4).
+    @Published var offlineMode = UserDefaults.standard.bool(forKey: "offlineMode") {
+        didSet { UserDefaults.standard.set(offlineMode, forKey: "offlineMode") }
+    }
+    /// When this app last opened a sign-in page: a callback without one is not ours (audit A2).
+    private var oauthStartedAt: Date?
 
     let engine: EngineClient
     weak var feedback: Feedback?
@@ -61,12 +66,20 @@ final class AccountStore: ObservableObject {
         Task {
             do {
                 let r = try await engine.call(["account", "oauth", "--provider", provider], as: OAuthStart.self)
+                oauthStartedAt = Date()
                 if let u = URL(string: r.url) { NSWorkspace.shared.open(u) }
             } catch { feedback?.show(error) }
         }
     }
 
     func completeOAuth(_ url: URL) async {
+        // Login CSRF: a web page could open beforeideploy://auth-callback with its own tokens and sync this
+        // Mac's projects into a stranger's account. Only a sign-in started here in the last 10 minutes counts.
+        guard let started = oauthStartedAt, Date().timeIntervalSince(started) < 600 else {
+            AppLog.ui.notice("ignored an auth callback without a sign-in in progress")
+            return
+        }
+        oauthStartedAt = nil
         let fragment = url.fragment ?? URLComponents(url: url, resolvingAgainstBaseURL: false)?.query ?? ""
         var params: [String: String] = [:]
         for pair in fragment.split(separator: "&") {
