@@ -4,10 +4,14 @@
 
 "account.creditsHelp" = "%@ AI tokens left";
 "account.deleteButton" = "Delete account…";
+"account.endsOn" = "ends %@";
 "account.export" = "Export my data…";
 "account.exportHint" = "The export is a JSON file with everything the cloud holds for you. Deleting removes the account and subscription; the projects on this Mac stay.";
 "account.exported" = "Export ready — showing it in Finder";
+"account.monthlyGrant" = "tokens a month";
 "account.offline" = "Offline mode";
+"account.offlineCopy" = "offline copy";
+"account.open" = "Account…";
 "account.rolePlan" = "%@ · %@ · %@ tokens";
 "account.signInOrUp" = "Sign in / Sign up";
 "account.signInToSync" = "Sign in to sync";
@@ -15,6 +19,8 @@
 "account.syncFailed" = "Sync failed";
 "account.syncProjects" = "Sync projects";
 "account.synced" = "Synced";
+"account.yourData" = "Your data";
+"account.yourDataHint" = "Projects and hosting keys live on this Mac. The cloud keeps your profile, plan, AI use and project names; export them or delete the account at any time.";
 
 "admin.aiDisabled" = "Disable AI for this user";
 "admin.audit" = "Audit log";

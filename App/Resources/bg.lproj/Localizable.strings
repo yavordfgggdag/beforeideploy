@@ -4,10 +4,14 @@
 
 "account.creditsHelp" = "Остават %@ AI токена";
 "account.deleteButton" = "Изтрий акаунта…";
+"account.endsOn" = "изтича на %@";
 "account.export" = "Експортирай данните ми…";
 "account.exportHint" = "Експортът е JSON с всичко, което облакът пази за теб. Изтриването маха акаунта и абонамента; проектите на този Mac остават.";
 "account.exported" = "Експортът е готов — показвам го във Finder";
+"account.monthlyGrant" = "токена на месец";
 "account.offline" = "Офлайн режим";
+"account.offlineCopy" = "офлайн копие";
+"account.open" = "Акаунт…";
 "account.rolePlan" = "%@ · %@ · %@ токена";
 "account.signInOrUp" = "Влез / Регистрирай се";
 "account.signInToSync" = "Влез, за да синхронизираш";
@@ -15,6 +19,8 @@
 "account.syncFailed" = "Синхронизацията не успя";
 "account.syncProjects" = "Синхронизирай проектите";
 "account.synced" = "Синхронизирано";
+"account.yourData" = "Твоите данни";
+"account.yourDataHint" = "Проектите и ключовете за хостинг са на този Mac. Облакът пази профила, плана, ползването на AI и имената на проектите; можеш да ги експортираш или да изтриеш акаунта по всяко време.";
 
 "admin.aiDisabled" = "Спри AI за този потребител";
 "admin.audit" = "Одит лог";

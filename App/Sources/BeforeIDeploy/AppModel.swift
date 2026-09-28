@@ -2,7 +2,7 @@ import AppKit
 import Combine
 import SwiftUI
 
-enum Screen: Hashable { case overview, project, domains, costs, setup, admin }
+enum Screen: Hashable { case overview, project, domains, costs, setup, admin, account }
 
 enum SheetKind: Identifiable {
     case production, netlifySetup, commit, history, settings, remote, spaceshipConnect, connectDomain, deleteAccount, plans

@@ -116,7 +116,7 @@ private struct WaitingBanner: View {
     }
 }
 
-private struct BalanceCard: View {
+struct BalanceCard: View {
     let status: BillingStatus
 
     var body: some View {
@@ -162,7 +162,7 @@ private struct BalanceCard: View {
     }
 }
 
-private struct Legend: View {
+struct Legend: View {
     let color: Color
     let text: String
     var body: some View {
@@ -299,7 +299,7 @@ private struct PackCard: View {
     }
 }
 
-private struct UsageList: View {
+struct UsageList: View {
     let usage: [BillingStatus.Usage]
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {

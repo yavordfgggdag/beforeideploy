@@ -51,6 +51,8 @@ struct RootView: View {
                     CostsView()
                 } else if model.screen == .setup {
                     SetupView()
+                } else if model.screen == .account, model.account?.loggedIn == true {
+                    AccountView()
                 } else if model.screen == .admin, model.account?.isAdmin == true {
                     ScrollView { AdminView() }
                 } else if let status = model.status {
