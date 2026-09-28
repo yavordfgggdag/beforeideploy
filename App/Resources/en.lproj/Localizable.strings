@@ -143,6 +143,12 @@
 "auth.signupSubtitle" = "One account for all your sites, hosting and domains.";
 "auth.welcomeBack" = "Welcome back";
 
+"autocheck.nowBlocked" = "The last change broke the check — open to see why.";
+"autocheck.nowBlockedToast" = "%@: the last change blocks the deploy";
+"autocheck.nowReady" = "All checks pass again.";
+"autocheck.nowReadyToast" = "%@: ready again";
+"autocheck.running" = "checking automatically…";
+
 "billing.choose" = "Choose";
 "billing.currentButton" = "Current plan";
 "billing.currentPlan" = "Current plan: %@";
@@ -433,6 +439,9 @@
 "menu.stopLocal" = "Stop Local Preview";
 "menu.view" = "View";
 
+"menubar.open" = "Open";
+"menubar.quit" = "Quit Before I Deploy";
+
 "nav.missionControl" = "Mission Control";
 
 "netlify.connect" = "Connect Netlify";
@@ -570,6 +579,8 @@
 "run.stopped" = "Stopped";
 
 "settings.account" = "Account";
+"settings.autoCheck" = "Check automatically on save";
+"settings.autoCheckHint" = "Re-checks the open project a few seconds after you save a file — quietly, reusing what did not change.";
 "settings.autoOpenPreview" = "Open previews automatically";
 "settings.autoOpenPreviewHint" = "After a successful Draft / Production deploy";
 "settings.behavior" = "Behavior";

@@ -143,6 +143,12 @@
 "auth.signupSubtitle" = "Един акаунт за всички твои сайтове, хостинги и домейни.";
 "auth.welcomeBack" = "Добре дошъл отново";
 
+"autocheck.nowBlocked" = "Последната промяна счупи проверката — отвори, за да видиш защо.";
+"autocheck.nowBlockedToast" = "%@: последната промяна блокира deploy-а";
+"autocheck.nowReady" = "Всички проверки минават отново.";
+"autocheck.nowReadyToast" = "%@: отново е готов";
+"autocheck.running" = "автоматична проверка…";
+
 "billing.choose" = "Избери";
 "billing.currentButton" = "Текущ план";
 "billing.currentPlan" = "Текущ план: %@";
@@ -433,6 +439,9 @@
 "menu.stopLocal" = "Спри Local Preview";
 "menu.view" = "Изглед";
 
+"menubar.open" = "Отвори";
+"menubar.quit" = "Затвори Before I Deploy";
+
 "nav.missionControl" = "Mission Control";
 
 "netlify.connect" = "Свържи Netlify";
@@ -570,6 +579,8 @@
 "run.stopped" = "Спряно";
 
 "settings.account" = "Акаунт";
+"settings.autoCheck" = "Проверявай автоматично при запазване";
+"settings.autoCheckHint" = "Проверява отворения проект няколко секунди след като запазиш файл — тихо, като преизползва непромененото.";
 "settings.autoOpenPreview" = "Отваряй preview автоматично";
 "settings.autoOpenPreviewHint" = "След успешен Draft / Production deploy";
 "settings.behavior" = "Поведение";

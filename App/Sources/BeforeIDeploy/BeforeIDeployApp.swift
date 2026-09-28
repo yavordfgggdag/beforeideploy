@@ -43,6 +43,16 @@ struct BeforeIDeployApp: App {
                 .task { await model.start() }
         }
         .windowStyle(.hiddenTitleBar)
+
+        MenuBarExtra {
+            MenuBarView()
+                .environment(\.locale, Localization.locale)
+                .environmentObject(model)
+                .preferredColorScheme(.dark)
+        } label: {
+            Image(systemName: model.menuBarSymbol)
+        }
+        .menuBarExtraStyle(.window)
         .defaultSize(width: 1280, height: 820)
         .commands {
             CommandGroup(replacing: .newItem) {

@@ -541,6 +541,8 @@ struct SettingsSheet: View {
                 VStack(alignment: .leading, spacing: 10) {
                     SectionLabel(text: L("settings.behavior"))
                     ToggleRow(title: L("settings.autoOpenPreview"), subtitle: L("settings.autoOpenPreviewHint"), isOn: $autoOpenPreview)
+                    ToggleRow(title: L("settings.autoCheck"), subtitle: L("settings.autoCheckHint"),
+                              isOn: Binding(get: { model.autoCheck }, set: { model.autoCheck = $0 }))
                     ToggleRow(title: L("settings.checkOnSelect"), subtitle: L("settings.checkOnSelectHint"), isOn: $checkOnSelect)
                     ToggleRow(title: L("settings.notifications"), subtitle: L("settings.notificationsHint"), isOn: $notificationsEnabled)
                 }

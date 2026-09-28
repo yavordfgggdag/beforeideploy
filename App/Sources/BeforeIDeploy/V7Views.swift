@@ -173,8 +173,8 @@ struct MissionControlView: View {
                         }
                     }
                 } else {
-                    HStack { Spinner(size: 16); Text(L("overview.loading")).foregroundColor(Theme.secondary) }
-                        .frame(maxWidth: .infinity, minHeight: 200)
+                    MissionControlSkeleton()
+                        .accessibilityLabel(L("overview.loading"))
                 }
             }
             .padding(.horizontal, 32)

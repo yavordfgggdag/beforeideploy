@@ -264,6 +264,10 @@ struct HeroCard: View {
                         } else {
                             Text(L("dashboard.runCheckHint"))
                         }
+                        if model.autoChecking {
+                            Spinner(size: 10)
+                            Text(L("autocheck.running")).foregroundColor(Theme.accent)
+                        }
                     }
                     .font(.system(size: 12))
                     .foregroundColor(Theme.secondary)

@@ -116,3 +116,12 @@ final class RunSessionTests: XCTestCase {
         XCTAssertTrue(session.finished)
     }
 }
+
+final class AutoCheckTests: XCTestCase {
+    func testOnlySourceChangesTriggerACheck() {
+        XCTAssertTrue(ProjectWatcher.isRelevant(["/p/src/app.js"]))
+        XCTAssertFalse(ProjectWatcher.isRelevant(["/p/node_modules/x/index.js", "/p/dist/index.html", "/p/.git/index"]))
+        XCTAssertTrue(ProjectWatcher.isRelevant(["/p/dist/a.js", "/p/index.html"]))
+        XCTAssertFalse(ProjectWatcher.isRelevant(["/p/.next/cache/x", "/p/.DS_Store"]))
+    }
+}

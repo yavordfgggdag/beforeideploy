@@ -55,6 +55,26 @@ final class AppModel: ObservableObject, Feedback {
     @Published var update: UpdateInfo?
 
     @AppStorage("checkOnSelect") var checkOnSelect = false
+    /// Re-check the selected project quietly when its files change (incremental, so usually seconds).
+    @Published var autoCheck: Bool = UserDefaults.standard.object(forKey: "autoCheck") as? Bool ?? true {
+        didSet {
+            UserDefaults.standard.set(autoCheck, forKey: "autoCheck")
+            watchSelectedProject()
+        }
+    }
+    /// A quiet automatic check is running (hero and menu bar show a small spinner).
+    @Published var autoChecking = false
+    private var watcher: ProjectWatcher?
+    private var autoCheckTask: Task<Void, Never>?
+    private var lastAutoCheck = Date.distantPast
+
+    /// Menu bar icon: the worst state among all projects.
+    var menuBarSymbol: String {
+        let states = projects.compactMap(\.lastStatus)
+        if states.contains("blocked") { return "xmark.octagon.fill" }
+        if states.contains("warnings") { return "exclamationmark.triangle.fill" }
+        return "paperplane.fill"
+    }
     /// "stable" or "beta" (WP6.3) — beta testers get pre-releases from the same feed.
     @Published var updateChannel: String = UserDefaults.standard.string(forKey: "updateChannel") ?? "stable" {
         didSet {
@@ -252,6 +272,7 @@ final class AppModel: ObservableObject, Feedback {
     func select(_ key: String, show: Bool = true) async {
         if show { screen = .project }
         projectStore.setSelected(key)
+        watchSelectedProject()
         await refreshStatus()
         await loadHistory()
         await projectStore.touch(key)
@@ -674,6 +695,51 @@ final class AppModel: ObservableObject, Feedback {
         Task {
             try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
             if toast == t { withAnimation(.easeOut(duration: 0.25)) { toast = nil } }
+        }
+    }
+
+    // MARK: - Automatic check (V10)
+
+    /// Watches the selected project's folder while auto-check is on.
+    func watchSelectedProject() {
+        watcher?.stop()
+        watcher = nil
+        guard autoCheck, let key = selectedKey, let p = projects.first(where: { $0.key == key }), p.exists != false else { return }
+        let w = ProjectWatcher(path: p.path) { [weak self] in
+            Task { @MainActor in self?.scheduleAutoCheck(for: key) }
+        }
+        w.start()
+        watcher = w
+    }
+
+    /// Debounced: 4 s after the last change, at most every 20 s, never while another run is on screen.
+    private func scheduleAutoCheck(for key: String) {
+        autoCheckTask?.cancel()
+        autoCheckTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 4_000_000_000)
+            guard let self, !Task.isCancelled else { return }
+            let wait = 20 - Date().timeIntervalSince(self.lastAutoCheck)
+            if wait > 0 { try? await Task.sleep(nanoseconds: UInt64(wait * 1_000_000_000)) }
+            guard !Task.isCancelled, self.run == nil, !self.autoChecking, self.selectedKey == key else { return }
+            await self.runQuietCheck(key)
+        }
+    }
+
+    private func runQuietCheck(_ key: String) async {
+        autoChecking = true
+        lastAutoCheck = Date()
+        defer { autoChecking = false }
+        let before = projects.first { $0.key == key }?.lastStatus
+        AppLog.ui.debug("auto-check")
+        _ = try? await engine.run(["check", "--project", key])
+        await loadProjects()
+        await refreshStatus(quiet: true)
+        let after = status?.check?.status
+        // tell the user only when the verdict changes (ready ↔ blocked), not on every save
+        if let after, let before, after != before, after == "blocked" || before == "blocked" {
+            let name = projects.first { $0.key == key }?.name ?? key
+            Notifier.shared.post(title: name, body: after == "blocked" ? L("autocheck.nowBlocked") : L("autocheck.nowReady"), url: nil)
+            flash(after == "blocked" ? L("autocheck.nowBlockedToast", name) : L("autocheck.nowReadyToast", name), error: after == "blocked")
         }
     }
 
