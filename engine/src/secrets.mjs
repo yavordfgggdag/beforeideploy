@@ -14,16 +14,23 @@ export function securityQuote(value) {
   return `"${String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
 }
 
+// Keychain values are stored as `b64:<base64 JSON>`: the `security -i` line parser does not handle escaped
+// quotes, and base64 has no quotes or spaces. Older plain-JSON values are still read.
+const B64 = 'b64:';
+const encode = (data) => B64 + Buffer.from(data, 'utf8').toString('base64');
+const decode = (stored) => (stored.startsWith(B64) ? Buffer.from(stored.slice(B64.length), 'base64').toString('utf8') : stored);
+
 export function setSecret(account, value) {
   const data = JSON.stringify(value);
   if (which('security') && !process.env.BID_NO_KEYCHAIN) {
     // the secret goes through stdin (`security -i`), never argv — argv is visible to every process via `ps`
-    const line = ['add-generic-password', '-U', '-s', securityQuote(SERVICE), '-a', securityQuote(account), '-w', securityQuote(data)].join(' ');
+    const stored = encode(data);
+    const line = ['add-generic-password', '-U', '-s', securityQuote(SERVICE), '-a', securityQuote(account), '-w', securityQuote(stored)].join(' ');
     const r = sh('security', ['-i'], { input: `${line}\n` });
     if (r.code !== 0 || /error|usage/i.test(r.stderr)) throw new Error(`Keychain: ${(r.stderr || r.stdout).trim()}`);
     // read back: the interactive parser must have stored exactly this value
     const check = sh('security', ['find-generic-password', '-s', SERVICE, '-a', account, '-w']);
-    if (check.code !== 0 || check.stdout.trim() !== data) throw new Error('Keychain: the saved value could not be read back');
+    if (check.code !== 0 || check.stdout.trim() !== stored) throw new Error('Keychain: the saved value could not be read back');
     return;
   }
   const f = fallbackFile(account);
@@ -35,7 +42,7 @@ export function getSecret(account) {
     const r = sh('security', ['find-generic-password', '-s', SERVICE, '-a', account, '-w']);
     if (r.code !== 0) return null;
     try {
-      return JSON.parse(r.stdout.trim());
+      return JSON.parse(decode(r.stdout.trim()));
     } catch {
       return null;
     }
