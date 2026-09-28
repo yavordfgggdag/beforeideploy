@@ -7,7 +7,8 @@ struct RunOverlay: View {
 
     var headerTint: Color {
         if !session.finished { return Theme.accent }
-        return session.success ? Theme.ready : Theme.blocked
+        if !session.success { return Theme.blocked }
+        return session.steps.contains { $0.status == "warn" } ? Theme.warn : Theme.ready
     }
 
     var body: some View {
@@ -61,7 +62,7 @@ struct RunOverlay: View {
                 Circle().fill(headerTint.opacity(0.14)).frame(width: 40, height: 40)
                     .shadow(color: headerTint.opacity(session.finished ? 0.45 : 0), radius: 10)
                 if session.finished {
-                    Image(systemName: session.success ? "checkmark" : "xmark")
+                    Image(systemName: !session.success ? "xmark" : (headerTint == Theme.warn ? "exclamationmark" : "checkmark"))
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(headerTint)
                 } else {

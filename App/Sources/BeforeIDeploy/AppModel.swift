@@ -211,11 +211,10 @@ final class AppModel: ObservableObject, Feedback {
         }
         if selectedKey == nil {
             let lastSelectedKey = projectStore.lastSelectedKey
-            if !lastSelectedKey.isEmpty, projects.contains(where: { $0.key == lastSelectedKey }) {
-                await select(lastSelectedKey)
-            } else if let first = projects.first {
-                await select(first.key)
-            }
+            // remember the last project, but open on Mission Control (no "loading project…" at launch)
+            let key = (!lastSelectedKey.isEmpty && projects.contains(where: { $0.key == lastSelectedKey })) ? lastSelectedKey : projects.first?.key
+            screen = .overview
+            if let key { Task { await select(key, show: false) } }
         }
         screen = .overview
         await openRequestedScreen()
@@ -250,14 +249,14 @@ final class AppModel: ObservableObject, Feedback {
         }
     }
 
-    func select(_ key: String) async {
-        screen = .project
+    func select(_ key: String, show: Bool = true) async {
+        if show { screen = .project }
         projectStore.setSelected(key)
         await refreshStatus()
         await loadHistory()
         await projectStore.touch(key)
         projectStore.backgroundSync(key)
-        if checkOnSelect, run == nil { runCheck() }
+        if show, checkOnSelect, run == nil { runCheck() }
     }
 
     func refreshStatus(quiet: Bool = false) async { await projectStore.refreshStatus(quiet: quiet) }

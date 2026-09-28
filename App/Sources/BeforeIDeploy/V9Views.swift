@@ -288,28 +288,15 @@ struct CloudSetupView: View {
 
 struct AccountBadge: View {
     @EnvironmentObject var model: AppModel
+    @Local private var open = false
+    @Local private var hover = false
+
     var body: some View {
         let a = model.account
-        Menu {
-            if a?.loggedIn == true {
-                Text(a?.email ?? "")
-                if let role = a?.role, let plan = a?.plan {
-                    Text(L("account.rolePlan", role, plan, Fmt.tokens(a?.credits?.balance ?? 0)))
-                }
-                Button(L("account.open")) { model.screen = .account }
-                if a?.features?.billingPlans == true {
-                    Button(L("billing.menu")) { model.sheet = .plans }
-                }
-                Button(L("account.syncProjects")) { model.syncNow() }
-                Divider()
-                Button(L("account.signOut")) { model.logout() }
-            } else {
-                Button(L("account.signInOrUp")) { model.offlineMode = false }
-            }
-        } label: {
+        Button { open.toggle() } label: {
             HStack(spacing: 9) {
                 ZStack {
-                    Circle().fill(Theme.accentGradient).frame(width: 26, height: 26)
+                    Circle().fill(Theme.avatarGradient(for: a?.email ?? "?")).frame(width: 26, height: 26)
                     Text(String((a?.name ?? a?.email ?? "?").prefix(1)).uppercased())
                         .font(.system(size: 12, weight: .bold)).foregroundColor(.white)
                     // credits ring: what is left of this month's plan tokens
@@ -322,22 +309,72 @@ struct AccountBadge: View {
                     }
                 }
                 .frame(width: 32, height: 32)
-                .help(a?.credits.map { L("account.creditsHelp", Fmt.tokens($0.balance)) } ?? "")
                 VStack(alignment: .leading, spacing: 1) {
                     Text(a?.loggedIn == true ? (a?.name ?? L("common.account")) : L("account.offline"))
                         .font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text).lineLimit(1)
                     Text(a?.loggedIn == true ? (a?.email ?? "") : L("account.signInToSync"))
                         .font(.system(size: 10.5)).foregroundColor(Theme.tertiary).lineLimit(1)
                 }
-                Spacer()
+                Spacer(minLength: 0)
                 Image(systemName: "chevron.up.chevron.down").font(.system(size: 9, weight: .bold)).foregroundColor(Theme.tertiary)
             }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(hover ? Theme.elevated : Theme.panel))
+            .contentShape(Rectangle())
         }
-        .menuStyle(.borderlessButton)
-        .menuIndicator(.hidden)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 6)
-        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.panel))
+        .buttonStyle(.plain)
+        .onHover { hover = $0 }
+        .help(a?.credits.map { L("account.creditsHelp", Fmt.tokens($0.balance)) } ?? "")
+        .popover(isPresented: $open, arrowEdge: .top) {
+            AccountMenu(close: { open = false })
+                .environmentObject(model)
+        }
+    }
+}
+
+/// The account badge's popover: who is signed in, plan and credits, and the account actions.
+struct AccountMenu: View {
+    @EnvironmentObject var model: AppModel
+    let close: () -> Void
+
+    var body: some View {
+        let a = model.account
+        VStack(alignment: .leading, spacing: 4) {
+            if a?.loggedIn == true {
+                Text(a?.email ?? "").font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.text)
+                if let role = a?.role, let plan = a?.plan {
+                    Text(L("account.rolePlan", role, plan, Fmt.tokens(a?.credits?.balance ?? 0)))
+                        .font(.system(size: 11.5)).foregroundColor(Theme.secondary)
+                }
+                Divider().padding(.vertical, 4)
+                item(L("account.open"), "person.crop.circle") { model.screen = .account }
+                if a?.features?.billingPlans == true {
+                    item(L("billing.menu"), "sparkles") { model.sheet = .plans }
+                }
+                item(L("account.syncProjects"), "arrow.triangle.2.circlepath") { model.syncNow() }
+                Divider().padding(.vertical, 4)
+                item(L("account.signOut"), "rectangle.portrait.and.arrow.right") { model.logout() }
+            } else {
+                Text(L("account.signInToSync")).font(.system(size: 12)).foregroundColor(Theme.secondary)
+                Divider().padding(.vertical, 4)
+                item(L("account.signInOrUp"), "person.crop.circle.badge.plus") { model.offlineMode = false }
+            }
+        }
+        .padding(12)
+        .frame(width: 260, alignment: .leading)
+    }
+
+    private func item(_ title: String, _ symbol: String, _ action: @escaping () -> Void) -> some View {
+        Button { close(); action() } label: {
+            Label(title, systemImage: symbol)
+                .font(.system(size: 12.5))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 5)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .foregroundColor(Theme.text)
     }
 }
 

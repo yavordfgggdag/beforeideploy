@@ -114,7 +114,8 @@ enum Snapshot {
 
     @MainActor
     static func write(to url: URL) {
-        guard let window = NSApp.windows.first(where: { $0.isVisible && $0.contentView != nil }),
+        guard let main = NSApp.windows.first(where: { $0.isVisible && $0.contentView != nil && $0.sheetParent == nil }),
+              let window = Optional(main.attachedSheet ?? main),
               let view = window.contentView?.superview ?? window.contentView,
               let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else {
             AppLog.ui.error("snapshot: no window")

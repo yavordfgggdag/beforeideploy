@@ -165,7 +165,7 @@ struct MissionControlView: View {
                         WelcomeView().frame(maxWidth: .infinity)
                     } else {
                         SectionLabel(text: L("common.projects"), icon: "square.stack.fill")
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 300), spacing: 14)], spacing: 14) {
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 300), spacing: 14, alignment: .top)], spacing: 14) {
                             ForEach(o.cards) { c in
                                 ProjectOverviewCard(card: c)
                                     .onTapGesture { Task { await model.select(c.key) } }
@@ -335,8 +335,8 @@ struct CostsView: View {
                                 }
                             }
                         }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                         .card()
-                        .frame(maxWidth: .infinity)
 
                         VStack(alignment: .leading, spacing: 10) {
                             SectionLabel(text: L("costs.budget"), icon: "shield.lefthalf.filled")
@@ -354,8 +354,8 @@ struct CostsView: View {
                                 .disabled(Double(minCredits) == nil)
                             }
                         }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                         .card()
-                        .frame(maxWidth: .infinity)
                     }
 
                     VStack(alignment: .leading, spacing: 10) {

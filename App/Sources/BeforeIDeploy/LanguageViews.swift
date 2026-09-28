@@ -31,19 +31,24 @@ struct WelcomeLanguageView: View {
                         .multilineTextAlignment(.center)
                 }
 
-                VStack(spacing: 0) {
-                    ScrollView {
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 170), spacing: 10)], spacing: 10) {
-                            ForEach(Localization.available, id: \.self) { code in
-                                LanguageTile(code: code, selected: code == selected) { selected = code }
-                            }
-                        }
-                        .padding(16)
+                let codes = Localization.available
+                let grid = LazyVGrid(columns: [GridItem(.adaptive(minimum: 170), spacing: 10)], spacing: 10) {
+                    ForEach(codes, id: \.self) { code in
+                        LanguageTile(code: code, selected: code == selected) { selected = code }
                     }
-                    .frame(maxHeight: 300)
+                }
+                .padding(16)
+                Group {
+                    // a handful of languages fit as they are; a long list scrolls
+                    if codes.count > 9 {
+                        ScrollView { grid }.frame(maxHeight: 300)
+                    } else {
+                        grid
+                    }
                 }
                 .background(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).fill(Theme.panel))
-                .frame(width: 580)
+                .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.edgeHighlight, lineWidth: 1))
+                .frame(width: codes.count > 2 ? 580 : 390)
 
                 Button(text("language.continue")) { model.setLanguage(selected) }
                     .bidButton(.primary)

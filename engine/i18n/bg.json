@@ -290,7 +290,7 @@
   "netlify.sitesFailed": "Не успях да заредя Netlify проектите.",
   "netlify.teamsFailed": "Не успях да заредя Netlify teams.",
   "overview.behind": "{name}: {count} commit(s) зад GitHub",
-  "overview.blocked": "{name}: BLOCKED — {steps}",
+  "overview.blocked": "{name}: БЛОКИРАН — {steps}",
   "overview.down": "{name}: live сайтът не отговаря ({reason})",
   "overview.errors": "грешки",
   "overview.folderMissing": "{name}: папката липсва",
