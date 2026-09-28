@@ -130,15 +130,15 @@ function locate(text, search) {
   let i = text.indexOf(search);
   if (i !== -1 && text.indexOf(search, i + 1) === -1) return [i, i + search.length];
   if (i !== -1) return 'ambiguous';
-  const t = norm(text);
+  const normText = norm(text);
   const s = norm(search);
-  i = t.indexOf(s);
+  i = normText.indexOf(s);
   if (i === -1) return null;
-  if (t.indexOf(s, i + 1) !== -1) return 'ambiguous';
+  if (normText.indexOf(s, i + 1) !== -1) return 'ambiguous';
   // map back: normalized text keeps line count, so translate by line numbers
   const lineOf = (str, idx) => str.slice(0, idx).split('\n').length - 1;
-  const startLine = lineOf(t, i);
-  const endLine = lineOf(t, i + s.length);
+  const startLine = lineOf(normText, i);
+  const endLine = lineOf(normText, i + s.length);
   const lines = text.split('\n');
   const start = lines.slice(0, startLine).join('\n').length + (startLine ? 1 : 0);
   const end = lines.slice(0, endLine + 1).join('\n').length;

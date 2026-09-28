@@ -468,10 +468,26 @@ t('aifix: prompt с лога, скрити secrets, ChatGPT URL', () => {
   assert(c.data.url.startsWith('https://claude.ai/new?q='), 'claude url');
 });
 
-t('aifix: codex без инсталиран CLI → ясна грешка', () => {
-  const r = bid('aifix', '--project', failingBuild, '--step', 'build', '--target', 'codex');
-  if (r.result.ok) assert(fs.existsSync(r.data.commandFile), 'command file');
-  else assert(r.result.code === 'missing_cli', r.result.code);
+t('aifix: codex — без CLI ясна грешка, с CLI .command файл (независимо от машината)', () => {
+  // PATH without any codex binary → missing_cli
+  const noCodex = (process.env.PATH || '').split(':').filter((d) => d && !fs.existsSync(path.join(d, 'codex'))).join(':');
+  const missing = bidEnv({ PATH: noCodex }, 'aifix', '--project', failingBuild, '--step', 'build', '--target', 'codex');
+  assert(missing.result.code === 'missing_cli', JSON.stringify(missing.result));
+  // a fake codex first in PATH → the command file is written (this path broke when the local `t` shadowed t())
+  const fakeBin = path.join(TMP, 'fake-bin');
+  fs.mkdirSync(fakeBin, { recursive: true });
+  fs.writeFileSync(path.join(fakeBin, 'codex'), '#!/bin/sh\nexit 0\n', { mode: 0o755 });
+  const ok = bidEnv({ PATH: `${fakeBin}:${noCodex}` }, 'aifix', '--project', failingBuild, '--step', 'build', '--target', 'codex');
+  assert(ok.result.ok, JSON.stringify(ok.result));
+  const cmd = fs.readFileSync(ok.data.commandFile, 'utf8');
+  assert(cmd.includes('codex "$(cat') && cmd.includes('AI Fix (codex)'), cmd.slice(0, 300));
+});
+
+t('engine: никой не засенчва t() с локална променлива „t“', () => {
+  const offenders = [];
+  const walk = (d) => { for (const e of fs.readdirSync(d, { withFileTypes: true })) { const p = path.join(d, e.name); if (e.isDirectory()) walk(p); else if (p.endsWith('.mjs')) { fs.readFileSync(p, 'utf8').split('\n').forEach((l, i) => { if (/\b(const|let|var)\s+t\s*=|\(\s*t\s*(,|\))\s*=>|\[\s*\w+\s*,\s*t\s*\]/.test(l)) offenders.push(`${path.relative(ROOT, p)}:${i + 1}`); }); } } };
+  walk(path.join(ROOT, 'engine', 'src'));
+  assert(offenders.length === 0, 'shadowing t(): ' + offenders.join(', '));
 });
 
 t('costs: AI fix се записва в ledger-а, има ценоразпис', () => {

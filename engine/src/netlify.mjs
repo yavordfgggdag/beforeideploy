@@ -78,7 +78,7 @@ export async function netlifyTeams() {
   const r = await nl(null, ['api', 'listAccountsForUser'], { captureStdout: true, quiet: true, timeout: 120000 });
   const data = extractJSON(r.stdout);
   if (!Array.isArray(data)) throw new EngineError(msg('netlify.teamsFailed'), 'netlify_failed');
-  return data.map((t) => ({ slug: t.slug, name: t.name || t.slug })).filter((t) => t.slug);
+  return data.map((team) => ({ slug: team.slug, name: team.name || team.slug })).filter((team) => team.slug);
 }
 
 export async function netlifySites() {

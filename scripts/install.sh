@@ -70,4 +70,8 @@ print -r -- "      zsh \"\$HOME/Library/Application Support/BeforeIDeploy/launch
 echo
 
 bold "✅ Готово — отварям Before I Deploy"
-open "$APPS/$APP_NAME"
+# LaunchServices sometimes needs a moment for a freshly copied app (error -600); retry, then say how to open it
+sleep 1
+open "$APPS/$APP_NAME" 2>/dev/null || { sleep 3; open "$APPS/$APP_NAME" 2>/dev/null; } || {
+  warn "Не успях да го отворя автоматично — отвори го от Finder → Applications или с: open ~/Applications/\"$APP_NAME\""
+}

@@ -158,16 +158,16 @@ function shellQuote(s) {
 
 export function aifix(project, { step, target }) {
   if (!step || step === true) throw new EngineError(msg('aifix.missingStep'), 'usage', 2);
-  const t = target && target !== true ? target : 'chatgpt';
+  const tgt = target && target !== true ? target : 'chatgpt';
   const { prompt, stepLabel } = buildPrompt(project, step);
   const dir = logDir(project.key);
   const promptFile = path.join(dir, `aifix-${step}.md`);
   fs.writeFileSync(promptFile, prompt);
 
-  const out = { target: t, step, prompt, promptFile, url: null, clipboard: false, commandFile: null, chars: prompt.length };
+  const out = { target: tgt, step, prompt, promptFile, url: null, clipboard: false, commandFile: null, chars: prompt.length };
 
-  if (t === 'chatgpt' || t === 'claude') {
-    const base = t === 'chatgpt' ? 'https://chatgpt.com/?q=' : 'https://claude.ai/new?q=';
+  if (tgt === 'chatgpt' || tgt === 'claude') {
+    const base = tgt === 'chatgpt' ? 'https://chatgpt.com/?q=' : 'https://claude.ai/new?q=';
     const full = base + encodeURIComponent(prompt);
     if (full.length <= URL_LIMIT) {
       out.url = full;
@@ -177,20 +177,20 @@ export function aifix(project, { step, target }) {
         base +
         encodeURIComponent(t('aifix.pasteIntro', { step: stepLabel, framework: detect(project.path).framework }));
     }
-  } else if (t === 'codex' || t === 'claude-code') {
-    const bin = t === 'codex' ? 'codex' : 'claude';
+  } else if (tgt === 'codex' || tgt === 'claude-code') {
+    const bin = tgt === 'codex' ? 'codex' : 'claude';
     if (!which(bin)) {
       throw new EngineError(
-        msg('aifix.cliMissing', { bin, pkg: t === 'codex' ? '@openai/codex' : '@anthropic-ai/claude-code' }),
+        msg('aifix.cliMissing', { bin, pkg: tgt === 'codex' ? '@openai/codex' : '@anthropic-ai/claude-code' }),
         'missing_cli'
       );
     }
-    const cmdFile = path.join(dir, `aifix-${t}.command`);
+    const cmdFile = path.join(dir, `aifix-${tgt}.command`);
     fs.writeFileSync(
       cmdFile,
       [
         '#!/bin/zsh',
-        `# Before I Deploy — AI Fix (${t})`,
+        `# Before I Deploy — AI Fix (${tgt})`,
         `[ -f ${shellQuote(path.join(ENGINE_DIR, 'env.zsh'))} ] && source ${shellQuote(path.join(ENGINE_DIR, 'env.zsh'))}`,
         `cd ${shellQuote(project.path)} || exit 1`,
         'clear',
@@ -202,17 +202,17 @@ export function aifix(project, { step, target }) {
     );
     fs.chmodSync(cmdFile, 0o755);
     out.commandFile = cmdFile;
-  } else if (t === 'copy') {
+  } else if (tgt === 'copy') {
     out.clipboard = true;
   } else {
-    throw new EngineError(msg('aifix.unknownTarget', { target: t }), 'usage', 2);
+    throw new EngineError(msg('aifix.unknownTarget', { target: tgt }), 'usage', 2);
   }
 
-  if (t !== 'copy') {
+  if (tgt !== 'copy') {
     recordCost({
       project: project.key,
       projectName: project.name,
-      service: { chatgpt: 'chatgpt', claude: 'claude', codex: 'codex', 'claude-code': 'claude' }[t],
+      service: { chatgpt: 'chatgpt', claude: 'claude', codex: 'codex', 'claude-code': 'claude' }[tgt],
       op: `aifix:${step}`,
     });
   }
