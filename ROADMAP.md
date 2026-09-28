@@ -155,6 +155,8 @@
 
 #### WP8-A — Пускане (Developer ID, DMG, сайт)
 
+> Статус: скриптовете и runbook-ът са готови (`scripts/release.sh`, `docs/release.md`); остава акаунтът и самият release.
+
 Както в плана + Homebrew cask в собствен tap (`brew install --cask before-i-deploy`) — разработчиците го очакват; `scripts/release.sh` прави и cask формулата. Проверка: `xcrun notarytool`/`stapler` са налични и с Command Line Tools (ако не — release се прави от Mac с Xcode). **4 дни + акаунт Apple Developer.**
 
 **Общо V10.0: ~45 агент-дни ≈ 9 седмици при един агент/разработчик, с 1 седмица резерв за QA (раздел 6).**

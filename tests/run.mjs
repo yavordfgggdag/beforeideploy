@@ -180,6 +180,39 @@ t('грешки: всеки EngineError код е документиран в do
   assert(r.status === 0, (r.stdout + r.stderr).trim().split('\n').slice(-8).join(' | '));
 });
 
+t('release: бележки от CHANGELOG и latest.json (release-notes.mjs, release-feed.mjs)', () => {
+  const node = (args) => spawnSync(process.execPath, args, { encoding: 'utf8', cwd: ROOT });
+  const notes = node([path.join(ROOT, 'scripts', 'release-notes.mjs'), '10.0.0']);
+  assert(notes.status === 0, notes.stderr);
+  const n = JSON.parse(notes.stdout);
+  assert(n.inDevelopment === true && n.notes.en.includes('AI Fix') && n.notes.bg.includes('AI Fix'), notes.stdout.slice(0, 200));
+  assert(node([path.join(ROOT, 'scripts', 'release-notes.mjs'), '10.0.0', '--check']).status === 1, 'dev entry must fail --check');
+  assert(node([path.join(ROOT, 'scripts', 'release-notes.mjs'), '10.0.0', '--check', '--allow-dev']).status === 0, '--allow-dev');
+  assert(node([path.join(ROOT, 'scripts', 'release-notes.mjs'), '1.2.3']).status === 1, 'unknown version');
+
+  const dir = path.join(TMP, 'release-feed');
+  fs.mkdirSync(dir, { recursive: true });
+  const out = path.join(dir, 'latest.json');
+  const notesFile = path.join(dir, 'notes.json');
+  fs.writeFileSync(notesFile, notes.stdout);
+  const sha = 'a'.repeat(64);
+  const feed = (...a) => node([path.join(ROOT, 'scripts', 'release-feed.mjs'), '--out', out, '--sha256', sha, ...a]);
+  assert(feed('--version', '10.0.0', '--url', 'https://x/10.0.0.dmg', '--min-version', '9.0.0', '--notes', notesFile).status === 0, 'stable');
+  let j = JSON.parse(fs.readFileSync(out, 'utf8'));
+  assert(j.version === '10.0.0' && j.minVersion === '9.0.0' && j.notes.bg && j.sha256 === sha, JSON.stringify(j).slice(0, 200));
+  assert(feed('--version', '10.1.0-beta.1', '--url', 'https://x/b.dmg', '--channel', 'beta').status === 0, 'beta');
+  j = JSON.parse(fs.readFileSync(out, 'utf8'));
+  assert(j.version === '10.0.0' && j.beta.version === '10.1.0-beta.1', 'beta goes to .beta');
+  assert(feed('--version', '10.0.1', '--url', 'https://x/10.0.1.dmg').status === 0, 'stable 2');
+  j = JSON.parse(fs.readFileSync(out, 'utf8'));
+  assert(j.version === '10.0.1' && j.minVersion === '9.0.0' && j.beta?.version === '10.1.0-beta.1', 'minVersion and newer beta kept');
+  assert(feed('--version', '10.2.0', '--url', 'https://x/10.2.0.dmg').status === 0, 'stable 3');
+  j = JSON.parse(fs.readFileSync(out, 'utf8'));
+  assert(!j.beta, 'older beta dropped');
+  const bad = node([path.join(ROOT, 'scripts', 'release-feed.mjs'), '--out', out, '--version', '1', '--url', 'u', '--sha256', 'nope']);
+  assert(bad.status === 2, 'bad sha must exit 2');
+});
+
 t('i18n: всеки ключ в engine/src съществува в каталога, няма неизползвани', () => {
   const en = catalog('en');
   const src = path.join(ROOT, 'engine', 'src');
