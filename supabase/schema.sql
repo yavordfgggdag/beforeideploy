@@ -219,9 +219,9 @@ insert into public.settings (key, value) values
      "currency": "EUR",
      "trial": {"days": 7, "plan": "high", "tokens": 150000},
      "plans": {
-       "flash":  {"price": 4.99,  "paddlePriceId": null},
-       "high":   {"price": 9.99,  "paddlePriceId": null},
-       "knight": {"price": 19.99, "paddlePriceId": null}
+       "flash":  {"price": 4.99,  "paddlePriceId": null, "yearly": {"price": 47.90,  "paddlePriceId": null}},
+       "high":   {"price": 9.99,  "paddlePriceId": null, "yearly": {"price": 95.90,  "paddlePriceId": null}},
+       "knight": {"price": 19.99, "paddlePriceId": null, "yearly": {"price": 191.90, "paddlePriceId": null}}
      },
      "packs": [
        {"id": "pack-500k", "tokens": 500000,  "price": 4.99,  "paddlePriceId": null},

@@ -133,6 +133,8 @@ final class ModelsTests: XCTestCase {
         XCTAssertEqual(c.plans.first { $0.id == "high" }?.tokens, 1_000_000)
         XCTAssertFalse(c.plans.first { $0.id == "knight" }?.available ?? true)
         XCTAssertEqual(c.trial?.days, 7)
+        XCTAssertEqual(c.plans.first { $0.id == "high" }?.yearlyPrice, 95.9)
+        XCTAssertEqual(c.plans.first { $0.id == "high" }?.yearlyAvailable, true)
     }
 
     func testBillingStatusAfterTrial() throws {

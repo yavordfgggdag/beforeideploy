@@ -153,12 +153,14 @@
 "billing.loading" = "Loading plans…";
 "billing.manage" = "Manage subscription";
 "billing.menu" = "Plan & credits…";
+"billing.monthly" = "Monthly";
 "billing.noPlanLine" = "Free — the external AI buttons always work.";
 "billing.packHint" = "One-time, valid 12 months";
 "billing.packTokens" = "+%@ tokens";
 "billing.packs" = "Extra tokens";
 "billing.pastDue" = "%@ · the last payment failed — update the card in Manage subscription";
 "billing.perMonth" = "/ month";
+"billing.perYear" = "/ year";
 "billing.plans" = "Plans";
 "billing.recentUsage" = "Recent AI use";
 "billing.recommended" = "RECOMMENDED";
@@ -177,6 +179,8 @@
 "billing.updated" = "Your plan is updated.";
 "billing.waiting" = "Waiting for the payment confirmation…";
 "billing.waitingHint" = "Finish the payment in the browser; the plan switches here by itself.";
+"billing.yearly" = "Yearly −20%";
+"billing.yearlySaving" = "%@ a month — 2 months free";
 
 "cloud.anonKeyPlaceholder" = "anon public key";
 "cloud.continueOffline" = "Continue without an account for now";

@@ -33,9 +33,10 @@ final class BillingStore: ObservableObject {
         } catch { feedback?.show(error) }
     }
 
-    func checkout(plan: String? = nil, pack: String? = nil) {
+    func checkout(plan: String? = nil, pack: String? = nil, yearly: Bool = false) {
         var args = ["billing", "checkout"]
         if let plan { args += ["--plan", plan] }
+        if yearly, plan != nil { args.append("--yearly") }
         if let pack { args += ["--pack", pack] }
         busy = plan ?? pack
         Task {

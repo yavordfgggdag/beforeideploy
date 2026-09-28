@@ -4,7 +4,7 @@
 //
 //   bid billing catalog                      plans (price, tokens), packs, trial offer
 //   bid billing status                       plan, subscription, balances (plan / top-up), recent usage
-//   bid billing checkout --plan high         → { url } (hosted Paddle checkout)
+//   bid billing checkout --plan high [--yearly] → { url } (hosted Paddle checkout)
 //   bid billing checkout --pack pack-500k    → { url }
 //   bid billing trial                        starts the one-time trial
 //   bid billing portal                       → { url } (change card, cancel, invoices)
@@ -54,7 +54,7 @@ export async function billingCommand(sub, flags) {
     const plan = flags.plan && flags.plan !== true ? String(flags.plan) : null;
     const pack = flags.pack && flags.pack !== true ? String(flags.pack) : null;
     if (!plan === !pack) throw new EngineError(msg('billing.checkoutArgs'), 'usage', 2);
-    return billingCall('checkout', plan ? { plan } : { pack });
+    return billingCall('checkout', plan ? { plan, ...(flags.yearly ? { interval: 'year' } : {}) } : { pack });
   }
   return billingCall(action);
 }

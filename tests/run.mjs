@@ -595,13 +595,13 @@ http.createServer((q,r)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{r.setHea
    const charged=6000*(j.deep?5:1);ledger.push({user_id:me.user_id,delta:-charged,reason:'ai_fix'});
    send({type:'usage',input:4500,output:1500,model:'claude-sonnet-5',charged:charged,balance:balance(me.user_id)});send({type:'done'});return r.end();}
  if(q.url==='/functions/v1/billing'){const me=caller(q);if(!me){r.statusCode=401;return r.end('{"error":"no session"}');}
-   const cat={currency:'EUR',plans:[{id:'flash',price:4.99,tokens:250000,available:true},{id:'high',price:9.99,tokens:1000000,available:true},{id:'knight',price:19.99,tokens:2500000,available:false}],packs:[{id:'pack-500k',tokens:500000,price:4.99,available:true}],trial:{days:7,plan:'high',tokens:150000}};
+   const cat={currency:'EUR',plans:[{id:'flash',price:4.99,tokens:250000,available:true},{id:'high',price:9.99,tokens:1000000,available:true,yearlyPrice:95.9,yearlyAvailable:true},{id:'knight',price:19.99,tokens:2500000,available:false}],packs:[{id:'pack-500k',tokens:500000,price:4.99,available:true}],trial:{days:7,plan:'high',tokens:150000}};
    const st=()=>{const mine=ledger.filter(l=>l.user_id===me.user_id);const pl=mine.filter(l=>l.bucket==='plan').reduce((a,l)=>a+l.delta,0);const top=mine.filter(l=>l.bucket!=='plan').reduce((a,l)=>a+l.delta,0);
      return {plan:me.plan,subscription:me.trialEnds?{provider:'trial',tier:'high',status:'trial',renewsAt:null,endsAt:me.trialEnds,manageable:false}:null,balance:{plan:Math.max(0,pl),topup:Math.max(0,top),total:Math.max(0,pl+top)},trialAvailable:!me.trialEnds,usage:[{at:'2026-10-09T10:00:00Z',step:'build',model:'claude-sonnet-5',tokens:6000,project:'p1'}]};};
    if(j.action==='catalog')return r.end(JSON.stringify(cat));
    if(j.action==='status')return r.end(JSON.stringify(st()));
    if(j.action==='trial'){if(me.trialEnds){r.statusCode=409;return r.end('{"error":"used","code":"trial_used"}');}me.trialEnds='2026-10-17T12:00:00.000Z';me.plan='high';ledger.push({user_id:me.user_id,delta:150000,bucket:'plan',reason:'trial_grant'});return r.end(JSON.stringify(st()));}
-   if(j.action==='checkout'){const it=cat.plans.find(x=>x.id===j.plan)||cat.packs.find(x=>x.id===j.pack);if(!it){r.statusCode=400;return r.end('{"error":"unknown"}');}if(!it.available){r.statusCode=409;return r.end('{"error":"x","code":"not_available"}');}return r.end(JSON.stringify({url:'https://pay.example/checkout?_ptxn=txn_'+(j.plan||j.pack),transaction:'txn_1'}));}
+   if(j.action==='checkout'){const it=cat.plans.find(x=>x.id===j.plan)||cat.packs.find(x=>x.id===j.pack);if(!it){r.statusCode=400;return r.end('{"error":"unknown"}');}if(!it.available){r.statusCode=409;return r.end('{"error":"x","code":"not_available"}');}return r.end(JSON.stringify({url:'https://pay.example/checkout?_ptxn=txn_'+(j.plan||j.pack)+(j.interval==='year'?'_year':''),transaction:'txn_1'}));}
    if(j.action==='portal'){r.statusCode=404;return r.end('{"error":"none","code":"no_subscription"}');}
    r.statusCode=400;return r.end('{"error":"unknown action"}');}
  if(q.url==='/functions/v1/account'){const me=caller(q);if(!me){r.statusCode=401;return r.end('{"error":"no session"}');}
@@ -838,6 +838,7 @@ t('billing: каталог, статус, пробен период веднъж
   const co = bid('billing', 'checkout', '--plan', 'high');
   assert(co.data.url.startsWith('https://pay.example/checkout'), JSON.stringify(co.result));
   assert(bid('billing', 'checkout', '--pack', 'pack-500k').data.url.includes('pack-500k'), 'pack checkout');
+  assert(bid('billing', 'checkout', '--plan', 'high', '--yearly').data.url.endsWith('high_year'), 'yearly checkout');
   const knight = bid('billing', 'checkout', '--plan', 'knight');
   assert(knight.result.key === 'billing.notAvailable', JSON.stringify(knight.result));
   const both = bid('billing', 'checkout');

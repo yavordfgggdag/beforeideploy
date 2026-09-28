@@ -11,7 +11,9 @@
       "id": "high",
       "price": 9.99,
       "tokens": 1000000,
-      "available": true
+      "available": true,
+      "yearlyPrice": 95.9,
+      "yearlyAvailable": true
     },
     {
       "id": "knight",

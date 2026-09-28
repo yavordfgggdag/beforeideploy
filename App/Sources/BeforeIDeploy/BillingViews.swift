@@ -5,6 +5,7 @@ import SwiftUI
 struct PlansSheet: View {
     @EnvironmentObject var model: AppModel
     @Environment(\.dismiss) private var dismiss
+    @Local private var yearly = false
 
     private var store: BillingStore { model.billingStore }
 
@@ -18,11 +19,18 @@ struct PlansSheet: View {
                         TrialCard(trial: t, busy: store.busy == "trial") { store.startTrial() }
                     }
                     if let c = store.catalog {
-                        SectionLabel(text: L("billing.plans"), icon: "square.stack.3d.up.fill")
+                        HStack {
+                            SectionLabel(text: L("billing.plans"), icon: "square.stack.3d.up.fill")
+                            Spacer()
+                            if c.plans.contains(where: { $0.yearlyAvailable == true }) {
+                                SegmentedControl(options: [(L("billing.monthly"), false), (L("billing.yearly"), true)], selection: $yearly)
+                                    .frame(width: 240)
+                            }
+                        }
                         HStack(alignment: .top, spacing: 12) {
                             ForEach(c.plans) { p in
-                                PlanCard(plan: p, currency: c.currency, current: store.status?.plan == p.id,
-                                         busy: store.busy == p.id) { store.checkout(plan: p.id) }
+                                PlanCard(plan: p, currency: c.currency, current: store.status?.plan == p.id, yearly: yearly,
+                                         busy: store.busy == p.id) { store.checkout(plan: p.id, yearly: yearly) }
                             }
                         }
                         if !c.packs.isEmpty {
@@ -194,11 +202,14 @@ private struct PlanCard: View {
     let plan: BillingCatalog.Plan
     let currency: String
     let current: Bool
+    var yearly = false
     let busy: Bool
     let choose: () -> Void
     @Local private var hover = false
 
     private var recommended: Bool { plan.id == "high" }
+    private var price: Double? { yearly ? plan.yearlyPrice : plan.price }
+    private var onSale: Bool { yearly ? plan.yearlyAvailable == true : plan.available }
     private var bullets: [String] {
         switch plan.id {
         case "flash": return [L("billing.feature.builtin"), L("billing.feature.sync"), L("billing.feature.projects5")]
@@ -221,9 +232,13 @@ private struct PlanCard: View {
                 }
             }
             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(BillingFormat.money(plan.price, currency: currency))
+                Text(BillingFormat.money(price, currency: currency))
                     .font(.system(size: 26, weight: .bold, design: .rounded)).foregroundColor(Theme.text)
-                Text(L("billing.perMonth")).font(.system(size: 12)).foregroundColor(Theme.tertiary)
+                Text(yearly ? L("billing.perYear") : L("billing.perMonth")).font(.system(size: 12)).foregroundColor(Theme.tertiary)
+            }
+            if yearly, let y = plan.yearlyPrice, let m = plan.price, m > 0 {
+                Text(L("billing.yearlySaving", BillingFormat.money(y / 12, currency: currency)))
+                    .font(.system(size: 11, weight: .semibold)).foregroundColor(Theme.ready)
             }
             Text(L("billing.tokensPerMonth", Fmt.tokens(plan.tokens)))
                 .font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.accent)
@@ -240,12 +255,12 @@ private struct PlanCard: View {
                 HStack {
                     Spacer()
                     if busy { Spinner(size: 12, color: .white) }
-                    Text(current ? L("billing.currentButton") : (plan.available ? L("billing.choose") : L("billing.soon")))
+                    Text(current ? L("billing.currentButton") : (onSale ? L("billing.choose") : L("billing.soon")))
                     Spacer()
                 }
             }
             .bidButton(recommended && !current ? .primary : .secondary)
-            .disabled(current || !plan.available || busy)
+            .disabled(current || !onSale || busy)
         }
         .frame(maxWidth: .infinity, minHeight: 250, alignment: .topLeading)
         .card(padding: 18, fill: hover ? Theme.elevated : Theme.panel, tint: recommended ? Theme.accent : nil)

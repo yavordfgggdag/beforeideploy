@@ -10,7 +10,7 @@ const NOW = new Date("2026-10-10T12:00:00Z");
 const CATALOG = {
   currency: "EUR",
   trial: { days: 7, plan: "high", tokens: 150000 },
-  plans: { flash: { price: 4.99, paddlePriceId: "pri_flash" }, high: { price: 9.99, paddlePriceId: "pri_high" }, knight: { price: 19.99, paddlePriceId: null } },
+  plans: { flash: { price: 4.99, paddlePriceId: "pri_flash" }, high: { price: 9.99, paddlePriceId: "pri_high", yearly: { price: 95.9, paddlePriceId: "pri_high_year" } }, knight: { price: 19.99, paddlePriceId: null } },
   packs: [{ id: "pack-500k", tokens: 500000, price: 4.99, paddlePriceId: "pri_pack" }],
 };
 
@@ -129,6 +129,7 @@ Deno.test("billing: catalog lists prices, tokens and what is on sale", async () 
   const c = await res.json();
   assert.equal(c.currency, "EUR");
   assert.deepEqual(c.plans.map((p: Row) => [p.id, p.price, p.tokens, p.available]), [["flash", 4.99, 250000, true], ["high", 9.99, 1000000, true], ["knight", 19.99, 2500000, false]]);
+  assert.deepEqual(c.plans.map((p: Row) => [p.yearlyPrice, p.yearlyAvailable]), [[null, false], [95.9, true], [null, false]]);
   assert.equal(c.packs[0].id, "pack-500k");
   assert.equal(c.trial.days, 7);
 });
@@ -223,4 +224,34 @@ Deno.test("billing: an approved refund takes back what is left of the transactio
   // a pending refund changes nothing
   const pending = await (await webhook(handle, { event_id: "evt_p", event_type: "adjustment.created", data: { id: "adj_2", action: "refund", status: "pending_approval", transaction_id: "txn_pack" } })).json();
   assert.equal(pending.ignored, true);
+});
+
+Deno.test("billing: yearly checkout uses the yearly price", async () => {
+  const { handle, calls } = world();
+  assert.equal((await handle(post("billing", { action: "checkout", plan: "high", interval: "year" }))).status, 200);
+  assert.equal(calls[0].body.items[0].price_id, "pri_high_year");
+  const flash = await handle(post("billing", { action: "checkout", plan: "flash", interval: "year" }));
+  assert.equal(flash.status, 409, "no yearly price for flash yet");
+});
+
+Deno.test("billing: a yearly plan grants the monthly tokens every month, once each", async () => {
+  const { db, handle } = world();
+  const yearSub = subEvent("evt_y", "active", "pri_high_year", { billing_cycle: { interval: "year", frequency: 1 }, current_billing_period: { starts_at: "2026-10-10T00:00:00Z", ends_at: "2027-10-10T00:00:00Z" } });
+  await webhook(handle, yearSub);
+  await webhook(handle, { event_id: "evt_yt", event_type: "transaction.completed", data: { id: "txn_year", custom_data: { user_id: USER.id }, items: [{ price: { id: "pri_high_year" } }] } });
+  assert.equal(sum(db.rows("credit_ledger"), "plan"), 1000000, "month 0 with the payment");
+
+  const at = (iso: string) => createBillingHandler({ ...fakeDeps(db), paddleApiKey: "k", paddleWebhookSecret: SECRET, paddleApiBase: "x", fetch: globalThis.fetch, now: () => new Date(iso) });
+  const st0 = await (await at("2026-10-25T00:00:00Z")(post("billing", { action: "status" }))).json();
+  assert.equal(st0.subscription.interval, "year");
+  assert.equal(db.rows("credit_ledger").filter((r) => r.reason === "plan_grant").length, 1, "still month 0");
+
+  await at("2026-11-12T00:00:00Z")(post("billing", { action: "status" }));
+  await at("2026-11-20T00:00:00Z")(post("billing", { action: "status" }));
+  const grants = db.rows("credit_ledger").filter((r) => r.reason === "plan_grant");
+  assert.deepEqual(grants.map((r) => r.ref), ["txn_year", "sub_1:m1"], "month 1 granted once");
+  assert.equal(sum(db.rows("credit_ledger"), "plan"), 1000000, "the unused month-0 rest expired");
+
+  await at("2027-12-01T00:00:00Z")(post("billing", { action: "status" }));
+  assert.equal(db.rows("credit_ledger").filter((r) => r.reason === "plan_grant").length, 2, "nothing after the paid year");
 });

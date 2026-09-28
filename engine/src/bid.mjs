@@ -53,7 +53,7 @@ const HELP = `Before I Deploy engine ${VERSION}
   bid aifix   --project P --step ID --target chatgpt|claude|codex|claude-code|copy
   bid ai      fix --project P --step ID [--deep] [--model M] [--provider anthropic|openai|cloud]   built-in AI Fix (streams 'ai' events)
   bid ai      explain --project P --step ID | apply --project P --patch-file F --yes [--files a,b] [--commit] | usage
-  bid billing catalog | status | trial | portal | checkout --plan flash|high|knight | checkout --pack ID
+  bid billing catalog | status | trial | portal | checkout --plan flash|high|knight [--yearly] | checkout --pack ID
   bid costs   [--refresh]          costs, credits, price table, budgets
   bid usage   [--refresh]          real limits from the providers
   bid budget  --netlify-min N

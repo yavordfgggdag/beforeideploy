@@ -16,6 +16,7 @@
 //
 // Prices and Paddle price ids live in `settings.billing.catalog`, token amounts in `settings.plans`.
 import { callerOf, type DbClient, type Deps, json, type Row } from "../_shared/db.ts";
+import { bucketBalance, ensureMonthlyGrant, grantPlanTokens } from "../_shared/credits.ts";
 
 export type Plan = "free" | "flash" | "high" | "knight";
 const PAID: Plan[] = ["flash", "high", "knight"];
@@ -23,14 +24,18 @@ const PAID: Plan[] = ["flash", "high", "knight"];
 export interface Catalog {
   currency: string;
   trial?: { days: number; plan: Plan; tokens: number } | null;
-  plans: Record<string, { price: number; paddlePriceId?: string | null }>;
+  plans: Record<string, { price: number; paddlePriceId?: string | null; yearly?: { price: number; paddlePriceId?: string | null } | null }>;
   packs: { id: string; tokens: number; price: number; paddlePriceId?: string | null }[];
 }
 
 export const DEFAULT_CATALOG: Catalog = {
   currency: "EUR",
   trial: { days: 7, plan: "high", tokens: 150000 },
-  plans: { flash: { price: 4.99, paddlePriceId: null }, high: { price: 9.99, paddlePriceId: null }, knight: { price: 19.99, paddlePriceId: null } },
+  plans: {
+    flash: { price: 4.99, paddlePriceId: null, yearly: { price: 47.9, paddlePriceId: null } },
+    high: { price: 9.99, paddlePriceId: null, yearly: { price: 95.9, paddlePriceId: null } },
+    knight: { price: 19.99, paddlePriceId: null, yearly: { price: 191.9, paddlePriceId: null } },
+  },
   packs: [
     { id: "pack-500k", tokens: 500000, price: 4.99, paddlePriceId: null },
     { id: "pack-2m", tokens: 2000000, price: 14.99, paddlePriceId: null },
@@ -89,24 +94,12 @@ async function loadCatalog(db: DbClient): Promise<{ catalog: Catalog; planTokens
 
 function tierForPrice(catalog: Catalog, priceId: string | undefined): Plan | null {
   if (!priceId) return null;
-  for (const [tier, p] of Object.entries(catalog.plans)) if (p.paddlePriceId === priceId) return tier as Plan;
+  for (const [tier, p] of Object.entries(catalog.plans)) if (p.paddlePriceId === priceId || p.yearly?.paddlePriceId === priceId) return tier as Plan;
   return null;
 }
 
 function packForPrice(catalog: Catalog, priceId: string | undefined) {
   return priceId ? catalog.packs.find((p) => p.paddlePriceId === priceId) ?? null : null;
-}
-
-async function bucketBalance(db: DbClient, userId: string, bucket: string): Promise<number> {
-  const { data } = await db.from("credit_ledger").select("delta,bucket").eq("user_id", userId).eq("bucket", bucket);
-  return (data ?? []).reduce((a: number, r: Row) => a + Number(r.delta ?? 0), 0);
-}
-
-/** A new plan period replaces what is left of the previous one: expire the rest, then grant the new amount. */
-async function grantPlanTokens(db: DbClient, userId: string, tokens: number, reason: string, ref: string) {
-  const rest = await bucketBalance(db, userId, "plan");
-  if (rest > 0) await db.from("credit_ledger").insert({ user_id: userId, delta: -rest, bucket: "plan", reason: "expiry", ref });
-  if (tokens > 0) await db.from("credit_ledger").insert({ user_id: userId, delta: tokens, bucket: "plan", reason, ref });
 }
 
 async function alreadyGranted(db: DbClient, userId: string, ref: string): Promise<boolean> {
@@ -261,7 +254,7 @@ async function statusOf(db: DbClient, userId: string, catalog: Catalog, now: Dat
   return {
     plan,
     subscription: current
-      ? { provider: current.provider, tier: current.tier, status: current.status, renewsAt: current.cancel_at ? null : current.period_end, endsAt: current.cancel_at ?? (current.provider === "trial" ? current.period_end : null), manageable: current.provider === "paddle" && !!current.customer_ref }
+      ? { provider: current.provider, tier: current.tier, status: current.status, interval: current.raw?.billing_cycle?.interval ?? "month", renewsAt: current.cancel_at ? null : current.period_end, endsAt: current.cancel_at ?? (current.provider === "trial" ? current.period_end : null), manageable: current.provider === "paddle" && !!current.customer_ref }
       : null,
     balance: { plan: Math.max(0, planBalance), topup: Math.max(0, topupBalance), total: Math.max(0, planBalance + topupBalance) },
     trialAvailable: !!catalog.trial && !list.some((s) => s.provider === "trial" || s.provider === "paddle"),
@@ -292,18 +285,29 @@ export function createBillingHandler(deps: BillingDeps): (req: Request) => Promi
         case "catalog":
           return json(200, {
             currency: catalog.currency,
-            plans: PAID.map((id) => ({ id, price: catalog.plans[id]?.price ?? null, tokens: planTokens[id]?.tokens ?? 0, available: !!catalog.plans[id]?.paddlePriceId })),
+            plans: PAID.map((id) => ({
+              id,
+              price: catalog.plans[id]?.price ?? null,
+              tokens: planTokens[id]?.tokens ?? 0,
+              available: !!catalog.plans[id]?.paddlePriceId,
+              yearlyPrice: catalog.plans[id]?.yearly?.price ?? null,
+              yearlyAvailable: !!catalog.plans[id]?.yearly?.paddlePriceId,
+            })),
             packs: catalog.packs.map((p) => ({ id: p.id, tokens: p.tokens, price: p.price, available: !!p.paddlePriceId })),
             trial: catalog.trial ?? null,
           });
 
         case "status":
+          await ensureMonthlyGrant(db, userId, planTokens, now);
           return json(200, await statusOf(db, userId, catalog, now));
 
         case "checkout": {
           const planId = typeof body.plan === "string" ? body.plan : null;
           const packId = typeof body.pack === "string" ? body.pack : null;
-          const priceId = planId ? catalog.plans[planId]?.paddlePriceId : packId ? catalog.packs.find((p) => p.id === packId)?.paddlePriceId : null;
+          const yearly = body.interval === "year";
+          const priceId = planId
+            ? (yearly ? catalog.plans[planId]?.yearly?.paddlePriceId : catalog.plans[planId]?.paddlePriceId)
+            : packId ? catalog.packs.find((p) => p.id === packId)?.paddlePriceId : null;
           if (!planId && !packId) return json(400, { error: "plan or pack required" });
           if (planId && !PAID.includes(planId as Plan)) return json(400, { error: `unknown plan ${planId}` });
           if (!priceId) return json(409, { error: "this item is not on sale yet", code: "not_available" });

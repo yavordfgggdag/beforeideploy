@@ -153,12 +153,14 @@
 "billing.loading" = "Зареждам плановете…";
 "billing.manage" = "Управление на абонамента";
 "billing.menu" = "План и кредити…";
+"billing.monthly" = "Месечно";
 "billing.noPlanLine" = "Безплатен — външните AI бутони работят винаги.";
 "billing.packHint" = "Еднократно, важи 12 месеца";
 "billing.packTokens" = "+%@ токена";
 "billing.packs" = "Допълнителни токени";
 "billing.pastDue" = "%@ · последното плащане не мина — обнови картата от „Управление на абонамента“";
 "billing.perMonth" = "/ месец";
+"billing.perYear" = "/ година";
 "billing.plans" = "Планове";
 "billing.recentUsage" = "Последно ползване на AI";
 "billing.recommended" = "ПРЕПОРЪЧАН";
@@ -177,6 +179,8 @@
 "billing.updated" = "Планът ти е обновен.";
 "billing.waiting" = "Чакам потвърждение на плащането…";
 "billing.waitingHint" = "Довърши плащането в браузъра; планът тук ще се смени сам.";
+"billing.yearly" = "Годишно −20%";
+"billing.yearlySaving" = "%@ на месец — 2 месеца безплатно";
 
 "cloud.anonKeyPlaceholder" = "anon public key";
 "cloud.continueOffline" = "Продължи без акаунт засега";

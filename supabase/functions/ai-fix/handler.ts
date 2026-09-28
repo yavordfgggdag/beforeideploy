@@ -3,6 +3,7 @@
 // the redacted prompt + the user's JWT; we check role/plan/credits/limits, stream the model's answer
 // back as normalized SSE ({type: delta|usage|done|error}) and bill the real token counts to credit_ledger.
 import { callerOf, type DbClient, type Deps, json, readJson, type Row } from "../_shared/db.ts";
+import { ensureMonthlyGrant } from "../_shared/credits.ts";
 
 export type Plan = "free" | "flash" | "high" | "knight";
 export type Role = "normal" | "vip" | "admin";
@@ -78,7 +79,8 @@ export function createAiFixHandler(deps: AiFixDeps): (req: Request) => Promise<R
     const settings = await loadSettings(db);
     if (body.prompt.length > Number(settings["ai.promptMaxChars"])) return json(413, { error: "prompt too long", code: "prompt_too_long" });
 
-    // ---- credits, rate limits, daily cap
+    // ---- credits, rate limits, daily cap (a yearly plan's monthly tokens are granted here if due)
+    await ensureMonthlyGrant(db, user.id, settings.plans, new Date());
     const { data: bal } = await db.from("credit_balance").select("balance").eq("user_id", user.id).maybeSingle();
     const balance = Number(bal?.balance ?? 0);
     if (balance <= 0) {

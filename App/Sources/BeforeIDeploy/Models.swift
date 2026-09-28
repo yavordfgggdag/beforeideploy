@@ -713,6 +713,8 @@ struct BillingCatalog: Codable, Hashable {
         var price: Double?
         var tokens: Int
         var available: Bool
+        var yearlyPrice: Double?
+        var yearlyAvailable: Bool?
     }
     struct Pack: Codable, Hashable, Identifiable {
         var id: String
@@ -736,6 +738,7 @@ struct BillingStatus: Codable, Hashable {
         var provider: String
         var tier: String
         var status: String
+        var interval: String?
         var renewsAt: String?
         var endsAt: String?
         var manageable: Bool
