@@ -148,8 +148,10 @@ async function handleWebhook(req: Request, deps: BillingDeps): Promise<Response>
 
   try {
     if (type.startsWith("subscription.")) {
+      // a subscription can carry several items (plan + add-ons): the highest known plan decides (audit C15)
+      const tiers = ((d.items ?? []) as Row[]).map((it) => tierForPrice(catalog, it.price?.id)).filter(Boolean) as Plan[];
+      const tier = tiers.sort((a, b) => PAID.indexOf(b) - PAID.indexOf(a))[0] ?? null;
       const priceId = d.items?.[0]?.price?.id;
-      const tier = tierForPrice(catalog, priceId);
       if (!userId) result = { ignored: "no custom_data.user_id" };
       else if (!tier) result = { ignored: `unknown price ${priceId}` };
       else {
@@ -175,7 +177,13 @@ async function handleWebhook(req: Request, deps: BillingDeps): Promise<Response>
         } else {
           if (existing) must(await db.from("subscriptions").update(row).eq("id", existing.id));
           else must(await db.from("subscriptions").insert(row));
-          const plan: Plan = ACTIVE.includes(status) ? tier : "free";
+          let plan: Plan = ACTIVE.includes(status) ? tier : "free";
+          if (plan === "free") {
+            // a plan an admin granted by hand (provider "manual") outlives the Paddle subscription (audit C15)
+            const { data: manual } = await db.from("subscriptions").select("tier,status,period_end").eq("user_id", userId).eq("provider", "manual");
+            const keep = ((manual ?? []) as Row[]).find((m) => m.status === "active" && (!m.period_end || new Date(m.period_end).getTime() > now.getTime()));
+            if (keep?.tier) plan = keep.tier as Plan;
+          }
           // a VIP/admin keeps the plan an admin gave them; normal users follow the subscription
           const { data: prof } = await db.from("profiles").select("role").eq("user_id", userId).maybeSingle();
           if ((prof?.role ?? "normal") === "normal" || plan !== "free") must(await db.from("profiles").update({ plan }).eq("user_id", userId));

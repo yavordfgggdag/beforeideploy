@@ -88,6 +88,7 @@ final class AppModel: ObservableObject, Feedback {
     let engine = EngineClient.shared
     private var pendingURL: URL?
     private var started = false
+    private var starting = false
     private var storeObservers: [AnyCancellable] = []
 
     init() {
@@ -214,7 +215,10 @@ final class AppModel: ObservableObject, Feedback {
 
     func start() async {
         // RootView is rebuilt on a language change and its .task calls start() again
-        guard !started else { return }
+        // a second call while the first is still starting (language change, Retry) must not run it twice (audit A15)
+        guard !started, !starting else { return }
+        starting = true
+        defer { starting = false }
         // the engine inside the app is installed / updated first (audit B1/B2)
         let target = URL(fileURLWithPath: engine.enginePath).deletingLastPathComponent()
         if case .failed(let why) = await EngineInstaller.installIfNeeded(into: target) {

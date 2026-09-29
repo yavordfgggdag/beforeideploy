@@ -112,7 +112,8 @@ final class AIStore: ObservableObject {
                 await projects.refreshStatus(quiet: true)
                 await projects.loadHistory()
                 current?.applying = false
-                if recheckAfterApply, !res.applied.isEmpty { onApplied?() }
+                // re-check only the project that was changed — the user may have switched projects meanwhile (audit A15)
+                if recheckAfterApply, !res.applied.isEmpty, projects.selected?.key == st.projectKey { onApplied?() }
             } catch {
                 feedback?.show(error)
                 current?.error = error.localizedDescription

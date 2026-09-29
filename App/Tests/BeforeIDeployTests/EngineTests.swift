@@ -115,6 +115,22 @@ final class RunSessionTests: XCTestCase {
         session.finish(success: true, title: "done", message: nil)
         XCTAssertTrue(session.finished)
     }
+
+    /// Log lines are batched (audit A9): nothing is lost, the order is kept, at most 600 per step.
+    @MainActor
+    func testLogLinesAreBatchedAndCapped() throws {
+        let session = RunSession(title: "t", subtitle: "s", kind: .check)
+        for i in 0..<700 {
+            let json = #"{"type":"log","step":"build","line":"line \#(i)"}"#
+            let raw = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(json.utf8)) as? [String: Any])
+            session.handle(EngineEvent(raw: raw, data: Data(json.utf8)))
+        }
+        session.flushLines()
+        XCTAssertEqual(session.steps.count, 1)
+        XCTAssertEqual(session.steps[0].lines.count, 600)
+        XCTAssertEqual(session.steps[0].lines.first, "line 100")
+        XCTAssertEqual(session.steps[0].lines.last, "line 699")
+    }
 }
 
 final class AutoCheckTests: XCTestCase {

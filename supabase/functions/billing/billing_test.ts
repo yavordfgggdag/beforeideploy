@@ -325,3 +325,18 @@ Deno.test("billing: two trial requests at once start one trial", async () => {
   assert.deepEqual(rs.map((r) => r.status).sort(), [200, 409]);
   assert.equal(sum(db.rows("credit_ledger"), "plan"), 150000);
 });
+
+Deno.test("billing: several subscription items — the highest plan decides", async () => {
+  const { db, handle } = world();
+  const ev = subEvent("evt_multi", "active", "pri_flash", { items: [{ price: { id: "pri_flash" } }, { price: { id: "pri_high" } }] });
+  await webhook(handle, ev);
+  assert.equal(db.rows("subscriptions")[0].tier, "high");
+  assert.equal(db.rows("profiles")[0].plan, "high");
+});
+
+Deno.test("billing: a plan an admin granted by hand survives a cancelled Paddle subscription", async () => {
+  const { db, handle } = world({ subs: [{ id: "m1", user_id: USER.id, provider: "manual", tier: "knight", status: "active", period_end: null }] });
+  await webhook(handle, { ...subEvent("evt_a", "active"), occurred_at: "2026-10-01T00:00:00Z" });
+  await webhook(handle, { ...subEvent("evt_c", "canceled"), occurred_at: "2026-10-02T00:00:00Z" });
+  assert.equal(db.rows("profiles")[0].plan, "knight");
+});

@@ -104,6 +104,20 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
+-- A changed sign-in address reaches the profile too (Admin search, invitations; audit C15).
+create or replace function public.handle_user_email_change()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  update public.profiles set email = coalesce(new.email, '') where user_id = new.id;
+  return new;
+end $$;
+
+drop trigger if exists on_auth_user_email_changed on auth.users;
+create trigger on_auth_user_email_changed
+  after update of email on auth.users
+  for each row when (old.email is distinct from new.email)
+  execute function public.handle_user_email_change();
+
 -- Profiles for users who signed up before v10.
 insert into public.profiles (user_id, email, display_name)
 select u.id, coalesce(u.email, ''), coalesce(u.raw_user_meta_data ->> 'full_name', u.raw_user_meta_data ->> 'name')

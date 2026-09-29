@@ -16,8 +16,9 @@ final class Notifier: NSObject, UNUserNotificationCenterDelegate {
         guard canUseUN else { return }
         let c = UNUserNotificationCenter.current()
         c.delegate = self
+        // the callback runs on a background queue; `authorized` is read on the main thread (audit A15)
         c.requestAuthorization(options: [.alert, .sound]) { granted, _ in
-            self.authorized = granted
+            DispatchQueue.main.async { self.authorized = granted }
         }
     }
 

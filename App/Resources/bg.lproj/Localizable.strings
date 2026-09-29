@@ -532,6 +532,7 @@
 "palette.openProject" = "Отвори проекта";
 "palette.pickFolder" = "Избери папка";
 "palette.placeholder" = "Какво искаш да направиш?";
+"palette.production" = "Production";
 "palette.productionDetail" = "С потвърждение DEPLOY";
 "palette.setupDetail" = "Инструменти и акаунти";
 "palette.smartDetail" = "Проверка → preview";

@@ -532,6 +532,9 @@ struct PaletteCommand: Identifiable {
 struct CommandPalette: View {
     @EnvironmentObject var model: AppModel
     @Local private var query = ""
+    /// Highlighted row: ↑/↓ move it, Return runs it (audit A14).
+    @Local private var selection = 0
+    @FocusState private var searchFocused: Bool
 
     var commands: [PaletteCommand] {
         var c: [PaletteCommand] = [
@@ -549,16 +552,24 @@ struct CommandPalette: View {
         if let p = model.selected {
             c += [
                 PaletteCommand(title: L("palette.checkProject", p.name), subtitle: L("palette.checkDetail"), icon: "arrow.triangle.2.circlepath") { model.runCheck() },
-                PaletteCommand(title: "Smart Deploy \(p.name)", subtitle: L("palette.smartDetail"), icon: "bolt.fill") { model.smartDeploy() },
-                PaletteCommand(title: "Local Preview \(p.name)", subtitle: L("palette.localDetail"), icon: "desktopcomputer") { model.localStart() },
-                PaletteCommand(title: "Commit & Push", subtitle: p.name, icon: "arrow.up.circle.fill") { model.sheet = .commit },
-                PaletteCommand(title: "Production \(p.name)", subtitle: L("palette.productionDetail"), icon: "paperplane.fill") { model.sheet = .production },
+                PaletteCommand(title: "\(L("run.smartDeploy")) — \(p.name)", subtitle: L("palette.smartDetail"), icon: "bolt.fill") { model.smartDeploy() },
+                PaletteCommand(title: "\(L("run.localPreview")) — \(p.name)", subtitle: L("palette.localDetail"), icon: "desktopcomputer") { model.localStart() },
+                PaletteCommand(title: L("menu.commitPush"), subtitle: p.name, icon: "arrow.up.circle.fill") { model.sheet = .commit },
+                PaletteCommand(title: "\(L("palette.production")) — \(p.name)", subtitle: L("palette.productionDetail"), icon: "paperplane.fill") { model.sheet = .production },
             ]
         }
         for p in model.projects {
             c.append(PaletteCommand(title: p.name, subtitle: L("palette.openProject"), icon: "folder.fill") { Task { await model.select(p.key) } })
         }
         return c
+    }
+
+    var visible: [PaletteCommand] { Array(filtered.prefix(12)) }
+
+    private func move(_ delta: Int) {
+        let n = visible.count
+        guard n > 0 else { return }
+        selection = (selection + delta + n) % n
     }
 
     var filtered: [PaletteCommand] {
@@ -577,7 +588,9 @@ struct CommandPalette: View {
                         .textFieldStyle(.plain)
                         .font(.system(size: 16))
                         .foregroundColor(Theme.text)
-                        .onSubmit { run(filtered.first) }
+                        .focused($searchFocused)
+                        .onSubmit { run(visible.indices.contains(selection) ? visible[selection] : nil) }
+                        .onChange(of: query) { _ in selection = 0 }
                     Text("esc").font(.system(size: 10.5, weight: .semibold)).foregroundColor(Theme.tertiary)
                         .padding(.horizontal, 6).padding(.vertical, 2)
                         .background(RoundedRectangle(cornerRadius: 5).fill(Theme.elevated))
@@ -586,19 +599,19 @@ struct CommandPalette: View {
                 Rectangle().fill(Theme.hairline).frame(height: 1)
                 ScrollView {
                     VStack(spacing: 2) {
-                        ForEach(Array(filtered.prefix(12).enumerated()), id: \.element.id) { i, cmd in
+                        ForEach(Array(visible.enumerated()), id: \.element.id) { index, cmd in
                             Button { run(cmd) } label: {
                                 HStack(spacing: 12) {
-                                    Image(systemName: cmd.icon).foregroundColor(i == 0 ? .white : Theme.accent).frame(width: 22)
+                                    Image(systemName: cmd.icon).foregroundColor(index == selection ? .white : Theme.accent).frame(width: 22)
                                     VStack(alignment: .leading, spacing: 1) {
-                                        Text(cmd.title).font(.system(size: 13.5, weight: .semibold)).foregroundColor(i == 0 ? .white : Theme.text)
-                                        Text(cmd.subtitle).font(.system(size: 11.5)).foregroundColor(i == 0 ? .white.opacity(0.75) : Theme.tertiary)
+                                        Text(cmd.title).font(.system(size: 13.5, weight: .semibold)).foregroundColor(index == selection ? .white : Theme.text)
+                                        Text(cmd.subtitle).font(.system(size: 11.5)).foregroundColor(index == selection ? .white.opacity(0.75) : Theme.tertiary)
                                     }
                                     Spacer()
-                                    if i == 0 { Image(systemName: "return").foregroundColor(.white.opacity(0.8)) }
+                                    if index == selection { Image(systemName: "return").foregroundColor(.white.opacity(0.8)) }
                                 }
                                 .padding(.horizontal, 12).padding(.vertical, 9)
-                                .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(i == 0 ? Theme.accent : Color.clear))
+                                .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(index == selection ? Theme.accent : Color.clear))
                                 .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)
@@ -616,8 +629,17 @@ struct CommandPalette: View {
             .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
             .shadow(color: .black.opacity(0.5), radius: 30, y: 14)
             .padding(.top, 110)
+            // arrow keys move the highlight even while the search field has focus
+            Group {
+                Button("") { move(-1) }.keyboardShortcut(.upArrow, modifiers: [])
+                Button("") { move(1) }.keyboardShortcut(.downArrow, modifiers: [])
+            }
+            .opacity(0)
+            .frame(width: 0, height: 0)
+            .accessibilityHidden(true)
         }
         .onExitCommand { model.showPalette = false }
+        .onAppear { DispatchQueue.main.async { searchFocused = true } }
     }
 
     func run(_ cmd: PaletteCommand?) {

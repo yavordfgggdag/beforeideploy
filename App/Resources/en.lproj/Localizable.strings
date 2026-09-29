@@ -532,6 +532,7 @@
 "palette.openProject" = "Open the project";
 "palette.pickFolder" = "Choose a folder";
 "palette.placeholder" = "What do you want to do?";
+"palette.production" = "Production";
 "palette.productionDetail" = "With DEPLOY confirmation";
 "palette.setupDetail" = "Tools and accounts";
 "palette.smartDetail" = "Check → preview";
