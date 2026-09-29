@@ -14,6 +14,9 @@ struct Project: Codable, Identifiable, Hashable {
     var key: String
     var name: String
     var path: String
+    var client: String?
+    var hosting: String?
+    var liveUrl: String?
     var framework: String?
     var packageManager: String?
     var publishDir: String?
@@ -96,6 +99,8 @@ struct DeployRecord: Codable, Hashable {
     var url: String?
     var at: String?
     var deployId: String?
+    var restoredFrom: String?
+    var rollback: Bool?
 }
 
 struct FixItem: Codable, Identifiable, Hashable {
@@ -140,6 +145,9 @@ struct ProjectStatus: Codable {
     var netlifyAuth: NetlifyAuth
     var fixes: [FixItem]
     var hosting: HostingInfo?
+    var issues: IssueList?
+    var release: ReleaseInfo?
+    var backup: BackupStatus?
 }
 
 struct HostingInfo: Codable, Hashable {
@@ -278,11 +286,230 @@ struct AISkipped: Codable, Hashable {
     var reason: String
 }
 
+struct AIRecheck: Codable, Hashable {
+    var status: String
+    var step: String?
+    var stepStatus: String?
+    var verified: Bool
+    var at: String?
+}
+
 struct AIApplyResult: Codable {
     var applied: [String]
     var skipped: [AISkipped]
     var committed: String?
     var changedSince: [String]?
+    var undoFile: String?
+    var recheck: AIRecheck?
+}
+
+struct AIUndoResult: Codable {
+    var restored: [String]
+    var skipped: [AISkipped]
+}
+
+// MARK: - Issues (V11): one shape for everything a check found
+
+struct IssueEvidence: Codable, Hashable {
+    var file: String?
+    var line: Int?
+    var resource: String?
+    var detail: String?
+    var log: String?
+}
+
+struct IssueFix: Codable, Hashable {
+    var type: String   // safe | ai | ui | manual
+    var id: String?
+    var risk: String?  // low | medium | high
+}
+
+struct IssueVerify: Codable, Hashable {
+    var steps: [String]
+}
+
+struct Issue: Codable, Identifiable, Hashable {
+    var id: String
+    var step: String
+    var rule: String
+    var severity: String    // blocker | high | medium | low | info
+    var kind: String        // defect | recommendation | signal
+    var confidence: String  // confirmed | likely | heuristic
+    var title: String
+    var impact: String
+    var evidence: IssueEvidence?
+    var fix: IssueFix?
+    var verify: IssueVerify?
+    var blocksRelease: Bool?
+}
+
+struct IssueCounts: Codable, Hashable {
+    var total: Int
+    var blocker: Int
+    var high: Int
+    var medium: Int
+    var low: Int
+    var info: Int
+    var defects: Int
+    var recommendations: Int
+    var signals: Int
+}
+
+struct IssueList: Codable, Hashable {
+    var issues: [Issue]
+    var counts: IssueCounts
+    var checkedAt: String?
+    var partial: Bool?
+}
+
+struct FixRecheck: Codable, Hashable {
+    var status: String
+    var at: String?
+    var steps: [String]?
+    var verified: Bool
+    var resolved: [String]?
+    var unresolved: [String]?
+}
+
+struct FixApplyResult: Codable {
+    var id: String
+    var summary: String?
+    var recheck: FixRecheck?
+}
+
+// MARK: - Releases (V11): operation records with stages, smoke checks and rollback
+
+struct ReleaseCapabilities: Codable, Hashable {
+    var provider: String
+    var preview: Bool
+    var production: Bool
+    var status: Bool
+    var logs: Bool
+    var domains: Bool
+    var rollback: Bool
+    var publishArtifact: Bool
+}
+
+struct AIUndoInfo: Codable, Hashable {
+    var at: String?
+    var step: String?
+    var files: [String]?
+}
+
+struct ReleaseInfo: Codable, Hashable {
+    var currentOp: String?
+    var lastOp: String?
+    var capabilities: ReleaseCapabilities
+    var aiUndo: AIUndoInfo?
+}
+
+struct ReleaseStage: Codable, Identifiable, Hashable {
+    var id: String
+    var status: String
+    var summary: String?
+    var details: [String]?
+    var startedAt: String?
+    var finishedAt: String?
+    var log: String?
+}
+
+struct SmokeCheck: Codable, Hashable, Identifiable {
+    var url: String
+    var ok: Bool
+    var status: Int?
+    var ms: Int?
+    var reason: String?
+    var id: String { url }
+}
+
+struct SmokeResult: Codable, Hashable {
+    var ok: Bool
+    var url: String?
+    var at: String?
+    var checks: [SmokeCheck]?
+    var log: String?
+}
+
+struct ReleasePreview: Codable, Hashable {
+    var url: String?
+    var deployId: String?
+    var at: String?
+}
+
+struct ReleaseProduction: Codable, Hashable {
+    var url: String?
+    var deployId: String?
+    var previousDeployId: String?
+    var at: String?
+}
+
+struct ReleaseRollback: Codable, Hashable {
+    var available: Bool
+    var reason: String?
+    var deployId: String?
+    var restores: String?
+    var note: String?
+    var createdAt: String?
+}
+
+struct ReleaseConfirmation: Codable, Hashable {
+    var typed: String?
+    var at: String?
+    var by: String?
+}
+
+struct ReleaseOp: Codable, Identifiable, Hashable {
+    var id: String
+    var kind: String
+    var project: String
+    var projectName: String?
+    var provider: String
+    var actor: String?
+    var createdAt: String
+    var updatedAt: String?
+    var state: String
+    var stages: [ReleaseStage]
+    var preview: ReleasePreview?
+    var production: ReleaseProduction?
+    var smoke: SmokeResult?
+    var verify: SmokeResult?
+    var rollback: ReleaseRollback?
+    var confirmation: ReleaseConfirmation?
+    var failure: String?
+    var readyFor: String?
+    var log: [String]?
+
+    var isFinal: Bool { ["succeeded", "failed", "cancelled", "stale", "verify_failed", "interrupted"].contains(state) }
+}
+
+struct HostDeploy: Codable, Identifiable, Hashable {
+    var id: String
+    var state: String?
+    var context: String?
+    var url: String?
+    var createdAt: String?
+    var publishedAt: String?
+    var title: String?
+    var sha: String?
+    var branch: String?
+}
+
+struct ReleaseSite: Codable, Hashable {
+    var siteId: String?
+    var liveUrl: String?
+    var publishedDeployId: String?
+    var publishedAt: String?
+}
+
+struct ReleaseStatus: Codable {
+    var provider: String
+    var capabilities: ReleaseCapabilities
+    var current: ReleaseOp?
+    var ops: [ReleaseOp]
+    var deploys: [HostDeploy]
+    var site: ReleaseSite?
+    var lastProd: DeployRecord?
+    var rollback: ReleaseRollback
 }
 
 // Self-update (engine `bid update check|download`) and support report (`bid report`)
@@ -364,11 +591,32 @@ struct Uptime: Codable, Hashable {
     var error: String?
 }
 
+/// One monitored value with its provenance (V11): what it is, where it came from, when, and a state that
+/// is never "healthy" without data (unchecked / stale / unsupported are their own states).
+struct Signal: Codable, Hashable {
+    var state: String        // healthy | problem | unchecked | stale | unsupported
+    var value: String?
+    var at: String?
+    var source: String?
+    var detail: String?
+}
+
+struct NextAction: Codable, Hashable {
+    var id: String           // check | fix | release | connect-hosting | investigate | none
+    var label: String
+}
+
 struct OverviewCard: Codable, Identifiable, Hashable {
     var key: String
     var name: String
     var path: String
     var exists: Bool
+    var client: String?
+    var hosting: String?
+    var signals: [String: Signal]?
+    var issues: IssueCounts?
+    var nextAction: NextAction?
+    var openIncidents: Int?
     var framework: String?
     var status: String?
     var checkedAt: String?
@@ -775,4 +1023,72 @@ struct BillingStatus: Codable, Hashable {
 
 struct BillingURL: Codable, Hashable {
     var url: String
+}
+
+
+// MARK: - Monitoring (V11)
+
+struct MonitorNotify: Codable, Hashable {
+    var down = true
+    var ssl = true
+    var domain = true
+    var recovered = true
+}
+
+struct MonitorSettings: Codable, Hashable {
+    var intervalMin: Int
+    var timeoutMs: Int?
+    var confirmFailures: Int?
+    var notify: MonitorNotify
+}
+
+struct MonitorAgent: Codable, Hashable {
+    var installed: Bool
+    var plist: String?
+    var label: String?
+    var note: String?
+}
+
+struct Incident: Codable, Identifiable, Hashable {
+    var id: String
+    var project: String
+    var projectName: String?
+    var kind: String       // down | ssl | domain
+    var severity: String   // critical | warning
+    var status: String     // open | resolved
+    var openedAt: String
+    var lastSeenAt: String?
+    var resolvedAt: String?
+    var count: Int?
+    var detail: String?
+    var url: String?
+}
+
+struct MonitorStatus: Codable {
+    var runsOn: String
+    var serverSide: Bool
+    var settings: MonitorSettings
+    var agent: MonitorAgent
+    var lastRunAt: String?
+    var lastRunBy: String?
+    var stale: Bool
+    var openIncidents: [Incident]
+    var recentIncidents: [Incident]
+}
+
+struct MonitorRun: Codable {
+    var at: String
+    var checked: Int
+    var quiet: Bool?
+}
+
+struct BackupStatus: Codable, Hashable {
+    var provider: String
+    var name: String
+    var connected: Bool
+    var state: String
+    var reason: String?
+    var missing: [String]?
+    var lastBackupAt: String?
+    var at: String?
 }

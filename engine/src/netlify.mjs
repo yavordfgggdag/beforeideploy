@@ -167,6 +167,65 @@ export async function netlifyCreate(project, { name, team }) {
   return info;
 }
 
+// ---------------------------------------------------------------- API helpers (V11 releases)
+
+/** One Netlify API call through the CLI (`netlify api <method> --data …`); throws netlify_failed on error. */
+export async function netlifyApi(project, method, data, { timeout = 120000 } = {}) {
+  requireAuth();
+  const r = await nl(project, ['api', method, '--data', JSON.stringify(data)], { captureStdout: true, quiet: true, timeout });
+  const j = extractJSON(r.stdout);
+  if (r.code !== 0 || j === null) throw new EngineError(msg('netlify.apiFailed', { method }), 'netlify_failed');
+  return j;
+}
+
+function requireSite(project) {
+  const d = detect(project.path);
+  if (!d.netlifyLinked) throw new EngineError(msg('netlify.notLinked'), 'not_linked', 4);
+  return d.siteId;
+}
+
+const toDeploy = (x) => ({
+  id: x.id,
+  state: x.state || null,
+  context: x.context || null,
+  url: x.deploy_ssl_url || x.deploy_url || x.ssl_url || x.url || null,
+  createdAt: x.created_at || null,
+  publishedAt: x.published_at || null,
+  title: x.title || null,
+  sha: x.commit_ref || null,
+  branch: x.branch || null,
+});
+
+/** Deploys of the linked site, newest first. */
+export async function netlifyDeploys(project, { limit = 20 } = {}) {
+  const siteId = requireSite(project);
+  const list = await netlifyApi(project, 'listSiteDeploys', { site_id: siteId, per_page: limit });
+  return (Array.isArray(list) ? list : []).map(toDeploy);
+}
+
+/** The site as Netlify sees it now: which deploy is published (production) and the live URL. */
+export async function netlifySiteState(project) {
+  const siteId = requireSite(project);
+  const site = await netlifyApi(project, 'getSite', { site_id: siteId });
+  if (!site?.id) throw new EngineError(msg('netlify.siteFailed'), 'netlify_failed');
+  return { siteId: site.id, liveUrl: site.ssl_url || site.url || null, publishedDeployId: site.published_deploy?.id || null, publishedAt: site.published_deploy?.published_at || null };
+}
+
+export async function netlifyGetDeploy(project, deployId) {
+  return toDeploy(await netlifyApi(project, 'getDeploy', { deploy_id: deployId }));
+}
+
+/**
+ * Makes an existing deploy the published one (Netlify "restore"/"publish deploy"). This is how a release
+ * promotes the exact preview that was smoke-tested, and how rollback returns to a previous deploy.
+ */
+export async function netlifyPublishDeploy(project, deployId) {
+  const siteId = requireSite(project);
+  const r = await netlifyApi(project, 'restoreSiteDeploy', { site_id: siteId, deploy_id: deployId });
+  if (!r?.id) throw new EngineError(msg('netlify.publishFailed'), 'netlify_failed');
+  return toDeploy(r);
+}
+
 // ---------------------------------------------------------------- deploy
 
 export function deployGuard(project) {

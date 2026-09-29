@@ -116,7 +116,7 @@ final class ModelsTests: XCTestCase {
         let u = try Fixtures.decode("update-check", as: UpdateInfo.self)
         XCTAssertTrue(u.configured)
         XCTAssertTrue(u.available)
-        XCTAssertEqual(u.latest, "10.1.0")
+        XCTAssertEqual(u.latest, "11.1.0")
         XCTAssertEqual(u.notes?["bg"], "Поправки")
     }
 
@@ -169,5 +169,83 @@ final class ModelsTests: XCTestCase {
     func testAIKeys() throws {
         let k = try Fixtures.decode("ai-keys", as: [AIKeyStatus].self)
         XCTAssertEqual(k.map(\.provider).sorted(), ["anthropic", "openai"])
+    }
+
+    // MARK: V11
+
+    func testIssuesAreSortedBlockersFirstAndCarryEvidenceAndFix() throws {
+        let l = try Fixtures.decode("issues", as: IssueList.self)
+        XCTAssertFalse(l.issues.isEmpty)
+        XCTAssertEqual(l.issues.first?.severity, "blocker")
+        XCTAssertEqual(l.issues.first?.blocksRelease, true)
+        XCTAssertTrue(l.issues.allSatisfy { ["defect", "recommendation", "signal"].contains($0.kind) })
+        XCTAssertTrue(l.issues.allSatisfy { ["confirmed", "likely", "heuristic"].contains($0.confidence) })
+        XCTAssertGreaterThan(l.counts.blocker, 0)
+        XCTAssertTrue(l.issues.contains { $0.fix != nil && $0.verify != nil })
+    }
+
+    func testReleasePreviewWaitsForConfirmation() throws {
+        let op = try Fixtures.decode("release-preview", as: ReleaseOp.self)
+        XCTAssertEqual(op.state, "awaiting_confirmation")
+        XCTAssertEqual(op.readyFor, "production")
+        XCTAssertFalse(op.isFinal)
+        XCTAssertEqual(op.stages.map(\.id).prefix(3), ["check", "preview", "smoke"])
+        XCTAssertNotNil(op.preview?.url)
+        XCTAssertEqual(op.smoke?.ok, true)
+    }
+
+    func testReleasePromotePublishesTheSmokeTestedDeploy() throws {
+        let op = try Fixtures.decode("release-promote", as: ReleaseOp.self)
+        XCTAssertEqual(op.state, "succeeded")
+        XCTAssertTrue(op.isFinal)
+        XCTAssertEqual(op.production?.deployId, op.preview?.deployId)
+        XCTAssertEqual(op.confirmation?.typed, "DEPLOY")
+        XCTAssertEqual(op.verify?.ok, true)
+    }
+
+    func testReleaseStatusCarriesCapabilitiesDeploysAndRollbackTarget() throws {
+        let s = try Fixtures.decode("release-status", as: ReleaseStatus.self)
+        XCTAssertEqual(s.provider, "netlify")
+        XCTAssertTrue(s.capabilities.rollback)
+        XCTAssertGreaterThanOrEqual(s.deploys.count, 4)
+        XCTAssertTrue(s.rollback.available)
+        XCTAssertEqual(s.rollback.restores, "files")
+        XCTAssertNotNil(s.site?.publishedDeployId)
+    }
+
+    func testMonitorStatusSaysWhereItRunsAndKeepsIncidents() throws {
+        let m = try Fixtures.decode("monitor-status", as: MonitorStatus.self)
+        XCTAssertEqual(m.runsOn, "mac")
+        XCTAssertFalse(m.serverSide)
+        XCTAssertEqual(m.openIncidents.count, 1)
+        XCTAssertEqual(m.openIncidents.first?.kind, "down")
+        XCTAssertEqual(m.openIncidents.first?.count, 2)
+        XCTAssertGreaterThanOrEqual(m.settings.intervalMin, 5)
+    }
+
+    func testBackupStatusIsHonestlyNotConnected() throws {
+        let b = try Fixtures.decode("backup-status", as: BackupStatus.self)
+        XCTAssertEqual(b.provider, "codeguard")
+        XCTAssertFalse(b.connected)
+        XCTAssertEqual(b.state, "unsupported")
+        XCTAssertNil(b.lastBackupAt)
+        XCTAssertFalse(b.missing?.isEmpty ?? true)
+    }
+
+    func testOverviewCardsCarrySignalsWithProvenanceAndANextAction() throws {
+        let o = try Fixtures.decode("overview", as: Overview.self)
+        let card = try XCTUnwrap(o.cards.first { $0.signals != nil })
+        let signals = try XCTUnwrap(card.signals)
+        XCTAssertTrue(signals.values.allSatisfy { ["healthy", "problem", "unchecked", "stale", "unsupported"].contains($0.state) })
+        // never green without data: a healthy signal always says when and from where
+        XCTAssertTrue(signals.values.filter { $0.state == "healthy" }.allSatisfy { $0.at != nil && $0.source != nil })
+        XCTAssertNotNil(card.nextAction)
+    }
+
+    func testStatusSnapshotCarriesIssuesReleaseAndBackup() throws {
+        let s = try Fixtures.decode("status", as: ProjectStatus.self)
+        XCTAssertNotNil(s.issues)
+        XCTAssertNotNil(s.release?.capabilities)
+        XCTAssertEqual(s.backup?.connected, false)
     }
 }

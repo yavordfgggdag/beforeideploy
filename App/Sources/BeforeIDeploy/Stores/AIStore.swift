@@ -18,6 +18,7 @@ final class AIStore: ObservableObject {
         var running = true
         var applying = false
         var applied: AIApplyResult?
+        var undone = false
         var selected: Set<String> = []
 
         var files: [AIPatchFile] { outcome?.files ?? [] }
@@ -104,21 +105,42 @@ final class AIStore: ObservableObject {
         current = st
         var args = ["ai", "apply", "--project", st.projectKey, "--patch-file", patch, "--files", st.selected.sorted().joined(separator: ","), "--yes"]
         if commitAfterApply { args.append("--commit") }
+        // the engine re-checks and reports `verified`; a failed re-check is shown, never hidden (V11)
+        if recheckAfterApply { args.append("--recheck") }
         Task {
             do {
                 let res = try await engine.call(args, as: AIApplyResult.self)
                 current?.applied = res
-                feedback?.flash(L("ai.applied", count: res.applied.count), error: res.applied.isEmpty)
+                if let rc = res.recheck {
+                    feedback?.flash(rc.verified ? L("ai.verified") : L("ai.unverified", rc.step ?? st.step), error: !rc.verified)
+                } else {
+                    feedback?.flash(L("ai.applied", count: res.applied.count), error: res.applied.isEmpty)
+                }
                 await projects.refreshStatus(quiet: true)
                 await projects.loadHistory()
                 current?.applying = false
-                // re-check only the project that was changed — the user may have switched projects meanwhile (audit A15)
-                if recheckAfterApply, !res.applied.isEmpty, projects.selected?.key == st.projectKey { onApplied?() }
             } catch {
                 feedback?.show(error)
                 current?.error = error.localizedDescription
                 current?.applying = false
             }
+        }
+    }
+
+    /// Restores the files of the last applied AI fix; files edited since are kept and reported.
+    func undo() {
+        guard let p = projects.selected, !(current?.applying ?? false) else { return }
+        current?.applying = true
+        Task {
+            defer { current?.applying = false }
+            do {
+                let r = try await engine.call(["ai", "undo", "--project", p.key, "--yes"], as: AIUndoResult.self)
+                var text = L("ai.undone", count: r.restored.count)
+                if !r.skipped.isEmpty { text += " · " + L("ai.undoSkipped", r.skipped.count) }
+                feedback?.flash(text, error: r.restored.isEmpty)
+                current?.undone = true
+                await projects.refreshStatus(quiet: true)
+            } catch { feedback?.show(error) }
         }
     }
 

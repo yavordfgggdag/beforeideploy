@@ -1,16 +1,16 @@
 {
-  "current": "10.0.0-dev",
+  "current": "11.0.0-dev",
   "configured": true,
   "channel": "stable",
-  "latest": "10.1.0",
+  "latest": "11.1.0",
   "available": true,
   "mandatory": false,
-  "url": "http://127.0.0.1:4798/releases/bid.dmg",
+  "url": "http://127.0.0.1:5082/releases/bid.dmg",
   "sha256": "6652eabd1eceba46459c321bb97517f4b13a8c1d5c870274ea8e5b135181c6ec",
   "notes": {
     "en": "Fixes",
     "bg": "Поправки"
   },
   "publishedAt": "2026-10-01T00:00:00Z",
-  "checkedAt": "2026-09-27T19:45:39.506Z"
+  "checkedAt": "2026-09-29T07:26:55.865Z"
 }

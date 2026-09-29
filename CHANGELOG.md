@@ -2,6 +2,30 @@
 
 All notable changes, newest first. Versions come from `engine/VERSION`. Each entry has an English and a Bulgarian part; the in-app update banner shows the notes from `latest.json`, which are generated from this file at release time (WP8).
 
+## 11.0.0 (in development)
+
+### English
+- **Issues**: every finding of a check is one item with severity (blocker / high / medium / low / info), kind (confirmed defect / recommendation / heuristic signal), confidence, evidence (file:line, log), impact, the proposed fix with its risk and the steps that verify it. Blockers come first. `bid issues`.
+- **Verified fixes**: safe fixes (`fix apply --recheck`) and AI patches (`ai apply --recheck`) re-run the checks and say whether the targeted issue is gone; a failed re-check is shown as failed, never as success. `ai undo` restores the files of the last AI patch and keeps files you edited since.
+- **Releases** (`bid release preview | promote | status | rollback | cancel`): fresh check → preview deploy → smoke checks (home page, sitemap pages, configured URLs, https, title) → typed DEPLOY → the same smoke-tested deploy is published (Netlify "publish deploy") → production is verified → result with the rollback target. Every release is an operation record with stages, timestamps and a log; one release per project at a time; a repeated promote never publishes twice; a change to the source or the build output after the preview makes the release stale; a dead engine mid-release is reported as interrupted and reconciled with the host.
+- **Rollback** to the previously published Netlify deploy (typed ROLLBACK), verified afterwards; the capability matrix says honestly what each hosting can do (Vercel / Cloudflare / GitHub Pages: no rollback from here yet).
+- **Portfolio**: clients on sites, search and filters (client, hosting, needs action, problems), per-site signals with source, time and state (healthy / problem / unchecked / stale / not available — never green without data), the next recommended action.
+- **Monitoring and incidents**: `bid monitor once` probes every live site with a timeout and one retry, confirms a problem only after two consecutive failures, keeps one incident per site and kind (new / ongoing / recovered), checks SSL and domains once a day, notifies only for the severities you enable, respects quiet hours. Runs on this Mac — the app's timer, or a launchd agent installed with your consent — and says so; there is no server-side monitoring yet.
+- **Backups**: honest "not connected" for CodeGuard with exactly what is missing; nothing simulated.
+- Draft preview asks the engine to re-check when the last check is stale (`deploy --recheck-if-stale`) instead of failing.
+- Engine tests 84 (release flow, smoke checks, monitoring, portfolio, issues, undo), test ports unique per run.
+
+### Български
+- **Проблеми**: всяка находка от проверката е един запис със сериозност (блокира / високо / средно / ниско / инфо), вид (потвърден дефект / препоръка / евристичен сигнал), увереност, доказателство (файл:ред, лог), въздействие, предложена поправка с риск и стъпките, които я проверяват. Блокиращите са първи. `bid issues`.
+- **Проверени поправки**: безопасните поправки (`fix apply --recheck`) и AI промените (`ai apply --recheck`) пускат проверките отново и казват дали проблемът е изчезнал; неуспешна повторна проверка се показва като неуспех, никога като успех. `ai undo` връща файловете от последната AI промяна и пази редактираните след това.
+- **Пускания** (`bid release preview | promote | status | rollback | cancel`): свежа проверка → preview deploy → проверки на preview (начална страница, страници от sitemap, зададени адреси, https, заглавие) → написано DEPLOY → същото проверено preview се публикува (Netlify „publish deploy“) → production се проверява → резултат с цел за връщане. Всяко пускане е запис с етапи, време и лог; едно пускане на проект наведнъж; повторно потвърждение никога не публикува два пъти; промяна в кода или в build изхода след preview прави пускането остаряло; умрял engine по средата се отчита като прекъснато и се сверява с хостинга.
+- **Rollback** към предишния публикуван Netlify deploy (написано ROLLBACK), с проверка след това; матрицата на възможностите казва честно какво може всеки хостинг (Vercel / Cloudflare / GitHub Pages: засега без rollback оттук).
+- **Портфолио**: клиенти на сайтовете, търсене и филтри (клиент, хостинг, иска действие, проблеми), сигнали за всеки сайт с източник, време и състояние (изправно / проблем / непроверено / остаряло / няма данни — никога зелено без данни), следващото препоръчано действие.
+- **Наблюдение и инциденти**: `bid monitor once` проверява всеки жив сайт с timeout и един повторен опит, потвърждава проблем само след два поредни неуспеха, пази един инцидент на сайт и вид (нов / продължаващ / възстановен), проверява SSL и домейни веднъж дневно, известява само за избраните видове, спазва тихи часове. Върви на този Mac — таймерът на приложението или launchd агент, инсталиран с твое съгласие — и го казва; сървърно наблюдение още няма.
+- **Backup-и**: честно „не е свързано“ за CodeGuard с точно какво липсва; нищо симулирано.
+- Draft preview кара engine-а да провери отново при остаряла проверка (`deploy --recheck-if-stale`) вместо да откаже.
+- Engine тестове 84 (пускане, проверки на страници, наблюдение, портфолио, проблеми, undo), портовете на тестовете са уникални за всяко пускане.
+
 ## 10.0.0 (in development)
 
 ### English

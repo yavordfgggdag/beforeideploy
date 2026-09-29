@@ -5,7 +5,8 @@ import path from 'node:path';
 import { ev, emit, EngineError, logDir, nowISO, sh, readJSON, writeJSON } from '../util.mjs';
 import { t, msg, currentLang } from '../i18n.mjs';
 import { detect } from '../detect.mjs';
-import { addHistory } from '../store.mjs';
+import { addHistory, getState, setState } from '../store.mjs';
+import { runChecks } from '../checks.mjs';
 import { recordCost, listLedger } from '../costs.mjs';
 import { accountStatus } from '../account.mjs';
 import { buildPrompt } from '../aifix.mjs';
@@ -106,7 +107,7 @@ export async function aiFix(project, { step, model, deep = false, provider: requ
 }
 
 /** Applies a patch produced by `aiFix`. Re-plans against the current files first, so a file edited since is reported, not clobbered. */
-export async function aiApply(project, { patchFile, files, yes = false, commit = false } = {}) {
+export async function aiApply(project, { patchFile, files, yes = false, commit = false, recheck = false } = {}) {
   if (!yes) throw new EngineError(msg('ai.apply.confirmRequired'), 'confirm_required', 2);
   if (!patchFile || patchFile === true) throw new EngineError(msg('ai.apply.missingPatch'), 'usage', 2);
   const abs = path.resolve(patchFile);
@@ -119,7 +120,22 @@ export async function aiApply(project, { patchFile, files, yes = false, commit =
   for (const p of fresh) p.changedSince = p.applicable && before.has(p.path) && before.get(p.path) !== p.after;
   const selected = files && files !== true ? String(files).split(',').map((s) => s.trim()).filter(Boolean) : null;
   ev.step('ai-apply', { label: t('ai.apply.label'), category: 'AI', status: 'running' });
+  // undo record (V11): what every file looked like before, so `ai undo` can put it back
+  const willWrite = fresh.filter((p) => p.applicable && (!selected || selected.includes(p.path)));
+  const undo = willWrite.map((p) => {
+    let before = null;
+    try {
+      before = fs.readFileSync(path.join(project.path, p.path), 'utf8');
+    } catch {}
+    return { path: p.path, before, after: p.after ?? null, action: p.action };
+  });
   const { applied, skipped } = applyPatch(project.path, fresh, selected);
+  let undoFile = null;
+  if (applied.length) {
+    undoFile = path.join(logDir(project.key), `ai-undo-${Date.now()}.json`);
+    writeJSON(undoFile, { project: project.key, step: patch.step, at: nowISO(), files: undo.filter((u) => applied.includes(u.path)) });
+    setState(project.key, { aiUndo: { file: undoFile, at: nowISO(), step: patch.step, applied } });
+  }
 
   let committed = null;
   if (commit && applied.length && detect(project.path).git.isRepo) {
@@ -141,7 +157,54 @@ export async function aiApply(project, { patchFile, files, yes = false, commit =
       fs.unlinkSync(abs); // everything landed — the proposal is no longer needed
     } catch {}
   }
-  return { applied, skipped, committed, changedSince: fresh.filter((p) => p.changedSince).map((p) => p.path) };
+  const out = { applied, skipped, committed, changedSince: fresh.filter((p) => p.changedSince).map((p) => p.path), undoFile };
+  if (recheck && applied.length) out.recheck = await verifyAfterFix(project, patch.step);
+  return out;
+}
+
+/** Re-runs the checks after an AI patch and says whether the step it targeted now passes. Never marks a fix verified on a failed run. */
+async function verifyAfterFix(project, step) {
+  const check = await runChecks(project, { stopOnFail: false });
+  const s = check.steps.find((x) => x.id === step);
+  const stepOk = !!s && ['pass', 'warn', 'info'].includes(s.status);
+  return { status: check.status, step, stepStatus: s?.status || null, verified: stepOk, at: check.at };
+}
+
+/** Restores the files of the last `ai apply` (V11). A file the user edited since is left alone and reported. */
+export async function aiUndo(project, { yes = false } = {}) {
+  if (!yes) throw new EngineError(msg('ai.undo.confirmRequired'), 'confirm_required', 2);
+  const st = getState(project.key);
+  const rec = st.aiUndo?.file ? readJSON(st.aiUndo.file, null) : null;
+  if (!rec || rec.project !== project.key) throw new EngineError(msg('ai.undo.nothing'), 'nothing');
+  const restored = [];
+  const skipped = [];
+  for (const f of rec.files) {
+    const abs = path.join(project.path, f.path);
+    let current = null;
+    try {
+      current = fs.readFileSync(abs, 'utf8');
+    } catch {}
+    if (current !== f.after) {
+      skipped.push({ path: f.path, reason: 'changed_since' });
+      continue;
+    }
+    try {
+      if (f.before === null) fs.rmSync(abs, { force: true });
+      else fs.writeFileSync(abs, f.before);
+      restored.push(f.path);
+    } catch (e) {
+      skipped.push({ path: f.path, reason: e.code || 'write_failed' });
+    }
+  }
+  if (!skipped.length) {
+    try {
+      fs.unlinkSync(st.aiUndo.file);
+    } catch {}
+    setState(project.key, { aiUndo: undefined });
+  }
+  ev.step('ai-undo', { label: t('ai.undo.label'), category: 'AI', status: restored.length ? 'pass' : 'fail', summary: t('ai.undo.done', { count: restored.length }), details: skipped.map((s) => `✗ ${s.path} — ${s.reason}`) });
+  addHistory({ project: project.key, projectName: project.name, kind: 'ai-undo', status: restored.length ? 'ok' : 'fail', message: restored.join(', ') || t('ai.undo.nothingShort') });
+  return { restored, skipped };
 }
 
 /** Credits (cloud) plus the local token ledger for this month. */

@@ -1,0 +1,62 @@
+{
+  "runsOn": "mac",
+  "serverSide": false,
+  "settings": {
+    "intervalMin": 5,
+    "timeoutMs": 1500,
+    "confirmFailures": 2,
+    "notify": {
+      "down": true,
+      "ssl": true,
+      "domain": true,
+      "recovered": true
+    },
+    "quietHours": null
+  },
+  "agent": {
+    "installed": false,
+    "plist": "/tmp/bid-test-EZ4j6h/home/Library/LaunchAgents/bg.yavor.beforeideploy.monitor.plist",
+    "label": "bg.yavor.beforeideploy.monitor",
+    "note": "Runs on this Mac only while it is awake; there is no server-side monitoring."
+  },
+  "lastRunAt": "2026-09-29T07:27:19.384Z",
+  "lastRunBy": "cli",
+  "stale": false,
+  "projects": {
+    "fc2181aa59a4": {
+      "failures": 3,
+      "key": "fc2181aa59a4",
+      "name": "monitored-site",
+      "url": "http://127.0.0.1:5082/mon/",
+      "at": "2026-09-29T07:27:17.869Z",
+      "uptime": {
+        "ok": false,
+        "status": 503,
+        "ms": 2,
+        "attempts": 2,
+        "firstError": 503,
+        "state": "problem"
+      },
+      "sslDays": null,
+      "sslCheckedAt": null,
+      "confirmed": true
+    }
+  },
+  "domains": null,
+  "openIncidents": [
+    {
+      "id": "40f42906",
+      "project": "fc2181aa59a4",
+      "projectName": "monitored-site",
+      "kind": "down",
+      "severity": "critical",
+      "status": "open",
+      "openedAt": "2026-09-29T07:27:17.677Z",
+      "lastSeenAt": "2026-09-29T07:27:19.384Z",
+      "count": 2,
+      "detail": "http 503",
+      "url": "http://127.0.0.1:5082/mon/"
+    }
+  ],
+  "recentIncidents": []
+}

@@ -555,7 +555,7 @@ struct CommandPalette: View {
                 PaletteCommand(title: "\(L("run.smartDeploy")) — \(p.name)", subtitle: L("palette.smartDetail"), icon: "bolt.fill") { model.smartDeploy() },
                 PaletteCommand(title: "\(L("run.localPreview")) — \(p.name)", subtitle: L("palette.localDetail"), icon: "desktopcomputer") { model.localStart() },
                 PaletteCommand(title: L("menu.commitPush"), subtitle: p.name, icon: "arrow.up.circle.fill") { model.sheet = .commit },
-                PaletteCommand(title: "\(L("palette.production")) — \(p.name)", subtitle: L("palette.productionDetail"), icon: "paperplane.fill") { model.sheet = .production },
+                PaletteCommand(title: "\(L("palette.production")) — \(p.name)", subtitle: L("palette.productionDetail"), icon: "paperplane.fill") { model.sheet = .release },
             ]
         }
         for p in model.projects {

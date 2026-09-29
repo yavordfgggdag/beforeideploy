@@ -146,6 +146,13 @@ struct AIFixOverlay: View {
             if let a = state.applied {
                 Label(L("ai.applied", count: a.applied.count), systemImage: "checkmark.circle.fill").font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.ready)
                 if let c = a.committed { Text("commit \(c)").font(.system(size: 11.5, design: .monospaced)).foregroundColor(Theme.tertiary) }
+                if let rc = a.recheck {
+                    Label(rc.verified ? L("ai.verified") : L("ai.unverified", rc.step ?? state.step), systemImage: rc.verified ? "checkmark.seal.fill" : "xmark.octagon.fill")
+                        .font(.system(size: 12, weight: .semibold)).foregroundColor(rc.verified ? Theme.ready : Theme.blocked)
+                }
+                if a.undoFile != nil, !state.undone {
+                    Button(L("ai.undo")) { store.undo() }.bidButton(.ghost, compact: true).disabled(state.applying)
+                }
             }
             Spacer()
             if state.running {

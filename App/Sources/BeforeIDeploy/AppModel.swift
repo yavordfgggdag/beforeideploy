@@ -5,7 +5,7 @@ import SwiftUI
 enum Screen: Hashable { case overview, project, domains, costs, setup, admin, account }
 
 enum SheetKind: Identifiable {
-    case production, netlifySetup, commit, history, settings, remote, spaceshipConnect, connectDomain, deleteAccount, plans
+    case production, netlifySetup, commit, history, settings, remote, spaceshipConnect, connectDomain, deleteAccount, plans, release, rollback, client
     var id: Int { hashValue }
 }
 
@@ -47,6 +47,8 @@ final class AppModel: ObservableObject, Feedback {
     @Published var lastError: String?
     @Published var screen: Screen = .overview
     @Published var overview: Overview?
+    /// Monitoring state (V11): last pass, open incidents, where it runs.
+    @Published var monitor: MonitorStatus?
     @Published var loadingOverview = false
     @Published var costs: CostSummary?
     @Published var loadingCosts = false
@@ -238,6 +240,8 @@ final class AppModel: ObservableObject, Feedback {
         Task { await loadCosts() }
         Task { await loadSpaceship() }
         Task { await checkForUpdates() }
+        Task { await loadMonitor() }
+        startMonitorLoop()
         // role, plan and credits can change on the server (purchase, admin) — refresh every 15 minutes
         Task { [weak self] in
             while !Task.isCancelled {
@@ -265,6 +269,76 @@ final class AppModel: ObservableObject, Feedback {
     }
 
     func loadProjects() async { await projectStore.loadProjects() }
+
+    // MARK: - Monitoring (V11)
+
+    func loadMonitor() async {
+        monitor = try? await engine.call(["monitor", "status"], as: MonitorStatus.self)
+    }
+
+    /// One monitoring pass now (network probes only, never a project check).
+    func runMonitorOnce(quiet: Bool = false) {
+        guard !busy.contains("monitor") else { return }
+        busy.insert("monitor")
+        Task {
+            defer { busy.remove("monitor") }
+            let o = try? await engine.run(["monitor", "once"])
+            if !quiet {
+                if let r = try? o?.decode(MonitorRun.self) { flash(L("monitor.ran", r.checked)) } else { flash(o?.errorMessage ?? L("common.error"), error: true) }
+            }
+            await loadMonitor()
+            if screen == .overview { await loadOverview(network: false) }
+        }
+    }
+
+    /// The app's own timer: while the app is open, a pass every `intervalMin` minutes.
+    private func startMonitorLoop() {
+        Task { [weak self] in
+            while !Task.isCancelled {
+                let minutes = max(5, self?.monitor?.settings.intervalMin ?? 10)
+                try? await Task.sleep(nanoseconds: UInt64(minutes) * 60 * 1_000_000_000)
+                guard let self else { return }
+                // the launchd agent already covers this Mac; do not double the probes
+                if self.monitor?.agent.installed != true { self.runMonitorOnce(quiet: true) }
+            }
+        }
+    }
+
+    func setMonitorAgent(on: Bool) {
+        busy.insert("monitor-agent")
+        Task {
+            defer { busy.remove("monitor-agent") }
+            let o = try? await engine.run(on ? ["monitor", "agent", "install", "--yes"] : ["monitor", "agent", "remove"])
+            if o?.ok == true { flash(L(on ? "monitor.agentOn" : "monitor.agentOff")) } else { flash(o?.errorMessage ?? L("common.error"), error: true) }
+            await loadMonitor()
+        }
+    }
+
+    func setMonitorNotify(down: Bool? = nil, ssl: Bool? = nil, domain: Bool? = nil, recovered: Bool? = nil) {
+        guard var n = monitor?.settings.notify else { return }
+        if let down { n.down = down }
+        if let ssl { n.ssl = ssl }
+        if let domain { n.domain = domain }
+        if let recovered { n.recovered = recovered }
+        let json = "{\"notify\":{\"down\":\(n.down),\"ssl\":\(n.ssl),\"domain\":\(n.domain),\"recovered\":\(n.recovered)}}"
+        Task {
+            _ = try? await engine.run(["monitor", "settings", "--json", json])
+            await loadMonitor()
+        }
+    }
+
+    // MARK: - Clients (V11 portfolio)
+
+    func setClient(_ name: String) {
+        guard let key = selectedKey else { return }
+        Task {
+            let o = try? await engine.run(["project", "client", "--project", key, "--name", name])
+            if o?.ok == true { flash(L("client.saved")) } else { flash(o?.errorMessage ?? L("common.error"), error: true) }
+            await loadProjects()
+            await refreshStatus(quiet: true)
+            await loadOverview(network: false)
+        }
+    }
 
     /// Switches the app and engine language without a restart and reloads what the engine had already
     /// sent in the old language (statuses, Setup, Mission Control, Costs, Domains, history).
@@ -410,6 +484,15 @@ final class AppModel: ObservableObject, Feedback {
     }
 
     // MARK: - Runs
+
+    /// Release state (V11) lives in RunController; the views read it through the facade.
+    var release: ReleaseStatus? { runController.release }
+    var loadingRelease: Bool { runController.loadingRelease }
+    func loadRelease() async { await runController.loadRelease() }
+    func startRelease() { runController.startRelease() }
+    func promoteRelease(_ op: ReleaseOp) { runController.promoteRelease(op) }
+    func rollbackRelease(deployId: String?) { runController.rollbackRelease(deployId: deployId) }
+    func cancelRelease(_ op: ReleaseOp) async { await runController.cancelRelease(op) }
 
     func runCheck(force: Bool = false) { runController.runCheck(force: force) }
     func smartDeploy() { runController.smartDeploy() }

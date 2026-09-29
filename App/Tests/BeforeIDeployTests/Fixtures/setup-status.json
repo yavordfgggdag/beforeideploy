@@ -5,7 +5,7 @@
       "id": "node",
       "title": "Node.js",
       "ok": true,
-      "detail": "v20.20.2",
+      "detail": "v22.22.2",
       "action": null,
       "optional": false
     },
@@ -204,7 +204,7 @@
       "id": "claude-code",
       "title": "Claude Code",
       "ok": true,
-      "detail": "2.1.283 (Claude Code)",
+      "detail": "2.1.284 (Claude Code)",
       "action": null,
       "optional": true
     },

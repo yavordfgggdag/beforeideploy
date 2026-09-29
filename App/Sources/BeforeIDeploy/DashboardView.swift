@@ -41,9 +41,11 @@ struct DashboardView: View {
                 switch tab {
                 case .overview:
                     HeroCard(status: status)
+                    IssuesCard(status: status)
                     HealthGrid(status: status)
-                    if !status.fixes.filter({ $0.id != "netlify.link" }).isEmpty {
-                        FixesCard(fixes: status.fixes.filter { $0.id != "netlify.link" })
+                    // safe fixes no issue points at (e.g. "create a GitHub repository") keep their own card
+                    if !extraFixes.isEmpty {
+                        FixesCard(fixes: extraFixes)
                     }
                     HStack(alignment: .top, spacing: 14) {
                         MiniStat(title: L("dashboard.localTitle"), value: status.local.running ? Fmt.host(status.local.url) : L("dashboard.stopped"),
@@ -65,7 +67,11 @@ struct DashboardView: View {
                     } else {
                         GenericHostingCard(status: status)
                     }
+                    if status.hosting?.ready == true {
+                        DeploymentsCard(status: status)
+                    }
                     DomainProjectCard(status: status)
+                    BackupCard(backup: status.backup)
                 case .history:
                     HistoryStrip()
                 }
@@ -78,9 +84,14 @@ struct DashboardView: View {
         }
     }
 
+    var extraFixes: [FixItem] {
+        let referenced = Set((status.issues?.issues ?? []).compactMap { $0.fix?.type == "safe" ? $0.fix?.id : nil })
+        return status.fixes.filter { $0.id != "netlify.link" && !referenced.contains($0.id) }
+    }
+
     var badges: [ProjectTab: String] {
         var b: [ProjectTab: String] = [:]
-        let issues = (status.check?.counts?.fail ?? 0) + (status.check?.counts?.warn ?? 0)
+        let issues = status.issues?.counts.total ?? ((status.check?.counts?.fail ?? 0) + (status.check?.counts?.warn ?? 0))
         if issues > 0 { b[.overview] = "\(issues)" }
         if status.local.running { b[.local] = "●" }
         if let c = status.git.changedCount, c > 0 { b[.git] = "\(c)" }
@@ -335,7 +346,7 @@ struct HeroCard: View {
                         .bidButton(.secondary)
                 } else {
                     Button {
-                        model.sheet = .production
+                        model.sheet = .release
                     } label: {
                         Label(L("hosting.productionButton"), systemImage: "paperplane.fill")
                     }

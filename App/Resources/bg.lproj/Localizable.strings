@@ -96,6 +96,13 @@
 "ai.title" = "Оправи с AI";
 "ai.tokensCount" = "%@ токена";
 "ai.tokensUsed" = "%@ токена (собствен ключ)";
+"ai.undo" = "Върни AI поправката";
+"ai.undoSkipped" = "%d файла са редактирани след това и са запазени";
+"ai.undone" = "%d файла върнати";
+"ai.undone.one" = "%d файл върнат";
+"ai.undone.other" = "%d файла върнати";
+"ai.unverified" = "Повторната проверка не мина — поправката не реши %@";
+"ai.verified" = "Повторната проверка мина — поправката е проверена";
 "ai.viaProvider" = "%@ · %@";
 
 "aifix.chatgpt" = "Оправи в ChatGPT";
@@ -152,6 +159,11 @@
 "autocheck.nowReadyToast" = "%@: отново е готов";
 "autocheck.running" = "автоматична проверка…";
 
+"backup.honest" = "Before I Deploy не прави backup. Rollback на хостинга връща само файлове.";
+"backup.missing" = "Липсва за свързване:";
+"backup.notConnected" = "Не е свързано";
+"backup.title" = "Backup-и";
+
 "billing.choose" = "Избери";
 "billing.currentButton" = "Текущ план";
 "billing.currentPlan" = "Текущ план: %@";
@@ -197,6 +209,12 @@
 "billing.yearly" = "Годишно −20%";
 "billing.yearlySaving" = "%@ на месец — 2 месеца безплатно";
 
+"client.hint" = "На кой клиент е този сайт? Ползва се за филтри и отчети.";
+"client.placeholder" = "Име на клиента";
+"client.saved" = "Клиентът е записан";
+"client.set" = "Задай клиент…";
+"client.title" = "Клиент";
+
 "cloud.anonKeyPlaceholder" = "anon public key";
 "cloud.continueOffline" = "Продължи без акаунт засега";
 "cloud.copySchema" = "Копирай SQL схемата";
@@ -231,6 +249,7 @@
 "common.costs" = "Разходи & кредити";
 "common.creditsUnit" = "кредита";
 "common.dependencies" = "Зависимости";
+"common.details" = "Детайли";
 "common.domains" = "Домейни";
 "common.done" = "Готово";
 "common.error" = "Грешка";
@@ -370,6 +389,9 @@
 "firstSteps.title" = "Първи стъпки";
 
 "fix.apply" = "Приложи";
+"fix.unresolved" = "Още отворени: %@";
+"fix.unverified" = "Поправката е приложена, но повторната проверка още се проваля: %@";
+"fix.verified" = "Поправката е проверена: %@ отново минава";
 
 "git.addRemote" = "Добави remote";
 "git.changes" = "промени";
@@ -410,6 +432,48 @@
 "hosting.signInLower" = "вход";
 "hosting.staticSite" = "статичен";
 "hosting.whereTitle" = "Къде да се хоства?";
+
+"incident.kind.domain" = "изтичащ домейн";
+"incident.kind.down" = "паднал сайт";
+"incident.kind.ssl" = "SSL сертификат";
+
+"issue.confidence.confirmed" = "потвърдено от инструмента";
+"issue.confidence.heuristic" = "по шаблон, може да греши";
+"issue.confidence.likely" = "вероятно";
+"issue.evidence" = "Доказателство";
+"issue.fix.ai" = "Поправи с AI";
+"issue.fix.manual" = "Ръчна поправка";
+"issue.fix.safe" = "Прегледай поправката";
+"issue.fix.ui.commit" = "Запиши промените";
+"issue.fix.ui.hosting-chooser" = "Избери хостинг";
+"issue.fix.ui.netlify-setup" = "Свържи хостинг";
+"issue.fix.ui.setup" = "Отвори Настройка";
+"issue.fixRisk" = "Риск на поправката: %@";
+"issue.impact" = "Въздействие";
+"issue.kind.defect" = "потвърден дефект";
+"issue.kind.recommendation" = "препоръка";
+"issue.kind.signal" = "евристичен сигнал";
+"issue.openLog" = "Отвори лога";
+"issue.risk.high" = "висок";
+"issue.risk.low" = "нисък";
+"issue.risk.medium" = "среден";
+"issue.severity.blocker" = "Блокира";
+"issue.severity.high" = "Високо";
+"issue.severity.info" = "Инфо";
+"issue.severity.low" = "Ниско";
+"issue.severity.medium" = "Средно";
+"issue.showFile" = "Покажи файла";
+"issue.verify" = "Проверява се с повторно пускане на: %@";
+
+"issues.blocking" = "%d спират пускането";
+"issues.blocking.one" = "%d спира пускането";
+"issues.blocking.other" = "%d спират пускането";
+"issues.count" = "%d проблема";
+"issues.count.one" = "%d проблем";
+"issues.count.other" = "%d проблема";
+"issues.none" = "Последната проверка не откри проблеми";
+"issues.notChecked" = "Още не е проверено — пусни проверка, за да видиш проблемите";
+"issues.title" = "Проблеми";
 
 "language.beta" = "БЕТА";
 "language.betaHelp" = "Машинен превод, който още не е прегледан — някои текстове може да звучат неестествено.";
@@ -458,6 +522,35 @@
 
 "menubar.open" = "Отвори";
 "menubar.quit" = "Затвори Before I Deploy";
+
+"monitor.agentConfirmBody" = "launchd агент (bg.yavor.beforeideploy.monitor) ще пуска проверките на сайтовете на този Mac и при затворено приложение. Маха се, когато го изключиш или деинсталираш приложението.";
+"monitor.agentConfirmButton" = "Инсталирай";
+"monitor.agentConfirmTitle" = "Да инсталирам ли фоновия агент?";
+"monitor.agentOff" = "Фоновият агент е премахнат";
+"monitor.agentOn" = "Фоновият агент е инсталиран";
+"monitor.agentToggle" = "Фонов агент";
+"monitor.checkNow" = "Провери сега";
+"monitor.incidentOpen" = "отворен от %@ · видян %d пъти";
+"monitor.incidentResolved" = "%@ → решен %@";
+"monitor.lastRun" = "последно %@";
+"monitor.neverRan" = "не е пускано";
+"monitor.noIncidents" = "Няма отворени инциденти";
+"monitor.noServerSide" = "Още няма сървърно наблюдение: когато този Mac спи или е изключен, нищо не се проверява.";
+"monitor.notify.domain" = "изтичащ домейн";
+"monitor.notify.down" = "паднал сайт";
+"monitor.notify.recovered" = "възстановяване";
+"monitor.notify.ssl" = "SSL";
+"monitor.notifyLabel" = "Известявай при";
+"monitor.openIncidents" = "%d отворени инцидента";
+"monitor.openIncidents.one" = "%d отворен инцидент";
+"monitor.openIncidents.other" = "%d отворени инцидента";
+"monitor.ran" = "Проверени %d сайта";
+"monitor.recentIncidents" = "%d решени наскоро";
+"monitor.recentIncidents.one" = "%d решен наскоро";
+"monitor.recentIncidents.other" = "%d решени наскоро";
+"monitor.runsOnAgent" = "Върви на този Mac във фонов режим на всеки %d мин (launchd агент), и при затворено приложение.";
+"monitor.runsOnApp" = "Върви на този Mac, докато приложението е отворено, на всеки %d мин.";
+"monitor.title" = "Наблюдение";
 
 "nav.missionControl" = "Mission Control";
 
@@ -537,6 +630,15 @@
 "palette.setupDetail" = "Инструменти и акаунти";
 "palette.smartDetail" = "Проверка → preview";
 
+"portfolio.allClients" = "Всички клиенти";
+"portfolio.allProviders" = "Всеки хостинг";
+"portfolio.clear" = "Изчисти филтрите";
+"portfolio.needsAction" = "Иска действие";
+"portfolio.noClient" = "без клиент";
+"portfolio.noMatch" = "Няма сайтове по тези филтри";
+"portfolio.problems" = "Проблеми";
+"portfolio.search" = "Търси сайт, клиент или хост";
+
 "production.branch" = "Клон";
 "production.costDefault" = "~15 кредита (оценка)";
 "production.costEstimate" = "~%@ %@ (оценка)";
@@ -552,6 +654,65 @@
 "production.warnings.one" = "%@ предупреждение от последната проверка";
 "production.warnings.other" = "%@ предупреждения от последната проверка";
 "production.whatUploads" = "Какво се качва";
+
+"release.actor.app" = "приложението";
+"release.actor.cli" = "командния ред";
+"release.button" = "Пускане…";
+"release.byActor" = "потвърдено от %@ · %@";
+"release.cancel" = "Откажи това preview";
+"release.cap.preview" = "preview";
+"release.cap.production" = "production";
+"release.cap.publishArtifact" = "публикуване на провереното preview";
+"release.cap.rollback" = "rollback";
+"release.cap.status" = "статус";
+"release.capabilities" = "Този хостинг може";
+"release.confirmHint" = "Напиши DEPLOY, за да публикуваш точно това preview в production. Файловете на сайта се заменят; бази данни и външни услуги не се пипат.";
+"release.deploy.preview" = "preview";
+"release.deploy.production" = "production";
+"release.deployments" = "Deploy-и";
+"release.failure" = "Причина: %@";
+"release.lastOps" = "Последни пускания";
+"release.noDeploys" = "Още няма deploy-и";
+"release.openPreview" = "Отвори preview";
+"release.pagesFailed" = "%d страници не отговарят";
+"release.pagesOk" = "%d страници отговарят";
+"release.promote" = "Публикувай в production";
+"release.published" = "публикуван";
+"release.publishes" = "Публикува deploy %@";
+"release.rollback.reason.no_previous" = "няма по-ранен production deploy";
+"release.rollback.reason.unsupported" = "този хостинг не го поддържа";
+"release.rollbackAvailable" = "Rollback е наличен към deploy %@";
+"release.rollbackButton" = "Върни предишната версия";
+"release.rollbackHint" = "Напиши ROLLBACK, за да върнеш предишно публикуваните файлове на %@. Бази данни и външни услуги не се възстановяват.";
+"release.rollbackTitle" = "Върни предишната версия";
+"release.rollbackUnavailable" = "Rollback не е наличен: %@";
+"release.rolledBack" = "Предишната версия е върната и проверена";
+"release.smokeChecks" = "Проверки";
+"release.stage.check" = "Проверка";
+"release.stage.preview" = "Preview deploy";
+"release.stage.promote" = "Публикуване в production";
+"release.stage.smoke" = "Проверки на preview";
+"release.stage.verify" = "Проверка на production";
+"release.staleHint" = "Preview-то вече не отговаря на проекта. Започни ново пускане.";
+"release.start" = "Започни пускане (preview)";
+"release.startHint" = "Прави свежа проверка, качва preview и проверява дали отговаря. Production се публикува само след твоето потвърждение.";
+"release.state.awaiting_confirmation" = "Preview е готово — чака твоето потвърждение";
+"release.state.cancelled" = "Отказано";
+"release.state.created" = "Създадено";
+"release.state.failed" = "Неуспешно";
+"release.state.interrupted" = "Прекъснато — резултатът е неизвестен, провери хостинга";
+"release.state.preview_running" = "Подготвя preview…";
+"release.state.promoting" = "Публикува…";
+"release.state.stale" = "Остаряло — проектът е променен след preview-то";
+"release.state.succeeded" = "Публикувано и проверено";
+"release.state.verify_failed" = "Публикувано, но проверката на production не мина";
+"release.state.verifying" = "Проверява production…";
+"release.subtitle" = "%@ — preview, проверки, после production";
+"release.succeededToast" = "Публикувано и проверено на production";
+"release.title" = "Пускане";
+"release.verifyFailedToast" = "Публикувано, но проверката на production не мина — rollback е наличен";
+"release.viewLog" = "Лог";
+"release.willPublish" = "Какво ще стане: провереното preview става живият сайт, после живият сайт се проверява отново.";
 
 "remote.openNew" = "Отвори github.com/new";
 "remote.sheetTitle" = "GitHub remote";
@@ -647,6 +808,17 @@
 "sidebar.remove" = "Премахни от библиотеката";
 "sidebar.search" = "Търси или действай…";
 "sidebar.tagline" = "Контролен център за проекти";
+
+"signal.backup" = "Backup";
+"signal.deploy" = "Последен deploy";
+"signal.domain" = "Домейн";
+"signal.healthy" = "OK";
+"signal.problem" = "проблем";
+"signal.ssl" = "SSL";
+"signal.stale" = "остаряло";
+"signal.unchecked" = "непроверено";
+"signal.unsupported" = "няма данни";
+"signal.uptime" = "Достъпност";
 
 "spaceship.connect" = "Свържи Spaceship";
 "spaceship.connectIntro" = "Виждаш всички домейни, кога изтичат, DNS записите и свързваш домейн с Netlify с един бутон.";

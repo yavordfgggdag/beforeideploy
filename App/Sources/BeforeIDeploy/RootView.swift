@@ -107,7 +107,9 @@ struct RootView: View {
         .sheet(item: $model.sheet) { kind in
             Group {
                 switch kind {
-                case .production: ProductionSheet()
+                case .production, .release: ReleaseSheet()
+                case .rollback: RollbackSheet()
+                case .client: ClientSheet()
                 case .netlifySetup: NetlifySetupSheet()
                 case .commit: CommitSheet()
                 case .history: HistorySheet()

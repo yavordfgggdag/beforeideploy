@@ -1,0 +1,22 @@
+{
+  "provider": "codeguard",
+  "name": "CodeGuard",
+  "connected": false,
+  "state": "unsupported",
+  "reason": "not_configured",
+  "missing": [
+    "settings: backup.codeguard.apiBase (Admin → Global settings)",
+    "Keychain: account \"codeguard\" (bid backup connect, once the API token exists)",
+    "CodeGuard API documentation and a partner agreement — not in this repository"
+  ],
+  "project": "00465ed29464",
+  "lastBackupAt": null,
+  "capabilities": {
+    "status": false,
+    "list": false,
+    "request": false,
+    "restore": false
+  },
+  "source": null,
+  "at": "2026-09-29T07:27:23.086Z"
+}

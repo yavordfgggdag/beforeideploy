@@ -10,9 +10,9 @@
     "output": 1500,
     "model": "claude-sonnet-5"
   },
-  "duration": 0.014,
+  "duration": 0.015,
   "explanation": "The build fails because src/app.js has a syntax error: a + ; is missing the right operand.",
-  "patchFile": "/tmp/bid-test-034T6B/cache/e91cb06f8f54/ai-patch-build-1790538329806.json",
+  "patchFile": "/tmp/bid-test-EZ4j6h/cache/b0e1b006380f/ai-patch-build-1790666802346.json",
   "files": [
     {
       "path": "src/app.js",

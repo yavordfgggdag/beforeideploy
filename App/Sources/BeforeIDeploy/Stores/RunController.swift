@@ -28,9 +28,14 @@ final class RunController: ObservableObject {
 
     // MARK: - Runs
 
+    /// Release state (V11): the engine's operation records for the selected project.
+    @Published var release: ReleaseStatus?
+    @Published var loadingRelease = false
+
     func startRun(_ session: RunSession, args: [String],
                   successTitle: String,
-                  onSuccess: (@MainActor (EngineOutcome) -> Void)? = nil) {
+                  onSuccess: (@MainActor (EngineOutcome) -> Void)? = nil,
+                  onDone: (@MainActor () async -> Void)? = nil) {
         guard run == nil || run?.finished == true else {
             flash(L("run.busy"), error: true)
             return
@@ -53,7 +58,86 @@ final class RunController: ObservableObject {
             }
             await projects.refreshStatus(quiet: true)
             await projects.loadHistory()
+            await onDone?()
         }
+    }
+
+    // MARK: - Releases (V11)
+
+    func loadRelease() async {
+        guard let p = selected else {
+            release = nil
+            return
+        }
+        loadingRelease = true
+        defer { loadingRelease = false }
+        do {
+            let r = try await engine.call(["release", "status", "--project", p.key], as: ReleaseStatus.self)
+            if selected?.key == p.key { release = r }
+        } catch {
+            if release?.provider == nil { flash(error.localizedDescription, error: true) }
+        }
+    }
+
+    /// Check → preview deploy → smoke checks. Ends awaiting confirmation; nothing reaches production.
+    func startRelease() {
+        guard let p = selected else { return }
+        let s = RunSession(title: L("release.title"), subtitle: p.name, kind: .smart)
+        startRun(s, args: ["release", "preview", "--project", p.key], successTitle: L("release.state.awaiting_confirmation"), onSuccess: { [weak self] outcome in
+            if let op = try? outcome.decode(ReleaseOp.self), let url = op.preview?.url {
+                s.resultURL = url
+                s.outcomeMessage = url
+                if self?.autoOpenPreview == true, let u = URL(string: url) { NSWorkspace.shared.open(u) }
+            }
+        }, onDone: { [weak self] in
+            await self?.loadRelease()
+        })
+    }
+
+    /// Publishes the smoke-tested preview (typed DEPLOY was entered in the sheet) and verifies production.
+    func promoteRelease(_ op: ReleaseOp) {
+        guard let p = selected else { return }
+        let s = RunSession(title: L("release.stage.promote"), subtitle: p.name, kind: .production)
+        startRun(s, args: ["release", "promote", "--project", p.key, "--op", op.id, "--confirm", "DEPLOY"], successTitle: L("release.state.succeeded"), onSuccess: { [weak self] outcome in
+            guard let r = try? outcome.decode(ReleaseOp.self) else { return }
+            s.resultURL = r.production?.url
+            s.outcomeMessage = r.production?.url
+            if r.state == "verify_failed" {
+                s.success = false
+                s.outcomeTitle = L("release.state.verify_failed")
+                self?.flash(L("release.verifyFailedToast"), error: true)
+            } else {
+                self?.flash(L("release.succeededToast"))
+            }
+        }, onDone: { [weak self] in
+            await self?.loadRelease()
+        })
+    }
+
+    func rollbackRelease(deployId: String?) {
+        guard let p = selected else { return }
+        var args = ["release", "rollback", "--project", p.key, "--confirm", "ROLLBACK"]
+        if let deployId { args += ["--deploy", deployId] }
+        let s = RunSession(title: L("release.rollbackTitle"), subtitle: p.name, kind: .production)
+        startRun(s, args: args, successTitle: L("release.rolledBack"), onSuccess: { outcome in
+            if let r = try? outcome.decode(ReleaseOp.self) {
+                s.resultURL = r.production?.url
+                s.outcomeMessage = r.production?.url
+                if r.state == "verify_failed" {
+                    s.success = false
+                    s.outcomeTitle = L("release.state.verify_failed")
+                }
+            }
+        }, onDone: { [weak self] in
+            await self?.loadRelease()
+        })
+    }
+
+    func cancelRelease(_ op: ReleaseOp) async {
+        guard let p = selected else { return }
+        let o = try? await engine.run(["release", "cancel", "--project", p.key, "--op", op.id])
+        if o?.ok != true { flash(o?.errorMessage ?? L("common.error"), error: true) }
+        await loadRelease()
     }
 
     /// `force` ignores the incremental cache (lint/typecheck/build reused while nothing changed).
@@ -82,16 +166,12 @@ final class RunController: ObservableObject {
         }
     }
 
-    /// Draft only — reuses a fresh passing check, otherwise runs the full Smart flow.
+    /// Draft only — the engine reuses a fresh passing check (same fingerprint, < 30 min) or runs a new one.
     func draftPreview() {
         guard let p = selected else { return }
-        if let c = projects.status?.check, c.status != "blocked", let d = Fmt.date(c.at), Date().timeIntervalSince(d) < 25 * 60 {
-            let s = RunSession(title: L("run.draftPreview"), subtitle: p.name, kind: .draft)
-            startRun(s, args: ["deploy", "--project", p.key], successTitle: L("run.draftReady")) { [weak self] outcome in
-                self?.afterDeploy(outcome, session: s, prod: false)
-            }
-        } else {
-            smartDeploy()
+        let s = RunSession(title: L("run.draftPreview"), subtitle: p.name, kind: .draft)
+        startRun(s, args: ["deploy", "--project", p.key, "--recheck-if-stale"], successTitle: L("run.draftReady")) { [weak self] outcome in
+            self?.afterDeploy(outcome, session: s, prod: false)
         }
     }
 
@@ -228,7 +308,19 @@ final class RunController: ObservableObject {
     func applyFix(_ fix: FixItem) {
         guard let p = selected else { return }
         let s = RunSession(title: fix.title, subtitle: p.name, kind: .fix)
-        startRun(s, args: ["fix", "apply", fix.id, "--project", p.key, "--yes"], successTitle: L("common.done"))
+        // --recheck: the engine re-runs the checks and says whether the issues this fix targeted are gone
+        startRun(s, args: ["fix", "apply", fix.id, "--project", p.key, "--yes", "--recheck"], successTitle: L("common.done")) { outcome in
+            guard let r = try? outcome.decode(FixApplyResult.self), let rc = r.recheck else { return }
+            let steps = (rc.steps ?? []).joined(separator: ", ")
+            if rc.verified {
+                s.outcomeMessage = L("fix.verified", steps)
+            } else {
+                s.success = false
+                s.outcomeTitle = L("fix.unverified", steps)
+                let open = rc.unresolved ?? []
+                s.outcomeMessage = open.isEmpty ? nil : L("fix.unresolved", open.joined(separator: ", "))
+            }
+        }
     }
 
     // MARK: - Domains

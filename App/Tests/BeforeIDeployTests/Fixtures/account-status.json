@@ -11,9 +11,32 @@
   "locale": "en",
   "aiDisabled": false,
   "credits": {
-    "balance": 0
+    "balance": 0,
+    "monthlyGrant": null,
+    "renewsAt": null,
+    "endsAt": null
   },
-  "settings": {},
+  "settings": {
+    "plans": {
+      "flash": {
+        "tokens": 250000
+      },
+      "high": {
+        "tokens": 1000000
+      },
+      "knight": {
+        "tokens": 2500000
+      }
+    }
+  },
+  "helpUrl": null,
+  "links": {
+    "privacy": null,
+    "terms": null,
+    "refund": null,
+    "support": null,
+    "help": null
+  },
   "profileStale": false,
   "hasOwnKey": false,
   "features": {

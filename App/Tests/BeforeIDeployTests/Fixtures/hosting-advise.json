@@ -1,5 +1,5 @@
 {
-  "project": "d827ba419e36",
+  "project": "e8a9ed98c9ce",
   "framework": "next",
   "ssr": true,
   "functions": false,
@@ -11,14 +11,14 @@
       "compatible": true,
       "current": true,
       "installed": true,
-      "loggedIn": false,
+      "loggedIn": true,
       "linked": false,
       "free": "Free plan (credit system)",
       "note": "Production deploys spend credits — see “Costs”.",
       "pricing": "https://www.netlify.com/pricing/",
       "preview": true,
       "reasons": [],
-      "score": 85,
+      "score": 100,
       "recommended": true
     },
     {

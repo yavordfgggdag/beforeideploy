@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { EngineError, ev, sh, exists, runStream, logDir, which } from './util.mjs';
 import { detect } from './detect.mjs';
-import { addHistory } from './store.mjs';
+import { addHistory, getState } from './store.mjs';
 import { t, msg } from './i18n.mjs';
 
 const BG = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'h', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'sht', ъ: 'a', ь: 'y', ю: 'yu', я: 'ya' };
@@ -142,7 +142,7 @@ function ensureGitignore(dir) {
   return missing;
 }
 
-export async function applyFix(project, id, { yes = false } = {}) {
+export async function applyFix(project, id, { yes = false, recheck = false } = {}) {
   if (!yes) throw new EngineError(msg('fix.confirmRequired'), 'confirm_required', 2);
   const dir = project.path;
   const d = detect(dir);
@@ -222,5 +222,24 @@ export async function applyFix(project, id, { yes = false } = {}) {
   }
   ev.step('fix', { label: id, status: 'pass', summary });
   addHistory({ project: project.key, projectName: project.name, kind: 'fix', status: 'ok', message: `${id}: ${summary}` });
-  return { id, summary };
+  const out = { id, summary };
+  if (recheck) out.recheck = await verifyFix(project, id);
+  return out;
+}
+
+/**
+ * Re-runs the checks after a safe fix and compares the issues it targeted (V11): `verified` is true only
+ * when every issue this fix was meant to remove is gone. A run that still fails is reported, never hidden.
+ */
+async function verifyFix(project, id) {
+  const { runChecks } = await import('./checks.mjs');
+  const { deriveIssues, compareIssues, FIX_VERIFIES } = await import('./issues.mjs');
+  const before = deriveIssues(getState(project.key).check).issues;
+  const targets = new Set(before.filter((i) => i.fix?.type === 'safe' && i.fix.id === id).map((i) => i.id));
+  const check = await runChecks(project, { stopOnFail: false });
+  const after = deriveIssues(check).issues;
+  const cmp = compareIssues(before, after, targets);
+  const steps = FIX_VERIFIES[id] || [];
+  const stepsOk = steps.every((sid) => ['pass', 'warn', 'info'].includes(check.steps.find((s) => s.id === sid)?.status));
+  return { status: check.status, at: check.at, steps, verified: cmp.verified && stepsOk, resolved: cmp.resolved, unresolved: cmp.unresolved };
 }

@@ -1,0 +1,131 @@
+{
+  "project": "1b1d7b927872",
+  "issues": [
+    {
+      "id": "secrets.trackedEnv:.env",
+      "step": "secrets",
+      "rule": "trackedEnv",
+      "severity": "blocker",
+      "kind": "defect",
+      "confidence": "confirmed",
+      "title": ".env file is tracked by Git",
+      "impact": "Passwords and keys travel with every push and every deploy.",
+      "evidence": {
+        "file": ".env"
+      },
+      "fix": {
+        "type": "safe",
+        "id": "env.untrack",
+        "risk": "medium"
+      },
+      "verify": {
+        "steps": [
+          "secrets",
+          "git"
+        ]
+      },
+      "blocksRelease": true
+    },
+    {
+      "id": "secrets.unignoredEnv:.env",
+      "step": "secrets",
+      "rule": "unignoredEnv",
+      "severity": "high",
+      "kind": "recommendation",
+      "confidence": "confirmed",
+      "title": ".env file is not ignored",
+      "impact": "The next commit would add secrets to the repository.",
+      "evidence": {
+        "file": ".env"
+      },
+      "fix": {
+        "type": "safe",
+        "id": "gitignore.create",
+        "risk": "low"
+      },
+      "verify": {
+        "steps": [
+          "secrets"
+        ]
+      },
+      "blocksRelease": false
+    },
+    {
+      "id": "hosting.notLinked",
+      "step": "hosting",
+      "rule": "notLinked",
+      "severity": "medium",
+      "kind": "recommendation",
+      "confidence": "confirmed",
+      "title": "Site is not linked to a hosting site",
+      "impact": "The first deploy has nowhere to go.",
+      "evidence": {},
+      "fix": {
+        "type": "ui",
+        "id": "netlify-setup",
+        "risk": "low"
+      },
+      "verify": {
+        "steps": [
+          "hosting"
+        ]
+      },
+      "blocksRelease": false
+    },
+    {
+      "id": "typecheck.none",
+      "step": "typecheck",
+      "rule": "none",
+      "severity": "low",
+      "kind": "recommendation",
+      "confidence": "likely",
+      "title": "No typecheck configured",
+      "impact": "Type errors reach production unnoticed.",
+      "evidence": {},
+      "fix": {
+        "type": "manual",
+        "risk": "low"
+      },
+      "verify": {
+        "steps": [
+          "typecheck"
+        ]
+      },
+      "blocksRelease": false
+    },
+    {
+      "id": "lint.none",
+      "step": "lint",
+      "rule": "none",
+      "severity": "low",
+      "kind": "recommendation",
+      "confidence": "likely",
+      "title": "No lint configured",
+      "impact": "Common mistakes are not caught before a deploy.",
+      "evidence": {},
+      "fix": {
+        "type": "manual",
+        "risk": "low"
+      },
+      "verify": {
+        "steps": [
+          "lint"
+        ]
+      },
+      "blocksRelease": false
+    }
+  ],
+  "counts": {
+    "total": 5,
+    "blocker": 1,
+    "high": 1,
+    "medium": 1,
+    "low": 2,
+    "info": 0,
+    "defects": 1,
+    "recommendations": 4,
+    "signals": 0
+  },
+  "checkedAt": "2026-09-29T07:25:21.468Z",
+  "partial": false
+}

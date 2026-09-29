@@ -1,9 +1,9 @@
 {
   "project": {
-    "key": "3fa2eabd3b6d",
-    "path": "/tmp/bid-test-034T6B/vite-app",
+    "key": "cbff0525327f",
+    "path": "/tmp/bid-test-EZ4j6h/vite-app",
     "name": "vite-app",
-    "addedAt": "2026-09-27T19:44:03.164Z",
+    "addedAt": "2026-09-29T07:25:11.050Z",
     "framework": "vite",
     "packageManager": "npm",
     "publishDir": "dist",
@@ -11,14 +11,14 @@
     "netlify": {
       "siteName": "vite-app-demo"
     },
-    "lastOpened": "2026-09-27T19:44:03.164Z",
+    "lastOpened": "2026-09-29T07:25:11.051Z",
     "hosting": "netlify",
     "lastPort": 4180,
     "exists": true
   },
   "detect": {
     "exists": true,
-    "path": "/tmp/bid-test-034T6B/vite-app",
+    "path": "/tmp/bid-test-EZ4j6h/vite-app",
     "name": "vite-app",
     "framework": "vite",
     "ssr": false,
@@ -60,7 +60,7 @@
     "ahead": null,
     "behind": null,
     "lastCommit": {
-      "hash": "f8ccb7f",
+      "hash": "9dfc0ff",
       "subject": "touch build",
       "relative": "2 minutes ago"
     }
@@ -70,7 +70,7 @@
   },
   "check": {
     "status": "ready",
-    "at": "2026-09-27T19:45:43.229Z",
+    "at": "2026-09-29T07:27:01.635Z",
     "counts": {
       "pass": 7,
       "info": 0,
@@ -87,7 +87,7 @@
           "No origin remote"
         ],
         "fixes": [],
-        "duration": 0.01,
+        "duration": 0.012,
         "status": "pass",
         "summary": "Clean working tree"
       },
@@ -97,20 +97,21 @@
         "category": "Security",
         "details": [],
         "fixes": [],
-        "duration": 0.011,
+        "duration": 0.014,
         "status": "pass",
-        "summary": "No secrets found"
+        "summary": "No secrets found",
+        "findings": []
       },
       {
         "id": "deps",
         "label": "Dependencies",
         "category": "Dependencies",
         "details": [
-          "Node v20.20.2",
+          "Node v22.22.2",
           "Package manager: npm"
         ],
         "fixes": [],
-        "duration": 0.01,
+        "duration": 0.014,
         "status": "pass",
         "summary": "npm · node_modules is in order"
       },
@@ -122,7 +123,7 @@
         "fixes": [],
         "status": "pass",
         "summary": "Lint passed · cached",
-        "log": "/tmp/bid-test-034T6B/cache/3fa2eabd3b6d/lint.log",
+        "log": "/tmp/bid-test-EZ4j6h/cache/cbff0525327f/lint.log",
         "duration": 0,
         "cached": true
       },
@@ -134,7 +135,7 @@
         "fixes": [],
         "status": "pass",
         "summary": "Types are OK · cached",
-        "log": "/tmp/bid-test-034T6B/cache/3fa2eabd3b6d/typecheck.log",
+        "log": "/tmp/bid-test-EZ4j6h/cache/cbff0525327f/typecheck.log",
         "duration": 0,
         "cached": true
       },
@@ -148,7 +149,7 @@
         "fixes": [],
         "status": "pass",
         "summary": "Production build passed · cached",
-        "log": "/tmp/bid-test-034T6B/cache/3fa2eabd3b6d/build.log",
+        "log": "/tmp/bid-test-EZ4j6h/cache/cbff0525327f/build.log",
         "duration": 0,
         "cached": true
       },
@@ -158,36 +159,97 @@
         "category": "Hosting",
         "details": [
           "Site ID: site-123",
-          "CLI: npx netlify-cli"
+          "CLI: netlify"
         ],
         "fixes": [],
-        "duration": 0.016,
+        "duration": 0.013,
         "status": "pass",
         "summary": "Netlify is connected"
       }
     ],
-    "duration": 0.073,
+    "duration": 0.08,
     "cached": [
       "lint",
       "typecheck",
       "build"
-    ]
+    ],
+    "fingerprint": "d6b6b1ed695087262a99aab5c8ea5c3948c5f2fe",
+    "artifact": {
+      "hash": "e1bd13a2abda521eb6729a7664bd9cd910b176f0",
+      "dir": "dist",
+      "files": 1,
+      "bytes": 14
+    }
   },
   "lastDraft": null,
   "lastProd": null,
   "netlifyAuth": {
-    "loggedIn": false,
-    "email": null,
-    "cli": "npx netlify-cli"
+    "loggedIn": true,
+    "email": "ops@example.com",
+    "name": null,
+    "cli": "netlify"
   },
   "fixes": [],
+  "issues": {
+    "issues": [],
+    "counts": {
+      "total": 0,
+      "blocker": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0,
+      "info": 0,
+      "defects": 0,
+      "recommendations": 0,
+      "signals": 0
+    },
+    "checkedAt": "2026-09-29T07:27:01.635Z",
+    "partial": false
+  },
+  "backup": {
+    "provider": "codeguard",
+    "name": "CodeGuard",
+    "connected": false,
+    "state": "unsupported",
+    "reason": "not_configured",
+    "missing": [
+      "settings: backup.codeguard.apiBase (Admin → Global settings)",
+      "Keychain: account \"codeguard\" (bid backup connect, once the API token exists)",
+      "CodeGuard API documentation and a partner agreement — not in this repository"
+    ],
+    "project": "cbff0525327f",
+    "lastBackupAt": null,
+    "capabilities": {
+      "status": false,
+      "list": false,
+      "request": false,
+      "restore": false
+    },
+    "source": null,
+    "at": "2026-09-29T07:27:24.147Z"
+  },
+  "release": {
+    "currentOp": null,
+    "lastOp": null,
+    "capabilities": {
+      "provider": "netlify",
+      "preview": true,
+      "production": true,
+      "status": true,
+      "logs": true,
+      "domains": true,
+      "rollback": true,
+      "publishArtifact": true
+    },
+    "aiUndo": null
+  },
   "hosting": {
     "provider": "netlify",
     "name": "Netlify",
     "ready": true,
     "preview": true,
     "installed": true,
-    "loggedIn": false,
+    "loggedIn": true,
     "liveUrl": null
   }
 }

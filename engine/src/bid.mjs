@@ -6,6 +6,10 @@ import { parseArgs, ok, fail, ev, sh, which, EngineError, APP_DIR, CACHE_DIR, EN
 import { detect } from './detect.mjs';
 import { listProjects, upsertProject, removeProject, resolveProject, updateProject, getState, listHistory, findProject } from './store.mjs';
 import { runChecks } from './checks.mjs';
+import { deriveIssues } from './issues.mjs';
+import { monitorOnce, monitorStatus, listIncidents, setMonitorSettings, agentInstall, agentRemove } from './monitor.mjs';
+import { backupStatus } from './providers/backup/codeguard.mjs';
+import { releasePreview, releasePromote, releaseStatus, releaseRollback, releaseCancel, capabilities } from './release.mjs';
 import { localStart, localStop, localRestart, localStatus } from './local.mjs';
 import { gitStatus, gitFetch, gitCommit, gitPush, gitSetRemote } from './git.mjs';
 import { netlifyAuth, netlifyLogin, netlifyTeams, netlifySites, netlifyInfo, netlifyLink, netlifyCreate, netlifyDeploy } from './netlify.mjs';
@@ -20,7 +24,7 @@ import { adminCommand, ADMIN_ACTIONS } from './admin.mjs';
 import { billingCommand } from './billing.mjs';
 import { demoCreate } from './demo.mjs';
 import { features as featureGates } from './features.mjs';
-import { aiFix, aiApply, aiUsage } from './ai/index.mjs';
+import { aiFix, aiApply, aiUsage, aiUndo } from './ai/index.mjs';
 import { updateCheck, updateDownload } from './update.mjs';
 import { logEvent, logTail, redactArgv, createReport, LOG_FILE } from './log.mjs';
 import { hostingStatus, advise, setHosting, deployProject, hostingReady, providerStatus } from './hosting.mjs';
@@ -75,7 +79,15 @@ const HELP = `Before I Deploy engine ${VERSION}
   bid report                                      support report (zip) with redacted logs + doctor
   bid cloud config --url U --anon-key K | schema
   bid hosting status | advise --project P | set --project P --provider netlify|vercel|cloudflare|ghpages
-  bid deploy  --project P [--prod --confirm DEPLOY]        with the selected hosting
+  bid deploy  --project P [--prod --confirm DEPLOY] [--recheck-if-stale]   with the selected hosting
+  bid issues  --project P          prioritized issues from the last check (severity, evidence, fix, verification)
+  bid monitor once [--project P] | status | incidents [--limit N] | settings --json '{…}' | agent install --yes | agent remove
+  bid backup  status --project P   backup provider state (CodeGuard: not connected until an API exists)
+  bid project client --project K --name N       which client a site belongs to (portfolio filter)
+  bid release preview --project P [--force]     check → preview deploy → smoke checks → awaits confirmation
+  bid release promote --project P --op ID --confirm DEPLOY   publishes the smoke-tested preview, verifies production
+  bid release status  --project P [--op ID] | rollback --confirm ROLLBACK [--deploy ID] | cancel --op ID
+  bid fix apply ID --project P --yes [--recheck]   · bid ai apply … [--recheck] · bid ai undo --project P --yes
   bid doctor`;
 
 function statusSnapshot(project) {
@@ -92,6 +104,9 @@ function statusSnapshot(project) {
     lastProd: st.lastProd || null,
     netlifyAuth: netlifyAuth(),
     fixes: listFixes(project.path),
+    issues: deriveIssues(st.check, { gitInstalled: !!which('git'), hasGitignore: !!d.hasGitignore, hostingLoggedIn: providerStatus(p.hosting || 'netlify').loggedIn }),
+    backup: backupStatus(p),
+    release: { currentOp: st.release?.currentOp || null, lastOp: st.release?.lastOp || null, capabilities: capabilities(p.hosting || 'netlify'), aiUndo: st.aiUndo ? { at: st.aiUndo.at, step: st.aiUndo.step, files: st.aiUndo.applied } : null },
     hosting: (() => {
       const id = p.hosting || 'netlify';
       const st = providerStatus(id);
@@ -159,6 +174,12 @@ async function main() {
         case 'rename': {
           const p = proj();
           return ok(updateProject(p.key, { customName: flags.name, name: flags.name }));
+        }
+        case 'client': {
+          const p = proj();
+          if (flags.name === undefined || flags.name === true) throw new EngineError(msg('project.client.missing'), 'usage', 2);
+          const client = String(flags.name).trim().slice(0, 80) || null;
+          return ok(updateProject(p.key, { client }));
         }
         default:
           throw new EngineError(msg('cli.unknownCommand', { command: `project ${sub}` }), 'usage', 2);
@@ -258,7 +279,7 @@ async function main() {
     case 'fix': {
       const p = proj();
       if (sub === 'list') return ok(listFixes(p.path));
-      if (sub === 'apply') return ok(await applyFix(p, positional[1] || flags.id, { yes: !!flags.yes }));
+      if (sub === 'apply') return ok(await applyFix(p, positional[1] || flags.id, { yes: !!flags.yes, recheck: !!flags.recheck }));
       throw new EngineError(msg('cli.unknownCommand', { command: `fix ${sub}` }), 'usage', 2);
     }
 
@@ -270,7 +291,8 @@ async function main() {
       const p = proj();
       if (sub === 'fix') return ok(await aiFix(p, { step: flags.step, model: flags.model, deep: !!flags.deep, provider: flags.provider }));
       if (sub === 'explain') return ok(await aiFix(p, { step: flags.step, model: flags.model, provider: flags.provider, mode: 'explain' }));
-      if (sub === 'apply') return ok(await aiApply(p, { patchFile: flags['patch-file'], files: flags.files, yes: !!flags.yes, commit: !!flags.commit }));
+      if (sub === 'apply') return ok(await aiApply(p, { patchFile: flags['patch-file'], files: flags.files, yes: !!flags.yes, commit: !!flags.commit, recheck: !!flags.recheck }));
+      if (sub === 'undo') return ok(await aiUndo(p, { yes: !!flags.yes }));
       throw new EngineError(msg('cli.unknownCommand', { command: `ai ${sub}` }), 'usage', 2);
     }
 
@@ -372,11 +394,56 @@ async function main() {
       throw new EngineError(msg('cli.unknownCommand', { command: `hosting ${sub}` }), 'usage', 2);
     }
 
-    case 'deploy':
-      return ok(await deployProject(proj(), { prod: !!flags.prod, confirm: flags.confirm }));
+    case 'deploy': {
+      const p = proj();
+      try {
+        return ok(await deployProject(p, { prod: !!flags.prod, confirm: flags.confirm }));
+      } catch (e) {
+        // --recheck-if-stale: the app asks for a draft; when the check is old or the code changed, run a fresh
+        // check first instead of failing (the production guard is untouched: still confirm + fresh check)
+        if (!flags['recheck-if-stale'] || flags.prod || !['stale_check', 'needs_check'].includes(e.code)) throw e;
+        const check = await runChecks(p, { stopOnFail: true });
+        if (check.status === 'blocked') throw new EngineError(msg('smart.blocked'), 'blocked', 3);
+        return ok(await deployProject(p, { prod: false }));
+      }
+    }
 
     case 'overview':
       return ok(await overview({ network: !flags['no-network'] }));
+
+    case 'monitor': {
+      if (sub === 'once') return ok(await monitorOnce({ project: flags.project && flags.project !== true ? proj().key : null }));
+      if (!sub || sub === 'status') return ok(monitorStatus());
+      if (sub === 'incidents') return ok(listIncidents({ limit: Number(flags.limit) || 100, project: flags.project && flags.project !== true ? proj().key : null }));
+      if (sub === 'settings') return ok(setMonitorSettings(flags.json && flags.json !== true ? JSON.parse(flags.json) : {}));
+      if (sub === 'agent') {
+        if (positional[1] === 'install') return ok(agentInstall({ yes: !!flags.yes }));
+        if (positional[1] === 'remove') return ok(agentRemove());
+        return ok(monitorStatus().agent);
+      }
+      throw new EngineError(msg('cli.unknownCommand', { command: `monitor ${sub}` }), 'usage', 2);
+    }
+
+    case 'backup': {
+      if (!sub || sub === 'status') return ok(backupStatus(proj()));
+      throw new EngineError(msg('cli.unknownCommand', { command: `backup ${sub}` }), 'usage', 2);
+    }
+
+    case 'issues': {
+      const p = proj();
+      const st = getState(p.key);
+      return ok({ project: p.key, ...deriveIssues(st.check, { gitInstalled: !!which('git'), hasGitignore: !!detect(p.path).hasGitignore, hostingLoggedIn: providerStatus(p.hosting || 'netlify').loggedIn }) });
+    }
+
+    case 'release': {
+      const p = proj();
+      if (sub === 'preview') return ok(await releasePreview(p, { force: !!flags.force }));
+      if (sub === 'promote') return ok(await releasePromote(p, { op: flags.op, confirm: flags.confirm }));
+      if (!sub || sub === 'status') return ok(await releaseStatus(p, { op: flags.op && flags.op !== true ? flags.op : null }));
+      if (sub === 'rollback') return ok(await releaseRollback(p, { confirm: flags.confirm, deploy: flags.deploy }));
+      if (sub === 'cancel') return ok(releaseCancel(p, { op: flags.op }));
+      throw new EngineError(msg('cli.unknownCommand', { command: `release ${sub}` }), 'usage', 2);
+    }
 
     case 'history': {
       let key = null;

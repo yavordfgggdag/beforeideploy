@@ -1,6 +1,13 @@
 {
   "configured": true,
   "loggedIn": false,
+  "links": {
+    "privacy": null,
+    "terms": null,
+    "refund": null,
+    "support": null,
+    "help": null
+  },
   "providers": [
     "github"
   ]

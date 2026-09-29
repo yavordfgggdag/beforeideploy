@@ -10,6 +10,12 @@ BUNDLE_ID="bg.yavor.beforeideploy"
 osascript -e 'tell application "Before I Deploy" to quit' >/dev/null 2>&1 || true
 rm -rf "/Applications/Before I Deploy.app" "$HOME/Applications/Before I Deploy.app" 2>/dev/null
 rm -rf "$SUPPORT/engine" "$SUPPORT/launcher"
+# the monitoring agent (V11) — otherwise launchd would keep starting a deleted engine
+AGENT="$HOME/Library/LaunchAgents/$BUNDLE_ID.monitor.plist"
+if [[ -f "$AGENT" ]]; then
+  launchctl bootout "gui/$(id -u)" "$AGENT" >/dev/null 2>&1 || launchctl unload "$AGENT" >/dev/null 2>&1 || true
+  rm -f "$AGENT"
+fi
 
 if [[ "${1:-}" == "--all" ]]; then
   rm -rf "$SUPPORT" "$HOME/Library/Caches/BeforeIDeploy" "$HOME/Library/Caches/$BUNDLE_ID" "$HOME/Library/Logs/BeforeIDeploy"

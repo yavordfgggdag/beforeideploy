@@ -54,6 +54,10 @@ quota, 127 Node missing; everything else exits 1.
 | `no_build` | 1 | No build output in the publish folder. | Run the check (it builds), or check the framework's output folder. |
 | `unsupported` | 1 | The action is not possible for this project on this hosting (SSR on Cloudflare/GitHub Pages, draft on GitHub Pages…). | Pick a hosting from the advice card that supports the project. |
 | `deploy_failed` | 1 | The hosting CLI failed during deploy. | The log has the details; usually a build or auth problem. |
+| `release_in_progress` | 3 | Another release (or rollback) of this project is still running in another engine process. | Wait for it, or check Release status: a dead process is detected and its release marked interrupted. |
+| `release_not_ready` | 3 | `release promote`/`cancel` was called for a release that is not awaiting confirmation. | Run `release preview` again; a finished release cannot be promoted twice. |
+| `stale_release` | 3 | The source or the build output changed after the preview was smoke-tested, so it can no longer be promoted. | Run the preview again — production only ever publishes what was verified. |
+| `smoke_failed` | 1 | The preview deploy does not answer correctly (status, missing title, redirect off-site, timeout). | Open the smoke log in the release, fix the page, run the preview again. |
 | `netlify_failed` | 1 | The Netlify CLI or API returned an error. | Read the message; `netlify status` in Terminal helps. |
 | `local_failed` | 1 | Local Preview could not start (port, build, dev server). | The log shows the server output; stop other servers on the port. |
 | `no_server` | 1 | Local Preview is not running. | Start it (⌘L). |

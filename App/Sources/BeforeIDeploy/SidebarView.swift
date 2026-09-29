@@ -75,6 +75,8 @@ struct SidebarView: View {
                                 Button(L("sidebar.openInCursor")) { model.openIn(app: ["Cursor", "Visual Studio Code"], path: p.path) }
                                 Button(L("common.openInTerminal")) { model.openIn(app: ["Terminal"], path: p.path) }
                                 Divider()
+                                Button(L("client.set")) { Task { await model.select(p.key, show: false); model.sheet = .client } }
+                                Divider()
                                 Button(L("sidebar.remove")) { model.removeProject(p.key) }
                             }
                     }

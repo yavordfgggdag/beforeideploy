@@ -406,6 +406,35 @@ t('fix: env.untrack маха .env от индекса и го пази на ди
   assert(fs.readFileSync(path.join(trackedEnv, '.gitignore'), 'utf8').includes('.env'), 'not ignored');
 });
 
+t('issues: единен модел — .env в Git е blocker със safe fix, --recheck доказва поправката', () => {
+  const dir = mk('issues-env', { 'index.html': HTML, '.env': 'SECRET=1\n' });
+  bid('check', '--project', dir);
+  const i = bid('issues', '--project', dir);
+  assert(i.result.ok, i.result?.error);
+  fixture('issues', i.data);
+  const env = i.data.issues.find((x) => x.rule === 'trackedEnv');
+  assert(env && env.severity === 'blocker' && env.kind === 'defect' && env.confidence === 'confirmed' && env.blocksRelease === true, JSON.stringify(env));
+  assert(env.evidence.file === '.env' && env.fix.type === 'safe' && env.fix.id === 'env.untrack' && env.fix.risk === 'medium', JSON.stringify(env));
+  assert(JSON.stringify(env.verify.steps) === '["secrets","git"]' && env.title && env.impact, 'verify + texts');
+  assert(i.data.issues[0].severity === 'blocker', 'blockers come first');
+  assert(i.data.counts.blocker >= 1 && i.data.counts.total === i.data.issues.length, JSON.stringify(i.data.counts));
+  const fix = bid('fix', 'apply', 'env.untrack', '--project', dir, '--yes', '--recheck');
+  assert(fix.result.ok, fix.result?.error);
+  assert(fix.data.recheck && fix.data.recheck.verified === true && fix.data.recheck.unresolved.length === 0, JSON.stringify(fix.data.recheck));
+  assert(fix.data.recheck.resolved.includes(env.id), 'the targeted issue is reported resolved');
+  const after = bid('issues', '--project', dir);
+  assert(!after.data.issues.some((x) => x.rule === 'trackedEnv'), 'issue gone after the verified fix');
+  const st = bid('status', '--project', dir);
+  assert(st.data.issues && Array.isArray(st.data.issues.issues) && st.data.release && st.data.release.capabilities.rollback === true, 'status carries issues + release capabilities');
+});
+
+t('issues: неуспешен build е blocker с AI поправка и доказателство от лога', () => {
+  const i = bid('issues', '--project', failingBuild);
+  const b = i.data.issues.find((x) => x.id === 'build.failed');
+  assert(b && b.severity === 'blocker' && b.fix.type === 'ai' && b.fix.id === 'build' && b.evidence.log, JSON.stringify(b));
+  assert(typeof b.evidence.detail === 'string' && b.evidence.detail.length > 0, 'log tail as evidence');
+});
+
 t('secrets: ключ в кода → fail с маскирана стойност', () => {
   const r = bid('check', '--project', secretInCode);
   const s = stepOf(r.data, 'secrets');
@@ -646,7 +675,7 @@ http.createServer((q,r)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{
  if(q.url.startsWith('/domains'))return r.end(JSON.stringify({items:[{name:'moyat-sait.bg',autoRenew:false,expirationDate:soon,lifecycleStatus:'registered'}],total:1}));
  if(q.url.startsWith('/dns/records/')&&q.method==='GET')return r.end(JSON.stringify({items:dns,total:dns.length}));
  r.statusCode=204;r.end();});}).listen(port,'127.0.0.1',()=>console.log('up'));`);
-const mockPort = 4799;
+const mockPort = 4300 + (process.pid % 400); // unique per run: a stale server from an interrupted run must not answer
 const mock = spawnChild(process.execPath, [MOCK, String(mockPort)], { stdio: 'ignore', detached: true });
 ENV.BID_SPACESHIP_BASE = `http://127.0.0.1:${mockPort}`;
 spawnSync('sleep', ['0.6']);
@@ -700,8 +729,12 @@ const ANSWER='The build fails because src/app.js has a syntax error: a + ; is mi
 const ANSWER_PARTS=[ANSWER.slice(0,40),ANSWER.slice(40,120),ANSWER.slice(120)];
 const balance=(id)=>ledger.filter(l=>l.user_id===id).reduce((a,l)=>a+l.delta,0);
 http.createServer((q,r)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{r.setHeader('content-type','application/json');
+ if(q.url.startsWith('/deploys/')||q.url==='/'||/^\\/[a-z0-9-]+\\.html/.test(q.url)){let st={};try{st=JSON.parse(require('fs').readFileSync(process.argv[3],'utf8'));}catch{}const m=/^\\/deploys\\/([^/]+)(\\/.*)?$/.exec(q.url);let dir=null,rel=q.url;
+  if(m){dir=(st.deploys||{})[m[1]]&&st.deploys[m[1]].dir;rel=m[2]||'/';}else{if(st.breakLive){r.statusCode=500;return r.end('broken');}dir=st.published&&st.deploys[st.published]&&st.deploys[st.published].dir;}
+  if(!dir){r.statusCode=404;return r.end('no deploy');}const rp=rel.split('?')[0];const f=require('path').join(dir,rp==='/'?'index.html':rp);try{const body=require('fs').readFileSync(f);r.setHeader('content-type','text/html');return r.end(body);}catch(e){r.statusCode=404;return r.end('404');}}
+ if(q.url.startsWith('/mon')){let st={};try{st=JSON.parse(require('fs').readFileSync(process.argv[3],'utf8'));}catch{}if(st.monDown){r.statusCode=503;return r.end('down');}r.setHeader('content-type','text/html');return r.end('<title>m</title>ok');}
  if(q.url==='/releases/latest.json'){const dmg='dmg-bytes';const sha=require('crypto').createHash('sha256').update(dmg).digest('hex');
-   return r.end(JSON.stringify({version:'10.1.0',minVersion:'9.0.0',url:'http://127.0.0.1:'+port+'/releases/bid.dmg',sha256:sha,notes:{en:'Fixes',bg:'Поправки'},publishedAt:'2026-10-01T00:00:00Z',beta:{version:'10.2.0-beta.1',url:'http://127.0.0.1:'+port+'/releases/bid.dmg',sha256:sha}}));}
+   return r.end(JSON.stringify({version:'11.1.0',minVersion:'9.0.0',url:'http://127.0.0.1:'+port+'/releases/bid.dmg',sha256:sha,notes:{en:'Fixes',bg:'Поправки'},publishedAt:'2026-10-01T00:00:00Z',beta:{version:'11.2.0-beta.1',url:'http://127.0.0.1:'+port+'/releases/bid.dmg',sha256:sha}}));}
  if(q.url==='/releases/insecure.json'){return r.end(JSON.stringify({version:'99.0.0',url:'http://example.com/x.dmg',sha256:'a'.repeat(64)}));}
  if(q.url==='/releases/nosha.json'){return r.end(JSON.stringify({version:'99.0.0',url:'https://example.com/x.dmg'}));}
  if(q.url==='/releases/bid.dmg'){r.setHeader('content-type','application/octet-stream');return r.end('dmg-bytes');}
@@ -766,8 +799,9 @@ http.createServer((q,r)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{r.setHea
  if(q.url==='/auth/v1/logout'){r.statusCode=204;return r.end();}
  if(q.url.startsWith('/rest/v1/bid_projects')){if(!/^Bearer AT-/.test(q.headers.authorization||'')){r.statusCode=401;return r.end('{}');}rows=JSON.parse(b);r.statusCode=201;return r.end();}
  r.statusCode=404;r.end('{}');});}).listen(port,'127.0.0.1');`);
-const sbPort = 4798;
-const sb = spawnChild(process.execPath, [SB, String(sbPort)], { stdio: 'ignore', detached: true });
+const sbPort = 4800 + (process.pid % 400);
+const FAKE_NETLIFY = path.join(TMP, 'fake-netlify.json');
+const sb = spawnChild(process.execPath, [SB, String(sbPort), FAKE_NETLIFY], { stdio: 'ignore', detached: true });
 ENV.BID_ANTHROPIC_API = `http://127.0.0.1:${sbPort}`;
 spawnSync('sleep', ['0.6']);
 
@@ -881,6 +915,148 @@ t('check: lint и typecheck вървят паралелно, редът на с�
 const aiFixture = { 'package.json': JSON.stringify({ name: 'ai-app', scripts: { build: 'node src/app.js' } }), 'node_modules/.keep': '', 'src/app.js': 'const a = 1;\nconst b = 2;\nconst c = a + ;\nconsole.log(c);\n' };
 const aiApp = mk('ai-app', aiFixture);
 
+// ---- Releases (V11): fake Netlify CLI on PATH + the sandbox server serves the "deployed" files
+const FAKE_BIN = path.join(TMP, 'bin');
+fs.mkdirSync(FAKE_BIN, { recursive: true });
+fs.writeFileSync(path.join(FAKE_BIN, 'netlify'), `#!/usr/bin/env node
+const fs=require('fs'),path=require('path');const STATE=process.env.FAKE_NETLIFY_STATE;const PORT=process.env.FAKE_NETLIFY_PORT;const live='http://127.0.0.1:'+PORT+'/';
+const load=()=>{try{return JSON.parse(fs.readFileSync(STATE,'utf8'));}catch{return {deploys:{},published:null,n:0};}};const save=(s)=>fs.writeFileSync(STATE,JSON.stringify(s));
+const a=process.argv.slice(2);const out=(o)=>process.stdout.write(JSON.stringify(o)+'\\n');
+if(a[0]==='deploy'){const s=load();s.n++;const id='dep-'+s.n;const di=a.indexOf('--dir');const dir=di>-1?path.resolve(a[di+1]):process.cwd();const prod=a.includes('--prod');
+ s.deploys[id]={id,dir,state:'ready',context:prod?'production':'deploy-preview',created_at:new Date(Date.now()+s.n).toISOString(),deploy_ssl_url:'http://127.0.0.1:'+PORT+'/deploys/'+id+'/'};
+ if(prod){s.published=id;s.deploys[id].published_at=new Date().toISOString();}save(s);out({deploy_id:id,deploy_url:s.deploys[id].deploy_ssl_url,url:live,site_name:'rel-site',logs:'http://logs/'+id});process.exit(0);}
+if(a[0]==='api'){const s=load();const data=JSON.parse(a[a.indexOf('--data')+1]||'{}');const m=a[1];
+ if(m==='getSite'){out({id:data.site_id,name:'rel-site',ssl_url:live,url:live,published_deploy:s.published?{id:s.published,published_at:s.deploys[s.published].published_at}:null});process.exit(0);}
+ if(m==='listSiteDeploys'){out(Object.values(s.deploys).sort((x,y)=>y.created_at.localeCompare(x.created_at)));process.exit(0);}
+ if(m==='getDeploy'){const d=s.deploys[data.deploy_id];if(!d){process.stderr.write('not found');process.exit(1);}out(d);process.exit(0);}
+ if(m==='restoreSiteDeploy'){if(s.failRestore){process.stderr.write('boom');process.exit(1);}const d=s.deploys[data.deploy_id];if(!d)process.exit(1);s.published=d.id;d.published_at=new Date().toISOString();d.context='production';save(s);out(d);process.exit(0);}
+ if(m==='listAccountsForUser'){out([{slug:'team',name:'Team'}]);process.exit(0);}}
+if(a[0]==='sites:list'){out([{id:'site-rel',name:'rel-site',ssl_url:live}]);process.exit(0);}
+process.stderr.write('fake netlify: unsupported '+a.join(' '));process.exit(1);
+`);
+fs.chmodSync(path.join(FAKE_BIN, 'netlify'), 0o755);
+fs.mkdirSync(path.join(ENV.HOME, '.config', 'netlify'), { recursive: true });
+fs.writeFileSync(path.join(ENV.HOME, '.config', 'netlify', 'config.json'), JSON.stringify({ userId: 'u1', users: { u1: { auth: { token: 'fake' }, email: 'ops@example.com' } } }));
+ENV.PATH = `${FAKE_BIN}:${ENV.PATH}`;
+ENV.FAKE_NETLIFY_STATE = FAKE_NETLIFY;
+ENV.FAKE_NETLIFY_PORT = String(sbPort);
+const fakeState = () => JSON.parse(fs.readFileSync(FAKE_NETLIFY, 'utf8'));
+const relSite = mk('rel-site', { 'index.html': HTML, '.netlify/state.json': '{"siteId":"site-rel"}', '.gitignore': '.netlify/\n.env\n' });
+let relOp = null;
+
+t('release: preview → smoke → чака потвърждение; op записът пази етапи, време и snapshot', () => {
+  const r = bid('release', 'preview', '--project', relSite);
+  assert(r.result.ok, r.result?.error + ' ' + r.stderr.slice(-300));
+  fixture('release-preview', r.data);
+  relOp = r.data;
+  assert(relOp.state === 'awaiting_confirmation' && relOp.readyFor === 'production', relOp.state);
+  assert(relOp.stages.map((s) => `${s.id}:${s.status}`).join() === 'check:pass,preview:pass,smoke:pass', JSON.stringify(relOp.stages));
+  assert(relOp.stages.every((s) => s.startedAt && s.finishedAt), 'timestamps');
+  assert(relOp.preview.url.includes('/deploys/dep-1/') && relOp.preview.deployId === 'dep-1', JSON.stringify(relOp.preview));
+  assert(relOp.smoke.ok && relOp.smoke.checks[0].status === 200 && fs.existsSync(relOp.smoke.log), 'smoke');
+  assert(relOp.snapshot.fingerprint && relOp.snapshot.artifact.hash && relOp.snapshot.artifact.files === 1, JSON.stringify(relOp.snapshot));
+  assert(fakeState().published === null, 'a preview must not publish production');
+  assert(r.events.some((e) => e.type === 'step' && e.id === 'release.smoke' && e.status === 'pass'), 'release step events');
+});
+
+t('release: промяна след preview → promote отказва (stale_release), нищо не е публикувано', () => {
+  fs.writeFileSync(path.join(relSite, 'index.html'), HTML + '<!-- v2 -->');
+  const r = bid('release', 'promote', '--project', relSite, '--op', relOp.id, '--confirm', 'DEPLOY');
+  assert(r.code === 3 && r.result.code === 'stale_release' && ['release.artifactChanged', 'release.sourceChanged'].includes(r.result.key), JSON.stringify(r.result));
+  assert(fakeState().published === null, 'must not publish');
+  const st = bid('release', 'status', '--project', relSite);
+  assert(st.data.ops.find((o) => o.id === relOp.id).state === 'stale', 'op marked stale');
+});
+
+t('release: без DEPLOY няма production; с DEPLOY публикува точно провереното preview и го проверява', () => {
+  relOp = bid('release', 'preview', '--project', relSite).data;
+  assert(relOp.preview.deployId === 'dep-2', relOp.preview.deployId);
+  const no = bid('release', 'promote', '--project', relSite, '--op', relOp.id);
+  assert(no.code === 2 && no.result.code === 'confirm_required', 'confirm required');
+  const r = bid('release', 'promote', '--project', relSite, '--op', relOp.id, '--confirm', 'DEPLOY');
+  assert(r.result.ok, r.result?.error + ' ' + r.stderr.slice(-300));
+  fixture('release-promote', r.data);
+  assert(r.data.state === 'succeeded', JSON.stringify(r.data.stages));
+  assert(r.data.production.deployId === 'dep-2' && fakeState().published === 'dep-2', 'the smoke-tested deploy is the published one');
+  assert(fakeState().n === 2, 'no new deploy was created for production');
+  assert(r.data.verify.ok && r.data.confirmation.typed === 'DEPLOY' && r.data.actor === 'cli', 'verify + confirmation recorded');
+  assert(r.data.rollback.available === false && r.data.rollback.reason === 'no_previous', JSON.stringify(r.data.rollback));
+  const st = bid('status', '--project', relSite);
+  assert(st.data.lastProd.deployId === 'dep-2' && st.data.release.lastOp === relOp.id && st.data.release.currentOp === null, JSON.stringify(st.data.release));
+  const h = bid('history', '--project', relSite);
+  assert(h.data.some((e) => e.kind === 'release' && e.status === 'ok'), 'history has the release');
+});
+
+t('release: повторен promote не публикува втори път', () => {
+  const r = bid('release', 'promote', '--project', relSite, '--op', relOp.id, '--confirm', 'DEPLOY');
+  assert(r.result.ok && r.data.state === 'succeeded' && fakeState().n === 2 && fakeState().published === 'dep-2', 'idempotent');
+});
+
+t('release: втори release прави rollback наличен; провалена проверка на production не е успех', () => {
+  fs.writeFileSync(path.join(relSite, 'index.html'), HTML + '<!-- v3 -->');
+  const op3 = bid('release', 'preview', '--project', relSite).data;
+  const r3 = bid('release', 'promote', '--project', relSite, '--op', op3.id, '--confirm', 'DEPLOY');
+  assert(r3.data.state === 'succeeded' && r3.data.rollback.available === true && r3.data.rollback.deployId === 'dep-2', JSON.stringify(r3.data.rollback));
+  // production breaks right after publishing
+  fs.writeFileSync(path.join(relSite, 'index.html'), HTML + '<!-- v4 -->');
+  const op4 = bid('release', 'preview', '--project', relSite).data;
+  fs.writeFileSync(FAKE_NETLIFY, JSON.stringify({ ...fakeState(), breakLive: true }));
+  const r4 = bid('release', 'promote', '--project', relSite, '--op', op4.id, '--confirm', 'DEPLOY');
+  assert(r4.result.ok && r4.data.state === 'verify_failed', r4.result?.error || r4.data.state);
+  assert(r4.data.verify.ok === false && r4.data.stages.find((s) => s.id === 'verify').status === 'fail', 'verify stage failed');
+  assert(r4.data.rollback.available === true && r4.data.rollback.deployId === 'dep-3' && r4.data.rollback.restores === 'files', JSON.stringify(r4.data.rollback));
+  assert(bid('history', '--project', relSite).data.some((e) => e.kind === 'release' && e.status === 'fail'), 'failed verification is recorded as a failure');
+  fs.writeFileSync(FAKE_NETLIFY, JSON.stringify({ ...fakeState(), breakLive: false }));
+});
+
+t('release: rollback иска ROLLBACK, връща предишния production deploy и го проверява', () => {
+  const no = bid('release', 'rollback', '--project', relSite);
+  assert(no.code === 2 && no.result.code === 'confirm_required', 'confirm');
+  const r = bid('release', 'rollback', '--project', relSite, '--confirm', 'ROLLBACK');
+  assert(r.result.ok && r.data.kind === 'rollback' && r.data.state === 'succeeded', JSON.stringify(r.result));
+  assert(fakeState().published === 'dep-3' && r.data.production.deployId === 'dep-3', 'previous production restored');
+  const st = bid('release', 'status', '--project', relSite);
+  fixture('release-status', st.data);
+  assert(st.data.capabilities.rollback === true && st.data.site.publishedDeployId === 'dep-3' && st.data.deploys.length >= 4, 'status');
+  assert(st.data.rollback.available === true && st.data.rollback.deployId === 'dep-4', 'next rollback target is the deploy published before');
+  assert(st.data.current === null, 'nothing awaiting confirmation');
+});
+
+t('release: заключване — паралелен release се отказва; умрял процес се отчита като прекъснат', () => {
+  const lock = path.join(ENV.BID_APP_DIR, 'ops', `${bid('status', '--project', relSite).data.project.key}.lock`);
+  fs.writeFileSync(lock, JSON.stringify({ op: 'release-other', pid: process.pid, at: new Date().toISOString() }));
+  const r = bid('release', 'preview', '--project', relSite);
+  assert(r.code === 3 && r.result.code === 'release_in_progress', JSON.stringify(r.result));
+  const key = bid('status', '--project', relSite).data.project.key;
+  const ghost = { id: 'release-ghost', kind: 'release', project: key, projectName: 'rel-site', provider: 'netlify', actor: 'cli', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), state: 'promoting', stages: [], log: [], preview: { deployId: 'dep-none' } };
+  fs.writeFileSync(path.join(ENV.BID_APP_DIR, 'ops', 'release-ghost.json'), JSON.stringify(ghost));
+  fs.writeFileSync(lock, JSON.stringify({ op: 'release-ghost', pid: 999999, at: new Date().toISOString() }));
+  const st = bid('release', 'status', '--project', relSite);
+  assert(st.data.ops.find((o) => o.id === 'release-ghost').state === 'interrupted', 'ghost op must not stay "promoting"');
+  const again = bid('release', 'preview', '--project', relSite);
+  assert(again.result.ok && again.data.state === 'awaiting_confirmation', 'a dead lock does not block: ' + again.result?.error);
+  const cancel = bid('release', 'cancel', '--project', relSite, '--op', again.data.id);
+  assert(cancel.result.ok && cancel.data.state === 'cancelled', 'cancel');
+  assert(bid('release', 'promote', '--project', relSite, '--op', again.data.id, '--confirm', 'DEPLOY').result.code === 'release_not_ready', 'cancelled cannot be promoted');
+});
+
+t('release: грешка от хостинга при публикуване → failed, не succeeded', () => {
+  fs.writeFileSync(path.join(relSite, 'index.html'), HTML + '<!-- v5 -->');
+  const op = bid('release', 'preview', '--project', relSite).data;
+  fs.writeFileSync(FAKE_NETLIFY, JSON.stringify({ ...fakeState(), failRestore: true }));
+  const r = bid('release', 'promote', '--project', relSite, '--op', op.id, '--confirm', 'DEPLOY');
+  assert(!r.result.ok && r.result.code === 'netlify_failed', JSON.stringify(r.result));
+  assert(bid('release', 'status', '--project', relSite).data.ops.find((o) => o.id === op.id).state === 'failed', 'op failed');
+  fs.writeFileSync(FAKE_NETLIFY, JSON.stringify({ ...fakeState(), failRestore: false }));
+});
+
+t('deploy --recheck-if-stale: остаряла проверка се подновява вместо да се откаже', () => {
+  fs.writeFileSync(path.join(relSite, 'index.html'), HTML + '<!-- v6 -->');
+  const r = bid('deploy', '--project', relSite, '--recheck-if-stale');
+  assert(r.result.ok && r.data.url.includes('/deploys/'), JSON.stringify(r.result));
+  assert(r.events.some((e) => e.type === 'step' && e.id === 'build'), 'a fresh check ran first');
+});
+
 t('ai: собствен ключ → patch, прилагане само с --yes, файл извън проекта се отхвърля', () => {
   const chk = bid('check', '--project', aiApp);
   assert(chk.data.status === 'blocked', 'fixture must fail to build');
@@ -915,6 +1091,22 @@ t('ai: собствен ключ → patch, прилагане само с --yes
   const explain = bid('ai', 'explain', '--project', aiApp, '--step', 'build');
   assert(explain.result.ok && explain.data.mode === 'explain' && explain.data.explanation.length > 10, JSON.stringify(explain.result));
   bid('account', 'keys', 'delete', '--provider', 'anthropic');
+});
+
+t('ai: undo връща файловете от последната поправка; повторното прилагане с --recheck доказва резултата', () => {
+  const undo = bid('ai', 'undo', '--project', aiApp, '--yes');
+  assert(undo.result.ok && undo.data.restored.join() === 'src/app.js', JSON.stringify(undo.result));
+  assert(fs.readFileSync(path.join(aiApp, 'src/app.js'), 'utf8').includes('a + ;'), 'file not restored');
+  assert(bid('ai', 'undo', '--project', aiApp, '--yes').result.code === 'nothing', 'a second undo has nothing to do');
+  const st = bid('status', '--project', aiApp);
+  const patchFile = fs.readdirSync(path.dirname(st.data.check.steps.find((x) => x.id === 'build').log)).filter((f) => /^ai-patch-/.test(f)).map((f) => path.join(path.dirname(st.data.check.steps.find((x) => x.id === 'build').log), f))[0];
+  assert(patchFile, 'the patch file is still there (one file was skipped)');
+  const again = bid('ai', 'apply', '--project', aiApp, '--patch-file', patchFile, '--files', 'src/app.js', '--yes', '--recheck');
+  assert(again.result.ok && again.data.recheck && again.data.recheck.verified === true && again.data.recheck.stepStatus !== 'fail', JSON.stringify(again.data.recheck));
+  // a file edited after the apply is left alone by undo
+  fs.appendFileSync(path.join(aiApp, 'src/app.js'), '\n// user edit\n');
+  const u2 = bid('ai', 'undo', '--project', aiApp, '--yes');
+  assert(u2.data.restored.length === 0 && u2.data.skipped[0].reason === 'changed_since', JSON.stringify(u2.data));
 });
 
 t('ai: cloud път — план, кредити, quota_exhausted → exit 8, free → недостъпно', () => {
@@ -998,12 +1190,12 @@ t('update: latest.json → налична версия, beta канал, изт�
   assert(none.data.configured === false && none.data.available === false, JSON.stringify(none.data));
   const r = bidEnv({ BID_UPDATE_URL: feed }, 'update', 'check');
   fixture('update-check', r.data);
-  assert(r.result.ok && r.data.current === '10.0.0-dev' && r.data.latest === '10.1.0' && r.data.available === true && r.data.mandatory === false, JSON.stringify(r.data));
+  assert(r.result.ok && r.data.current === fs.readFileSync(path.join(ROOT, 'engine', 'VERSION'), 'utf8').trim() && r.data.latest === '11.1.0' && r.data.available === true && r.data.mandatory === false, JSON.stringify(r.data));
   assert(r.data.notes.bg === 'Поправки', 'notes');
   const cached = bidEnv({ BID_UPDATE_URL: feed }, 'update', 'check');
   assert(cached.data.fromCache === true, 'second check should use the 6h cache');
   const beta = bidEnv({ BID_UPDATE_URL: feed }, 'update', 'check', '--channel', 'beta');
-  assert(beta.data.latest === '10.2.0-beta.1' && beta.data.available === true, JSON.stringify(beta.data));
+  assert(beta.data.latest === '11.2.0-beta.1' && beta.data.available === true, JSON.stringify(beta.data));
   const dl = bidEnv({ BID_UPDATE_URL: feed }, 'update', 'download');
   assert(dl.result.ok && fs.existsSync(dl.data.path) && fs.readFileSync(dl.data.path, 'utf8') === 'dmg-bytes', JSON.stringify(dl.result));
   assert(dl.data.path.startsWith(path.join(ENV.HOME, 'Downloads')), 'must land in ~/Downloads');
@@ -1011,9 +1203,9 @@ t('update: latest.json → налична версия, beta канал, изт�
     const x = bidEnv({ BID_UPDATE_URL: `http://127.0.0.1:${sbPort}/releases/${bad}.json` }, 'update', 'download');
     assert(x.result.key === 'update.insecure', bad + ': ' + JSON.stringify(x.result));
   }
-  // the app's own version decides (audit B5): an app already on 10.1.0 is up to date
-  const same = bidEnv({ BID_UPDATE_URL: feed }, 'update', 'check', '--current', '10.1.0', '--force');
-  assert(same.data.current === '10.1.0' && same.data.available === false, JSON.stringify(same.data));
+  // the app's own version decides (audit B5): an app already on 11.1.0 is up to date
+  const same = bidEnv({ BID_UPDATE_URL: feed }, 'update', 'check', '--current', '11.1.0', '--force');
+  assert(same.data.current === '11.1.0' && same.data.available === false, JSON.stringify(same.data));
 });
 
 t('logs & report: engine.log пази командите с маскирани пароли; докладът е без secrets', () => {
@@ -1028,7 +1220,7 @@ t('logs & report: engine.log пази командите с маскирани �
   assert(rep.result.ok && fs.existsSync(rep.data.path) && rep.data.files.includes('engine-log.ndjson') && rep.data.files.includes('doctor.json'), JSON.stringify(rep.result));
   const bundle = fs.readdirSync(rep.data.dir).map((f) => fs.readFileSync(path.join(rep.data.dir, f), 'utf8')).join('\n');
   assert(!bundle.includes('supersecret') && !bundle.includes('sk-ant-good-key-123') && !bundle.includes('yavor@example.com'), 'report leaks secrets or emails');
-  assert(JSON.parse(fs.readFileSync(path.join(rep.data.dir, 'doctor.json'), 'utf8')).version === '10.0.0-dev', 'doctor version');
+  assert(JSON.parse(fs.readFileSync(path.join(rep.data.dir, 'doctor.json'), 'utf8')).version === fs.readFileSync(path.join(ROOT, 'engine', 'VERSION'), 'utf8').trim(), 'doctor version');
 });
 
 t('акаунт: експорт на данните и изтриване с --confirm DELETE', () => {
@@ -1179,6 +1371,95 @@ ta('local: dev mode използва dev script', async () => {
   assert(stop.data.stopped, 'dev not stopped');
   await new Promise((r) => setTimeout(r, 400));
   assert((await httpGet(s.data.url)).status === 0, 'dev server child still alive (process group kill failed)');
+});
+
+ta('monitor: потвърждава проблем след 2 неуспеха, обединява, отчита възстановяване; агентът иска --yes', async () => {
+  const url = `http://127.0.0.1:${sbPort}/mon/`;
+  const setDown = (down) => fs.writeFileSync(FAKE_NETLIFY, JSON.stringify({ ...fakeState(), monDown: down }));
+  const site = mk('monitored-site', { 'index.html': HTML });
+  bid('project', 'add', '--path', site);
+  const key = bid('status', '--project', site).data.project.key;
+  const lib = path.join(ENV.BID_APP_DIR, 'projects.json');
+  const j = JSON.parse(fs.readFileSync(lib, 'utf8'));
+  j.projects.find((p) => p.key === key).liveUrl = url;
+  fs.writeFileSync(lib, JSON.stringify(j));
+  const settings = bid('monitor', 'settings', '--json', '{"intervalMin":5,"timeoutMs":1500,"notify":{"down":true}}');
+  assert(settings.data.intervalMin === 5 && settings.data.notify.down === true && settings.data.notify.ssl === true, JSON.stringify(settings.data));
+  assert(bid('monitor', 'settings', '--json', '{"intervalMin":1}').result.code === 'usage', 'interval below 5 min refused');
+  setDown(false);
+  const ok1 = bid('monitor', 'once', '--project', site);
+  assert(ok1.result.ok && ok1.data.samples[0].uptime.state === 'healthy' && ok1.data.events.length === 0, JSON.stringify(ok1.data));
+  setDown(true);
+  const f1 = bid('monitor', 'once', '--project', site);
+  assert(f1.data.samples[0].uptime.state === 'problem' && f1.data.samples[0].failures === 1 && f1.data.events.length === 0, 'first failure is not an incident yet: ' + JSON.stringify(f1.data.samples[0]));
+  assert(!f1.events.some((e) => e.type === 'notify'), 'no notification on a single blip');
+  assert(f1.data.samples[0].uptime.attempts === 2, 'one bounded retry');
+  const f2 = bid('monitor', 'once', '--project', site);
+  assert(f2.data.events.some((e) => e.kind === 'down' && e.type === 'new'), 'second failure opens the incident: ' + JSON.stringify(f2.data.events));
+  assert(f2.events.some((e) => e.type === 'notify'), 'notification on a confirmed problem');
+  const f3 = bid('monitor', 'once', '--project', site);
+  assert(f3.data.events.some((e) => e.kind === 'down' && e.type === 'ongoing') && !f3.events.some((e) => e.type === 'notify'), 'ongoing, no repeated notification');
+  const st = bid('monitor', 'status');
+  fixture('monitor-status', st.data);
+  assert(st.data.runsOn === 'mac' && st.data.serverSide === false && st.data.openIncidents.length === 1 && st.data.openIncidents[0].count === 2, JSON.stringify(st.data.openIncidents));
+  const ov = bid('overview', '--no-network');
+  const card = ov.data.cards.find((c) => c.key === key);
+  assert(card.signals.uptime.state === 'problem' && card.signals.uptime.source === 'monitor' && card.openIncidents === 1 && card.nextAction.id === 'investigate', JSON.stringify(card.signals) + JSON.stringify(card.nextAction));
+  setDown(false);
+  const r = bid('monitor', 'once', '--project', site);
+  assert(r.data.events.some((e) => e.kind === 'down' && e.type === 'recovered'), 'recovery event');
+  const inc = bid('monitor', 'incidents');
+  assert(inc.data.length === 1 && inc.data[0].status === 'resolved' && inc.data[0].resolvedAt, JSON.stringify(inc.data));
+  assert(bid('monitor', 'agent', 'install').result.code === 'confirm_required', 'agent needs --yes');
+  if (process.platform !== 'darwin') assert(bid('monitor', 'agent', 'install', '--yes').result.code === 'unsupported', 'agent is macOS only');
+});
+
+ta('portfolio: клиент, сигнали с източник и време, „непроверено“ никога не е зелено, backup е честно несвързан', async () => {
+  const site = mk('client-site', { 'index.html': HTML });
+  bid('project', 'add', '--path', site);
+  const c = bid('project', 'client', '--project', site, '--name', '  Bakery Ltd ');
+  assert(c.result.ok && c.data.client === 'Bakery Ltd', JSON.stringify(c.result));
+  assert(bid('project', 'client', '--project', site).result.code === 'usage', '--name required');
+  const ov = bid('overview', '--no-network');
+  fixture('overview', ov.data);
+  const card = ov.data.cards.find((c) => c.name === 'client-site');
+  assert(card.client === 'Bakery Ltd', 'client on the card');
+  assert(card.signals.check.state === 'unchecked' && card.signals.uptime.state === 'unsupported' && card.signals.backup.state === 'unsupported', JSON.stringify(card.signals));
+  assert(card.nextAction.id === 'check', JSON.stringify(card.nextAction));
+  for (const s of Object.values(card.signals)) assert(['healthy', 'problem', 'unchecked', 'stale', 'unsupported'].includes(s.state), 'state vocabulary');
+  bid('check', '--project', site);
+  const ov2 = bid('overview', '--no-network');
+  const card2 = ov2.data.cards.find((c) => c.name === 'client-site');
+  assert(card2.signals.check.state === 'healthy' && card2.signals.check.source === 'check' && card2.signals.check.at, JSON.stringify(card2.signals.check));
+  assert(card2.nextAction.id === 'connect-hosting', JSON.stringify(card2.nextAction));
+  const b = bid('backup', 'status', '--project', site);
+  fixture('backup-status', b.data);
+  assert(b.data.connected === false && b.data.state === 'unsupported' && b.data.missing.length >= 2 && b.data.lastBackupAt === null, JSON.stringify(b.data));
+  const st = bid('status', '--project', site);
+  assert(st.data.backup && st.data.backup.connected === false, 'status carries the backup boundary');
+});
+
+ta('postdeploy: smoke checks — sitemap страници, 404 проваля, redirect извън сайта се отказва, timeout', async () => {
+  const { smokeTest } = await import(path.join(ROOT, 'engine', 'src', 'postdeploy.mjs'));
+  const srv = http.createServer((q, r) => {
+    if (q.url === '/') return r.end('<!doctype html><title>Site</title>ok');
+    if (q.url === '/sitemap.xml') return r.end(`<urlset><url><loc>http://127.0.0.1:${srv.address().port}/about</loc></url><url><loc>http://127.0.0.1:${srv.address().port}/missing</loc></url><url><loc>http://evil.example/x</loc></url></urlset>`);
+    if (q.url === '/about') return r.end('<title>About</title>');
+    if (q.url === '/off') { r.statusCode = 302; r.setHeader('location', 'http://evil.example/'); return r.end(); }
+    if (q.url === '/slow') return setTimeout(() => r.end('late'), 3000);
+    r.statusCode = 404; r.end('nope');
+  });
+  await new Promise((res) => srv.listen(0, '127.0.0.1', res));
+  const base = `http://127.0.0.1:${srv.address().port}/`;
+  const r = await smokeTest(base);
+  assert(r.ok === false && r.checks.length === 3, JSON.stringify(r.checks));
+  assert(r.checks[0].ok && r.checks.find((c) => c.url.endsWith('/about')).ok && r.checks.find((c) => c.url.endsWith('/missing')).reason === 'http 404', JSON.stringify(r.checks));
+  assert(!r.checks.some((c) => c.url.includes('evil')), 'foreign sitemap entries are ignored');
+  const off = await smokeTest(base, { paths: ['/off'], useSitemap: false });
+  assert(off.checks[1].reason === 'redirect_offsite', JSON.stringify(off.checks[1]));
+  const slow = await smokeTest(base, { paths: ['/slow'], useSitemap: false, timeoutMs: 500 });
+  assert(slow.checks[1].reason === 'timeout', JSON.stringify(slow.checks[1]));
+  srv.close();
 });
 
 ta('status: пълен snapshot за dashboard-а', async () => {

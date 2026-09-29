@@ -112,6 +112,11 @@ struct AIFixBar: View {
 
 struct MissionControlView: View {
     @EnvironmentObject var model: AppModel
+    @Local private var query = ""
+    @Local private var client = ""
+    @Local private var provider = ""
+    @Local private var onlyAction = false
+    @Local private var onlyProblems = false
 
     var body: some View {
         ScrollView {
@@ -161,14 +166,25 @@ struct MissionControlView: View {
                         .card()
                     }
 
+                    MonitorCard()
+
                     if o.cards.isEmpty {
                         WelcomeView().frame(maxWidth: .infinity)
                     } else {
-                        SectionLabel(text: L("common.projects"), icon: "square.stack.fill")
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 300), spacing: 14, alignment: .top)], spacing: 14) {
-                            ForEach(o.cards) { c in
-                                ProjectOverviewCard(card: c)
-                                    .onTapGesture { Task { await model.select(c.key) } }
+                        filterBar(o)
+                        let shown = filtered(o.cards)
+                        if shown.isEmpty {
+                            VStack(spacing: 8) {
+                                EmptyLine(icon: "line.3.horizontal.decrease.circle", text: L("portfolio.noMatch"))
+                                Button(L("portfolio.clear")) { query = ""; client = ""; provider = ""; onlyAction = false; onlyProblems = false }.bidButton(.secondary, compact: true)
+                            }
+                            .frame(maxWidth: .infinity).padding(.vertical, 20)
+                        } else {
+                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 320), spacing: 14, alignment: .top)], spacing: 14) {
+                                ForEach(shown) { c in
+                                    ProjectOverviewCard(card: c)
+                                        .onTapGesture { Task { await model.select(c.key) } }
+                                }
                             }
                         }
                     }
@@ -183,11 +199,58 @@ struct MissionControlView: View {
             .frame(maxWidth: 1180)
             .frame(maxWidth: .infinity)
         }
+        .task { await model.loadMonitor() }
     }
 
     var subtitle: String {
         guard let o = model.overview else { return L("overview.title") }
         return L("overview.updated", Fmt.relative(o.at))
+    }
+
+    private func filterBar(_ o: Overview) -> some View {
+        let clients = Array(Set(o.cards.compactMap { $0.client }.filter { !$0.isEmpty })).sorted()
+        let providers = Array(Set(o.cards.compactMap { $0.hosting })).sorted()
+        return HStack(spacing: 10) {
+            SectionLabel(text: L("common.projects"), icon: "square.stack.fill")
+            Spacer()
+            HStack(spacing: 6) {
+                Image(systemName: "magnifyingglass").foregroundColor(Theme.tertiary)
+                TextField(L("portfolio.search"), text: $query).textFieldStyle(.plain).font(.system(size: 12.5)).frame(width: 200)
+            }
+            .padding(.horizontal, 8).padding(.vertical, 5)
+            .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.panel))
+            if !clients.isEmpty {
+                Picker("", selection: $client) {
+                    Text(L("portfolio.allClients")).tag("")
+                    ForEach(clients, id: \.self) { Text($0).tag($0) }
+                }
+                .labelsHidden().frame(width: 150)
+            }
+            if providers.count > 1 {
+                Picker("", selection: $provider) {
+                    Text(L("portfolio.allProviders")).tag("")
+                    ForEach(providers, id: \.self) { Text($0).tag($0) }
+                }
+                .labelsHidden().frame(width: 130)
+            }
+            Toggle(L("portfolio.needsAction"), isOn: $onlyAction).toggleStyle(.checkbox).font(.system(size: 12))
+            Toggle(L("portfolio.problems"), isOn: $onlyProblems).toggleStyle(.checkbox).font(.system(size: 12))
+        }
+    }
+
+    private func filtered(_ cards: [OverviewCard]) -> [OverviewCard] {
+        let q = query.trimmingCharacters(in: .whitespaces).lowercased()
+        return cards.filter { c in
+            if !client.isEmpty, c.client != client { return false }
+            if !provider.isEmpty, c.hosting != provider { return false }
+            if onlyAction, (c.nextAction?.id ?? "none") == "none" { return false }
+            if onlyProblems, !(c.status == "blocked" || (c.signals?.values.contains { $0.state == "problem" } ?? false)) { return false }
+            if !q.isEmpty {
+                let hay = [c.name, c.client ?? "", c.liveUrl.map(Fmt.host) ?? "", c.framework ?? ""].joined(separator: " ").lowercased()
+                if !hay.contains(q) { return false }
+            }
+            return true
+        }
     }
 }
 
@@ -229,8 +292,8 @@ struct ProjectOverviewCard: View {
                 ProjectAvatar(name: card.name, size: 32)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(card.name).font(.system(size: 14.5, weight: .bold)).foregroundColor(Theme.text).lineLimit(1)
-                    Text([card.framework, card.branch].compactMap { $0 }.joined(separator: " · "))
-                        .font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                    Text([card.client ?? L("portfolio.noClient"), card.framework, card.branch].compactMap { $0 }.joined(separator: " · "))
+                        .font(.system(size: 11)).foregroundColor(Theme.tertiary).lineLimit(1)
                 }
                 Spacer()
                 Text(statusText)
@@ -269,6 +332,21 @@ struct ProjectOverviewCard: View {
                 if !card.failing.isEmpty {
                     Text(L("overview.failing", card.failing.joined(separator: ", ")))
                         .font(.system(size: 11.5, weight: .medium)).foregroundColor(Theme.blocked)
+                }
+                if let sig = card.signals {
+                    HStack(spacing: 6) {
+                        SignalPill(name: L("signal.deploy"), signal: sig["deploy"], icon: "paperplane")
+                        SignalPill(name: L("signal.uptime"), signal: sig["uptime"], icon: "dot.radiowaves.left.and.right")
+                        SignalPill(name: L("signal.ssl"), signal: sig["ssl"], icon: "lock.fill")
+                        SignalPill(name: L("signal.domain"), signal: sig["domain"], icon: "globe")
+                        SignalPill(name: L("signal.backup"), signal: sig["backup"], icon: "externaldrive")
+                    }
+                }
+                if let next = card.nextAction, next.id != "none" {
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.right.circle.fill").foregroundColor(Theme.accent)
+                        Text(next.label).font(.system(size: 11.5, weight: .semibold)).foregroundColor(Theme.text)
+                    }
                 }
             }
         }

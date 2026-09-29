@@ -1,6 +1,6 @@
 {
   "status": "ready",
-  "at": "2026-09-27T19:44:07.020Z",
+  "at": "2026-09-29T07:25:14.865Z",
   "counts": {
     "pass": 6,
     "info": 1,
@@ -17,7 +17,7 @@
         "No origin remote"
       ],
       "fixes": [],
-      "duration": 0.009,
+      "duration": 0.012,
       "status": "pass",
       "summary": "Clean working tree"
     },
@@ -27,20 +27,21 @@
       "category": "Security",
       "details": [],
       "fixes": [],
-      "duration": 0.012,
+      "duration": 0.014,
       "status": "pass",
-      "summary": "No secrets found"
+      "summary": "No secrets found",
+      "findings": []
     },
     {
       "id": "deps",
       "label": "Dependencies",
       "category": "Dependencies",
       "details": [
-        "Node v20.20.2",
+        "Node v22.22.2",
         "Package manager: npm"
       ],
       "fixes": [],
-      "duration": 0.009,
+      "duration": 0.016,
       "status": "pass",
       "summary": "npm · node_modules is in order"
     },
@@ -50,10 +51,10 @@
       "category": "Code Quality",
       "details": [],
       "fixes": [],
-      "duration": 0.313,
+      "duration": 0.186,
       "status": "pass",
       "summary": "Lint passed",
-      "log": "/tmp/bid-test-034T6B/cache/3fa2eabd3b6d/lint.log"
+      "log": "/tmp/bid-test-EZ4j6h/cache/cbff0525327f/lint.log"
     },
     {
       "id": "typecheck",
@@ -61,10 +62,10 @@
       "category": "Code Quality",
       "details": [],
       "fixes": [],
-      "duration": 0.354,
+      "duration": 0.204,
       "status": "pass",
       "summary": "Types are OK",
-      "log": "/tmp/bid-test-034T6B/cache/3fa2eabd3b6d/typecheck.log"
+      "log": "/tmp/bid-test-EZ4j6h/cache/cbff0525327f/typecheck.log"
     },
     {
       "id": "build",
@@ -74,10 +75,10 @@
         "Output: dist"
       ],
       "fixes": [],
-      "duration": 0.277,
+      "duration": 0.238,
       "status": "pass",
       "summary": "Production build passed",
-      "log": "/tmp/bid-test-034T6B/cache/3fa2eabd3b6d/build.log"
+      "log": "/tmp/bid-test-EZ4j6h/cache/cbff0525327f/build.log"
     },
     {
       "id": "hosting",
@@ -87,11 +88,18 @@
       "fixes": [
         "netlify.link"
       ],
-      "duration": 0.016,
+      "duration": 0.019,
       "status": "info",
       "summary": "Netlify is not connected"
     }
   ],
-  "duration": 1.02,
-  "cached": []
+  "duration": 0.548,
+  "cached": [],
+  "fingerprint": "8c4bb14bb5ee6bba50fb04167c120a93672d42bf",
+  "artifact": {
+    "hash": "e1bd13a2abda521eb6729a7664bd9cd910b176f0",
+    "dir": "dist",
+    "files": 1,
+    "bytes": 14
+  }
 }

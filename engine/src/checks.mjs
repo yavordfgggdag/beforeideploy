@@ -159,6 +159,8 @@ async function stepSecrets(ctx) {
   const { dir, d } = ctx;
   const details = [];
   const fixes = [];
+  // structured findings for the issues model (V11): the app never parses the details text
+  const structured = [];
   let status = 'pass';
 
   if (d.git.isRepo) {
@@ -168,6 +170,7 @@ async function stepSecrets(ctx) {
     if (tracked.length) {
       status = 'fail';
       details.push(...tracked.map((f) => t('check.secrets.tracked', { file: f })));
+      structured.push(...tracked.map((f) => ({ type: 'tracked-env', file: f })));
       fixes.push('env.untrack');
     }
   }
@@ -183,6 +186,7 @@ async function stepSecrets(ctx) {
     if (unignored.length) {
       if (status !== 'fail') status = 'warn';
       details.push(...unignored.map((f) => t('check.secrets.notIgnored', { file: f })));
+      structured.push(...unignored.map((f) => ({ type: 'unignored-env', file: f })));
       fixes.push(d.hasGitignore ? 'gitignore.env' : 'gitignore.create');
     }
   }
@@ -191,6 +195,7 @@ async function stepSecrets(ctx) {
   if (findings.length) {
     status = 'fail';
     details.push(...findings.map((f) => `${f.file}:${f.line} — ${f.kind} (${f.sample})`));
+    structured.push(...findings.map((f) => ({ type: 'secret', ...f })));
   }
 
   const summary =
@@ -201,7 +206,7 @@ async function stepSecrets(ctx) {
         : status === 'fail'
           ? t('check.secrets.envTracked')
           : t('check.secrets.envNotIgnored');
-  return { status, summary, details, fixes };
+  return { status, summary, details, fixes, findings: structured };
 }
 
 async function stepDeps(ctx) {
@@ -325,6 +330,49 @@ function statSig(dir, rel) {
   }
 }
 
+/**
+ * Identity of the build output that would be published (V11): content hash of every file under publishDir.
+ * A production release must publish exactly what was checked — this hash proves it. Null when there is no
+ * static output (SSR sites are built by the host from the source fingerprint).
+ */
+export function artifactHash(dir, publishDir) {
+  if (!publishDir) return null;
+  const root = path.resolve(dir, publishDir);
+  if (!exists(path.join(root, 'index.html'))) return null;
+  const h = crypto.createHash('sha1');
+  let files = 0;
+  let bytes = 0;
+  const walk = (rel) => {
+    let entries = [];
+    try {
+      entries = fs.readdirSync(path.join(root, rel), { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name));
+    } catch {
+      return;
+    }
+    for (const e of entries) {
+      if (files > 20000) return;
+      // what a publish sends: no dotfiles (stagePublicCopy skips them too), no dependencies
+      if ((e.name.startsWith('.') && e.name !== '.well-known') || e.name === 'node_modules') continue;
+      const r = rel ? `${rel}/${e.name}` : e.name;
+      if (e.isDirectory()) {
+        walk(r);
+      } else if (e.isFile()) {
+        const abs = path.join(root, r);
+        const st = fs.statSync(abs);
+        files++;
+        bytes += st.size;
+        h.update(r).update('\0');
+        // small files by content, large ones by size + mtime (a 300 MB video is not re-read on every check)
+        if (st.size <= 8 * 1024 * 1024) h.update(fs.readFileSync(abs));
+        else h.update(`${st.size}:${Math.round(st.mtimeMs)}`);
+        h.update('\0');
+      }
+    }
+  };
+  walk('');
+  return { hash: h.digest('hex'), dir: publishDir, files, bytes };
+}
+
 /** Identity of the source tree (HEAD + working-tree diff + untracked files), lockfiles, project config and Node. */
 export function fingerprint(dir, d) {
   const parts = [];
@@ -419,7 +467,8 @@ export async function runChecks(project, { stopOnFail = false, skip = [], force 
 
   const { status, counts } = overallStatus(results);
   // the fingerprint lets a deploy see whether the code changed after this check (audit E7)
-  const check = { status, at: nowISO(), counts, steps: results, duration: (Date.now() - started) / 1000, cached: results.filter((r) => r.cached).map((r) => r.id), fingerprint: fp };
+  const artifact = !ctx.d.ssr && ctx.d.publishReady ? artifactHash(dir, ctx.d.publishDir) : null;
+  const check = { status, at: nowISO(), counts, steps: results, duration: (Date.now() - started) / 1000, cached: results.filter((r) => r.cached).map((r) => r.id), fingerprint: fp, artifact };
   setState(project.key, { check, stepCache });
   updateProject(project.key, { framework: ctx.d.framework, packageManager: ctx.d.packageManager, publishDir: ctx.d.publishDir });
   addHistory({

@@ -30,6 +30,13 @@
     }
   },
   "helpUrl": null,
+  "links": {
+    "privacy": null,
+    "terms": null,
+    "refund": null,
+    "support": null,
+    "help": null
+  },
   "profileStale": false,
   "hasOwnKey": false,
   "features": {
