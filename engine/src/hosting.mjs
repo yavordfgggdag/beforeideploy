@@ -1,7 +1,7 @@
 // Hosting adapters — Netlify, Vercel, Cloudflare Pages, GitHub Pages behind one interface.
 import fs from 'node:fs';
 import path from 'node:path';
-import { HOME, CACHE_DIR, EngineError, ev, sh, which, runStream, logDir, readJSON, exists, nowISO } from './util.mjs';
+import { HOME, CACHE_DIR, EngineError, ev, sh, which, runStream, logDir, readJSON, exists, nowISO, publishIncludes } from './util.mjs';
 import { detect } from './detect.mjs';
 import { getState, setState, updateProject, addHistory, findProject } from './store.mjs';
 import { netlifyAuth, netlifyDeploy, deployGuard } from './netlify.mjs';
@@ -249,18 +249,17 @@ export function stagePublicCopy(projectDir, publishDir) {
   if (publishDir && publishDir !== '.' && publishDir !== './') return publishDir;
   const out = path.join(CACHE_DIR, 'publish', path.basename(projectDir).replace(/[^\w.-]/g, '_'));
   fs.rmSync(out, { recursive: true, force: true });
-  const skip = new Set(['node_modules', 'package.json', 'package-lock.json', 'pnpm-lock.yaml', 'yarn.lock', 'bun.lockb', 'bid.config.json']);
-  const copy = (from, to) => {
+  const copy = (from, to, root) => {
     fs.mkdirSync(to, { recursive: true });
     for (const e of fs.readdirSync(from, { withFileTypes: true })) {
-      if ((e.name.startsWith('.') && e.name !== '.well-known') || skip.has(e.name)) continue;
+      if (!publishIncludes(e.name, { root })) continue;
       const a = path.join(from, e.name);
       const b = path.join(to, e.name);
-      if (e.isDirectory()) copy(a, b);
+      if (e.isDirectory()) copy(a, b, false);
       else if (e.isFile()) fs.copyFileSync(a, b);
     }
   };
-  copy(projectDir, out);
+  copy(projectDir, out, true);
   return out;
 }
 

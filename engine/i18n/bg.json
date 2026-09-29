@@ -501,5 +501,8 @@
   "overview.next.none": "Няма какво да се прави",
   "overview.signal.http": "HTTP {status}",
   "overview.signal.days": "{days} д",
-  "overview.signal.expired": "изтекъл"
+  "overview.signal.expired": "изтекъл",
+  "release.changedDuringUpload": "Файлове в папката за публикуване бяха променени по време на качването. Нищо не е публикувано — пусни preview отново.",
+  "release.buildConfigChanged": "Конфигурацията на build-а (скриптове, hosting конфигурация, папка за публикуване) е променена след проверката на preview-то. Пусни preview отново.",
+  "release.identityUnsupported": "Този release поток не може да докаже, че {provider} публикува точно провереното при server-rendered проект. Използвай Netlify (публикуване по deploy id) или статичен build изход; обикновеният deploy остава наличен."
 }

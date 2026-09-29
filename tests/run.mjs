@@ -54,6 +54,7 @@ function fixture(name, data) {
   fs.writeFileSync(path.join(FIXTURES_DIR, `${name}.json`), JSON.stringify(data, null, 2) + '\n');
 }
 
+const asyncTests = [];
 function t(name, fn) {
   try {
     fn();
@@ -922,7 +923,7 @@ fs.writeFileSync(path.join(FAKE_BIN, 'netlify'), `#!/usr/bin/env node
 const fs=require('fs'),path=require('path');const STATE=process.env.FAKE_NETLIFY_STATE;const PORT=process.env.FAKE_NETLIFY_PORT;const live='http://127.0.0.1:'+PORT+'/';
 const load=()=>{try{return JSON.parse(fs.readFileSync(STATE,'utf8'));}catch{return {deploys:{},published:null,n:0};}};const save=(s)=>fs.writeFileSync(STATE,JSON.stringify(s));
 const a=process.argv.slice(2);const out=(o)=>process.stdout.write(JSON.stringify(o)+'\\n');
-if(a[0]==='deploy'){const s=load();s.n++;const id='dep-'+s.n;const di=a.indexOf('--dir');const dir=di>-1?path.resolve(a[di+1]):process.cwd();const prod=a.includes('--prod');
+if(a[0]==='deploy'){const s=load();s.n++;const id='dep-'+s.n;const di=a.indexOf('--dir');const dir=di>-1?path.resolve(a[di+1]):process.cwd();const prod=a.includes('--prod');if(s.mutateOnDeploy){fs.appendFileSync(path.join(dir,s.mutateOnDeploy),'<!-- changed mid-upload -->');}
  s.deploys[id]={id,dir,state:'ready',context:prod?'production':'deploy-preview',created_at:new Date(Date.now()+s.n).toISOString(),deploy_ssl_url:'http://127.0.0.1:'+PORT+'/deploys/'+id+'/'};
  if(prod){s.published=id;s.deploys[id].published_at=new Date().toISOString();}save(s);out({deploy_id:id,deploy_url:s.deploys[id].deploy_ssl_url,url:live,site_name:'rel-site',logs:'http://logs/'+id});process.exit(0);}
 if(a[0]==='api'){const s=load();const data=JSON.parse(a[a.indexOf('--data')+1]||'{}');const m=a[1];
@@ -1022,12 +1023,76 @@ t('release: rollback иска ROLLBACK, връща предишния production
   assert(st.data.current === null, 'nothing awaiting confirmation');
 });
 
+ta('artifact: SHA-256 manifest по съдържание — голям файл със същия размер и mtime, но друго съдържание → друг hash', async () => {
+  const { artifactHash } = await import(path.join(ROOT, 'engine', 'src', 'checks.mjs'));
+  const site = mk('big-site', { 'index.html': HTML, 'b/a.txt': 'x', 'a/z.txt': 'y', '.env': 'SECRET=1', 'node_modules/x.js': '1' });
+  const big = path.join(site, 'video.bin');
+  const buf = Buffer.alloc(9 * 1024 * 1024, 7);
+  fs.writeFileSync(big, buf);
+  const when = new Date('2026-01-01T00:00:00Z');
+  fs.utimesSync(big, when, when);
+  const manifestDir = fs.mkdtempSync(path.join(TMP, 'manifest-'));
+  const one = await artifactHash(site, '.', { manifestDir });
+  buf[4 * 1024 * 1024] = 8; // same size, same mtime, one byte differs
+  fs.writeFileSync(big, buf);
+  fs.utimesSync(big, when, when);
+  const two = await artifactHash(site, '.');
+  assert(one.algo === 'sha256' && one.hash.length === 64 && one.hash !== two.hash, 'content decides, not size+mtime');
+  assert(one.files === 4 && two.files === 4, 'dotfiles and node_modules are not part of a publish: ' + one.files);
+  const manifest = JSON.parse(fs.readFileSync(one.manifestFile, 'utf8'));
+  assert(manifest.files.map((f) => f.path).join() === 'a/z.txt,b/a.txt,index.html,video.bin', 'normalised, sorted POSIX paths: ' + manifest.files.map((f) => f.path).join());
+  assert(manifest.files.every((f) => /^[0-9a-f]{64}$/.test(f.sha256) && typeof f.size === 'number' && f.type), 'every entry has sha256, size, type');
+  assert(manifest.files.find((f) => f.path === 'index.html').type === 'html' && manifest.files.find((f) => f.path === 'video.bin').type === 'other', 'file types');
+  // a renamed file with identical content changes the identity too
+  fs.renameSync(path.join(site, 'b/a.txt'), path.join(site, 'b/c.txt'));
+  const three = await artifactHash(site, '.');
+  assert(three.hash !== two.hash, 'paths are part of the identity');
+});
+
+t('release: файл, променен по време на качването → failed (artifact_changed), нищо не е публикувано', () => {
+  fs.writeFileSync(path.join(relSite, 'index.html'), HTML + '<!-- v4b -->');
+  fs.writeFileSync(FAKE_NETLIFY, JSON.stringify({ ...fakeState(), mutateOnDeploy: 'index.html' }));
+  const r = bid('release', 'preview', '--project', relSite);
+  fs.writeFileSync(FAKE_NETLIFY, JSON.stringify({ ...fakeState(), mutateOnDeploy: null }));
+  assert(r.code === 3 && r.result.code === 'stale_release' && r.result.key === 'release.changedDuringUpload', JSON.stringify(r.result));
+  const st = bid('release', 'status', '--project', relSite);
+  const op = st.data.ops[0];
+  assert(op.state === 'failed' && op.failure === 'artifact_changed' && !op.preview, 'no preview is recorded for a changed upload: ' + JSON.stringify({ state: op.state, failure: op.failure }));
+  assert(op.identity === 'artifact+deployId' && op.snapshot.buildConfig, 'identity and build config are bound: ' + JSON.stringify({ identity: op.identity }));
+  // build configuration counts too: a new netlify.toml after the preview makes it stale
+  fs.writeFileSync(path.join(relSite, 'index.html'), HTML + '<!-- v4c -->');
+  const ok = bid('release', 'preview', '--project', relSite);
+  assert(ok.result.ok, ok.result?.error);
+  fs.writeFileSync(path.join(relSite, 'netlify.toml'), '[build]\n  publish = "."\n');
+  const stale = bid('release', 'promote', '--project', relSite, '--op', ok.data.id, '--confirm', 'DEPLOY');
+  fs.rmSync(path.join(relSite, 'netlify.toml'));
+  assert(stale.result.code === 'stale_release' && ['release.buildConfigChanged', 'release.sourceChanged'].includes(stale.result.key), JSON.stringify(stale.result));
+});
+
+t('release: SSR проект на провайдър без публикуване по deploy id → release_unsupported (обикновен deploy остава)', () => {
+  const ssr = mk('ssr-site', { 'package.json': JSON.stringify({ name: 'ssr', dependencies: { next: '14.0.0' }, scripts: { build: 'echo build' } }), 'node_modules/.keep': '', '.gitignore': 'node_modules\n', 'vercel.json': '{}' });
+  bid('project', 'add', '--path', ssr);
+  bid('hosting', 'set', '--project', ssr, '--provider', 'vercel');
+  const r = bid('release', 'preview', '--project', ssr);
+  assert(r.code === 3 && r.result.code === 'release_unsupported' && r.result.key === 'release.identityUnsupported', JSON.stringify(r.result));
+  assert(bid('release', 'status', '--project', ssr).data.ops[0].failure === 'identity_unsupported', 'the op says why');
+});
+
 t('release: заключване — паралелен release се отказва; умрял процес се отчита като прекъснат', () => {
   const lock = path.join(ENV.BID_APP_DIR, 'ops', `${bid('status', '--project', relSite).data.project.key}.lock`);
-  fs.writeFileSync(lock, JSON.stringify({ op: 'release-other', pid: process.pid, at: new Date().toISOString() }));
+  const myStart = (() => { const t = spawnSync('ps', ['-p', String(process.pid), '-o', 'lstart='], { encoding: 'utf8' }).stdout.trim(); const ms = Date.parse(t); return Number.isFinite(ms) ? Math.round(ms / 1000) : t; })();
+  fs.writeFileSync(lock, JSON.stringify({ op: 'release-other', pid: process.pid, pidStart: myStart, at: new Date().toISOString() }));
   const r = bid('release', 'preview', '--project', relSite);
   assert(r.code === 3 && r.result.code === 'release_in_progress', JSON.stringify(r.result));
   const key = bid('status', '--project', relSite).data.project.key;
+  // the same pid, but a different process instance (start time): the old holder died and its pid was reused
+  const reused = { id: 'release-reused', kind: 'release', project: key, projectName: 'rel-site', provider: 'netlify', actor: 'cli', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), state: 'preview_running', stages: [], log: [] };
+  fs.writeFileSync(path.join(ENV.BID_APP_DIR, 'ops', 'release-reused.json'), JSON.stringify(reused));
+  fs.writeFileSync(lock, JSON.stringify({ op: 'release-reused', pid: process.pid, pidStart: 1, at: new Date().toISOString() }));
+  const afterReuse = bid('release', 'preview', '--project', relSite);
+  assert(afterReuse.result.ok, 'a reused pid must not hold the lock: ' + JSON.stringify(afterReuse.result));
+  assert(bid('release', 'status', '--project', relSite).data.ops.find((o) => o.id === 'release-reused').state === 'interrupted', 'the op of the dead holder is interrupted');
+  bid('release', 'cancel', '--project', relSite, '--op', afterReuse.data.id);
   const ghost = { id: 'release-ghost', kind: 'release', project: key, projectName: 'rel-site', provider: 'netlify', actor: 'cli', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), state: 'promoting', stages: [], log: [], preview: { deployId: 'dep-none' } };
   fs.writeFileSync(path.join(ENV.BID_APP_DIR, 'ops', 'release-ghost.json'), JSON.stringify(ghost));
   fs.writeFileSync(lock, JSON.stringify({ op: 'release-ghost', pid: 999999, at: new Date().toISOString() }));
@@ -1082,6 +1147,10 @@ t('ai: собствен ключ → patch, прилагане само с --yes
   const applied = bid('ai', 'apply', '--project', aiApp, '--patch-file', fix.data.patchFile, '--files', 'src/app.js', '--yes', '--commit');
   assert(applied.result.ok && applied.data.applied.join() === 'src/app.js', JSON.stringify(applied.result));
   assert(applied.data.skipped.some((x) => x.path === '../outside.js' && x.reason === 'outside_project'), JSON.stringify(applied.data.skipped));
+  // undo records keep the user's previous file content: apart from logs, owner-only permissions (V11 RC)
+  assert(applied.data.undoFile && applied.data.undoFile.startsWith(path.join(ENV.BID_APP_DIR, 'undo') + path.sep), 'undo lives under Application Support/undo: ' + applied.data.undoFile);
+  assert((fs.statSync(applied.data.undoFile).mode & 0o777) === 0o600 && (fs.statSync(path.dirname(applied.data.undoFile)).mode & 0o777) === 0o700, 'undo permissions');
+  assert(!fs.existsSync(path.join(ENV.BID_CACHE_DIR)) || !fs.readdirSync(ENV.BID_CACHE_DIR, { recursive: true }).some((f) => String(f).includes('ai-undo')), 'no undo copy in the cache/log folder');
   assert(fs.readFileSync(path.join(aiApp, 'src/app.js'), 'utf8').includes('const c = a + b;'), 'edit applied');
   assert(!fs.existsSync(path.join(aiApp, 'src/notes.txt')), 'unselected file must not be created');
   assert(/AI fix \(build\)/.test(git(aiApp, 'log', '-1', '--format=%s')), 'commit');
@@ -1218,6 +1287,7 @@ t('logs & report: engine.log пази командите с маскирани �
   const rep = bid('report');
   assert(rep.data.files.includes('app-crash-2026-10-01-120000.txt'), 'app crash file in the report: ' + rep.data.files.join(','));
   assert(rep.result.ok && fs.existsSync(rep.data.path) && rep.data.files.includes('engine-log.ndjson') && rep.data.files.includes('doctor.json'), JSON.stringify(rep.result));
+  assert(!rep.data.files.some((f) => /undo|ai-patch/.test(f)), 'undo records and AI patches never enter a support report: ' + rep.data.files.join(','));
   const bundle = fs.readdirSync(rep.data.dir).map((f) => fs.readFileSync(path.join(rep.data.dir, f), 'utf8')).join('\n');
   assert(!bundle.includes('supersecret') && !bundle.includes('sk-ant-good-key-123') && !bundle.includes('yavor@example.com'), 'report leaks secrets or emails');
   assert(JSON.parse(fs.readFileSync(path.join(rep.data.dir, 'doctor.json'), 'utf8')).version === fs.readFileSync(path.join(ROOT, 'engine', 'VERSION'), 'utf8').trim(), 'doctor version');
@@ -1277,7 +1347,6 @@ async function httpGet(url) {
   });
 }
 
-const asyncTests = [];
 function ta(name, fn) {
   asyncTests.push([name, fn]);
 }

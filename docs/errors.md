@@ -57,6 +57,7 @@ quota, 127 Node missing; everything else exits 1.
 | `release_in_progress` | 3 | Another release (or rollback) of this project is still running in another engine process. | Wait for it, or check Release status: a dead process is detected and its release marked interrupted. |
 | `release_not_ready` | 3 | `release promote`/`cancel` was called for a release that is not awaiting confirmation. | Run `release preview` again; a finished release cannot be promoted twice. |
 | `stale_release` | 3 | The source or the build output changed after the preview was smoke-tested, so it can no longer be promoted. | Run the preview again — production only ever publishes what was verified. |
+| `release_unsupported` | 3 | A server-rendered project on a provider that rebuilds from source: the release flow has no way to prove that production is the checked build. | Use Netlify (the preview deploy is published by id) or a static build output; `bid deploy` still works and says the same. |
 | `smoke_failed` | 1 | The preview deploy does not answer correctly (status, missing title, redirect off-site, timeout). | Open the smoke log in the release, fix the page, run the preview again. |
 | `netlify_failed` | 1 | The Netlify CLI or API returned an error. | Read the message; `netlify status` in Terminal helps. |
 | `local_failed` | 1 | Local Preview could not start (port, build, dev server). | The log shows the server output; stop other servers on the port. |
@@ -87,6 +88,11 @@ Returned as `code` in the JSON body; the engine maps them to the codes above (`q
 | `forbidden` | 403 | Admin function called by a non-admin. |
 | `daily_cap` | 403 | Daily AI cap reached. |
 | `quota_exhausted` | 402 | No credits left. |
+| `bad_secret` | 401 | `monitor` scheduler call without the `x-monitor-secret` that matches `MONITOR_CRON_SECRET` (V11 RC). |
+| `url_rejected` | 400 | `monitor register`: the URL is not a public http(s) hostname (`reason`: scheme, ip_literal, local_host, credentials_in_url, port, hostname, invalid_url). |
+| `project_not_synced` | 404 | `monitor register`: the project has no `bid_projects` row for this user yet — sign in and let the app sync the project first. |
+| `not_owner` | 403 | `monitor register`: the URL's host is not the project's live host / domain as the cloud knows it (`known` lists them). |
+| `not_registered` | 404 | `monitor test`: no target registered for this project. |
 | `rate_limited` | 429 | More than 6 requests a minute or 60 an hour. |
 | `prompt_too_long` | 413 | Prompt plus system prompt above `ai.promptMaxChars` (60 000 by default) + 8 000. |
 | `model_error` | stream | The model reported an error mid-answer; what was produced is billed, the details are in the function log. |

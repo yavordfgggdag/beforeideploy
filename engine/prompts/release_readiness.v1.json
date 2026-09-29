@@ -1,0 +1,81 @@
+{
+  "id": "release_readiness",
+  "version": 1,
+  "kind": "action",
+  "purpose": "Summarize release readiness from the engine gates; never waive a failed gate.",
+  "input": {
+    "required": [
+      "snapshot",
+      "check_results",
+      "preview_results",
+      "provider_capabilities",
+      "engine_release_gates"
+    ],
+    "properties": {
+      "snapshot": {
+        "type": "string"
+      },
+      "check_results": {
+        "type": "string"
+      },
+      "preview_results": {
+        "type": "string"
+      },
+      "provider_capabilities": {
+        "type": "string"
+      },
+      "engine_release_gates": {
+        "type": "string"
+      }
+    }
+  },
+  "template": "Summarize release readiness from the snapshot, check results, preview results, provider capabilities and engine release gates below. Identify blockers and missing evidence. Do not infer approval or waive a failed gate. Explain exactly which artifact is eligible and what production confirmation will do. The engine, not this response, determines readiness.\n\nSNAPSHOT:\n{{snapshot}}\n\nCHECK RESULTS:\n{{check_results}}\n\nPREVIEW RESULTS:\n{{preview_results}}\n\nPROVIDER CAPABILITIES:\n{{provider_capabilities}}\n\nENGINE RELEASE GATES (authoritative):\n{{engine_release_gates}}\n\nReturn JSON with exactly these fields: summary (string), engine_gate_status (copied verbatim from the gates' status field), blockers (array of strings), warnings (array of strings), missing_evidence (array of strings), proposed_next_action (string).",
+  "output": {
+    "required": [
+      "summary",
+      "engine_gate_status",
+      "blockers",
+      "warnings",
+      "missing_evidence",
+      "proposed_next_action"
+    ],
+    "properties": {
+      "summary": {
+        "type": "string"
+      },
+      "engine_gate_status": {
+        "type": "string",
+        "ref": "engine_status"
+      },
+      "blockers": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "warnings": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "missing_evidence": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "proposed_next_action": {
+        "type": "string"
+      }
+    }
+  },
+  "locales": {
+    "en": {
+      "title": "Review release readiness"
+    },
+    "bg": {
+      "title": "Прегледай готовността за пускане"
+    }
+  }
+}

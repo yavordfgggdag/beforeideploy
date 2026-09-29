@@ -501,5 +501,8 @@
   "overview.next.none": "Nothing to do",
   "overview.signal.http": "HTTP {status}",
   "overview.signal.days": "{days} d",
-  "overview.signal.expired": "expired"
+  "overview.signal.expired": "expired",
+  "release.changedDuringUpload": "Files in the publish folder changed while they were being uploaded. Nothing was published — run the preview again.",
+  "release.buildConfigChanged": "The build configuration (scripts, hosting config, publish folder) changed after the preview was checked. Run the preview again.",
+  "release.identityUnsupported": "This release flow cannot prove that {provider} publishes exactly what was checked for a server-rendered project. Use Netlify (published by deploy id) or a static build output; a plain deploy remains available."
 }

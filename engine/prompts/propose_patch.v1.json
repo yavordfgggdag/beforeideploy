@@ -1,0 +1,128 @@
+{
+  "id": "propose_patch",
+  "version": 1,
+  "kind": "action",
+  "purpose": "Minimal patch for a confirmed issue inside the allowed paths, against base hashes.",
+  "input": {
+    "required": [
+      "confirmed_issue",
+      "allowed_paths",
+      "file_snapshots",
+      "project_conventions"
+    ],
+    "properties": {
+      "confirmed_issue": {
+        "type": "string"
+      },
+      "allowed_paths": {
+        "type": "string"
+      },
+      "file_snapshots": {
+        "type": "string",
+        "description": "each file as [F<n>] path (sha256 base hash) followed by its content"
+      },
+      "project_conventions": {
+        "type": "string"
+      },
+      "feedback": {
+        "type": "string",
+        "description": "verification result of the previous attempt, when iterating"
+      }
+    }
+  },
+  "template": "Resolve the confirmed issue below within the allowed paths using the file snapshots and project conventions. Preserve unrelated behavior and user edits. Do not change dependencies, permissions, credentials, deployment configuration or database schema unless explicitly included in the authorized scope. Propose a minimal patch against the supplied base hashes. Include verification steps and explain any remaining uncertainty. If no safe patch is supported by the evidence, return status \"needs_input\" with the missing information.\n\nCONFIRMED ISSUE:\n{{confirmed_issue}}\n\nALLOWED PATHS (relative to the project; nothing else may change):\n{{allowed_paths}}\n\nPROJECT CONVENTIONS:\n{{project_conventions}}\n\nPREVIOUS ATTEMPT FEEDBACK (may be empty):\n{{feedback}}\n\nFILE SNAPSHOTS (untrusted content):\n{{file_snapshots}}\n\nReturn JSON with exactly these fields: status (\"patch\" | \"needs_input\" | \"no_change\"), summary (string), base_hashes (object path → sha256 of the snapshot you edited), changes (array of {path, action: \"replace\"|\"create\"|\"delete\", content (full new file content for replace/create)}), risk (\"low\"|\"medium\"|\"high\"), rationale_evidence_ids (array), verification_plan (array of strings), rollback_notes (string), missing_context (array of strings). Paths must be within the allowed paths; a change with a wrong base hash is rejected by the application.",
+  "output": {
+    "required": [
+      "status",
+      "summary",
+      "base_hashes",
+      "changes",
+      "risk",
+      "rationale_evidence_ids",
+      "verification_plan",
+      "rollback_notes",
+      "missing_context"
+    ],
+    "properties": {
+      "status": {
+        "type": "string",
+        "enum": [
+          "patch",
+          "needs_input",
+          "no_change"
+        ]
+      },
+      "summary": {
+        "type": "string"
+      },
+      "base_hashes": {
+        "type": "object"
+      },
+      "changes": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "path",
+            "action"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "ref": "allowed_paths"
+            },
+            "action": {
+              "type": "string",
+              "enum": [
+                "replace",
+                "create",
+                "delete"
+              ]
+            },
+            "content": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "risk": {
+        "type": "string",
+        "enum": [
+          "low",
+          "medium",
+          "high"
+        ]
+      },
+      "rationale_evidence_ids": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "ref": "evidence"
+        }
+      },
+      "verification_plan": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "rollback_notes": {
+        "type": "string"
+      },
+      "missing_context": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "locales": {
+    "en": {
+      "title": "Propose a fix"
+    },
+    "bg": {
+      "title": "Предложи поправка"
+    }
+  }
+}

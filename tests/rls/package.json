@@ -1,0 +1,8 @@
+{
+  "name": "bid-rls-tests",
+  "private": true,
+  "type": "module",
+  "description": "Row-level-security tests for supabase/schema.sql on a real Postgres (PGlite). Not part of the engine (zero-dependency rule): dev tooling only.",
+  "scripts": { "test": "node rls.mjs" },
+  "devDependencies": { "@electric-sql/pglite": "0.5.8" }
+}

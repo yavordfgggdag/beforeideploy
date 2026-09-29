@@ -1,0 +1,62 @@
+{
+  "id": "explain_verification",
+  "version": 1,
+  "kind": "action",
+  "purpose": "Explain an engine verification result without upgrading its status.",
+  "input": {
+    "required": [
+      "engine_verification_result",
+      "locale"
+    ],
+    "properties": {
+      "engine_verification_result": {
+        "type": "string"
+      },
+      "locale": {
+        "type": "string"
+      }
+    }
+  },
+  "template": "Explain the engine verification result below to the user in {{locale}}. State what changed, which checks ran, which passed or failed and what remains unresolved. Reproduce the engine's status without upgrading unknown, cancelled or failed to success. State when an external integration or manual test is still required.\n\nENGINE VERIFICATION RESULT (authoritative):\n{{engine_verification_result}}\n\nReturn JSON with exactly these fields: engine_status (copied verbatim from the result's status field), summary (string), completed_checks (array of strings), unresolved (array of strings), next_action (string).",
+  "output": {
+    "required": [
+      "engine_status",
+      "summary",
+      "completed_checks",
+      "unresolved",
+      "next_action"
+    ],
+    "properties": {
+      "engine_status": {
+        "type": "string",
+        "ref": "engine_status"
+      },
+      "summary": {
+        "type": "string"
+      },
+      "completed_checks": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "unresolved": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "next_action": {
+        "type": "string"
+      }
+    }
+  },
+  "locales": {
+    "en": {
+      "title": "Explain the verification"
+    },
+    "bg": {
+      "title": "Обясни проверката"
+    }
+  }
+}

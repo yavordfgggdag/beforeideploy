@@ -283,3 +283,82 @@ create index if not exists admin_audit_created_idx on public.admin_audit (create
 -- ---------------------------------------------------------------- owner
 -- Make yourself admin once (replace the email):
 --   update public.profiles set role = 'admin' where email = 'you@example.com';
+
+-- ---------------------------------------------------------------- server-side monitoring (V11 RC)
+-- Targets are registered by the app (JWT, own rows); probes, incidents and the heartbeat are written only
+-- by the `monitor` Edge Function (service role, scheduled by pg_cron — see monitor-cron.sql).
+
+create table if not exists public.monitor_targets (
+  id            uuid primary key default gen_random_uuid(),
+  user_id       uuid not null references public.profiles(user_id) on delete cascade,
+  project_key   text not null,
+  url           text not null,
+  enabled       boolean not null default true,
+  interval_min  integer not null default 10 check (interval_min between 5 and 1440),
+  checks        jsonb not null default '{"kinds":["down","ssl"],"paths":[]}',
+  last_run_at   timestamptz,
+  next_run_at   timestamptz,
+  last_ok       boolean,
+  last_status   integer,
+  last_ms       integer,
+  last_reason   text,
+  failures      integer not null default 0,
+  updated_at    timestamptz not null default now(),
+  unique (user_id, project_key)
+);
+create index if not exists monitor_targets_due_idx on public.monitor_targets (enabled, next_run_at);
+alter table public.monitor_targets enable row level security;
+drop policy if exists "read own targets" on public.monitor_targets;
+create policy "read own targets" on public.monitor_targets for select using (auth.uid() = user_id);
+-- writes go through the Edge Function (service role): the URL policy and ownership check live there
+
+create table if not exists public.monitor_probes (
+  id           bigserial primary key,
+  user_id      uuid not null references public.profiles(user_id) on delete cascade,
+  project_key  text not null,
+  at           timestamptz not null default now(),
+  kind         text not null,               -- down | page
+  ok           boolean not null,
+  status       integer,
+  ms           integer,
+  detail       text,
+  ip           text
+);
+create index if not exists monitor_probes_user_idx on public.monitor_probes (user_id, project_key, at desc);
+alter table public.monitor_probes enable row level security;
+drop policy if exists "read own probes" on public.monitor_probes;
+create policy "read own probes" on public.monitor_probes for select using (auth.uid() = user_id);
+
+create table if not exists public.monitor_incidents (
+  id            uuid primary key default gen_random_uuid(),
+  user_id       uuid not null references public.profiles(user_id) on delete cascade,
+  project_key   text not null,
+  kind          text not null,              -- down | ssl | page
+  status        text not null,              -- open | resolved
+  severity      text not null default 'critical',
+  opened_at     timestamptz not null default now(),
+  last_seen_at  timestamptz,
+  resolved_at   timestamptz,
+  count         integer not null default 1,
+  detail        text,
+  url           text,
+  source        text not null default 'cloud'
+);
+create index if not exists monitor_incidents_user_idx on public.monitor_incidents (user_id, opened_at desc);
+create unique index if not exists monitor_incidents_one_open on public.monitor_incidents (user_id, project_key, kind) where status = 'open';
+alter table public.monitor_incidents enable row level security;
+drop policy if exists "read own incidents" on public.monitor_incidents;
+create policy "read own incidents" on public.monitor_incidents for select using (auth.uid() = user_id);
+
+-- one row per scheduler pass; readable by every signed-in user (it carries no tenant data)
+create table if not exists public.monitor_heartbeat (
+  id       bigserial primary key,
+  at       timestamptz not null default now(),
+  checked  integer not null default 0,
+  due      integer not null default 0,
+  targets  integer not null default 0
+);
+create index if not exists monitor_heartbeat_at_idx on public.monitor_heartbeat (at desc);
+alter table public.monitor_heartbeat enable row level security;
+drop policy if exists "read heartbeat" on public.monitor_heartbeat;
+create policy "read heartbeat" on public.monitor_heartbeat for select to authenticated using (true);

@@ -12,3 +12,5 @@ releases/
 
 # local test output (install.sh)
 tests/last-run.txt
+tests/rls/last-run.json
+tests/rls/package-lock.json

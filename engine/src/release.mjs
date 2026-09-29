@@ -14,9 +14,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { APP_DIR, EngineError, ev, ensureDir, logDir, nowISO, pidAlive, readJSON, writeJSON } from './util.mjs';
+import { APP_DIR, EngineError, ev, ensureDir, logDir, nowISO, pidAlive, pidStartTime, processHolds, readJSON, writeJSON } from './util.mjs';
 import { detect } from './detect.mjs';
-import { runChecks, fingerprint, artifactHash } from './checks.mjs';
+import { runChecks, fingerprint, artifactHash, buildConfigHash } from './checks.mjs';
 import { getState, setState, addHistory, findProject, updateProject } from './store.mjs';
 import { deployProject, PROVIDERS, providerStatus } from './hosting.mjs';
 import { netlifyDeploys, netlifySiteState, netlifyGetDeploy, netlifyPublishDeploy } from './netlify.mjs';
@@ -113,7 +113,9 @@ function acquireLock(project, op) {
   ensureDir(OPS_DIR());
   const f = lockFile(project.key);
   const cur = readJSON(f, null);
-  if (cur && cur.pid !== process.pid && pidAlive(cur.pid)) {
+  // the holder is alive only when the pid exists AND it is the same process instance (start time):
+  // after a crash the pid can be reused by an unrelated program, which must not block releases forever
+  if (cur && cur.pid !== process.pid && processHolds(cur)) {
     throw new EngineError(msg('release.inProgress', { op: cur.op }), 'release_in_progress', 3);
   }
   if (cur && cur.pid !== process.pid) {
@@ -121,11 +123,11 @@ function acquireLock(project, op) {
     const stale = readJSON(opFile(cur.op), null);
     if (stale && !FINAL.has(stale.state)) {
       stale.state = 'interrupted';
-      logLine(stale, `lock holder pid ${cur.pid} is gone — marked interrupted`);
+      logLine(stale, `lock holder pid ${cur.pid} is gone${pidAlive(cur.pid) ? ' (pid reused by another process)' : ''} — marked interrupted`);
       saveOp(stale);
     }
   }
-  writeJSON(f, { op: op.id, pid: process.pid, at: nowISO() });
+  writeJSON(f, { op: op.id, pid: process.pid, pidStart: pidStartTime(process.pid), at: nowISO() });
 }
 
 function releaseLock(project) {
@@ -136,16 +138,48 @@ function releaseLock(project) {
 
 // ---------------------------------------------------------------- snapshot binding
 
-function snapshot(project) {
+async function snapshot(project) {
   const d = detect(project.path);
-  return { fingerprint: fingerprint(project.path, d), artifact: !d.ssr && d.publishReady ? artifactHash(project.path, d.publishDir) : null, at: nowISO() };
+  return {
+    fingerprint: fingerprint(project.path, d),
+    buildConfig: buildConfigHash(project.path, d),
+    artifact: !d.ssr && d.publishReady ? await artifactHash(project.path, d.publishDir) : null,
+    at: nowISO(),
+  };
 }
 
-function snapshotMatches(op, project) {
-  const now = snapshot(project);
+/** source → buildConfig → artifact, in that order; the first difference names the reason. */
+async function snapshotMatches(op, project) {
+  const now = await snapshot(project);
   if (now.fingerprint !== op.snapshot.fingerprint) return { ok: false, reason: 'source' };
+  if (op.snapshot.buildConfig && now.buildConfig !== op.snapshot.buildConfig) return { ok: false, reason: 'buildConfig' };
   if ((op.snapshot.artifact?.hash || null) !== (now.artifact?.hash || null)) return { ok: false, reason: 'artifact' };
   return { ok: true };
+}
+
+/**
+ * How a release proves it publishes what was checked (V11 RC):
+ *   artifact  — static output: SHA-256 manifest, re-hashed right before and right after every upload;
+ *   deployId  — Netlify: the smoke-tested preview deploy is published by id, whatever the build type;
+ *   none      — SSR on a provider that rebuilds from source: no verifiable identity → the release flow refuses
+ *               (plain `bid deploy` remains available and says the same).
+ */
+function identityFor(d, provider, caps) {
+  if (!d.ssr && d.publishReady) return provider === 'netlify' && caps.publishArtifact ? 'artifact+deployId' : 'artifact';
+  if (provider === 'netlify' && caps.publishArtifact) return 'deployId';
+  return 'none';
+}
+
+/** Re-hash the publish folder around an upload; a difference means someone changed files while they were being sent. */
+async function assertArtifactUnchanged(op, project, when) {
+  if (!op.snapshot?.artifact?.hash) return;
+  const d = detect(project.path);
+  const now = await artifactHash(project.path, d.publishDir);
+  if ((now?.hash || null) !== op.snapshot.artifact.hash) {
+    op.failure = 'artifact_changed';
+    logLine(op, `artifact changed ${when} upload: ${op.snapshot.artifact.hash.slice(0, 12)} → ${now?.hash?.slice(0, 12) || 'none'}`);
+    throw new EngineError(msg('release.changedDuringUpload'), 'stale_release', 3);
+  }
 }
 
 // ---------------------------------------------------------------- preview
@@ -162,8 +196,17 @@ export async function releasePreview(project, { force = false } = {}) {
 
     stage(op, 'check', { status: 'running' });
     const check = await runChecks(p, { stopOnFail: true, force });
-    op.snapshot = { fingerprint: check.fingerprint, artifact: check.artifact || null, at: check.at };
+    op.snapshot = { fingerprint: check.fingerprint, buildConfig: check.buildConfig || null, artifact: check.artifact || null, at: check.at };
     op.check = { at: check.at, status: check.status, counts: check.counts };
+    const det = detect(p.path);
+    op.identity = identityFor(det, provider, caps);
+    if (op.identity === 'none') {
+      stage(op, 'check', { status: 'fail', summary: t('release.identityUnsupported', { provider: PROVIDERS[provider].name }) });
+      op.state = 'failed';
+      op.failure = 'identity_unsupported';
+      saveOp(op);
+      throw new EngineError(msg('release.identityUnsupported', { provider: PROVIDERS[provider].name }), 'release_unsupported', 3);
+    }
     if (check.status === 'blocked') {
       stage(op, 'check', { status: 'fail', summary: t('release.checkBlocked') });
       op.state = 'failed';
@@ -183,8 +226,10 @@ export async function releasePreview(project, { force = false } = {}) {
     }
 
     stage(op, 'preview', { status: 'running' });
+    await assertArtifactUnchanged(op, p, 'before');
     const dep = await deployProject(p, { prod: false });
-    op.preview = { url: dep.url, deployId: dep.deployId || null, at: nowISO() };
+    await assertArtifactUnchanged(op, p, 'after');
+    op.preview = { url: dep.url, deployId: dep.deployId || null, at: nowISO(), artifact: op.snapshot.artifact?.hash || null };
     stage(op, 'preview', { status: 'pass', summary: dep.url });
 
     stage(op, 'smoke', { status: 'running', summary: dep.url });
@@ -234,13 +279,13 @@ export async function releasePromote(project, { op: opId, confirm } = {}) {
   if (op.state === 'promoting' || op.state === 'verifying') return reconcile(p, op);
   if (op.state !== 'awaiting_confirmation') throw new EngineError(msg('release.notReady', { state: op.state }), 'release_not_ready', 3);
 
-  const same = snapshotMatches(op, p);
+  const same = await snapshotMatches(op, p);
   if (!same.ok) {
     op.state = 'stale';
-    op.failure = same.reason === 'artifact' ? 'artifact_changed' : 'source_changed';
+    op.failure = same.reason === 'artifact' ? 'artifact_changed' : same.reason === 'buildConfig' ? 'build_config_changed' : 'source_changed';
     logLine(op, `snapshot changed since preview (${same.reason})`);
     saveOp(op);
-    throw new EngineError(msg(same.reason === 'artifact' ? 'release.artifactChanged' : 'release.sourceChanged'), 'stale_release', 3);
+    throw new EngineError(msg(same.reason === 'artifact' ? 'release.artifactChanged' : same.reason === 'buildConfig' ? 'release.buildConfigChanged' : 'release.sourceChanged'), 'stale_release', 3);
   }
 
   acquireLock(p, op);
@@ -263,8 +308,11 @@ export async function releasePromote(project, { op: opId, confirm } = {}) {
       updateProject(p.key, { netlify: { liveUrl: production.url } });
       addHistory({ project: p.key, projectName: p.name, kind: 'production', status: 'ok', url: production.url, message: t('release.history.publishedPreview') });
     } else {
+      // no publish-by-id on this provider: the checked artifact is uploaded again, re-hashed before and after
+      await assertArtifactUnchanged(op, p, 'before');
       const dep = await deployProject(p, { prod: true, confirm: 'DEPLOY' });
-      production = { url: dep.url, deployId: dep.deployId || null, at: nowISO() };
+      await assertArtifactUnchanged(op, p, 'after');
+      production = { url: dep.url, deployId: dep.deployId || null, at: nowISO(), artifact: op.snapshot.artifact?.hash || null };
     }
     op.production = { ...(op.production || {}), ...production };
     stage(op, 'promote', { status: 'pass', summary: production.url });
@@ -347,7 +395,7 @@ export async function releaseStatus(project, { op: opId = null } = {}) {
   // an op still "in progress" whose engine is gone is reported honestly, not left spinning
   const lock = readJSON(lockFile(p.key), null);
   for (const o of ops) {
-    if (!FINAL.has(o.state) && o.state !== 'awaiting_confirmation' && !(lock && lock.op === o.id && pidAlive(lock.pid))) {
+    if (!FINAL.has(o.state) && o.state !== 'awaiting_confirmation' && !(lock && lock.op === o.id && processHolds(lock))) {
       if (o.state === 'promoting' || o.state === 'verifying') {
         try {
           await reconcile(p, o);

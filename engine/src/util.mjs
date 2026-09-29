@@ -312,6 +312,41 @@ export function pidAlive(pid) {
   }
 }
 
+/**
+ * When a process started (`ps -o lstart`), normalised to seconds — with the pid it identifies one process
+ * instance, so a lock left by a dead process whose pid was reused is not mistaken for a live holder.
+ * null when ps cannot tell (the caller then falls back to pidAlive alone).
+ */
+export function pidStartTime(pid) {
+  if (!pid) return null;
+  const r = spawnSync('ps', ['-p', String(pid), '-o', 'lstart='], { encoding: 'utf8', timeout: 5000 });
+  const text = (r.stdout || '').trim();
+  if (r.status !== 0 || !text) return null;
+  const ms = Date.parse(text);
+  return Number.isFinite(ms) ? Math.round(ms / 1000) : text;
+}
+
+/** pidAlive + the start time recorded when the lock was taken: a reused pid does not count as the holder. */
+export function processHolds(lock) {
+  if (!lock?.pid || !pidAlive(lock.pid)) return false;
+  if (lock.pidStart === undefined || lock.pidStart === null) return true;
+  const now = pidStartTime(lock.pid);
+  return now === null || now === lock.pidStart;
+}
+
+/**
+ * Which entries of a folder a publish sends (stagePublicCopy and the artifact manifest agree on this):
+ * no dotfiles except .well-known, never node_modules; a site published from the project root also leaves
+ * the tooling files behind.
+ */
+const ROOT_TOOLING = new Set(['node_modules', 'package.json', 'package-lock.json', 'pnpm-lock.yaml', 'yarn.lock', 'bun.lockb', 'bid.config.json']);
+export function publishIncludes(name, { root = false } = {}) {
+  if (name.startsWith('.') && name !== '.well-known') return false;
+  if (name === 'node_modules') return false;
+  if (root && ROOT_TOOLING.has(name)) return false;
+  return true;
+}
+
 export function extractJSON(text) {
   if (!text) return null;
   const firstObj = text.indexOf('{');

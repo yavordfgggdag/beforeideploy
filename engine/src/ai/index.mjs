@@ -2,7 +2,7 @@
 // The model only proposes; nothing in the project changes before `bid ai apply --yes` (invariant 15).
 import fs from 'node:fs';
 import path from 'node:path';
-import { ev, emit, EngineError, logDir, nowISO, sh, readJSON, writeJSON } from '../util.mjs';
+import { ev, emit, EngineError, logDir, nowISO, sh, readJSON, writeJSON, APP_DIR } from '../util.mjs';
 import { t, msg, currentLang } from '../i18n.mjs';
 import { detect } from '../detect.mjs';
 import { addHistory, getState, setState } from '../store.mjs';
@@ -132,8 +132,7 @@ export async function aiApply(project, { patchFile, files, yes = false, commit =
   const { applied, skipped } = applyPatch(project.path, fresh, selected);
   let undoFile = null;
   if (applied.length) {
-    undoFile = path.join(logDir(project.key), `ai-undo-${Date.now()}.json`);
-    writeJSON(undoFile, { project: project.key, step: patch.step, at: nowISO(), files: undo.filter((u) => applied.includes(u.path)) });
+    undoFile = writeUndoRecord(project.key, { project: project.key, step: patch.step, at: nowISO(), files: undo.filter((u) => applied.includes(u.path)) });
     setState(project.key, { aiUndo: { file: undoFile, at: nowISO(), step: patch.step, applied } });
   }
 
@@ -160,6 +159,54 @@ export async function aiApply(project, { patchFile, files, yes = false, commit =
   const out = { applied, skipped, committed, changedSince: fresh.filter((p) => p.changedSince).map((p) => p.path), undoFile };
   if (recheck && applied.length) out.recheck = await verifyAfterFix(project, patch.step);
   return out;
+}
+
+/**
+ * Undo records hold the previous content of the user's files (V11 RC). They live apart from logs and caches —
+ * `~/Library/Application Support/BeforeIDeploy/undo/<project>/`, folder 0700, files 0600 — so the support
+ * report (which only packs *.log under the cache folder), the AI context (project files only) and telemetry
+ * never see them. Retention: the newest 10 per project and nothing older than 30 days.
+ */
+export const UNDO_DIR = (key) => path.join(APP_DIR, 'undo', key);
+const UNDO_KEEP = 10;
+const UNDO_MAX_AGE_MS = 30 * 86400_000;
+
+export function writeUndoRecord(key, record) {
+  const dir = UNDO_DIR(key);
+  fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+  try {
+    fs.chmodSync(dir, 0o700);
+  } catch {}
+  const file = path.join(dir, `ai-undo-${Date.now()}.json`);
+  fs.writeFileSync(file, JSON.stringify(record, null, 2), { mode: 0o600 });
+  try {
+    fs.chmodSync(file, 0o600);
+  } catch {}
+  pruneUndo(key);
+  return file;
+}
+
+export function pruneUndo(key) {
+  const dir = UNDO_DIR(key);
+  let names = [];
+  try {
+    names = fs.readdirSync(dir).filter((f) => f.startsWith('ai-undo-') && f.endsWith('.json')).sort();
+  } catch {
+    return [];
+  }
+  const removed = [];
+  const now = Date.now();
+  names.forEach((f, i) => {
+    const stamp = Number(f.slice('ai-undo-'.length, -'.json'.length));
+    const old = Number.isFinite(stamp) && now - stamp > UNDO_MAX_AGE_MS;
+    if (old || i < names.length - UNDO_KEEP) {
+      try {
+        fs.rmSync(path.join(dir, f), { force: true });
+        removed.push(f);
+      } catch {}
+    }
+  });
+  return removed;
 }
 
 /** Re-runs the checks after an AI patch and says whether the step it targeted now passes. Never marks a fix verified on a failed run. */

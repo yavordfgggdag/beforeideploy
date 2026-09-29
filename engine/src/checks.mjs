@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { ev, sh, which, runStream, logDir, nowISO, exists } from './util.mjs';
+import { ev, sh, which, runStream, logDir, nowISO, exists, publishIncludes } from './util.mjs';
 import { detect, pmRunArgs } from './detect.mjs';
 import { getState, setState, addHistory, updateProject } from './store.mjs';
 import { t } from './i18n.mjs';
@@ -335,42 +335,95 @@ function statSig(dir, rel) {
  * A production release must publish exactly what was checked — this hash proves it. Null when there is no
  * static output (SSR sites are built by the host from the source fingerprint).
  */
-export function artifactHash(dir, publishDir) {
+/**
+ * Identity of what a publish sends (V11 RC): every file under the publish folder, in the order and with the
+ * filter stagePublicCopy uses, hashed by content with SHA-256 through a stream — size + mtime never stand in
+ * for content, whatever the file size. The manifest (normalised POSIX paths, size, sha256, type) is written
+ * next to the project logs so a mismatch can be explained file by file; the artifact hash is the SHA-256 of
+ * the manifest lines. null when there is nothing publishable (SSR, no index.html).
+ */
+export async function artifactHash(dir, publishDir, { manifestDir = null } = {}) {
   if (!publishDir) return null;
   const root = path.resolve(dir, publishDir);
   if (!exists(path.join(root, 'index.html'))) return null;
-  const h = crypto.createHash('sha1');
-  let files = 0;
-  let bytes = 0;
-  const walk = (rel) => {
-    let entries = [];
+  const isRoot = publishDir === '.' || publishDir === './' || root === path.resolve(dir);
+  const entries = [];
+  const walk = (rel, top) => {
+    let list = [];
     try {
-      entries = fs.readdirSync(path.join(root, rel), { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name));
+      list = fs.readdirSync(path.join(root, rel), { withFileTypes: true });
     } catch {
       return;
     }
-    for (const e of entries) {
-      if (files > 20000) return;
-      // what a publish sends: no dotfiles (stagePublicCopy skips them too), no dependencies
-      if ((e.name.startsWith('.') && e.name !== '.well-known') || e.name === 'node_modules') continue;
+    // byte order of the UTF-8 path, not the locale: the same tree hashes the same on every Mac
+    list.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+    for (const e of list) {
+      if (entries.length > 20000) return;
+      if (!publishIncludes(e.name, { root: top })) continue;
       const r = rel ? `${rel}/${e.name}` : e.name;
-      if (e.isDirectory()) {
-        walk(r);
-      } else if (e.isFile()) {
-        const abs = path.join(root, r);
-        const st = fs.statSync(abs);
-        files++;
-        bytes += st.size;
-        h.update(r).update('\0');
-        // small files by content, large ones by size + mtime (a 300 MB video is not re-read on every check)
-        if (st.size <= 8 * 1024 * 1024) h.update(fs.readFileSync(abs));
-        else h.update(`${st.size}:${Math.round(st.mtimeMs)}`);
-        h.update('\0');
-      }
+      if (e.isDirectory()) walk(r, false);
+      else if (e.isFile()) entries.push(r);
     }
   };
-  walk('');
-  return { hash: h.digest('hex'), dir: publishDir, files, bytes };
+  walk('', isRoot);
+  const manifest = [];
+  let bytes = 0;
+  for (const rel of entries) {
+    const abs = path.join(root, ...rel.split('/'));
+    const st = fs.statSync(abs);
+    const sha = await fileSha256(abs);
+    bytes += st.size;
+    manifest.push({ path: rel, size: st.size, sha256: sha, type: fileType(rel) });
+  }
+  const h = crypto.createHash('sha256');
+  for (const m of manifest) h.update(`${m.path}\0${m.size}\0${m.sha256}\n`);
+  const hash = h.digest('hex');
+  const out = { hash, algo: 'sha256', dir: publishDir, files: manifest.length, bytes, manifestFile: null };
+  if (manifestDir) {
+    try {
+      const f = path.join(manifestDir, `artifact-${hash.slice(0, 16)}.json`);
+      fs.writeFileSync(f, JSON.stringify({ hash, algo: 'sha256', dir: publishDir, at: nowISO(), files: manifest }, null, 1));
+      out.manifestFile = f;
+    } catch {}
+  }
+  return out;
+}
+
+export function fileSha256(abs) {
+  return new Promise((resolve, reject) => {
+    const h = crypto.createHash('sha256');
+    fs.createReadStream(abs)
+      .on('data', (c) => h.update(c))
+      .on('error', reject)
+      .on('end', () => resolve(h.digest('hex')));
+  });
+}
+
+const TYPES = { html: 'html', htm: 'html', css: 'css', js: 'script', mjs: 'script', cjs: 'script', json: 'json', xml: 'xml', txt: 'text', md: 'text', svg: 'image', png: 'image', jpg: 'image', jpeg: 'image', gif: 'image', webp: 'image', avif: 'image', ico: 'image', woff: 'font', woff2: 'font', ttf: 'font', otf: 'font', mp4: 'video', webm: 'video', mp3: 'audio', pdf: 'document', map: 'sourcemap', wasm: 'binary' };
+function fileType(rel) {
+  const ext = rel.includes('.') ? rel.slice(rel.lastIndexOf('.') + 1).toLowerCase() : '';
+  return TYPES[ext] || 'other';
+}
+
+/**
+ * The build configuration a release is bound to (V11 RC): framework, publish folder, the build scripts and
+ * the hosting config files. A change here between the check and the publish makes the release stale even
+ * when the source fingerprint (which already covers the tracked tree) would not notice — e.g. an untracked
+ * netlify.toml on a non-git folder.
+ */
+export function buildConfigHash(dir, d) {
+  const h = crypto.createHash('sha256');
+  h.update(`${d.framework || ''}\0${d.publishDir || ''}\0${d.packageManager || ''}\0${d.ssr ? 1 : 0}\n`);
+  try {
+    const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'));
+    h.update(JSON.stringify(pkg.scripts || {})).update('\n');
+  } catch {}
+  for (const f of ['bid.config.json', 'netlify.toml', 'vercel.json', 'wrangler.toml', '_redirects', '_headers', 'static.json']) {
+    try {
+      h.update(f).update('\0').update(fs.readFileSync(path.join(dir, f))).update('\n');
+    } catch {}
+  }
+  return h.digest('hex');
 }
 
 /** Identity of the source tree (HEAD + working-tree diff + untracked files), lockfiles, project config and Node. */
@@ -467,8 +520,8 @@ export async function runChecks(project, { stopOnFail = false, skip = [], force 
 
   const { status, counts } = overallStatus(results);
   // the fingerprint lets a deploy see whether the code changed after this check (audit E7)
-  const artifact = !ctx.d.ssr && ctx.d.publishReady ? artifactHash(dir, ctx.d.publishDir) : null;
-  const check = { status, at: nowISO(), counts, steps: results, duration: (Date.now() - started) / 1000, cached: results.filter((r) => r.cached).map((r) => r.id), fingerprint: fp, artifact };
+  const artifact = !ctx.d.ssr && ctx.d.publishReady ? await artifactHash(dir, ctx.d.publishDir, { manifestDir: logDir(project.key) }) : null;
+  const check = { status, at: nowISO(), counts, steps: results, duration: (Date.now() - started) / 1000, cached: results.filter((r) => r.cached).map((r) => r.id), fingerprint: fp, buildConfig: buildConfigHash(dir, ctx.d), artifact };
   setState(project.key, { check, stepCache });
   updateProject(project.key, { framework: ctx.d.framework, packageManager: ctx.d.packageManager, publishDir: ctx.d.publishDir });
   addHistory({
