@@ -46,31 +46,31 @@ struct RootView: View {
                 .frame(width: 248)
             Rectangle().fill(Theme.hairline).frame(width: 1)
             ZStack {
-                AmbientBackground(tint: backdropTint)
+                AuroraBackground(tint: backdropTint)
                 if model.engineMissing {
                     EngineMissingView()
                 } else if model.nodeMissing {
                     NodeMissingView()
                 } else if model.screen == .overview {
-                    MissionControlView()
+                    MissionControlView().screenTransition()
                 } else if model.screen == .domains {
-                    DomainsView()
+                    DomainsView().screenTransition()
                 } else if model.screen == .costs {
-                    CostsView()
+                    CostsView().screenTransition()
                 } else if model.screen == .setup {
-                    SetupView()
+                    SetupView().screenTransition()
                 } else if model.screen == .assistant {
-                    AssistantView()
+                    AssistantView().screenTransition()
                 } else if model.screen == .usage {
-                    PlanUsageView()
+                    PlanUsageView().screenTransition()
                 } else if model.screen == .account, model.account?.loggedIn == true {
-                    AccountView()
+                    AccountView().screenTransition()
                 } else if model.screen == .admin, model.account?.isAdmin == true {
                     ScrollView { AdminView() }
                 } else if let status = model.status {
                     DashboardView(status: status)
                         .id(status.project.key)
-                        .transition(.opacity)
+                        .screenTransition()
                 } else if model.projects.isEmpty && model.selectedKey == nil {
                     WelcomeView()
                 } else {
@@ -80,6 +80,8 @@ struct RootView: View {
                     }
                 }
             }
+            .animation(Motion.spring, value: model.screen)
+            .animation(Motion.spring, value: model.selectedKey)
         }
         .background(Theme.bg)
         .ignoresSafeArea()

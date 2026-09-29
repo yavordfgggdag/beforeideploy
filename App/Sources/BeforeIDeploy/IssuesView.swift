@@ -29,8 +29,9 @@ struct IssuesCard: View {
                 EmptyLine(icon: "questionmark.circle", text: L("issues.notChecked"))
             } else if let list = status.issues?.issues, !list.isEmpty {
                 VStack(spacing: 8) {
-                    ForEach(list) { issue in
+                    ForEach(Array(list.enumerated()), id: \.element.id) { i, issue in
                         IssueRow(issue: issue, projectPath: status.project.path)
+                            .entrance(i, offset: 8)
                     }
                 }
             } else {
@@ -109,6 +110,7 @@ struct IssueRow: View {
         .padding(12)
         .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.bg))
         .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(issue.severity == "blocker" ? tint.opacity(0.45) : Theme.hairline, lineWidth: 1))
+        .lift(radius: 12, tint: tint, amount: 1.006)
     }
 
     @ViewBuilder private var fixButton: some View {

@@ -44,8 +44,11 @@ struct RunOverlay: View {
                 RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(Theme.edgeHighlight, lineWidth: 1)
             )
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .overlay { if session.finished && session.success { Celebration().frame(width: 900, height: 600).clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous)) } }
+            .glowBorder(headerTint, radius: 20, strength: session.finished ? 0.9 : 0.5)
             .shadow(color: .black.opacity(0.25), radius: 2, y: 1)
             .shadow(color: .black.opacity(0.5), radius: 44, y: 18)
+            .shadow(color: headerTint.opacity(0.25), radius: 60, y: 10)
         }
         .onExitCommand { if session.finished { close() } }
     }
@@ -66,9 +69,10 @@ struct RunOverlay: View {
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(headerTint)
                 } else {
-                    Spinner(size: 18)
+                    Orbit(size: 20)
                 }
             }
+            .breath(headerTint, strong: !session.finished)
             VStack(alignment: .leading, spacing: 3) {
                 Text(session.finished ? (session.outcomeTitle ?? session.title) : session.title)
                     .font(.system(size: 17, weight: .bold))
@@ -94,6 +98,7 @@ struct RunOverlay: View {
                     .fill(LinearGradient(colors: [headerTint.opacity(0.6), headerTint], startPoint: .leading, endPoint: .trailing))
                     .frame(width: geo.size.width * session.progress, height: 2)
                     .shadow(color: headerTint.opacity(0.8), radius: 3)
+                    .shimmer(active: !session.finished)
                     .animation(Motion.gentle, value: session.progress)
             }
             .frame(height: 2)
@@ -105,9 +110,10 @@ struct RunOverlay: View {
     private var stepList: some View {
         ScrollView {
             VStack(spacing: 4) {
-                ForEach(session.steps) { s in
+                ForEach(Array(session.steps.enumerated()), id: \.element.id) { i, s in
                     RunStepRow(step: s, selected: session.selectedStep == s.id)
                         .onTapGesture { session.selectedStep = s.id }
+                        .entrance(i, offset: 8)
                 }
                 if session.steps.isEmpty {
                     HStack(spacing: 8) {
@@ -275,7 +281,7 @@ struct RunStepRow: View {
         HStack(spacing: 10) {
             ZStack {
                 if step.status == "running" {
-                    Spinner(size: 13)
+                    Orbit(size: 14)
                 } else {
                     Image(systemName: Theme.symbol(for: step.status))
                         .font(.system(size: 13))

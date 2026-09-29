@@ -171,6 +171,7 @@ struct MiniStat: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .lift(radius: 13, amount: 1.02)
         .onHover { hover = $0 }
     }
 }
@@ -230,6 +231,7 @@ struct HeaderView: View {
 struct HeroCard: View {
     @EnvironmentObject var model: AppModel
     let status: ProjectStatus
+    @Local private var celebrate = false
 
     var state: String { status.check?.status ?? "unknown" }
 
@@ -261,6 +263,7 @@ struct HeroCard: View {
             HStack(alignment: .center, spacing: 16) {
                 StatusRing(fraction: passFraction, tint: tint,
                            symbol: state == "unknown" ? "questionmark" : Theme.symbol(for: state))
+                    .breath(tint, strong: state == "blocked")
                     .accessibilityLabel(title)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
@@ -357,6 +360,13 @@ struct HeroCard: View {
             }
         }
         .card(padding: 22, tint: state == "unknown" ? nil : tint)
+        .glowBorder(tint, strength: state == "ready" ? 0.9 : state == "blocked" ? 0.7 : 0.45)
+        .overlay { if celebrate { Celebration().frame(maxWidth: .infinity, maxHeight: .infinity) } }
+        .onChange(of: status.check?.at) { _ in
+            guard state == "ready", !Motion.reduced else { return }
+            celebrate = true
+            Task { try? await Task.sleep(nanoseconds: 2_000_000_000); celebrate = false }
+        }
         .overlay(
             RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
                 .strokeBorder(tint.opacity(state == "unknown" ? 0 : 0.25), lineWidth: 1)
@@ -414,8 +424,8 @@ struct HealthGrid: View {
         VStack(alignment: .leading, spacing: 10) {
             SectionLabel(text: L("dashboard.projectHealth"), icon: "waveform.path.ecg")
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 150, maximum: 400), spacing: 10)], spacing: 10) {
-                ForEach(steps) { s in
-                    HealthTile(step: s)
+                ForEach(Array(steps.enumerated()), id: \.element.id) { i, s in
+                    HealthTile(step: s).entrance(i, offset: 10)
                 }
             }
         }
@@ -478,6 +488,7 @@ struct HealthTile: View {
             )
         }
         .buttonStyle(.plain)
+        .lift(radius: 13, tint: Theme.color(for: step.status), amount: 1.02)
         .onHover { hover = $0 }
         .popover(isPresented: $showDetails, arrowEdge: .bottom) {
             StepDetailPopover(step: step)

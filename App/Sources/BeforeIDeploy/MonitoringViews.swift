@@ -14,6 +14,8 @@ struct MonitorCard: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 10) {
                 SectionLabel(text: L("monitor.title"), icon: "waveform.path.ecg.rectangle")
+                PulseDot(color: m?.serverSide == true ? Theme.ready : (m?.stale == true ? Theme.warn : Theme.accent), size: 6, active: m != nil && m?.stale != true)
+                    .frame(width: 14, height: 14)
                 Spacer()
                 if let at = m?.lastRunAt {
                     Label(L("monitor.lastRun", Fmt.relative(at)), systemImage: m?.stale == true ? "exclamationmark.triangle.fill" : "clock")

@@ -70,7 +70,7 @@ jobs:
           mkdir -p "$OUT"
           shoot() { # name, extra args…
             local name="$1"; shift
-            open -n -W "$APP" --args -BIDSnapshot "$OUT/$name.png" -BIDSnapshotDelay 12 "$@" &
+            open -n -W "$APP" --args -BIDSnapshot "$OUT/$name.png" -BIDSnapshotDelay 14 -BIDNoKeychain 1 "$@" &
             local pid=$!
             for i in $(seq 1 50); do [ -f "$OUT/$name.png" ] && break; sleep 1; done
             sleep 1
@@ -102,6 +102,11 @@ jobs:
           shoot 11-mission-control-en -BIDScreen overview
           shoot 12-project-en -BIDScreen project
           ls -la "$OUT"
+      - name: App and engine logs (decode errors, slow commands)
+        if: always()
+        run: |
+          log show --predicate 'subsystem == "bg.yavor.beforeideploy"' --last 15m --style compact 2>/dev/null | grep -v "^Timestamp" | tail -120 || true
+          tail -n 60 "$HOME/Library/Logs/BeforeIDeploy/engine.log" 2>/dev/null | cut -c1-300 || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:

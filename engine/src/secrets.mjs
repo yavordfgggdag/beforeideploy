@@ -39,7 +39,8 @@ export function setSecret(account, value) {
 
 export function getSecret(account) {
   if (which('security') && !process.env.BID_NO_KEYCHAIN) {
-    const r = sh('security', ['find-generic-password', '-s', SERVICE, '-a', account, '-w']);
+    // a locked or prompting keychain must never freeze the engine (headless Macs, CI): 8 s, then "no secret"
+    const r = sh('security', ['find-generic-password', '-s', SERVICE, '-a', account, '-w'], { timeout: 8000 });
     if (r.code !== 0) return null;
     try {
       return JSON.parse(decode(r.stdout.trim()));

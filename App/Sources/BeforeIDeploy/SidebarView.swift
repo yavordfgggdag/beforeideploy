@@ -1,14 +1,26 @@
 import SwiftUI
 
+/// The sidebar's selection pill slides between rows (matchedGeometryEffect through the environment).
+struct NavNamespaceKey: EnvironmentKey {
+    static let defaultValue: Namespace.ID? = nil
+}
+extension EnvironmentValues {
+    var navNamespace: Namespace.ID? {
+        get { self[NavNamespaceKey.self] }
+        set { self[NavNamespaceKey.self] = newValue }
+    }
+}
+
 struct SidebarView: View {
     @EnvironmentObject var model: AppModel
+    @Namespace private var navPill
 
     var expiring: Int { model.spaceship?.domains.filter { ($0.daysLeft ?? 999) < 30 }.count ?? 0 }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 10) {
-                AppGlyph(size: 26)
+                AppGlyph(size: 26).breath(Theme.accent)
                 VStack(alignment: .leading, spacing: 1) {
                     Text("Before I Deploy")
                         .font(.system(size: 13.5, weight: .bold))
@@ -62,6 +74,8 @@ struct SidebarView: View {
             }
             .padding(.horizontal, 10)
             .padding(.bottom, 18)
+            .environment(\.navNamespace, navPill)
+            .animation(Motion.spring, value: model.screen)
 
             HStack {
                 SectionLabel(text: L("common.projects"))
@@ -241,6 +255,7 @@ struct NavRow: View {
     var badge: String? = nil
     let action: () -> Void
     @Local private var hover = false
+    @Environment(\.navNamespace) private var ns
 
     var body: some View {
         Button(action: action) {
@@ -249,6 +264,8 @@ struct NavRow: View {
                     .font(.system(size: 12.5, weight: .semibold))
                     .foregroundColor(selected ? Theme.accent : Theme.secondary)
                     .frame(width: 20)
+                    .scaleEffect(hover && !Motion.reduced ? 1.12 : 1)
+                    .rotationEffect(.degrees(hover && !Motion.reduced ? -6 : 0))
                 Text(title)
                     .font(.system(size: 13, weight: selected ? .semibold : .medium))
                     .foregroundColor(selected ? Theme.text : Theme.secondary)
@@ -264,16 +281,17 @@ struct NavRow: View {
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
-            .background(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(selected
-                          ? LinearGradient(colors: [Theme.accent.opacity(0.26), Theme.accent.opacity(0.10)], startPoint: .leading, endPoint: .trailing)
-                          : LinearGradient(colors: [hover ? Theme.panel : .clear], startPoint: .leading, endPoint: .trailing))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .strokeBorder(Theme.accent.opacity(selected ? 0.28 : 0), lineWidth: 1)
-            )
+            .background {
+                if selected {
+                    let pill = RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(LinearGradient(colors: [Theme.accent.opacity(0.28), Theme.accent.opacity(0.10)], startPoint: .leading, endPoint: .trailing))
+                        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Theme.accent.opacity(0.32), lineWidth: 1))
+                        .shadow(color: Theme.accent.opacity(0.25), radius: 10, y: 3)
+                    if let ns { pill.matchedGeometryEffect(id: "nav-pill", in: ns) } else { pill }
+                } else {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous).fill(hover ? Theme.panel : .clear)
+                }
+            }
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

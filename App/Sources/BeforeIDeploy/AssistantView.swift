@@ -34,9 +34,9 @@ struct AssistantView: View {
     private var conversation: some View {
         VStack(spacing: 0) {
             HStack(spacing: 10) {
-                Image(systemName: "sparkles").foregroundColor(Theme.accent)
+                Image(systemName: "sparkles").foregroundColor(Theme.accent).breath(Theme.accent)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(L("assistant.title")).font(.system(size: 15, weight: .bold)).foregroundColor(Theme.text)
+                    GradientText(text: L("assistant.title"), font: .system(size: 15, weight: .bold))
                     Text(model.status?.project.name ?? "").font(.system(size: 11.5)).foregroundColor(Theme.secondary)
                 }
                 Spacer()
@@ -51,8 +51,8 @@ struct AssistantView: View {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 12) {
                         if store.turns.isEmpty { emptyState }
-                        ForEach(store.turns) { turn in
-                            TurnView(turn: turn).id(turn.id)
+                        ForEach(Array(store.turns.enumerated()), id: \.element.id) { i, turn in
+                            TurnView(turn: turn).id(turn.id).entrance(min(i, 6), offset: 10)
                         }
                     }
                     .padding(20)
@@ -241,8 +241,15 @@ struct TurnView: View {
                             Text(turn.text).font(.system(size: 11, design: .monospaced)).foregroundColor(Theme.tertiary).textSelection(.enabled)
                         }.font(.system(size: 11)).foregroundColor(Theme.secondary)
                     }
+                } else if turn.text.isEmpty {
+                    HStack(spacing: 8) {
+                        Orbit(size: 14)
+                        Text(L("assistant.thinking")).font(.system(size: 12.5)).foregroundColor(Theme.secondary)
+                        TypingDots()
+                    }
                 } else {
-                    Text(turn.text.isEmpty ? L("assistant.thinking") : turn.text).font(.system(size: 12.5, design: turn.text.isEmpty ? .default : .monospaced)).foregroundColor(Theme.secondary).textSelection(.enabled)
+                    Text(turn.text).font(.system(size: 12.5, design: .monospaced)).foregroundColor(Theme.secondary).textSelection(.enabled)
+                    TypingDots().padding(.top, 2)
                 }
             }
             .padding(14)

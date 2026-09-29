@@ -16,6 +16,7 @@ struct PageHeader<Trailing: View>: View {
             }
             .frame(width: 44, height: 44)
             .shadow(color: Theme.accent.opacity(0.35), radius: 12, y: 4)
+            .breath(Theme.accent)
             VStack(alignment: .leading, spacing: 3) {
                 Text(title).font(.system(size: 26, weight: .bold)).foregroundColor(Theme.text)
                 Text(subtitle).font(.system(size: 12.5)).foregroundColor(Theme.secondary)
@@ -43,11 +44,16 @@ struct KPITile: View {
                         .fill((tint == Theme.text ? Theme.accent : tint).opacity(0.14)))
                 Spacer()
             }
-            Text(value).font(.system(size: 28, weight: .bold, design: .rounded)).foregroundColor(tint).monospacedDigit()
+            if let n = Int(value) {
+                CountUp(target: n, format: { String($0) }, font: .system(size: 28, weight: .bold, design: .rounded), color: tint)
+            } else {
+                Text(value).font(.system(size: 28, weight: .bold, design: .rounded)).foregroundColor(tint).monospacedDigit()
+            }
             Text(label).font(.system(size: 11.5)).foregroundColor(Theme.tertiary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .card(padding: 16)
+        .lift(tint: tint == Theme.text ? Theme.accent : tint)
         .accessibilityElement(children: .combine)
     }
 }
@@ -137,11 +143,11 @@ struct MissionControlView: View {
 
                 if let o = model.overview {
                     HStack(spacing: 12) {
-                        KPITile(value: "\(o.totals.projects)", label: L("common.projectsCaption"), icon: "folder.fill")
-                        KPITile(value: "\(o.totals.ready)", label: L("overview.readyToDeploy"), icon: "checkmark.seal.fill", tint: Theme.ready)
-                        KPITile(value: "\(o.totals.blocked)", label: L("overview.blockedCaption"), icon: "xmark.octagon.fill", tint: o.totals.blocked > 0 ? Theme.blocked : Theme.text)
+                        KPITile(value: "\(o.totals.projects)", label: L("common.projectsCaption"), icon: "folder.fill").entrance(0)
+                        KPITile(value: "\(o.totals.ready)", label: L("overview.readyToDeploy"), icon: "checkmark.seal.fill", tint: Theme.ready).entrance(1)
+                        KPITile(value: "\(o.totals.blocked)", label: L("overview.blockedCaption"), icon: "xmark.octagon.fill", tint: o.totals.blocked > 0 ? Theme.blocked : Theme.text).entrance(2)
                         KPITile(value: "\(o.totals.online)/\(o.totals.live)", label: L("overview.sitesOnline"), icon: "dot.radiowaves.left.and.right",
-                                tint: o.totals.online < o.totals.live ? Theme.warn : Theme.ready)
+                                tint: o.totals.online < o.totals.live ? Theme.warn : Theme.ready).entrance(3)
                     }
 
                     if !o.attention.isEmpty {
@@ -164,9 +170,10 @@ struct MissionControlView: View {
                             }
                         }
                         .card()
+                        .entrance(4)
                     }
 
-                    MonitorCard()
+                    MonitorCard().entrance(5)
 
                     if o.cards.isEmpty {
                         WelcomeView().frame(maxWidth: .infinity)
@@ -181,9 +188,10 @@ struct MissionControlView: View {
                             .frame(maxWidth: .infinity).padding(.vertical, 20)
                         } else {
                             LazyVGrid(columns: [GridItem(.adaptive(minimum: 320), spacing: 14, alignment: .top)], spacing: 14) {
-                                ForEach(shown) { c in
+                                ForEach(Array(shown.enumerated()), id: \.element.id) { i, c in
                                     ProjectOverviewCard(card: c)
                                         .onTapGesture { Task { await model.select(c.key) } }
+                                        .entrance(4 + i)
                                 }
                             }
                         }
@@ -301,6 +309,7 @@ struct ProjectOverviewCard: View {
                     .foregroundColor(Theme.color(for: card.status ?? "idle"))
                     .padding(.horizontal, 8).padding(.vertical, 4)
                     .background(Capsule().fill(Theme.color(for: card.status ?? "idle").opacity(0.14)))
+                    .modifier(Breath(color: Theme.color(for: card.status ?? "idle"), strong: card.status == "blocked"))
             }
 
             VStack(alignment: .leading, spacing: 7) {
@@ -359,6 +368,7 @@ struct ProjectOverviewCard: View {
         .offset(y: hover && !Motion.reduced ? -2 : 0)
         .contentShape(Rectangle())
         .onHover { hover = $0 }
+        .lift(tint: Theme.color(for: card.status ?? "idle"), amount: 1.015)
         .animation(Motion.quick, value: hover)
     }
 }

@@ -193,6 +193,7 @@ struct FirstStepsCard: View {
                             .background(RoundedRectangle(cornerRadius: 5, style: .continuous).fill(Theme.elevated))
                     }
                 }
+                .entrance(i, offset: 8)
             }
             if let setup = model.setup, !setup.ready {
                 Rectangle().fill(Theme.hairline).frame(height: 1)

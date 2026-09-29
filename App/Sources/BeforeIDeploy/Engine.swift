@@ -109,6 +109,8 @@ final class EngineClient {
         var env = ProcessInfo.processInfo.environment
         env["BID_CLIENT"] = "app"
         if env["BID_LANG"] == nil { env["BID_LANG"] = Self.engineLanguage }
+        // screenshot / CI runs: never touch the login keychain (`open --args -BIDNoKeychain 1`)
+        if Snapshot.argument("BIDNoKeychain") { env["BID_NO_KEYCHAIN"] = "1" }
         for (k, v) in extra { env[k] = v }
         process.environment = env
 
@@ -164,7 +166,13 @@ final class EngineClient {
                             env: [String: String] = [:],
                             onEvent: (@MainActor (EngineEvent) -> Void)? = nil) async throws -> T {
         let outcome = try await run(args, env: env, onEvent: onEvent)
-        return try outcome.decode(T.self)
+        do {
+            return try outcome.decode(T.self)
+        } catch {
+            // a model that stopped matching the engine's JSON is the most common silent failure: say so in the log
+            AppLog.engine.error("\(AppLog.commandName(args), privacy: .public) decode \(String(describing: T.self), privacy: .public): \(String(describing: error), privacy: .public)")
+            throw error
+        }
     }
 }
 

@@ -13,10 +13,10 @@ struct PlanUsageView: View {
                 header
                 if let u = store.usage {
                     HStack(alignment: .top, spacing: 16) {
-                        planCard(u).frame(maxWidth: .infinity)
-                        limitsCard(u).frame(width: 300)
+                        planCard(u).frame(maxWidth: .infinity).entrance(0)
+                        limitsCard(u).frame(width: 300).entrance(1)
                     }
-                    historyCard(u)
+                    historyCard(u).entrance(2)
                 } else if store.loading {
                     HStack(spacing: 10) { Spinner(size: 16); Text(L("usage.loading")).foregroundColor(Theme.secondary) }.card()
                 } else if let e = store.usageError {
@@ -84,8 +84,8 @@ struct PlanUsageView: View {
             }
             Divider().background(Theme.hairline)
             HStack(spacing: 22) {
-                stat(L("usage.purchased"), Fmt.tokens(u.purchased.tokens), sub: L("usage.purchasedHint"))
-                stat(L("usage.available"), Fmt.tokens(u.remaining.available), sub: L("usage.availableHint"))
+                stat(L("usage.purchased"), u.purchased.tokens, sub: L("usage.purchasedHint"))
+                stat(L("usage.available"), u.remaining.available, sub: L("usage.availableHint"))
                 Spacer()
             }
             if let r = u.reconciled, r.releasedHolds > 0 {
@@ -165,10 +165,10 @@ struct PlanUsageView: View {
         HStack(spacing: 5) { Circle().fill(color).frame(width: 7, height: 7); Text(text) }
     }
 
-    private func stat(_ label: String, _ value: String, sub: String) -> some View {
+    private func stat(_ label: String, _ value: Int, sub: String) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(label).font(.system(size: 11)).foregroundColor(Theme.tertiary)
-            Text(value).font(.system(size: 16, weight: .bold)).foregroundColor(Theme.text)
+            CountUp(target: value, font: .system(size: 16, weight: .bold, design: .rounded), color: Theme.text)
             Text(sub).font(.system(size: 10.5)).foregroundColor(Theme.tertiary)
         }
     }
