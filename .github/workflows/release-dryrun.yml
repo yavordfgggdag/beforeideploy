@@ -7,6 +7,11 @@ on:
   workflow_dispatch:
   push:
     tags: ['v*']
+    paths:
+      - 'scripts/release.sh'
+      - 'scripts/build.sh'
+      - '.github/workflows/release-dryrun.yml'
+    branches: ['**']
 
 jobs:
   dmg:
