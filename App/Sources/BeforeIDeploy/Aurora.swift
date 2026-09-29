@@ -33,9 +33,9 @@ private struct AuroraFrame: View {
             let h = geo.size.height
             ZStack {
                 Theme.bg
-                blob(color: tint, size: max(w, h) * 0.9, x: w * (0.82 + 0.06 * sin(t * 0.21)), y: h * (0.10 + 0.08 * cos(t * 0.17)), opacity: 0.16)
-                blob(color: Color(hex: 0x7A3FD6), size: max(w, h) * 0.8, x: w * (0.12 + 0.07 * cos(t * 0.13)), y: h * (0.92 + 0.05 * sin(t * 0.19)), opacity: 0.12)
-                blob(color: Color(hex: 0x1FA36A), size: max(w, h) * 0.55, x: w * (0.55 + 0.10 * sin(t * 0.11)), y: h * (0.55 + 0.10 * cos(t * 0.09)), opacity: 0.05)
+                blob(color: tint, size: max(w, h) * 0.9, x: w * (0.82 + 0.06 * sin(t * 0.21)), y: h * (0.10 + 0.08 * cos(t * 0.17)), opacity: 0.26)
+                blob(color: Color(hex: 0x7A3FD6), size: max(w, h) * 0.8, x: w * (0.12 + 0.07 * cos(t * 0.13)), y: h * (0.92 + 0.05 * sin(t * 0.19)), opacity: 0.20)
+                blob(color: Color(hex: 0x1FA36A), size: max(w, h) * 0.55, x: w * (0.55 + 0.10 * sin(t * 0.11)), y: h * (0.55 + 0.10 * cos(t * 0.09)), opacity: 0.09)
                 // fine grain so the gradients never band
                 Rectangle().fill(Color.white.opacity(0.012)).blendMode(.plusLighter)
             }
@@ -383,6 +383,95 @@ struct SweepBar: View {
 
 // MARK: - View helpers
 
+// MARK: - Welcome sky
+
+/// The onboarding backdrop: the brand gradient with slowly drifting light and a soft sweep — alive, never busy.
+struct WelcomeSky: View {
+    var body: some View {
+        if Motion.reduced {
+            WelcomeSkyFrame(t: 0)
+        } else {
+            TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { ctx in
+                WelcomeSkyFrame(t: ctx.date.timeIntervalSinceReferenceDate)
+            }
+        }
+    }
+}
+
+private struct WelcomeSkyFrame: View {
+    let t: Double
+
+    var body: some View {
+        GeometryReader { geo in
+            let w = geo.size.width
+            let h = geo.size.height
+            ZStack {
+                LinearGradient(colors: [Color(hex: 0x0B3D91), Color(hex: 0x0A6EF0), Color(hex: 0x3B9CFF)],
+                               startPoint: .bottomLeading, endPoint: .topTrailing)
+                glow(size: max(w, h) * 0.9, x: w * (0.85 + 0.05 * sin(t * 0.19)), y: h * (0.05 + 0.06 * cos(t * 0.23)), opacity: 0.22)
+                glow(size: max(w, h) * 0.7, x: w * (0.05 + 0.06 * cos(t * 0.15)), y: h * (0.95 + 0.04 * sin(t * 0.21)), opacity: 0.16)
+                glow(size: max(w, h) * 0.45, x: w * (0.5 + 0.12 * sin(t * 0.11)), y: h * (0.5 + 0.10 * cos(t * 0.13)), opacity: 0.10, color: Color(hex: 0x9BE7FF))
+                // a light sweep every ~12 s, like sun on water
+                let sweep = (t * 0.085).truncatingRemainder(dividingBy: 1)
+                LinearGradient(colors: [.clear, Color.white.opacity(0.10), .clear], startPoint: .top, endPoint: .bottom)
+                    .frame(width: w * 1.6, height: h * 0.5)
+                    .rotationEffect(.degrees(-28))
+                    .offset(y: -h * 0.9 + h * 1.8 * sweep)
+                    .blendMode(.plusLighter)
+            }
+        }
+        .allowsHitTesting(false)
+    }
+
+    private func glow(size: CGFloat, x: CGFloat, y: CGFloat, opacity: Double, color: Color = .white) -> some View {
+        Circle()
+            .fill(RadialGradient(colors: [color.opacity(opacity), color.opacity(opacity * 0.3), .clear], center: .center, startRadius: 0, endRadius: size / 2))
+            .frame(width: size, height: size)
+            .position(x: x, y: y)
+    }
+}
+
+// MARK: - Floating
+
+/// A slow vertical bob — logos and hero glyphs hover instead of sitting still.
+struct Floating: ViewModifier {
+    var amplitude: CGFloat = 4
+    var period: Double = 3.2
+    @Local private var up = false
+
+    func body(content: Content) -> some View {
+        content
+            .offset(y: up && !Motion.reduced ? -amplitude : amplitude)
+            .onAppear {
+                guard !Motion.reduced else { return }
+                withAnimation(.easeInOut(duration: period).repeatForever(autoreverses: true)) { up = true }
+            }
+    }
+}
+
+// MARK: - Progress ring
+
+/// A ring that draws itself from empty to `fraction` on appear and re-draws on every change.
+struct ProgressRing: View {
+    var fraction: Double
+    var lineWidth: CGFloat = 7
+    var tint: LinearGradient = Theme.accentGradient
+    @Local private var shown: Double = 0
+
+    var body: some View {
+        ZStack {
+            Circle().stroke(Theme.elevated, lineWidth: lineWidth)
+            Circle()
+                .trim(from: 0, to: CGFloat(shown))
+                .stroke(tint, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+                .shadow(color: Theme.accent.opacity(0.45), radius: 6)
+        }
+        .onAppear { withAnimation(Motion.reduced ? nil : .spring(response: 1.1, dampingFraction: 0.85).delay(0.15)) { shown = fraction } }
+        .onChange(of: fraction) { f in withAnimation(Motion.reduced ? nil : .spring(response: 0.8, dampingFraction: 0.85)) { shown = f } }
+    }
+}
+
 extension View {
     func glowBorder(_ tint: Color, radius: CGFloat = Theme.radius, strength: Double = 1) -> some View {
         modifier(GlowBorder(tint: tint, radius: radius, strength: strength))
@@ -400,6 +489,9 @@ extension View {
         modifier(Shimmer(active: active))
     }
     /// Screen-level transition: content slides up and fades in when the screen changes.
+    func floating(amplitude: CGFloat = 4, period: Double = 3.2) -> some View {
+        modifier(Floating(amplitude: amplitude, period: period))
+    }
     func screenTransition() -> some View {
         transition(.asymmetric(insertion: .opacity.combined(with: .offset(y: 12)).combined(with: .scale(scale: 0.995)), removal: .opacity))
     }

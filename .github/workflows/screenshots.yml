@@ -59,7 +59,7 @@ jobs:
           BID="$ENGINE/bid"
           for p in moyat-sait online-magazin portfolio; do
             "$BID" project add --path "$DEMO/$p" > /dev/null
-            "$BID" check --project "$DEMO/$p" > /dev/null || true
+            BID_LANG=bg "$BID" check --project "$DEMO/$p" > /dev/null || true
           done
           "$BID" project list | tail -1 | head -c 600; echo
       - name: Take screenshots

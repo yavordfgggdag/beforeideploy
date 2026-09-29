@@ -221,7 +221,11 @@ struct ProjectRow: View {
                     .lineLimit(1)
             }
             Spacer(minLength: 4)
-            StatusDot(status: project.lastStatus, size: 7)
+            if project.lastStatus == "blocked" {
+                PulseDot(color: Theme.color(for: project.lastStatus), size: 7).frame(width: 12, height: 12)
+            } else {
+                StatusDot(status: project.lastStatus, size: 7)
+            }
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 7)
@@ -240,6 +244,7 @@ struct ProjectRow: View {
             }
         }
         .contentShape(Rectangle())
+        .scaleEffect(hover && !Motion.reduced ? 1.015 : 1)
         .onHover { hover = $0 }
         .animation(Motion.quick, value: hover)
         .animation(Motion.quick, value: selected)

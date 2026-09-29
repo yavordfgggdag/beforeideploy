@@ -10,10 +10,7 @@ struct WelcomeLanguageView: View {
 
     var body: some View {
         ZStack {
-            LinearGradient(colors: [Color(hex: 0x0B3D91), Color(hex: 0x0A6EF0), Color(hex: 0x3B9CFF)],
-                           startPoint: .bottomLeading, endPoint: .topTrailing)
-            Circle().fill(Color.white.opacity(0.08)).frame(width: 620).offset(x: 360, y: -300).blur(radius: 2)
-            Circle().fill(Color.white.opacity(0.06)).frame(width: 420).offset(x: -380, y: 320)
+            WelcomeSky()
 
             VStack(spacing: 24) {
                 HStack(spacing: 12) {
@@ -22,14 +19,17 @@ struct WelcomeLanguageView: View {
                         Image(systemName: "paperplane.fill").font(.system(size: 22, weight: .bold)).foregroundColor(.white).rotationEffect(.degrees(-8))
                     }
                     .frame(width: 50, height: 50)
+                    .floating()
                     Text("Before I Deploy").font(.system(size: 24, weight: .bold)).foregroundColor(.white)
                 }
+                .entrance(0)
 
                 VStack(spacing: 6) {
                     Text(text("language.title")).font(.system(size: 26, weight: .heavy)).foregroundColor(.white)
                     Text(text("language.subtitle")).font(.system(size: 13)).foregroundColor(.white.opacity(0.8))
                         .multilineTextAlignment(.center)
                 }
+                .entrance(1)
 
                 let codes = Localization.available
                 let grid = LazyVGrid(columns: [GridItem(.adaptive(minimum: 170), spacing: 10)], spacing: 10) {
@@ -49,10 +49,13 @@ struct WelcomeLanguageView: View {
                 .background(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).fill(Theme.panel))
                 .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.edgeHighlight, lineWidth: 1))
                 .frame(width: codes.count > 2 ? 580 : 390)
+                .glowBorder(Theme.accent, strength: 0.7)
+                .entrance(2, offset: 22)
 
                 Button(text("language.continue")) { model.setLanguage(selected) }
                     .bidButton(.primary)
                     .keyboardShortcut(.defaultAction)
+                    .entrance(4)
             }
             .padding(40)
         }
@@ -86,6 +89,8 @@ struct LanguageTile: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .lift(radius: Theme.smallRadius, amount: 1.03)
+        .animation(Motion.spring, value: selected)
     }
 }
 

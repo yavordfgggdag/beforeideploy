@@ -33,10 +33,7 @@ struct WelcomeTourView: View {
 
     var body: some View {
         ZStack {
-            LinearGradient(colors: [Color(hex: 0x0B3D91), Color(hex: 0x0A6EF0), Color(hex: 0x3B9CFF)],
-                           startPoint: .bottomLeading, endPoint: .topTrailing)
-            Circle().fill(Color.white.opacity(0.08)).frame(width: 620).offset(x: 360, y: -300).blur(radius: 2)
-            Circle().fill(Color.white.opacity(0.06)).frame(width: 420).offset(x: -380, y: 320)
+            WelcomeSky()
 
             VStack(spacing: 22) {
                 HStack(spacing: 12) {
@@ -45,8 +42,10 @@ struct WelcomeTourView: View {
                         Image(systemName: "paperplane.fill").font(.system(size: 22, weight: .bold)).foregroundColor(.white).rotationEffect(.degrees(-8))
                     }
                     .frame(width: 50, height: 50)
+                    .floating()
                     Text("Before I Deploy").font(.system(size: 24, weight: .bold)).foregroundColor(.white)
                 }
+                .entrance(0)
 
                 VStack(spacing: 18) {
                     Image(systemName: page.symbol)
@@ -54,6 +53,8 @@ struct WelcomeTourView: View {
                         .foregroundColor(Theme.accent)
                         .frame(width: 84, height: 84)
                         .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Theme.accentSoft))
+                        .breath(Theme.accent)
+                        .floating(amplitude: 3, period: 2.8)
                     VStack(spacing: 8) {
                         Text(L(page.titleKey))
                             .font(.system(size: 24, weight: .heavy))
@@ -66,12 +67,13 @@ struct WelcomeTourView: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     VStack(alignment: .leading, spacing: 9) {
-                        ForEach(page.bullets, id: \.self) { key in
+                        ForEach(Array(page.bullets.enumerated()), id: \.element) { i, key in
                             HStack(alignment: .top, spacing: 10) {
                                 Image(systemName: "checkmark.circle.fill").foregroundColor(Theme.ready).font(.system(size: 13))
                                 Text(L(key)).font(.system(size: 13)).foregroundColor(Theme.text)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
+                            .entrance(i + 3, offset: 10)
                         }
                     }
                     .padding(.horizontal, 8)
@@ -80,14 +82,18 @@ struct WelcomeTourView: View {
                 .frame(width: 560)
                 .background(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).fill(Theme.panel))
                 .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
+                .glowBorder(Theme.accent, strength: 0.7)
+                .shadow(color: .black.opacity(0.35), radius: 30, y: 16)
                 .id(page.id)
-                .transition(.opacity.combined(with: .move(edge: .trailing)))
+                .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .trailing)).combined(with: .scale(scale: 0.96)),
+                                        removal: .opacity.combined(with: .move(edge: .leading)).combined(with: .scale(scale: 0.96))))
 
                 HStack(spacing: 8) {
                     ForEach(Onboarding.pages) { p in
-                        Circle()
+                        Capsule()
                             .fill(p.id == page.id ? Color.white : Color.white.opacity(0.35))
-                            .frame(width: 7, height: 7)
+                            .frame(width: p.id == page.id ? 22 : 7, height: 7)
+                            .animation(Motion.spring, value: page.id)
                     }
                 }
                 .accessibilityLabel(L("tour.pageOf", page.id + 1, Onboarding.pages.count))

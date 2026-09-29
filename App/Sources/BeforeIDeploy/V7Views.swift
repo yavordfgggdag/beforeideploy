@@ -393,7 +393,9 @@ struct CostsView: View {
                 if let c = model.costs {
                     SectionLabel(text: L("costs.accounts"), icon: "person.2.fill")
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 320), spacing: 14)], spacing: 14) {
-                        ForEach(c.usage.providers) { p in ProviderCard(provider: p) }
+                        ForEach(Array(c.usage.providers.enumerated()), id: \.element.id) { i, p in
+                            ProviderCard(provider: p).lift().entrance(i + 1)
+                        }
                     }
 
                     SectionLabel(text: L("costs.thisMonth", c.month), icon: "calendar")
@@ -643,11 +645,7 @@ struct SetupView: View {
                     let done = s.items.filter(\.ok).count
                     HStack(spacing: 18) {
                         ZStack {
-                            Circle().stroke(Theme.elevated, lineWidth: 7)
-                            Circle()
-                                .trim(from: 0, to: s.items.isEmpty ? 0 : CGFloat(done) / CGFloat(s.items.count))
-                                .stroke(Theme.accentGradient, style: StrokeStyle(lineWidth: 7, lineCap: .round))
-                                .rotationEffect(.degrees(-90))
+                            ProgressRing(fraction: s.items.isEmpty ? 0 : Double(done) / Double(s.items.count))
                             Text("\(done)/\(s.items.count)").font(.system(size: 14, weight: .bold)).foregroundColor(Theme.text)
                         }
                         .frame(width: 64, height: 64)
@@ -663,20 +661,24 @@ struct SetupView: View {
                             .disabled(s.ready)
                     }
                     .card(padding: 20)
+                    .glowBorder(s.ready ? Theme.ready : Theme.accent, strength: 0.8)
+                    .entrance(0)
 
                     if model.account?.canUseOwnKey == true {
                         AIKeysCard()
                     }
 
-                    ForEach(groups(s.items)) { group in
+                    ForEach(Array(groups(s.items).enumerated()), id: \.element.id) { gi, group in
                         VStack(alignment: .leading, spacing: 4) {
                             SectionLabel(text: group.name).padding(.bottom, 6)
-                            ForEach(group.items) { item in
-                                SetupRow(item: item)
+                            ForEach(Array(group.items.enumerated()), id: \.element.id) { ii, item in
+                                SetupRow(item: item).entrance(gi * 3 + ii + 2, offset: 8)
                                 if item.id != group.items.last?.id { Rectangle().fill(Theme.hairline).frame(height: 1) }
                             }
                         }
                         .card()
+                        .lift()
+                        .entrance(gi + 1)
                     }
                 } else {
                     HStack { Spinner(size: 16); Text(L("setup.checking")).foregroundColor(Theme.secondary) }

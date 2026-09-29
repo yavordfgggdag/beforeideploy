@@ -184,10 +184,7 @@ struct BrandPanel: View {
 
     var body: some View {
         ZStack {
-            LinearGradient(colors: [Color(hex: 0x0B3D91), Color(hex: 0x0A6EF0), Color(hex: 0x3B9CFF)],
-                           startPoint: .bottomLeading, endPoint: .topTrailing)
-            Circle().fill(Color.white.opacity(0.08)).frame(width: 520).offset(x: 220, y: -260).blur(radius: 2)
-            Circle().fill(Color.white.opacity(0.06)).frame(width: 380).offset(x: -240, y: 300)
+            WelcomeSky()
             VStack(alignment: .leading, spacing: 28) {
                 HStack(spacing: 12) {
                     ZStack {
@@ -535,6 +532,7 @@ struct CommandPalette: View {
     /// Highlighted row: ↑/↓ move it, Return runs it (audit A14).
     @Local private var selection = 0
     @FocusState private var searchFocused: Bool
+    @Local private var appeared = false
 
     var commands: [PaletteCommand] {
         var c: [PaletteCommand] = [
@@ -615,6 +613,7 @@ struct CommandPalette: View {
                                 .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)
+                            .entrance(index, offset: 8)
                         }
                         if filtered.isEmpty {
                             Text(L("palette.nothingFound")).foregroundColor(Theme.tertiary).padding(20)
@@ -627,8 +626,12 @@ struct CommandPalette: View {
             .frame(width: 620)
             .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Theme.panel))
             .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
+            .glowBorder(Theme.accent, radius: 16, strength: 0.8)
             .shadow(color: .black.opacity(0.5), radius: 30, y: 14)
             .padding(.top, 110)
+            .scaleEffect(appeared || Motion.reduced ? 1 : 0.94, anchor: .top)
+            .opacity(appeared || Motion.reduced ? 1 : 0)
+            .onAppear { withAnimation(.spring(response: 0.36, dampingFraction: 0.8)) { appeared = true } }
             // arrow keys move the highlight even while the search field has focus
             Group {
                 Button("") { move(-1) }.keyboardShortcut(.upArrow, modifiers: [])
