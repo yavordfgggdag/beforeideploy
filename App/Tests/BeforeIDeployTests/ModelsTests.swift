@@ -55,6 +55,23 @@ final class ModelsTests: XCTestCase {
         XCTAssertEqual(legacy.oauthProviders, ["github"])
     }
 
+    func testCloudDoctorDecodesTheOwnerSetupState() throws {
+        let d = try Fixtures.decode("cloud-doctor", as: CloudDoctorResult.self)
+        XCTAssertTrue(d.configured)
+        XCTAssertTrue(d.reachable)
+        XCTAssertEqual(d.schemaApplied, true)
+        XCTAssertEqual(d.functionsMissing, [])
+        XCTAssertEqual(d.auth?.emailConfirmRequired, true)
+        XCTAssertEqual(d.auth?.providers, ["github", "email"])
+        // an unreachable project keeps the shape the sign-in screen renders
+        let off = try JSONDecoder().decode(CloudDoctorResult.self, from: Data(#"{"configured":true,"url":"https://x.supabase.co","reachable":false,"error":"timeout","functionsMissing":[]}"#.utf8))
+        XCTAssertFalse(off.reachable)
+        XCTAssertNil(off.auth)
+        // a signed-in account against a project without the schema says so
+        let a = try JSONDecoder().decode(AccountState.self, from: Data(#"{"configured":true,"loggedIn":true,"plan":"free","schemaMissing":true}"#.utf8))
+        XCTAssertEqual(a.schemaMissing, true)
+    }
+
     func testFeaturesDecodeDottedKeys() throws {
         let json = #"{"ai.cloud":true,"ai.ownKey":false,"ai.builtin":true,"ai.external":true,"ai.deep":false,"cloud.sync":true,"admin.panel":false,"billing.plans":true,"projects.max":5}"#
         let f = try JSONDecoder().decode(AccountState.Features.self, from: Data(json.utf8))

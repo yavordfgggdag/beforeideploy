@@ -7,6 +7,7 @@ import { netlifyAuth, netlifyLogin } from './netlify.mjs';
 import { spaceshipConnected } from './spaceship.mjs';
 import { providerStatus } from './hosting.mjs';
 import { t, msg } from './i18n.mjs';
+import { cloudDoctor, cloudSetupItems } from './cloud.mjs';
 
 function fileHas(file, re) {
   try {
@@ -116,6 +117,21 @@ export function setupStatus() {
     ready: required.every((i) => i.ok),
     missingRequired: required.filter((i) => !i.ok).length,
     missingOptional: items.filter((i) => i.optional && !i.ok).length,
+  };
+}
+
+/** `setupStatus()` plus the cloud rows (network, ≤ 5 s when the project is unreachable) — what the Setup screen shows. */
+export async function setupStatusFull() {
+  const st = setupStatus();
+  const cloud = cloudSetupItems(await cloudDoctor());
+  const items = [...cloud, ...st.items];
+  const required = items.filter((i) => !i.optional);
+  return {
+    items,
+    ready: required.every((i) => i.ok),
+    missingRequired: required.filter((i) => !i.ok).length,
+    missingOptional: items.filter((i) => i.optional && !i.ok).length,
+    cloudReady: cloud.filter((i) => !i.optional).every((i) => i.ok),
   };
 }
 

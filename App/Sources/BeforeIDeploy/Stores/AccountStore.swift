@@ -7,6 +7,11 @@ final class AccountStore: ObservableObject {
     @Published var account: AccountState?
     @Published var accountChecked = false
     @Published var aiKeys: [AIKeyStatus] = []
+    /// Engine code of the last failed sign-in / sign-up (`email_not_confirmed` unlocks "send it again").
+    @Published var lastAuthCode: String?
+    /// Last `bid cloud doctor` answer, shown on the sign-in screen on request.
+    @Published var cloudDoctor: CloudDoctorResult?
+    @Published var cloudChecking = false
     /// @Published, not @AppStorage: @AppStorage inside an ObservableObject does not refresh views (audit A4).
     @Published var offlineMode = UserDefaults.standard.bool(forKey: "offlineMode") {
         didSet { UserDefaults.standard.set(offlineMode, forKey: "offlineMode") }
@@ -39,20 +44,48 @@ final class AccountStore: ObservableObject {
         do {
             let r = try await engine.call(["account", "signup", "--email", email, "--name", name], as: AccountState.self,
                                           env: ["BID_PASSWORD": password])
+            lastAuthCode = nil
             if r.confirmEmail == true { return "CONFIRM" }
             account = r
             await afterLogin()
             return nil
-        } catch { return error.localizedDescription }
+        } catch {
+            lastAuthCode = (error as? EngineError)?.code
+            return error.localizedDescription
+        }
     }
 
     func login(email: String, password: String) async -> String? {
         do {
             account = try await engine.call(["account", "login", "--email", email], as: AccountState.self,
                                             env: ["BID_PASSWORD": password])
+            lastAuthCode = nil
             await afterLogin()
             return nil
+        } catch {
+            lastAuthCode = (error as? EngineError)?.code
+            return error.localizedDescription
+        }
+    }
+
+    /// Sends the sign-up confirmation e-mail again. Returns an error message, or nil on success.
+    func resendConfirmation(email: String) async -> String? {
+        do {
+            _ = try await engine.call(["account", "resend", "--email", email], as: [String: JSONValue].self)
+            return nil
         } catch { return error.localizedDescription }
+    }
+
+    /// Asks the engine what the cloud project can do (schema, functions, sign-up, e-mail confirmation).
+    func checkCloud() async {
+        cloudChecking = true
+        defer { cloudChecking = false }
+        do { cloudDoctor = try await engine.call(["cloud", "doctor"], as: CloudDoctorResult.self) } catch { feedback?.show(error) }
+    }
+
+    /// The bundled supabase/schema.sql (engine `cloud schema`), nil when the engine has none.
+    func cloudSchema() async -> String? {
+        (try? await engine.call(["cloud", "schema"], as: CloudSchema.self))?.sql
     }
 
     func recover(email: String) async -> String? {
@@ -100,7 +133,11 @@ final class AccountStore: ObservableObject {
 
     private func afterLogin() async {
         offlineMode = false
-        feedback?.flash(L("auth.hello", account?.name ?? account?.email ?? ""), error: false)
+        if account?.schemaMissing == true {
+            feedback?.flash(L("auth.schemaMissing"), error: true)
+        } else {
+            feedback?.flash(L("auth.hello", account?.name ?? account?.email ?? ""), error: false)
+        }
         await onLogin?()
         Task { _ = try? await engine.run(["account", "sync"]) }
     }
@@ -167,31 +204,4 @@ final class AccountStore: ObservableObject {
             return nil
         } catch { return error.localizedDescription }
     }
-
-    static let cloudSchema = #"""
--- Before I Deploy — Supabase schema (run once in Supabase → SQL Editor)
--- Only project METADATA is stored. Service tokens (Netlify, Vercel, GitHub…) never leave the user's Mac.
-
-create table if not exists public.bid_projects (
-  user_id     uuid        not null references auth.users(id) on delete cascade,
-  key         text        not null,
-  name        text        not null,
-  framework   text,
-  hosting     text,
-  live_url    text,
-  domain      text,
-  last_status text,
-  updated_at  timestamptz not null default now(),
-  primary key (user_id, key)
-);
-
-alter table public.bid_projects enable row level security;
-
--- Every user sees and edits only their own rows.
-drop policy if exists "own rows" on public.bid_projects;
-create policy "own rows" on public.bid_projects
-  for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
-"""#
 }

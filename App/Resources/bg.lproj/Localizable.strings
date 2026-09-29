@@ -221,6 +221,7 @@
 
 "auth.apple" = "Вход с Apple";
 "auth.backToLogin" = "← Назад към вход";
+"auth.checkCloud" = "Не можеш да влезеш? Провери облака";
 "auth.checkInbox" = "Провери пощата си за линк за нова парола.";
 "auth.confirmEmail" = "Изпратихме ти имейл за потвърждение. Потвърди го и влез.";
 "auth.continueOffline" = "Продължи без акаунт";
@@ -238,6 +239,10 @@
 "auth.passwordMin" = "Парола (поне 8 символа)";
 "auth.privacyNote" = "Ключовете за Netlify, GitHub, Vercel и т.н. остават на твоя Mac (Keychain). Акаунтът пази имената, framework-а, хостинга, live адресите, домейните и резултатите от проверките на проектите ти, плана и употребата на AI — никога кода или ключовете ти. Можеш да го експортираш или изтриеш по всяко време от Настройки.";
 "auth.recoverSubtitle" = "Ще ти изпратим линк за нова парола.";
+"auth.resend" = "Изпрати потвърждението отново";
+"auth.resendHint" = "Няма писмо? Собственикът може да изключи потвърждението по имейл в Supabase (Настройка → Облак обяснява как).";
+"auth.resent" = "Изпратено. Провери пощата и спама — вграденият mailer на Supabase праща само до имейлите на екипа на проекта, така че собственикът може да се наложи да изключи „Confirm email“.";
+"auth.schemaMissing" = "Влезе, но облакът не е довършен: липсва схемата на базата (Настройка → Облак).";
 "auth.sendLink" = "Изпрати линк";
 "auth.signIn" = "Вход";
 "auth.signUp" = "Регистрация";
@@ -309,7 +314,23 @@
 "cloud.anonKeyPlaceholder" = "anon public key";
 "cloud.continueOffline" = "Продължи без акаунт засега";
 "cloud.copySchema" = "Копирай SQL схемата";
+"cloud.doctor.confirmOff" = "Не се иска потвърждение по имейл";
+"cloud.doctor.confirmOn" = "Иска се потвърждение по имейл — вграденият mailer на Supabase праща само до екипа на проекта";
+"cloud.doctor.functionsMissing" = "Не са качени Edge Functions: %@";
+"cloud.doctor.functionsOk" = "Всички Edge Functions са качени";
+"cloud.doctor.openDashboard" = "Отвори Supabase dashboard";
+"cloud.doctor.openSetup" = "Отвори Настройка → Облак";
+"cloud.doctor.ownerHint" = "Това са стъпки на собственика, веднъж — в Supabase dashboard или с GitHub Action-а cloud-deploy (docs/CLOUD-SETUP-BG.md). Дотогава можеш да продължиш без акаунт.";
+"cloud.doctor.reachable" = "Проектът %@ отговаря";
+"cloud.doctor.schemaMissing" = "Схемата не е приложена — липсват таблици: %@";
+"cloud.doctor.schemaOk" = "Схемата на базата е приложена";
+"cloud.doctor.signupOff" = "Регистрацията е изключена в Supabase";
+"cloud.doctor.signupOn" = "Регистрацията е отворена";
+"cloud.doctor.unreachable" = "Проектът не отговаря: %@";
 "cloud.openSupabase" = "Отвори Supabase";
+"cloud.schemaCopied" = "Схемата е копирана — постави я в SQL Editor и натисни Run";
+"cloud.schemaCopiedOpen" = "Схемата е копирана. SQL Editor се отваря в браузъра: постави (⌘V) и натисни Run.";
+"cloud.schemaUnavailable" = "Този engine няма supabase/schema.sql — използвай копието от хранилището.";
 "cloud.step1" = "Създай безплатен проект в Supabase.";
 "cloud.step2" = "SQL Editor → постави схемата (бутонът отдолу я копира) → Run.";
 "cloud.step3" = "Project Settings → API: копирай Project URL и anon public key и ги постави тук.";

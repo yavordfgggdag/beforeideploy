@@ -45,6 +45,16 @@ struct AuthView: View {
                 if let error {
                     Label(error, systemImage: "exclamationmark.circle.fill")
                         .font(.system(size: 12.5)).foregroundColor(Theme.blocked)
+                        .fixedSize(horizontal: false, vertical: true)
+                    if model.lastAuthCode == "email_not_confirmed" {
+                        HStack(spacing: 10) {
+                            Button { resend() } label: { Label(L("auth.resend"), systemImage: "envelope.arrow.triangle.branch") }
+                                .bidButton(.secondary, compact: true)
+                                .disabled(busy || email.isEmpty)
+                            Text(L("auth.resendHint")).font(.system(size: 11.5)).foregroundColor(Theme.tertiary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
                 }
                 if let info {
                     Label(info, systemImage: "checkmark.circle.fill")
@@ -98,6 +108,7 @@ struct AuthView: View {
                     Button(L("auth.continueOffline")) { model.continueOffline() }
                         .buttonStyle(.plain).foregroundColor(Theme.tertiary).font(.system(size: 12))
                 }
+                CloudCheckLine()
                 Spacer()
                 Text(L("auth.privacyNote"))
                     .font(.system(size: 11)).foregroundColor(Theme.tertiary)
@@ -115,6 +126,15 @@ struct AuthView: View {
     /// Sign-in buttons the cloud project has enabled (engine reads Supabase's public auth settings).
     var providers: [String] {
         (model.account?.oauthProviders ?? ["github"]).filter { $0 == "github" || $0 == "apple" }
+    }
+
+    func resend() {
+        busy = true
+        Task {
+            let r = await model.resendConfirmation(email: email.trimmingCharacters(in: .whitespaces))
+            if r == nil { info = L("auth.resent"); error = nil } else { error = r }
+            busy = false
+        }
     }
 
     func submit() {
@@ -249,7 +269,7 @@ struct CloudSetupView: View {
                     HStack {
                         Button { model.open("https://supabase.com/dashboard/new") } label: { Label(L("cloud.openSupabase"), systemImage: "safari") }
                             .bidButton(.secondary, compact: true)
-                        Button { model.copyCloudSchema() } label: { Label(L("cloud.copySchema"), systemImage: "doc.on.doc") }
+                        Button { Task { if await model.copyCloudSchema() { model.flash(L("cloud.schemaCopied")) } } } label: { Label(L("cloud.copySchema"), systemImage: "doc.on.doc") }
                             .bidButton(.secondary, compact: true)
                     }
                     BIDTextField(placeholder: "https://xxxx.supabase.co", text: $url, mono: true)
@@ -278,6 +298,63 @@ struct CloudSetupView: View {
             }
             .frame(width: 480)
             .background(Theme.bg)
+        }
+    }
+}
+
+/// "Trouble signing in?" — runs `bid cloud doctor` and shows the owner exactly what the cloud project lacks.
+struct CloudCheckLine: View {
+    @EnvironmentObject var model: AppModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button {
+                Task { await model.checkCloud() }
+            } label: {
+                HStack(spacing: 6) {
+                    if model.cloudChecking { Spinner(size: 11) } else { Image(systemName: "stethoscope") }
+                    Text(L("auth.checkCloud"))
+                }
+            }
+            .buttonStyle(.plain).foregroundColor(Theme.accent).font(.system(size: 12.5))
+            .disabled(model.cloudChecking)
+            if let d = model.cloudDoctor {
+                VStack(alignment: .leading, spacing: 5) {
+                    line(d.reachable, d.reachable ? L("cloud.doctor.reachable", d.ref ?? d.url ?? "") : L("cloud.doctor.unreachable", d.error ?? ""))
+                    if d.reachable {
+                        line(d.schemaApplied == true, d.schemaApplied == true ? L("cloud.doctor.schemaOk") : L("cloud.doctor.schemaMissing", (d.tablesMissing ?? []).joined(separator: ", ")))
+                        line((d.functionsMissing ?? []).isEmpty, (d.functionsMissing ?? []).isEmpty ? L("cloud.doctor.functionsOk") : L("cloud.doctor.functionsMissing", (d.functionsMissing ?? []).joined(separator: ", ")))
+                        if let a = d.auth {
+                            line(a.signupEnabled != false, a.signupEnabled != false ? L("cloud.doctor.signupOn") : L("cloud.doctor.signupOff"))
+                            line(a.emailConfirmRequired != true, a.emailConfirmRequired != true ? L("cloud.doctor.confirmOff") : L("cloud.doctor.confirmOn"))
+                        }
+                        if d.schemaApplied != true || !(d.functionsMissing ?? []).isEmpty || d.auth?.emailConfirmRequired == true {
+                            Text(L("cloud.doctor.ownerHint")).font(.system(size: 11.5)).foregroundColor(Theme.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                            HStack(spacing: 8) {
+                                if let u = d.dashboard?.project {
+                                    Button { model.open(u) } label: { Label(L("cloud.doctor.openDashboard"), systemImage: "arrow.up.right") }
+                                        .bidButton(.secondary, compact: true)
+                                }
+                                Button { model.screen = .setup; model.continueOffline(); Task { await model.loadSetup() } } label: { Label(L("cloud.doctor.openSetup"), systemImage: "wand.and.stars") }
+                                    .bidButton(.ghost, compact: true)
+                            }
+                        }
+                    }
+                }
+                .padding(12)
+                .background(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).fill(Theme.panel))
+                .overlay(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
+                .entrance(0, offset: 8)
+            }
+        }
+    }
+
+    private func line(_ ok: Bool, _ text: String) -> some View {
+        HStack(alignment: .top, spacing: 7) {
+            Image(systemName: ok ? "checkmark.circle.fill" : "xmark.circle.fill")
+                .font(.system(size: 12)).foregroundColor(ok ? Theme.ready : Theme.blocked)
+            Text(text).font(.system(size: 12)).foregroundColor(Theme.text).fixedSize(horizontal: false, vertical: true)
         }
     }
 }

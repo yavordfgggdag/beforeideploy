@@ -28,6 +28,7 @@ export async function adminCall(action, params = {}) {
   try {
     data = text ? JSON.parse(text) : null;
   } catch {}
+  if (res.status === 404 && data?.code === 'NOT_FOUND') throw new EngineError(msg('cloud.functionMissing', { name: 'admin' }), 'cloud_function_missing');
   if (res.status === 403) throw new EngineError(msg('admin.forbidden'), 'forbidden', 3);
   if (!res.ok) throw new EngineError(msg('admin.failed', { status: res.status, detail: data?.error || '' }), 'admin_failed');
   return data;

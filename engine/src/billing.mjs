@@ -38,6 +38,7 @@ async function billingCall(action, params = {}) {
     throw new EngineError(msg('account.network', { error: e.message }), 'network');
   }
   const data = await res.json().catch(() => null);
+  if (res.status === 404 && data?.code === 'NOT_FOUND') throw new EngineError(msg('cloud.functionMissing', { name: 'billing' }), 'cloud_function_missing');
   if (res.status === 401) throw new EngineError(msg('account.notLoggedIn'), 'not_logged_in', 5);
   if (!res.ok) {
     const key = CODE_KEYS[data?.code];

@@ -737,7 +737,7 @@ function evalScenario(name,text){const f=path.join(process.env.BID_EVAL_DIR||'',
   out=out.replace(/\\{\\{base:([^}]+)\\}\\}/g,(_,p)=>{const m=new RegExp('\\\\] '+p.replace(/[.\/-]/g,(c)=>'\\\\'+c)+' \\\\(sha256 ([0-9a-f]{64})\\\\)').exec(text);return m?m[1]:'unknown';});
   out=out.replace(/\\{\\{engine_status\\}\\}/g,()=>{const m=/\\\\"status\\\\": \\\\"([a-z_]+)\\\\"/.exec(text);return m?m[1]:'unknown';});
   return {text:out};}
-const balance=(id)=>ledger.filter(l=>l.user_id===id).reduce((a,l)=>a+l.delta,0);
+const balance=(id)=>ledger.filter(l=>l.user_id===id).reduce((a,l)=>a+l.delta,0);const resent=[];
 http.createServer((q,r)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{r.setHeader('content-type','application/json');
  if(q.url.startsWith('/deploys/')||q.url==='/'||/^\\/[a-z0-9-]+\\.html/.test(q.url)){let st={};try{st=JSON.parse(require('fs').readFileSync(process.argv[3],'utf8'));}catch{}const m=/^\\/deploys\\/([^/]+)(\\/.*)?$/.exec(q.url);let dir=null,rel=q.url;
   if(m){dir=(st.deploys||{})[m[1]]&&st.deploys[m[1]].dir;rel=m[2]||'/';}else{if(st.breakLive){r.statusCode=500;return r.end('broken');}dir=st.published&&st.deploys[st.published]&&st.deploys[st.published].dir;}
@@ -763,9 +763,13 @@ http.createServer((q,r)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{r.setHea
    ev({type:'content_block_stop',index:0});ev({type:'message_delta',delta:{stop_reason:'end_turn'},usage:{output_tokens:1500}});ev({type:'message_stop'});return r.end();}
  if(q.url==='/hook'){hooks.push(JSON.parse(b||'{}'));return r.end('{"ok":true}');}
  if(q.url==='/hooks')return r.end(JSON.stringify(hooks));
+ if(q.url==='/resent')return r.end(JSON.stringify(resent));
  if(q.url==='/cloud-sim'){const s0=JSON.parse(b||'{}');if(s0.clear){monIncidents.length=0;monBeat=null;}if(s0.beat!==undefined)monBeat=s0.beat;if(s0.incident)monIncidents.push(s0.incident);return r.end('{}');}
  if(q.headers.apikey!=='ANON'){r.statusCode=401;return r.end('{"message":"no apikey"}');}
  const j=b?JSON.parse(b):{};
+ const flag=(n)=>require('fs').existsSync(process.argv[3]+'.'+n);
+ if(q.url.startsWith('/rest/v1/profiles')&&flag('noschema')){r.statusCode=404;return r.end('{"code":"42P01","message":"relation \\"public.profiles\\" does not exist"}');}
+ if(q.url.startsWith('/functions/v1/billing')&&flag('nofunctions')){r.statusCode=404;return r.end('{"code":"NOT_FOUND","message":"Requested function was not found"}');}
  if(q.url==='/functions/v1/ai-fix'){const me=caller(q);if(!me){r.statusCode=401;return r.end('{"error":"no session"}');}
    if(me.ai_disabled){r.statusCode=403;return r.end('{"error":"disabled","code":"disabled"}');}
    if(me.role==='normal'&&me.plan==='free'){r.statusCode=403;return r.end('{"error":"plan","code":"no_plan"}');}
@@ -804,6 +808,9 @@ http.createServer((q,r)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{r.setHea
    r.statusCode=400;return r.end('{"error":"unknown action"}');}
  if(q.url.startsWith('/rest/v1/settings')){if(!caller(q)){r.statusCode=401;return r.end('{}');}return r.end(JSON.stringify([{key:'plans',value:{flash:{tokens:250000},high:{tokens:1000000},knight:{tokens:2500000}}}]));}
  if(q.url.startsWith('/rest/v1/subscriptions')){const me=caller(q);if(!me){r.statusCode=401;return r.end('{}');}return r.end(JSON.stringify(me.plan!=='free'?[{provider:'manual',status:'active',period_end:'2026-11-01T00:00:00Z',cancel_at:null}]:[]));}
+ if(q.url==='/auth/v1/health'){return r.end('{"name":"GoTrue"}');}
+ if(q.url==='/auth/v1/resend'){resent.push(j.email);return r.end('{}');}
+ if(/^\\/rest\\/v1\\/(credit_ledger|ai_usage|monitor_targets)\\?/.test(q.url)){return r.end('[]');}
  if(q.url==='/auth/v1/settings'){return r.end('{"external":{"apple":false,"github":true,"google":false,"email":true}}');}
  if(q.url==='/auth/v1/signup'){if(users[j.email]){r.statusCode=400;return r.end('{"msg":"User already registered"}');}users[j.email]=j.password;
    profiles['u-'+j.email]={user_id:'u-'+j.email,email:j.email,role:Object.keys(profiles).length?'normal':'admin',plan:'free',locale:(j.data&&j.data.locale)||'en',ai_disabled:false,display_name:j.data&&j.data.full_name||null};
@@ -925,6 +932,52 @@ t('акаунт: регистрация, вход, грешна парола, sy
   } finally {
     // the mock stays up for the AI tests below; it is killed at exit
   }
+});
+
+t('cloud doctor: схема, функции, вход при непълен облак, повторно писмо', () => {
+  const d = bid('cloud', 'doctor');
+  assert(d.result.ok && d.data.reachable === true && d.data.schemaApplied === true, JSON.stringify(d.result).slice(0, 300));
+  assert(d.data.functionsMissing.length === 0 && d.data.auth.providers.includes('github') && d.data.auth.emailConfirmRequired === true, JSON.stringify(d.data));
+  fixture('cloud-doctor', d.data);
+  const st = bid('setup', 'status');
+  const cloudRows = st.data.items.filter((i) => i.id.startsWith('cloud-'));
+  assert(cloudRows.length >= 4 && st.data.items[0].id === 'cloud-config', 'cloud group first: ' + cloudRows.map((i) => i.id).join(','));
+  assert(cloudRows.find((i) => i.id === 'cloud-schema').ok && cloudRows.find((i) => i.id === 'cloud-functions').ok, JSON.stringify(cloudRows));
+  assert(cloudRows.find((i) => i.id === 'cloud-email').ok === false && cloudRows.find((i) => i.id === 'cloud-email').optional, 'email confirm row');
+  assert(st.data.cloudReady === true, 'cloudReady');
+  assert(bid('setup', 'status', '--local').data.items.every((i) => !i.id.startsWith('cloud-')), '--local skips the network');
+
+  // schema never applied: profiles → 404. Sign-in still succeeds, the profile is the default one and says why.
+  fs.writeFileSync(FAKE_NETLIFY + '.noschema', '1');
+  try {
+    bid('account', 'logout');
+    const r = bid('account', 'login', '--email', 'yavor@example.com', '--password', 'supersecret1');
+    assert(r.result.ok && r.data.loggedIn === true && r.data.schemaMissing === true && r.data.plan === 'free', JSON.stringify(r.result).slice(0, 300));
+    const d2 = bid('cloud', 'doctor');
+    assert(d2.data.schemaApplied === false && d2.data.tablesMissing.join() === 'profiles', JSON.stringify(d2.data.tables));
+    const row = bid('setup', 'status').data.items.find((i) => i.id === 'cloud-schema');
+    assert(row.ok === false && row.action.appAction === 'cloud-schema' && row.detail.includes('profiles'), JSON.stringify(row));
+  } finally {
+    fs.unlinkSync(FAKE_NETLIFY + '.noschema');
+  }
+  assert(bid('account', 'status').data.schemaMissing === false, 'recovers once the table exists');
+
+  // a function that is not deployed answers NOT_FOUND → one clear code, not "HTTP 404"
+  fs.writeFileSync(FAKE_NETLIFY + '.nofunctions', '1');
+  try {
+    const b = bid('billing', 'status');
+    assert(b.result.code === 'cloud_function_missing' && b.result.error.includes('billing'), JSON.stringify(b.result));
+    const d3 = bid('cloud', 'doctor');
+    assert(d3.data.functionsMissing.join() === 'billing', JSON.stringify(d3.data.functions));
+  } finally {
+    fs.unlinkSync(FAKE_NETLIFY + '.nofunctions');
+  }
+
+  // the confirmation e-mail can be sent again
+  const rs = bid('account', 'resend', '--email', 'yavor@example.com');
+  assert(rs.data.sent === true, JSON.stringify(rs.result));
+  const sent = JSON.parse(spawnSync('curl', ['-s', 'http://127.0.0.1:' + sbPort + '/resent'], { encoding: 'utf8' }).stdout);
+  assert(sent.includes('yavor@example.com'), 'resend reached the server: ' + JSON.stringify(sent));
 });
 process.on('exit', () => { try { process.kill(-sb.pid); } catch {} });
 

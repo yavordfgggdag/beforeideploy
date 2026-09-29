@@ -548,6 +548,41 @@ struct ReportResult: Codable {
     var files: [String]
 }
 
+/// `bid cloud doctor`: what the bundled Supabase project can do right now (owner setup state).
+struct CloudDoctorResult: Codable {
+    var configured: Bool
+    var url: String?
+    var ref: String?
+    var reachable: Bool
+    var error: String?
+    var auth: Auth?
+    var schemaApplied: Bool?
+    var tablesMissing: [String]?
+    var functionsMissing: [String]?
+    var dashboard: Dashboard?
+    var checkedAt: String?
+
+    struct Auth: Codable {
+        var signupEnabled: Bool?
+        var emailConfirmRequired: Bool?
+        var providers: [String]?
+    }
+
+    struct Dashboard: Codable {
+        var project: String?
+        var sql: String?
+        var functions: String?
+        var auth: String?
+        var api: String?
+    }
+}
+
+/// `bid cloud schema`: the bundled supabase/schema.sql.
+struct CloudSchema: Codable {
+    var sql: String?
+    var file: String?
+}
+
 struct SetupAction: Codable, Hashable {
     var type: String
     var label: String
@@ -815,6 +850,8 @@ struct AccountState: Codable {
     var aiDisabled: Bool?
     var credits: Credits?
     var profileStale: Bool?
+    /// Sign-in succeeded but `profiles` does not exist: supabase/schema.sql was never applied (owner's job).
+    var schemaMissing: Bool?
     var hasOwnKey: Bool?
     var features: Features?
     /// OAuth providers enabled in the cloud project (engine: GET /auth/v1/settings) — present before login.

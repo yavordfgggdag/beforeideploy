@@ -31,6 +31,7 @@ SwiftUI app ──(NDJSON over stdout)──▶ engine `bid` (Node, zero deps, b
 | `checks.mjs` (`artifactHash`, `buildConfigHash`) | SHA-256 manifest of every publish file; build-config binding |
 | `release.mjs` | identity per provider, re-hash around uploads, pid+start-time lock |
 | `util.mjs` (`publishIncludes`, `pidStartTime`, `processHolds`) | shared publish filter; lock liveness |
+| `cloud.mjs` (`cloudDoctor`, `cloudSetupItems`) | probes the bundled project (health, auth options, tables, functions) → `bid cloud doctor`, the first group of `bid setup status`, the "Check the cloud" line on the sign-in screen |
 
 ### New cloud pieces
 
@@ -45,6 +46,10 @@ SwiftUI app ──(NDJSON over stdout)──▶ engine `bid` (Node, zero deps, b
 | `monitor-cron.sql` | pg_cron + pg_net + Vault schedule for the scheduler |
 
 ## 2. Setup (owner, once)
+
+Shortest path: GitHub → Actions → `cloud-deploy` with one repository secret `SUPABASE_ACCESS_TOKEN` does
+steps 1, 2 and (optionally) the e-mail-confirmation switch; `cloud-check` prints the project's state any
+time. Details and the by-hand path: `docs/CLOUD-SETUP-BG.md`.
 
 1. **Database**: run `supabase/schema.sql` in the SQL editor (idempotent; adds the monitoring tables and the
    usage columns to an existing V10/V11 database).

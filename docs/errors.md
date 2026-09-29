@@ -28,6 +28,8 @@ quota, 127 Node missing; everything else exits 1.
 | `rest_failed` | 1 | A cloud table request failed (RLS, schema not applied, network mid-request). | Owner: check `supabase/schema.sql` is applied; users: retry, then send a support report. |
 | `sync_failed` | 1 | Cloud sync of the project list failed. | Retry from the account menu; local projects are never lost. |
 | `account_failed` | 1 | The `account` Edge Function (export / delete) returned an error. | Retry; owner: `supabase functions deploy account`. |
+| `email_not_confirmed` | 1 | Supabase Auth refused the sign-in because the address was never confirmed. | "Send the confirmation again" on the sign-in screen; owner: Supabase's built-in mailer reaches only the project's team, so turn "Confirm email" off or set up SMTP (docs/CLOUD-SETUP-BG.md). |
+| `cloud_function_missing` | 1 | An Edge Function the engine called is not deployed on the cloud project (`Requested function was not found`). | Owner: GitHub → Actions → cloud-deploy, or `supabase functions deploy <name>`; Setup → Cloud lists the missing ones. |
 | `subscription_active` | 1 | Account deletion was refused because a paid subscription is still running and the cloud cannot cancel it. | Cancel it in Plans → Manage subscription, then delete the account again. |
 | `billing_failed` | 1 | A billing request failed: item not on sale, trial already used, no subscription, payments not set up, or the provider did not answer. | The message says which; the plans screen shows only what can be bought. |
 | `admin_failed` | 1 | The `admin` Edge Function returned an error. | The message has the server's text; owner: function deployed and caller is `admin`? |

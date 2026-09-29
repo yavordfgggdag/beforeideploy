@@ -681,6 +681,14 @@ final class AppModel: ObservableObject, Feedback {
         case "open":
             open(a.url)
         case "app":
+            if a.appAction == "cloud-schema" {
+                Task {
+                    if await copyCloudSchema() {
+                        flash(L("cloud.schemaCopiedOpen"))
+                        if let u = a.url { open(u) }
+                    }
+                }
+            }
             if a.appAction == "spaceship-connect" { sheet = .spaceshipConnect }
             if a.appAction == "netlify-login" { netlifyLogin { [weak self] in Task { await self?.loadSetup() } } }
         default:
@@ -826,9 +834,22 @@ final class AppModel: ObservableObject, Feedback {
         await accountStore.configureCloud(url: url, key: key)
     }
 
-    func copyCloudSchema() {
-        copy(AccountStore.cloudSchema)
+    /// Copies supabase/schema.sql for the SQL Editor; returns false when the engine has no schema file.
+    @discardableResult
+    func copyCloudSchema() async -> Bool {
+        guard let sql = await accountStore.cloudSchema() else {
+            flash(L("cloud.schemaUnavailable"), error: true)
+            return false
+        }
+        copy(sql)
+        return true
     }
+
+    var lastAuthCode: String? { accountStore.lastAuthCode }
+    var cloudDoctor: CloudDoctorResult? { accountStore.cloudDoctor }
+    var cloudChecking: Bool { accountStore.cloudChecking }
+    func checkCloud() async { await accountStore.checkCloud() }
+    func resendConfirmation(email: String) async -> String? { await accountStore.resendConfirmation(email: email) }
 
     func continueOffline() {
         offlineMode = true

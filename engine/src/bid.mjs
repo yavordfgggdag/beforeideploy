@@ -18,9 +18,10 @@ import { netlifyAuth, netlifyLogin, netlifyTeams, netlifySites, netlifyInfo, net
 import { listFixes, applyFix } from './fixes.mjs';
 import { aifix } from './aifix.mjs';
 import { costSummary, providerUsage, setBudgets, getPrices } from './costs.mjs';
-import { setupStatus, setupRun, setupAuto, setupTerminal } from './setup.mjs';
+import { setupStatus, setupRun, setupAuto, setupTerminal, setupStatusFull } from './setup.mjs';
+import { cloudDoctor } from './cloud.mjs';
 import { overview } from './overview.mjs';
-import { accountStatus, signup, login, logout, recover, oauthUrl, completeOAuth, syncProjects, setCloudConfig, cloudConfig, setLocale, exportAccount, deleteAccount } from './account.mjs';
+import { accountStatus, signup, login, logout, recover, resendConfirmation, oauthUrl, completeOAuth, syncProjects, setCloudConfig, cloudConfig, setLocale, exportAccount, deleteAccount } from './account.mjs';
 import { aiKeysStatus, aiKeySet, aiKeyDelete } from './aikeys.mjs';
 import { adminCommand, ADMIN_ACTIONS } from './admin.mjs';
 import { billingCommand } from './billing.mjs';
@@ -71,7 +72,7 @@ const HELP = `Before I Deploy engine ${VERSION}
   bid spaceship dns --domain D
   bid spaceship connect-domain --project P --domain D [--yes]   A @ + CNAME www → Netlify
   bid account status | signup --email E --password P [--name N] | login --email E --password P
-  bid account logout | recover --email E | oauth [--provider github] | session --access A --refresh R | sync
+  bid account logout | recover --email E | resend --email E | oauth [--provider github] | session --access A --refresh R | sync
   bid account export | delete --confirm DELETE      GDPR: data export to ~/Downloads / delete the cloud account
   bid account locale --set L | keys status | keys set --provider anthropic|openai (env BID_AI_KEY) | keys delete --provider P
   bid admin   <action> [--user ID] [--json '{…}']   (admin only) actions: ${ADMIN_ACTIONS.join(', ')}
@@ -79,7 +80,7 @@ const HELP = `Before I Deploy engine ${VERSION}
   bid update  check [--force] [--channel beta] | download        release feed from settings.release.url / BID_UPDATE_URL
   bid logs    [--tail N]                          engine.log entries (argv redacted)
   bid report                                      support report (zip) with redacted logs + doctor
-  bid cloud config --url U --anon-key K | schema
+  bid cloud config --url U --anon-key K | schema | doctor   doctor: schema applied? functions deployed? sign-up open?
   bid hosting status | advise --project P | set --project P --provider netlify|vercel|cloudflare|ghpages
   bid deploy  --project P [--prod --confirm DEPLOY] [--recheck-if-stale]   with the selected hosting
   bid issues  --project P          prioritized issues from the last check (severity, evidence, fix, verification)
@@ -320,7 +321,7 @@ async function main() {
       return ok(setBudgets({ ...(flags['netlify-min'] !== undefined ? { netlifyMinCredits: Number(flags['netlify-min']) } : {}) }));
 
     case 'setup': {
-      if (!sub || sub === 'status') return ok(setupStatus());
+      if (!sub || sub === 'status') return ok(flags.local ? setupStatus() : await setupStatusFull());
       if (sub === 'run') return ok(await setupRun(positional[1] || flags.id, { yes: !!flags.yes }));
       if (sub === 'auto') return ok(await setupAuto({ yes: !!flags.yes, includeOptional: !!flags.optional }));
       if (sub === 'terminal') return ok(setupTerminal(positional[1] || flags.id || 'all'));
@@ -344,6 +345,7 @@ async function main() {
       if (sub === 'login') return ok(await login({ email, password }));
       if (sub === 'logout') return ok(await logout());
       if (sub === 'recover') return ok(await recover({ email }));
+      if (sub === 'resend') return ok(await resendConfirmation({ email }));
       if (sub === 'oauth') return ok(oauthUrl({ provider: flags.provider || 'github' }));
       if (sub === 'session') return ok(await completeOAuth({ access: flags.access || process.env.BID_ACCESS, refresh: flags.refresh || process.env.BID_REFRESH }));
       if (sub === 'sync') return ok(await syncProjects());
@@ -362,6 +364,7 @@ async function main() {
 
     case 'cloud': {
       if (sub === 'config') return ok(setCloudConfig({ url: flags.url, anonKey: flags['anon-key'] }));
+      if (sub === 'doctor') return ok(await cloudDoctor());
       if (sub === 'schema') {
         // installed engine: engine/supabase/schema.sql (copied by install.sh); dev checkout: ../supabase/schema.sql
         const file = [join(ENGINE_DIR, 'supabase', 'schema.sql'), join(ENGINE_DIR, '..', 'supabase', 'schema.sql')].find((f) => existsSync(f));

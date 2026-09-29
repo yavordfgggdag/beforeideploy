@@ -152,6 +152,7 @@ async function* cloud({ prompt, system, step, project, locale, deep, model }) {
   }
   if (!res.ok) {
     const j = (await res.json().catch(() => null)) || {};
+    if (res.status === 404 && j.code === 'NOT_FOUND') throw new EngineError(msg('cloud.functionMissing', { name: 'ai-fix' }), 'cloud_function_missing');
     if (res.status === 402) throw new EngineError(msg('ai.quotaExhausted', { renewsAt: j.renewsAt || '—' }), 'quota_exhausted', 8);
     if (res.status === 403) throw new EngineError(msg(j.code === 'daily_cap' ? 'ai.dailyCap' : 'ai.unavailable.noPlan'), j.code === 'daily_cap' ? 'ai_daily_cap' : 'ai_unavailable');
     if (res.status === 429) throw new EngineError(msg('ai.rateLimited', { name: 'Before I Deploy AI' }), 'ai_rate_limited');

@@ -128,6 +128,13 @@ Status vocabulary: ✅ done and proven · ⚠️ done, proof limited (says how) 
 
 ## 2. Blockers for "ready for public release" (owner)
 
+0. **Cloud project not set up** (found 2026-09-29 by the `cloud-check` workflow against the bundled project):
+   `schema.sql` never applied, no Edge Function deployed, e-mail confirmation on with the built-in mailer.
+   Fix: `docs/CLOUD-SETUP-BG.md` — the `cloud-deploy` workflow with one `SUPABASE_ACCESS_TOKEN` secret, or
+   the dashboard by hand. The app now signs in regardless (default profile + warning), shows the exact gaps
+   on the sign-in screen ("Check the cloud") and in Setup → Cloud, and maps a missing function to
+   `cloud_function_missing`.
+
 1. **Signing and notarization** — Developer ID certificate + notary profile (`docs/release.md §1`). Until then
    every build is unsigned.
 2. **Real walkthrough on a Mac** — `docs/OWNER-ACCEPTANCE-TEST-BG.md` (Netlify test site, Supabase project,

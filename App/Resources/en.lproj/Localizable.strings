@@ -221,6 +221,7 @@
 
 "auth.apple" = "Sign in with Apple";
 "auth.backToLogin" = "← Back to sign in";
+"auth.checkCloud" = "Trouble signing in? Check the cloud";
 "auth.checkInbox" = "Check your inbox for a new-password link.";
 "auth.confirmEmail" = "We sent you a confirmation email. Confirm it and sign in.";
 "auth.continueOffline" = "Continue without an account";
@@ -238,6 +239,10 @@
 "auth.passwordMin" = "Password (at least 8 characters)";
 "auth.privacyNote" = "Keys for Netlify, GitHub, Vercel etc. stay on your Mac (Keychain). The account stores your projects' names, frameworks, hosting, live URLs, domains and check results, plus your plan and AI usage — never your code or keys. Export or delete it any time in Settings.";
 "auth.recoverSubtitle" = "We will send you a link for a new password.";
+"auth.resend" = "Send the confirmation again";
+"auth.resendHint" = "No letter? The owner can turn off e-mail confirmation in Supabase (Settings → Cloud explains how).";
+"auth.resent" = "Sent. Check the inbox and the spam folder — the built-in Supabase mailer reaches only the project's team members, so the owner may have to turn off \"Confirm email\".";
+"auth.schemaMissing" = "Signed in, but the cloud is not finished: the database schema is missing (Setup → Cloud).";
 "auth.sendLink" = "Send link";
 "auth.signIn" = "Sign in";
 "auth.signUp" = "Sign up";
@@ -309,7 +314,23 @@
 "cloud.anonKeyPlaceholder" = "anon public key";
 "cloud.continueOffline" = "Continue without an account for now";
 "cloud.copySchema" = "Copy the SQL schema";
+"cloud.doctor.confirmOff" = "No e-mail confirmation needed";
+"cloud.doctor.confirmOn" = "E-mail confirmation is required — Supabase's built-in mailer delivers only to the project's team";
+"cloud.doctor.functionsMissing" = "Edge Functions not deployed: %@";
+"cloud.doctor.functionsOk" = "All Edge Functions deployed";
+"cloud.doctor.openDashboard" = "Open the Supabase dashboard";
+"cloud.doctor.openSetup" = "Open Setup → Cloud";
+"cloud.doctor.ownerHint" = "These are owner steps, done once in the Supabase dashboard or with the cloud-deploy GitHub Action (docs/CLOUD-SETUP-BG.md). Until then you can continue without an account.";
+"cloud.doctor.reachable" = "Project %@ answers";
+"cloud.doctor.schemaMissing" = "Schema not applied — tables missing: %@";
+"cloud.doctor.schemaOk" = "Database schema applied";
+"cloud.doctor.signupOff" = "Sign-up is disabled in Supabase";
+"cloud.doctor.signupOn" = "Sign-up is open";
+"cloud.doctor.unreachable" = "The project does not answer: %@";
 "cloud.openSupabase" = "Open Supabase";
+"cloud.schemaCopied" = "Schema copied — paste it in the SQL Editor and press Run";
+"cloud.schemaCopiedOpen" = "Schema copied. The SQL Editor opens in the browser: paste (⌘V) and press Run.";
+"cloud.schemaUnavailable" = "This engine has no supabase/schema.sql — use the copy in the repository.";
 "cloud.step1" = "Create a free project in Supabase.";
 "cloud.step2" = "SQL Editor → paste the schema (the button below copies it) → Run.";
 "cloud.step3" = "Project Settings → API: copy the Project URL and the anon public key and paste them here.";

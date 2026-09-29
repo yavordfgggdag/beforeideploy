@@ -59,6 +59,8 @@ async function auth(p, { method = 'POST', body, token } = {}) {
   } catch {}
   if (!res.ok) {
     const raw = data?.error_description || data?.msg || data?.message || data?.error || `HTTP ${res.status}`;
+    // an unconfirmed address gets its own code: the app offers to send the confirmation again
+    if (/email not confirmed/i.test(String(raw))) throw Object.assign(new EngineError(translate(raw), 'email_not_confirmed'), { status: res.status });
     throw Object.assign(new EngineError(translate(raw), 'auth_error'), { status: res.status });
   }
   return data;
@@ -82,7 +84,7 @@ export async function rest(p, { method = 'GET', body, token, headers = {} } = {}
   try {
     data = text ? JSON.parse(text) : null;
   } catch {}
-  if (!res.ok) throw new EngineError(msg('account.rest.http', { status: res.status, detail: data?.message || data?.hint || '' }), res.status === 401 ? 'not_logged_in' : 'rest_failed', res.status === 401 ? 5 : 1);
+  if (!res.ok) throw Object.assign(new EngineError(msg('account.rest.http', { status: res.status, detail: data?.message || data?.hint || '' }), res.status === 401 ? 'not_logged_in' : 'rest_failed', res.status === 401 ? 5 : 1), { status: res.status });
   return data;
 }
 
@@ -163,6 +165,9 @@ async function loadProfile(session) {
   } catch (e) {
     if (e.code === 'network' && cached?.userId === id) return { ...cached, stale: true };
     if (e.code === 'network') return { ...DEFAULT_PROFILE, userId: id, stale: true };
+    // 404 = the profiles table does not exist: schema.sql was never applied. Sign-in itself succeeded, so the
+    // user gets the default (free, offline-like) profile and the app says what the owner still has to do.
+    if (e.code === 'rest_failed' && e.status === 404) return { ...DEFAULT_PROFILE, userId: id, stale: true, schemaMissing: true };
     throw e;
   }
 }
@@ -189,6 +194,7 @@ function withFeatures(user, profile) {
     helpUrl: typeof p.settings?.['help.url'] === 'string' ? p.settings['help.url'] : null,
     links: publicLinks(p.settings),
     profileStale: !!p.stale,
+    schemaMissing: !!p.schemaMissing,
     hasOwnKey,
     features: features({ role: p.role, plan: p.plan, aiDisabled: p.aiDisabled, hasOwnKey }),
   };
@@ -212,6 +218,13 @@ export async function login({ email, password }) {
   if (!email || !password || email === true || password === true) throw new EngineError(msg('account.missingCredentials'), 'usage', 2);
   const r = await auth('/token?grant_type=password', { body: { email, password } });
   return publicUser(saveSession(r));
+}
+
+/** Sends the sign-up confirmation e-mail again (the first one is easy to lose: spam, or the built-in mailer). */
+export async function resendConfirmation({ email }) {
+  if (!email || email === true) throw new EngineError(msg('account.missingEmail'), 'usage', 2);
+  await auth('/resend', { body: { type: 'signup', email } });
+  return { sent: true, email };
 }
 
 export async function recover({ email }) {
@@ -319,6 +332,7 @@ async function accountFunction(session, action) {
     throw new EngineError(msg('account.network', { error: e.message }), 'network');
   }
   const data = await res.json().catch(() => null);
+  if (res.status === 404 && data?.code === 'NOT_FOUND') throw new EngineError(msg('cloud.functionMissing', { name: 'account' }), 'cloud_function_missing');
   if (res.status === 401) throw new EngineError(msg('account.notLoggedIn'), 'not_logged_in', 5);
   if (data?.code === 'subscription_active') throw new EngineError(msg('account.delete.subscriptionActive'), 'subscription_active');
   if (!res.ok) throw new EngineError(msg('account.rest.http', { status: res.status, detail: data?.error || '' }), 'account_failed');
