@@ -122,6 +122,14 @@ Edge Functions `deno test supabase/functions` — 51 · `scripts/i18n-check.mjs`
 | 5 — коректност на engine-а | ✅ | deploy само на провереният код, кирилица в Git, DNS без прекъсване, AI промени „всичко или нищо“, изтекъл SSL |
 | 6 — документи и CI | ✅ | README на английски + български, release dry-run (universal DMG), синтактични проверки, engine-macos на PR |
 
+## Пускане — какво е готово (2026-09-29)
+
+| Точка | Статус | Къде |
+|---|---|---|
+| Сайт: начална страница с цени, Поверителност, Условия, Възстановяване, `/checkout` за Paddle | ✅ код · 👤 име и адрес на продавача | `site/`, `scripts/site-build.py` |
+| Netlify проект `beforeideploy` | ✅ създаден · ⏳ качването е блокирано от мрежата на облачната среда | app.netlify.com/projects/beforeideploy |
+| Universal DMG (arm64 + x86_64) с engine вътре | ✅ сглобен в CI (без подпис) | workflow `release-dryrun`, артефакт `release-dryrun` |
+
 ## Какво остава преди публичен V10.0
 
 Само неща извън кода (собственикът): Supabase — `schema.sql`, `supabase functions deploy admin ai-fix account billing`,
