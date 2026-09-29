@@ -71,7 +71,8 @@ CI (`.github/workflows`): engine on Linux and macOS, `swift build` + `swift test
 `~/Library/Caches/BeforeIDeploy/`. **Remove:** `zsh scripts/uninstall.sh` (keeps your library) or
 `--all` (also history, settings and the saved Keychain items; project folders are never touched).
 
-**Documents:** [`docs/AUDIT-V10.md`](docs/AUDIT-V10.md) — the release audit and its status ·
+**Documents:** [`docs/HANDOFF-V10.md`](docs/HANDOFF-V10.md) — the full technical handoff (every module, command, table, rule, and the roadmap) ·
+[`docs/AUDIT-V10.md`](docs/AUDIT-V10.md) — the release audit and its status ·
 [`docs/release.md`](docs/release.md) — signing, notarization, update feed, legal pages ·
 [`supabase/functions/README.md`](supabase/functions/README.md) — cloud setup · [`CHANGELOG.md`](CHANGELOG.md) ·
 [`ROADMAP.md`](ROADMAP.md) · [`docs/manual-qa.md`](docs/manual-qa.md).
