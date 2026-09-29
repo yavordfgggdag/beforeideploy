@@ -110,7 +110,7 @@ Status vocabulary: ✅ done and proven · ⚠️ done, proof limited (says how) 
 | Onboarding: welcome → account/local → project → hosting → first scan → AI → preview → monitoring | ✅ (compiled only in CI) | `OnboardingViews.swift FirstStepsCard` (7 steps, BG/EN) | CI build |
 | Main areas: sites, AI assistant, issues, deployments, monitoring, backups, activity, plan/usage | ✅ | sidebar: Mission Control, AI assistant, Plan & usage, …; Dashboard cards | CI build |
 | Light/dark, window sizes, long BG text, keyboard, focus, VoiceOver, empty/loading/offline/error/expired states; status not by colour alone | ⚠️ | states coded (loading / empty / error / signed-out / unavailable); icons + text on every status; accessibility labels on new controls — **visual and VoiceOver checks need a Mac** | manual (owner) |
-| Installable build for both architectures; runtime bundled; no developer Node assumed | ✅ script / ⛔ unexercised | `scripts/bundle-node.sh` (SHASUMS256 verified), `build.sh` copies `engine/prompts` + `engine/runtime`, launcher prefers the bundled runtime; universal binary via `release.sh` — needs a Mac to run | owner |
+| Installable build for both architectures; runtime bundled; no developer Node assumed | ✅ built in CI / ⛔ not yet installed on a clean Mac | CI `release-dryrun` on macos-15 (commit `7ae5546`): `bundle-node.sh` downloaded and verified Node v22.12.0 for arm64 + x86_64, universal binary (`lipo`: x86_64 arm64), `Before-I-Deploy-11.0.0-rc.1.dmg` (90 MB, unsigned), `latest.json` + cask; the bundled engine answers `bid version`. Running the DMG on a Mac without Node is the owner's step | CI + owner |
 | Signing, notarization, Gatekeeper, upgrade/migration, uninstall | ⛔ signing / ✅ scripts | `release.sh` refuses to notarize without credentials and says so; update feed + sha256 (V10); `uninstall.sh --all` removes agent/keys | owner |
 
 ### §9 Evidence and tests (final numbers)
@@ -120,7 +120,8 @@ Status vocabulary: ✅ done and proven · ⚠️ done, proof limited (says how) 
 | `node tests/run.mjs` | 97 passed, 0 failed (Linux, Node 22; macOS runner in CI) | unit/mock + sandbox integration |
 | `deno test supabase/functions` | 80 passed | unit/mock |
 | `tests/rls/rls.mjs` (PGlite) | 8 passed — user A / user B / anonymous / service role on every table incl. the monitoring tables | real Postgres, in-process |
-| `swift test` | 44 (CI) | CI |
+| `swift test` | 44 passed (CI `app.yml` on `7ae5546`, macos-15; build + i18n + bundled engine check green) | CI |
+| `release-dryrun.yml` | ✅ on `7ae5546`: universal DMG with bundled Node runtime | CI |
 | `i18n-check`, `error-codes`, `schema.sql` twice in PGlite | ✅ | unit |
 | Real-provider integration (Netlify, Paddle sandbox, Anthropic) | ⛔ not run from this environment | owner |
 | Manual UX on a real Mac | ⛔ not run | owner |
