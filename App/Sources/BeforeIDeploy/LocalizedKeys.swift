@@ -127,4 +127,119 @@ enum K {
         default: return v
         }
     }
+
+    // MARK: V11 RC — usage / billing / assistant enums
+
+    static func subscriptionStatus(_ v: String) -> String {
+        switch v {
+        case "active": return L("usage.status.active")
+        case "trial": return L("usage.status.trial")
+        case "past_due": return L("usage.status.past_due")
+        case "canceled": return L("usage.status.canceled")
+        case "expired": return L("usage.status.expired")
+        default: return v
+        }
+    }
+
+    static func usageStatus(_ v: String) -> String {
+        switch v {
+        case "ok": return L("usage.op.ok")
+        case "pending": return L("usage.op.pending")
+        case "orphaned": return L("usage.op.orphaned")
+        case "truncated": return L("usage.op.truncated")
+        case "refused": return L("usage.op.refused")
+        case "error": return L("usage.op.error")
+        default: return v
+        }
+    }
+
+    static func ledgerReason(_ v: String) -> String {
+        switch v {
+        case "plan_grant": return L("usage.reason.plan_grant")
+        case "trial_grant": return L("usage.reason.trial_grant")
+        case "topup": return L("usage.reason.topup")
+        case "ai_fix": return L("usage.reason.ai_fix")
+        case "hold": return L("usage.reason.hold")
+        case "admin_grant": return L("usage.reason.admin_grant")
+        case "refund": return L("usage.reason.refund")
+        case "expiry": return L("usage.reason.expiry")
+        default: return v
+        }
+    }
+
+    static func bucket(_ v: String) -> String {
+        switch v {
+        case "plan": return L("usage.bucket.plan")
+        case "topup": return L("usage.bucket.topup")
+        case "hold": return L("usage.bucket.hold")
+        default: return v
+        }
+    }
+
+    static func assistantAction(_ v: String) -> String {
+        switch v {
+        case "ask": return L("assistant.action.ask")
+        case "diagnose": return L("assistant.action.diagnose")
+        case "propose": return L("assistant.action.propose")
+        case "fix": return L("assistant.action.fix")
+        case "review": return L("assistant.action.review")
+        case "explain": return L("assistant.action.explain")
+        case "readiness": return L("assistant.action.readiness")
+        case "triage": return L("assistant.action.triage")
+        default: return v
+        }
+    }
+
+    static func assistantStopped(_ v: String?) -> String? {
+        switch v {
+        case nil: return nil
+        case "invalid_output": return L("assistant.stopped.invalid_output")
+        case "needs_input": return L("assistant.stopped.needs_input")
+        case "no_change": return L("assistant.stopped.no_change")
+        case "stale_base_hash": return L("assistant.stopped.stale_base_hash")
+        case "needs_confirmation": return L("assistant.stopped.needs_confirmation")
+        case "not_applicable": return L("assistant.stopped.not_applicable")
+        case "no_progress": return L("assistant.stopped.no_progress")
+        case "regression": return L("assistant.stopped.regression")
+        case "max_iterations": return L("assistant.stopped.max_iterations")
+        case "budget": return L("assistant.stopped.budget")
+        case "cancelled": return L("assistant.cancelled")
+        default: return v
+        }
+    }
+
+    static func evidenceKind(_ v: String) -> String {
+        switch v {
+        case "issue": return L("assistant.evidence.issue")
+        case "log": return L("assistant.evidence.log")
+        case "file": return L("assistant.evidence.file")
+        case "git": return L("assistant.evidence.git")
+        case "diff": return L("assistant.evidence.diff")
+        case "incident": return L("assistant.evidence.incident")
+        default: return v
+        }
+    }
+
+    /// Field labels of the assistant's structured answers (engine/prompts/*.json output schemas).
+    static func outputField(_ v: String) -> String {
+        switch v {
+        case "status": return L("assistant.field.status")
+        case "engine_status", "engine_gate_status": return L("assistant.field.engine_status")
+        case "observations": return L("assistant.field.observations")
+        case "hypotheses": return L("assistant.field.hypotheses")
+        case "impact": return L("assistant.field.impact")
+        case "next_steps", "next_action", "proposed_next_action": return L("assistant.field.next_steps")
+        case "missing_context", "missing_evidence": return L("assistant.field.missing_context")
+        case "findings": return L("assistant.field.findings")
+        case "required_checks", "recommended_checks", "completed_checks": return L("assistant.field.checks")
+        case "remaining_uncertainties", "uncertainties": return L("assistant.field.uncertainties")
+        case "blockers": return L("assistant.field.blockers")
+        case "warnings": return L("assistant.field.warnings")
+        case "unresolved": return L("assistant.field.unresolved")
+        case "recovery_options": return L("assistant.field.recovery_options")
+        case "timeline_summary": return L("assistant.field.timeline")
+        case "evidence_ids": return L("assistant.field.evidence")
+        default: return v.replacingOccurrences(of: "_", with: " ")
+        }
+    }
 }

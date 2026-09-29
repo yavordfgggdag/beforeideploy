@@ -1,0 +1,7 @@
+{
+  "purpose": "never returns JSON; after one repair the operation ends as invalid_output",
+  "responses": [
+    "I think the problem is in app.js, let me explain at length…",
+    "Sorry, here is prose again without JSON."
+  ]
+}

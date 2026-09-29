@@ -7,7 +7,9 @@ import { detect } from './detect.mjs';
 import { listProjects, upsertProject, removeProject, resolveProject, updateProject, getState, listHistory, findProject } from './store.mjs';
 import { runChecks } from './checks.mjs';
 import { deriveIssues } from './issues.mjs';
-import { monitorOnce, monitorStatus, listIncidents, setMonitorSettings, agentInstall, agentRemove } from './monitor.mjs';
+import { monitorOnce, monitorStatus, monitorStatusMerged, listIncidents, setMonitorSettings, agentInstall, agentRemove, maintenanceCommand, notifyTest } from './monitor.mjs';
+import { monitorCloudStatus, monitorCloudEnable, monitorCloudDisable, monitorCloudTest } from './monitor-cloud.mjs';
+import { assistantChat, assistantHistory, assistantReset, assistantSettings, setAssistantSettings, listPrompts } from './ai/assistant.mjs';
 import { backupStatus } from './providers/backup/codeguard.mjs';
 import { releasePreview, releasePromote, releaseStatus, releaseRollback, releaseCancel, capabilities } from './release.mjs';
 import { localStart, localStop, localRestart, localStatus } from './local.mjs';
@@ -59,7 +61,7 @@ const HELP = `Before I Deploy engine ${VERSION}
   bid ai      fix --project P --step ID [--deep] [--model M] [--provider anthropic|openai|cloud]   built-in AI Fix (streams 'ai' events)
   bid ai      explain --project P --step ID | apply --project P --patch-file F --yes [--files a,b] [--commit] | usage
   bid demo create                  sample website in ~/Documents/Before I Deploy Demo, added to the list
-  bid billing catalog | status | trial | portal | checkout --plan flash|high|knight [--yearly] | checkout --pack ID
+  bid billing catalog | status | usage | sync | trial | portal | checkout --plan flash|high|knight [--yearly] | checkout --pack ID
   bid costs   [--refresh]          costs, credits, price table, budgets
   bid usage   [--refresh]          real limits from the providers
   bid budget  --netlify-min N
@@ -81,13 +83,17 @@ const HELP = `Before I Deploy engine ${VERSION}
   bid hosting status | advise --project P | set --project P --provider netlify|vercel|cloudflare|ghpages
   bid deploy  --project P [--prod --confirm DEPLOY] [--recheck-if-stale]   with the selected hosting
   bid issues  --project P          prioritized issues from the last check (severity, evidence, fix, verification)
-  bid monitor once [--project P] | status | incidents [--limit N] | settings --json '{…}' | agent install --yes | agent remove
+  bid monitor once [--project P] | status [--no-network] | incidents [--limit N] | settings --json '{…}' | agent install --yes | agent remove
+  bid monitor cloud status | enable [--project P] [--interval N] [--paths /a,/b] | disable [--project P] | test --project P
+  bid monitor maintenance add --from ISO --to ISO [--project P] [--note T] | list | clear · bid monitor notify test
   bid backup  status --project P   backup provider state (CodeGuard: not connected until an API exists)
   bid project client --project K --name N       which client a site belongs to (portfolio filter)
   bid release preview --project P [--force]     check → preview deploy → smoke checks → awaits confirmation
   bid release promote --project P --op ID --confirm DEPLOY   publishes the smoke-tested preview, verifies production
   bid release status  --project P [--op ID] | rollback --confirm ROLLBACK [--deploy ID] | cancel --op ID
   bid fix apply ID --project P --yes [--recheck]   · bid ai apply … [--recheck] · bid ai undo --project P --yes
+  bid ai chat --project P --action ask|diagnose|propose|review|explain|readiness|triage|fix [--message M] [--issue ID] [--files a,b] [--patch-file F] [--budget N] [--yes] [--new]
+  bid ai history --project P [--limit N] · bid ai reset --project P · bid ai settings [--json '{…}'] · bid ai prompts
   bid doctor`;
 
 function statusSnapshot(project) {
@@ -127,7 +133,7 @@ function doctor() {
     engineDir: ENGINE_DIR,
     appDir: APP_DIR,
     cacheDir: CACHE_DIR,
-    node: { path: process.execPath, version: process.version },
+    node: { path: process.execPath, version: process.version, runtime: process.env.BID_NODE_RUNTIME || 'system' },
     npm: v('npm'),
     pnpm: v('pnpm'),
     yarn: v('yarn'),
@@ -288,11 +294,16 @@ async function main() {
 
     case 'ai': {
       if (sub === 'usage') return ok(await aiUsage());
+      if (sub === 'prompts') return ok(listPrompts());
+      if (sub === 'settings') return ok(flags.json && flags.json !== true ? setAssistantSettings(JSON.parse(flags.json)) : assistantSettings());
       const p = proj();
       if (sub === 'fix') return ok(await aiFix(p, { step: flags.step, model: flags.model, deep: !!flags.deep, provider: flags.provider }));
       if (sub === 'explain') return ok(await aiFix(p, { step: flags.step, model: flags.model, provider: flags.provider, mode: 'explain' }));
       if (sub === 'apply') return ok(await aiApply(p, { patchFile: flags['patch-file'], files: flags.files, yes: !!flags.yes, commit: !!flags.commit, recheck: !!flags.recheck }));
       if (sub === 'undo') return ok(await aiUndo(p, { yes: !!flags.yes }));
+      if (sub === 'chat') return ok(await assistantChat(p, { action: flags.action, message: flags.message, issue: flags.issue, files: flags.files, patchFile: flags['patch-file'], budget: flags.budget, yes: !!flags.yes, newConversation: !!flags.new, provider: flags.provider, model: flags.model }));
+      if (sub === 'history') return ok(assistantHistory(p, { limit: flags.limit ? Number(flags.limit) : 50 }));
+      if (sub === 'reset') return ok(assistantReset(p));
       throw new EngineError(msg('cli.unknownCommand', { command: `ai ${sub}` }), 'usage', 2);
     }
 
@@ -413,9 +424,19 @@ async function main() {
 
     case 'monitor': {
       if (sub === 'once') return ok(await monitorOnce({ project: flags.project && flags.project !== true ? proj().key : null }));
-      if (!sub || sub === 'status') return ok(monitorStatus());
+      if (!sub || sub === 'status') return ok(flags['no-network'] ? monitorStatus() : await monitorStatusMerged());
+      if (sub === 'cloud') {
+        const action = positional[1];
+        const key = flags.project && flags.project !== true ? proj().key : null;
+        if (action === 'enable') return ok(await monitorCloudEnable({ project: key, intervalMin: flags.interval ? Number(flags.interval) : null, paths: flags.paths && flags.paths !== true ? String(flags.paths).split(',').map((x) => x.trim()).filter(Boolean) : null }));
+        if (action === 'disable') return ok(await monitorCloudDisable({ project: key }));
+        if (action === 'test') return ok(await monitorCloudTest({ project: key }));
+        return ok(await monitorCloudStatus());
+      }
+      if (sub === 'maintenance') return ok(await maintenanceCommand(positional[1], flags));
+      if (sub === 'notify') return ok(await notifyTest());
       if (sub === 'incidents') return ok(listIncidents({ limit: Number(flags.limit) || 100, project: flags.project && flags.project !== true ? proj().key : null }));
-      if (sub === 'settings') return ok(setMonitorSettings(flags.json && flags.json !== true ? JSON.parse(flags.json) : {}));
+      if (sub === 'settings') return ok(await setMonitorSettings(flags.json && flags.json !== true ? JSON.parse(flags.json) : {}));
       if (sub === 'agent') {
         if (positional[1] === 'install') return ok(agentInstall({ yes: !!flags.yes }));
         if (positional[1] === 'remove') return ok(agentRemove());

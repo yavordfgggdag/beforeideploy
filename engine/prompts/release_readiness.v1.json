@@ -26,10 +26,14 @@
       },
       "engine_release_gates": {
         "type": "string"
+      },
+      "note": {
+        "type": "string",
+        "description": "optional note from the user"
       }
     }
   },
-  "template": "Summarize release readiness from the snapshot, check results, preview results, provider capabilities and engine release gates below. Identify blockers and missing evidence. Do not infer approval or waive a failed gate. Explain exactly which artifact is eligible and what production confirmation will do. The engine, not this response, determines readiness.\n\nSNAPSHOT:\n{{snapshot}}\n\nCHECK RESULTS:\n{{check_results}}\n\nPREVIEW RESULTS:\n{{preview_results}}\n\nPROVIDER CAPABILITIES:\n{{provider_capabilities}}\n\nENGINE RELEASE GATES (authoritative):\n{{engine_release_gates}}\n\nReturn JSON with exactly these fields: summary (string), engine_gate_status (copied verbatim from the gates' status field), blockers (array of strings), warnings (array of strings), missing_evidence (array of strings), proposed_next_action (string).",
+  "template": "Summarize release readiness from the snapshot, check results, preview results, provider capabilities and engine release gates below. Identify blockers and missing evidence. Do not infer approval or waive a failed gate. Explain exactly which artifact is eligible and what production confirmation will do. The engine, not this response, determines readiness.\n\nUSER NOTE (may be empty):\n{{note}}\n\nSNAPSHOT:\n{{snapshot}}\n\nCHECK RESULTS:\n{{check_results}}\n\nPREVIEW RESULTS:\n{{preview_results}}\n\nPROVIDER CAPABILITIES:\n{{provider_capabilities}}\n\nENGINE RELEASE GATES (authoritative):\n{{engine_release_gates}}\n\nReturn JSON with exactly these fields: summary (string), engine_gate_status (copied verbatim from the gates' status field), blockers (array of strings), warnings (array of strings), missing_evidence (array of strings), proposed_next_action (string).",
   "output": {
     "required": [
       "summary",

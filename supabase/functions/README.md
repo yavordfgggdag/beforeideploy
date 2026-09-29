@@ -5,7 +5,8 @@
 | `admin` | `bid admin <action>` (Admin panel) | role-gated user/plan/credit management, written to `admin_audit` |
 | `ai-fix` | `bid ai fix` for normal users on a plan | metered AI proxy: plan/credits/rate checks, streams the model, bills real tokens |
 | `account` | `bid account export` / `bid account delete` | GDPR export of the caller's rows; account deletion (cancels the Paddle subscription first) |
-| `billing` | `bid billing …` and Paddle webhooks | catalog, status, checkout, trial, customer portal; subscription / grant / refund webhooks |
+| `billing` | `bid billing …` and Paddle webhooks | catalog, status, **usage** (server-authoritative Plan & usage), **sync** (recovery after a missed webhook), checkout, trial, customer portal; subscription / grant / refund webhooks |
+| `monitor` | `bid monitor cloud …` and pg_cron (`run`) | server-side monitoring (V11 RC): register a tenant's own live host, status with scheduler heartbeat, incidents, test; the cron pass probes due targets through the pinned network guard (`_shared/netguard.ts`) |
 
 Deploy from the repo root with the Supabase CLI (once per change):
 
@@ -14,8 +15,10 @@ supabase login
 supabase link --project-ref <your-project-ref>
 supabase functions deploy admin ai-fix account
 supabase functions deploy billing --no-verify-jwt    # Paddle webhooks carry no JWT; user actions are checked inside
+supabase functions deploy monitor --no-verify-jwt    # the pg_cron call carries no JWT (x-monitor-secret); user actions are checked inside
 supabase secrets set ANTHROPIC_API_KEY=sk-ant-…     # ai-fix
 supabase secrets set PADDLE_API_KEY=… PADDLE_WEBHOOK_SECRET=… PADDLE_ENV=sandbox   # billing + account
+supabase secrets set MONITOR_CRON_SECRET=<long random string>                     # monitor; then run supabase/monitor-cron.sql
 ```
 
 The functions read `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY`, which Supabase

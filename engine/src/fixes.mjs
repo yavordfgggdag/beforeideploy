@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { EngineError, ev, sh, exists, runStream, logDir, which } from './util.mjs';
 import { detect } from './detect.mjs';
-import { addHistory, getState } from './store.mjs';
+import { addHistory, getState, setState } from './store.mjs';
 import { t, msg } from './i18n.mjs';
 
 const BG = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'h', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'sht', ъ: 'a', ь: 'y', ю: 'yu', я: 'ya' };
@@ -241,5 +241,7 @@ async function verifyFix(project, id) {
   const cmp = compareIssues(before, after, targets);
   const steps = FIX_VERIFIES[id] || [];
   const stepsOk = steps.every((sid) => ['pass', 'warn', 'info'].includes(check.steps.find((s) => s.id === sid)?.status));
-  return { status: check.status, at: check.at, steps, verified: cmp.verified && stepsOk, resolved: cmp.resolved, unresolved: cmp.unresolved };
+  const out = { status: check.status, at: check.at, steps, verified: cmp.verified && stepsOk, resolved: cmp.resolved, unresolved: cmp.unresolved };
+  setState(project.key, { lastRecheck: { kind: 'fix', fix: id, ...out } });
+  return out;
 }

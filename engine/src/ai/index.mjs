@@ -214,7 +214,9 @@ async function verifyAfterFix(project, step) {
   const check = await runChecks(project, { stopOnFail: false });
   const s = check.steps.find((x) => x.id === step);
   const stepOk = !!s && ['pass', 'warn', 'info'].includes(s.status);
-  return { status: check.status, step, stepStatus: s?.status || null, verified: stepOk, at: check.at };
+  const out = { status: check.status, step, stepStatus: s?.status || null, verified: stepOk, at: check.at };
+  setState(project.key, { lastRecheck: { kind: 'ai', ...out } });
+  return out;
 }
 
 /** Restores the files of the last `ai apply` (V11). A file the user edited since is left alone and reported. */

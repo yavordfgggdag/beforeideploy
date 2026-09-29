@@ -32,6 +32,10 @@ struct SidebarView: View {
                     model.screen = .domains
                     Task { await model.loadSpaceship() }
                 }
+                NavRow(symbol: "sparkles", title: L("assistant.nav"), selected: model.screen == .assistant) {
+                    model.screen = .assistant
+                    Task { await model.assistantStore.load() }
+                }
                 NavRow(symbol: "creditcard.fill", title: L("common.costs"), selected: model.screen == .costs) {
                     model.screen = .costs
                     Task { await model.loadCosts() }
@@ -42,6 +46,10 @@ struct SidebarView: View {
                     Task { await model.loadSetup() }
                 }
                 if model.account?.loggedIn == true {
+                    NavRow(symbol: "gauge.with.dots.needle.33percent", title: L("usage.nav"), selected: model.screen == .usage) {
+                        model.screen = .usage
+                        Task { await model.billingStore.loadUsage() }
+                    }
                     NavRow(symbol: "person.crop.circle.fill", title: L("common.account"), selected: model.screen == .account) {
                         model.screen = .account
                     }

@@ -147,16 +147,21 @@ struct AppleSignInButton: View {
     }
 }
 
-/// Shown on the empty main screen: the three steps to a first deploy, with their shortcuts, plus a
-/// pointer to Setup when required tools are missing.
+/// Shown on the empty main screen: the path from the first launch to a monitored site — account or local mode,
+/// add a project, connect hosting, first check, AI suggestion, preview, monitoring (V11 RC) — plus a pointer to
+/// Setup when required tools are missing.
 struct FirstStepsCard: View {
     @EnvironmentObject var model: AppModel
 
     private var steps: [(String, String, String, String)] {
         [
+            ("person.crop.circle", L("firstSteps.account"), L("firstSteps.accountHint"), ""),
             ("folder.badge.plus", L("firstSteps.add"), L("firstSteps.addHint"), "⌘O"),
+            ("antenna.radiowaves.left.and.right", L("firstSteps.hosting"), L("firstSteps.hostingHint"), ""),
             ("checkmark.seal", L("firstSteps.check"), L("firstSteps.checkHint"), "⌘R"),
+            ("sparkles", L("firstSteps.ai"), L("firstSteps.aiHint"), ""),
             ("paperplane", L("firstSteps.deploy"), L("firstSteps.deployHint"), "⌘D"),
+            ("waveform.path.ecg", L("firstSteps.monitor"), L("firstSteps.monitorHint"), ""),
         ]
     }
 
@@ -182,9 +187,11 @@ struct FirstStepsCard: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     Spacer()
-                    Text(s.3).font(.system(size: 11, weight: .medium, design: .rounded)).foregroundColor(Theme.tertiary)
-                        .padding(.horizontal, 6).padding(.vertical, 2)
-                        .background(RoundedRectangle(cornerRadius: 5, style: .continuous).fill(Theme.elevated))
+                    if !s.3.isEmpty {
+                        Text(s.3).font(.system(size: 11, weight: .medium, design: .rounded)).foregroundColor(Theme.tertiary)
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .background(RoundedRectangle(cornerRadius: 5, style: .continuous).fill(Theme.elevated))
+                    }
                 }
             }
             if let setup = model.setup, !setup.ready {

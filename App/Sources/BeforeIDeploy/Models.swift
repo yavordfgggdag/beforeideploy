@@ -215,7 +215,7 @@ struct NetlifyTeam: Codable, Identifiable, Hashable {
 
 struct DoctorInfo: Codable {
     struct Tool: Codable { var path: String; var version: String }
-    struct NodeInfo: Codable { var path: String; var version: String }
+    struct NodeInfo: Codable { var path: String; var version: String; var runtime: String? }
     var engine: String
     var engineDir: String
     var appDir: String
@@ -1062,11 +1062,16 @@ struct Incident: Codable, Identifiable, Hashable {
     var count: Int?
     var detail: String?
     var url: String?
+    var source: String?     // mac | cloud
+    var alsoCloud: Bool?
 }
 
 struct MonitorStatus: Codable {
-    var runsOn: String
+    var runsOn: String          // mac | cloud | both
     var serverSide: Bool
+    var cloud: CloudMonitor?    // nil: not asked (offline view); unavailable: signed out / no network
+    var maintenance: [MaintenanceWindow]?
+    var channels: MonitorChannels?
     var settings: MonitorSettings
     var agent: MonitorAgent
     var lastRunAt: String?
@@ -1074,6 +1079,42 @@ struct MonitorStatus: Codable {
     var stale: Bool
     var openIncidents: [Incident]
     var recentIncidents: [Incident]
+}
+
+struct CloudMonitor: Codable, Hashable {
+    struct Scheduler: Codable, Hashable { var lastRunAt: String?; var healthy: Bool; var state: String; var checked: Int? }
+    struct Target: Codable, Identifiable, Hashable {
+        var projectKey: String
+        var projectName: String?
+        var url: String
+        var enabled: Bool
+        var intervalMin: Int
+        var lastRunAt: String?
+        var nextRunAt: String?
+        var lastOk: Bool?
+        var lastStatus: Int?
+        var failures: Int?
+        var id: String { projectKey }
+    }
+    var unavailable: Bool?
+    var reason: String?
+    var active: Bool?
+    var scheduler: Scheduler?
+    var targets: [Target]?
+    var retentionDays: Int?
+    var nextRunAt: String?
+}
+
+struct MaintenanceWindow: Codable, Identifiable, Hashable {
+    var from: String
+    var to: String
+    var project: String?
+    var note: String?
+    var id: String { from + to + (project ?? "") }
+}
+
+struct MonitorChannels: Codable, Hashable {
+    var webhook: String?
 }
 
 struct MonitorRun: Codable {
@@ -1091,4 +1132,200 @@ struct BackupStatus: Codable, Hashable {
     var missing: [String]?
     var lastBackupAt: String?
     var at: String?
+}
+
+// MARK: - Embedded assistant (V11 RC)
+
+/// A free-form JSON value: the assistant's validated structured output is rendered generically.
+indirect enum JSONValue: Codable, Hashable {
+    case string(String)
+    case number(Double)
+    case bool(Bool)
+    case null
+    case array([JSONValue])
+    case object([String: JSONValue])
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.singleValueContainer()
+        if c.decodeNil() { self = .null }
+        else if let b = try? c.decode(Bool.self) { self = .bool(b) }
+        else if let n = try? c.decode(Double.self) { self = .number(n) }
+        else if let s = try? c.decode(String.self) { self = .string(s) }
+        else if let a = try? c.decode([JSONValue].self) { self = .array(a) }
+        else if let o = try? c.decode([String: JSONValue].self) { self = .object(o) }
+        else { throw DecodingError.dataCorruptedError(in: c, debugDescription: "unsupported JSON") }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.singleValueContainer()
+        switch self {
+        case .string(let s): try c.encode(s)
+        case .number(let n): try c.encode(n)
+        case .bool(let b): try c.encode(b)
+        case .null: try c.encodeNil()
+        case .array(let a): try c.encode(a)
+        case .object(let o): try c.encode(o)
+        }
+    }
+
+    var string: String? { if case .string(let s) = self { return s } else { return nil } }
+    var array: [JSONValue]? { if case .array(let a) = self { return a } else { return nil } }
+    var object: [String: JSONValue]? { if case .object(let o) = self { return o } else { return nil } }
+    subscript(_ key: String) -> JSONValue? { object?[key] }
+    var strings: [String] { array?.compactMap(\.string) ?? [] }
+    /// Short human text for any value (used for list items that are objects).
+    var text: String {
+        switch self {
+        case .string(let s): return s
+        case .number(let n): return n == n.rounded() ? String(Int(n)) : String(n)
+        case .bool(let b): return b ? "true" : "false"
+        case .null: return "—"
+        case .array(let a): return a.map(\.text).joined(separator: ", ")
+        case .object(let o): return o.keys.sorted().compactMap { k in o[k].map { "\(k): \($0.text)" } }.joined(separator: " · ")
+        }
+    }
+}
+
+struct AssistantEvidence: Codable, Identifiable, Hashable {
+    var id: String
+    var kind: String       // issue | log | file | git | diff | incident
+    var label: String
+    var chars: Int
+    var redactions: Int
+}
+
+struct AssistantBudget: Codable, Hashable {
+    var limit: Int
+    var used: Int
+    var calls: Int?
+}
+
+struct AssistantApplied: Codable, Hashable {
+    var applied: [String]
+    var skipped: [AISkipped]?
+    var undoFile: String?
+}
+
+struct AssistantResult: Codable, Hashable {
+    var conversation: String
+    var action: String
+    var provider: String
+    var model: String?
+    var template: String?
+    var output: JSONValue?
+    var valid: Bool
+    var errors: [String]?
+    var repairs: Int?
+    var usage: AIUsage?
+    var stopped: String?     // nil = finished; invalid_output | needs_input | no_change | stale_base_hash | needs_confirmation | not_applicable | no_progress | regression | max_iterations | budget
+    var budget: AssistantBudget?
+    var duration: Double?
+    var patchFile: String?
+    var files: [AIPatchFile]?
+    var risk: String?
+    var verificationPlan: [String]?
+    var rollbackNotes: String?
+    var iterations: Int?
+    var applied: AssistantApplied?
+    var recheck: AIRecheck?
+    var verified: Bool?
+    var undone: Bool?
+    var evidence: [AssistantEvidence]?
+    var engineStatus: String?
+}
+
+struct AssistantHistoryEntry: Codable, Identifiable, Hashable {
+    var at: String
+    var conversation: String?
+    var action: String
+    var message: String?
+    var template: String?
+    var valid: Bool?
+    var stopped: String?
+    var summary: String?
+    var patchFile: String?
+    var duration: Double?
+    var id: String { at + action }
+}
+
+struct AssistantHistory: Codable {
+    var project: String
+    var conversation: String?
+    var entries: [AssistantHistoryEntry]
+}
+
+struct AssistantSettings: Codable, Hashable {
+    var autoApplyLowRisk: Bool
+    var maxIterations: Int
+    var maxTokensPerOperation: Int
+    var maxContextChars: Int?
+    var maxFileChars: Int?
+    var maxFiles: Int?
+    var callTimeoutMs: Int?
+}
+
+struct PromptInfo: Codable, Identifiable, Hashable {
+    var id: String
+    var version: Int
+    var kind: String
+    var purpose: String
+    var title: [String: [String: String]]?
+    var inputs: [String]
+    var outputs: [String]
+}
+
+// MARK: - Plan & usage (V11 RC): server-authoritative, all in tokens
+
+struct UsageReport: Codable {
+    struct Period: Codable, Hashable { var start: String; var end: String; var renewsAt: String?; var source: String }
+    struct Tokens: Codable, Hashable { var tokens: Int; var operations: Int? }
+    struct Remaining: Codable, Hashable { var plan: Int; var purchased: Int; var total: Int; var available: Int }
+    struct Purchased: Codable, Hashable { var tokens: Int; var expires: String? }
+    struct Limits: Codable, Hashable { var perMinute: Int; var perHour: Int; var dailyCapPercent: Int; var dailyCapTokens: Int?; var spentToday: Int }
+    struct Pricing: Codable, Hashable { var version: String; var spendOrder: [String]? }
+    struct Reconciled: Codable, Hashable { var releasedHolds: Int }
+    struct Operation: Codable, Identifiable, Hashable {
+        var id: String
+        var at: String
+        var step: String?
+        var project: String?
+        var model: String?
+        var status: String?
+        var tokens: Int
+        var input: Int?
+        var output: Int?
+        var pricingVersion: String?
+        var operationId: String?
+    }
+    struct LedgerRow: Codable, Identifiable, Hashable {
+        var id: JSONValue
+        var at: String
+        var delta: Int
+        var bucket: String
+        var reason: String
+        var ref: String?
+        var pricingVersion: String?
+    }
+    struct History: Codable { var operations: [Operation]; var ledger: [LedgerRow] }
+
+    var serverTime: String
+    var unit: String
+    var plan: String
+    var subscription: BillingStatus.Subscription?
+    var trialAvailable: Bool?
+    var period: Period
+    var included: Tokens
+    var used: Tokens
+    var reserved: Tokens
+    var remaining: Remaining
+    var purchased: Purchased
+    var limits: Limits
+    var pricing: Pricing
+    var reconciled: Reconciled?
+    var history: History
+}
+
+struct BillingSync: Codable {
+    var synced: [String]
+    var status: BillingStatus
 }

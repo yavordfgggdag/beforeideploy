@@ -3,7 +3,7 @@
 // the redacted prompt + the user's JWT; we check role/plan/credits/limits, stream the model's answer
 // back as normalized SSE ({type: delta|usage|done|error}) and bill the real token counts to credit_ledger.
 import { callerOf, type DbClient, type Deps, json, must, readJson, type Row } from "../_shared/db.ts";
-import { bucketBalance, ensureMonthlyGrant, expireDue } from "../_shared/credits.ts";
+import { bucketBalance, ensureMonthlyGrant, expireDue, pricingVersion, reconcileHolds } from "../_shared/credits.ts";
 
 export type Plan = "free" | "flash" | "high" | "knight";
 export type Role = "normal" | "vip" | "admin";
@@ -16,7 +16,9 @@ export interface AiFixBody {
   locale?: string;
   deep?: boolean;
   model?: string;
-  mode?: "fix" | "explain";
+  mode?: "fix" | "explain" | "assistant";
+  /** Client-generated id of the logical operation: a retry with the same id never bills twice (V11 RC). */
+  operationId?: string;
 }
 
 export interface AiFixDeps extends Deps {
@@ -91,6 +93,24 @@ export function createAiFixHandler(deps: AiFixDeps): (req: Request) => Promise<R
       return json(403, { error: "a paid plan is required", code: "no_plan" });
     }
 
+    // abandoned holds from earlier requests are released before anything is reserved (V11 RC)
+    await reconcileHolds(db, user.id, now);
+    // one logical operation is billed once: a retry with the same operationId gets the recorded outcome
+    const operationId = typeof body.operationId === "string" && /^[A-Za-z0-9_-]{8,64}$/.test(body.operationId) ? body.operationId : null;
+    if (operationId) {
+      const { data: prior } = await db.from("ai_usage").select("id,status,charged_tokens,model").eq("user_id", user.id).eq("operation_id", operationId).maybeSingle();
+      if (prior) {
+        const done = !!prior.status && prior.status !== "pending";
+        return json(409, {
+          error: done ? "this operation was already completed" : "this operation is still running",
+          code: done ? "duplicate_operation" : "operation_in_progress",
+          operationId,
+          usage: done ? { charged: Number(prior.charged_tokens ?? 0), model: prior.model, status: prior.status } : null,
+        });
+      }
+    }
+    const priceVersion = await pricingVersion(settings as unknown as Record<string, unknown>);
+
     // the whole input counts, not just the prompt (audit C1)
     const inputChars = body.prompt.length + (typeof body.system === "string" ? body.system.length : 0);
     if (body.system !== undefined && typeof body.system !== "string") return json(400, { error: "system must be text" });
@@ -112,7 +132,7 @@ export function createAiFixHandler(deps: AiFixDeps): (req: Request) => Promise<R
     // ---- reserve first, check after (audit C1): the usage row counts for the rate limits and the hold
     // counts in the balance at once, so parallel requests see each other and cannot all pass.
     const usageIns = must(await db.from("ai_usage").insert({
-      user_id: user.id, project_key: body.project?.key ?? null, step: body.step ?? null, model, status: "pending", charged_tokens: 0,
+      user_id: user.id, project_key: body.project?.key ?? null, step: body.step ?? null, model, status: "pending", charged_tokens: 0, operation_id: operationId, pricing_version: priceVersion,
     }).select("id").maybeSingle());
     const usageId = String((usageIns.data as Row | null)?.id ?? crypto.randomUUID());
     must(await db.from("credit_ledger").insert({ user_id: user.id, delta: -estimate, bucket: "hold", reason: "hold", ref: usageId }));
@@ -206,8 +226,8 @@ export function createAiFixHandler(deps: AiFixDeps): (req: Request) => Promise<R
           const fromPlan = Math.min(charged, planLeft);
           const fromTopup = charged - fromPlan;
           const rows: Row[] = [];
-          if (fromPlan > 0) rows.push({ user_id: user.id, delta: -fromPlan, bucket: "plan", reason: "ai_fix", ref: usageId });
-          if (fromTopup > 0) rows.push({ user_id: user.id, delta: -fromTopup, bucket: "topup", reason: "ai_fix", ref: usageId });
+          if (fromPlan > 0) rows.push({ user_id: user.id, delta: -fromPlan, bucket: "plan", reason: "ai_fix", ref: usageId, pricing_version: priceVersion });
+          if (fromTopup > 0) rows.push({ user_id: user.id, delta: -fromTopup, bucket: "topup", reason: "ai_fix", ref: usageId, pricing_version: priceVersion });
           must(await db.from("credit_ledger").insert(rows));
         }
         return { charged, balance: await balanceOf() };

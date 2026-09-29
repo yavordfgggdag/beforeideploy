@@ -59,6 +59,10 @@ struct RootView: View {
                     CostsView()
                 } else if model.screen == .setup {
                     SetupView()
+                } else if model.screen == .assistant {
+                    AssistantView()
+                } else if model.screen == .usage {
+                    PlanUsageView()
                 } else if model.screen == .account, model.account?.loggedIn == true {
                     AccountView()
                 } else if model.screen == .admin, model.account?.isAdmin == true {

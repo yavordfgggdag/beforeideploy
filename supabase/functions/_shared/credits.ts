@@ -75,3 +75,41 @@ export async function expireDue(db: DbClient, userId: string, now: Date): Promis
   }
   return plan;
 }
+
+/** How long an AI request may keep a hold before it counts as abandoned (a crashed function, a lost client). */
+export const HOLD_TTL_MS = 15 * 60_000;
+
+/**
+ * Orphaned holds (V11 RC): a hold whose ai_usage row never settled within HOLD_TTL_MS is released and the
+ * usage row marked `orphaned`, so an abandoned request cannot keep credits reserved forever. Idempotent;
+ * runs at the start of every AI request and of every usage read. Returns how many holds were released.
+ */
+export async function reconcileHolds(db: DbClient, userId: string, now: Date): Promise<{ released: number; reservedTokens: number; open: number }> {
+  const { data: holds } = await db.from("credit_ledger").select("id,ref,delta,created_at").eq("user_id", userId).eq("reason", "hold");
+  let released = 0;
+  let reservedTokens = 0;
+  let open = 0;
+  for (const h of (holds ?? []) as Row[]) {
+    const { data: usage } = await db.from("ai_usage").select("id,status,created_at").eq("id", h.ref).maybeSingle();
+    const startedAt = Date.parse(String(usage?.created_at ?? h.created_at ?? now.toISOString()));
+    const inFlight = !!usage && (!usage.status || usage.status === "pending");
+    if (!usage || !inFlight || now.getTime() - startedAt > HOLD_TTL_MS) {
+      await db.from("credit_ledger").delete().eq("id", h.id);
+      if (usage && inFlight) await db.from("ai_usage").update({ status: "orphaned" }).eq("id", usage.id);
+      released++;
+    } else {
+      reservedTokens += -Number(h.delta ?? 0);
+      open++;
+    }
+  }
+  return { released, reservedTokens, open };
+}
+
+/** Version label of the price table in force: an explicit `pricing.version` setting, else a hash of the table. */
+export async function pricingVersion(settings: Record<string, unknown>): Promise<string> {
+  const explicit = settings["pricing.version"];
+  if (typeof explicit === "string" && explicit) return explicit;
+  const text = JSON.stringify({ prices: settings["ai.prices"] ?? null, multipliers: settings["ai.multipliers"] ?? null, plans: settings["plans"] ?? null });
+  const d = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)));
+  return "p-" + [...d.slice(0, 6)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}

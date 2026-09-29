@@ -77,6 +77,10 @@ echo
 
 bold "3. Build"
 # one binary for Apple silicon and Intel; the feed URL goes into the bundled engine (audit R1/R3)
+if [[ "${BID_SKIP_NODE_BUNDLE:-0}" != "1" ]]; then
+  zsh scripts/bundle-node.sh >/dev/null || die "bundle-node.sh failed — set BID_SKIP_NODE_BUNDLE=1 only for a local smoke build (the app would then need Node on the Mac)"
+  ok "bundled Node runtime $(cat engine/runtime/arm64/VERSION) (arm64 + x86_64)"
+fi
 BID_UNIVERSAL=1 BID_RELEASE_BASE_URL="${BID_RELEASE_BASE_URL:-}" zsh scripts/build.sh >/dev/null || die "build.sh failed"
 [[ -d "$APP" ]] || die "no app at $APP"
 BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Contents/Info.plist")"

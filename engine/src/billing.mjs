@@ -12,7 +12,7 @@ import { EngineError } from './util.mjs';
 import { cloudConfig, currentSession } from './account.mjs';
 import { msg } from './i18n.mjs';
 
-export const BILLING_ACTIONS = ['catalog', 'status', 'checkout', 'trial', 'portal'];
+export const BILLING_ACTIONS = ['catalog', 'status', 'checkout', 'trial', 'portal', 'usage', 'sync'];
 
 const CODE_KEYS = {
   not_available: 'billing.notAvailable',

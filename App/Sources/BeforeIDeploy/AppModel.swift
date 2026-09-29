@@ -2,7 +2,7 @@ import AppKit
 import Combine
 import SwiftUI
 
-enum Screen: Hashable { case overview, project, domains, costs, setup, admin, account }
+enum Screen: Hashable { case overview, project, domains, costs, setup, admin, account, assistant, usage }
 
 enum SheetKind: Identifiable {
     case production, netlifySetup, commit, history, settings, remote, spaceshipConnect, connectDomain, deleteAccount, plans, release, rollback, client
@@ -37,6 +37,7 @@ final class AppModel: ObservableObject, Feedback {
     let runController: RunController
     let adminStore: AdminStore
     let aiStore: AIStore
+    let assistantStore: AssistantStore
     let billingStore: BillingStore
 
     @Published var sheet: SheetKind?
@@ -103,6 +104,7 @@ final class AppModel: ObservableObject, Feedback {
         runController = RunController(engine: engine, projects: projects)
         adminStore = AdminStore(engine: engine)
         aiStore = AIStore(engine: engine, projects: projects)
+        assistantStore = AssistantStore(engine: engine, projects: projects)
         billingStore = BillingStore(engine: engine)
 
         projectStore.feedback = self
@@ -112,6 +114,7 @@ final class AppModel: ObservableObject, Feedback {
         runController.beforeRun = { [weak self] in self?.stopQuietCheck() }
         adminStore.feedback = self
         aiStore.feedback = self
+        assistantStore.feedback = self
         billingStore.feedback = self
         billingStore.onChanged = { [weak self] in await self?.accountStore.loadAccount() }
         aiStore.onApplied = { [weak self] in
@@ -311,6 +314,47 @@ final class AppModel: ObservableObject, Feedback {
             let o = try? await engine.run(on ? ["monitor", "agent", "install", "--yes"] : ["monitor", "agent", "remove"])
             if o?.ok == true { flash(L(on ? "monitor.agentOn" : "monitor.agentOff")) } else { flash(o?.errorMessage ?? L("common.error"), error: true) }
             await loadMonitor()
+        }
+    }
+
+    /// Cloud monitoring for the selected project (registers its live host with the cloud, or removes it).
+    func setCloudMonitoring(on: Bool) {
+        guard let key = selectedKey else { return }
+        busy.insert("monitor-cloud")
+        Task {
+            defer { busy.remove("monitor-cloud") }
+            let o = try? await engine.run(on ? ["monitor", "cloud", "enable", "--project", key] : ["monitor", "cloud", "disable", "--project", key])
+            if o?.ok == true {
+                if on, let d = o?.resultData, let s = String(data: d, encoding: .utf8), s.contains("\"registered\":false") {
+                    flash(L("monitor.cloudNeedsLiveUrl"), error: true)
+                } else {
+                    flash(L(on ? "monitor.cloudOn" : "monitor.cloudOff"))
+                }
+            } else {
+                flash(o?.errorMessage ?? L("common.error"), error: true)
+            }
+            await loadMonitor()
+        }
+    }
+
+    /// The one external channel: a webhook the user pastes (validated by the engine: https, public host).
+    func setMonitorWebhook(_ url: String?) {
+        busy.insert("monitor-webhook")
+        Task {
+            defer { busy.remove("monitor-webhook") }
+            let value = (url?.isEmpty ?? true) ? "null" : "\"\(url!.replacingOccurrences(of: "\"", with: "\\\""))\""
+            let o = try? await engine.run(["monitor", "settings", "--json", "{\"channels\":{\"webhook\":\(value)}}"])
+            if o?.ok == true { flash(L("monitor.webhookSaved")) } else { flash(o?.errorMessage ?? L("common.error"), error: true) }
+            await loadMonitor()
+        }
+    }
+
+    func testMonitorWebhook() {
+        busy.insert("monitor-webhook")
+        Task {
+            defer { busy.remove("monitor-webhook") }
+            let o = try? await engine.run(["monitor", "notify", "test"])
+            if o?.ok == true { flash(L("monitor.webhookTested")) } else { flash(o?.errorMessage ?? L("common.error"), error: true) }
         }
     }
 

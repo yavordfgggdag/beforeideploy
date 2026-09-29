@@ -1,0 +1,25 @@
+{
+  "purpose": "tries to declare a blocked project ready; rejected twice → invalid_output",
+  "responses": [
+    {
+      "response": {
+        "summary": "Looks fine to me, ship it.",
+        "engine_gate_status": "ready",
+        "blockers": [],
+        "warnings": [],
+        "missing_evidence": [],
+        "proposed_next_action": "deploy"
+      }
+    },
+    {
+      "response": {
+        "summary": "Ship it.",
+        "engine_gate_status": "ready",
+        "blockers": [],
+        "warnings": [],
+        "missing_evidence": [],
+        "proposed_next_action": "deploy"
+      }
+    }
+  ]
+}

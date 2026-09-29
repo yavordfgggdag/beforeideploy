@@ -551,7 +551,7 @@ struct SettingsSheet: View {
                     SectionLabel(text: L("settings.environment"))
                     if let d = doctor {
                         InfoRow(label: "Engine", value: "v\(d.engine)")
-                        InfoRow(label: "Node", value: d.node.version)
+                        InfoRow(label: "Node", value: d.node.runtime == "bundled" ? L("engine.nodeBundled", d.node.version) : d.node.version)
                         InfoRow(label: "npm", value: d.npm?.version ?? "—")
                         if let p = d.pnpm { InfoRow(label: "pnpm", value: p.version) }
                         InfoRow(label: "git", value: d.git?.version ?? L("common.none"), tint: d.git == nil ? Theme.blocked : Theme.text)

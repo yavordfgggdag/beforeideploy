@@ -22,6 +22,7 @@ import { APP_DIR, ENGINE_DIR, EngineError, ev, ensureDir, nowISO, readJSON, writ
 import { listProjects, getState } from './store.mjs';
 import { spaceshipDomains } from './spaceship.mjs';
 import { t, msg } from './i18n.mjs';
+import { cloudStatusOrNull, validateWebhookUrl, postWebhook, webhookPayload } from './monitor-cloud.mjs';
 
 const STATE_FILE = () => path.join(APP_DIR, 'monitor.json');
 const INCIDENTS_FILE = () => path.join(APP_DIR, 'incidents.jsonl');
@@ -35,16 +36,23 @@ export const DEFAULT_SETTINGS = {
   confirmFailures: 2,
   notify: { down: true, ssl: true, domain: true, recovered: true },
   quietHours: null, // e.g. { from: 22, to: 7 }
+  maintenance: [], // [{ from: ISO, to: ISO, project?: key }] — no notifications, samples marked, incidents not opened
+  channels: { webhook: null }, // the ONE external channel, set by the user (https, public host)
 };
 
 export function monitorSettings() {
   const saved = readJSON(SETTINGS_FILE(), {}) || {};
-  return { ...DEFAULT_SETTINGS, ...saved, notify: { ...DEFAULT_SETTINGS.notify, ...(saved.notify || {}) } };
+  return { ...DEFAULT_SETTINGS, ...saved, notify: { ...DEFAULT_SETTINGS.notify, ...(saved.notify || {}) }, channels: { ...DEFAULT_SETTINGS.channels, ...(saved.channels || {}) }, maintenance: Array.isArray(saved.maintenance) ? saved.maintenance : [] };
 }
 
-export function setMonitorSettings(patch) {
+export async function setMonitorSettings(patch) {
   const next = { ...monitorSettings(), ...patch };
   if (patch.notify) next.notify = { ...monitorSettings().notify, ...patch.notify };
+  if (patch.channels) {
+    next.channels = { ...monitorSettings().channels, ...patch.channels };
+    if (next.channels.webhook) next.channels.webhook = await validateWebhookUrl(next.channels.webhook);
+  }
+  if (patch.maintenance !== undefined) next.maintenance = normalizeMaintenance(patch.maintenance);
   if (!Number.isFinite(next.intervalMin) || next.intervalMin < 5 || next.intervalMin > 1440) throw new EngineError(msg('monitor.badInterval'), 'usage', 2);
   writeJSON(SETTINGS_FILE(), next);
   return next;
@@ -128,6 +136,40 @@ function openIncident(list, key, kind) {
   return list.find((i) => i.project === key && i.kind === kind && i.status === 'open');
 }
 
+function normalizeMaintenance(list) {
+  if (!Array.isArray(list)) throw new EngineError(msg('monitor.maintenance.invalid'), 'usage', 2);
+  return list.map((w) => {
+    const from = Date.parse(w?.from);
+    const to = Date.parse(w?.to);
+    if (!Number.isFinite(from) || !Number.isFinite(to) || to <= from || to - from > 7 * 86400_000) throw new EngineError(msg('monitor.maintenance.invalid'), 'usage', 2);
+    return { from: new Date(from).toISOString(), to: new Date(to).toISOString(), project: w.project || null, note: w.note ? String(w.note).slice(0, 120) : null };
+  });
+}
+
+/** Windows that cover `now` (expired ones are dropped on the next settings write). */
+export function activeMaintenance(settings, key, now = new Date()) {
+  const t0 = now.getTime();
+  return (settings.maintenance || []).filter((w) => (!w.project || w.project === key) && Date.parse(w.from) <= t0 && t0 < Date.parse(w.to));
+}
+
+export async function maintenanceCommand(sub, flags) {
+  const settings = monitorSettings();
+  if (sub === 'add') {
+    const w = { from: flags.from, to: flags.to, project: flags.project && flags.project !== true ? String(flags.project) : null, note: flags.note && flags.note !== true ? String(flags.note) : null };
+    return (await setMonitorSettings({ maintenance: [...settings.maintenance, w] })).maintenance;
+  }
+  if (sub === 'clear') return (await setMonitorSettings({ maintenance: [] })).maintenance;
+  return settings.maintenance;
+}
+
+/** Sends a test payload to the configured webhook and reports what the receiver answered. */
+export async function notifyTest() {
+  const settings = monitorSettings();
+  if (!settings.channels.webhook) throw new EngineError(msg('monitor.webhook.none'), 'not_configured');
+  const r = await postWebhook(settings.channels.webhook, webhookPayload('test', { project: null, projectName: null }, {}));
+  return { url: settings.channels.webhook, ...r };
+}
+
 function inQuietHours(settings, now = new Date()) {
   const q = settings.quietHours;
   if (!q || !Number.isFinite(q.from) || !Number.isFinite(q.to)) return false;
@@ -162,6 +204,14 @@ export async function monitorOnce({ project = null, now = new Date() } = {}) {
     if (!live) {
       sample.uptime = { state: 'unsupported', reason: 'no_live_url' };
       state.projects[p.key] = { ...prev, ...sample, failures: 0 };
+      samples.push(sample);
+      continue;
+    }
+    const maintenance = activeMaintenance(settings, p.key, now);
+    if (maintenance.length) {
+      sample.uptime = { state: 'unchecked', reason: 'maintenance', until: maintenance[0].to };
+      sample.maintenance = true;
+      state.projects[p.key] = { ...prev, ...sample };
       samples.push(sample);
       continue;
     }
@@ -250,7 +300,18 @@ export async function monitorOnce({ project = null, now = new Date() } = {}) {
   state.lastRunBy = process.env.BID_CLIENT === 'app' ? 'app' : process.env.BID_MONITOR_AGENT ? 'agent' : 'cli';
   writeJSON(STATE_FILE(), state);
   writeIncidents(incidents);
-  return { at: state.lastRunAt, checked: samples.length, samples, events, quiet };
+  // the one external channel: confirmed problems and recoveries, never "ongoing" repeats, never in quiet hours
+  const delivered = [];
+  if (settings.channels.webhook && !quiet) {
+    for (const e of events.filter((x) => x.type === 'new' || x.type === 'recovered')) {
+      if (e.type === 'new' && settings.notify[e.kind] === false) continue;
+      if (e.type === 'recovered' && settings.notify.recovered === false) continue;
+      const inc = incidents.filter((i) => i.project === e.project && i.kind === e.kind).slice(-1)[0];
+      const r = await postWebhook(settings.channels.webhook, webhookPayload(e.type === 'new' ? 'incident' : 'recovered', { project: e.project, projectName: inc?.projectName || null, kind: e.kind, detail: inc?.detail || null, url: inc?.url || null }, { project: inc?.projectName || e.project, kind: e.kind }));
+      delivered.push({ ...e, ...r });
+    }
+  }
+  return { at: state.lastRunAt, checked: samples.length, samples, events, quiet, delivered };
 }
 
 // ---------------------------------------------------------------- status / incidents
@@ -263,6 +324,9 @@ export function monitorStatus() {
   return {
     runsOn: 'mac',
     serverSide: false,
+    cloud: null,
+    maintenance: settings.maintenance,
+    channels: { webhook: settings.channels.webhook ? redactUrl(settings.channels.webhook) : null },
     settings,
     agent,
     lastRunAt: state.lastRunAt || null,
@@ -273,6 +337,45 @@ export function monitorStatus() {
     openIncidents: incidents.filter((i) => i.status === 'open').sort((a, b) => b.openedAt.localeCompare(a.openedAt)),
     recentIncidents: incidents.filter((i) => i.status !== 'open').slice(-20).reverse(),
   };
+}
+
+function redactUrl(u) {
+  try {
+    const x = new URL(u);
+    return `${x.protocol}//${x.host}${x.pathname.length > 1 ? '/…' : ''}`;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Local status merged with the cloud's (V11 RC). `runsOn` says where checks really run: 'mac' (app timer /
+ * launchd agent), 'cloud' (scheduler heartbeat present and targets registered), 'both', or 'mac' with
+ * `cloud.unavailable` when the account is signed out or offline. Cloud incidents are merged and deduplicated
+ * with the local ones by project + kind; the source of every incident is kept.
+ */
+export async function monitorStatusMerged({ cloud = true } = {}) {
+  const local = monitorStatus();
+  if (!cloud) return local;
+  const c = await cloudStatusOrNull();
+  if (!c || c.unavailable) return { ...local, cloud: c ? { unavailable: true, reason: c.reason } : null };
+  const cloudActive = !!c.active;
+  const keyOf = (i) => `${i.projectKey || i.project}:${i.kind}`;
+  const seen = new Set(local.openIncidents.map(keyOf));
+  const cloudOpen = (c.openIncidents || []).map((i) => ({ id: i.id, project: i.projectKey, projectName: findProjectName(i.projectKey), kind: i.kind, severity: i.severity, status: i.status, openedAt: i.openedAt, lastSeenAt: i.lastSeenAt, resolvedAt: i.resolvedAt, count: i.count, detail: i.detail, url: i.url, source: 'cloud' }));
+  const merged = [...local.openIncidents.map((i) => ({ ...i, source: i.source || 'mac', alsoCloud: cloudOpen.some((x) => keyOf(x) === keyOf(i)) })), ...cloudOpen.filter((i) => !seen.has(keyOf(i)))];
+  const targets = (c.targets || []).map((x) => ({ ...x, projectName: findProjectName(x.projectKey) }));
+  return {
+    ...local,
+    runsOn: cloudActive ? (local.agent.installed || local.lastRunAt ? 'both' : 'cloud') : 'mac',
+    serverSide: cloudActive,
+    cloud: { active: cloudActive, scheduler: c.scheduler, targets, limits: c.limits, retentionDays: c.limits?.retentionDays ?? null, nextRunAt: targets.map((x) => x.nextRunAt).filter(Boolean).sort()[0] || null },
+    openIncidents: merged.sort((a, b) => String(b.openedAt).localeCompare(String(a.openedAt))),
+  };
+}
+
+function findProjectName(key) {
+  return listProjects().find((p) => p.key === key)?.name || key;
 }
 
 export function listIncidents({ limit = 100, project = null } = {}) {

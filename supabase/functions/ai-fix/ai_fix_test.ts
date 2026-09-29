@@ -318,3 +318,50 @@ Deno.test("ai-fix: an ended trial stops AI here too, not only in billing status"
   assert.equal(w.db.rows("profiles")[0].plan, "free");
   assert.equal(w.db.rows("subscriptions")[0].status, "expired");
 });
+
+// ---------------------------------------------------------------- V11 RC: idempotent operations, orphaned holds, pricing version
+
+Deno.test("ai-fix: the same operation id never bills twice; a retry gets the recorded outcome", async () => {
+  const { db, handle } = world();
+  const first = await events(await handle(post("ai-fix", { ...PROMPT, operationId: "op-12345678" })));
+  assert.equal(first.at(-1)?.type, "done");
+  const row = db.rows("ai_usage")[0];
+  assert.equal(row.operation_id, "op-12345678");
+  assert.match(String(row.pricing_version), /^p-[0-9a-f]{12}$/);
+  assert.ok(db.rows("credit_ledger").filter((r) => r.reason === "ai_fix").every((r) => r.pricing_version === row.pricing_version), "charges carry the price table version");
+  const spent = db.rows("credit_ledger").filter((r) => r.reason === "ai_fix").reduce((a, r) => a + Number(r.delta), 0);
+  const retry = await handle(post("ai-fix", { ...PROMPT, operationId: "op-12345678" }));
+  assert.equal(retry.status, 409);
+  const j = await retry.json();
+  assert.equal(j.code, "duplicate_operation");
+  assert.equal(j.usage.charged, Number(row.charged_tokens));
+  assert.equal(db.rows("ai_usage").length, 1, "no second usage row");
+  assert.equal(db.rows("credit_ledger").filter((r) => r.reason === "ai_fix").reduce((a, r) => a + Number(r.delta), 0), spent, "no second charge");
+  // an operation still in flight is reported as such
+  db.tables.ai_usage.push({ id: "u-run", user_id: USER.id, operation_id: "op-running1", status: "pending", created_at: new Date().toISOString() });
+  const running = await handle(post("ai-fix", { ...PROMPT, operationId: "op-running1" }));
+  assert.equal((await running.json()).code, "operation_in_progress");
+  // a malformed id is ignored (not an error): the request runs without idempotency
+  const loose = await handle(post("ai-fix", { ...PROMPT, operationId: "x" }));
+  assert.equal(loose.status, 200);
+});
+
+Deno.test("ai-fix: a hold abandoned by a crashed request is released before the next request reserves", async () => {
+  const stale = new Date(Date.now() - 20 * 60_000).toISOString();
+  const { db, handle } = world({
+    balance: 40000,
+    usage: [{ id: "u-dead", user_id: USER.id, status: "pending", charged_tokens: 0, created_at: stale, step: "build" }],
+  });
+  db.tables.credit_ledger.push({ id: "h-dead", user_id: USER.id, delta: -39000, bucket: "hold", reason: "hold", ref: "u-dead", created_at: stale });
+  // without reconciliation the balance would be 1000 and the request would be refused with quota_exhausted
+  const res = await handle(post("ai-fix", PROMPT));
+  assert.equal(res.status, 200);
+  await res.text();
+  assert.equal(db.rows("ai_usage").find((r) => r.id === "u-dead")?.status, "orphaned");
+  assert.equal(db.rows("credit_ledger").filter((r) => r.reason === "hold").length, 0, "the abandoned hold is gone and the new one settled");
+  // a fresh in-flight hold is NOT released
+  const fresh = world({ balance: 100000, usage: [{ id: "u-live", user_id: USER.id, status: "pending", charged_tokens: 0, created_at: new Date().toISOString() }] });
+  fresh.db.tables.credit_ledger.push({ id: "h-live", user_id: USER.id, delta: -1000, bucket: "hold", reason: "hold", ref: "u-live", created_at: new Date().toISOString() });
+  await (await fresh.handle(post("ai-fix", PROMPT))).text();
+  assert.equal(fresh.db.rows("credit_ledger").filter((r) => r.reason === "hold" && r.ref === "u-live").length, 1);
+});

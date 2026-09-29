@@ -340,3 +340,102 @@ Deno.test("billing: a plan an admin granted by hand survives a cancelled Paddle 
   await webhook(handle, { ...subEvent("evt_c", "canceled"), occurred_at: "2026-10-02T00:00:00Z" });
   assert.equal(db.rows("profiles")[0].plan, "knight");
 });
+
+// ---------------------------------------------------------------- V11 RC: usage, sync
+
+Deno.test("billing: usage is server-authoritative — period, included / used / reserved / remaining, purchased apart, limits, pricing version, history", async () => {
+  const { db, handle } = world({
+    plan: "high",
+    subs: [{ id: "s1", user_id: USER.id, provider: "paddle", provider_ref: "sub_1", customer_ref: "ctm_1", tier: "high", status: "active", period_start: "2026-10-10T00:00:00Z", period_end: "2026-11-10T00:00:00Z", updated_at: "2026-10-10T00:00:00Z" }],
+    ledger: [
+      { id: "l1", user_id: USER.id, delta: 1000000, bucket: "plan", reason: "plan_grant", ref: "sub_1:m0", created_at: "2026-10-10T00:00:01Z" },
+      { id: "l2", user_id: USER.id, delta: 500000, bucket: "topup", reason: "topup", ref: "txn_9", created_at: "2026-10-10T00:00:02Z" },
+      { id: "l3", user_id: USER.id, delta: -6000, bucket: "plan", reason: "ai_fix", ref: "u1", pricing_version: "p-old", created_at: "2026-10-12T10:00:00Z" },
+      { id: "l4", user_id: USER.id, delta: -30000, bucket: "hold", reason: "hold", ref: "u-live", created_at: "2026-10-15T11:59:00Z" },
+      { id: "l5", user_id: USER.id, delta: -30000, bucket: "hold", reason: "hold", ref: "u-dead", created_at: "2026-10-15T10:00:00Z" },
+    ],
+    now: new Date("2026-10-15T12:00:00Z"),
+  });
+  db.tables.ai_usage = [
+    { id: "u1", user_id: USER.id, created_at: "2026-10-12T10:00:00Z", step: "build", model: "claude-sonnet-5", charged_tokens: 6000, status: "ok", project_key: "p1", pricing_version: "p-old" },
+    { id: "u0", user_id: USER.id, created_at: "2026-10-01T10:00:00Z", step: "build", model: "claude-sonnet-5", charged_tokens: 999, status: "ok", project_key: "p1" },
+    { id: "u-live", user_id: USER.id, created_at: "2026-10-15T11:59:00Z", step: "lint", status: "pending", charged_tokens: 0 },
+    { id: "u-dead", user_id: USER.id, created_at: "2026-10-15T10:00:00Z", step: "lint", status: "pending", charged_tokens: 0 },
+  ];
+  const res = await handle(post("billing", { action: "usage" }));
+  assert.equal(res.status, 200);
+  const u = await res.json();
+  assert.equal(u.unit, "tokens");
+  assert.equal(u.plan, "high");
+  assert.deepEqual(u.period, { start: "2026-10-10T00:00:00Z", end: "2026-11-10T00:00:00Z", renewsAt: "2026-11-10T00:00:00Z", source: "subscription" });
+  assert.equal(u.included.tokens, 1000000);
+  assert.deepEqual(u.used, { tokens: 6000, operations: 1 }, "only settled charges inside the period; u0 is before it");
+  assert.deepEqual(u.reserved, { tokens: 30000, operations: 1 }, "the live hold is reserved, the abandoned one was released");
+  assert.equal(u.reconciled.releasedHolds, 1);
+  assert.equal(db.rows("ai_usage").find((r) => r.id === "u-dead")?.status, "orphaned");
+  assert.equal(db.rows("credit_ledger").filter((r) => r.reason === "hold").length, 1);
+  assert.deepEqual(u.remaining, { plan: 994000, purchased: 500000, total: 1494000, available: 1464000 });
+  assert.equal(u.purchased.tokens, 500000, "purchased packs are shown apart from the plan tokens");
+  assert.equal(u.limits.perMinute, 6);
+  assert.equal(u.limits.dailyCapTokens, 150000);
+  assert.equal(u.limits.spentToday, 0);
+  assert.match(u.pricing.version, /^p-[0-9a-f]{12}$/, "a hash of the price table when no explicit version is set");
+  assert.deepEqual(u.pricing.spendOrder, ["plan", "topup"]);
+  assert.equal(u.history.operations.length, 4);
+  assert.equal(u.history.operations[0].id, "u-live");
+  assert.equal(u.history.ledger.length, 4);
+  assert.equal(u.history.ledger.find((l: Row) => l.ref === "u1").pricingVersion, "p-old");
+  // an explicit pricing version setting wins
+  db.tables.settings.push({ key: "pricing.version", value: "2026-10" });
+  const u2 = await (await handle(post("billing", { action: "usage" }))).json();
+  assert.equal(u2.pricing.version, "2026-10");
+  // Free without a subscription: calendar period, nothing renews
+  const free = world({ plan: "free", now: new Date("2026-10-15T12:00:00Z") });
+  const f = await (await free.handle(post("billing", { action: "usage" }))).json();
+  assert.deepEqual(f.period, { start: "2026-10-01T00:00:00.000Z", end: "2026-11-01T00:00:00.000Z", renewsAt: null, source: "calendar" });
+  assert.equal(f.included.tokens, 0);
+  assert.equal(f.limits.dailyCapTokens, null);
+});
+
+Deno.test("billing: sync recovers a missed webhook from the provider's current subscription state", async () => {
+  const w = world({
+    plan: "high",
+    subs: [{ id: "s1", user_id: USER.id, provider: "paddle", provider_ref: "sub_1", customer_ref: "ctm_1", tier: "high", status: "active", period_start: "2026-09-10T00:00:00Z", period_end: "2026-10-10T00:00:00Z", raw: { billing_cycle: { interval: "month" } }, updated_at: "2026-09-10T00:00:00Z" }],
+    now: new Date("2026-10-15T12:00:00Z"),
+  });
+  const db = w.db;
+  const remote: Row = { id: "sub_1", status: "active", current_billing_period: { starts_at: "2026-10-10T00:00:00Z", ends_at: "2026-11-10T00:00:00Z" }, billing_cycle: { interval: "month" }, items: [{ price: { id: "pri_flash" } }], scheduled_change: null };
+  const handle = createBillingHandler({
+    ...fakeDeps(db),
+    paddleApiKey: "pdl_test_key",
+    paddleWebhookSecret: SECRET,
+    paddleApiBase: "https://sandbox-api.paddle.test",
+    now: () => new Date("2026-10-15T12:00:00Z"),
+    fetch: (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      assert.equal(init?.method, "GET");
+      assert.equal((init?.headers as Record<string, string>).authorization, "Bearer pdl_test_key");
+      if (url.endsWith("/subscriptions/sub_1")) return Response.json({ data: remote });
+      return Response.json({ error: { detail: "nope" } }, { status: 404 });
+    }) as unknown as typeof globalThis.fetch,
+  });
+  const res = await handle(post("billing", { action: "sync" }));
+  assert.equal(res.status, 200);
+  const j = await res.json();
+  assert.deepEqual(j.synced, ["sub_1"]);
+  const s = db.rows("subscriptions")[0];
+  assert.equal(s.period_end, "2026-11-10T00:00:00Z", "the new period arrived without a webhook");
+  assert.equal(s.tier, "flash", "the plan changed at the provider");
+  assert.equal(db.rows("profiles")[0].plan, "flash");
+  assert.equal(j.status.subscription.renewsAt, "2026-11-10T00:00:00Z");
+  // cancelled at the provider → cancel_at set, status carried over
+  remote.status = "canceled";
+  remote.canceled_at = "2026-10-14T00:00:00Z";
+  const j2 = await (await handle(post("billing", { action: "sync" }))).json();
+  assert.equal(db.rows("subscriptions")[0].status, "canceled");
+  assert.equal(db.rows("subscriptions")[0].cancel_at, "2026-10-14T00:00:00Z");
+  assert.equal(j2.status.subscription, null);
+  // nothing to sync for a trial-only account
+  const t = world({ plan: "high", subs: [{ id: "t1", user_id: USER.id, provider: "trial", tier: "high", status: "trial", period_end: "2026-10-20T00:00:00Z" }] });
+  assert.deepEqual((await (await t.handle(post("billing", { action: "sync" }))).json()).synced, []);
+});

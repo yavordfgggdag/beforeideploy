@@ -1,0 +1,29 @@
+{
+  "purpose": "first answer upgrades a warnings result to pass; the repair round mirrors the engine status",
+  "responses": [
+    {
+      "response": {
+        "engine_status": "pass",
+        "summary": "All good, everything passed.",
+        "completed_checks": [
+          "build"
+        ],
+        "unresolved": [],
+        "next_action": "deploy"
+      }
+    },
+    {
+      "response": {
+        "engine_status": "{{engine_status}}",
+        "summary": "The check finished with warnings.",
+        "completed_checks": [
+          "build"
+        ],
+        "unresolved": [
+          "lint warnings"
+        ],
+        "next_action": "review the warnings"
+      }
+    }
+  ]
+}

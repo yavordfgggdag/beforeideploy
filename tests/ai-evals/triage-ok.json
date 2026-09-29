@@ -1,0 +1,30 @@
+{
+  "purpose": "incident triage with bounded checks and honest rollback limits",
+  "response": {
+    "observed_impact": "The home page returned 503 twice.",
+    "timeline_summary": "Opened after the last deploy; still open.",
+    "hypotheses": [
+      {
+        "claim": "the last deploy broke the server config",
+        "confidence": "medium",
+        "evidence_ids": [
+          "E1"
+        ]
+      }
+    ],
+    "recommended_checks": [
+      "open the deploy log",
+      "probe /health"
+    ],
+    "recovery_options": [
+      {
+        "option": "rollback to the previous deploy",
+        "requires": "typed ROLLBACK, Netlify",
+        "limits": "files only; database state is not restored"
+      }
+    ],
+    "uncertainties": [
+      "correlation with the deploy is temporal only"
+    ]
+  }
+}

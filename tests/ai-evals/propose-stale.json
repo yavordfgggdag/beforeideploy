@@ -1,0 +1,26 @@
+{
+  "purpose": "base hash does not match the file the model saw → stale_base_hash, nothing written",
+  "response": {
+    "status": "patch",
+    "summary": "Complete the expression.",
+    "base_hashes": {
+      "src/app.js": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+    },
+    "changes": [
+      {
+        "path": "src/app.js",
+        "action": "replace",
+        "content": "const a = 1;\nconst b = 2;\nconst c = a + b;\nconsole.log(c);\n"
+      }
+    ],
+    "risk": "low",
+    "rationale_evidence_ids": [
+      "E1"
+    ],
+    "verification_plan": [
+      "node src/app.js"
+    ],
+    "rollback_notes": "undo restores the file",
+    "missing_context": []
+  }
+}

@@ -11,6 +11,9 @@ final class BillingStore: ObservableObject {
     /// Set while we wait for Paddle's webhook after the browser checkout.
     @Published var waitingForPayment = false
     @Published var busy: String?
+    /// Plan & usage (V11 RC): what the cloud says, in tokens; nil until loaded or when signed out.
+    @Published var usage: UsageReport?
+    @Published var usageError: String?
 
     let engine: EngineClient
     weak var feedback: Feedback?
@@ -92,6 +95,34 @@ final class BillingStore: ObservableObject {
                     return
                 }
             }
+        }
+    }
+
+    /// Loads the server-authoritative usage report (plan, period, included / used / reserved / remaining, history).
+    func loadUsage() async {
+        loading = true
+        defer { loading = false }
+        do {
+            usage = try await engine.call(["billing", "usage"], as: UsageReport.self)
+            usageError = nil
+            if usage != nil && catalog == nil { catalog = try? await engine.call(["billing", "catalog"], as: BillingCatalog.self) }
+        } catch {
+            usageError = error.localizedDescription
+        }
+    }
+
+    /// Recovery after a missed webhook: asks the cloud to re-read the subscription at the provider.
+    func sync() {
+        busy = "sync"
+        Task {
+            defer { busy = nil }
+            do {
+                let r = try await engine.call(["billing", "sync"], as: BillingSync.self)
+                status = r.status
+                feedback?.flash(r.synced.isEmpty ? L("usage.syncNothing") : L("usage.synced"), error: false)
+                await loadUsage()
+                await onChanged?()
+            } catch { feedback?.show(error) }
         }
     }
 

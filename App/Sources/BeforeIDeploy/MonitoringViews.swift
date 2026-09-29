@@ -7,6 +7,7 @@ import SwiftUI
 struct MonitorCard: View {
     @EnvironmentObject var model: AppModel
     @Local private var confirmAgent = false
+    @Local private var webhookDraft = ""
 
     var body: some View {
         let m = model.monitor
@@ -35,7 +36,14 @@ struct MonitorCard: View {
                 .toggleStyle(.switch).controlSize(.small)
                 .disabled(model.busy.contains("monitor-agent"))
             }
-            Text(L("monitor.noServerSide")).font(.system(size: 11)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
+            cloudSection(m)
+            if let w = m?.maintenance, !w.isEmpty {
+                ForEach(w) { win in
+                    Label(L("monitor.maintenanceWindow", Fmt.dateTime(win.from), Fmt.dateTime(win.to), win.note ?? ""), systemImage: "wrench.and.screwdriver")
+                        .font(.system(size: 11)).foregroundColor(Theme.warn)
+                }
+            }
+            channelRow(m)
 
             if let s = m?.settings {
                 HStack(spacing: 14) {
@@ -72,6 +80,59 @@ struct MonitorCard: View {
         }
     }
 
+    /// Where the checks really run. Cloud = registered target + a fresh scheduler heartbeat; anything less is said as it is.
+    @ViewBuilder private func cloudSection(_ m: MonitorStatus?) -> some View {
+        let c = m?.cloud
+        let key = model.selectedKey
+        let target = c?.targets?.first { $0.projectKey == key }
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "cloud").foregroundColor(c?.active == true ? Theme.ready : Theme.tertiary)
+            VStack(alignment: .leading, spacing: 3) {
+                if m == nil || c == nil {
+                    Text(L("monitor.cloudUnknown")).font(.system(size: 12)).foregroundColor(Theme.secondary)
+                } else if c?.unavailable == true {
+                    Text(c?.reason == "not_logged_in" ? L("monitor.cloudSignedOut") : L("monitor.cloudOffline")).font(.system(size: 12)).foregroundColor(Theme.secondary)
+                } else if c?.active == true {
+                    Text(L("monitor.cloudActive", c?.targets?.count ?? 0)).font(.system(size: 12)).foregroundColor(Theme.text)
+                    Text(L("monitor.cloudScheduler", Fmt.relative(c?.scheduler?.lastRunAt), c?.nextRunAt.map { Fmt.relative($0) } ?? "—", c?.retentionDays ?? 90)).font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                } else if c?.scheduler?.state == "never" {
+                    Text(L("monitor.cloudNever")).font(.system(size: 12)).foregroundColor(Theme.warn)
+                } else if c?.scheduler?.state == "stale" {
+                    Text(L("monitor.cloudStale", Fmt.relative(c?.scheduler?.lastRunAt))).font(.system(size: 12)).foregroundColor(Theme.warn)
+                } else {
+                    Text(L("monitor.cloudNoTargets")).font(.system(size: 12)).foregroundColor(Theme.secondary)
+                }
+                if let t = target {
+                    Text(L("monitor.cloudTarget", t.url, t.intervalMin, t.lastOk.map { $0 ? L("signal.healthy") : L("signal.problem") } ?? L("signal.unchecked"))).font(.system(size: 11)).foregroundColor(Theme.tertiary).lineLimit(1).truncationMode(.middle)
+                }
+                if m?.serverSide != true { Text(L("monitor.noServerSide")).font(.system(size: 11)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true) }
+            }
+            Spacer()
+            if key != nil, c?.unavailable != true, c != nil {
+                Toggle(L("monitor.cloudToggle"), isOn: Binding(get: { target != nil }, set: { model.setCloudMonitoring(on: $0) }))
+                    .toggleStyle(.switch).controlSize(.small)
+                    .disabled(model.busy.contains("monitor-cloud"))
+                    .help(L("monitor.cloudToggleHelp"))
+            }
+        }
+    }
+
+    private func channelRow(_ m: MonitorStatus?) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: "bell.badge").foregroundColor(Theme.accent)
+            if let w = m?.channels?.webhook {
+                Text(L("monitor.webhookSet", w)).font(.system(size: 11.5)).foregroundColor(Theme.secondary).lineLimit(1).truncationMode(.middle)
+                Button(L("monitor.webhookTest")) { model.testMonitorWebhook() }.bidButton(.ghost, compact: true).disabled(model.busy.contains("monitor-webhook"))
+                Button(L("monitor.webhookRemove")) { model.setMonitorWebhook(nil) }.bidButton(.ghost, compact: true).disabled(model.busy.contains("monitor-webhook"))
+            } else {
+                TextField(L("monitor.webhookPlaceholder"), text: $webhookDraft).textFieldStyle(.roundedBorder).font(.system(size: 11.5)).frame(maxWidth: 360)
+                    .onSubmit { model.setMonitorWebhook(webhookDraft) }
+                Button(L("common.save")) { model.setMonitorWebhook(webhookDraft) }.bidButton(.secondary, compact: true).disabled(webhookDraft.isEmpty || model.busy.contains("monitor-webhook"))
+            }
+            Spacer()
+        }
+    }
+
     private func notifyToggle(_ title: String, _ value: Bool, _ set: @escaping (Bool) -> Void) -> some View {
         Toggle(title, isOn: Binding(get: { value }, set: set)).toggleStyle(.checkbox).font(.system(size: 11.5))
     }
@@ -94,6 +155,10 @@ struct IncidentRow: View {
                 HStack(spacing: 6) {
                     Text(incident.projectName ?? incident.project).font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.text)
                     Text(K.incidentKind(incident.kind)).font(.system(size: 11)).foregroundColor(Theme.secondary)
+                    if let src = incident.source {
+                        Text(src == "cloud" ? L("monitor.sourceCloud") : L("monitor.sourceMac")).font(.system(size: 10, weight: .semibold)).foregroundColor(Theme.tertiary)
+                            .padding(.horizontal, 5).padding(.vertical, 1).background(Capsule().fill(Theme.hairline))
+                    }
                     if let d = incident.detail { Text(d).font(.system(size: 11, design: .monospaced)).foregroundColor(Theme.tertiary) }
                 }
                 Text(incident.status == "open"

@@ -1,0 +1,22 @@
+{
+  "purpose": "advisory review of a diff without claiming tests ran",
+  "response": {
+    "findings": [
+      {
+        "severity": "minor",
+        "path": "src/app.js",
+        "evidence_ids": [
+          "E1"
+        ],
+        "explanation": "the fix is minimal",
+        "suggested_action": "none"
+      }
+    ],
+    "required_checks": [
+      "build"
+    ],
+    "remaining_uncertainties": [
+      "no tests exist for app.js"
+    ]
+  }
+}

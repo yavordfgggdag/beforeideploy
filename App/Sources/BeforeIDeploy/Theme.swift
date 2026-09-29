@@ -395,6 +395,17 @@ enum Fmt {
         return f.string(from: d)
     }
 
+    /// Date and time in the user's locale and time zone (usage periods, renewals — V11 RC).
+    static func dateTime(_ s: String?) -> String {
+        guard let d = date(s) else { return "—" }
+        let f = DateFormatter()
+        f.locale = Localization.locale
+        f.timeZone = TimeZone.current
+        f.dateStyle = .medium
+        f.timeStyle = .short
+        return f.string(from: d)
+    }
+
     static func time(_ s: String?) -> String {
         guard let d = date(s) else { return "—" }
         let f = DateFormatter()

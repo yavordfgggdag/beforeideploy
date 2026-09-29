@@ -45,7 +45,14 @@ echo "▸ Engine в пакета…"
 # The app installs this copy into Application Support on first launch and after every update (audit B1)
 ENGINE_DST="$APP/Contents/Resources/engine"
 mkdir -p "$ENGINE_DST/supabase"
-cp -R "$ROOT/engine/bid" "$ROOT/engine/VERSION" "$ROOT/engine/cloud.json" "$ROOT/engine/i18n" "$ROOT/engine/src" "$ENGINE_DST/"
+cp -R "$ROOT/engine/bid" "$ROOT/engine/VERSION" "$ROOT/engine/cloud.json" "$ROOT/engine/i18n" "$ROOT/engine/src" "$ROOT/engine/prompts" "$ENGINE_DST/"
+# bundled Node runtime (scripts/bundle-node.sh, V11 RC): the launcher prefers it over a developer Node on PATH
+if [[ -d "$ROOT/engine/runtime" ]]; then
+  cp -R "$ROOT/engine/runtime" "$ENGINE_DST/runtime"
+  echo "  runtime: $(cat "$ROOT/engine/runtime/arm64/VERSION" 2>/dev/null || echo '?') (arm64 + x86_64)"
+else
+  echo "  ⚠ no bundled Node runtime (zsh scripts/bundle-node.sh) — the app will need Node.js on the Mac"
+fi
 cp "$ROOT/supabase/schema.sql" "$ENGINE_DST/supabase/schema.sql"   # `bid cloud schema` (Cloud setup screen)
 chmod +x "$ENGINE_DST/bid"
 # the release feed, so people without an account get updates too (audit R3)

@@ -14,3 +14,6 @@ releases/
 tests/last-run.txt
 tests/rls/last-run.json
 tests/rls/package-lock.json
+
+# bundled Node runtime (scripts/bundle-node.sh) — downloaded at build time, ~110 MB per architecture
+engine/runtime/

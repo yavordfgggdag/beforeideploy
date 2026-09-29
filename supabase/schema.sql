@@ -362,3 +362,11 @@ create index if not exists monitor_heartbeat_at_idx on public.monitor_heartbeat 
 alter table public.monitor_heartbeat enable row level security;
 drop policy if exists "read heartbeat" on public.monitor_heartbeat;
 create policy "read heartbeat" on public.monitor_heartbeat for select to authenticated using (true);
+
+-- ---------------------------------------------------------------- usage ledger hardening (V11 RC)
+-- One logical AI operation bills once (the client sends an operation id; a retry gets the recorded outcome),
+-- every charge records the price table it was computed with, and abandoned holds are released.
+alter table public.ai_usage add column if not exists operation_id text;
+alter table public.ai_usage add column if not exists pricing_version text;
+create unique index if not exists ai_usage_operation_once on public.ai_usage (user_id, operation_id) where operation_id is not null;
+alter table public.credit_ledger add column if not exists pricing_version text;

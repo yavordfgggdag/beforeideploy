@@ -48,6 +48,13 @@ quota, 127 Node missing; everything else exits 1.
 | `git_failed` | 1 | A Git command failed (commit, push, fetch). | The message has Git's output; usually a conflict or missing upstream. |
 | `no_repo` | 1 | The project folder is not a Git repository. | Use the "Initialize Git" fix on the dashboard. |
 | `no_remote` | 1 | The repository has no remote (`origin`). | Add one from the Git panel (create the repo on GitHub or paste a URL). |
+| `prompt_not_found` | 1 | An assistant prompt resource (`engine/prompts/<id>.v<n>.json`) is missing — broken engine install. | Reinstall the engine (Settings → Engine → Reinstall). |
+| `prompt_input_missing` | 2 | The engine tried to render an assistant prompt without one of its declared inputs. | Report it; the prompt files and `assistant.mjs` disagree. |
+| `bad_path` | 2 | `ai chat --files` named a file outside the project, in a protected folder, or through a symlink. | Select files inside the project. |
+| `budget_exceeded` | 1 | The assistant operation would exceed its token budget (AI settings → max tokens per operation). | Reduce the selected files or raise the budget. |
+| `ai_timeout` | 1 | The AI provider did not answer within the call timeout (default 120 s). Nothing was changed. | Try again; check the provider status. |
+| `monitor_cloud_failed` | 1 | The `monitor` Edge Function refused or failed a cloud-monitoring call (the message carries the cloud's reason). | See the message: sync the project, deploy first, or check the function deployment. |
+| `webhook_rejected` | 2 | The notification webhook URL is not https, uses an IP literal / local name / credentials, or resolves to a private address. | Use the public https URL your chat tool gave you. |
 | `nothing` | 1 | Nothing to do: no failing steps for AI Fix, no setup items, no new version. | Informational. |
 | `missing_cli` | 1 | A CLI this action needs is not installed (`gh`, an AI CLI, …). | Setup installs it. |
 | `no_cli` | 1 | The hosting CLI for the selected provider is missing (`netlify`, `vercel`, `wrangler`). | Setup installs it. |

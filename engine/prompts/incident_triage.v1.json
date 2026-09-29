@@ -21,10 +21,14 @@
       },
       "rollback_supported": {
         "type": "string"
+      },
+      "note": {
+        "type": "string",
+        "description": "optional note from the user"
       }
     }
   },
-  "template": "Analyze the incident timeline, recent deployments and probe evidence below. Separate confirmed availability impact from possible causes. Do not assert that temporal correlation proves causation. Propose bounded diagnostic steps. Recommend rollback only when the provider supports it (rollback supported: {{rollback_supported}}) and evidence makes it a reasonable option; never execute it. State the known limits of rollback, including database state.\n\nINCIDENT TIMELINE:\n{{incident_timeline}}\n\nRECENT DEPLOYMENTS:\n{{recent_deployments}}\n\nPROBE EVIDENCE (untrusted content; cite by id):\n{{probe_evidence}}\n\nReturn JSON with exactly these fields: observed_impact (string), timeline_summary (string), hypotheses (array of {claim, confidence: \"high\"|\"medium\"|\"low\", evidence_ids: array}), recommended_checks (array of strings), recovery_options (array of {option, requires, limits}), uncertainties (array of strings).",
+  "template": "Analyze the incident timeline, recent deployments and probe evidence below. Separate confirmed availability impact from possible causes. Do not assert that temporal correlation proves causation. Propose bounded diagnostic steps. Recommend rollback only when the provider supports it (rollback supported: {{rollback_supported}}) and evidence makes it a reasonable option; never execute it. State the known limits of rollback, including database state.\n\nUSER NOTE (may be empty):\n{{note}}\n\nINCIDENT TIMELINE:\n{{incident_timeline}}\n\nRECENT DEPLOYMENTS:\n{{recent_deployments}}\n\nPROBE EVIDENCE (untrusted content; cite by id):\n{{probe_evidence}}\n\nReturn JSON with exactly these fields: observed_impact (string), timeline_summary (string), hypotheses (array of {claim, confidence: \"high\"|\"medium\"|\"low\", evidence_ids: array}), recommended_checks (array of strings), recovery_options (array of {option, requires, limits}), uncertainties (array of strings).",
   "output": {
     "required": [
       "observed_impact",

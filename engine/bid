@@ -5,6 +5,14 @@ ENGINE_DIR="${0:A:h}"
 # PATH captured by install.sh from your real Terminal session
 [ -f "$ENGINE_DIR/env.zsh" ] && source "$ENGINE_DIR/env.zsh"
 
+# Bundled Node runtime (scripts/bundle-node.sh, V11 RC): the app must not depend on a developer Node on the
+# client's Mac. When present it wins over anything on PATH; BID_NO_BUNDLED_NODE=1 forces the PATH lookup.
+BUNDLED_NODE="$ENGINE_DIR/runtime/$(uname -m)/bin/node"
+if [[ -z "${BID_NO_BUNDLED_NODE:-}" && -x "$BUNDLED_NODE" ]]; then
+  export BID_NODE_RUNTIME="bundled"
+  exec "$BUNDLED_NODE" "$ENGINE_DIR/src/bid.mjs" "$@"
+fi
+
 # the PATH from env.zsh (your Terminal) comes first, so nvm / asdf / volta pick the Node you chose;
 # the usual install places are only a fallback (audit E12)
 export PATH="$PATH:$HOME/.volta/bin:$HOME/.asdf/shims:/opt/homebrew/bin:/usr/local/bin:$HOME/.bun/bin:$HOME/.local/bin:$HOME/Library/pnpm:/usr/bin:/bin:/usr/sbin:/sbin"
