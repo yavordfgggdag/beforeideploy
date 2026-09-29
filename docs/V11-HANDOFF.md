@@ -5,6 +5,20 @@ what V11 added or changed, how to run and verify it, and what the next developer
 
 Branch `claude/nifty-edison-1195gi` · version `11.0.0-dev` · macOS 13+, Node 18+, zero npm dependencies.
 
+## 0. Status at handoff (commit `a44dc2f`)
+
+| Check | Result | Where |
+|---|---|---|
+| `node tests/run.mjs` (Linux + macOS runners) | ✅ 85 passed, 0 failed | CI `engine.yml`, `engine-macos.yml` |
+| `cd App && swift build && swift test` (macos-15) | ✅ build ok, 44 tests, 0 failures | CI `app.yml` run 34 |
+| Bundled engine inside the `.app` | ✅ `bid version` → `11.0.0-dev` | same job (audit B1 step) |
+| `deno test supabase/functions` | ✅ 68 passed, 0 type errors | local + CI `functions.yml` (unchanged code) |
+| `scripts/i18n-check.mjs` · `scripts/error-codes.mjs` | ✅ 499 engine keys, 825 app keys, 73 codes | CI |
+| Real Netlify account, real Mac walkthrough | ⏳ not done from the cloud container | owner (see §8) |
+
+Companion documents: `docs/AUDIT-V11.md` (baseline, gap analysis, evidence per requirement, acceptance criteria,
+limitations), `CHANGELOG.md` 11.0.0, `ROADMAP.md` §2.
+
 ## 1. What V11 is
 
 A control centre for the websites of maintenance clients. The primary flow, each step backed by a command:
@@ -194,14 +208,17 @@ destructive buttons.
 
 ## 6. Tests
 
-- `node tests/run.mjs` — 84 tests. New: issues model + verified safe fix, build issue evidence, AI undo + verified
+- `node tests/run.mjs` — 85 tests. New: issues model + verified safe fix, build issue evidence, AI undo + verified
   re-apply, release flow (preview → stale → promote → idempotent promote → rollback available → verify_failed →
   rollback → lock / interrupted / cancel → host failure), `deploy --recheck-if-stale`, smoke checks (sitemap, 404,
   off-site redirect, timeout), monitoring (confirm after 2, ongoing, recovery, settings, agent consent),
   portfolio (client, signals vocabulary, next action, backup boundary).
   The Netlify CLI is a fake on `PATH` (`TMP/bin/netlify`) and the sandbox HTTP server serves the "deployed" files;
   mock ports are unique per run (`4300/4800 + pid % 400`).
-- Swift: `cd App && swift test` (CI `app.yml`; the cloud dev container has no Swift).
+- Swift: `cd App && swift test` — 44 tests (CI `app.yml`; the cloud dev container has no Swift). V11 added 8
+  fixture-decode tests in `ModelsTests.swift` (issues, release preview / promote / status, monitor status, backup
+  status, overview signals, status snapshot). Fixtures are regenerated with `BID_WRITE_FIXTURES=1 node tests/run.mjs`
+  and live in `App/Tests/BeforeIDeployTests/Fixtures/`; regenerate them whenever an engine result shape changes.
 - Deno: unchanged (68).
 
 ## 7. Do not break
@@ -213,3 +230,47 @@ destructive buttons.
 5. `unchecked` / `stale` / `unsupported` are real states; do not map them to green.
 6. Backups stay "not connected" until a real API is wired through the adapter contract.
 7. All new user-facing text through the catalogs (`L`, `t`, `msg`); `K.*` for enum values in Swift.
+
+## 8. Open work, in priority order (for the next developer)
+
+Each item names the seam to build on; none of them requires touching the rules in §7.
+
+1. **Real-provider walkthrough on a Mac** (blocking for release). `git pull && zsh Rebuild.command`; on a test site
+   with a real Netlify account: check → `Release…` → preview link opens → smoke list → type DEPLOY → verify → the
+   Deployments card marks the new deploy as published → `Rollback…` → the previous deploy is published again.
+   Then `bid monitor agent install --yes`, sleep/wake the Mac, confirm `monitor.json.lastRunBy === 'agent'`.
+   Anything that differs from the fake CLI (`tests/run.mjs` → `TMP/bin/netlify`) is a bug to fix in `netlify.mjs`.
+2. **Server-side monitoring** (the only way to cover a sleeping Mac). Supabase `pg_cron` → edge function
+   `monitor` that probes each project's `liveUrl` (SSRF guard: public https hosts only, no redirects off-site,
+   5 s timeout, ≤ 1 probe per site per 5 min) and writes to a new `incidents` table with RLS by `user_id`.
+   The engine then merges cloud incidents into `monitorStatus()` and marks `runsOn: 'cloud'`; the app text in
+   `MonitorCard` (`monitor.noServerSide`) goes away only when that exists.
+3. **Rollback / published-deploy for Vercel and Cloudflare Pages.** Both have APIs (`vercel promote`,
+   Cloudflare `deployments/<id>/rollback`); add them behind `CAPABILITIES` and `netlifyPublishDeploy`-style
+   adapters, then flip `rollback`/`status`/`publishArtifact` per provider. Do not enable a capability without an
+   integration test against a fake CLI like the Netlify one.
+4. **CodeGuard.** Needs API docs, a token and a partner agreement. Implement `status/list/request/restore` in
+   `providers/backup/codeguard.mjs` per its header, store the token in the Keychain account `codeguard`
+   (`bid backup connect`), add `backup.codeguard.apiBase` to `SETTINGS_KEYS`, and only then let `BackupCard` show a
+   date. Restore must require a typed `RESTORE` and show what it affects before doing anything.
+5. **Smoke checks beyond status/title** — forms (POST to configured endpoints with a dry-run flag), broken internal
+   links (bounded crawl), Lighthouse (WP11) as an optional stage. Keep each page fetch bounded and same-site.
+6. **`release preview` reuse of a fresh check** — if `state.check` is < N minutes old and the fingerprint +
+   artifact hash match, skip the check stage (today it always re-runs, cached incrementally).
+7. **External notification channels** (email / Slack) for confirmed incidents — user-configured only, through the
+   existing `ev.notify` → app path; no default channel.
+8. Roadmap leftovers: light theme, WP10 SEO/accessibility rules, WP15 DNS providers, WP16 SFTP.
+
+## 9. How to verify a change to V11 quickly
+
+```
+node tests/run.mjs > /tmp/eng.txt; tail -1 /tmp/eng.txt      # 85 passed — never pipe, ~4 min
+node scripts/i18n-check.mjs && node scripts/error-codes.mjs
+BID_WRITE_FIXTURES=1 node tests/run.mjs                        # when an engine result shape changed
+cd App && swift test                                           # macOS only; CI does it on every push
+deno test supabase/functions                                   # only if cloud code changed
+```
+
+A release-flow change is proven by the eight `release:` tests; a monitoring change by `monitor:`; an issues-model
+change by the two `issues:` tests and the Swift `testIssues…` decode test.
+
