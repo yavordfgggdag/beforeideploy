@@ -46,7 +46,7 @@ function bidEnv(extra, ...args) {
     } catch {}
   }
   const result = events.find((e) => e.type === 'result') || null;
-  return { code: r.status, events, result, data: result?.data, stderr: r.stderr };
+  return { code: r.status, events, result, data: result?.data, stderr: r.stderr, stdout: r.stdout };
 }
 
 // Swift model tests decode these captured engine results (App/Tests/BeforeIDeployTests/Fixtures).
@@ -1660,7 +1660,7 @@ t('update: latest.json → налична версия, beta канал, изт�
 
 t('logs & report: engine.log пази командите с маскирани пароли; докладът е без secrets', () => {
   const logs = bid('logs', '--tail', '400');
-  assert(logs.data && logs.data.entries.length > 20 && logs.data.entries.every((e) => e.cmd && typeof e.ms === 'number'), 'entries: ' + JSON.stringify(logs.result) + (logs.stderr || '').slice(-300));
+  assert(logs.data && logs.data.entries.length > 20 && logs.data.entries.every((e) => e.cmd && typeof e.ms === 'number'), 'entries: ' + JSON.stringify({ code: logs.code, result: logs.result, events: logs.events.length, stdoutBytes: (logs.stdout || '').length, head: (logs.stdout || '').slice(0, 400), tail: (logs.stdout || '').slice(-400) }) + (logs.stderr || '').slice(-300));
   const text = JSON.stringify(logs.data.entries);
   assert(text.includes('"signup"') && text.includes('***') && !text.includes('supersecret'), 'password must be masked in argv');
   assert(logs.data.entries.some((e) => e.ok === false && e.code), 'failed commands are logged with their code');
