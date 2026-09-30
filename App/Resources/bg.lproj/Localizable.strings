@@ -775,7 +775,7 @@
 "netlifySetup.createAndLink" = "Създай и свържи";
 "netlifySetup.createNew" = "Създай нов";
 "netlifySetup.linkExisting" = "Свържи съществуващ";
-"netlifySetup.loading" = "Зареждам от Netlify… (първия път през npx може да отнеме минута)";
+"netlifySetup.loading" = "Зареждам от Netlify…";
 "netlifySetup.namePlaceholder" = "име";
 "netlifySetup.noSites" = "Няма намерени сайтове";
 "netlifySetup.searchSite" = "Търси сайт…";
@@ -999,11 +999,11 @@
 "settings.languageSection" = "Език";
 "settings.logs" = "Логове";
 "settings.netlifyAccount" = "Netlify акаунт";
+"settings.netlifyMissing" = "не е инсталиран — Setup го инсталира";
 "settings.notifications" = "macOS известия";
 "settings.notificationsHint" = "Когато build / deploy приключи";
 "settings.support" = "Версия и поддръжка";
 "settings.version" = "Версия";
-"settings.viaNpx" = "през npx";
 
 "setup.allRequiredSet" = "Всичко задължително е настроено";
 "setup.autoAll" = "Настрой всичко автоматично";

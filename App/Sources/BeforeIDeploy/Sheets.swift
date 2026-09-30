@@ -474,7 +474,7 @@ struct SettingsSheet: View {
                         InfoRow(label: "npm", value: d.npm?.version ?? "—")
                         if let p = d.pnpm { InfoRow(label: "pnpm", value: p.version) }
                         InfoRow(label: "git", value: d.git?.version ?? L("common.none"), tint: d.git == nil ? Theme.blocked : Theme.text)
-                        InfoRow(label: "Netlify CLI", value: d.netlify?.version ?? (d.npx != nil ? L("settings.viaNpx") : L("common.none")))
+                        InfoRow(label: "Netlify CLI", value: d.netlify?.version ?? L("settings.netlifyMissing"))
                         InfoRow(label: L("settings.netlifyAccount"), value: d.netlifyAuth.email ?? (d.netlifyAuth.loggedIn ? L("common.signedInLower") : L("common.notSignedInLower")))
                         HStack {
                             Button(L("settings.dataFolder")) { model.openFile(d.appDir) }.bidButton(.ghost, compact: true)
@@ -493,9 +493,10 @@ struct SettingsSheet: View {
                     HStack {
                         Button(L("update.checkNow")) { Task { await model.checkForUpdates(force: true, announce: true) } }.bidButton(.secondary, compact: true)
                         Button(L("report.save")) { model.saveReport() }.bidButton(.secondary, compact: true).disabled(model.busy.contains("report"))
-                        Button { model.prepareFeedback() } label: { Label(L("feedback.send"), systemImage: "envelope") }
-                            .bidButton(.secondary, compact: true).disabled(model.busy.contains("report"))
                     }
+                    // its own row: three buttons side by side were cut off in Bulgarian
+                    Button { model.prepareFeedback() } label: { Label(L("feedback.send"), systemImage: "envelope") }
+                        .bidButton(.secondary, compact: true).disabled(model.busy.contains("report"))
                     Text(L("report.hint")).font(.system(size: 11)).foregroundColor(Theme.tertiary)
                     if let r = model.feedbackReport {
                         // what the report holds, before the user decides to send it (WP08, audit D6)
