@@ -28,6 +28,7 @@ SwiftUI app ──(NDJSON over stdout)──▶ engine `bid` (Node, zero deps, b
 | `ai/prompts.mjs`, `engine/prompts/*.v1.json` | versioned prompt resources, rendering, JSON extraction, schema + ref validation |
 | `ai/assistant.mjs` | actions ask / diagnose / propose / fix / review / explain / readiness / triage; evidence + redaction; budgets; the bounded fix loop; per-project history (`Application Support/chats/*.jsonl`, 0600); settings (`ai-settings.json`) |
 | `monitor-cloud.mjs` | `monitor` function client; webhook channel (public https only); Mac-side address guard |
+| `pushover.mjs` | Pushover channel: keys verified with `users/validate`, Keychain only, `messages.json` delivery (high priority for incidents) |
 | `checks.mjs` (`artifactHash`, `buildConfigHash`) | SHA-256 manifest of every publish file; build-config binding |
 | `release.mjs` | identity per provider, re-hash around uploads, pid+start-time lock |
 | `util.mjs` (`publishIncludes`, `pidStartTime`, `processHolds`) | shared publish filter; lock liveness |

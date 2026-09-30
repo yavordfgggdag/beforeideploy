@@ -23,6 +23,7 @@ import { listProjects, getState } from './store.mjs';
 import { spaceshipDomains } from './spaceship.mjs';
 import { t, msg } from './i18n.mjs';
 import { cloudStatusOrNull, validateWebhookUrl, postWebhook, webhookPayload } from './monitor-cloud.mjs';
+import { pushoverStatus, sendPushover } from './pushover.mjs';
 
 const STATE_FILE = () => path.join(APP_DIR, 'monitor.json');
 const INCIDENTS_FILE = () => path.join(APP_DIR, 'incidents.jsonl');
@@ -37,7 +38,7 @@ export const DEFAULT_SETTINGS = {
   notify: { down: true, ssl: true, domain: true, recovered: true },
   quietHours: null, // e.g. { from: 22, to: 7 }
   maintenance: [], // [{ from: ISO, to: ISO, project?: key }] — no notifications, samples marked, incidents not opened
-  channels: { webhook: null }, // the ONE external channel, set by the user (https, public host)
+  channels: { webhook: null }, // external channels set by the user: a webhook (https, public host); Pushover lives in the Keychain (pushover.mjs)
 };
 
 export function monitorSettings() {
@@ -162,12 +163,38 @@ export async function maintenanceCommand(sub, flags) {
   return settings.maintenance;
 }
 
-/** Sends a test payload to the configured webhook and reports what the receiver answered. */
+/** External channels that are configured right now: { webhook: url|null, pushover: bool }. */
+function activeChannels(settings) {
+  return { webhook: settings.channels.webhook || null, pushover: pushoverStatus().connected };
+}
+
+/** Delivers one notification to every configured channel; one { channel, ok, status } per channel, never throws. */
+async function deliver(settings, kind, event, extra) {
+  const ch = activeChannels(settings);
+  const out = [];
+  if (ch.webhook) {
+    const r = await postWebhook(ch.webhook, webhookPayload(kind, event, extra));
+    out.push({ channel: 'webhook', ...r });
+  }
+  if (ch.pushover) {
+    const payload = webhookPayload(kind, event, extra);
+    const title = event?.projectName || event?.project ? `Before I Deploy · ${event.projectName || event.project}` : 'Before I Deploy';
+    const r = await sendPushover({ title, message: payload.text, priority: kind === 'incident' ? 1 : 0, url: event?.url || null, urlTitle: event?.url ? t('monitor.pushover.openSite') : null });
+    out.push({ channel: 'pushover', ...r });
+  }
+  return out;
+}
+
+/** Sends a test notification to every configured channel and reports what each receiver answered. */
 export async function notifyTest() {
   const settings = monitorSettings();
-  if (!settings.channels.webhook) throw new EngineError(msg('monitor.webhook.none'), 'not_configured');
-  const r = await postWebhook(settings.channels.webhook, webhookPayload('test', { project: null, projectName: null }, {}));
-  return { url: settings.channels.webhook, ...r };
+  const ch = activeChannels(settings);
+  if (!ch.webhook && !ch.pushover) throw new EngineError(msg('monitor.notify.none'), 'not_configured');
+  const results = await deliver(settings, 'test', { project: null, projectName: null }, {});
+  const webhook = results.find((r) => r.channel === 'webhook') || null;
+  const pushover = results.find((r) => r.channel === 'pushover') || null;
+  const first = webhook || pushover;
+  return { ok: results.every((r) => r.ok), url: ch.webhook, status: first.status, error: first.error || null, channels: results, webhook, pushover };
 }
 
 function inQuietHours(settings, now = new Date()) {
@@ -302,13 +329,14 @@ export async function monitorOnce({ project = null, now = new Date() } = {}) {
   writeIncidents(incidents);
   // the one external channel: confirmed problems and recoveries, never "ongoing" repeats, never in quiet hours
   const delivered = [];
-  if (settings.channels.webhook && !quiet) {
+  const channels = activeChannels(settings);
+  if ((channels.webhook || channels.pushover) && !quiet) {
     for (const e of events.filter((x) => x.type === 'new' || x.type === 'recovered')) {
       if (e.type === 'new' && settings.notify[e.kind] === false) continue;
       if (e.type === 'recovered' && settings.notify.recovered === false) continue;
       const inc = incidents.filter((i) => i.project === e.project && i.kind === e.kind).slice(-1)[0];
-      const r = await postWebhook(settings.channels.webhook, webhookPayload(e.type === 'new' ? 'incident' : 'recovered', { project: e.project, projectName: inc?.projectName || null, kind: e.kind, detail: inc?.detail || null, url: inc?.url || null }, { project: inc?.projectName || e.project, kind: e.kind }));
-      delivered.push({ ...e, ...r });
+      const results = await deliver(settings, e.type === 'new' ? 'incident' : 'recovered', { project: e.project, projectName: inc?.projectName || null, kind: e.kind, detail: inc?.detail || null, url: inc?.url || null }, { project: inc?.projectName || e.project, kind: e.kind });
+      for (const r of results) delivered.push({ ...e, ...r });
     }
   }
   return { at: state.lastRunAt, checked: samples.length, samples, events, quiet, delivered };
@@ -326,7 +354,7 @@ export function monitorStatus() {
     serverSide: false,
     cloud: null,
     maintenance: settings.maintenance,
-    channels: { webhook: settings.channels.webhook ? redactUrl(settings.channels.webhook) : null },
+    channels: { webhook: settings.channels.webhook ? redactUrl(settings.channels.webhook) : null, pushover: pushoverStatus() },
     settings,
     agent,
     lastRunAt: state.lastRunAt || null,

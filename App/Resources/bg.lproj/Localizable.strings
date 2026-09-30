@@ -709,6 +709,11 @@
 "monitor.openIncidents" = "%@ отворени инцидента";
 "monitor.openIncidents.one" = "%@ отворен инцидент";
 "monitor.openIncidents.other" = "%@ отворени инцидента";
+"monitor.pushoverConnect" = "Свържи Pushover…";
+"monitor.pushoverConnected" = "Pushover е свързан. Изпрати тест, за да го видиш на телефона.";
+"monitor.pushoverIntro" = "Pushover: известия на телефона.";
+"monitor.pushoverRemoved" = "Pushover е изключен; ключовете са премахнати от Keychain.";
+"monitor.pushoverSet" = "Pushover е свързан (user key %@) — инцидентите и възстановяванията стигат до телефона.";
 "monitor.ran" = "Проверени %@ сайта";
 "monitor.recentIncidents" = "%@ решени наскоро";
 "monitor.recentIncidents.one" = "%@ решен наскоро";
@@ -846,6 +851,17 @@
 "production.warnings.one" = "%@ предупреждение от последната проверка";
 "production.warnings.other" = "%@ предупреждения от последната проверка";
 "production.whatUploads" = "Какво се качва";
+
+"pushover.keyNote" = "Двата ключа се проверяват веднага с Pushover и се пазят в macOS Keychain — никога във файлове. Инцидентите се пращат с висок приоритет, възстановяванията с нормален; тихите часове и прозорците за поддръжка важат и тук.";
+"pushover.openBuild" = "Създай приложение";
+"pushover.openSite" = "Отвори pushover.net";
+"pushover.step1" = "Създай акаунт в Pushover и инсталирай приложението Pushover на телефона.";
+"pushover.step2" = "Копирай своя User Key от таблото на Pushover.";
+"pushover.step3" = "Създай приложение (например „Before I Deploy“) и копирай неговия API Token.";
+"pushover.subtitle" = "Pushover доставя потвърден инцидент и възстановяването му като push известие (еднократна покупка на приложението от тяхна страна).";
+"pushover.title" = "Известия на телефона";
+"pushover.token" = "API Token на приложението";
+"pushover.userKey" = "User Key";
 
 "release.actor.app" = "приложението";
 "release.actor.cli" = "командния ред";

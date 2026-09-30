@@ -58,6 +58,7 @@ quota, 127 Node missing; everything else exits 1.
 | `ai_timeout` | 1 | The AI provider did not answer within the call timeout (default 120 s). Nothing was changed. | Try again; check the provider status. |
 | `monitor_cloud_failed` | 1 | The `monitor` Edge Function refused or failed a cloud-monitoring call (the message carries the cloud's reason). | See the message: sync the project, deploy first, or check the function deployment. |
 | `webhook_rejected` | 2 | The notification webhook URL is not https, uses an IP literal / local name / credentials, or resolves to a private address. | Use the public https URL your chat tool gave you. |
+| `pushover_rejected` | 2 | Pushover did not accept the user key + application token pair (wrong format, or Pushover's validate call answered with an error). Nothing was stored. | Copy the user key from pushover.net and the API token of an application you created at pushover.net/apps/build. |
 | `nothing` | 1 | Nothing to do: no failing steps for AI Fix, no setup items, no new version. | Informational. |
 | `missing_cli` | 1 | A CLI this action needs is not installed (`gh`, an AI CLI, …). | Setup installs it. |
 | `no_cli` | 1 | The hosting CLI for the selected provider is missing (`netlify`, `vercel`, `wrangler`). | Setup installs it. |

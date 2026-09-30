@@ -849,7 +849,7 @@ const SB = path.join(TMP, 'mock-supabase.cjs');
 fs.writeFileSync(SB, `
 const http=require('http');const fs=require('fs');const path=require('path');const port=Number(process.argv[2]);const users={};let rows=[];
 // v10: profiles (first signup = owner/admin), credit ledger, admin function, audit log; plus a fake Anthropic /v1/models
-const profiles={};const ledger=[];const audit=[];const monTargets={};const monIncidents=[];let monBeat=null;const hooks=[];
+const profiles={};const ledger=[];const audit=[];const monTargets={};const monIncidents=[];let monBeat=null;const hooks=[];const pushes=[];
 const tok=(e)=>({access_token:'AT-'+e,refresh_token:'RT-'+e,expires_in:3600,user:{id:'u-'+e,email:e,user_metadata:{full_name:'Test'},app_metadata:{provider:'email'}}});
 const caller=(q)=>{const m=/^Bearer AT-(.+)$/.exec(q.headers.authorization||'');return m?profiles['u-'+m[1]]:null;};
 const ANSWER='The build fails because src/app.js has a syntax error: a + ; is missing the right operand.\\n\\n<<<FILE src/app.js>>>\\n<<<<<<< SEARCH\\nconst c = a + ;\\n=======\\nconst c = a + b;\\n>>>>>>> REPLACE\\n<<<NEW FILE src/notes.txt>>>\\nfixed by ai\\n<<<END FILE>>>\\n<<<FILE ../outside.js>>>\\n<<<<<<< SEARCH\\nx\\n=======\\ny\\n>>>>>>> REPLACE\\n';
@@ -886,6 +886,9 @@ http.createServer((q,r)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{r.setHea
    for(const part of parts)ev({type:'content_block_delta',index:0,delta:{type:'text_delta',text:part}});
    ev({type:'content_block_stop',index:0});ev({type:'message_delta',delta:{stop_reason:'end_turn'},usage:{output_tokens:1500}});ev({type:'message_stop'});return r.end();}
  if(q.url==='/hook'){hooks.push(JSON.parse(b||'{}'));return r.end('{"ok":true}');}
+ if(q.url==='/pushover/users/validate.json'){const f=Object.fromEntries(new URLSearchParams(b));if(f.token==='aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'&&f.user==='uuuuuuuuuuuuuuuuuuuuuuuuuuuuuu')return r.end('{"status":1,"group":0,"devices":["iphone"],"request":"r1"}');r.statusCode=400;return r.end('{"status":0,"errors":["user identifier is invalid"],"request":"r2"}');}
+ if(q.url==='/pushover/messages.json'){const f=Object.fromEntries(new URLSearchParams(b));if(f.token!=='aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'){r.statusCode=400;return r.end('{"status":0,"errors":["application token is invalid"]}');}pushes.push(f);return r.end('{"status":1,"request":"r3"}');}
+ if(q.url==='/pushes')return r.end(JSON.stringify(pushes));
  if(q.url==='/hooks')return r.end(JSON.stringify(hooks));
  if(q.url==='/resent')return r.end(JSON.stringify(resent));
  if(q.url==='/cloud-sim'){const s0=JSON.parse(b||'{}');if(s0.clear){monIncidents.length=0;monBeat=null;}if(s0.beat!==undefined)monBeat=s0.beat;if(s0.incident)monIncidents.push(s0.incident);return r.end('{}');}
@@ -1925,27 +1928,45 @@ t('monitor: прозорец за поддръжка спира проверки
   assert(bid('monitor', 'settings', '--json', '{"channels":{"webhook":"https://127.0.0.1/x"}}').result.code === 'webhook_rejected', 'ip literal refused');
   assert(bid('monitor', 'settings', '--json', '{"channels":{"webhook":"https://user:pw@hooks.example.com/x"}}').result.code === 'webhook_rejected', 'credentials refused');
   assert(bid('monitor', 'notify', 'test').result.code === 'not_configured', 'no channel yet');
-  const testEnv = { BID_TEST_ALLOW_PRIVATE_WEBHOOK: '1', BID_TEST_WEBHOOK_TARGET: `http://127.0.0.1:${sbPort}/hook` };
+  const testEnv = { BID_TEST_ALLOW_PRIVATE_WEBHOOK: '1', BID_TEST_WEBHOOK_TARGET: `http://127.0.0.1:${sbPort}/hook`, BID_TEST_PUSHOVER_URL: `http://127.0.0.1:${sbPort}/pushover` };
   const set = bidEnv(testEnv, 'monitor', 'settings', '--json', '{"channels":{"webhook":"https://hooks.example.com/services/T/B/x"}}');
   assert(set.result.ok && set.data.channels.webhook === 'https://hooks.example.com/services/T/B/x', JSON.stringify(set.result));
   assert(bid('monitor', 'status', '--no-network').data.channels.webhook === 'https://hooks.example.com/…', 'status shows the channel without its secret path');
+  // Pushover: keys only through the environment, verified with Pushover before they are stored, masked in status
+  const GOOD = { BID_PUSHOVER_USER: 'uuuuuuuuuuuuuuuuuuuuuuuuuuuuuu', BID_PUSHOVER_TOKEN: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' };
+  assert(bidEnv(testEnv, 'monitor', 'pushover', 'connect').result.code === 'usage', 'keys required');
+  assert(bidEnv({ ...testEnv, BID_PUSHOVER_USER: 'short', BID_PUSHOVER_TOKEN: 'x' }, 'monitor', 'pushover', 'connect').result.code === 'pushover_rejected', 'format refused before any request');
+  const badPo = bidEnv({ ...testEnv, ...GOOD, BID_PUSHOVER_USER: 'uuuuuuuuuuuuuuuuuuuuuuuuuuuuuX' }, 'monitor', 'pushover', 'connect');
+  assert(badPo.result.code === 'pushover_rejected' && /user identifier is invalid/.test(badPo.result.error) && bid('monitor', 'pushover', 'status').data.connected === false, 'rejected by Pushover → nothing stored: ' + JSON.stringify(badPo.result));
+  const po = bidEnv({ ...testEnv, ...GOOD }, 'monitor', 'pushover', 'connect');
+  assert(po.result.ok && po.data.connected === true && po.data.user === 'uuuu…', JSON.stringify(po.result));
+  const st = bid('monitor', 'status', '--no-network').data;
+  assert(st.channels.pushover.connected === true && st.channels.pushover.user === 'uuuu…' && !JSON.stringify(st).includes('aaaaaaaaaa') && !JSON.stringify(st).includes('uuuuuuuuuu'), 'status never carries the keys');
   const nt = bidEnv(testEnv, 'monitor', 'notify', 'test');
-  assert(nt.result.ok && nt.data.ok === true && nt.data.status === 200, JSON.stringify(nt.result));
-  // a confirmed incident and its recovery reach the channel once each; "ongoing" never repeats
+  assert(nt.result.ok && nt.data.ok === true && nt.data.status === 200 && nt.data.webhook.ok === true && nt.data.pushover.ok === true && nt.data.channels.length === 2, JSON.stringify(nt.result));
+  // a confirmed incident and its recovery reach every channel once each; "ongoing" never repeats
   bidEnv(testEnv, 'monitor', 'once', '--project', site);
   const conf = bidEnv(testEnv, 'monitor', 'once', '--project', site);
-  assert(conf.data.delivered.length === 1 && conf.data.delivered[0].type === 'new' && conf.data.delivered[0].ok === true, JSON.stringify(conf.data.delivered));
+  const confHook = conf.data.delivered.filter((d) => d.channel === 'webhook');
+  const confPush = conf.data.delivered.filter((d) => d.channel === 'pushover');
+  assert(conf.data.delivered.length === 2 && confHook.length === 1 && confHook[0].type === 'new' && confHook[0].ok === true && confPush.length === 1 && confPush[0].ok === true, JSON.stringify(conf.data.delivered));
   const ongoing = bidEnv(testEnv, 'monitor', 'once', '--project', site);
   assert(ongoing.data.delivered.length === 0, 'ongoing is not re-sent');
   fs.writeFileSync(FAKE_NETLIFY, JSON.stringify({ ...fakeState(), monDown: false }));
   const rec = bidEnv(testEnv, 'monitor', 'once', '--project', site);
-  assert(rec.data.delivered.length === 1 && rec.data.delivered[0].type === 'recovered', JSON.stringify(rec.data.delivered));
+  assert(rec.data.delivered.length === 2 && rec.data.delivered.every((d) => d.type === 'recovered' && d.ok), JSON.stringify(rec.data.delivered));
   const hooks = JSON.parse(httpGetSync(`http://127.0.0.1:${sbPort}/hooks`));
   assert(hooks.length === 3 && hooks[0].kind === 'test' && hooks[1].kind === 'incident' && hooks[1].incidentKind === 'down' && hooks[1].project === key && hooks[2].kind === 'recovered' && hooks.every((h) => h.source === 'beforeideploy' && h.text), JSON.stringify(hooks));
+  const pushes = JSON.parse(httpGetSync(`http://127.0.0.1:${sbPort}/pushes`));
+  assert(pushes.length === 3 && pushes[0].priority === '0' && pushes[1].priority === '1' && pushes[1].title.includes('maint-site') && pushes[1].url === `http://127.0.0.1:${sbPort}/mon/` && pushes[1].url_title && pushes[2].priority === '0' && pushes.every((p) => p.user === GOOD.BID_PUSHOVER_USER && p.message), JSON.stringify(pushes));
+  // disconnect: the Keychain entry is gone and the channel is silent
+  assert(bid('monitor', 'pushover', 'disconnect').data.connected === false && bid('monitor', 'status', '--no-network').data.channels.pushover.connected === false, 'disconnect');
+  assert(bidEnv(testEnv, 'monitor', 'notify', 'test').data.channels.length === 1, 'only the webhook is left');
   // this site's incident must not leak into the monitoring tests below
   const incFile2 = path.join(ENV.BID_APP_DIR, 'incidents.jsonl');
   fs.writeFileSync(incFile2, fs.readFileSync(incFile2, 'utf8').split('\n').filter((l) => l && !l.includes(`"project":"${key}"`)).join('\n') + '\n');
   bid('monitor', 'settings', '--json', '{"channels":{"webhook":null}}');
+  assert(bid('monitor', 'notify', 'test').result.code === 'not_configured', 'no channel left');
 });
 
 ta('portfolio: клиент, сигнали с източник и време, „непроверено“ никога не е зелено, backup е честно несвързан', async () => {

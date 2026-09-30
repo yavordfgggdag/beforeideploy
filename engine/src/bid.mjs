@@ -7,6 +7,7 @@ import { detect } from './detect.mjs';
 import { listProjects, upsertProject, removeProject, resolveProject, updateProject, getState, listHistory, findProject } from './store.mjs';
 import { runChecks } from './checks.mjs';
 import { deriveIssues } from './issues.mjs';
+import { pushoverConnect, pushoverDisconnect, pushoverStatus } from './pushover.mjs';
 import { monitorOnce, monitorStatus, monitorStatusMerged, listIncidents, setMonitorSettings, agentInstall, agentRemove, maintenanceCommand, notifyTest } from './monitor.mjs';
 import { monitorCloudStatus, monitorCloudEnable, monitorCloudDisable, monitorCloudTest } from './monitor-cloud.mjs';
 import { assistantChat, assistantHistory, assistantReset, assistantSettings, setAssistantSettings, listPrompts } from './ai/assistant.mjs';
@@ -91,6 +92,7 @@ const HELP = `Before I Deploy engine ${VERSION}
   bid monitor once [--project P] | status [--no-network] | incidents [--limit N] | settings --json '{…}' | agent install --yes | agent remove
   bid monitor cloud status | enable [--project P] [--interval N] [--paths /a,/b] | disable [--project P] | test --project P
   bid monitor maintenance add --from ISO --to ISO [--project P] [--note T] | list | clear · bid monitor notify test
+  bid monitor pushover connect (env BID_PUSHOVER_USER + BID_PUSHOVER_TOKEN) | disconnect | status   push notifications to your phone
   bid backup  status --project P   backup provider state (CodeGuard: not connected until an API exists)
   bid project client --project K --name N       which client a site belongs to (portfolio filter)
   bid release preview --project P [--force]     check → preview deploy → smoke checks → awaits confirmation
@@ -452,6 +454,11 @@ async function main() {
       }
       if (sub === 'maintenance') return ok(await maintenanceCommand(positional[1], flags));
       if (sub === 'notify') return ok(await notifyTest());
+      if (sub === 'pushover') {
+        if (positional[1] === 'connect') return ok(await pushoverConnect({ user: flags.user, token: flags.token }));
+        if (positional[1] === 'disconnect') return ok(pushoverDisconnect());
+        return ok(pushoverStatus());
+      }
       if (sub === 'incidents') return ok(listIncidents({ limit: Number(flags.limit) || 100, project: flags.project && flags.project !== true ? proj().key : null }));
       if (sub === 'settings') return ok(await setMonitorSettings(flags.json && flags.json !== true ? JSON.parse(flags.json) : {}));
       if (sub === 'agent') {

@@ -546,7 +546,6 @@
   "monitor.cloud.failed": "Cloud monitoring failed ({status}) {detail}",
   "monitor.maintenance.invalid": "A maintenance window needs from/to timestamps (ISO), to after from, at most 7 days.",
   "monitor.webhook.invalid": "The webhook URL was rejected ({reason}): https, a public hostname, no credentials.",
-  "monitor.webhook.none": "No notification webhook is configured (monitor settings → channels.webhook).",
   "monitor.webhook.text.test": "Before I Deploy: test notification — this channel works.",
   "monitor.webhook.text.incident": "Before I Deploy: {project} — {kind} incident confirmed.",
   "monitor.webhook.text.recovered": "Before I Deploy: {project} — {kind} recovered.",
@@ -718,5 +717,9 @@
   "newsite.notFound.title.en": "Page not found",
   "newsite.notFound.text.bg": "Адресът не съществува или е преместен.",
   "newsite.notFound.text.en": "This address does not exist or has moved.",
-  "site.summary.readyHints": "{pages} page(s) ready for visitors — {hints} hint(s) for the launch files (robots, sitemap, 404, favicon)."
+  "site.summary.readyHints": "{pages} page(s) ready for visitors — {hints} hint(s) for the launch files (robots, sitemap, 404, favicon).",
+  "monitor.notify.none": "No notification channel is configured (a webhook URL or Pushover in the monitoring settings).",
+  "monitor.pushover.missingKeys": "Pushover needs your user key and an application token (BID_PUSHOVER_USER + BID_PUSHOVER_TOKEN).",
+  "monitor.pushover.rejected": "Pushover rejected the keys ({reason}). Copy the user key from pushover.net and the token of an application you created there.",
+  "monitor.pushover.openSite": "Open the site"
 }

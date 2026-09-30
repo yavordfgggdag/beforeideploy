@@ -127,6 +127,7 @@ struct RootView: View {
                 case .plans: PlansSheet()
                 case .aiKeys: AIKeysSheet()
                 case .newSite: NewSiteSheet()
+                case .pushover: PushoverSheet()
                 }
             }
             .environmentObject(model)

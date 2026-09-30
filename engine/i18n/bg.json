@@ -546,7 +546,6 @@
   "monitor.cloud.failed": "Облачният мониторинг се провали ({status}) {detail}",
   "monitor.maintenance.invalid": "Прозорецът за поддръжка иска from/to (ISO), to след from, най-много 7 дни.",
   "monitor.webhook.invalid": "Webhook URL-ът е отхвърлен ({reason}): https, публичен хост, без credentials.",
-  "monitor.webhook.none": "Няма конфигуриран webhook за известия (настройки на мониторинга → channels.webhook).",
   "monitor.webhook.text.test": "Before I Deploy: тестово известие — този канал работи.",
   "monitor.webhook.text.incident": "Before I Deploy: {project} — потвърден инцидент ({kind}).",
   "monitor.webhook.text.recovered": "Before I Deploy: {project} — възстановено ({kind}).",
@@ -718,5 +717,9 @@
   "newsite.notFound.title.en": "Page not found",
   "newsite.notFound.text.bg": "Адресът не съществува или е преместен.",
   "newsite.notFound.text.en": "This address does not exist or has moved.",
-  "site.summary.readyHints": "{pages} страници готови за посетители — {hints} подсказки за файловете за пускане (robots, sitemap, 404, favicon)."
+  "site.summary.readyHints": "{pages} страници готови за посетители — {hints} подсказки за файловете за пускане (robots, sitemap, 404, favicon).",
+  "monitor.notify.none": "Няма конфигуриран канал за известия (webhook URL или Pushover в настройките на наблюдението).",
+  "monitor.pushover.missingKeys": "Pushover иска твоя user key и token на приложение (BID_PUSHOVER_USER + BID_PUSHOVER_TOKEN).",
+  "monitor.pushover.rejected": "Pushover отхвърли ключовете ({reason}). Копирай user key от pushover.net и token на приложение, което си създал там.",
+  "monitor.pushover.openSite": "Отвори сайта"
 }

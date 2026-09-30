@@ -5,7 +5,7 @@ import SwiftUI
 enum Screen: Hashable { case overview, project, domains, costs, setup, admin, account, assistant, usage }
 
 enum SheetKind: Identifiable {
-    case production, netlifySetup, commit, history, settings, remote, spaceshipConnect, connectDomain, deleteAccount, plans, release, rollback, client, aiKeys, newSite
+    case production, netlifySetup, commit, history, settings, remote, spaceshipConnect, connectDomain, deleteAccount, plans, release, rollback, client, aiKeys, newSite, pushover
     var id: Int { hashValue }
 }
 
@@ -349,12 +349,35 @@ final class AppModel: ObservableObject, Feedback {
         }
     }
 
+    /// Sends a test notification to every configured channel (webhook and/or Pushover).
     func testMonitorWebhook() {
         busy.insert("monitor-webhook")
         Task {
             defer { busy.remove("monitor-webhook") }
             let o = try? await engine.run(["monitor", "notify", "test"])
             if o?.ok == true { flash(L("monitor.webhookTested")) } else { flash(o?.errorMessage ?? L("common.error"), error: true) }
+        }
+    }
+
+    /// Pushover: the keys go to the engine through the environment (never argv), are verified with Pushover
+    /// and stored in the Keychain. Returns true when connected.
+    func connectPushover(user: String, token: String) async -> Bool {
+        busy.insert("monitor-pushover")
+        defer { busy.remove("monitor-pushover") }
+        let env = ["BID_PUSHOVER_USER": user.trimmingCharacters(in: .whitespacesAndNewlines), "BID_PUSHOVER_TOKEN": token.trimmingCharacters(in: .whitespacesAndNewlines)]
+        let o = try? await engine.run(["monitor", "pushover", "connect"], env: env)
+        if o?.ok == true { flash(L("monitor.pushoverConnected")) } else { flash(o?.errorMessage ?? L("common.error"), error: true) }
+        await loadMonitor()
+        return o?.ok == true
+    }
+
+    func disconnectPushover() {
+        busy.insert("monitor-pushover")
+        Task {
+            defer { busy.remove("monitor-pushover") }
+            let o = try? await engine.run(["monitor", "pushover", "disconnect"])
+            if o?.ok == true { flash(L("monitor.pushoverRemoved")) } else { flash(o?.errorMessage ?? L("common.error"), error: true) }
+            await loadMonitor()
         }
     }
 

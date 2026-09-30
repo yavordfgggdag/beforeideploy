@@ -272,6 +272,14 @@ final class ModelsTests: XCTestCase {
         XCTAssertEqual(m.openIncidents.first?.kind, "down")
         XCTAssertEqual(m.openIncidents.first?.count, 2)
         XCTAssertGreaterThanOrEqual(m.settings.intervalMin, 5)
+        // external channels: the webhook is a redacted URL or nil; Pushover reports only a masked key, never the secrets
+        let ch = try XCTUnwrap(m.channels)
+        XCTAssertNil(ch.webhook)
+        XCTAssertEqual(ch.pushover?.connected, false)
+        XCTAssertNil(ch.pushover?.user)
+        let connected = try JSONDecoder().decode(PushoverChannel.self, from: Data(#"{"connected":true,"user":"uQiR…","savedAt":"2026-09-30T15:00:00.000Z"}"#.utf8))
+        XCTAssertTrue(connected.connected)
+        XCTAssertEqual(connected.user, "uQiR…")
     }
 
     func testBackupStatusIsHonestlyNotConnected() throws {

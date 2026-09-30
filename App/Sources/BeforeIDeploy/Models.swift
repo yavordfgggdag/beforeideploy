@@ -1191,6 +1191,14 @@ struct MaintenanceWindow: Codable, Identifiable, Hashable {
 
 struct MonitorChannels: Codable, Hashable {
     var webhook: String?
+    var pushover: PushoverChannel?
+}
+
+/// Pushover (phone push notifications): the keys live in the Keychain; status carries only a masked user key.
+struct PushoverChannel: Codable, Hashable {
+    var connected: Bool
+    var user: String?
+    var savedAt: String?
 }
 
 struct MonitorRun: Codable {

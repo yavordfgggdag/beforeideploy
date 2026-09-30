@@ -747,6 +747,61 @@ struct AIKeysSheet: View {
     }
 }
 
+// MARK: - Pushover (phone notifications, V11.1)
+
+/// Connects Pushover: the user key from the Pushover dashboard and the API token of an application the user
+/// creates there. The engine verifies the pair with Pushover and keeps it in the Keychain; the app never
+/// writes the keys anywhere and passes them through the environment, not argv.
+struct PushoverSheet: View {
+    @EnvironmentObject var model: AppModel
+    @Environment(\.dismiss) private var dismiss
+    @Local private var user = ""
+    @Local private var token = ""
+    @Local private var busy = false
+
+    var body: some View {
+        SheetScaffold(icon: "iphone.radiowaves.left.and.right", iconTint: Theme.accent, title: L("pushover.title"), subtitle: L("pushover.subtitle"), width: 560) {
+            VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 8) {
+                    StepLine(n: 1, text: L("pushover.step1")).entrance(1, offset: 8)
+                    StepLine(n: 2, text: L("pushover.step2")).entrance(2, offset: 8)
+                    StepLine(n: 3, text: L("pushover.step3")).entrance(3, offset: 8)
+                }
+                HStack(spacing: 8) {
+                    Button { model.open("https://pushover.net/") } label: { Label(L("pushover.openSite"), systemImage: "safari") }.bidButton(.secondary, compact: true)
+                    Button { model.open("https://pushover.net/apps/build") } label: { Label(L("pushover.openBuild"), systemImage: "plus.app") }.bidButton(.ghost, compact: true)
+                }
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(L("pushover.userKey")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                    BIDTextField(placeholder: "uQiRzpo4DXghDmr9QzzfQu27cmVRsG", text: $user, mono: true)
+                    Text(L("pushover.token")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                    SecureField("azGDORePK8gMaC0QOYAMyEEuzJnyUi", text: $token)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 13, design: .monospaced))
+                        .padding(.horizontal, 12).padding(.vertical, 9)
+                        .background(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).fill(Theme.bg))
+                        .overlay(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
+                }
+                Text(L("pushover.keyNote")).font(.system(size: 11.5)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
+            }
+        } actions: {
+            Button(L("common.cancel")) { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
+            Button {
+                busy = true
+                Task {
+                    if await model.connectPushover(user: user, token: token) { dismiss() }
+                    busy = false
+                }
+            } label: {
+                if busy { Spinner(size: 12, color: .white) } else { Text(L("common.connect")) }
+            }
+            .bidButton(.primary)
+            .keyboardShortcut(.defaultAction)
+            .disabled(user.count < 30 || token.count < 30 || busy)
+        }
+    }
+}
+
 // MARK: - Delete account (GDPR, WP5)
 
 struct DeleteAccountSheet: View {

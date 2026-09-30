@@ -709,6 +709,11 @@
 "monitor.openIncidents" = "%@ open incidents";
 "monitor.openIncidents.one" = "%@ open incident";
 "monitor.openIncidents.other" = "%@ open incidents";
+"monitor.pushoverConnect" = "Connect Pushover…";
+"monitor.pushoverConnected" = "Pushover is connected. Send a test to see it on the phone.";
+"monitor.pushoverIntro" = "Pushover: push notifications on your phone.";
+"monitor.pushoverRemoved" = "Pushover is disconnected; the keys were removed from the Keychain.";
+"monitor.pushoverSet" = "Pushover is connected (user key %@) — incidents and recoveries reach your phone.";
 "monitor.ran" = "Checked %@ sites";
 "monitor.recentIncidents" = "%@ resolved recently";
 "monitor.recentIncidents.one" = "%@ resolved recently";
@@ -846,6 +851,17 @@
 "production.warnings.one" = "%@ warning from the last check";
 "production.warnings.other" = "%@ warnings from the last check";
 "production.whatUploads" = "What is uploaded";
+
+"pushover.keyNote" = "Both keys are verified with Pushover right away and stored in the macOS Keychain — never written to files. Incidents are sent with high priority, recoveries with normal priority; quiet hours and maintenance windows still apply.";
+"pushover.openBuild" = "Create an application";
+"pushover.openSite" = "Open pushover.net";
+"pushover.step1" = "Create a Pushover account and install the Pushover app on your phone.";
+"pushover.step2" = "Copy your User Key from the Pushover dashboard.";
+"pushover.step3" = "Create an application (for example „Before I Deploy“) and copy its API Token.";
+"pushover.subtitle" = "Pushover delivers a confirmed incident and its recovery as a push notification (a one-time app purchase on their side).";
+"pushover.title" = "Notifications on your phone";
+"pushover.token" = "Application API Token";
+"pushover.userKey" = "User Key";
 
 "release.actor.app" = "the app";
 "release.actor.cli" = "the command line";

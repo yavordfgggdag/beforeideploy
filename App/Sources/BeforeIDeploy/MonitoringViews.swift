@@ -119,19 +119,36 @@ struct MonitorCard: View {
         }
     }
 
+    /// External channels: a webhook URL (chat tools) and Pushover (the phone). "Send test" reaches every configured one.
     private func channelRow(_ m: MonitorStatus?) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: "bell.badge").foregroundColor(Theme.accent)
-            if let w = m?.channels?.webhook {
-                Text(L("monitor.webhookSet", w)).font(.system(size: 11.5)).foregroundColor(Theme.secondary).lineLimit(1).truncationMode(.middle)
-                Button(L("monitor.webhookTest")) { model.testMonitorWebhook() }.bidButton(.ghost, compact: true).disabled(model.busy.contains("monitor-webhook"))
-                Button(L("monitor.webhookRemove")) { model.setMonitorWebhook(nil) }.bidButton(.ghost, compact: true).disabled(model.busy.contains("monitor-webhook"))
-            } else {
-                TextField(L("monitor.webhookPlaceholder"), text: $webhookDraft).textFieldStyle(.roundedBorder).font(.system(size: 11.5)).frame(maxWidth: 360)
-                    .onSubmit { model.setMonitorWebhook(webhookDraft) }
-                Button(L("common.save")) { model.setMonitorWebhook(webhookDraft) }.bidButton(.secondary, compact: true).disabled(webhookDraft.isEmpty || model.busy.contains("monitor-webhook"))
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Image(systemName: "bell.badge").foregroundColor(Theme.accent)
+                if let w = m?.channels?.webhook {
+                    Text(L("monitor.webhookSet", w)).font(.system(size: 11.5)).foregroundColor(Theme.secondary).lineLimit(1).truncationMode(.middle)
+                    Button(L("monitor.webhookTest")) { model.testMonitorWebhook() }.bidButton(.ghost, compact: true).disabled(model.busy.contains("monitor-webhook"))
+                    Button(L("monitor.webhookRemove")) { model.setMonitorWebhook(nil) }.bidButton(.ghost, compact: true).disabled(model.busy.contains("monitor-webhook"))
+                } else {
+                    TextField(L("monitor.webhookPlaceholder"), text: $webhookDraft).textFieldStyle(.roundedBorder).font(.system(size: 11.5)).frame(maxWidth: 360)
+                        .onSubmit { model.setMonitorWebhook(webhookDraft) }
+                    Button(L("common.save")) { model.setMonitorWebhook(webhookDraft) }.bidButton(.secondary, compact: true).disabled(webhookDraft.isEmpty || model.busy.contains("monitor-webhook"))
+                }
+                Spacer()
             }
-            Spacer()
+            HStack(spacing: 8) {
+                Image(systemName: "iphone.radiowaves.left.and.right").foregroundColor(Theme.accent)
+                if let p = m?.channels?.pushover, p.connected {
+                    Text(L("monitor.pushoverSet", p.user ?? "…")).font(.system(size: 11.5)).foregroundColor(Theme.secondary).lineLimit(1)
+                    if m?.channels?.webhook == nil {
+                        Button(L("monitor.webhookTest")) { model.testMonitorWebhook() }.bidButton(.ghost, compact: true).disabled(model.busy.contains("monitor-webhook"))
+                    }
+                    Button(L("monitor.webhookRemove")) { model.disconnectPushover() }.bidButton(.ghost, compact: true).disabled(model.busy.contains("monitor-pushover"))
+                } else {
+                    Text(L("monitor.pushoverIntro")).font(.system(size: 11.5)).foregroundColor(Theme.tertiary).lineLimit(1)
+                    Button(L("monitor.pushoverConnect")) { model.sheet = .pushover }.bidButton(.secondary, compact: true)
+                }
+                Spacer()
+            }
         }
     }
 
