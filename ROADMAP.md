@@ -93,7 +93,7 @@
   **неактивна до** изпълнение на `supabase/monitor-cron.sql` от собственика);
 - RLS тестове на истински Postgres (PGlite) за всички таблици; вграден Node runtime в .app (`scripts/bundle-node.sh`);
 - блокери за публично пускане: подпис/нотаризация (Developer ID), реален тест на Mac с реален Netlify/Paddle
-  sandbox — `docs/OWNER-ACCEPTANCE-TEST-BG.md`; пълният tracker: `docs/RELEASE-CANDIDATE-AUDIT.md`.
+  sandbox — `docs/OWNER-ACCEPTANCE-TEST-BG.md`; пълният tracker: `docs/RELEASE-CANDIDATE-AUDIT.md`; одитът за бета и задачите за следващия агент: `docs/AUDIT-V11.1-BETA-BG.md`.
 
 **V11.1 „Launchpad“ (2026-09-30, `11.1.0-rc.1`)** — най-лесният път от папка до жив сайт:
 - стъпка `site` (WP10): SEO, съдържание, достъпност, бюджети, файлове за пускане; `bid.config.json`; безопасни
