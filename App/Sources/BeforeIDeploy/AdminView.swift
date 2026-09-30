@@ -47,6 +47,8 @@ struct AdminView: View {
                 }
             }
 
+            AdminDiagnosticsCard()
+
             HStack(alignment: .top, spacing: 16) {
                 AdminInviteCard()
                     .frame(maxWidth: 420)
@@ -327,5 +329,51 @@ struct AIKeyRow: View {
             }
         }
         .padding(.vertical, 8)
+    }
+}
+
+/// Cloud readiness for the owner (WP03): secrets set or not, scheduler heartbeat, Paddle price ids, legal links,
+/// database functions. Only yes/no answers leave the cloud — never a value.
+struct AdminDiagnosticsCard: View {
+    @EnvironmentObject var model: AppModel
+    private var store: AdminStore { model.adminStore }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                SectionLabel(text: L("admin.diag.title"), icon: "stethoscope")
+                Spacer()
+                Button { Task { await store.loadDiagnostics() } } label: { Label(L("common.refresh"), systemImage: "arrow.clockwise") }
+                    .bidButton(.ghost, compact: true)
+            }
+            if let d = store.diagnostics {
+                if d.ready {
+                    Label(L("admin.diag.ready"), systemImage: "checkmark.seal.fill").font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.ready)
+                } else {
+                    Text(L("admin.diag.todo", String(d.todo.count))).font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.warn)
+                }
+                row(L("admin.diag.scheduler"), ok: d.scheduler.state == "ok", detail: d.scheduler.lastRunAt.map { Fmt.relative($0) } ?? L("admin.diag.never"))
+                ForEach(d.secrets.keys.sorted(), id: \.self) { k in row(k, ok: d.secrets[k] == true, detail: d.secrets[k] == true ? L("admin.diag.set") : L("admin.diag.missing")) }
+                ForEach(d.functions.keys.sorted(), id: \.self) { k in row(k, ok: d.functions[k] == true, detail: d.functions[k] == true ? L("admin.diag.present") : L("admin.diag.applySchema")) }
+                row(L("admin.diag.prices"), ok: d.missingPrices.isEmpty, detail: d.missingPrices.isEmpty ? L("admin.diag.set") : d.missingPrices.joined(separator: ", "))
+                ForEach(d.links.keys.sorted(), id: \.self) { k in row(k, ok: d.links[k] == true, detail: d.links[k] == true ? L("admin.diag.set") : L("admin.diag.missing")) }
+            } else if let e = store.diagnosticsError {
+                Text(e).font(.system(size: 12)).foregroundColor(Theme.warn).textSelection(.enabled)
+            } else {
+                Spinner(size: 14)
+            }
+        }
+        .card()
+        .task { await store.loadDiagnostics() }
+    }
+
+    private func row(_ title: String, ok: Bool, detail: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: ok ? "checkmark.circle.fill" : "exclamationmark.circle.fill").foregroundColor(ok ? Theme.ready : Theme.warn)
+            Text(title).font(.system(size: 12, design: .monospaced)).foregroundColor(Theme.text)
+            Spacer()
+            Text(detail).font(.system(size: 11.5)).foregroundColor(Theme.secondary).lineLimit(1).truncationMode(.middle)
+        }
+        .accessibilityElement(children: .combine)
     }
 }

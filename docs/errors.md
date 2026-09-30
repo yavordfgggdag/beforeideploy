@@ -62,6 +62,7 @@ quota, 127 Node missing; everything else exits 1.
 | `monitor_cloud_failed` | 1 | The `monitor` Edge Function refused or failed a cloud-monitoring call (the message carries the cloud's reason). | See the message: sync the project, deploy first, or check the function deployment. |
 | `webhook_rejected` | 2 | The notification webhook URL is not https, uses an IP literal / local name / credentials, or resolves to a private address. | Use the public https URL your chat tool gave you. |
 | `pushover_rejected` | 2 | Pushover did not accept the user key + application token pair (wrong format, or Pushover's validate call answered with an error). Nothing was stored. | Copy the user key from pushover.net and the API token of an application you created at pushover.net/apps/build. |
+| `rate_limited` | 1 | A cloud function refused the call: too many of this kind for this account in its window (checkout / portal / sync 5 per minute, monitor test 10 per minute, register 120 per hour, export 3 per hour, admin writes 60 per minute), or it could not check the limit. | Wait for the window; nothing was charged or changed. |
 | `nothing` | 1 | Nothing to do: no failing steps for AI Fix, no setup items, no new version. | Informational. |
 | `missing_cli` | 1 | A CLI this action needs is not installed (`gh`, an AI CLI, …). | Setup installs it. |
 | `no_cli` | 1 | The hosting CLI for the selected provider is missing (`netlify`, `vercel`, `wrangler`). | Setup installs it. |
@@ -120,3 +121,7 @@ Returned as `code` in the JSON body; the engine maps them to the codes above (`q
 | `no_subscription` | 404 | Customer portal asked for an account without a Paddle customer. |
 | `provider_error` | 502 | The Paddle API answered with an error or without the expected URL. |
 | `not_configured` | 500 / 503 | `ANTHROPIC_API_KEY` (ai-fix) or `PADDLE_API_KEY` (billing) secret is missing on the function. |
+
+| `internal` | 500 | An unexpected server error; details stay in the function log (`internalError`), the client gets only this code. |
+| `rate_limited` | 429 | The shared per-user limit for this action is reached (`bid_rate_hit`, schema.sql). |
+| `rate_limit_unavailable` | 503 | The limit could not be checked (database error). The call is refused rather than skipping the limit; a database without the function (schema not updated) lets calls through and logs it. |

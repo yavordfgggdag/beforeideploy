@@ -44,6 +44,12 @@ export async function fetchT(url, opts = {}, timeoutMs = Number(process.env.BID_
   }
 }
 
+/** A cloud function's shared rate limit (WP03) → one clear engine error, whatever the function. */
+export function throwIfRateLimited(res, data) {
+  if (res.status === 429 && data?.code === 'rate_limited') throw new EngineError(msg('cloud.rateLimited', { seconds: data.windowSeconds || 60 }), 'rate_limited');
+  if (res.status === 503 && data?.code === 'rate_limit_unavailable') throw new EngineError(msg('cloud.rateLimitUnavailable'), 'rate_limited');
+}
+
 // ---------------------------------------------------------------- output
 
 export function emit(obj) {

@@ -18,6 +18,8 @@ class FakeQuery implements Query {
   private filters: Filter[] = [];
   private orderBy: { column: string; ascending: boolean } | null = null;
   private limitN: number | null = null;
+  private rangeFrom: number | null = null;
+  private rangeTo: number | null = null;
   private head = false;
   private counting = false;
   private single = false;
@@ -40,6 +42,15 @@ class FakeQuery implements Query {
   }
   gte(column: string, value: unknown): Query {
     this.filters.push((r) => (typeof value === "number" ? Number(r[column]) >= value : String(r[column]) >= String(value)));
+    return this;
+  }
+  lt(column: string, value: unknown): Query {
+    this.filters.push((r) => (typeof value === "number" ? Number(r[column]) < value : String(r[column]) < String(value)));
+    return this;
+  }
+  range(from: number, to: number): Query {
+    this.rangeFrom = from;
+    this.rangeTo = to;
     return this;
   }
   in(column: string, values: unknown[]): Query {
@@ -116,8 +127,11 @@ class FakeQuery implements Query {
           const { column, ascending } = this.orderBy;
           out = [...out].sort((a, b) => (String(a[column]) < String(b[column]) ? -1 : String(a[column]) > String(b[column]) ? 1 : 0) * (ascending ? 1 : -1));
         }
-        if (this.limitN != null) out = out.slice(0, this.limitN);
         if (this.counting && this.head) return { data: null, error: null, count: out.length };
+        if (this.rangeFrom != null) out = out.slice(this.rangeFrom, (this.rangeTo ?? this.rangeFrom) + 1);
+        if (this.limitN != null) out = out.slice(0, this.limitN);
+        // like PostgREST: an unranged select returns at most max-rows (1000) — code must page (WP03)
+        out = out.slice(0, Math.min(out.length, this.db.maxRows));
         return this.finish(out);
       }
       case "delete": {
@@ -182,6 +196,14 @@ export class FakeDb implements DbClient {
     subscriptions: [{ cols: ["user_id", "provider"], when: (r) => r.provider === "trial" }],
   };
   log: { table: string; op: string }[] = [];
+  /** PostgREST max-rows: an unranged select returns at most this many rows. */
+  maxRows = 1000;
+  /** Current time for the SQL functions (tests move it). */
+  clock: () => number = () => Date.now();
+  /** rpc names that fail as if the function were not deployed (schema not updated). */
+  missingFunctions: string[] = [];
+  /** rpc name → a database error (not "missing"). */
+  rpcErrors: Record<string, DbError> = {};
   deletedUsers: string[] = [];
   invited: { email: string; data: Row }[] = [];
   user: AuthUser | null;
@@ -193,6 +215,47 @@ export class FakeDb implements DbClient {
 
   from(table: string): Query {
     return new FakeQuery(this, table);
+  }
+
+  /** The Postgres functions of schema.sql, with the same semantics (tests/rls proves the SQL itself). */
+  rpc(fn: string, args: Row = {}): PromiseLike<Result<unknown>> {
+    return Promise.resolve().then(() => {
+      if (this.missingFunctions.includes(fn)) return { data: null, error: { message: `Could not find the function public.${fn}`, code: "PGRST202" } };
+      if (this.rpcErrors[fn]) return { data: null, error: this.rpcErrors[fn] };
+      const t = this.tables;
+      const now = this.clock();
+      const iso = (ms: number) => new Date(ms).toISOString();
+      if (fn === "bid_rate_hit") {
+        const rows = (t.rate_events ??= []);
+        const since = iso(now - Number(args.p_window_seconds) * 1000);
+        const n = rows.filter((r) => r.user_id === args.p_user && r.action === args.p_action && String(r.at) > since).length;
+        if (n >= Number(args.p_limit)) return { data: false, error: null };
+        rows.push({ user_id: args.p_user, action: args.p_action, at: iso(now) });
+        return { data: true, error: null };
+      }
+      if (fn === "bid_prune") {
+        const batch = Number(args.p_batch ?? 5000);
+        const day = 86400_000;
+        const prune = (table: string, old: (r: Row) => boolean) => {
+          const rows = t[table] ?? [];
+          const gone = rows.filter(old).slice(0, batch);
+          t[table] = rows.filter((r) => !gone.includes(r));
+          return gone.length;
+        };
+        return {
+          data: {
+            monitor_probes: prune("monitor_probes", (r) => String(r.at) < iso(now - 90 * day)),
+            monitor_incidents: prune("monitor_incidents", (r) => r.status === "resolved" && !!r.resolved_at && String(r.resolved_at) < iso(now - 90 * day)),
+            monitor_heartbeat: prune("monitor_heartbeat", (r) => String(r.at) < iso(now - 7 * day)),
+            rate_events: prune("rate_events", (r) => String(r.at) < iso(now - 2 * day)),
+            ai_usage: prune("ai_usage", (r) => String(r.created_at) < iso(now - 395 * day)),
+            admin_audit: prune("admin_audit", (r) => String(r.created_at) < iso(now - 730 * day)),
+          },
+          error: null,
+        };
+      }
+      return { data: null, error: { message: `fake_supabase: unknown function ${fn}`, code: "PGRST202" } };
+    });
   }
 
   auth = {

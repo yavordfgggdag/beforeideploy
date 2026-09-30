@@ -91,7 +91,9 @@ for (const f of walk(path.join(ROOT, 'engine', 'src'), '.mjs')) {
 
 // ---- codes the Edge Functions return in JSON (`code: "…"`), surfaced by the engine as-is in some paths
 const cloud = new Set();
-for (const f of walk(path.join(ROOT, 'supabase', 'functions'), 'handler.ts')) {
+// handlers plus the shared modules they answer through (_shared/ratelimit.ts …); tests and fakes excluded
+const cloudFiles = [...walk(path.join(ROOT, 'supabase', 'functions'), 'handler.ts'), ...walk(path.join(ROOT, 'supabase', 'functions', '_shared'), '.ts').filter((f) => !/fake_|_test\.ts$/.test(f))];
+for (const f of cloudFiles) {
   for (const m of fs.readFileSync(f, 'utf8').matchAll(/\bcode:\s*"([a-z_]+)"/g)) cloud.add(m[1]);
 }
 

@@ -1,11 +1,13 @@
 // Before I Deploy — `account` Edge Function, request handler (V10 WP5, testable since L6):
-//   { "action": "export" } → every row the cloud holds for the caller (profile, subscriptions,
-//                            credit ledger, AI usage, project metadata)
+//   { "action": "export" } → every row the cloud holds for the caller (profile, subscriptions, credit
+//                            ledger, AI usage, project metadata, monitoring targets / probes / incidents),
+//                            paged so nothing is cut at PostgREST's 1000 rows (WP03)
 //   { "action": "delete" } → cancels active subscriptions (409 when a Paddle one cannot be cancelled here),
 //                            writes an audit row (e-mail hashed), drops billing events and deletes the auth
 //                            user; profiles/subscriptions/credit_ledger/ai_usage/bid_projects cascade.
 //                            Local projects on the Mac are untouched (the engine only drops its session).
-import { callerOf, type Deps, internalError, json, must, readJson, sha256Hex } from "../_shared/db.ts";
+import { allRows, callerOf, type Deps, internalError, json, must, readJson, sha256Hex } from "../_shared/db.ts";
+import { rateLimited } from "../_shared/ratelimit.ts";
 
 export interface AccountDeps extends Deps {
   /** Cancels a Paddle subscription immediately (index.ts calls the Paddle API); absent → local cancel only. */
@@ -22,21 +24,22 @@ export function createAccountHandler(deps: AccountDeps): (req: Request) => Promi
     const user = who.user;
     const db = deps.service();
 
-    const rows = async (table: string) => {
-      const { data, error: e } = await db.from(table).select("*").eq("user_id", user.id);
-      if (e) throw e;
-      return data ?? [];
-    };
+    const rows = (table: string, order = "created_at") => allRows(() => db.from(table).select("*").eq("user_id", user.id).order(order, { ascending: true }));
 
     try {
       switch (body.action) {
         case "export": {
-          const [profile, subscriptions, ledger, usage, projects] = await Promise.all([
+          const limited = await rateLimited(db, user.id, "account.export");
+          if (limited) return limited;
+          const [profile, subscriptions, ledger, usage, projects, monitorTargets, monitorProbes, monitorIncidents] = await Promise.all([
             db.from("profiles").select("*").eq("user_id", user.id).maybeSingle().then((r) => r.data),
-            rows("subscriptions"),
+            rows("subscriptions", "updated_at"),
             rows("credit_ledger"),
             rows("ai_usage"),
-            rows("bid_projects"),
+            rows("bid_projects", "key"),
+            rows("monitor_targets", "project_key"),
+            rows("monitor_probes", "at"),
+            rows("monitor_incidents", "opened_at"),
           ]);
           return json(200, {
             exportedAt: new Date().toISOString(),
@@ -46,6 +49,9 @@ export function createAccountHandler(deps: AccountDeps): (req: Request) => Promi
             credit_ledger: ledger,
             ai_usage: usage,
             projects,
+            monitor_targets: monitorTargets,
+            monitor_probes: monitorProbes,
+            monitor_incidents: monitorIncidents,
           });
         }
         case "delete": {

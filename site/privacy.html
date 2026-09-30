@@ -15,7 +15,7 @@
 <main class="wrap">
 
 <article class="legal">
-<h1>Privacy policy</h1><p class="updated">Last updated 29 September 2026</p>
+<h1>Privacy policy</h1><p class="updated">Last updated 30 September 2026</p>
 <p class="draft">Draft — the seller details in brackets are completed before sales start.</p>
 <p>This policy explains what Before I Deploy (“the app”), provided by [Seller legal name], [Registered address] (“we”), does with
 personal data. Questions: <a href="mailto:support@beforeideploy.app">support@beforeideploy.app</a>.</p>
@@ -26,11 +26,19 @@ our update server whether a new version exists (your IP address is seen by that 
 <h2>2. With an account</h2>
 <p>If you create an account we store: your e-mail address and display name; your role, plan and language;
 for each project you add — its name, framework, hosting provider, live URL, domain and the result of the
-last check; your AI usage (time, step, model, token count, project name); your subscription and token
+last check; your AI usage (time, step, model, token count, project name); your subscription and credit
 balance. We never store your source code or your keys.</p>
-<h2>3. AI Fix</h2>
-<p>Only when you start AI Fix, and after you agree once, the log of the failed step (with keys and
-passwords removed) and the project files it names are sent to the AI model: to Anthropic through our
+<h2>2a. Server-side monitoring</h2>
+<p>Only for sites you switch it on for, our server checks the site's public address on a schedule. For
+this we store: the address and which checks to run; each check's time, result, response time, HTTP status
+and the IP address the site answered from; and the incidents opened and resolved from those results. We
+only check the public address of your own project and never private networks.</p>
+<p>Notifications you set up (a webhook address or Pushover) are sent from your Mac directly to the service
+you chose; the Pushover keys stay in your Mac's Keychain.</p>
+<h2>3. AI Fix and the assistant</h2>
+<p>Only when you start AI Fix or ask the assistant, and after you agree once, the log of the failed step
+(with keys and passwords removed) and the project files it names are sent to the AI model — the app lists
+them before sending. Secret files (such as .env files, keys and certificates) are never sent. They go to Anthropic through our
 service, or directly to the provider of your own key. Anthropic processes this data to answer and does
 not use it to train models under its commercial terms.</p>
 <h2>4. Payments</h2>
@@ -41,12 +49,20 @@ bought, not your card details.</p>
 <p>Supabase (database and authentication), Paddle (payments), Anthropic (AI Fix), and our e-mail
 provider for sign-in and invitation e-mails. Each processes data only on our instructions.</p>
 <h2>6. Legal basis and retention</h2>
-<p>We process account data to provide the service you asked for (contract) and payment records to meet tax
-law (legal obligation). Account data is kept while the account exists; deleting the account removes it,
-except payment records we must keep by law. A one-way hash of your e-mail is kept to allow one free trial
-per address.</p>
+<p>We process account data to provide the service you asked for (contract). Account data is kept while the
+account exists. Some records are removed earlier, automatically:</p>
+<ul>
+<li>monitoring checks — 90 days; resolved incidents — 90 days after they were resolved;</li>
+<li>AI usage records — 13 months;</li>
+<li>short-lived request counters used to prevent abuse — 2 days;</li>
+<li>administrator actions on accounts — 24 months.</li>
+</ul>
+<p>Deleting your account removes all of the above, your projects, credit records and subscription records
+from our service. Paddle, as Merchant of Record, keeps the payment records it must keep under tax law.
+A one-way hash of your e-mail is kept to allow only one free trial per address.</p>
 <h2>7. Your rights</h2>
-<p>In the app, Settings → Account lets you export all your data or delete your account at any time. You may
+<p>In the app, Settings → Account lets you export all your data (including monitoring records) or delete
+your account at any time. You may
 also ask us for access, correction, deletion, restriction or portability, object to processing, and
 complain to your data protection authority.</p>
 <h2>8. Changes</h2>

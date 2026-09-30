@@ -8,7 +8,7 @@
 //   bid billing checkout --pack pack-500k    → { url }
 //   bid billing trial                        starts the one-time trial
 //   bid billing portal                       → { url } (change card, cancel, invoices)
-import { EngineError, fetchT } from './util.mjs';
+import { EngineError, fetchT, throwIfRateLimited } from './util.mjs';
 import { cloudConfig, currentSession } from './account.mjs';
 import { msg } from './i18n.mjs';
 
@@ -39,6 +39,7 @@ async function billingCall(action, params = {}) {
   }
   const data = await res.json().catch(() => null);
   if (res.status === 404 && data?.code === 'NOT_FOUND') throw new EngineError(msg('cloud.functionMissing', { name: 'billing' }), 'cloud_function_missing');
+  throwIfRateLimited(res, data);
   if (res.status === 401) throw new EngineError(msg('account.notLoggedIn'), 'not_logged_in', 5);
   if (!res.ok) {
     const key = CODE_KEYS[data?.code];

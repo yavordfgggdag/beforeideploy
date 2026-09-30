@@ -14,4 +14,6 @@ const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 Deno.serve(createAdminHandler({
   asUser: (auth) => createClient(url, anonKey, { global: { headers: { Authorization: auth } } }) as unknown as DbClient,
   service: () => createClient(url, serviceKey, { auth: { persistSession: false } }) as unknown as DbClient,
+  // diagnostics: set or not — the value never leaves the function
+  hasSecret: (name) => !!Deno.env.get(name),
 }));

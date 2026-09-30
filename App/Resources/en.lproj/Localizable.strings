@@ -29,6 +29,16 @@
 "admin.auditEmpty" = "No actions yet.";
 "admin.credits" = "Credits";
 "admin.creditsBalance" = "AI credits";
+"admin.diag.applySchema" = "apply supabase/schema.sql";
+"admin.diag.missing" = "missing";
+"admin.diag.never" = "never ran";
+"admin.diag.present" = "present";
+"admin.diag.prices" = "Paddle price ids";
+"admin.diag.ready" = "Everything the cloud needs is configured.";
+"admin.diag.scheduler" = "Monitoring scheduler";
+"admin.diag.set" = "set";
+"admin.diag.title" = "Cloud readiness";
+"admin.diag.todo" = "%@ things still to configure";
 "admin.find" = "Search";
 "admin.grant" = "Grant credits";
 "admin.grantHint" = "A negative number takes credits away. Recorded in credit_ledger as admin_grant.";

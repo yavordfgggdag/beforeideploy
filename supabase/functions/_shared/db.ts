@@ -21,10 +21,13 @@ export interface Query extends PromiseLike<Result> {
   select(columns?: string, opts?: { count?: "exact" | "planned" | "estimated"; head?: boolean }): Query;
   eq(column: string, value: unknown): Query;
   gte(column: string, value: unknown): Query;
+  lt(column: string, value: unknown): Query;
   in(column: string, values: unknown[]): Query;
   or(filters: string): Query;
   order(column: string, opts?: { ascending?: boolean }): Query;
   limit(n: number): Query;
+  /** Rows from..to inclusive (PostgREST caps an unranged select at max-rows, 1000 by default). */
+  range(from: number, to: number): Query;
   maybeSingle(): PromiseLike<Result<Row>>;
   insert(rows: Row | Row[]): Query;
   update(patch: Row): Query;
@@ -40,6 +43,9 @@ export interface AuthUser {
 
 export interface DbClient {
   from(table: string): Query;
+  /** A Postgres function (schema.sql): bid_rate_hit, bid_prune … */
+  // deno-lint-ignore no-explicit-any
+  rpc(fn: string, args?: Row): PromiseLike<Result<any>>;
   auth: {
     getUser(): Promise<{ data: { user: AuthUser | null }; error: DbError | null }>;
     admin?: {
@@ -97,4 +103,16 @@ export function internalError(where: string, e: unknown): Response {
 export async function sha256Hex(text: string): Promise<string> {
   const d = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)));
   return [...d].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/** Every row of a select, page by page — never silently the first 1000 (PostgREST max-rows, WP03). */
+export async function allRows(query: () => Query, page = 1000): Promise<Row[]> {
+  const out: Row[] = [];
+  for (let from = 0; ; from += page) {
+    const { data, error } = await query().range(from, from + page - 1);
+    if (error) throw error;
+    const rows = (data ?? []) as Row[];
+    out.push(...rows);
+    if (rows.length < page) return out;
+  }
 }

@@ -12,6 +12,8 @@ final class AdminStore: ObservableObject {
     @Published var usage: [AdminUsage] = []
     /// Global settings as pretty-printed JSON per key (the cloud `settings` table).
     @Published var settings: [String: String] = [:]
+    @Published var diagnostics: AdminDiagnostics?
+    @Published var diagnosticsError: String?
 
     /// Keys the panel offers even before they exist in the table.
     static let knownSettings = ["billing.catalog", "plans", "ai.models", "ai.creditEur", "ai.usdToEur", "ai.sessionHours", "ai.sessionCapPercent",
@@ -90,6 +92,15 @@ final class AdminStore: ObservableObject {
         } catch {
             feedback?.show(error)
             return false
+        }
+    }
+
+    func loadDiagnostics() async {
+        do {
+            diagnostics = try await engine.call(["admin", "diagnostics"], as: AdminDiagnostics.self)
+            diagnosticsError = nil
+        } catch {
+            diagnosticsError = error.localizedDescription
         }
     }
 

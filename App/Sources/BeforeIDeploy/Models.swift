@@ -1422,3 +1422,19 @@ struct BillingSync: Codable {
     var synced: [String]
     var status: BillingStatus
 }
+
+/// `bid admin diagnostics` (WP03): what the owner still has to configure in the cloud — yes/no only.
+struct AdminDiagnostics: Codable, Hashable {
+    struct Scheduler: Codable, Hashable {
+        var lastRunAt: String?
+        var ageMinutes: Int?
+        var state: String      // ok | stale | never
+    }
+    var secrets: [String: Bool]
+    var scheduler: Scheduler
+    var missingPrices: [String]
+    var links: [String: Bool]
+    var functions: [String: Bool]
+    var todo: [String]
+    var ready: Bool
+}

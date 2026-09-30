@@ -4,7 +4,7 @@ import { testEndpoint, isProductionBundle } from './isolation.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { APP_DIR, ENGINE_DIR, EngineError, readJSON, writeJSON, nowISO, ensureDir, fetchT } from './util.mjs';
+import { APP_DIR, ENGINE_DIR, EngineError, readJSON, writeJSON, nowISO, ensureDir, fetchT, throwIfRateLimited } from './util.mjs';
 import { getSecret, setSecret, deleteSecret } from './secrets.mjs';
 import { listProjects } from './store.mjs';
 import { msg, currentLang } from './i18n.mjs';
@@ -345,6 +345,7 @@ async function accountFunction(session, action) {
   const data = await res.json().catch(() => null);
   if (res.status === 404 && data?.code === 'NOT_FOUND') throw new EngineError(msg('cloud.functionMissing', { name: 'account' }), 'cloud_function_missing');
   if (res.status === 401) throw new EngineError(msg('account.notLoggedIn'), 'not_logged_in', 5);
+  throwIfRateLimited(res, data);
   if (data?.code === 'subscription_active') throw new EngineError(msg('account.delete.subscriptionActive'), 'subscription_active');
   if (!res.ok) throw new EngineError(msg('account.rest.http', { status: res.status, detail: data?.error || '' }), 'account_failed');
   return data;

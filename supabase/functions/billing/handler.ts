@@ -16,6 +16,7 @@
 //
 // Prices and Paddle price ids live in `settings.billing.catalog`, token amounts in `settings.plans`.
 import { callerOf, type DbClient, type Deps, internalError, isDuplicate, json, must, type Row, sha256Hex } from "../_shared/db.ts";
+import { rateLimited } from "../_shared/ratelimit.ts";
 import { bucketBalance, ensureMonthlyGrant, expireDue, grantPlanTokens, insertOnce, pricingVersion, reconcileHolds } from "../_shared/credits.ts";
 
 export type Plan = "free" | "flash" | "high" | "knight";
@@ -394,6 +395,12 @@ export function createBillingHandler(deps: BillingDeps): (req: Request) => Promi
     const db = deps.service();
     const now = deps.now?.() ?? new Date();
     const { catalog, planTokens } = await loadCatalog(db);
+
+    // checkout / portal create a Paddle session per call, sync calls the Paddle API: limited per user (WP03)
+    if (body.action === "checkout" || body.action === "portal" || body.action === "sync") {
+      const limited = await rateLimited(db, userId, `billing.${body.action}`);
+      if (limited) return limited;
+    }
 
     try {
       switch (body.action) {

@@ -732,5 +732,7 @@
   "hosting.ghpages.cliMissing": "GitHub Pages needs the gh-pages tool installed (Setup, or `npm i -g gh-pages`). It is not downloaded on the fly.",
   "cli.secretInArgv": "{flag} is not accepted on the command line (every process can read it). Put the value in the {env} environment variable instead.",
   "update.tooLarge": "The update is larger than {mb} MB — refused.",
-  "ai.streamIdle": "The AI provider stopped answering for {seconds} s. Nothing was changed."
+  "ai.streamIdle": "The AI provider stopped answering for {seconds} s. Nothing was changed.",
+  "cloud.rateLimited": "Too many requests of this kind — try again in {seconds} s.",
+  "cloud.rateLimitUnavailable": "The cloud could not check its request limit right now. Try again in a moment."
 }

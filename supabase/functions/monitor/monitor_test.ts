@@ -186,6 +186,8 @@ function world(user = ME) {
   const answers: Record<string, { ok: boolean; status: number | null; reason: string | null; tlsExpiresAt?: string | null }> = {};
   const probed: string[] = [];
   let clock = new Date("2026-10-01T10:00:00Z");
+  // the SQL functions (retention, rate limits) run on the same clock as the handler
+  db.clock = () => clock.getTime();
   const handle = createMonitorHandler({
     ...fakeDeps(db),
     cronSecret: "cron-secret",
@@ -330,4 +332,32 @@ Deno.test("monitor: page checks and TLS expiry open their own incidents; the bat
   assert.equal(r.due, LIMITS.batch, "due is what this pass took; the rest wait for the next pass");
   r = await (await w.run()).json();
   assert.equal(r.checked, 5, "the remaining targets are probed on the next pass");
+});
+
+Deno.test("monitor (WP03): retention runs in the database in batches — over 1000 old probes, open incidents kept, heartbeat pruned", async () => {
+  const w = world();
+  const old = "2026-05-01T00:00:00Z"; // > 90 days before the world's clock
+  for (let i = 0; i < 1500; i++) w.db.rows("monitor_probes").push({ id: `old-${i}`, user_id: ME.id, project_key: "shop", at: old, kind: "uptime", ok: true });
+  for (let i = 0; i < 10; i++) w.db.rows("monitor_probes").push({ id: `new-${i}`, user_id: ME.id, project_key: "shop", at: "2026-09-30T00:00:00Z", kind: "uptime", ok: true });
+  w.db.rows("monitor_incidents").push({ id: "gone", user_id: ME.id, project_key: "shop", kind: "down", status: "resolved", opened_at: old, resolved_at: old });
+  w.db.rows("monitor_incidents").push({ id: "still", user_id: ME.id, project_key: "shop", kind: "ssl", status: "open", opened_at: old });
+  for (let i = 0; i < 300; i++) w.db.rows("monitor_heartbeat").push({ at: "2026-09-01T00:00:00Z", checked: 0 });
+  const r = await (await w.run()).json();
+  assert.equal(r.pruned.monitor_probes, 1500, "every old probe in one pass (batch 5000), not just the first 1000");
+  assert.equal(r.pruned.monitor_heartbeat, 300);
+  assert.equal(w.db.rows("monitor_probes").filter((p) => String(p.id).startsWith("old-")).length, 0);
+  assert.equal(w.db.rows("monitor_probes").filter((p) => String(p.id).startsWith("new-")).length, 10, "recent probes kept");
+  assert.deepEqual(w.db.rows("monitor_incidents").map((i) => i.id), ["still"], "an open incident is never pruned");
+  assert.equal(w.db.rows("monitor_heartbeat").length, 1, "only this pass's heartbeat remains");
+});
+
+Deno.test("monitor (WP03): an on-demand test probe is rate limited per user", async () => {
+  const w = world();
+  await w.handle(post("monitor", { action: "register", projectKey: "shop", url: "https://shop.example.com/" }));
+  const codes: number[] = [];
+  for (let i = 0; i < 11; i++) codes.push((await w.handle(post("monitor", { action: "test", projectKey: "shop" }))).status);
+  assert.deepEqual(codes.slice(0, 10), Array(10).fill(200));
+  assert.equal(codes[10], 429, "the 11th probe within a minute is refused");
+  w.tick(2);
+  assert.equal((await w.handle(post("monitor", { action: "test", projectKey: "shop" }))).status, 200, "the window moves on");
 });

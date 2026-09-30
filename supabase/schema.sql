@@ -370,3 +370,70 @@ alter table public.ai_usage add column if not exists operation_id text;
 alter table public.ai_usage add column if not exists pricing_version text;
 create unique index if not exists ai_usage_operation_once on public.ai_usage (user_id, operation_id) where operation_id is not null;
 alter table public.credit_ledger add column if not exists pricing_version text;
+
+-- ---------------------------------------------------------------- retention and rate limits (WP03)
+-- Retention runs inside the database in bounded batches (never "select everything, delete one by one"
+-- from a worker, which PostgREST caps at 1000 rows). Periods by category and purpose:
+--   monitor_probes          90 days   (evidence behind incidents; shown in the app for the last weeks)
+--   monitor_incidents       90 days after resolution; open incidents are never removed
+--   monitor_heartbeat       7 days    (only "is the scheduler alive" is read from it)
+--   rate_events             2 days    (rate limits look back at most one hour)
+--   ai_usage                13 months (the usage page shows the current period; a year back for disputes)
+--   admin_audit             24 months
+--   credit_ledger, subscriptions, billing_events, trial_claims: not pruned here — money and one-trial-per-
+--   address records follow the owner's accounting and legal retention (docs/BILLING-AND-USAGE.md §retention).
+create index if not exists monitor_probes_at_idx on public.monitor_probes (at);
+create index if not exists monitor_incidents_resolved_idx on public.monitor_incidents (resolved_at) where status = 'resolved';
+create index if not exists ai_usage_created_idx on public.ai_usage (created_at);
+create index if not exists admin_audit_created_idx on public.admin_audit (created_at);
+
+create table if not exists public.rate_events (
+  user_id  uuid not null references auth.users(id) on delete cascade,
+  action   text not null,
+  at       timestamptz not null default now()
+);
+create index if not exists rate_events_lookup on public.rate_events (user_id, action, at);
+create index if not exists rate_events_at_idx on public.rate_events (at);
+alter table public.rate_events enable row level security; -- no policies: service role only
+
+-- One atomic check-and-record per (user, action) across every Edge Function instance: the advisory lock
+-- serialises concurrent calls for the same key inside one transaction, so N parallel requests cannot all
+-- see "under the limit".
+create or replace function public.bid_rate_hit(p_user uuid, p_action text, p_limit integer, p_window_seconds integer)
+returns boolean
+language plpgsql security definer set search_path = public as $$
+declare n integer;
+begin
+  perform pg_advisory_xact_lock(hashtextextended(p_user::text || ':' || p_action, 0));
+  select count(*) into n from public.rate_events
+    where user_id = p_user and action = p_action and at > now() - make_interval(secs => p_window_seconds);
+  if n >= p_limit then return false; end if;
+  insert into public.rate_events (user_id, action) values (p_user, p_action);
+  return true;
+end $$;
+revoke all on function public.bid_rate_hit(uuid, text, integer, integer) from public, anon, authenticated;
+grant execute on function public.bid_rate_hit(uuid, text, integer, integer) to service_role;
+
+-- Deletes at most p_batch rows per table per call; the scheduler calls it every run, so a backlog drains
+-- over a few runs without a long lock. Returns what was removed.
+create or replace function public.bid_prune(p_batch integer default 5000)
+returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare probes integer; incidents integer; beats integer; rates integer; usage integer; audit integer;
+begin
+  delete from public.monitor_probes where ctid in (select ctid from public.monitor_probes where at < now() - interval '90 days' limit p_batch);
+  get diagnostics probes = row_count;
+  delete from public.monitor_incidents where ctid in (select ctid from public.monitor_incidents where status = 'resolved' and resolved_at < now() - interval '90 days' limit p_batch);
+  get diagnostics incidents = row_count;
+  delete from public.monitor_heartbeat where ctid in (select ctid from public.monitor_heartbeat where at < now() - interval '7 days' limit p_batch);
+  get diagnostics beats = row_count;
+  delete from public.rate_events where ctid in (select ctid from public.rate_events where at < now() - interval '2 days' limit p_batch);
+  get diagnostics rates = row_count;
+  delete from public.ai_usage where ctid in (select ctid from public.ai_usage where created_at < now() - interval '13 months' limit p_batch);
+  get diagnostics usage = row_count;
+  delete from public.admin_audit where ctid in (select ctid from public.admin_audit where created_at < now() - interval '24 months' limit p_batch);
+  get diagnostics audit = row_count;
+  return jsonb_build_object('monitor_probes', probes, 'monitor_incidents', incidents, 'monitor_heartbeat', beats, 'rate_events', rates, 'ai_usage', usage, 'admin_audit', audit);
+end $$;
+revoke all on function public.bid_prune(integer) from public, anon, authenticated;
+grant execute on function public.bid_prune(integer) to service_role;

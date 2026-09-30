@@ -203,6 +203,32 @@ await t('monitoring (V11 RC): targets, probes and incidents are per tenant and r
   await rejects(() => asService((q) => q(`insert into public.monitor_targets (user_id, project_key, url, interval_min) values ($1, 'fast', 'https://x.example.com/', 1)`, [A])), /check constraint|interval_min/);
 });
 
+await t('WP03 retention: bid_prune removes old rows in bounded batches (over 1000), keeps open incidents and recent rows; clients cannot call it', async () => {
+  await asService((q) => q(`insert into public.monitor_probes (user_id, project_key, at, kind, ok) select $1, 'old', now() - interval '100 days', 'uptime', true from generate_series(1, 1500)`, [A]));
+  await asService((q) => q(`insert into public.monitor_probes (user_id, project_key, at, kind, ok) select $1, 'new', now() - interval '1 day', 'uptime', true from generate_series(1, 10)`, [A]));
+  await asService((q) => q(`insert into public.monitor_incidents (user_id, project_key, kind, status, opened_at, resolved_at) values ($1, 'gone', 'down', 'resolved', now() - interval '200 days', now() - interval '120 days')`, [A]));
+  await asService((q) => q(`insert into public.monitor_incidents (user_id, project_key, kind, status, opened_at) values ($1, 'still', 'ssl', 'open', now() - interval '200 days')`, [A]));
+  await asService((q) => q(`insert into public.monitor_heartbeat (at, checked) select now() - interval '10 days', 1 from generate_series(1, 5)`));
+  const first = (await asService((q) => q('select public.bid_prune(1000) as r'))).rows[0].r;
+  assert(first.monitor_probes === 1000 && first.monitor_incidents === 1 && first.monitor_heartbeat === 5, 'first batch: ' + JSON.stringify(first));
+  const second = (await asService((q) => q('select public.bid_prune(1000) as r'))).rows[0].r;
+  assert(second.monitor_probes === 500, 'the rest drains on the next run: ' + JSON.stringify(second));
+  const left = (await asService((q) => q(`select project_key, count(*)::int as n from public.monitor_probes where project_key in ('old','new') group by project_key`))).rows;
+  assert(left.length === 1 && left[0].project_key === 'new' && left[0].n === 10, 'recent probes kept: ' + JSON.stringify(left));
+  assert((await asService((q) => q(`select count(*)::int as n from public.monitor_incidents where project_key = 'still' and status = 'open'`))).rows[0].n === 1, 'an open incident is never pruned');
+  await rejects(() => asA((q) => q('select public.bid_prune(10)')), /permission denied/);
+  await rejects(() => asAnon((q) => q('select public.bid_prune(10)')), /permission denied/);
+});
+
+await t('WP03 rate limit: bid_rate_hit is atomic per user and action, separate per tenant; clients cannot call it or read rate_events', async () => {
+  const hit = (uid, action) => asService((q) => q('select public.bid_rate_hit($1, $2, 3, 60) as ok', [uid, action])).then((r) => r.rows[0].ok);
+  const a = [await hit(A, 'billing.checkout'), await hit(A, 'billing.checkout'), await hit(A, 'billing.checkout'), await hit(A, 'billing.checkout')];
+  assert(a.join() === 'true,true,true,false', 'fourth call in the window is refused: ' + a.join());
+  assert((await hit(B, 'billing.checkout')) === true && (await hit(A, 'monitor.test')) === true, 'other tenant / other action unaffected');
+  await rejects(() => asA((q) => q(`select public.bid_rate_hit($1, 'x', 100, 60)`, [A])), /permission denied/);
+  assert((await asA((q) => q('select * from public.rate_events'))).rows.length === 0, 'clients see no rate events');
+});
+
 await t('account deletion cascades: removing the auth user removes every row of that tenant and nothing of the other', async () => {
   await db.query(`delete from auth.users where id = $1`, [B]); // the auth service (owner), not the API role
   for (const table of ['profiles', 'bid_projects', 'credit_ledger', 'subscriptions', 'monitor_targets']) {

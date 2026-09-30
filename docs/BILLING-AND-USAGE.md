@@ -122,6 +122,29 @@ last 50 operations (with status: done / in flight / abandoned / truncated / refu
 ledger rows; buttons: Buy credits, Upgrade, Manage subscription (portal), Sync with provider, Refresh. The
 assistant shows the estimate before a request and the real cost after; a compact pill shows available tokens.
 
+## 7a. Retention and rate limits (WP03)
+
+Retention runs inside the database: `bid_prune(p_batch)` (schema.sql) deletes at most `p_batch` rows per
+table per call and is called by every scheduler run (`monitor` → `run`), so a backlog drains over a few
+runs without a long lock; `tests/rls` proves it on real Postgres with 1500 rows.
+
+| Data | Kept | Why |
+|---|---|---|
+| `monitor_probes` | 90 days | evidence behind incidents |
+| `monitor_incidents` (resolved) | 90 days after resolution; open ones always | history in the app |
+| `monitor_heartbeat` | 7 days | only "is the scheduler alive" is read |
+| `rate_events` | 2 days | limits look back at most one hour |
+| `ai_usage` | 13 months | the usage page shows the period; a year back for disputes |
+| `admin_audit` | 24 months | who changed an account |
+| `credit_ledger`, `subscriptions`, `billing_events` | while the account exists | money; deleted with the account (cascade / explicit) — Paddle as Merchant of Record keeps the tax records |
+| `trial_claims` | always (hash only) | one trial per address |
+
+Rate limits: `bid_rate_hit(user, action, limit, window)` counts and records under an advisory lock, so every
+Edge Function instance shares the same numbers (`_shared/ratelimit.ts`): billing checkout / portal / sync 5
+per minute, monitor test 10 per minute and register 120 per hour, account export 3 per hour, admin writes
+60 per minute. A database without the function lets calls through and logs it; any other database error
+refuses the call (`rate_limit_unavailable`). `ai-fix` keeps its per-plan limits (`settings.ai.rate`).
+
 ## 8. Not built (honest list)
 
 - Pack expiry after 12 months is stated policy without an enforcing job (`expiry` rows for packs are never

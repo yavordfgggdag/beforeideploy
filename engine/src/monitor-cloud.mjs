@@ -7,7 +7,7 @@
 //   bid monitor maintenance add --from ISO --to ISO [--project P] | list | clear
 import dns from 'node:dns/promises';
 import net from 'node:net';
-import { EngineError, fetchT } from './util.mjs';
+import { EngineError, fetchT, throwIfRateLimited } from './util.mjs';
 import { msg, t } from './i18n.mjs';
 import { testEndpoint } from './isolation.mjs';
 import { cloudConfig, currentSession } from './account.mjs';
@@ -43,6 +43,7 @@ async function monitorCall(action, params = {}, { timeoutMs = 8000 } = {}) {
   }
   const data = await res.json().catch(() => null);
   if (res.status === 404 && data?.code === 'NOT_FOUND') throw new EngineError(msg('cloud.functionMissing', { name: 'monitor' }), 'cloud_function_missing');
+  throwIfRateLimited(res, data);
   if (res.status === 401) throw new EngineError(msg('account.notLoggedIn'), 'not_logged_in', 5);
   if (!res.ok) {
     const key = CODE_KEYS[data?.code];

@@ -29,6 +29,16 @@
 "admin.auditEmpty" = "Още няма действия.";
 "admin.credits" = "Кредити";
 "admin.creditsBalance" = "AI кредити";
+"admin.diag.applySchema" = "приложи supabase/schema.sql";
+"admin.diag.missing" = "липсва";
+"admin.diag.never" = "никога не е пускан";
+"admin.diag.present" = "налична";
+"admin.diag.prices" = "Paddle price ids";
+"admin.diag.ready" = "Всичко нужно на облака е настроено.";
+"admin.diag.scheduler" = "Планировчик на наблюдението";
+"admin.diag.set" = "зададено";
+"admin.diag.title" = "Готовност на облака";
+"admin.diag.todo" = "Остават %@ неща за настройване";
 "admin.find" = "Търси";
 "admin.grant" = "Дай кредити";
 "admin.grantHint" = "Отрицателно число взима кредити. Записва се в credit_ledger като admin_grant.";

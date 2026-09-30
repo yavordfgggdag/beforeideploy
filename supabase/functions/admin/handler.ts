@@ -2,6 +2,16 @@
 // Every request carries the caller's user JWT; we check profiles.role = 'admin', then act with the
 // service role and write a row to admin_audit. The engine calls it via `bid admin <action>`.
 import { callerOf, type DbClient, type Deps, internalError, json, readJson } from "../_shared/db.ts";
+import { rateLimited } from "../_shared/ratelimit.ts";
+
+/** Project secrets the functions need. Diagnostics reports only yes / no — never a value or a prefix. */
+export const REQUIRED_SECRETS = ["ANTHROPIC_API_KEY", "PADDLE_API_KEY", "PADDLE_WEBHOOK_SECRET", "PADDLE_ENV", "MONITOR_CRON_SECRET"];
+
+export interface AdminDeps extends Deps {
+  /** Whether a project secret is set (index.ts reads Deno.env); tests pass a map. */
+  hasSecret?: (name: string) => boolean;
+  now?: () => Date;
+}
 
 /** Settings an admin may change (audit C14); anything else is a typo or an attempt to plant data. */
 export const SETTINGS_KEYS = [
@@ -41,7 +51,7 @@ async function userRow(db: DbClient, userId: string) {
   return { ...data, balance: await balanceOf(db, userId) };
 }
 
-export function createAdminHandler(deps: Deps): (req: Request) => Promise<Response> {
+export function createAdminHandler(deps: AdminDeps): (req: Request) => Promise<Response> {
   return async (req) => {
     if (req.method !== "POST") return json(405, { error: "POST only" });
     const body = await readJson<AdminBody>(req);
@@ -58,6 +68,11 @@ export function createAdminHandler(deps: Deps): (req: Request) => Promise<Respon
     const db = deps.service();
     const audit = (target: string | null, payload: unknown) =>
       db.from("admin_audit").insert({ admin_id: me.id, action: body.action, target, payload });
+    // writes are limited per admin too: a stolen admin session cannot rewrite every account in a loop (WP03)
+    if (!["list_users", "get_user", "get_usage", "get_settings", "audit_log", "diagnostics"].includes(body.action)) {
+      const limited = await rateLimited(db, me.id, "admin.write");
+      if (limited) return limited;
+    }
 
     try {
       switch (body.action) {
@@ -160,6 +175,42 @@ export function createAdminHandler(deps: Deps): (req: Request) => Promise<Respon
           if (upErr) throw upErr;
           await audit(data.user.id, { email, role });
           return json(200, { user: await userRow(db, data.user.id) });
+        }
+
+        case "diagnostics": {
+          // what the owner must still configure, without exposing any secret or the infrastructure (WP03)
+          const now = deps.now?.() ?? new Date();
+          const secrets = Object.fromEntries(REQUIRED_SECRETS.map((n) => [n, !!deps.hasSecret?.(n)]));
+          const { data: beat } = await db.from("monitor_heartbeat").select("at").order("at", { ascending: false }).limit(1).maybeSingle();
+          const lastBeat = beat?.at ? String(beat.at) : null;
+          const ageMin = lastBeat ? Math.round((now.getTime() - Date.parse(lastBeat)) / 60000) : null;
+          const { data: settingsRows } = await db.from("settings").select("key,value");
+          const settings = Object.fromEntries((settingsRows ?? []).map((r) => [r.key, r.value]));
+          const catalog = (settings["billing.catalog"] ?? {}) as { plans?: Record<string, { paddlePriceId?: string | null; yearly?: { paddlePriceId?: string | null } }>; packs?: { id?: string; paddlePriceId?: string | null }[] };
+          const missingPrices: string[] = [];
+          for (const [id, plan] of Object.entries(catalog.plans ?? {})) {
+            if (!plan?.paddlePriceId) missingPrices.push(`${id}.monthly`);
+            if (plan?.yearly && !plan.yearly.paddlePriceId) missingPrices.push(`${id}.yearly`);
+          }
+          for (const pack of catalog.packs ?? []) if (!pack?.paddlePriceId) missingPrices.push(`pack.${pack?.id ?? "?"}`);
+          const links = Object.fromEntries(["legal.privacy", "legal.terms", "legal.refund", "support.email", "release.url", "help.url"].map((k) => [k, !!settings[k]]));
+          const fnProbe = async (fn: string, args: Record<string, unknown>) => {
+            const { error } = await db.rpc(fn, args);
+            return !error || !(error.code === "PGRST202" || error.code === "42883");
+          };
+          const functions = {
+            bid_rate_hit: await fnProbe("bid_rate_hit", { p_user: me.id, p_action: "admin.diagnostics", p_limit: 1000, p_window_seconds: 1 }),
+            bid_prune: await fnProbe("bid_prune", { p_batch: 0 }),
+          };
+          const scheduler = { lastRunAt: lastBeat, ageMinutes: ageMin, state: lastBeat == null ? "never" : ageMin != null && ageMin > 15 ? "stale" : "ok" };
+          const todo = [
+            ...Object.entries(secrets).filter(([, v]) => !v).map(([k]) => `secret:${k}`),
+            ...(scheduler.state === "ok" ? [] : ["scheduler"]),
+            ...missingPrices.map((p) => `price:${p}`),
+            ...Object.entries(links).filter(([k, v]) => !v && k.startsWith("legal.")).map(([k]) => `setting:${k}`),
+            ...Object.entries(functions).filter(([, v]) => !v).map(([k]) => `schema:${k}`),
+          ];
+          return json(200, { secrets, scheduler, missingPrices, links, functions, todo, ready: todo.length === 0 });
         }
 
         case "audit_log": {

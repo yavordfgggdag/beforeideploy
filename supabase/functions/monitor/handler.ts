@@ -19,6 +19,7 @@
 // A failure becomes an incident only after `confirmFailures` consecutive failed runs; one open incident per
 // (target, kind); recovery closes it. Nothing here scans a project or touches a deployment.
 import { callerOf, type Deps, internalError, json, must, readJson, type Row } from "../_shared/db.ts";
+import { rateLimited } from "../_shared/ratelimit.ts";
 import { type ProbeOptions, type ProbeResult, probe as netProbe, validateTargetUrl } from "../_shared/netguard.ts";
 
 export interface MonitorDeps extends Deps {
@@ -78,6 +79,11 @@ export function createMonitorHandler(deps: MonitorDeps): (req: Request) => Promi
       if (!who) return json(401, { error: "no session" });
       const user = who.user;
       const db = deps.service();
+      // an on-demand probe and a registration cost outbound requests: limited per user (WP03)
+      if (body.action === "test" || body.action === "register") {
+        const limited = await rateLimited(db, user.id, `monitor.${body.action}`);
+        if (limited) return limited;
+      }
 
       switch (body.action) {
         case "register": {
@@ -230,15 +236,13 @@ async function runDue(deps: MonitorDeps, probe: NonNullable<MonitorDeps["probe"]
       events.push(...await incidentStep(db, target, "page", !!bad, !bad, bad ?? "", "warning", at));
     }
   }
-  // retention: probes and resolved incidents older than the window
-  const cutoff = new Date(t - LIMITS.retentionDays * 86400_000).toISOString();
-  const { data: oldProbes } = await db.from("monitor_probes").select("id,at");
-  for (const p of (oldProbes ?? []).filter((p) => String(p.at) < cutoff)) await db.from("monitor_probes").delete().eq("id", p.id);
-  const { data: oldInc } = await db.from("monitor_incidents").select("id,status,resolved_at").eq("status", "resolved");
-  for (const i of (oldInc ?? []).filter((i) => i.resolved_at && String(i.resolved_at) < cutoff)) await db.from("monitor_incidents").delete().eq("id", i.id);
+  // retention (WP03): one bounded, indexed delete per table inside the database (bid_prune, schema.sql) — the
+  // old "select everything, delete one by one" stopped at PostgREST's 1000 rows and never pruned the heartbeat
+  const { data: pruned, error: pruneError } = await db.rpc("bid_prune", { p_batch: 5000 });
+  if (pruneError) console.error(`monitor: retention skipped — ${pruneError.message}`);
 
   must(await db.from("monitor_heartbeat").insert({ at: now.toISOString(), checked, due: due.length, targets: (all ?? []).length }));
-  return { at: now.toISOString(), checked, due: due.length, targets: (all ?? []).length, events };
+  return { at: now.toISOString(), checked, due: due.length, targets: (all ?? []).length, events, pruned: pruned ?? null };
 }
 
 /** One incident per (target, kind): open when confirmed, count while it lasts, resolve on recovery. */

@@ -121,3 +121,18 @@ Deno.test("account: errors do not leak database details", async () => {
   assert.equal(res.status, 500);
   assert.deepEqual(await res.json(), { error: "internal error", code: "internal" });
 });
+
+Deno.test("account (WP03): export pages past 1000 rows and includes the monitoring tables", async () => {
+  const { db, handle } = world();
+  for (let i = 0; i < 2500; i++) db.rows("credit_ledger").push({ user_id: ME.id, delta: -1, bucket: "plan", reason: "ai_fix", created_at: `2026-09-${String(1 + (i % 28)).padStart(2, "0")}T00:00:00Z` });
+  db.tables.monitor_targets = [{ user_id: ME.id, project_key: "p1", url: "https://my.example.com/" }, { user_id: OTHER, project_key: "p2", url: "https://their.example.com/" }];
+  db.tables.monitor_probes = [{ user_id: ME.id, project_key: "p1", at: "2026-09-30T00:00:00Z", kind: "uptime", ok: true, ip: "93.184.216.34" }, { user_id: OTHER, project_key: "p2", at: "2026-09-30T00:00:00Z", kind: "uptime", ok: true }];
+  db.tables.monitor_incidents = [{ user_id: ME.id, project_key: "p1", kind: "down", status: "resolved", opened_at: "2026-09-29T00:00:00Z" }];
+  const j = await (await handle(post("account", { action: "export" }))).json();
+  assert.equal(j.credit_ledger.length, 2501, "every ledger row, not the first 1000");
+  assert.equal(j.monitor_targets.length, 1);
+  assert.equal(j.monitor_probes.length, 1);
+  assert.equal(j.monitor_probes[0].ip, "93.184.216.34", "the probe log is exported as stored");
+  assert.equal(j.monitor_incidents.length, 1);
+  assert.ok(j.monitor_targets.every((r: { user_id: string }) => r.user_id === ME.id), "only the caller's rows");
+});

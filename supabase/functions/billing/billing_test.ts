@@ -442,3 +442,25 @@ Deno.test("billing: sync recovers a missed webhook from the provider's current s
   const t = world({ plan: "high", subs: [{ id: "t1", user_id: USER.id, provider: "trial", tier: "high", status: "trial", period_end: "2026-10-20T00:00:00Z" }] });
   assert.deepEqual((await (await t.handle(post("billing", { action: "sync" }))).json()).synced, []);
 });
+
+Deno.test("billing (WP03): checkout is rate limited per user in the database; a missing function lets it through, a database error refuses", async () => {
+  const { db, handle, calls } = world();
+  const statuses: number[] = [];
+  for (let i = 0; i < 6; i++) statuses.push((await handle(post("billing", { action: "checkout", plan: "high" }))).status);
+  assert.deepEqual(statuses, [200, 200, 200, 200, 200, 429]);
+  assert.equal(calls.filter((c) => c.url.endsWith("/transactions")).length, 5, "the refused call never reached Paddle");
+  const body = await (await handle(post("billing", { action: "portal" }))).json();
+  assert.notEqual(body.code, "rate_limited", "other actions have their own counters");
+  // schema not updated yet: the limiter is skipped (logged), not the checkout
+  const w2 = world();
+  w2.db.missingFunctions.push("bid_rate_hit");
+  assert.equal((await w2.handle(post("billing", { action: "checkout", plan: "high" }))).status, 200);
+  // a real database error: refuse rather than skip the limit
+  const w3 = world();
+  w3.db.rpcErrors.bid_rate_hit = { message: "connection reset", code: "08006" };
+  const r3 = await w3.handle(post("billing", { action: "checkout", plan: "high" }));
+  assert.equal(r3.status, 503);
+  assert.equal((await r3.json()).code, "rate_limit_unavailable");
+  assert.equal(w3.calls.length, 0);
+  void db;
+});

@@ -32,7 +32,7 @@ Each function is `index.ts` (reads env, builds the real supabase-js clients, `De
 fake Anthropic stream — no network, no secrets:
 
 ```bash
-deno test supabase/functions                     # 49 tests
+deno test --allow-env --allow-net supabase/functions   # 86 tests (2026-09-30); RLS + SQL functions: cd tests/rls && node rls.mjs (10)
 for f in supabase/functions/*/index.ts; do deno check "$f"; done
 ```
 

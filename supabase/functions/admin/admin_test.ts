@@ -185,3 +185,30 @@ Deno.test("admin: invite creates the user with the role, audits, refuses duplica
   assert.equal((await handle(post("admin", { action: "invite", email: "nope" }))).status, 400);
   assert.equal((await handle(post("admin", { action: "invite", email: "a@b.co", role: "king" }))).status, 400);
 });
+
+Deno.test("admin (WP03): diagnostics says what is missing with yes/no only — never a secret value", async () => {
+  const { db } = world();
+  db.tables.settings = [{ key: "billing.catalog", value: { plans: { flash: { price: 9.99, paddlePriceId: "pri_f", yearly: { price: 99.9, paddlePriceId: null } }, high: { price: 29.99, paddlePriceId: null } }, packs: [{ id: "pack-100k", paddlePriceId: null }] } }, { key: "legal.privacy", value: "https://x/privacy" }];
+  db.tables.monitor_heartbeat = [{ at: "2026-10-01T09:55:00Z", checked: 1 }];
+  const secrets: Record<string, string> = { ANTHROPIC_API_KEY: "sk-ant-real-looking", MONITOR_CRON_SECRET: "cron" };
+  const handle = createAdminHandler({ ...fakeDeps(db), hasSecret: (n) => !!secrets[n], now: () => new Date("2026-10-01T10:00:00Z") });
+  const res = await handle(post("admin", { action: "diagnostics" }));
+  assert.equal(res.status, 200);
+  const text = await res.text();
+  assert.ok(!text.includes("sk-ant") && !text.includes("cron\""), "no secret value in the answer");
+  const j = JSON.parse(text);
+  assert.deepEqual(j.secrets, { ANTHROPIC_API_KEY: true, PADDLE_API_KEY: false, PADDLE_WEBHOOK_SECRET: false, PADDLE_ENV: false, MONITOR_CRON_SECRET: true });
+  assert.equal(j.scheduler.state, "ok");
+  assert.deepEqual(j.missingPrices.sort(), ["flash.yearly", "high.monthly", "pack.pack-100k"]);
+  assert.equal(j.links["legal.privacy"], true);
+  assert.equal(j.links["legal.terms"], false);
+  assert.deepEqual(j.functions, { bid_rate_hit: true, bid_prune: true });
+  assert.equal(j.ready, false);
+  assert.ok(j.todo.includes("secret:PADDLE_API_KEY") && j.todo.includes("price:high.monthly") && j.todo.includes("setting:legal.terms"));
+  db.missingFunctions.push("bid_prune");
+  const j2 = await (await handle(post("admin", { action: "diagnostics" }))).json();
+  assert.equal(j2.functions.bid_prune, false);
+  assert.ok(j2.todo.includes("schema:bid_prune"));
+  const normal = createAdminHandler({ ...fakeDeps(world(NORMAL.id).db), hasSecret: () => true });
+  assert.equal((await normal(post("admin", { action: "diagnostics" }))).status, 403, "admins only");
+});
