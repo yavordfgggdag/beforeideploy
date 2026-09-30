@@ -95,9 +95,11 @@ struct BeforeIDeployApp: App {
                     .disabled(projectCommandsOff)
                 Button(L("common.history")) { model.sheet = .history }
                     .keyboardShortcut("y")
+                    .disabled(projectCommandsOff)
                 Divider()
                 Button(L("common.refresh")) { Task { await model.refreshStatus() } }
                     .keyboardShortcut("r", modifiers: [.command, .shift])
+                    .disabled(projectCommandsOff)
             }
             CommandMenu(L("menu.view")) {
                 Button(L("nav.missionControl")) { model.screen = .overview }
@@ -108,6 +110,18 @@ struct BeforeIDeployApp: App {
                     .keyboardShortcut("3")
                 Button(L("common.setup")) { model.screen = .setup }
                     .keyboardShortcut("4")
+                // every screen of the sidebar is reachable from the keyboard (WP08, audit A9)
+                Button(L("assistant.nav")) { model.screen = .assistant }
+                    .keyboardShortcut("5")
+                Button(L("usage.nav")) { model.screen = .usage }
+                    .keyboardShortcut("6")
+                    .disabled(model.account?.loggedIn != true)
+                Button(L("common.account")) { model.screen = .account }
+                    .keyboardShortcut("7")
+                    .disabled(model.account?.loggedIn != true)
+                Button(L("admin.title")) { model.screen = .admin }
+                    .keyboardShortcut("8")
+                    .disabled(model.account?.isAdmin != true)
                 Divider()
                 Button(L("menu.nextProject")) { model.selectAdjacent(1) }
                     .keyboardShortcut("]")

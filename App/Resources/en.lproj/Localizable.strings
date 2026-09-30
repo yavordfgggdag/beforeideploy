@@ -525,6 +525,13 @@
 "engine.timedOut" = "The engine did not answer within %@ s and was stopped. Nothing else was changed.";
 "engine.unknownError" = "Unknown error";
 
+"feedback.contains" = "The report contains:";
+"feedback.mailBody" = "What happened:\n\nWhat I expected:\n\n—\nVersion %@ · macOS %@\nReport (please attach): %@";
+"feedback.mailSubject" = "Before I Deploy %@ — feedback";
+"feedback.redacted" = "Keys, passwords, tokens and e-mail addresses are removed from every file; no source code is included. Nothing is sent until you send the e-mail yourself.";
+"feedback.send" = "Send feedback…";
+"feedback.writeMail" = "Write the e-mail";
+
 "firstSteps.account" = "Sign in — or stay local";
 "firstSteps.accountHint" = "An account adds AI credits, sync and cloud monitoring. Without one, checks and deploys still work on this Mac.";
 "firstSteps.add" = "Add a project";
@@ -857,22 +864,6 @@
 "portfolio.noMatch" = "No sites match the filters";
 "portfolio.problems" = "Problems";
 "portfolio.search" = "Search site, client or host";
-
-"production.branch" = "Branch";
-"production.costDefault" = "~15 credits (estimate)";
-"production.costEstimate" = "~%@ %@ (estimate)";
-"production.costs" = "Costs";
-"production.deployButton" = "Deploy to Production";
-"production.explain" = "Before uploading, a full check runs (Git → Secrets → Lint → Typecheck → Build). On an error the deploy stops. Production may use build minutes/credits from your Netlify plan.";
-"production.freshBuild" = "%@/ after a fresh build";
-"production.price" = "Price: %@";
-"production.site" = "Site";
-"production.title" = "This will update the LIVE site of %@";
-"production.typeDeploy" = "To continue, type DEPLOY";
-"production.uncommitted" = "Uncommitted changes";
-"production.warnings.one" = "%@ warning from the last check";
-"production.warnings.other" = "%@ warnings from the last check";
-"production.whatUploads" = "What is uploaded";
 
 "pushover.keyNote" = "Both keys are verified with Pushover right away and stored in the macOS Keychain — never written to files. Incidents are sent with high priority, recoveries with normal priority; quiet hours and maintenance windows still apply.";
 "pushover.openBuild" = "Create an application";

@@ -50,86 +50,6 @@ struct SheetScaffold<Content: View, Actions: View>: View {
 
 // MARK: - Production
 
-struct ProductionSheet: View {
-    @EnvironmentObject var model: AppModel
-    @Environment(\.dismiss) private var dismiss
-    @Local private var typed = ""
-
-    var costText: String {
-        if let p = model.costs?.prices.items["netlify:production"] {
-            return p.amount == 0 ? L("common.free") : L("production.costEstimate", CostsView.amount(p.amount), CostsView.unitName(p.unit))
-        }
-        return L("production.costDefault")
-    }
-
-    var body: some View {
-        let s = model.status
-        let live = s?.project.netlify?.liveUrl ?? s?.lastProd?.url
-        let warnings = s?.check?.steps.filter { $0.status == "warn" } ?? []
-        SheetScaffold(icon: "paperplane.fill", iconTint: Theme.blocked, title: L("run.productionDeploy"),
-                      subtitle: L("production.title", s?.project.name ?? "")) {
-            VStack(alignment: .leading, spacing: 14) {
-                VStack(alignment: .leading, spacing: 8) {
-                    InfoRow(label: L("production.site"), value: live.map(Fmt.host) ?? s?.project.netlify?.siteName ?? "—")
-                    InfoRow(label: L("production.whatUploads"), value: s?.detect.ssr == true || s?.detect.hasFunctions == true
-                            ? "Netlify build (framework / functions)"
-                            : L("production.freshBuild", s?.detect.publishDir ?? "dist"))
-                    InfoRow(label: L("production.branch"), value: s?.git.branch ?? "—")
-                    InfoRow(label: L("production.uncommitted"), value: "\(s?.git.changedCount ?? 0)",
-                            tint: (s?.git.changedCount ?? 0) > 0 ? Theme.warn : Theme.text)
-                }
-                .padding(14)
-                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.bg))
-
-                HStack(spacing: 10) {
-                    Image(systemName: "creditcard.fill").foregroundColor(Theme.accent)
-                    Text(L("production.price", costText)).font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.text)
-                    Spacer()
-                    Button(L("production.costs")) { dismiss(); model.screen = .costs }.bidButton(.ghost, compact: true)
-                }
-                .padding(12)
-                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.accentSoft))
-
-                if !warnings.isEmpty {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Label(L("production.warnings", count: warnings.count), systemImage: "exclamationmark.triangle.fill")
-                            .font(.system(size: 12.5, weight: .semibold))
-                            .foregroundColor(Theme.warn)
-                        ForEach(warnings) { w in
-                            Text("• \(w.label ?? w.id): \(w.summary ?? "")")
-                                .font(.system(size: 12)).foregroundColor(Theme.secondary)
-                        }
-                    }
-                }
-
-                Text(L("production.explain"))
-                    .font(.system(size: 12))
-                    .foregroundColor(Theme.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(L("production.typeDeploy"))
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(Theme.text)
-                    BIDTextField(placeholder: "DEPLOY", text: $typed, mono: true)
-                }
-            }
-        } actions: {
-            Button(L("common.cancel")) { dismiss() }
-                .bidButton(.secondary)
-                .keyboardShortcut(.cancelAction)
-            Button {
-                dismiss()
-                model.productionDeploy(confirm: typed)
-            } label: {
-                Label(L("production.deployButton"), systemImage: "paperplane.fill")
-            }
-            .bidButton(.danger)
-            .disabled(typed != "DEPLOY")
-        }
-    }
-}
-
 struct InfoRow: View {
     let label: String
     let value: String
@@ -201,7 +121,7 @@ struct NetlifySetupSheet: View {
                             VStack(spacing: 4) {
                                 ForEach(filtered) { site in
                                     SiteRow(site: site, selected: chosenSite == site.id)
-                                        .onTapGesture { chosenSite = site.id }
+                                        .tapAction { chosenSite = site.id }
                                 }
                                 if filtered.isEmpty {
                                     Text(L("netlifySetup.noSites")).foregroundColor(Theme.tertiary).font(.system(size: 12)).padding(20)
@@ -370,8 +290,7 @@ struct CommitSheet: View {
                                 Spacer()
                             }
                             .padding(.horizontal, 10).padding(.vertical, 5)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
+                            .tapAction {
                                 if on { excluded.insert(f.path) } else { excluded.remove(f.path) }
                             }
                         }
@@ -574,8 +493,26 @@ struct SettingsSheet: View {
                     HStack {
                         Button(L("update.checkNow")) { Task { await model.checkForUpdates(force: true, announce: true) } }.bidButton(.secondary, compact: true)
                         Button(L("report.save")) { model.saveReport() }.bidButton(.secondary, compact: true).disabled(model.busy.contains("report"))
+                        Button { model.prepareFeedback() } label: { Label(L("feedback.send"), systemImage: "envelope") }
+                            .bidButton(.secondary, compact: true).disabled(model.busy.contains("report"))
                     }
                     Text(L("report.hint")).font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                    if let r = model.feedbackReport {
+                        // what the report holds, before the user decides to send it (WP08, audit D6)
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(L("feedback.contains")).font(.system(size: 11.5, weight: .semibold)).foregroundColor(Theme.text)
+                            ForEach(r.files, id: \.self) { f in
+                                Label(f, systemImage: "doc.text").font(.system(size: 11, design: .monospaced)).foregroundColor(Theme.secondary)
+                            }
+                            Text(L("feedback.redacted")).font(.system(size: 11)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
+                            HStack {
+                                Button(L("feedback.writeMail")) { model.writeFeedbackMail(r) }.bidButton(.primary, compact: true)
+                                Button(L("common.cancel")) { model.feedbackReport = nil }.bidButton(.ghost, compact: true)
+                            }
+                        }
+                        .padding(10)
+                        .background(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).fill(Theme.bg))
+                    }
                     LegalLinks()
                 }
                 if model.account?.loggedIn == true {

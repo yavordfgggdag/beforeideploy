@@ -62,11 +62,32 @@ function saveOp(op) {
   ensureDir(OPS_DIR());
   op.updatedAt = nowISO();
   writeJSON(opFile(op.id), op);
+  if (FINAL.has(op.state)) pruneOps(op.project, op.id);
   setState(op.project, { release: { ...(getState(op.project).release || {}), lastOp: op.id, ...(FINAL.has(op.state) ? { currentOp: null } : { currentOp: op.id }) } });
   return op;
 }
 
 const FINAL = new Set(['succeeded', 'failed', 'cancelled', 'stale', 'verify_failed', 'interrupted']);
+
+/** Finished release records: the newest 50 per project and none older than 180 days (WP02, audit E11). */
+function pruneOps(key, keepId) {
+  let mine = [];
+  try {
+    mine = fs.readdirSync(OPS_DIR()).filter((f) => f.endsWith('.json')).map((f) => ({ f, o: readJSON(path.join(OPS_DIR(), f), null) })).filter((x) => x.o && x.o.project === key && FINAL.has(x.o.state));
+  } catch {
+    return;
+  }
+  mine.sort((a, b) => String(b.o.createdAt).localeCompare(String(a.o.createdAt)));
+  const cutoff = Date.now() - 180 * 86400000;
+  mine.forEach((x, i) => {
+    if (x.o.id === keepId) return;
+    if (i >= 50 || Date.parse(x.o.createdAt) < cutoff) {
+      try {
+        fs.unlinkSync(path.join(OPS_DIR(), x.f));
+      } catch {}
+    }
+  });
+}
 
 function logLine(op, text) {
   op.log.push(`${nowISO()} ${text}`);

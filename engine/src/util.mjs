@@ -50,6 +50,45 @@ export function throwIfRateLimited(res, data) {
   if (res.status === 503 && data?.code === 'rate_limit_unavailable') throw new EngineError(msg('cloud.rateLimitUnavailable'), 'rate_limited');
 }
 
+/**
+ * Appends one line and keeps the file bounded (WP02, audit E11): past maxBytes only the last keepLines lines
+ * stay. Append-only logs (costs ledger, assistant history) must not grow for years.
+ */
+export function appendBounded(file, line, { maxBytes = 2 * 1024 * 1024, keepLines = 10000, mode } = {}) {
+  fs.appendFileSync(file, line.endsWith('\n') ? line : line + '\n', mode ? { mode } : undefined);
+  try {
+    if (fs.statSync(file).size > maxBytes) {
+      const lines = fs.readFileSync(file, 'utf8').trim().split('\n');
+      fs.writeFileSync(file, lines.slice(-keepLines).join('\n') + '\n', mode ? { mode } : undefined);
+    }
+  } catch {}
+}
+
+/** Removes files in `dir` matching `re`: all but the newest `keep`, and any older than `maxAgeDays`. */
+export function pruneFiles(dir, re, { keep = Infinity, maxAgeDays = Infinity } = {}) {
+  let list = [];
+  try {
+    list = fs.readdirSync(dir).filter((f) => re.test(f)).map((f) => {
+      const p = path.join(dir, f);
+      return { p, t: fs.statSync(p).mtimeMs };
+    });
+  } catch {
+    return 0;
+  }
+  list.sort((a, b) => b.t - a.t);
+  const cutoff = Date.now() - maxAgeDays * 86400000;
+  let n = 0;
+  list.forEach((e, i) => {
+    if (i >= keep || e.t < cutoff) {
+      try {
+        fs.rmSync(e.p, { recursive: true, force: true });
+        n++;
+      } catch {}
+    }
+  });
+  return n;
+}
+
 // ---------------------------------------------------------------- output
 
 export function emit(obj) {

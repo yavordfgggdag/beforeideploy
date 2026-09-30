@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { ev, sh, which, runStream, logDir, nowISO, exists, publishIncludes, EngineError } from './util.mjs';
+import { ev, sh, which, runStream, logDir, nowISO, exists, publishIncludes, EngineError, pruneFiles } from './util.mjs';
 import { scriptEnv, isolate, isolationLevel } from './isolation.mjs';
 import { classify } from './pathpolicy.mjs';
 import { detect, pmRunArgs } from './detect.mjs';
@@ -404,6 +404,9 @@ export async function artifactHash(dir, publishDir, { manifestDir = null, asRoot
       const f = path.join(manifestDir, `artifact-${hash.slice(0, 16)}.json`);
       fs.writeFileSync(f, JSON.stringify({ hash, algo: 'sha256', dir: publishDir, at: nowISO(), files: manifest }, null, 1));
       out.manifestFile = f;
+      // manifests of old builds: the newest 20 are enough to explain any recent release (audit E11)
+      pruneFiles(manifestDir, /^artifact-[0-9a-f]{16}\.json$/, { keep: 20 });
+      pruneFiles(manifestDir, /^smoke-.*\.log$/, { maxAgeDays: 30 });
     } catch {}
   }
   return out;

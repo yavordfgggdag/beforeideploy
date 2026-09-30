@@ -434,3 +434,15 @@ enum Fmt {
         return h
     }
 }
+
+extension View {
+    /// A row or card that acts on click: also a button for VoiceOver and Full Keyboard Access (Space / VO-Space
+    /// run the same action), so no action is reachable by mouse only (WP08, audit A9).
+    func tapAction(_ action: @escaping () -> Void) -> some View {
+        self
+            .contentShape(Rectangle())
+            .onTapGesture(perform: action)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction(.default, action)
+    }
+}

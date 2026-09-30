@@ -41,7 +41,7 @@ struct DomainsView: View {
                             }
                             ForEach(s.domains) { d in
                                 DomainRow(domain: d, selected: selectedDomain == d.name)
-                                    .onTapGesture { select(d.name) }
+                                    .tapAction { select(d.name) }
                             }
                         }
                         .card()

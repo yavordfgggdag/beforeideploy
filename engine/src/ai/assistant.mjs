@@ -19,7 +19,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { APP_DIR, EngineError, ev, emit, logDir, nowISO, readJSON, writeJSON, sh } from '../util.mjs';
+import { APP_DIR, EngineError, ev, emit, logDir, nowISO, readJSON, writeJSON, sh, appendBounded } from '../util.mjs';
 import { t, msg, currentLang } from '../i18n.mjs';
 import { detect } from '../detect.mjs';
 import { getState, setState, addHistory, listHistory } from '../store.mjs';
@@ -76,7 +76,7 @@ const chatFile = (key) => path.join(CHAT_DIR(), `${key}.jsonl`);
 
 function appendHistory(key, entry) {
   fs.mkdirSync(CHAT_DIR(), { recursive: true, mode: 0o700 });
-  fs.appendFileSync(chatFile(key), JSON.stringify(entry) + '\n', { mode: 0o600 });
+  appendBounded(chatFile(key), JSON.stringify(entry), { maxBytes: 512 * 1024, keepLines: 1000, mode: 0o600 });
 }
 
 export function assistantHistory(project, { limit = 50 } = {}) {

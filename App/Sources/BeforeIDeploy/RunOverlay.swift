@@ -112,7 +112,7 @@ struct RunOverlay: View {
             VStack(spacing: 4) {
                 ForEach(Array(session.steps.enumerated()), id: \.element.id) { i, s in
                     RunStepRow(step: s, selected: session.selectedStep == s.id)
-                        .onTapGesture { session.selectedStep = s.id }
+                        .tapAction { session.selectedStep = s.id }
                         .entrance(i, offset: 8)
                 }
                 if session.steps.isEmpty {

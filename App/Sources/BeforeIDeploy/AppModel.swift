@@ -915,6 +915,32 @@ final class AppModel: ObservableObject, Feedback {
         }
     }
 
+    /// The report prepared for feedback: shown to the user file by file before anything leaves the Mac (WP08).
+    @Published var feedbackReport: ReportResult?
+
+    /// Feedback (WP08, audit D6): builds the redacted report and shows what is in it. Nothing is sent: the user
+    /// opens an e-mail to support and attaches the zip themselves.
+    func prepareFeedback() {
+        busy.insert("report")
+        Task {
+            defer { busy.remove("report") }
+            do { feedbackReport = try await engine.call(["report"], as: ReportResult.self) } catch { show(error) }
+        }
+    }
+
+    /// Opens the user's mail app with the version and the report's location; the user attaches and sends.
+    func writeFeedbackMail(_ r: ReportResult) {
+        let to = account?.links?.support.flatMap { $0.contains("@") ? $0 : nil } ?? ""
+        let version = (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "?"
+        let body = L("feedback.mailBody", version, ProcessInfo.processInfo.operatingSystemVersionString, r.path)
+        var c = URLComponents()
+        c.scheme = "mailto"
+        c.path = to
+        c.queryItems = [URLQueryItem(name: "subject", value: L("feedback.mailSubject", version)), URLQueryItem(name: "body", value: body)]
+        if let url = c.url { NSWorkspace.shared.open(url) }
+        revealInFinder(r.path)
+    }
+
     /// Bundles redacted logs + doctor into a zip and shows it in Finder (nothing is sent anywhere).
     func saveReport() {
         busy.insert("report")
@@ -1133,6 +1159,9 @@ final class AppModel: ObservableObject, Feedback {
         case "costs": screen = .costs
         case "setup": screen = .setup
         case "account": screen = .account
+        case "assistant": screen = .assistant
+        case "usage": screen = .usage
+        case "admin": screen = .admin
         case "plans": sheet = .plans
         case "settings": sheet = .settings
         case "palette": showPalette = true

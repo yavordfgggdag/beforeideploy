@@ -3,7 +3,7 @@
 // redacted tail of that log, the latest per-project logs and `doctor` into a zip for support.
 import fs from 'node:fs';
 import path from 'node:path';
-import { APP_DIR, CACHE_DIR, ensureDir, nowISO, sh, which } from './util.mjs';
+import { APP_DIR, CACHE_DIR, ensureDir, nowISO, sh, which, pruneFiles } from './util.mjs';
 import { redact } from './aifix.mjs';
 
 const LOG_DIR = () => ensureDir(path.join(APP_DIR, 'logs'));
@@ -76,6 +76,8 @@ const tailText = (file, n) => {
  */
 export function createReport({ doctor, version }) {
   const stamp = nowISO().replace(/[:.]/g, '-');
+  // earlier reports (folders and zips) are removed after 30 days (audit E11)
+  pruneFiles(CACHE_DIR, /^report-.*/, { maxAgeDays: 30 });
   const dir = ensureDir(path.join(CACHE_DIR, `report-${stamp}`));
   const files = [];
   const put = (name, text) => {

@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spaceshipConnected } from './spaceship.mjs';
-import { APP_DIR, readJSON, writeJSON, ensureDir, nowISO, which, runStream, extractJSON, HOME } from './util.mjs';
+import { APP_DIR, readJSON, writeJSON, ensureDir, nowISO, which, runStream, extractJSON, HOME, appendBounded } from './util.mjs';
 import { t, isDefaultText } from './i18n.mjs';
 
 const PRICES_FILE = () => path.join(APP_DIR, 'prices.json');
@@ -95,7 +95,7 @@ export function recordCost({ project, projectName, service, op, amount, unit, es
     ref,
   };
   ensureDir(APP_DIR);
-  fs.appendFileSync(LEDGER_FILE(), JSON.stringify(entry) + '\n');
+  appendBounded(LEDGER_FILE(), JSON.stringify(entry), { maxBytes: 4 * 1024 * 1024, keepLines: 20000 });
   return entry;
 }
 

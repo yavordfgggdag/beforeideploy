@@ -922,6 +922,25 @@ console.log(JSON.stringify(out));`);
   assert(o.plain === 'stale_check' && o.release === 'passed', r.stdout + r.stderr);
 });
 
+t('WP02 растеж: append-only файловете са ограничени, стари манифести и доклади се чистят (E11)', () => {
+  const r = runModule(`import fs from 'node:fs'; import path from 'node:path';
+const { appendBounded, pruneFiles } = await import(${JSON.stringify(path.join(ROOT, 'engine', 'src', 'util.mjs'))});
+const dir = fs.mkdtempSync(${JSON.stringify(path.join(TMP, 'e11-'))});
+const f = path.join(dir, 'ledger.jsonl');
+for (let i = 0; i < 500; i++) appendBounded(f, JSON.stringify({ i, pad: 'x'.repeat(40) }), { maxBytes: 4000, keepLines: 50 });
+const lines = fs.readFileSync(f, 'utf8').trim().split('\\n');
+for (let i = 0; i < 30; i++) { const p = path.join(dir, 'artifact-' + String(i).padStart(16, '0') + '.json'); fs.writeFileSync(p, '{}'); fs.utimesSync(p, new Date(Date.now() - (30 - i) * 1000), new Date(Date.now() - (30 - i) * 1000)); }
+const old = path.join(dir, 'report-2020'); fs.mkdirSync(old); fs.utimesSync(old, new Date('2020-01-01'), new Date('2020-01-01'));
+pruneFiles(dir, /^artifact-/, { keep: 20 });
+pruneFiles(dir, /^report-/, { maxAgeDays: 30 });
+const left = fs.readdirSync(dir);
+console.log(JSON.stringify({ n: lines.length, last: JSON.parse(lines[lines.length - 1]).i, artifacts: left.filter((x) => x.startsWith('artifact-')).length, newest: left.includes('artifact-0000000000000029.json'), report: left.includes('report-2020') }));`);
+  const o = JSON.parse(r.stdout.trim().split('\n').pop() || '{}');
+  // bounded by bytes: after a trim to 50 lines it grows back to ~4000 bytes (≈ 62 lines) and is trimmed again
+  assert(o.n <= 70 && o.last === 499, 'the ledger keeps the newest lines only: ' + r.stdout + r.stderr);
+  assert(o.artifacts === 20 && o.newest && !o.report, 'newest 20 manifests kept, old report removed: ' + r.stdout);
+});
+
 t('WP01 argv: пароли, токени и ключове не се приемат като флагове (E9)', () => {
   for (const [args, env] of [[['account', 'login', '--email', 'a@b.co', '--password', 'p4ss-in-argv'], 'BID_PASSWORD'], [['account', 'session', '--access', 'a', '--refresh', 'r'], 'BID_ACCESS'], [['spaceship', 'connect', '--key', 'k', '--secret', 's'], 'BID_SPACESHIP_KEY'], [['monitor', 'pushover', 'connect', '--token', 't'], 'BID_PUSHOVER_TOKEN']]) {
     const r = bid(...args);

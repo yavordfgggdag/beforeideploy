@@ -91,7 +91,7 @@ struct SidebarView: View {
                 VStack(spacing: 2) {
                     ForEach(model.projects) { p in
                         ProjectRow(project: p, selected: model.screen == .project && p.key == model.selectedKey)
-                            .onTapGesture { Task { await model.select(p.key) } }
+                            .tapAction { Task { await model.select(p.key) } }
                             .contextMenu {
                                 Button(L("common.showInFinder")) { model.revealInFinder(p.path) }
                                 Button(L("sidebar.openInCursor")) { model.openIn(app: ["Cursor", "Visual Studio Code"], path: p.path) }

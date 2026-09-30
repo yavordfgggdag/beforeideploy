@@ -216,7 +216,7 @@ struct MissionControlView: View {
                             LazyVGrid(columns: [GridItem(.adaptive(minimum: 320), spacing: 14, alignment: .top)], spacing: 14) {
                                 ForEach(Array(shown.enumerated()), id: \.element.id) { i, c in
                                     ProjectOverviewCard(card: c)
-                                        .onTapGesture { Task { await model.select(c.key) } }
+                                        .tapAction { Task { await model.select(c.key) } }
                                         .entrance(4 + i)
                                 }
                             }

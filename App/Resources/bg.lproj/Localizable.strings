@@ -525,6 +525,13 @@
 "engine.timedOut" = "Engine-ът не отговори за %@ s и беше спрян. Нищо друго не е променено.";
 "engine.unknownError" = "Неизвестна грешка";
 
+"feedback.contains" = "Докладът съдържа:";
+"feedback.mailBody" = "Какво се случи:\n\nКакво очаквах:\n\n—\nВерсия %@ · macOS %@\nДоклад (моля, прикачи го): %@";
+"feedback.mailSubject" = "Before I Deploy %@ — обратна връзка";
+"feedback.redacted" = "Ключове, пароли, токени и имейл адреси са махнати от всеки файл; изходен код няма. Нищо не се изпраща, докато не изпратиш имейла сам.";
+"feedback.send" = "Изпрати обратна връзка…";
+"feedback.writeMail" = "Напиши имейла";
+
 "firstSteps.account" = "Влез — или остани локално";
 "firstSteps.accountHint" = "Акаунтът добавя AI кредити, синхронизация и облачен мониторинг. Без него проверките и публикуването работят на този Mac.";
 "firstSteps.add" = "Добави проект";
@@ -857,22 +864,6 @@
 "portfolio.noMatch" = "Няма сайтове по тези филтри";
 "portfolio.problems" = "Проблеми";
 "portfolio.search" = "Търси сайт, клиент или хост";
-
-"production.branch" = "Клон";
-"production.costDefault" = "~15 кредита (оценка)";
-"production.costEstimate" = "~%@ %@ (оценка)";
-"production.costs" = "Разходи";
-"production.deployButton" = "Публикувай в production";
-"production.explain" = "Преди качването ще мине пълна проверка (Git → Secrets → Lint → Typecheck → Build). При грешка deploy-ът спира. Production може да използва build минути/кредити от Netlify плана ти.";
-"production.freshBuild" = "%@/ след свеж build";
-"production.price" = "Цена: %@";
-"production.site" = "Сайт";
-"production.title" = "Това ще обнови LIVE сайта на %@";
-"production.typeDeploy" = "За да продължиш, напиши DEPLOY";
-"production.uncommitted" = "Неприбрани промени";
-"production.warnings.one" = "%@ предупреждение от последната проверка";
-"production.warnings.other" = "%@ предупреждения от последната проверка";
-"production.whatUploads" = "Какво се качва";
 
 "pushover.keyNote" = "Двата ключа се проверяват веднага с Pushover и се пазят в macOS Keychain — никога във файлове. Инцидентите се пращат с висок приоритет, възстановяванията с нормален; тихите часове и прозорците за поддръжка важат и тук.";
 "pushover.openBuild" = "Създай приложение";
