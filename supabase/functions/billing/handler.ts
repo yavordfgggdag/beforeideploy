@@ -30,18 +30,21 @@ export interface Catalog {
 
 export const DEFAULT_CATALOG: Catalog = {
   currency: "EUR",
-  trial: { days: 7, plan: "high", tokens: 150000 },
+  // docs/PLANS-AND-CREDITS-BG.md: Flash 9.99 € / 100 000 credits, High 29.99 € / 250 000, Knight 99.99 € / 1 000 000;
+  // yearly = 10 months; trial = 7 days of High with 50 000 credits; packs at the owner's cost plus a margin
+  trial: { days: 7, plan: "high", tokens: 50000 },
   plans: {
-    flash: { price: 4.99, paddlePriceId: null, yearly: { price: 47.9, paddlePriceId: null } },
-    high: { price: 9.99, paddlePriceId: null, yearly: { price: 95.9, paddlePriceId: null } },
-    knight: { price: 19.99, paddlePriceId: null, yearly: { price: 191.9, paddlePriceId: null } },
+    flash: { price: 9.99, paddlePriceId: null, yearly: { price: 99.9, paddlePriceId: null } },
+    high: { price: 29.99, paddlePriceId: null, yearly: { price: 299.9, paddlePriceId: null } },
+    knight: { price: 99.99, paddlePriceId: null, yearly: { price: 999.9, paddlePriceId: null } },
   },
   packs: [
-    { id: "pack-500k", tokens: 500000, price: 4.99, paddlePriceId: null },
-    { id: "pack-2m", tokens: 2000000, price: 14.99, paddlePriceId: null },
+    { id: "pack-100k", tokens: 100000, price: 3.99, paddlePriceId: null },
+    { id: "pack-500k", tokens: 500000, price: 17.99, paddlePriceId: null },
+    { id: "pack-1m", tokens: 1000000, price: 33.99, paddlePriceId: null },
   ],
 };
-export const DEFAULT_PLAN_TOKENS: Record<string, { tokens: number }> = { flash: { tokens: 250000 }, high: { tokens: 1000000 }, knight: { tokens: 2500000 } };
+export const DEFAULT_PLAN_TOKENS: Record<string, { tokens: number }> = { flash: { tokens: 100000 }, high: { tokens: 250000 }, knight: { tokens: 1000000 } };
 
 export interface BillingDeps extends Deps {
   paddleApiKey: string;
@@ -305,21 +308,44 @@ async function usageOf(db: DbClient, userId: string, email: string | null, catal
     ? { start: active.period_start, end: active.period_end, renewsAt: sub?.renewsAt ?? null, source: "subscription" }
     : { start: calendarStart, end: calendarEnd, renewsAt: status.plan === "free" ? null : calendarEnd, source: "calendar" };
   const { data: ops } = await db.from("ai_usage").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(50);
-  const { data: inPeriod } = await db.from("ai_usage").select("charged_tokens,status,created_at").eq("user_id", userId).gte("created_at", period.start);
+  const { data: inPeriod } = await db.from("ai_usage").select("charged_tokens,status,created_at,model").eq("user_id", userId).gte("created_at", period.start);
   const settledInPeriod = ((inPeriod ?? []) as Row[]).filter((u) => u.status && !["pending", "orphaned"].includes(String(u.status)) && String(u.created_at) < period.end);
   const usedTokens = settledInPeriod.reduce((a, u) => a + Number(u.charged_tokens ?? 0), 0);
   const { data: ledger } = await db.from("credit_ledger").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(50);
-  const dayStart = new Date(now);
-  dayStart.setUTCHours(0, 0, 0, 0);
-  const spentToday = ((inPeriod ?? []) as Row[]).filter((u) => String(u.created_at) >= dayStart.toISOString() && u.status && u.status !== "orphaned").reduce((a, u) => a + Number(u.charged_tokens ?? 0), 0);
   const included = planTokens[status.plan]?.tokens ?? 0;
   const rate = (settings["ai.rate"] as Row | undefined) ?? { perMinute: 6, perHour: 60 };
-  const capPercent = Number(settings["ai.dailyCapPercent"] ?? 15);
+  // the rolling session, as the ai-fix function enforces it: N hours, a share of the monthly credits
+  const sessionHours = Number(settings["ai.sessionHours"] ?? 5);
+  const capPercent = Number(settings["ai.sessionCapPercent"] ?? 20);
+  const windowStart = new Date(now.getTime() - sessionHours * 3600_000).toISOString();
+  const { data: recent } = await db.from("ai_usage").select("charged_tokens,created_at,status").eq("user_id", userId).gte("created_at", windowStart);
+  const inSession = ((recent ?? []) as Row[]).filter((u) => String(u.created_at) >= windowStart && u.status !== "orphaned");
+  const sessionUsed = inSession.reduce((a, u) => a + Number(u.charged_tokens ?? 0), 0);
+  const sessionCap = included > 0 ? Math.floor((included * capPercent) / 100) : null;
+  const oldest = inSession.map((u) => String(u.created_at)).sort()[0];
+  const session = sessionCap === null ? null : {
+    windowHours: sessionHours,
+    capPercent,
+    cap: sessionCap,
+    used: sessionUsed,
+    remaining: Math.max(0, sessionCap - sessionUsed),
+    resetsAt: oldest ? new Date(new Date(oldest).getTime() + sessionHours * 3600_000).toISOString() : null,
+  };
+  // per model inside the period (what Claude shows as "all models" vs "Opus")
+  const byModelMap = new Map<string, { model: string; tokens: number; operations: number }>();
+  for (const u of settledInPeriod as Row[]) {
+    const key = String((u as Row).model ?? "unknown");
+    const cur = byModelMap.get(key) ?? { model: key, tokens: 0, operations: 0 };
+    cur.tokens += Number(u.charged_tokens ?? 0);
+    cur.operations += 1;
+    byModelMap.set(key, cur);
+  }
+  const byModel = [...byModelMap.values()].sort((a, b) => b.tokens - a.tokens);
   const version = await pricingVersion(settings as unknown as Record<string, unknown>);
   const available = Math.max(0, status.balance.total - reconciled.reservedTokens);
   return {
     serverTime: now.toISOString(),
-    unit: "tokens",
+    unit: "credits",
     plan: status.plan,
     subscription: sub,
     trialAvailable: status.trialAvailable,
@@ -329,8 +355,10 @@ async function usageOf(db: DbClient, userId: string, email: string | null, catal
     reserved: { tokens: reconciled.reservedTokens, operations: reconciled.open },
     remaining: { plan: status.balance.plan, purchased: status.balance.topup, total: status.balance.total, available },
     purchased: { tokens: status.balance.topup, expires: "12 months after purchase" },
-    limits: { perMinute: Number(rate.perMinute ?? 6), perHour: Number(rate.perHour ?? 60), dailyCapPercent: capPercent, dailyCapTokens: included > 0 ? Math.floor((included * capPercent) / 100) : null, spentToday },
-    pricing: { version, prices: settings["ai.prices"] ?? null, multipliers: settings["ai.multipliers"] ?? null, spendOrder: ["plan", "topup"] },
+    session,
+    byModel,
+    limits: { perMinute: Number(rate.perMinute ?? 6), perHour: Number(rate.perHour ?? 60), sessionHours, sessionCapPercent: capPercent, sessionCap, sessionUsed },
+    pricing: { version, prices: settings["ai.prices"] ?? null, creditEur: settings["ai.creditEur"] ?? null, usdToEur: settings["ai.usdToEur"] ?? null, spendOrder: ["plan", "topup"] },
     reconciled: { releasedHolds: reconciled.released },
     history: {
       operations: ((ops ?? []) as Row[]).map((u) => ({ id: u.id, at: u.created_at, step: u.step, project: u.project_key, model: u.model, status: u.status, tokens: Number(u.charged_tokens ?? 0), input: u.input_tokens ?? null, output: u.output_tokens ?? null, pricingVersion: u.pricing_version ?? null, operationId: u.operation_id ?? null })),

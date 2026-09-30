@@ -56,7 +56,7 @@ own status (the model cannot upgrade "warnings" to "pass" or "blocked" to "ready
 3. **Budget** — `maxTokensPerOperation` (default 60 000, `--budget` can only lower it); when the estimate would
    exceed it the request is refused (`budget_exceeded`) and nothing is sent. Context over `maxContextChars`
    drops the largest file blocks first (they are listed as omitted).
-4. **Call** — the current provider (own key: Anthropic/OpenAI; else the cloud `ai-fix` function with the plan's
+4. **Call** — the current provider (own key: Anthropic/OpenAI — available to every account and without one, default model `claude-opus-5-5`; else the cloud `ai-fix` function with the plan's
    model); one call, `callTimeoutMs` (default 120 s) → `ai_timeout`.
 5. **Parse + validate** — `extractJSON` (plain, fenced or wrapped in prose) then `validateOutput`. One repair
    round is allowed: the errors are sent back and a corrected object requested. Still invalid →

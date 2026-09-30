@@ -30,14 +30,20 @@ export interface AiFixDeps extends Deps {
 
 // Defaults; every key can be overridden from the Admin panel (table `settings`).
 export const DEFAULTS = {
-  "ai.models": { flash: "claude-haiku-4-5", high: "claude-sonnet-5", knight: "claude-sonnet-5", deep: "claude-opus-5" } as Record<string, string>,
-  "ai.multipliers": { deep: 5 } as Record<string, number>,
-  "ai.dailyCapPercent": 15,
+  // model per plan (docs/PLANS-AND-CREDITS-BG.md §1); `explain` is the cheap model for explanations, `deep` the Knight-only deep fix
+  "ai.models": { flash: "claude-sonnet-5-5", high: "claude-opus-5-5", knight: "claude-opus-5-5", deep: "claude-opus-5-5", explain: "claude-haiku-4-5" } as Record<string, string>,
+  // what one credit costs the owner, per plan (EUR): Flash 100 000 credits = 2.49 €, High 250 000 = 7.50 €, Knight 1 000 000 = 30 €
+  "ai.creditEur": { flash: 0.0000249, high: 0.00003, knight: 0.00003, default: 0.00003 } as Record<string, number>,
+  "ai.usdToEur": 0.92,
+  // the rolling session (as in Claude): 20 % of the monthly credits per 5 hours
+  "ai.sessionHours": 5,
+  "ai.sessionCapPercent": 20,
   "ai.promptMaxChars": 60000,
   "ai.rate": { perMinute: 6, perHour: 60 },
   // USD per million tokens (input / output) — used for cost_usd bookkeeping only
-  "ai.prices": { "claude-haiku-4-5": [1, 5], "claude-sonnet-5": [2, 10], "claude-opus-5": [5, 25] } as Record<string, [number, number]>,
-  plans: { flash: { tokens: 250000 }, high: { tokens: 1000000 }, knight: { tokens: 2500000 } } as Record<string, { tokens: number }>,
+  "ai.prices": { "claude-haiku-4-5": [1, 5], "claude-sonnet-5-5": [2, 10], "claude-opus-5-5": [4, 20] } as Record<string, [number, number]>,
+  // credits per month per plan (the ledger column is still called tokens)
+  plans: { flash: { tokens: 100000 }, high: { tokens: 250000 }, knight: { tokens: 1000000 } } as Record<string, { tokens: number }>,
 };
 
 export type Settings = typeof DEFAULTS & Record<string, unknown>;
@@ -54,14 +60,28 @@ export async function loadSettings(db: DbClient): Promise<Settings> {
   return s as Settings;
 }
 
-/** Model, cost multiplier and effort for this request. Deep = strongest model, only for Knight / vip / admin. */
+/** Model and effort for this request. Deep = the strongest model at the highest effort, only for Knight / vip / admin. */
 export function chooseModel(settings: Settings, role: Role, plan: Plan, body: Pick<AiFixBody, "deep" | "mode">) {
   const models = settings["ai.models"];
   const deepAllowed = plan === "knight" || role !== "normal";
   const deep = !!body.deep && deepAllowed;
-  const model = deep ? models.deep : body.mode === "explain" ? models.flash : (models[plan] ?? models.high);
-  const multiplier = deep ? Number(settings["ai.multipliers"].deep ?? 5) : 1;
-  return { model, multiplier, effort: deep ? "high" : "medium", deep };
+  const model = deep ? models.deep : body.mode === "explain" ? (models.explain ?? models.flash) : (models[plan] ?? models.high);
+  return { model, effort: deep ? "xhigh" : "medium", deep };
+}
+
+/**
+ * Credits for a request: the model's real price (USD per million tokens) converted to EUR and divided by what one
+ * credit costs the owner on this plan — so the plan's credits can never cost the owner more than their cap
+ * (docs/PLANS-AND-CREDITS-BG.md §2). At least one credit for any request that reached the model.
+ */
+export function creditsFor(settings: Settings, plan: string, model: string, inputTokens: number, outputTokens: number) {
+  const [pin, pout] = settings["ai.prices"][model] ?? [0, 0];
+  const costUsd = (inputTokens * pin + outputTokens * pout) / 1_000_000;
+  const rates = settings["ai.creditEur"] ?? {};
+  const rate = Number(rates[plan] ?? rates.default ?? 0.00003);
+  const costEur = costUsd * Number(settings["ai.usdToEur"] ?? 0.92);
+  const credits = costUsd > 0 ? Math.max(1, Math.ceil(costEur / rate - 1e-9)) : 0; // 1e-9 absorbs float noise on exact quotients
+  return { costUsd, costEur, rate, credits };
 }
 
 export function createAiFixHandler(deps: AiFixDeps): (req: Request) => Promise<Response> {
@@ -124,10 +144,11 @@ export function createAiFixHandler(deps: AiFixDeps): (req: Request) => Promise<R
     if (balance <= 0) return quota();
 
     // ---- model by plan
-    const { model, multiplier, effort } = chooseModel(settings, role, plan, body);
+    const { model, effort } = chooseModel(settings, role, plan, body);
     const maxTokens = body.mode === "explain" ? 1500 : 8000;
     const estInput = Math.ceil(inputChars / CHARS_PER_TOKEN);
-    const estimate = Math.round((estInput + maxTokens) * multiplier);
+    // the hold reserves the worst case: the whole input plus a full-length answer at this model's price
+    const estimate = creditsFor(settings, plan, model, estInput, maxTokens).credits;
 
     // ---- reserve first, check after (audit C1): the usage row counts for the rate limits and the hold
     // counts in the balance at once, so parallel requests see each other and cannot all pass.
@@ -153,14 +174,18 @@ export function createAiFixHandler(deps: AiFixDeps): (req: Request) => Promise<R
     }
     const monthly = settings.plans[plan]?.tokens ?? 0;
     if (monthly > 0) {
-      const dayStart = new Date(t);
-      dayStart.setUTCHours(0, 0, 0, 0);
-      const { data: today } = await db.from("ai_usage").select("charged_tokens").eq("user_id", user.id).gte("created_at", dayStart.toISOString());
-      const spentToday = (today ?? []).reduce((a: number, r: Row) => a + Number(r.charged_tokens ?? 0), 0);
-      const cap = Math.floor((monthly * Number(settings["ai.dailyCapPercent"])) / 100);
-      if (spentToday >= cap) {
-        await release("daily_cap");
-        return json(403, { error: "daily limit reached", code: "daily_cap", cap, spentToday });
+      // the rolling session: what was charged in the last N hours against a share of the monthly credits
+      const hours = Number(settings["ai.sessionHours"] ?? 5);
+      const windowStart = new Date(t - hours * 3600_000);
+      const { data: inWindow } = await db.from("ai_usage").select("charged_tokens,created_at").eq("user_id", user.id).gte("created_at", windowStart.toISOString());
+      const rowsInWindow = ((inWindow ?? []) as Row[]).filter((r) => String(r.created_at) >= windowStart.toISOString());
+      const spent = rowsInWindow.reduce((a: number, r: Row) => a + Number(r.charged_tokens ?? 0), 0);
+      const cap = Math.floor((monthly * Number(settings["ai.sessionCapPercent"] ?? 20)) / 100);
+      if (spent >= cap) {
+        const oldest = rowsInWindow.map((r) => String(r.created_at)).sort()[0];
+        const resetsAt = oldest ? new Date(new Date(oldest).getTime() + hours * 3600_000).toISOString() : new Date(t + hours * 3600_000).toISOString();
+        await release("session_cap");
+        return json(403, { error: "session limit reached", code: "session_cap", cap, spent, resetsAt, windowHours: hours });
       }
     }
     // other requests' holds are visible now: without them in flight this one would have credits left
@@ -215,9 +240,7 @@ export function createAiFixHandler(deps: AiFixDeps): (req: Request) => Promise<R
       settled ??= (async () => {
         const inTok = input || estInput;
         const outTok = outputReported ? output : Math.max(output, Math.ceil(deltaChars / CHARS_PER_TOKEN));
-        const charged = Math.round((inTok + outTok) * multiplier);
-        const [pin, pout] = settings["ai.prices"][usedModel] ?? [0, 0];
-        const costUsd = (inTok * pin + outTok * pout) / 1_000_000;
+        const { credits: charged, costUsd } = creditsFor(settings, plan, usedModel, inTok, outTok);
         await db.from("credit_ledger").delete().eq("user_id", user.id).eq("ref", usageId).eq("reason", "hold");
         must(await db.from("ai_usage").update({ model: usedModel, input_tokens: inTok, output_tokens: outTok, cost_usd: costUsd, charged_tokens: charged, status }).eq("id", usageId));
         if (charged > 0) {

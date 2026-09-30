@@ -9,9 +9,9 @@
     "manageable": false
   },
   "balance": {
-    "plan": 150000,
+    "plan": 50000,
     "topup": 0,
-    "total": 150000
+    "total": 50000
   },
   "trialAvailable": false,
   "usage": [

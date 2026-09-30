@@ -37,7 +37,7 @@ quota, 127 Node missing; everything else exits 1.
 | `unauthorized` | 1 | The provider rejected the credentials (AI key, Spaceship key). | Re-enter the key; for Spaceship also check the API secret. |
 | `ai_unavailable` | 1 | Built-in AI Fix is not available for this account: no plan, no own key for the role, or AI disabled. | VIP/admin: add an Anthropic or OpenAI key in Setup; normal users: a plan (WP4); the external AI buttons always work. |
 | `ai_rate_limited` | 1 | Too many AI requests in a minute or hour (cloud limit, or the provider's). | Wait a minute and retry. |
-| `ai_daily_cap` | 1 | Today's AI spend reached the daily cap (15 % of the monthly quota). | Continue tomorrow or use the external buttons. |
+| `ai_session_cap` | 1 | The rolling 5-hour session used its share of the monthly credits (20 %). | Wait for the reset time in the message, buy a pack or change the plan; the external buttons stay free. |
 | `ai_failed` | 1 | The AI provider returned an error or an unusable stream. | Retry; if it repeats, the support report has the response. |
 | `ai_refused` | 1 | The model declined to answer (safety refusal). | Rephrase by fixing the prompt's log manually, or use an external assistant. |
 | `bad_patch` | 1 | The saved AI answer does not belong to this project or has no applicable file changes. | Run AI Fix again; apply only from the panel it produced. |
@@ -87,7 +87,7 @@ quota, 127 Node missing; everything else exits 1.
 ## Cloud (Edge Functions)
 
 Returned as `code` in the JSON body; the engine maps them to the codes above (`quota_exhausted`,
-`ai_rate_limited`, `ai_daily_cap`, `ai_unavailable`, `forbidden`, `not_configured`).
+`ai_rate_limited`, `ai_session_cap`, `ai_unavailable`, `forbidden`, `not_configured`).
 
 | Code | HTTP | Meaning |
 |---|---|---|
@@ -95,7 +95,7 @@ Returned as `code` in the JSON body; the engine maps them to the codes above (`q
 | `disabled` | 403 | An admin disabled AI for this account. |
 | `no_plan` | 403 | Normal user on the Free plan asked for cloud AI. |
 | `forbidden` | 403 | Admin function called by a non-admin. |
-| `daily_cap` | 403 | Daily AI cap reached. |
+| `session_cap` | 403 | The 5-hour session's AI credit share is used; the body carries `resetsAt`, `cap`, `spent`. |
 | `quota_exhausted` | 402 | No credits left. |
 | `bad_secret` | 401 | `monitor` scheduler call without the `x-monitor-secret` that matches `MONITOR_CRON_SECRET` (V11 RC). |
 | `url_rejected` | 400 | `monitor register`: the URL is not a public http(s) hostname (`reason`: scheme, ip_literal, local_host, credentials_in_url, port, hostname, invalid_url). |

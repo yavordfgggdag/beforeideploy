@@ -37,9 +37,9 @@ final class ModelsTests: XCTestCase {
     func testCreditsCarryTheMonthlyGrantAndRenewal() throws {
         let a = try Fixtures.decode("account-status-high", as: AccountState.self)
         let c = try XCTUnwrap(a.credits)
-        XCTAssertEqual(c.monthlyGrant, 1_000_000)
+        XCTAssertEqual(c.monthlyGrant, 250_000)
         XCTAssertEqual(c.renewsAt, "2026-11-01T00:00:00Z")
-        XCTAssertEqual(c.fraction ?? -1, 0.25, accuracy: 0.0001)
+        XCTAssertEqual(c.fraction ?? -1, 1.0, accuracy: 0.0001)
         XCTAssertNil(AccountState.Credits(balance: 5, monthlyGrant: nil).fraction)
     }
 
@@ -147,18 +147,32 @@ final class ModelsTests: XCTestCase {
         let c = try Fixtures.decode("billing-catalog", as: BillingCatalog.self)
         XCTAssertEqual(c.currency, "EUR")
         XCTAssertEqual(c.plans.map(\.id), ["flash", "high", "knight"])
-        XCTAssertEqual(c.plans.first { $0.id == "high" }?.tokens, 1_000_000)
+        XCTAssertEqual(c.plans.first { $0.id == "high" }?.tokens, 250_000)
         XCTAssertFalse(c.plans.first { $0.id == "knight" }?.available ?? true)
         XCTAssertEqual(c.trial?.days, 7)
-        XCTAssertEqual(c.plans.first { $0.id == "high" }?.yearlyPrice, 95.9)
+        XCTAssertEqual(c.plans.first { $0.id == "high" }?.yearlyPrice, 299.9)
         XCTAssertEqual(c.plans.first { $0.id == "high" }?.yearlyAvailable, true)
+    }
+
+    func testUsageReportCarriesTheSessionAndPerModelBreakdown() throws {
+        let u = try Fixtures.decode("usage-report", as: UsageReport.self)
+        XCTAssertEqual(u.unit, "credits")
+        XCTAssertNotNil(u.byModel)
+        XCTAssertNil(u.limits.sessionCap) // Free has no session
+        // a High report: the 5-hour session with its cap, what was used and when it resets
+        let high = try JSONDecoder().decode(UsageReport.Session.self, from: Data(#"{"windowHours":5,"capPercent":20,"cap":50000,"used":1472,"remaining":48528,"resetsAt":"2026-10-09T15:00:00Z"}"#.utf8))
+        XCTAssertEqual(high.remaining, 48_528)
+        XCTAssertEqual(high.resetsAt, "2026-10-09T15:00:00Z")
+        // an older engine without the session fields still decodes
+        let legacy = try JSONDecoder().decode(UsageReport.Limits.self, from: Data(#"{"perMinute":6,"perHour":60}"#.utf8))
+        XCTAssertNil(legacy.sessionCap)
     }
 
     func testBillingStatusAfterTrial() throws {
         let s = try Fixtures.decode("billing-status", as: BillingStatus.self)
         XCTAssertEqual(s.plan, "high")
         XCTAssertEqual(s.subscription?.provider, "trial")
-        XCTAssertEqual(s.balance.plan, 150_000)
+        XCTAssertEqual(s.balance.plan, 50_000)
         XCTAssertFalse(s.trialAvailable)
         XCTAssertEqual(s.usage.first?.tokens, 6000)
     }

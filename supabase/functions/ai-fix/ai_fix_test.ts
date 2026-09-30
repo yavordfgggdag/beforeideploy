@@ -2,7 +2,10 @@
 import assert from "node:assert/strict";
 import type { AuthUser, Row } from "../_shared/db.ts";
 import { FakeDb, fakeDeps, post, sseEvents } from "../_shared/fake_supabase.ts";
-import { createAiFixHandler, type Plan, type Role } from "./handler.ts";
+import { createAiFixHandler, creditsFor, DEFAULTS, type Plan, type Role } from "./handler.ts";
+
+/** What the fake stream (4000 in / 2000 out, reported as Sonnet 5.5) costs on a plan. */
+const charge = (plan: string, model = "claude-sonnet-5-5", input = 4000, output = 2000) => creditsFor(DEFAULTS, plan, model, input, output).credits;
 
 const USER: AuthUser = { id: "u-1", email: "ivan@example.com" };
 const PROMPT = { prompt: "Build failed:\nTypeError: x is not a function", step: "build", project: { key: "p1", framework: "vite" }, mode: "fix" };
@@ -12,7 +15,7 @@ function anthropicSse(events: Row[]): string {
 }
 
 const OK_STREAM = anthropicSse([
-  { type: "message_start", message: { model: "claude-sonnet-5", usage: { input_tokens: 4000, output_tokens: 1 } } },
+  { type: "message_start", message: { model: "claude-sonnet-5-5", usage: { input_tokens: 4000, output_tokens: 1 } } },
   { type: "content_block_start", index: 0, content_block: { type: "text", text: "" } },
   { type: "content_block_delta", index: 0, delta: { type: "text_delta", text: "Hello " } },
   { type: "ping" },
@@ -124,18 +127,36 @@ Deno.test("ai-fix: 429 after 6 requests in a minute", async () => {
   assert.equal((await world({ usage: other }).handle(post("ai-fix", PROMPT))).status, 200);
 });
 
-Deno.test("ai-fix: 403 daily_cap at 15% of the monthly quota", async () => {
-  const earlier = new Date(Date.now() - 3 * 3600_000).toISOString();
-  const dayStart = new Date();
-  dayStart.setUTCHours(0, 0, 0, 0);
-  // High = 1,000,000 tokens → cap 150,000. Use a timestamp that is surely today (UTC).
-  const ts = new Date(dayStart.getTime() + 60_000).toISOString();
-  const usage = [{ user_id: USER.id, created_at: ts > earlier ? ts : earlier, charged_tokens: 150000 }];
+Deno.test("ai-fix: 403 session_cap at 20% of the monthly credits inside the 5-hour session, with the reset time", async () => {
+  // High = 250 000 credits → 50 000 per session; one request 2 h ago spent them all
+  const twoHoursAgo = new Date(Date.now() - 2 * 3600_000).toISOString();
+  const usage = [{ user_id: USER.id, created_at: twoHoursAgo, charged_tokens: 50000 }];
   const res = await world({ usage }).handle(post("ai-fix", PROMPT));
   assert.equal(res.status, 403);
   const j = await res.json();
-  assert.equal(j.code, "daily_cap");
-  assert.equal(j.cap, 150000);
+  assert.equal(j.code, "session_cap");
+  assert.equal(j.cap, 50000);
+  assert.equal(j.windowHours, 5);
+  assert.equal(j.resetsAt, new Date(new Date(twoHoursAgo).getTime() + 5 * 3600_000).toISOString());
+  // the same spend six hours ago is outside the session
+  const old = [{ user_id: USER.id, created_at: new Date(Date.now() - 6 * 3600_000).toISOString(), charged_tokens: 50000 }];
+  assert.equal((await world({ usage: old }).handle(post("ai-fix", PROMPT))).status, 200);
+});
+
+Deno.test("ai-fix: credits follow the model's real price and the plan's rate, so the owner's cap holds", () => {
+  // one typical fix on High (Opus 5.5, 4 $ / 20 $ per MTok): 0.048 $ → 0.04416 € → 1472 credits at 0.00003 €
+  const high = creditsFor(DEFAULTS, "high", "claude-opus-5-5", 4500, 1500);
+  assert.ok(Math.abs(high.costUsd - 0.048) < 1e-9);
+  assert.equal(high.credits, 1472);
+  // Flash pays Sonnet 5.5 prices at its own rate: 0.024 $ → 0.02208 € → 887 credits at 0.0000249 €
+  assert.equal(creditsFor(DEFAULTS, "flash", "claude-sonnet-5-5", 4500, 1500).credits, 887);
+  // the whole monthly grant can never cost more than the cap: Flash 100 000 × 0.0000249 = 2.49 €, High 7.50 €, Knight 30 €
+  for (const [plan, cap] of [["flash", 2.49], ["high", 7.5], ["knight", 30]] as const) {
+    assert.ok(Math.abs(DEFAULTS.plans[plan].tokens * DEFAULTS["ai.creditEur"][plan] - cap) < 1e-6, plan);
+  }
+  // an answer that produced nothing costs nothing; anything that reached the model costs at least one credit
+  assert.equal(creditsFor(DEFAULTS, "high", "claude-opus-5-5", 0, 0).credits, 0);
+  assert.equal(creditsFor(DEFAULTS, "high", "claude-opus-5-5", 1, 0).credits, 1);
 });
 
 Deno.test("ai-fix: 413 for an oversized prompt", async () => {
@@ -154,9 +175,9 @@ Deno.test("ai-fix: streams deltas, bills the real tokens and records usage", asy
   const usage = ev.find((e) => e.type === "usage")!;
   assert.equal(usage.input, 4000);
   assert.equal(usage.output, 2000);
-  assert.equal(usage.charged, 6000);
-  assert.equal(usage.balance, 94000);
-  assert.equal(usage.model, "claude-sonnet-5");
+  assert.equal(usage.charged, charge("high"));
+  assert.equal(usage.balance, 100000 - charge("high"));
+  assert.equal(usage.model, "claude-sonnet-5-5");
   assert.equal(usage.status, "ok");
   assert.deepEqual(ev.at(-1), { type: "done", stopReason: "ok" });
 
@@ -167,36 +188,39 @@ Deno.test("ai-fix: streams deltas, bills the real tokens and records usage", asy
   assert.equal(rows[0].step, "build");
   assert.equal(rows[0].input_tokens, 4000);
   assert.equal(rows[0].output_tokens, 2000);
-  assert.equal(rows[0].charged_tokens, 6000);
+  assert.equal(rows[0].charged_tokens, charge("high"));
+  assert.equal(rows[0].charged_tokens, 859); // 0.028 $ × 0.92 / 0.00003 €, rounded up
   assert.ok(Math.abs(rows[0].cost_usd - 0.028) < 1e-9);
   const ledger = db.rows("credit_ledger").filter((r) => r.reason === "ai_fix");
   assert.equal(ledger.length, 1);
-  assert.equal(ledger[0].delta, -6000);
+  assert.equal(ledger[0].delta, -charge("high"));
   assert.equal(ledger[0].bucket, "plan");
   assert.equal(ledger[0].ref, rows[0].id);
 
   assert.equal(up.calls.length, 1);
   assert.equal(up.calls[0].url, "https://anthropic.local/v1/messages");
   assert.equal(up.calls[0].headers["x-api-key"], "sk-ant-test");
-  assert.equal(up.calls[0].body.model, "claude-sonnet-5");
+  assert.equal(up.calls[0].body.model, "claude-opus-5-5");
   assert.equal(up.calls[0].body.max_tokens, 8000);
   assert.equal(up.calls[0].body.stream, true);
   assert.deepEqual(up.calls[0].body.output_config, { effort: "medium" });
   assert.equal(up.calls[0].body.messages[0].content, PROMPT.prompt);
 });
 
-Deno.test("ai-fix: deep fix uses the strongest model at ×5 for Knight, is ignored for High", async () => {
+Deno.test("ai-fix: deep fix uses the strongest model at xhigh effort for Knight, is ignored for High; credits follow the model that answered", async () => {
   const knight = world({ plan: "knight" });
   const ev = await events(await knight.handle(post("ai-fix", { ...PROMPT, deep: true })));
-  assert.equal(knight.up.calls[0].body.model, "claude-opus-5");
-  assert.deepEqual(knight.up.calls[0].body.output_config, { effort: "high" });
-  assert.equal(ev.find((e) => e.type === "usage")!.charged, 30000); // stream reports sonnet as usedModel; multiplier ×5 on 6000
-  assert.equal(knight.db.rows("credit_ledger").find((r) => r.reason === "ai_fix")!.delta, -30000);
+  assert.equal(knight.up.calls[0].body.model, "claude-opus-5-5");
+  assert.deepEqual(knight.up.calls[0].body.output_config, { effort: "xhigh" });
+  // the fake stream reports Sonnet 5.5 as the model that answered, so that is what is charged
+  assert.equal(ev.find((e) => e.type === "usage")!.charged, charge("knight"));
+  assert.equal(knight.db.rows("credit_ledger").find((r) => r.reason === "ai_fix")!.delta, -charge("knight"));
 
   const high = world({ plan: "high" });
   await events(await high.handle(post("ai-fix", { ...PROMPT, deep: true })));
-  assert.equal(high.up.calls[0].body.model, "claude-sonnet-5");
-  assert.equal(high.db.rows("credit_ledger").find((r) => r.reason === "ai_fix")!.delta, -6000);
+  assert.equal(high.up.calls[0].body.model, "claude-opus-5-5");
+  assert.deepEqual(high.up.calls[0].body.output_config, { effort: "medium" });
+  assert.equal(high.db.rows("credit_ledger").find((r) => r.reason === "ai_fix")!.delta, -charge("high"));
 });
 
 Deno.test("ai-fix: explain mode takes the fast model without output_config", async () => {
@@ -209,19 +233,22 @@ Deno.test("ai-fix: explain mode takes the fast model without output_config", asy
 
 Deno.test("ai-fix: the settings table overrides models, multipliers and limits", async () => {
   const settings = [
-    { key: "ai.models", value: { flash: "claude-haiku-4-5", high: "claude-opus-5", knight: "claude-opus-5", deep: "claude-opus-5" } },
-    { key: "ai.multipliers", value: { deep: 3 } },
+    { key: "ai.models", value: { flash: "claude-haiku-4-5", high: "claude-opus-5-5", knight: "claude-opus-5-5", deep: "claude-opus-5-5" } },
+    { key: "ai.creditEur", value: { ...DEFAULTS["ai.creditEur"], knight: 0.00006 } },
     { key: "ai.rate", value: { perMinute: 1, perHour: 60 } },
   ];
   const w = world({ plan: "high", settings });
   await events(await w.handle(post("ai-fix", PROMPT)));
-  assert.equal(w.up.calls[0].body.model, "claude-opus-5");
+  assert.equal(w.up.calls[0].body.model, "claude-opus-5-5");
   // perMinute: 1 → the second request is rate limited
   assert.equal((await w.handle(post("ai-fix", PROMPT))).status, 429);
 
   const k = world({ plan: "knight", settings });
   await events(await k.handle(post("ai-fix", { ...PROMPT, deep: true })));
-  assert.equal(k.db.rows("credit_ledger").find((r) => r.reason === "ai_fix")!.delta, -18000);
+  // a Knight credit worth twice as much → half the credits for the same answer
+  const halved = creditsFor({ ...DEFAULTS, "ai.creditEur": { ...DEFAULTS["ai.creditEur"], knight: 0.00006 } }, "knight", "claude-sonnet-5-5", 4000, 2000).credits;
+  assert.equal(halved, Math.ceil(charge("knight") / 2));
+  assert.equal(k.db.rows("credit_ledger").find((r) => r.reason === "ai_fix")!.delta, -halved);
 });
 
 Deno.test("ai-fix: an upstream failure is a 502 and bills nothing", async () => {
@@ -236,7 +263,7 @@ Deno.test("ai-fix: an upstream failure is a 502 and bills nothing", async () => 
 
 Deno.test("ai-fix: a model error mid-stream is forwarded and recorded", async () => {
   const body = anthropicSse([
-    { type: "message_start", message: { model: "claude-sonnet-5", usage: { input_tokens: 100 } } },
+    { type: "message_start", message: { model: "claude-sonnet-5-5", usage: { input_tokens: 100 } } },
     { type: "content_block_delta", index: 0, delta: { type: "text_delta", text: "partial" } },
     { type: "error", error: { type: "overloaded_error", message: "Overloaded" } },
   ]);
@@ -246,13 +273,13 @@ Deno.test("ai-fix: a model error mid-stream is forwarded and recorded", async ()
   assert.equal(ev.find((e) => e.type === "error")!.code, "model_error");
   assert.equal(ev.find((e) => e.type === "usage")!.status, "error");
   assert.equal(w.db.rows("ai_usage")[0].status, "error");
-  // no final output count: the 7 streamed characters are billed as an estimate (⌈7 / 3.5⌉ = 2 tokens)
-  assert.equal(w.db.rows("ai_usage")[0].charged_tokens, 102);
+  // no final output count: the 7 streamed characters are billed as an estimate (⌈7 / 3.5⌉ = 2 tokens) at the model's price
+  assert.equal(w.db.rows("ai_usage")[0].charged_tokens, charge("high", "claude-sonnet-5-5", 100, 2));
 });
 
 Deno.test("ai-fix: truncated and refused answers are marked", async () => {
   const body = anthropicSse([
-    { type: "message_start", message: { model: "claude-sonnet-5", usage: { input_tokens: 10 } } },
+    { type: "message_start", message: { model: "claude-sonnet-5-5", usage: { input_tokens: 10 } } },
     { type: "message_delta", delta: { stop_reason: "max_tokens" }, usage: { output_tokens: 8000 } },
   ]);
   const w = world({ upstream: { body } });
@@ -262,20 +289,20 @@ Deno.test("ai-fix: truncated and refused answers are marked", async () => {
 
 Deno.test("ai-fix: plan tokens are spent first, the rest comes from top-up packs", async () => {
   const w = world({ ledger: [
-    { user_id: USER.id, delta: 2000, bucket: "plan", reason: "plan_grant", ref: "t" },
+    { user_id: USER.id, delta: 500, bucket: "plan", reason: "plan_grant", ref: "t" },
     { user_id: USER.id, delta: 10000, bucket: "topup", reason: "topup", ref: "p" },
   ] });
   await events(await w.handle(post("ai-fix", PROMPT)));
   const charges = w.db.rows("credit_ledger").filter((r) => r.reason === "ai_fix");
-  assert.deepEqual(charges.map((r) => [r.bucket, r.delta]), [["plan", -2000], ["topup", -4000]]);
+  assert.deepEqual(charges.map((r) => [r.bucket, r.delta]), [["plan", -500], ["topup", -(charge("high") - 500)]]);
 });
 
 // ---------------------------------------------------------------- audit batch 2 (C1, C6, C9, C10)
 
 Deno.test("ai-fix: parallel requests see each other's reservations and cannot all overspend", async () => {
-  // each request reserves ≈ 8,015 tokens (prompt estimate + max output); with 10,000 left a third
-  // concurrent request always sees two other holds and is refused
-  const { db, handle, up } = world({ balance: 10000 });
+  // each request reserves ≈ 4,900 credits (prompt estimate + a full 8,000-token Opus answer) and settles
+  // ≈ 860; with 5,000 left the second passes and the third is refused whether or not the first settled
+  const { db, handle, up } = world({ balance: 5000 });
   const rs = await Promise.all([1, 2, 3].map(() => handle(post("ai-fix", PROMPT))));
   const passed = rs.filter((r) => r.status === 200);
   assert.ok(passed.length < 3, `at most two of three get through (got ${passed.length})`);
@@ -305,7 +332,7 @@ Deno.test("ai-fix: closing the answer aborts the model request", async () => {
 Deno.test("ai-fix: Free with bought token packs may still use AI", async () => {
   const w = world({ plan: "free", ledger: [{ user_id: USER.id, delta: 100000, bucket: "topup", reason: "topup", ref: "txn:pri_pack" }] });
   const ev = await events(await w.handle(post("ai-fix", PROMPT)));
-  assert.equal(ev.find((e) => e.type === "usage")!.charged, 6000);
+  assert.equal(ev.find((e) => e.type === "usage")!.charged, charge("free"));
   assert.equal(w.db.rows("credit_ledger").find((r) => r.reason === "ai_fix")!.bucket, "topup");
 });
 

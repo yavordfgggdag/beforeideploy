@@ -1,5 +1,5 @@
 // AI providers (V10 WP3). Three ways to reach a model, one event stream:
-//   anthropic / openai — the user's own key from the Keychain (vip/admin)
+//   anthropic / openai — the user's own key from the Keychain (VIP / admin)
 //   cloud              — the metered `ai-fix` Edge Function (normal users with a plan; the central key never leaves the backend)
 // Every provider yields { type: 'delta', text } · { type: 'usage', input?, output?, model? } · { type: 'done', stopReason? }.
 import { EngineError } from '../util.mjs';
@@ -71,7 +71,8 @@ const parseJSON = (s) => {
 
 async function* anthropic({ key, model, system, messages, maxTokens = 8000, effort = 'medium' }) {
   const body = { model, max_tokens: maxTokens, system, messages, stream: true };
-  // effort is not accepted by the Haiku 4.5 family; the other current models take it in output_config
+  // effort is not accepted by the Haiku 4.5 family; the other current models take it in output_config and run
+  // adaptive thinking on their own (Opus 5.5 cannot switch it off — effort is the only depth control)
   if (effort && !/haiku/i.test(model)) body.output_config = { effort };
   const base = { 'x-api-key': key, 'anthropic-version': '2023-06-01' };
   // A declined request is re-run server-side on Anthropic's recommended fallback model (beta).
@@ -154,7 +155,8 @@ async function* cloud({ prompt, system, step, project, locale, deep, model }) {
     const j = (await res.json().catch(() => null)) || {};
     if (res.status === 404 && j.code === 'NOT_FOUND') throw new EngineError(msg('cloud.functionMissing', { name: 'ai-fix' }), 'cloud_function_missing');
     if (res.status === 402) throw new EngineError(msg('ai.quotaExhausted', { renewsAt: j.renewsAt || '—' }), 'quota_exhausted', 8);
-    if (res.status === 403) throw new EngineError(msg(j.code === 'daily_cap' ? 'ai.dailyCap' : 'ai.unavailable.noPlan'), j.code === 'daily_cap' ? 'ai_daily_cap' : 'ai_unavailable');
+    if (res.status === 403 && j.code === 'session_cap') throw new EngineError(msg('ai.sessionCap', { at: j.resetsAt ? new Date(j.resetsAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—', hours: j.windowHours || 5 }), 'ai_session_cap');
+    if (res.status === 403) throw new EngineError(msg('ai.unavailable.noPlan'), 'ai_unavailable');
     if (res.status === 429) throw new EngineError(msg('ai.rateLimited', { name: 'Before I Deploy AI' }), 'ai_rate_limited');
     if (res.status === 401) throw new EngineError(msg('account.notLoggedIn'), 'not_logged_in', 5);
     throw new EngineError(msg('ai.providerHttp', { name: 'ai-fix', status: res.status, detail: j.error || '' }), 'ai_failed');

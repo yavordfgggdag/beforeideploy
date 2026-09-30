@@ -40,7 +40,6 @@
   "ai.apply.reason.other": "unknown reason",
   "ai.apply.reason.outside_project": "path outside the project",
   "ai.apply.reason.search_not_found": "search text not found (file changed?)",
-  "ai.dailyCap": "Today's AI limit is reached — continue tomorrow.",
   "ai.keyRejected": "{name} rejected the key — check it in Setup → AI keys.",
   "ai.network": "The AI provider is not responding: {error}",
   "ai.providerError": "{name}: {error}",
@@ -57,9 +56,9 @@
   "ai.step.thinking": "Thinking… ({model}, {provider})",
   "ai.system.explain": "You are a senior web developer. In plain words (at most 6 sentences) explain what the failing check means and the single most likely cause. No code blocks, except a one-line command when it really helps. Reply in the language of the user's message.",
   "ai.system.fix": "You are a senior full-stack web developer and DevOps engineer helping a solo developer fix a web project before it goes live. You receive the failing check: log tail, relevant files, environment. Reply in the language of the user's message.\n\nAnswer in exactly this structure:\n1. A short explanation (2–5 sentences): what is wrong and why.\n2. The minimal code change as edit blocks — and nothing after them. Use only these block types:\n\n<<<FILE relative/path.ext>>>\n<<<<<<< SEARCH\nexact existing lines (copied verbatim, whole lines, must match exactly once)\n=======\nreplacement lines\n>>>>>>> REPLACE\n\n<<<NEW FILE relative/path.ext>>>\nfull file content\n<<<END FILE>>>\n\n<<<DELETE FILE relative/path.ext>>>\n\nRules: paths are relative to the project root; never touch node_modules, lockfiles, .git, .env files or anything outside the project; do not change frameworks or versions unless the error requires it; keep each SEARCH small but unique; several SEARCH/REPLACE pairs per file are fine; if a command must be run (install, git…), say it in the explanation instead of inventing files; never put keys, passwords or tokens in code. If the log is not enough to be sure, say which file you need to see instead of guessing.",
-  "ai.unavailable.noKey": "Add your {provider} key in Setup → AI keys.",
+  "ai.unavailable.noKey": "Add your {provider} key in Setup → AI key (or sign in with a plan for the cloud AI).",
   "ai.unavailable.noPlan": "The built-in AI Fix needs a plan (Flash, High or Knight). The external ChatGPT/Claude buttons stay free.",
-  "ai.unavailable.ownKeyRole": "An own AI key is available only to VIP and admin accounts.",
+  "ai.unavailable.ownKeyRole": "An own AI key is not available for this account.",
   "ai.unknownProvider": "Unknown AI provider: {provider}",
   "aifix.cliMissing": "{bin} CLI is not installed. Install it from “Setup” (npm i -g {pkg}).",
   "aifix.command.fixing": "fixing: {step}",
@@ -572,5 +571,11 @@
   "setup.cloud.email": "E-mail confirmation",
   "setup.cloud.emailConfirmOn": "“Confirm email” is on. Supabase's built-in mailer delivers only to the project's team members and a few messages per hour — other people never get the letter. Turn it off (Authentication → Providers → Email) or set up custom SMTP.",
   "setup.cloud.emailConfirmOff": "People can sign in right after sign-up.",
-  "setup.display.authProviders": "Authentication → Providers"
+  "setup.display.authProviders": "Authentication → Providers",
+  "setup.aiKey.title": "AI key (Anthropic or OpenAI)",
+  "setup.aiKey.detail": "VIP and admin accounts run the assistant, AI Fix and deep fixes on their own key instead of the shared cloud model. Stored in the macOS Keychain.",
+  "setup.aiKey.ok": "{name} key connected ({hint})",
+  "setup.action.addKey": "Add key",
+  "setup.display.keychain": "macOS Keychain",
+  "ai.sessionCap": "This session's AI limit is used up — it resets at {at} ({hours}-hour sessions). Buy credits or change the plan to lift it."
 }

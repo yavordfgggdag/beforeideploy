@@ -12,20 +12,20 @@
   "aiDisabled": false,
   "credits": {
     "balance": 250000,
-    "monthlyGrant": 1000000,
+    "monthlyGrant": 250000,
     "renewsAt": "2026-11-01T00:00:00Z",
     "endsAt": null
   },
   "settings": {
     "plans": {
       "flash": {
-        "tokens": 250000
+        "tokens": 100000
       },
       "high": {
-        "tokens": 1000000
+        "tokens": 250000
       },
       "knight": {
-        "tokens": 2500000
+        "tokens": 1000000
       }
     }
   },
@@ -38,6 +38,7 @@
     "help": null
   },
   "profileStale": false,
+  "schemaMissing": false,
   "hasOwnKey": false,
   "features": {
     "ai.cloud": true,

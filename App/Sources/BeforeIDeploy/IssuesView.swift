@@ -114,13 +114,15 @@ struct IssueRow: View {
     }
 
     @ViewBuilder private var fixButton: some View {
+        Button { model.openAssistant(issue: issue.id) } label: { Label(L("ai.askAssistant"), systemImage: "sparkles") }
+            .bidButton(.ghost, compact: true)
+            .help(L("ai.askIssueHelp"))
         if let fix = issue.fix {
             switch fix.type {
             case "safe":
                 Button(L("issue.fix.safe")) { if let id = fix.id { model.requestFix(id) } }.bidButton(.primary, compact: true)
             case "ai":
-                Button(L("issue.fix.ai")) { model.aiStore.start(step: issue.step) }.bidButton(.primary, compact: true)
-                    .disabled(!(model.account?.features?.aiBuiltin ?? true))
+                Button(L("issue.fix.ai")) { if model.aiReady { model.aiStore.start(step: issue.step) } else { model.aiUnavailableAction() } }.bidButton(.primary, compact: true)
             case "ui":
                 Button(K.fixUI(fix.id ?? "setup")) { route(fix.id ?? "setup") }.bidButton(.secondary, compact: true)
             default:

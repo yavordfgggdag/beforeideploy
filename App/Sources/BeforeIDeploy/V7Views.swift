@@ -86,14 +86,17 @@ struct AIFixBar: View {
                             .help(L("ai.deepHelp"))
                     }
                 } else if model.account?.canUseOwnKey == true {
-                    Button { model.screen = .setup } label: { Label(L("ai.addKeyButton"), systemImage: "key.fill") }
-                        .bidButton(.ghost, compact: true)
+                    Button { model.sheet = .aiKeys } label: { Label(L("ai.addKeyButton"), systemImage: "key.fill") }
+                        .bidButton(.primary, compact: true)
                         .help(L("ai.addKeyHelp"))
-                } else if model.account?.features?.billingPlans == true {
-                    Button { model.sheet = .plans } label: { Label(L("ai.fixButton"), systemImage: "sparkles") }
-                        .bidButton(.ghost, compact: true)
-                        .help(L("ai.needsPlan"))
+                } else {
+                    Button { model.aiUnavailableAction() } label: { Label(L("ai.fixButton"), systemImage: "sparkles") }
+                        .bidButton(.primary, compact: true)
+                        .help(L("ai.planHelp"))
                 }
+                Button { model.openAssistant() } label: { Label(L("ai.askAssistant"), systemImage: "bubble.left.and.text.bubble") }
+                    .bidButton(.secondary, compact: true)
+                    .help(L("ai.askAssistantHelp"))
                 Button { model.aiFix(step: step, target: "chatgpt") } label: { Label(L("aifix.chatgpt"), systemImage: "bubble.left.and.bubble.right.fill") }
                     .bidButton(builtin ? .secondary : .primary, compact: true)
                     .help(L("aifix.chatgptHelp"))
@@ -154,19 +157,24 @@ struct MissionControlView: View {
                         VStack(alignment: .leading, spacing: 10) {
                             SectionLabel(text: L("overview.attention"), icon: "bell.badge.fill")
                             ForEach(o.attention) { a in
-                                Button {
-                                    Task { await model.select(a.key) }
-                                } label: {
-                                    HStack(spacing: 10) {
-                                        Image(systemName: Theme.symbol(for: a.level)).foregroundColor(Theme.color(for: a.level))
-                                        Text(a.text).font(.system(size: 12.5)).foregroundColor(Theme.text)
-                                        Spacer()
-                                        Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundColor(Theme.tertiary)
+                                HStack(spacing: 10) {
+                                    Button {
+                                        Task { await model.select(a.key) }
+                                    } label: {
+                                        HStack(spacing: 10) {
+                                            Image(systemName: Theme.symbol(for: a.level)).foregroundColor(Theme.color(for: a.level))
+                                            Text(a.text).font(.system(size: 12.5)).foregroundColor(Theme.text)
+                                            Spacer()
+                                        }
+                                        .padding(.vertical, 5)
+                                        .contentShape(Rectangle())
                                     }
-                                    .padding(.vertical, 5)
-                                    .contentShape(Rectangle())
+                                    .buttonStyle(.plain)
+                                    Button { model.openAssistant(projectKey: a.key) } label: { Label(L("ai.askAssistant"), systemImage: "sparkles") }
+                                        .bidButton(.ghost, compact: true)
+                                        .help(L("ai.askAssistantHelp"))
+                                    Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundColor(Theme.tertiary)
                                 }
-                                .buttonStyle(.plain)
                             }
                         }
                         .card()
@@ -664,9 +672,7 @@ struct SetupView: View {
                     .glowBorder(s.ready ? Theme.ready : Theme.accent, strength: 0.8)
                     .entrance(0)
 
-                    if model.account?.canUseOwnKey == true {
-                        AIKeysCard()
-                    }
+                    if model.account?.canUseOwnKey == true { AIKeysCard().lift().entrance(1) }
 
                     ForEach(Array(groups(s.items).enumerated()), id: \.element.id) { gi, group in
                         VStack(alignment: .leading, spacing: 4) {

@@ -124,11 +124,11 @@ Deno.test("admin: disable_ai flips the flag", async () => {
 
 Deno.test("admin: set_settings upserts by key; get_settings reads back", async () => {
   const { db, handle } = world();
-  assert.equal((await (await handle(post("admin", { action: "set_settings", settings: { "ai.dailyCapPercent": 20 } }))).json()).saved, 1);
-  assert.equal((await handle(post("admin", { action: "set_settings", settings: { "ai.dailyCapPercent": 25, "ai.rate": { perMinute: 3 } } }))).status, 200);
+  assert.equal((await (await handle(post("admin", { action: "set_settings", settings: { "ai.sessionCapPercent": 20 } }))).json()).saved, 1);
+  assert.equal((await handle(post("admin", { action: "set_settings", settings: { "ai.sessionCapPercent": 25, "ai.rate": { perMinute: 3 } } }))).status, 200);
   assert.equal(db.rows("settings").length, 2);
   const { settings } = await (await handle(post("admin", { action: "get_settings" }))).json();
-  assert.equal(settings["ai.dailyCapPercent"], 25);
+  assert.equal(settings["ai.sessionCapPercent"], 25);
   assert.deepEqual(settings["ai.rate"], { perMinute: 3 });
   assert.equal((await handle(post("admin", { action: "set_settings", settings: {} }))).status, 400);
   const bad = await handle(post("admin", { action: "set_settings", settings: { "ai.rate": {}, "evil.key": 1 } }));

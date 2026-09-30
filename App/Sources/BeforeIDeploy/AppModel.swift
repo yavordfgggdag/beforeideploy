@@ -5,7 +5,7 @@ import SwiftUI
 enum Screen: Hashable { case overview, project, domains, costs, setup, admin, account, assistant, usage }
 
 enum SheetKind: Identifiable {
-    case production, netlifySetup, commit, history, settings, remote, spaceshipConnect, connectDomain, deleteAccount, plans, release, rollback, client
+    case production, netlifySetup, commit, history, settings, remote, spaceshipConnect, connectDomain, deleteAccount, plans, release, rollback, client, aiKeys
     var id: Int { hashValue }
 }
 
@@ -416,6 +416,37 @@ final class AppModel: ObservableObject, Feedback {
 
     func refreshStatus(quiet: Bool = false) async { await projectStore.refreshStatus(quiet: quiet) }
 
+    /// Whether the embedded AI can run right now: an own key on this Mac, or a paid plan for the cloud model.
+    var aiReady: Bool { account?.features?.aiBuiltin == true }
+
+    /// The right door when the AI cannot run yet: VIP/admin add a key, members pick a plan, guests sign in.
+    func aiUnavailableAction() {
+        if account?.canUseOwnKey == true {
+            flash(L("ai.keyNeeded"), error: false)
+            sheet = .aiKeys
+        } else if account?.loggedIn == true {
+            flash(L("ai.planNeeded"), error: false)
+            sheet = .plans
+        } else {
+            flash(L("ai.signInNeeded"), error: true)
+            offlineMode = false
+        }
+    }
+
+    /// Opens the AI assistant for the selected project, with an issue preselected when given. Without a
+    /// key or plan it opens the key sheet instead, so the first click never ends in a dead button.
+    func openAssistant(issue: String? = nil, projectKey: String? = nil) {
+        Task {
+            if let k = projectKey, projectStore.selected?.key != k { await select(k, show: false) }
+            guard aiReady else {
+                aiUnavailableAction()
+                return
+            }
+            if let issue { assistantStore.selectedIssue = issue }
+            screen = .assistant
+        }
+    }
+
     func loadHistory() async { await projectStore.loadHistory() }
 
     /// A profile made on another Mac carries the language the user picked there — follow it once at login.
@@ -681,6 +712,7 @@ final class AppModel: ObservableObject, Feedback {
         case "open":
             open(a.url)
         case "app":
+            if a.appAction == "ai-key" { sheet = .aiKeys }
             if a.appAction == "cloud-schema" {
                 Task {
                     if await copyCloudSchema() {

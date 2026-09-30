@@ -3,8 +3,11 @@
 //
 // Owner decisions from V10-PLAN §5 live here as constants so they can be flipped in one place:
 //   FREE_CLOUD_SYNC (decision 5: Free plan without cloud sync)   CLOUD_AI_PROVIDER (decision 3: Anthropic)
+//   OWN_KEY_FOR_EVERYONE (owner decision 2026-09-30, docs/PLANS-AND-CREDITS-BG.md: false — Free, Flash, High and
+//   Knight run on the owner's accounts through the cloud; VIP and admin bring their own keys)
 
 export const FREE_CLOUD_SYNC = false;
+export const OWN_KEY_FOR_EVERYONE = false;
 export const CLOUD_AI_PROVIDER = 'anthropic';
 
 export const ROLES = ['normal', 'vip', 'admin'];
@@ -30,7 +33,7 @@ export function features(account) {
   const paid = PAID.includes(a.plan);
   return {
     'ai.cloud': a.role === 'normal' && paid && !a.aiDisabled,   // central key, metered by the backend
-    'ai.ownKey': privileged,                                     // own Anthropic/OpenAI key from Keychain
+    'ai.ownKey': privileged || OWN_KEY_FOR_EVERYONE,             // own Anthropic/OpenAI key from Keychain
     'ai.builtin': (a.role === 'normal' && paid && !a.aiDisabled) || (privileged && a.hasOwnKey),
     'ai.external': true,                                         // ChatGPT/Claude/Codex buttons — free for everyone
     'ai.deep': a.plan === 'knight' || privileged,

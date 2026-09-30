@@ -1,6 +1,19 @@
 {
   "items": [
     {
+      "group": "Cloud (accounts, AI, billing)",
+      "id": "cloud-config",
+      "title": "Supabase project",
+      "ok": false,
+      "detail": "No cloud project is configured — the Cloud setup screen takes the URL and anon key.",
+      "action": {
+        "type": "open",
+        "label": "Open",
+        "url": "https://supabase.com/dashboard"
+      },
+      "optional": false
+    },
+    {
       "group": "Basics",
       "id": "node",
       "title": "Node.js",
@@ -204,7 +217,7 @@
       "id": "claude-code",
       "title": "Claude Code",
       "ok": true,
-      "detail": "2.1.284 (Claude Code)",
+      "detail": "2.1.285 (Claude Code)",
       "action": null,
       "optional": true
     },
@@ -223,6 +236,7 @@
     }
   ],
   "ready": false,
-  "missingRequired": 5,
-  "missingOptional": 9
+  "missingRequired": 6,
+  "missingOptional": 9,
+  "cloudReady": false
 }

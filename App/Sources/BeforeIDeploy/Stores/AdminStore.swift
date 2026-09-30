@@ -14,7 +14,7 @@ final class AdminStore: ObservableObject {
     @Published var settings: [String: String] = [:]
 
     /// Keys the panel offers even before they exist in the table.
-    static let knownSettings = ["billing.catalog", "plans", "ai.models", "ai.multipliers", "ai.dailyCapPercent",
+    static let knownSettings = ["billing.catalog", "plans", "ai.models", "ai.creditEur", "ai.usdToEur", "ai.sessionHours", "ai.sessionCapPercent",
                                 "ai.rate", "ai.promptMaxChars", "ai.prices", "release.url", "help.url",
                                 "legal.privacy", "legal.terms", "legal.refund", "support.email"]
 

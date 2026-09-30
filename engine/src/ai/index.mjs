@@ -14,7 +14,7 @@ import { chooseProvider, stream } from './providers.mjs';
 import { parseAnswer, plan as planPatch, apply as applyPatch, reasonKey } from './patch.mjs';
 
 /** Fallbacks when the cloud `settings` table has no `ai.models` (Admin panel edits it without a release). */
-export const DEFAULT_MODELS = { fast: 'claude-haiku-4-5', standard: 'claude-sonnet-5', deep: 'claude-opus-5', openai: 'gpt-5' };
+export const DEFAULT_MODELS = { fast: 'claude-haiku-4-5', standard: 'claude-opus-5-5', deep: 'claude-opus-5-5', openai: 'gpt-5' };
 const PATCH_TTL_MS = 7 * 86400000;
 
 function pickModel({ provider, deep, explicit, status, mode }) {

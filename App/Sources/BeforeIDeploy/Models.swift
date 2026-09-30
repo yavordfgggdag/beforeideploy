@@ -1318,7 +1318,10 @@ struct UsageReport: Codable {
     struct Tokens: Codable, Hashable { var tokens: Int; var operations: Int? }
     struct Remaining: Codable, Hashable { var plan: Int; var purchased: Int; var total: Int; var available: Int }
     struct Purchased: Codable, Hashable { var tokens: Int; var expires: String? }
-    struct Limits: Codable, Hashable { var perMinute: Int; var perHour: Int; var dailyCapPercent: Int; var dailyCapTokens: Int?; var spentToday: Int }
+    struct Limits: Codable, Hashable { var perMinute: Int; var perHour: Int; var sessionHours: Int?; var sessionCapPercent: Int?; var sessionCap: Int?; var sessionUsed: Int? }
+    /// The rolling session (as in Claude): a share of the monthly credits per N hours, with the time it resets.
+    struct Session: Codable, Hashable { var windowHours: Int; var capPercent: Int; var cap: Int; var used: Int; var remaining: Int; var resetsAt: String? }
+    struct ModelUsage: Codable, Hashable, Identifiable { var model: String; var tokens: Int; var operations: Int; var id: String { model } }
     struct Pricing: Codable, Hashable { var version: String; var spendOrder: [String]? }
     struct Reconciled: Codable, Hashable { var releasedHolds: Int }
     struct Operation: Codable, Identifiable, Hashable {
@@ -1356,6 +1359,8 @@ struct UsageReport: Codable {
     var reserved: Tokens
     var remaining: Remaining
     var purchased: Purchased
+    var session: Session?
+    var byModel: [ModelUsage]?
     var limits: Limits
     var pricing: Pricing
     var reconciled: Reconciled?

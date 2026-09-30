@@ -252,7 +252,7 @@ export async function assistantChat(project, opts = {}) {
   const settings = assistantSettings();
   const status = await accountStatus();
   const provider = chooseProvider({ features: status.features || null, requested: opts.provider });
-  const model = provider === 'cloud' ? null : opts.model && opts.model !== true ? opts.model : provider === 'openai' ? (status.settings?.['ai.models']?.openai || 'gpt-5') : (status.settings?.['ai.models']?.standard || 'claude-sonnet-5');
+  const model = provider === 'cloud' ? null : opts.model && opts.model !== true ? opts.model : provider === 'openai' ? (status.settings?.['ai.models']?.openai || 'gpt-5') : (status.settings?.['ai.models']?.standard || 'claude-opus-5-5');
   const budget = { limit: Math.min(settings.maxTokensPerOperation, Number(opts.budget) || settings.maxTokensPerOperation), used: 0, calls: 0 };
   const history = assistantHistory(project, { limit: 1 });
   const conversation = opts.newConversation || !history.conversation ? crypto.randomBytes(6).toString('hex') : history.conversation;

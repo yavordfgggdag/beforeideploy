@@ -109,7 +109,7 @@ export async function reconcileHolds(db: DbClient, userId: string, now: Date): P
 export async function pricingVersion(settings: Record<string, unknown>): Promise<string> {
   const explicit = settings["pricing.version"];
   if (typeof explicit === "string" && explicit) return explicit;
-  const text = JSON.stringify({ prices: settings["ai.prices"] ?? null, multipliers: settings["ai.multipliers"] ?? null, plans: settings["plans"] ?? null });
+  const text = JSON.stringify({ prices: settings["ai.prices"] ?? null, creditEur: settings["ai.creditEur"] ?? null, usdToEur: settings["ai.usdToEur"] ?? null, plans: settings["plans"] ?? null });
   const d = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)));
   return "p-" + [...d.slice(0, 6)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }

@@ -617,6 +617,12 @@ struct CommandPalette: View {
             PaletteCommand(title: L("common.domains"), subtitle: L("palette.domainsDetail"), icon: "network") { model.screen = .domains; Task { await model.loadSpaceship() } },
             PaletteCommand(title: L("common.costs"), subtitle: L("palette.costsDetail"), icon: "creditcard.fill") { model.screen = .costs; Task { await model.loadCosts() } },
             PaletteCommand(title: L("common.setup"), subtitle: L("palette.setupDetail"), icon: "wand.and.stars") { model.screen = .setup; Task { await model.loadSetup() } },
+            PaletteCommand(title: L("ai.askAssistant"), subtitle: L("palette.assistantDetail"), icon: "sparkles") { model.openAssistant() },
+        ]
+        if model.account?.canUseOwnKey == true {
+            c.append(PaletteCommand(title: L("ai.addKeyButton"), subtitle: L("palette.aiKeyDetail"), icon: "key.fill") { model.sheet = .aiKeys })
+        }
+        c += [
         ]
         if model.account?.isAdmin == true {
             c.append(PaletteCommand(title: L("admin.title"), subtitle: L("admin.subtitle"), icon: "person.2.badge.gearshape.fill") { model.screen = .admin })

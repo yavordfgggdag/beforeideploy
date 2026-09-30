@@ -789,15 +789,15 @@ http.createServer((q,r)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{r.setHea
    const beat=monBeat?{lastRunAt:monBeat,healthy:true,state:'running',checked:1}:{lastRunAt:null,healthy:false,state:'never',checked:null};
    return r.end(JSON.stringify({runsOn:'cloud',serverSide:true,active:beat.healthy&&Object.keys(mine).length>0,scheduler:beat,limits:{minIntervalMin:5,batch:25,confirmFailures:2,retentionDays:90,heartbeatStaleMin:15,timeoutMs:5000},targets:Object.values(mine),openIncidents:monIncidents.filter(i=>i.user===me.user_id&&i.status==='open').map(({user,...i})=>i)}));}
  if(q.url==='/functions/v1/billing'){const me=caller(q);if(!me){r.statusCode=401;return r.end('{"error":"no session"}');}
-   const cat={currency:'EUR',plans:[{id:'flash',price:4.99,tokens:250000,available:true},{id:'high',price:9.99,tokens:1000000,available:true,yearlyPrice:95.9,yearlyAvailable:true},{id:'knight',price:19.99,tokens:2500000,available:false}],packs:[{id:'pack-500k',tokens:500000,price:4.99,available:true}],trial:{days:7,plan:'high',tokens:150000}};
+   const cat={currency:'EUR',plans:[{id:'flash',price:9.99,tokens:100000,available:true},{id:'high',price:29.99,tokens:250000,available:true,yearlyPrice:299.9,yearlyAvailable:true},{id:'knight',price:99.99,tokens:1000000,available:false}],packs:[{id:'pack-100k',tokens:100000,price:3.99,available:true},{id:'pack-500k',tokens:500000,price:17.99,available:true}],trial:{days:7,plan:'high',tokens:50000}};
    const st=()=>{const mine=ledger.filter(l=>l.user_id===me.user_id);const pl=mine.filter(l=>l.bucket==='plan').reduce((a,l)=>a+l.delta,0);const top=mine.filter(l=>l.bucket!=='plan').reduce((a,l)=>a+l.delta,0);
      return {plan:me.plan,subscription:me.trialEnds?{provider:'trial',tier:'high',status:'trial',renewsAt:null,endsAt:me.trialEnds,manageable:false}:null,balance:{plan:Math.max(0,pl),topup:Math.max(0,top),total:Math.max(0,pl+top)},trialAvailable:!me.trialEnds,usage:[{at:'2026-10-09T10:00:00Z',step:'build',model:'claude-sonnet-5',tokens:6000,project:'p1'}]};};
    if(j.action==='catalog')return r.end(JSON.stringify(cat));
    if(j.action==='status')return r.end(JSON.stringify(st()));
-   if(j.action==='trial'){if(me.trialEnds){r.statusCode=409;return r.end('{"error":"used","code":"trial_used"}');}me.trialEnds='2026-10-17T12:00:00.000Z';me.plan='high';ledger.push({user_id:me.user_id,delta:150000,bucket:'plan',reason:'trial_grant'});return r.end(JSON.stringify(st()));}
+   if(j.action==='trial'){if(me.trialEnds){r.statusCode=409;return r.end('{"error":"used","code":"trial_used"}');}me.trialEnds='2026-10-17T12:00:00.000Z';me.plan='high';ledger.push({user_id:me.user_id,delta:50000,bucket:'plan',reason:'trial_grant'});return r.end(JSON.stringify(st()));}
    if(j.action==='checkout'){const it=cat.plans.find(x=>x.id===j.plan)||cat.packs.find(x=>x.id===j.pack);if(!it){r.statusCode=400;return r.end('{"error":"unknown"}');}if(!it.available){r.statusCode=409;return r.end('{"error":"x","code":"not_available"}');}return r.end(JSON.stringify({url:'https://pay.example/checkout?_ptxn=txn_'+(j.plan||j.pack)+(j.interval==='year'?'_year':''),transaction:'txn_1'}));}
    if(j.action==='portal'){r.statusCode=404;return r.end('{"error":"none","code":"no_subscription"}');}
-   if(j.action==='usage'){const s0=st();return r.end(JSON.stringify({serverTime:new Date().toISOString(),unit:'tokens',plan:me.plan,subscription:s0.subscription,trialAvailable:s0.trialAvailable,period:{start:'2026-10-01T00:00:00.000Z',end:'2026-11-01T00:00:00.000Z',renewsAt:me.plan==='free'?null:'2026-11-01T00:00:00.000Z',source:'calendar'},included:{tokens:me.plan==='high'?1000000:0},used:{tokens:6000,operations:1},reserved:{tokens:0,operations:0},remaining:{plan:s0.balance.plan,purchased:s0.balance.topup,total:s0.balance.total,available:s0.balance.total},purchased:{tokens:s0.balance.topup,expires:'12 months after purchase'},limits:{perMinute:6,perHour:60,dailyCapPercent:15,dailyCapTokens:me.plan==='high'?150000:null,spentToday:0},pricing:{version:'p-test',spendOrder:['plan','topup']},reconciled:{releasedHolds:0},history:{operations:s0.usage.map((u,i)=>({id:'u'+i,at:u.at,step:u.step,project:u.project,model:u.model,status:'ok',tokens:u.tokens})),ledger:ledger.filter(l=>l.user_id===me.user_id).map((l,i)=>({id:i,at:'2026-10-09T10:00:00Z',delta:l.delta,bucket:l.bucket||'plan',reason:l.reason}))}}));}
+   if(j.action==='usage'){const s0=st();return r.end(JSON.stringify({serverTime:new Date().toISOString(),unit:'credits',plan:me.plan,subscription:s0.subscription,trialAvailable:s0.trialAvailable,period:{start:'2026-10-01T00:00:00.000Z',end:'2026-11-01T00:00:00.000Z',renewsAt:me.plan==='free'?null:'2026-11-01T00:00:00.000Z',source:'calendar'},included:{tokens:me.plan==='high'?250000:0},used:{tokens:6000,operations:1},reserved:{tokens:0,operations:0},remaining:{plan:s0.balance.plan,purchased:s0.balance.topup,total:s0.balance.total,available:s0.balance.total},purchased:{tokens:s0.balance.topup,expires:'12 months after purchase'},session:me.plan==='high'?{windowHours:5,capPercent:20,cap:50000,used:1472,remaining:48528,resetsAt:'2026-10-09T15:00:00Z'}:null,byModel:[{model:'claude-opus-5-5',tokens:6000,operations:1}],limits:{perMinute:6,perHour:60,sessionHours:5,sessionCapPercent:20,sessionCap:me.plan==='high'?50000:null,sessionUsed:0},pricing:{version:'p-test',spendOrder:['plan','topup']},reconciled:{releasedHolds:0},history:{operations:s0.usage.map((u,i)=>({id:'u'+i,at:u.at,step:u.step,project:u.project,model:u.model,status:'ok',tokens:u.tokens})),ledger:ledger.filter(l=>l.user_id===me.user_id).map((l,i)=>({id:i,at:'2026-10-09T10:00:00Z',delta:l.delta,bucket:l.bucket||'plan',reason:l.reason}))}}));}
    if(j.action==='sync')return r.end(JSON.stringify({synced:[],status:st()}));
 
 
@@ -806,7 +806,7 @@ http.createServer((q,r)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{r.setHea
    if(j.action==='export')return r.end(JSON.stringify({user:{id:me.user_id,email:me.email},profile:me,subscriptions:[],credit_ledger:ledger.filter(l=>l.user_id===me.user_id),ai_usage:[],projects:rows.filter(x=>x.user_id===me.user_id)}));
    if(j.action==='delete'){delete users[me.email];delete profiles[me.user_id];rows=rows.filter(x=>x.user_id!==me.user_id);audit.push({admin:me.user_id,action:'delete_me',target:me.user_id});return r.end('{"deleted":true}');}
    r.statusCode=400;return r.end('{"error":"unknown action"}');}
- if(q.url.startsWith('/rest/v1/settings')){if(!caller(q)){r.statusCode=401;return r.end('{}');}return r.end(JSON.stringify([{key:'plans',value:{flash:{tokens:250000},high:{tokens:1000000},knight:{tokens:2500000}}}]));}
+ if(q.url.startsWith('/rest/v1/settings')){if(!caller(q)){r.statusCode=401;return r.end('{}');}return r.end(JSON.stringify([{key:'plans',value:{flash:{tokens:100000},high:{tokens:250000},knight:{tokens:1000000}}}]));}
  if(q.url.startsWith('/rest/v1/subscriptions')){const me=caller(q);if(!me){r.statusCode=401;return r.end('{}');}return r.end(JSON.stringify(me.plan!=='free'?[{provider:'manual',status:'active',period_end:'2026-11-01T00:00:00Z',cancel_at:null}]:[]));}
  if(q.url==='/auth/v1/health'){return r.end('{"name":"GoTrue"}');}
  if(q.url==='/auth/v1/resend'){resent.push(j.email);return r.end('{}');}
@@ -852,9 +852,10 @@ t('cloud schema: engine-ът връща supabase/schema.sql', () => {
   assert(f.data['ai.cloud'] === true && f.data['ai.deep'] === true && f.data['projects.max'] === null, JSON.stringify(f.data));
 });
 
-t('акаунт: без облак → configured:false', () => {
+t('акаунт: без облак → configured:false; без вход има само външните AI бутони (Free не харчи нищо)', () => {
   const r = bid('account', 'status');
-  assert(r.data.configured === false, JSON.stringify(r.data));
+  assert(r.data.configured === false && r.data.loggedIn === false, JSON.stringify(r.data));
+  assert(r.data.features && r.data.features['ai.external'] === true && r.data.features['ai.cloud'] === false && r.data.features['ai.ownKey'] === false && r.data.features['ai.builtin'] === false, JSON.stringify(r.data.features));
 });
 
 t('акаунт: регистрация, вход, грешна парола, sync, изход', () => {
@@ -909,7 +910,7 @@ t('акаунт: регистрация, вход, грешна парола, sy
     assert(users.result.ok && users.data.users.length === 1, JSON.stringify(users.result));
     bid('account', 'logout');
     const friend = bid('account', 'signup', '--email', 'friend@example.com', '--password', 'supersecret2', '--name', 'Friend');
-    assert(friend.data.role === 'normal' && friend.data.features['admin.panel'] === false && friend.data.features['cloud.sync'] === false, JSON.stringify(friend.data));
+    assert(friend.data.role === 'normal' && friend.data.features['admin.panel'] === false && friend.data.features['cloud.sync'] === false && friend.data.features['ai.ownKey'] === false, JSON.stringify(friend.data));
     assert(friend.data.features['projects.max'] === 2, 'free plan limit');
     const skipped = bid('account', 'sync');
     assert(skipped.result.ok && skipped.data.synced === 0 && skipped.data.skipped === 'plan', JSON.stringify(skipped.result));
@@ -1244,6 +1245,12 @@ t('ai: собствен ключ → patch, прилагане само с --yes
   assert(usage.data.local.tokens >= 6000 && usage.data.local.byProvider.anthropic, JSON.stringify(usage.data.local));
   const explain = bid('ai', 'explain', '--project', aiApp, '--step', 'build');
   assert(explain.result.ok && explain.data.mode === 'explain' && explain.data.explanation.length > 10, JSON.stringify(explain.result));
+  // signed out, the stored key is not used: Free and guests never spend money (docs/PLANS-AND-CREDITS-BG.md)
+  bid('account', 'logout');
+  const guest = bid('account', 'status');
+  assert(guest.data.loggedIn === false && guest.data.features['ai.builtin'] === false, JSON.stringify(guest.data.features));
+  assert(['not_logged_in', 'ai_unavailable'].includes(bid('ai', 'explain', '--project', aiApp, '--step', 'build').result.code), 'guest AI must be refused');
+  bid('account', 'login', '--email', 'yavor@example.com', '--password', 'supersecret1');
   bid('account', 'keys', 'delete', '--provider', 'anthropic');
 });
 
@@ -1425,7 +1432,7 @@ t('ai: cloud път — план, кредити, quota_exhausted → exit 8, fr
   const login = (email, pw) => { bid('account', 'logout'); return bid('account', 'login', '--email', email, '--password', pw); };
   const f = login('friend@example.com', 'supersecret2');
   assert(f.data.features['ai.cloud'] === true && f.data.credits.balance === 250000, JSON.stringify(f.data));
-  assert(f.data.credits.monthlyGrant === 1000000 && f.data.credits.renewsAt === '2026-11-01T00:00:00Z', 'credits: ' + JSON.stringify(f.data.credits));
+  assert(f.data.credits.monthlyGrant === 250000 && f.data.credits.renewsAt === '2026-11-01T00:00:00Z', 'credits: ' + JSON.stringify(f.data.credits));
   fixture('account-status-high', f.data);
   const fix = bid('ai', 'fix', '--project', cloudApp, '--step', 'build');
   assert(fix.result.ok, fix.result?.error);
@@ -1456,7 +1463,7 @@ t('billing: каталог, статус, пробен период веднъж
   const st = bid('billing', 'status');
   assert(st.data.plan === 'free' && st.data.trialAvailable === true, JSON.stringify(st.data));
   const trial = bid('billing', 'trial');
-  assert(trial.data.plan === 'high' && trial.data.balance.plan === 150000 && trial.data.subscription.provider === 'trial', JSON.stringify(trial.data));
+  assert(trial.data.plan === 'high' && trial.data.balance.plan === 50000 && trial.data.subscription.provider === 'trial', JSON.stringify(trial.data));
   fixture('billing-status', trial.data);
   const again = bid('billing', 'trial');
   assert(again.result.code === 'billing_failed' && again.result.key === 'billing.trialUsed', JSON.stringify(again.result));
@@ -1493,7 +1500,10 @@ t('billing: каталог, статус, пробен период веднъж
 
 t('billing: usage е server-authoritative — период, включено/използвано/резервирано/оставащо, история; sync без абонамент', () => {
   const u = bid('billing', 'usage');
-  assert(u.result.ok && u.data.unit === 'tokens' && u.data.period.start && u.data.remaining.available >= 0 && Array.isArray(u.data.history.operations) && Array.isArray(u.data.history.ledger) && u.data.pricing.version, JSON.stringify(u.result));
+  assert(u.result.ok && u.data.unit === 'credits' && u.data.period.start && u.data.remaining.available >= 0 && Array.isArray(u.data.history.operations) && Array.isArray(u.data.history.ledger) && u.data.pricing.version, JSON.stringify(u.result));
+  fixture('usage-report', u.data);
+  assert(u.data.session === null || (typeof u.data.session.cap === 'number' && typeof u.data.session.used === 'number'), 'session shape');
+  assert(Array.isArray(u.data.byModel), 'per-model breakdown');
   assert(typeof u.data.reserved.tokens === 'number' && typeof u.data.limits.perMinute === 'number', 'reserved + limits');
   const sy = bid('billing', 'sync');
   assert(sy.result.ok && Array.isArray(sy.data.synced) && sy.data.status.plan, JSON.stringify(sy.result));

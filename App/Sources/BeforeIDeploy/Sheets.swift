@@ -625,6 +625,33 @@ struct LegalLinks: View {
     }
 }
 
+// MARK: - AI key (embedded AI on your own key)
+
+/// One place to connect an Anthropic or OpenAI key: reached from every "AI" button when no key or plan is set.
+struct AIKeysSheet: View {
+    @EnvironmentObject var model: AppModel
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        SheetScaffold(icon: "sparkles", iconTint: Theme.accent, title: L("aikeys.sheetTitle"), subtitle: L("aikeys.sheetSubtitle"), width: 560) {
+            VStack(alignment: .leading, spacing: 12) {
+                AIKeysCard()
+                if model.account?.features?.billingPlans == true, model.account?.loggedIn == true {
+                    HStack(spacing: 8) {
+                        Image(systemName: "creditcard").foregroundColor(Theme.secondary)
+                        Text(L("aikeys.orPlan")).font(.system(size: 12)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
+                        Spacer()
+                        Button(L("aikeys.seePlans")) { dismiss(); model.sheet = .plans }.bidButton(.ghost, compact: true)
+                    }
+                }
+                Text(L("aikeys.privacy")).font(.system(size: 11.5)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
+            }
+        } actions: {
+            Button(L("common.done")) { dismiss() }.bidButton(.primary).keyboardShortcut(.defaultAction)
+        }
+    }
+}
+
 // MARK: - Delete account (GDPR, WP5)
 
 struct DeleteAccountSheet: View {

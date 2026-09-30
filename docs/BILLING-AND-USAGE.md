@@ -4,16 +4,20 @@ One source of truth for AI credits: `public.credit_ledger` in the cloud. The app
 (`billing usage`), never a client-side estimate; the engine keeps a local cost journal only for the owner's own
 providers (Netlify, own AI keys) and marks it as such.
 
-## 1. Units
+## 1. Units (revised 2026-09-30 — docs/PLANS-AND-CREDITS-BG.md)
 
 | Unit | Where it appears | Never mixed with |
 |---|---|---|
-| **tokens** | credits: plan grants, packs, holds, charges; every number on "Plan & usage" | money |
-| **money** (EUR in the catalog) | plan and pack prices in the catalog / checkout; proration and tax from Paddle's checkout | tokens |
-| **model tokens** (input / output) | `ai_usage.input_tokens / output_tokens`; the charge is `(input + output) × multiplier` | — |
+| **credits** | plan grants, packs, holds, charges; every number on "Plan & usage" (the ledger column is still named `tokens` / `charged_tokens` for compatibility) | money, model tokens |
+| **money** (EUR in the catalog) | plan and pack prices in the catalog / checkout; proration and tax from Paddle's checkout; the owner's cost per credit (`ai.creditEur`) | credits |
+| **model tokens** (input / output) | `ai_usage.input_tokens / output_tokens`; the charge is `ceil(model cost in EUR / credit value of the plan)` (`creditsFor` in `ai-fix`) | — |
 
-There is no separate "product credit" currency: a credit is a token. The catalog says how many tokens a plan
-or a pack gives; the ledger only ever moves tokens.
+A credit is a money-backed unit: Flash 100 000 credits = 2.49 € of model cost, High 250 000 = 7.50 €, Knight
+1 000 000 = 30 €. Because the charge follows the model's real price, the plan's credits can never cost the
+owner more than that cap, whatever model or answer length. Plans: Flash 9.99 €, High 29.99 €, Knight 99.99 €
+a month (yearly = 10 months); packs 100k / 500k / 1M credits at 3.99 / 17.99 / 33.99 €; trial 7 days of High
+with 50 000 credits. The rolling **session** (5 h, 20 % of the monthly credits, code `session_cap`) replaces
+the daily cap.
 
 ## 2. Ledger (`credit_ledger`)
 

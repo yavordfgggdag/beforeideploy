@@ -200,8 +200,14 @@ function withFeatures(user, profile) {
   };
 }
 
+/** What a Mac without a session can do: external AI buttons and an own key — never the metered cloud. */
+function guestFeatures() {
+  const hasOwnKey = hasOwnAiKey();
+  return { hasOwnKey, features: features({ role: 'normal', plan: 'free', hasOwnKey }) };
+}
+
 async function publicUser(session) {
-  if (!session?.user) return { configured: !!cloudConfig(), loggedIn: false, links: publicLinks() };
+  if (!session?.user) return { configured: !!cloudConfig(), loggedIn: false, links: publicLinks(), ...guestFeatures() };
   return withFeatures({ configured: true, loggedIn: true, ...session.user }, await loadProfile(session));
 }
 
@@ -299,7 +305,7 @@ export async function authProviders() {
 
 export async function accountStatus() {
   const configured = !!cloudConfig();
-  if (!configured) return { configured: false, loggedIn: false };
+  if (!configured) return { configured: false, loggedIn: false, links: publicLinks(), ...guestFeatures() };
   const s = await currentSession();
   const user = await publicUser(s);
   if (!user.loggedIn) user.providers = await authProviders();

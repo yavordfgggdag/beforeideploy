@@ -2,12 +2,19 @@
 import fs from 'node:fs';
 import { spawn } from 'node:child_process';
 import path from 'node:path';
-import { HOME, ENGINE_DIR, CACHE_DIR, EngineError, ev, emit, sh, which, runStream, ensureDir, exists, readJSON } from './util.mjs';
+import { HOME, ENGINE_DIR, CACHE_DIR, APP_DIR, EngineError, ev, emit, sh, which, runStream, ensureDir, exists, readJSON } from './util.mjs';
 import { netlifyAuth, netlifyLogin } from './netlify.mjs';
 import { spaceshipConnected } from './spaceship.mjs';
 import { providerStatus } from './hosting.mjs';
 import { t, msg } from './i18n.mjs';
 import { cloudDoctor, cloudSetupItems } from './cloud.mjs';
+import { aiKeysStatus } from './aikeys.mjs';
+
+/** VIP/admin only (docs/PLANS-AND-CREDITS-BG.md): the last profile seen says which role this Mac has. */
+function ownKeyAllowed() {
+  const role = readJSON(path.join(APP_DIR, 'profile.json'), null)?.role;
+  return role === 'vip' || role === 'admin';
+}
 
 function fileHas(file, re) {
   try {
@@ -94,6 +101,16 @@ export function setupStatus() {
   add(t('setup.group.hosting'), 'wrangler-auth', t('setup.cloudflareAccount.title'), wrAuth, wrAuth ? t('setup.loggedIn') : wr ? t('setup.action.browserLogin') : t('setup.cloudflareAccount.installFirst'), wr ? { type: 'terminal', label: t('setup.action.browserLogin'), script: 'wrangler login' } : null, true);
 
   // ---------------------------------------------------------------- AI
+  if (ownKeyAllowed()) {
+    const keys = aiKeysStatus();
+    const keyOn = keys.find((k) => k.connected);
+    add(t('setup.group.ai'), 'ai-key', t('setup.aiKey.title'), !!keyOn, keyOn ? t('setup.aiKey.ok', { name: keyOn.name, hint: keyOn.hint || '' }) : t('setup.aiKey.detail'), {
+      type: 'app',
+      label: t('setup.action.addKey'),
+      appAction: 'ai-key',
+      display: t('setup.display.keychain'),
+    }, true);
+  }
   const codex = which('codex');
   add(t('setup.group.ai'), 'codex', 'Codex CLI', !!codex, codex ? version('codex') : t('setup.codex.detail'), npmInstall('@openai/codex'), true);
   const codexAuth = exists(path.join(HOME, '.codex', 'auth.json')) || !!process.env.OPENAI_API_KEY;
