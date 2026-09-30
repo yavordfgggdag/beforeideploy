@@ -371,7 +371,8 @@ struct ProjectOverviewCard: View {
                         .font(.system(size: 11.5, weight: .medium)).foregroundColor(Theme.blocked)
                 }
                 if let sig = card.signals {
-                    HStack(spacing: 6) {
+                    // wraps onto a second row instead of squeezing five pills into one (text broke letter by letter)
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 118), spacing: 6, alignment: .leading)], alignment: .leading, spacing: 6) {
                         SignalPill(name: L("signal.deploy"), signal: sig["deploy"], icon: "paperplane")
                         SignalPill(name: L("signal.uptime"), signal: sig["uptime"], icon: "dot.radiowaves.left.and.right")
                         SignalPill(name: L("signal.ssl"), signal: sig["ssl"], icon: "lock.fill")

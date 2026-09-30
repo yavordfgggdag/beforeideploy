@@ -223,15 +223,23 @@ struct SignalPill: View {
         }
     }
 
+    /// A deploy id or commit hash is shortened to 8 characters; the full value stays in the tooltip.
+    private var shown: String {
+        let v = signal?.value ?? K.signalState(signal?.state ?? "unchecked")
+        return v.count > 14 && v.range(of: "^[0-9a-fA-F]+$", options: .regularExpression) != nil ? String(v.prefix(8)) : v
+    }
+
     var body: some View {
         HStack(spacing: 5) {
             Image(systemName: icon).font(.system(size: 10, weight: .semibold)).foregroundColor(tint)
-            Text(signal?.value ?? K.signalState(signal?.state ?? "unchecked")).font(.system(size: 11, weight: .medium)).foregroundColor(signal?.state == "unsupported" || signal == nil ? Theme.tertiary : Theme.text)
-            if let at = signal?.at { Text(Fmt.relative(at)).font(.system(size: 10)).foregroundColor(Theme.tertiary) }
+            Text(shown).font(.system(size: 11, weight: .medium)).foregroundColor(signal?.state == "unsupported" || signal == nil ? Theme.tertiary : Theme.text)
+                .lineLimit(1).truncationMode(.middle)
+            if let at = signal?.at { Text(Fmt.relative(at)).font(.system(size: 10)).foregroundColor(Theme.tertiary).lineLimit(1) }
         }
+        .fixedSize(horizontal: false, vertical: true)
         .padding(.horizontal, 7).padding(.vertical, 3)
         .background(Capsule().fill(tint.opacity(signal?.state == "healthy" || signal?.state == "problem" ? 0.12 : 0.06)))
-        .help("\(name): \(K.signalState(signal?.state ?? "unchecked"))\(signal?.source.map { " · \($0)" } ?? "")\(signal?.detail.map { " · \($0)" } ?? "")")
+        .help("\(name): \(signal?.value ?? K.signalState(signal?.state ?? "unchecked"))\(signal?.source.map { " · \($0)" } ?? "")\(signal?.detail.map { " · \($0)" } ?? "")")
         .accessibilityLabel("\(name): \(signal?.value ?? K.signalState(signal?.state ?? "unchecked"))")
     }
 }
