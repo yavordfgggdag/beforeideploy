@@ -29,6 +29,8 @@ interface UpstreamOpts {
   status?: number;
   body?: string;
   throws?: boolean;
+  /** The model does not answer until this resolves (lets a test line requests up before any of them settles). */
+  holdUntil?: Promise<void>;
 }
 
 function fakeAnthropic(opts: UpstreamOpts = {}) {
@@ -36,6 +38,7 @@ function fakeAnthropic(opts: UpstreamOpts = {}) {
   const f = (async (input: RequestInfo | URL, init?: RequestInit) => {
     calls.push({ url: String(input), headers: (init?.headers ?? {}) as Record<string, string>, body: JSON.parse(String(init?.body)), signal: init?.signal });
     if (opts.throws) throw new TypeError("connection refused");
+    if (opts.holdUntil) await opts.holdUntil;
     return new Response(opts.body ?? OK_STREAM, { status: opts.status ?? 200, headers: { "content-type": "text/event-stream" } });
   }) as unknown as typeof fetch;
   return { fetch: f, calls };
@@ -300,10 +303,16 @@ Deno.test("ai-fix: plan tokens are spent first, the rest comes from top-up packs
 // ---------------------------------------------------------------- audit batch 2 (C1, C6, C9, C10)
 
 Deno.test("ai-fix: parallel requests see each other's reservations and cannot all overspend", async () => {
-  // each request reserves ≈ 4,900 credits (prompt estimate + a full 8,000-token Opus answer) and settles
-  // ≈ 860; with 5,000 left the second passes and the third is refused whether or not the first settled
-  const { db, handle, up } = world({ balance: 5000 });
-  const rs = await Promise.all([1, 2, 3].map(() => handle(post("ai-fix", PROMPT))));
+  // each request reserves ≈ 4,900 credits (prompt estimate + a full 8,000-token Opus answer); the model is
+  // held back until all three have made their reservation, so with 6,000 left the third one always sees
+  // the two other holds and is refused — no settle can sneak in between (that is the race the hold prevents)
+  let open!: () => void;
+  const gate = new Promise<void>((r) => (open = r));
+  const { db, handle, up } = world({ balance: 6000, upstream: { holdUntil: gate } });
+  const pending = [1, 2, 3].map(() => handle(post("ai-fix", PROMPT)));
+  await new Promise((r) => setTimeout(r, 50));
+  open();
+  const rs = await Promise.all(pending);
   const passed = rs.filter((r) => r.status === 200);
   assert.ok(passed.length < 3, `at most two of three get through (got ${passed.length})`);
   assert.ok(rs.every((r) => r.status === 200 || r.status === 402));
