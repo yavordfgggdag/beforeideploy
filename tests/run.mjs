@@ -35,7 +35,9 @@ function bid(...args) {
 }
 
 function bidEnv(extra, ...args) {
-  const r = spawnSync(BID, args, { env: { ...ENV, ...extra }, encoding: 'utf8', timeout: 120000 });
+  // 64 MB: `bid logs --tail 400` on macOS (long /private/var/folders paths in argv) overflows Node's 1 MB default.
+  const r = spawnSync(BID, args, { env: { ...ENV, ...extra }, encoding: 'utf8', timeout: 120000, maxBuffer: 64 * 1024 * 1024 });
+  if (r.error) console.error('  spawn error:', args.join(' '), r.error.code || r.error.message);
   const lines = (r.stdout || '').trim().split('\n').filter(Boolean);
   const events = [];
   for (const l of lines) {
@@ -1658,7 +1660,7 @@ t('update: latest.json → налична версия, beta канал, изт�
 
 t('logs & report: engine.log пази командите с маскирани пароли; докладът е без secrets', () => {
   const logs = bid('logs', '--tail', '400');
-  assert(logs.data.entries.length > 20 && logs.data.entries.every((e) => e.cmd && typeof e.ms === 'number'), 'entries');
+  assert(logs.data && logs.data.entries.length > 20 && logs.data.entries.every((e) => e.cmd && typeof e.ms === 'number'), 'entries: ' + JSON.stringify(logs.result) + (logs.stderr || '').slice(-300));
   const text = JSON.stringify(logs.data.entries);
   assert(text.includes('"signup"') && text.includes('***') && !text.includes('supersecret'), 'password must be masked in argv');
   assert(logs.data.entries.some((e) => e.ok === false && e.code), 'failed commands are logged with their code');

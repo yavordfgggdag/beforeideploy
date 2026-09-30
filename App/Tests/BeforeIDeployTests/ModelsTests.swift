@@ -13,7 +13,7 @@ final class ModelsTests: XCTestCase {
     func testCheckStateWithCachedSteps() throws {
         let c = try Fixtures.decode("check", as: CheckState.self)
         XCTAssertEqual(c.status, "ready")
-        XCTAssertEqual(c.steps.count, 7)
+        XCTAssertEqual(c.steps.count, 8) // + the V11.1 `site` step
         XCTAssertTrue(c.steps.contains { $0.id == "build" })
         // `cached` is optional: absent on a full run, true when reused
         XCTAssertNoThrow(c.steps.map { $0.cached ?? false })
