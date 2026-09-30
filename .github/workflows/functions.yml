@@ -30,7 +30,7 @@ jobs:
           for f in supabase/functions/*/index.ts; do echo "▸ $f"; deno check "$f"; done
       - name: Tests
         run: |
-          if ls supabase/functions/*/*_test.ts >/dev/null 2>&1; then deno test --allow-env --allow-net supabase/functions; else echo "no function tests yet"; fi
+          if ls supabase/functions/*/*_test.ts >/dev/null 2>&1; then deno test --allow-env --allow-net --allow-read supabase/functions; else echo "no function tests yet"; fi
 
   rls:
     name: RLS on a real Postgres (PGlite)

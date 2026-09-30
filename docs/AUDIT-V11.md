@@ -75,7 +75,7 @@ run, so an interrupted run can no longer poison the next one (found while workin
 
 ## 4. Remaining limitations (honest list)
 
-1. **No server-side monitoring.** Checks run only on the Mac (app timer or launchd agent). Needs a cloud scheduler
+1. *(Superseded in 11.0.0-rc.1 — built, active after `monitor-cron.sql`.)* **No server-side monitoring.** Checks run only on the Mac (app timer or launchd agent). Needs a cloud scheduler
    (Supabase cron + an edge function with SSRF guards) — not built.
 2. **Rollback / publish-artifact only for Netlify.** Vercel, Cloudflare Pages and GitHub Pages: preview/production
    through their CLIs, no rollback, no status API, promote re-deploys the (hash-verified) artifact.
@@ -87,7 +87,7 @@ run, so an interrupted run can no longer poison the next one (found while workin
 6. **Smoke checks** verify status, title, https and configured pages — not visual correctness or forms.
 7. `release preview` always runs a full (incrementally cached) check; a very large project pays the build time
    twice when the user checked seconds before.
-8. Light theme, WP10 (SEO/accessibility rules), WP11 (Lighthouse), WP15 (DNS providers), WP16 (SFTP) remain on the
+8. Light theme, WP10 (SEO/accessibility rules — *done in 11.1.0-rc.1*), WP11 (Lighthouse), WP15 (DNS providers), WP16 (SFTP) remain on the
    roadmap.
 
 ## 5. Owner actions

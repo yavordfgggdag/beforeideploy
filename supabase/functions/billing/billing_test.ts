@@ -464,3 +464,15 @@ Deno.test("billing (WP03): checkout is rate limited per user in the database; a 
   assert.equal(w3.calls.length, 0);
   void db;
 });
+
+Deno.test("billing (WP04): the schema seed is the same catalog and plan credits as the function defaults", async () => {
+  const { DEFAULT_CATALOG, DEFAULT_PLAN_TOKENS } = await import("./handler.ts");
+  const sql = await Deno.readTextFile(new URL("../../schema.sql", import.meta.url));
+  const seed = (key: string) => {
+    const m = new RegExp(`\\('${key.replace(".", "\\.")}',\\s*'([\\s\\S]*?)'\\)`).exec(sql);
+    assert.ok(m, `seed for ${key} in schema.sql`);
+    return JSON.parse(m![1]);
+  };
+  assert.deepEqual(seed("billing.catalog"), DEFAULT_CATALOG);
+  assert.deepEqual(seed("plans"), DEFAULT_PLAN_TOKENS);
+});

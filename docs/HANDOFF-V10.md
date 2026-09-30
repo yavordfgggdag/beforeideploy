@@ -300,6 +300,7 @@ Functions: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `AN
 | Plan | Price | AI tokens / month | Projects | Notes |
 |---|---|---|---|---|
 | Free | €0 | — (own key only for VIP/admin; Free normal users can buy packs) | 2 | all checks, deploys, preview, Git, Mission Control |
+| *Replaced on 2026-09-30 — the valid table is docs/PLANS-AND-CREDITS-BG.md (Flash 9.99 / High 29.99 / Knight 99.99 €, credits 100k / 250k / 1M).* | | | | |
 | Flash | €4.99 / €47.90 yr | 250 000 | 5 | built-in AI Fix |
 | High | €9.99 / €95.90 yr | 1 000 000 | unlimited | 7-day trial (once per e-mail), recommended |
 | Knight | €19.99 / €191.90 yr | 2 500 000 | unlimited | deep fix with the strongest model ×5 |

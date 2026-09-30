@@ -238,18 +238,22 @@ create policy "read settings" on public.settings
 -- Default catalog (WP4). Prices are what the plans screen shows; the Paddle price ids connect each plan and
 -- pack to the product in Paddle (Catalog → Prices). Edit from the Admin panel or here; the app needs no update.
 insert into public.settings (key, value) values
-  ('plans', '{"flash":{"tokens":250000},"high":{"tokens":1000000},"knight":{"tokens":2500000}}'),
+  -- docs/PLANS-AND-CREDITS-BG.md (2026-09-30); must equal DEFAULT_CATALOG / DEFAULT_PLAN_TOKENS in
+  -- supabase/functions/billing/handler.ts (billing_test.ts checks it). An existing database keeps its values
+  -- (on conflict do nothing): terms of paying customers never change silently.
+  ('plans', '{"flash":{"tokens":100000},"high":{"tokens":250000},"knight":{"tokens":1000000}}'),
   ('billing.catalog', '{
      "currency": "EUR",
-     "trial": {"days": 7, "plan": "high", "tokens": 150000},
+     "trial": {"days": 7, "plan": "high", "tokens": 50000},
      "plans": {
-       "flash":  {"price": 4.99,  "paddlePriceId": null, "yearly": {"price": 47.90,  "paddlePriceId": null}},
-       "high":   {"price": 9.99,  "paddlePriceId": null, "yearly": {"price": 95.90,  "paddlePriceId": null}},
-       "knight": {"price": 19.99, "paddlePriceId": null, "yearly": {"price": 191.90, "paddlePriceId": null}}
+       "flash":  {"price": 9.99,  "paddlePriceId": null, "yearly": {"price": 99.9,  "paddlePriceId": null}},
+       "high":   {"price": 29.99, "paddlePriceId": null, "yearly": {"price": 299.9, "paddlePriceId": null}},
+       "knight": {"price": 99.99, "paddlePriceId": null, "yearly": {"price": 999.9, "paddlePriceId": null}}
      },
      "packs": [
-       {"id": "pack-500k", "tokens": 500000,  "price": 4.99,  "paddlePriceId": null},
-       {"id": "pack-2m",   "tokens": 2000000, "price": 14.99, "paddlePriceId": null}
+       {"id": "pack-100k", "tokens": 100000,  "price": 3.99,  "paddlePriceId": null},
+       {"id": "pack-500k", "tokens": 500000,  "price": 17.99, "paddlePriceId": null},
+       {"id": "pack-1m",   "tokens": 1000000, "price": 33.99, "paddlePriceId": null}
      ]
    }')
 on conflict (key) do nothing;

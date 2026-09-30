@@ -131,7 +131,7 @@ Netlify adapter additions (`netlify.mjs`): `netlifyApi`, `netlifyDeploys`, `netl
   (`bid monitor once` every `intervalMin`, `BID_MONITOR_AGENT=1`) and loads it; `agentRemove()` unloads and deletes.
   macOS only, consent required. The app's own loop (`AppModel.startMonitorLoop`) runs while the app is open and
   steps aside when the agent is installed.
-- **Not implemented:** a server-side scheduler. When the Mac sleeps, nothing is checked; the UI says so.
+- **Not implemented (in V11):** a server-side scheduler. When the Mac sleeps, nothing is checked; the UI says so. *Superseded in 11.0.0-rc.1: the `monitor` Edge Function and `supabase/monitor-cron.sql` check sites from the cloud once the owner runs the cron script (docs/AUDIT-V11.1-BETA-BG.md).*
 
 ### 2.7 `engine/src/overview.mjs` — portfolio signals
 
