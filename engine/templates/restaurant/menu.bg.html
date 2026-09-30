@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="{{LANG}}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Меню и цени · {{NAME}}</title>
+  <meta name="description" content="Сезонното меню на ресторанта: предястия, основни ястия, десерти и вино.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#faf6ef">
+  <meta property="og:title" content="Меню и цени · {{NAME}}">
+  <meta property="og:description" content="Сезонното меню на ресторанта: предястия, основни ястия, десерти и вино.">
+  <meta property="og:image" content="/og.svg">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <a class="skip" href="#main">Към съдържанието</a>
+  <header class="top">
+    <div class="wrap">
+      <a class="brand" href="/"><span class="mark"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h11v5a5.5 5.5 0 01-11 0z"/><path d="M16 9.5h1.5a2.5 2.5 0 010 5H16"/><path d="M8 3.5v2M11 3.5v2"/></svg></span>{{NAME}}</a>
+      <nav class="nav" aria-label="Основно меню"><a href="/menu.html" aria-current="page">Меню</a><a href="/#about">За нас</a><a href="/#reviews">Отзиви</a><a href="/#contact">Резервация</a></nav>
+      <a class="btn" href="/#contact">Резервирай маса</a>
+    </div>
+  </header>
+  <main id="main">
+    <section class="pagehead"><div class="wrap"><h1>Меню</h1><p>Сезонно меню. Попитайте за алергени — ще ви насочим.</p></div></section>
+    <section class="section">
+      <div class="wrap">
+        <div class="menu">
+          <div>
+            <h3>Предястия</h3>
+            <div class="dish"><b>Хляб с квас и масло</b><span class="price">5 лв.</span><small>Печен сутринта</small></div>
+            <div class="dish"><b>Салата с печена цвекла</b><span class="price">14 лв.</span><small>Козе сирене, орехи, мед</small></div>
+            <div class="dish"><b>Крем супа от тиква</b><span class="price">9 лв.</span><small>Тиквени семки, сметана</small></div>
+          </div>
+          <div>
+            <h3>Основни</h3>
+            <div class="dish"><b>Агнешко с розмарин</b><span class="price">28 лв.</span><small>Бавно печено, картофи</small></div>
+            <div class="dish"><b>Ризото с гъби</b><span class="price">22 лв.</span><small>Манатарки, пармезан</small></div>
+            <div class="dish"><b>Филе от пъстърва</b><span class="price">24 лв.</span><small>Масло с лимон, зеленчуци</small></div>
+          </div>
+          <div>
+            <h3>Десерти</h3>
+            <div class="dish"><b>Шоколадов фондан</b><span class="price">12 лв.</span><small>Ванилов сладолед</small></div>
+            <div class="dish"><b>Тиквеник по нашему</b><span class="price">9 лв.</span><small>Канела, орехи</small></div>
+          </div>
+          <div>
+            <h3>Вино</h3>
+            <div class="dish"><b>Мавруд, чаша</b><span class="price">9 лв.</span><small>Пловдивски регион</small></div>
+            <div class="dish"><b>Тамянка, чаша</b><span class="price">8 лв.</span><small>Южна Черноморка</small></div>
+            <div class="dish"><b>Бутилка на деня</b><span class="price">38 лв.</span><small>Попитайте сервитьора</small></div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="wrap">
+        <div class="cta"><div><h2>Запазете маса</h2><p>Петък и събота вечер са пълни — резервирайте предварително.</p></div><a class="btn" href="/#contact">Резервирай</a></div>
+      </div>
+    </section>
+  </main>
+  <footer class="foot">
+    <div class="wrap">
+      <p>© {{YEAR}} {{NAME}} · Всички права запазени.</p>
+      <nav aria-label="Основно меню"><a href="/menu.html">Меню</a><a href="/#about">За нас</a><a href="/#reviews">Отзиви</a><a href="/#contact">Резервация</a><a href="/privacy.html">Поверителност</a></nav>
+    </div>
+  </footer>
+</body>
+</html>

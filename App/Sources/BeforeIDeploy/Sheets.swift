@@ -576,39 +576,22 @@ struct NewSiteSheet: View {
     @Local private var error: String?
 
     var body: some View {
-        SheetScaffold(icon: "plus.square.on.square", iconTint: Theme.accent, title: L("newsite.title"), subtitle: L("newsite.subtitle"), width: 620) {
+        SheetScaffold(icon: "plus.square.on.square", iconTint: Theme.accent, title: L("newsite.title"), subtitle: L("newsite.subtitle"), width: 780) {
             VStack(alignment: .leading, spacing: 14) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(L("newsite.name")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
                     BIDTextField(placeholder: L("newsite.namePlaceholder"), text: $name)
                 }
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(L("newsite.template")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text(L("newsite.template")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                        Spacer()
+                        if !model.templates.isEmpty { Text(L("newsite.count", model.templates.count)).font(.system(size: 11)).foregroundColor(Theme.tertiary) }
+                    }
                     if model.templates.isEmpty {
                         HStack(spacing: 8) { Spinner(size: 12); Text(L("newsite.loading")).font(.system(size: 12)).foregroundColor(Theme.tertiary) }
-                    }
-                    HStack(spacing: 10) {
-                        ForEach(model.templates) { t in
-                            Button { template = t.id } label: {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    HStack {
-                                        Image(systemName: t.id == "portfolio" ? "rectangle.3.group" : "rectangle.inset.filled").foregroundColor(Theme.accent)
-                                        Text(t.title).font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.text)
-                                        Spacer()
-                                        if template == t.id { Image(systemName: "checkmark.circle.fill").foregroundColor(Theme.accent) }
-                                    }
-                                    Text(t.description).font(.system(size: 11.5)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
-                                    Text(L("newsite.pages", t.pages)).font(.system(size: 10.5)).foregroundColor(Theme.tertiary)
-                                }
-                                .padding(12)
-                                .frame(maxWidth: .infinity, alignment: .topLeading)
-                                .background(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).fill(template == t.id ? Theme.accentSoft : Theme.elevated))
-                                .overlay(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).strokeBorder(template == t.id ? Theme.accent : Color.clear, lineWidth: 1))
-                                .contentShape(Rectangle())
-                            }
-                            .buttonStyle(.plain)
-                            .lift(radius: Theme.smallRadius, amount: 1.02)
-                        }
+                    } else {
+                        TemplateGallery(templates: model.templates, selection: $template)
                     }
                 }
                 HStack(spacing: 14) {
@@ -655,6 +638,102 @@ struct NewSiteSheet: View {
         panel.prompt = L("newsite.chooseFolder")
         panel.message = L("newsite.folderMessage")
         if panel.runModal() == .OK, let u = panel.url { dir = u.path }
+    }
+}
+
+/// The template gallery in the "New site" sheet: category chips over a grid of cards, each with the
+/// template's own accent, so the choice reads like a set of finished designs rather than a list of names.
+struct TemplateGallery: View {
+    let templates: [SiteTemplate]
+    @Binding var selection: String
+    @Local private var category = "all"
+
+    private var categories: [(id: String, title: String)] {
+        var seen = Set<String>()
+        var out: [(String, String)] = [("all", L("newsite.allCategories"))]
+        for t in templates {
+            let id = t.category ?? "other"
+            if seen.insert(id).inserted { out.append((id, t.categoryTitle ?? id)) }
+        }
+        return out
+    }
+
+    private var shown: [SiteTemplate] {
+        category == "all" ? templates : templates.filter { ($0.category ?? "other") == category }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            FlowLayout(spacing: 6, lineSpacing: 6) {
+                ForEach(categories, id: \.id) { c in
+                    let on = category == c.id
+                    Text(c.title)
+                        .font(.system(size: 11.5, weight: on ? .semibold : .regular))
+                        .foregroundColor(on ? .white : Theme.secondary)
+                        .padding(.horizontal, 11).padding(.vertical, 5)
+                        .background(Capsule().fill(on ? Theme.accent : Theme.elevated))
+                        .fixedSize()
+                        .contentShape(Capsule())
+                        .tapAction { withAnimation(.easeOut(duration: 0.15)) { category = c.id } }
+                        .accessibilityAddTraits(on ? [.isButton, .isSelected] : .isButton)
+                }
+            }
+            ScrollView {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 166), spacing: 10, alignment: .top)], spacing: 10) {
+                    ForEach(shown) { t in
+                        TemplateCard(template: t, selected: selection == t.id) { selection = t.id }
+                    }
+                }
+                .padding(2)
+            }
+            .frame(height: 300)
+        }
+    }
+}
+
+private struct TemplateCard: View {
+    let template: SiteTemplate
+    let selected: Bool
+    let action: () -> Void
+
+    private var tint: Color { Color(hexString: template.accent) ?? Theme.accent }
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 8) {
+                ZStack(alignment: .topTrailing) {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(LinearGradient(colors: [tint, tint.opacity(0.55)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                        .frame(height: 58)
+                        .overlay(Image(systemName: template.icon ?? "doc.richtext").font(.system(size: 22, weight: .semibold)).foregroundColor(.white))
+                    if selected {
+                        Image(systemName: "checkmark.circle.fill").font(.system(size: 15)).foregroundStyle(.white, tint).padding(6)
+                    }
+                }
+                Text(template.title).font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.text).lineLimit(1)
+                Text(template.description).font(.system(size: 11)).foregroundColor(Theme.secondary).lineLimit(3).fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                Text(L("newsite.pages", template.pages)).font(.system(size: 10.5)).foregroundColor(Theme.tertiary)
+            }
+            .padding(10)
+            .frame(maxWidth: .infinity, minHeight: 176, alignment: .topLeading)
+            .background(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).fill(selected ? tint.opacity(0.14) : Theme.elevated))
+            .overlay(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).strokeBorder(selected ? tint : Color.clear, lineWidth: 1.5))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .lift(radius: Theme.smallRadius, amount: 1.02)
+        .accessibilityLabel(template.title)
+        .accessibilityHint(template.description)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+}
+
+private extension Color {
+    /// "#RRGGBB" from the engine, or nil.
+    init?(hexString: String?) {
+        guard let s = hexString, s.hasPrefix("#"), s.count == 7, let v = UInt32(s.dropFirst(), radix: 16) else { return nil }
+        self.init(hex: v)
     }
 }
 

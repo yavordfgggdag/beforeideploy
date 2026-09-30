@@ -787,9 +787,11 @@
 "netlifySetup.subtitle" = "No `netlify init` — GitHub CI will not be enabled, deploys stay manual";
 "netlifySetup.team" = "Team";
 
+"newsite.allCategories" = "All";
 "newsite.button" = "New site…";
 "newsite.buttonHelp" = "Create a site from a template: SEO, 404, robots, sitemap, favicon and a privacy page are already in place.";
 "newsite.chooseFolder" = "Choose…";
+"newsite.count" = "%@ templates";
 "newsite.create" = "Create the site";
 "newsite.created" = "%@ is ready — run the check and connect hosting.";
 "newsite.folder" = "Create in";
@@ -802,7 +804,7 @@
 "newsite.subtitle" = "A folder with a site that passes the check on its first run";
 "newsite.template" = "Template";
 "newsite.title" = "New site";
-"newsite.whatYouGet" = "You get: a page with your name and description, a privacy page, 404, robots.txt, sitemap.xml, favicon, netlify.toml and a Git repository with one commit. Edit the texts, run the check, connect hosting — the launch list guides you.";
+"newsite.whatYouGet" = "You get: ready pages with sample text in the site's language, a contact or booking form, a privacy page, 404, robots.txt, sitemap.xml, favicon, a social preview image, netlify.toml and a Git repository with one commit. Replace the texts, run the check, connect hosting — the launch list guides you.";
 
 "node.missing.body" = "Before I Deploy checks and builds your projects with Node.js (version 18 or newer). Install it from nodejs.org or with Homebrew, then press Check again.";
 "node.missing.download" = "Download Node.js";

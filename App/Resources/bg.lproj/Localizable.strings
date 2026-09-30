@@ -787,9 +787,11 @@
 "netlifySetup.subtitle" = "Без `netlify init` — GitHub CI няма да се включи, deploy-ите остават ръчни";
 "netlifySetup.team" = "Екип";
 
+"newsite.allCategories" = "Всички";
 "newsite.button" = "Нов сайт…";
 "newsite.buttonHelp" = "Създай сайт от шаблон: SEO, 404, robots, sitemap, favicon и страница за поверителност вече са на място.";
 "newsite.chooseFolder" = "Избери…";
+"newsite.count" = "%@ шаблона";
 "newsite.create" = "Създай сайта";
 "newsite.created" = "%@ е готов — пусни проверката и свържи хостинг.";
 "newsite.folder" = "Създай в";
@@ -802,7 +804,7 @@
 "newsite.subtitle" = "Папка със сайт, който минава проверката от първия път";
 "newsite.template" = "Шаблон";
 "newsite.title" = "Нов сайт";
-"newsite.whatYouGet" = "Получаваш: страница с твоето име и описание, страница за поверителност, 404, robots.txt, sitemap.xml, favicon, netlify.toml и Git хранилище с един commit. Редактирай текстовете, пусни проверката, свържи хостинг — списъкът „Пускане“ те води.";
+"newsite.whatYouGet" = "Получаваш: готови страници с примерен текст на езика на сайта, форма за контакт или записване, страница за поверителност, 404, robots.txt, sitemap.xml, favicon, картинка за споделяне, netlify.toml и Git хранилище с един commit. Смени текстовете, пусни проверката, свържи хостинг — списъкът „Пускане“ те води.";
 
 "node.missing.body" = "Before I Deploy проверява и build-ва проектите ти с Node.js (версия 18 или по-нова). Инсталирай го от nodejs.org или с Homebrew и натисни „Провери отново“.";
 "node.missing.download" = "Изтегли Node.js";

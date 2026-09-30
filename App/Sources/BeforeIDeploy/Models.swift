@@ -177,6 +177,11 @@ struct SiteTemplate: Codable, Hashable, Identifiable {
     var title: String
     var description: String
     var pages: Int
+    /// Picker grouping and look (V11.1 template gallery); optional so an older engine still decodes.
+    var category: String?
+    var categoryTitle: String?
+    var icon: String?
+    var accent: String?
 }
 
 /// `bid new create` — the site that was just created.

@@ -411,7 +411,8 @@ t('launch: чеклистът извежда следващата стъпка �
 
 t('new: шаблонът създава сайт, който минава проверката на качеството от първия път', () => {
   const list = bid('new', 'list').data;
-  assert(list.map((x) => x.id).join() === 'landing,portfolio' && list.every((x) => x.title && x.description && x.pages >= 3), JSON.stringify(list));
+  assert(list.length >= 20 && list[0].id === 'landing' && ['restaurant', 'salon', 'saas', 'wedding', 'linkinbio', 'portfolio'].every((id) => list.some((x) => x.id === id)), JSON.stringify(list.map((x) => x.id)));
+  assert(list.every((x) => x.title && x.title !== x.id && x.description && x.pages >= 3 && x.category !== 'other' && x.categoryTitle && x.icon && /^#[0-9a-f]{6}$/i.test(x.accent)), JSON.stringify(list.find((x) => !x.categoryTitle || x.pages < 3)));
   const parent = path.join(TMP, 'new-sites');
   fs.mkdirSync(parent, { recursive: true });
   const bad = bid('new', 'create', '--template', 'nope', '--name', 'X', '--dir', parent);
@@ -431,6 +432,21 @@ t('new: шаблонът създава сайт, който минава про
   const en = bid('new', 'create', '--template', 'portfolio', '--name', 'Studio North', '--dir', parent, '--lang', 'en');
   assert(en.result.ok && fs.existsSync(path.join(en.data.path, 'work.html')) && fs.readFileSync(path.join(en.data.path, 'privacy.html'), 'utf8').includes('lang="en"'), JSON.stringify(en.result).slice(0, 200));
   assert(bid('check', '--project', en.data.path).data.steps.find((s) => s.id === 'site').status === 'pass', 'portfolio passes too');
+  // every template, in both languages: one page per language, no placeholders left, the quality check passes
+  for (const x of list) {
+    for (const lang of ['bg', 'en']) {
+      const c = bid('new', 'create', '--template', x.id, '--name', `Всеки ${x.id} ${lang}`, '--dir', parent, '--lang', lang);
+      assert(c.result.ok, `${x.id}/${lang}: ${JSON.stringify(c.result).slice(0, 200)}`);
+      const files = fs.readdirSync(c.data.path);
+      assert(!files.some((f) => /\.(bg|en)\.[a-z]+$/.test(f)) && files.includes('index.html') && files.includes('og.svg'), `${x.id}/${lang} files: ${files}`);
+      const html = files.filter((f) => f.endsWith('.html')).map((f) => fs.readFileSync(path.join(c.data.path, f), 'utf8')).join('');
+      assert(!html.includes('{{') && html.includes(`<html lang="${lang}">`), `${x.id}/${lang} placeholders`);
+      const site = bid('check', '--project', c.data.path).data.steps.find((s) => s.id === 'site');
+      assert(site.status === 'pass', `${x.id}/${lang}: ${JSON.stringify(site.details)}`);
+    }
+  }
+  const described = bid('new', 'create', '--template', 'restaurant', '--name', 'Моето бистро', '--dir', parent, '--description', 'Бистро с домашна храна');
+  assert(fs.readFileSync(path.join(described.data.path, 'index.html'), 'utf8').includes('content="Бистро с домашна храна"'), 'own description wins over the template default');
   fixture('new-site', r.data);
 });
 
