@@ -1,5 +1,6 @@
 // Account — Supabase Auth (email/password + GitHub), session in Keychain, project metadata sync.
 // Service tokens (Netlify, Vercel, …) NEVER leave the Mac; only project metadata is synced.
+import { testEndpoint, isProductionBundle } from './isolation.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -9,20 +10,24 @@ import { listProjects } from './store.mjs';
 import { msg, currentLang } from './i18n.mjs';
 import { features, AI_KEY_PROVIDERS } from './features.mjs';
 
+const SUPABASE_URL = /^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i;
 const USER_CONFIG = () => path.join(APP_DIR, 'cloud.json');
 const PROFILE_CACHE = () => path.join(APP_DIR, 'profile.json'); // last profile seen — used offline; no secrets
 const BUNDLED_CONFIG = () => path.join(ENGINE_DIR, 'cloud.json');
 
 export function cloudConfig() {
   const c = readJSON(USER_CONFIG(), null) || (process.env.BID_NO_BUNDLED_CLOUD ? null : readJSON(BUNDLED_CONFIG(), null));
-  if (process.env.BID_SUPABASE_URL) return { url: process.env.BID_SUPABASE_URL, anonKey: process.env.BID_SUPABASE_ANON_KEY };
+  // an environment override must still be a Supabase project; anything else only in the test suite (WP01)
+  const envUrl = process.env.BID_SUPABASE_URL;
+  if (envUrl && process.env.BID_SUPABASE_ANON_KEY && (SUPABASE_URL.test(envUrl) || testEndpoint('BID_SUPABASE_URL'))) return { url: envUrl.replace(/\/$/, ''), anonKey: process.env.BID_SUPABASE_ANON_KEY };
   if (!c?.url || !c?.anonKey) return null;
   return { url: c.url.replace(/\/$/, ''), anonKey: c.anonKey };
 }
 
 export function setCloudConfig({ url, anonKey }) {
   if (!url || !anonKey || url === true || anonKey === true) throw new EngineError(msg('account.cloud.missingArgs'), 'usage', 2);
-  if (!/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(url.trim()) && !/^http:\/\/127\.0\.0\.1/.test(url)) {
+  // a local Supabase (127.0.0.1) is for development only — never accepted by the engine inside the app
+  if (!SUPABASE_URL.test(url.trim()) && !(/^http:\/\/127\.0\.0\.1(:\d+)?\/?$/.test(url.trim()) && !isProductionBundle())) {
     throw new EngineError(msg('account.cloud.badUrl'), 'usage', 2);
   }
   writeJSON(USER_CONFIG(), { url: url.trim().replace(/\/$/, ''), anonKey: anonKey.trim(), savedAt: nowISO() });

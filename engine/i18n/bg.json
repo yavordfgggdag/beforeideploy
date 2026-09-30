@@ -128,7 +128,7 @@
   "check.hosting.linked": "{name} — свързан",
   "check.hosting.netlifyLinked": "Netlify е свързан",
   "check.hosting.netlifyNotLinked": "Netlify не е свързан",
-  "check.hosting.noNetlifyCli": "Няма Netlify CLI (нито npx)",
+  "check.hosting.noNetlifyCli": "Netlify CLI не е инсталиран — Setup го инсталира (никога не се тегли в движение).",
   "check.hosting.noSsr": "{name} не поддържа сървърно рендиране/функции",
   "check.hosting.notLoggedIn": "Не си влязъл в {name}",
   "check.hosting.willCreate": "{name} — ще се създаде при първия deploy",
@@ -721,5 +721,14 @@
   "monitor.notify.none": "Няма конфигуриран канал за известия (webhook URL или Pushover в настройките на наблюдението).",
   "monitor.pushover.missingKeys": "Pushover иска твоя user key и token на приложение (BID_PUSHOVER_USER + BID_PUSHOVER_TOKEN).",
   "monitor.pushover.rejected": "Pushover отхвърли ключовете ({reason}). Копирай user key от pushover.net и token на приложение, което си създал там.",
-  "monitor.pushover.openSite": "Отвори сайта"
+  "monitor.pushover.openSite": "Отвори сайта",
+  "ai.apply.reason.blocked": "защитен файл или папка (.git, node_modules, CI, конфигурации на инструменти)",
+  "ai.apply.reason.secret": "таен файл (.env, ключове, сертификати) — AI никога не го чете и не го пише",
+  "ai.apply.reason.symlink": "по пътя има символна връзка — отказано",
+  "ai.apply.reason.config_needs_approval": "променя какво се изпълнява или публикува (скриптове, build или хостинг конфигурация) — иска отделно одобрение",
+  "assistant.secretFile": "{path} е таен файл (.env, ключ, сертификат). Никога не се изпраща към AI модел.",
+  "check.scriptsChanged": "Скриптовете или build конфигурацията на проекта са променени ({files}). Автоматичните проверки не пускат променени скриптове — пусни проверката сам веднъж, за да ги одобриш.",
+  "deploy.artifactMismatch": "Файловете за публикуване ({actual}) не са тези, които проверката потвърди ({expected}). Пусни проверката отново и тогава публикувай.",
+  "hosting.ghpages.cliMissing": "GitHub Pages иска инсталиран инструмент gh-pages (Setup или `npm i -g gh-pages`). Не се тегли в движение.",
+  "cli.secretInArgv": "{flag} не се приема в командния ред (всеки процес може да го прочете). Сложи стойността в променливата на средата {env}."
 }

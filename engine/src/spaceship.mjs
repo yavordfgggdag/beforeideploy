@@ -1,12 +1,13 @@
 // Spaceship — domains, expiry, DNS and one-click “connect domain to Netlify”
 import path from 'node:path';
 import { EngineError, ev, nowISO, readJSON, writeJSON, APP_DIR, runStream, which, extractJSON, HOME } from './util.mjs';
+import { testEndpoint } from './isolation.mjs';
 import { getSecret, setSecret, deleteSecret } from './secrets.mjs';
 import { detect } from './detect.mjs';
 import { addHistory, updateProject } from './store.mjs';
 import { t, msg } from './i18n.mjs';
 
-const BASE = process.env.BID_SPACESHIP_BASE || 'https://spaceship.dev/api/v1';
+const BASE = testEndpoint('BID_SPACESHIP_BASE') || 'https://spaceship.dev/api/v1';
 const NETLIFY_LB_IP = '75.2.60.5';
 const CACHE = () => path.join(APP_DIR, 'spaceship-cache.json');
 
@@ -113,7 +114,6 @@ export async function spaceshipDns(domain) {
 
 function netlifyCli() {
   if (which('netlify')) return { cmd: 'netlify', pre: [] };
-  if (which('npx')) return { cmd: 'npx', pre: ['--yes', 'netlify-cli'] };
   throw new EngineError(msg('spaceship.noNetlifyCli'), 'no_cli');
 }
 

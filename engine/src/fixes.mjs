@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { EngineError, ev, sh, exists, runStream, logDir, which } from './util.mjs';
+import { scriptEnv, isolate } from './isolation.mjs';
 import { detect } from './detect.mjs';
 import { addHistory, getState, setState } from './store.mjs';
 import { t, msg } from './i18n.mjs';
@@ -198,7 +199,9 @@ export async function applyFix(project, id, { yes = false, recheck = false } = {
     }
     case 'deps.install': {
       const logFile = path.join(logDir(project.key), 'install.log');
-      const r = await runStream(d.packageManager || 'npm', ['install'], { cwd: dir, step: 'fix', logFile, timeout: 15 * 60 * 1000 });
+      // install runs the project's lifecycle scripts: same isolation as a check (WP01)
+      const [icmd, iargs] = isolate(d.packageManager || 'npm', ['install']);
+      const r = await runStream(icmd, iargs, { cwd: dir, step: 'fix', logFile, env: scriptEnv(), timeout: 15 * 60 * 1000, display: `${d.packageManager || 'npm'} install` });
       if (r.code !== 0) {
         ev.step('fix', { label: id, status: 'fail', summary: t('fix.deps.stepFailed'), details: r.tail.slice(-15), log: logFile });
         throw new EngineError(msg('fix.deps.failed'), 'fix_failed');

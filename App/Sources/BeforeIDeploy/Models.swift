@@ -309,6 +309,10 @@ struct AIPatchFile: Codable, Identifiable, Hashable {
     var diff: String
     var applicable: Bool
     var error: String?
+    /// Path class from the engine's policy: source | config | secret | blocked (WP01).
+    var cls: String?
+    /// A config change (scripts, build/hosting config, lockfile): applied only with its own explicit tick.
+    var needsApproval: Bool?
     var id: String { path }
 }
 

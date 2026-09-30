@@ -12,6 +12,7 @@ import { accountStatus } from '../account.mjs';
 import { buildPrompt } from '../aifix.mjs';
 import { chooseProvider, stream } from './providers.mjs';
 import { parseAnswer, plan as planPatch, apply as applyPatch, reasonKey } from './patch.mjs';
+import { resolveInProject, writeNoFollow, removeNoFollow } from '../pathpolicy.mjs';
 
 /** Fallbacks when the cloud `settings` table has no `ai.models` (Admin panel edits it without a release). */
 export const DEFAULT_MODELS = { fast: 'claude-haiku-4-5', standard: 'claude-opus-5-5', deep: 'claude-opus-5-5', openai: 'gpt-5' };
@@ -107,7 +108,7 @@ export async function aiFix(project, { step, model, deep = false, provider: requ
 }
 
 /** Applies a patch produced by `aiFix`. Re-plans against the current files first, so a file edited since is reported, not clobbered. */
-export async function aiApply(project, { patchFile, files, yes = false, commit = false, recheck = false } = {}) {
+export async function aiApply(project, { patchFile, files, yes = false, commit = false, recheck = false, allowConfig = false } = {}) {
   if (!yes) throw new EngineError(msg('ai.apply.confirmRequired'), 'confirm_required', 2);
   if (!patchFile || patchFile === true) throw new EngineError(msg('ai.apply.missingPatch'), 'usage', 2);
   const abs = path.resolve(patchFile);
@@ -115,13 +116,14 @@ export async function aiApply(project, { patchFile, files, yes = false, commit =
   const patch = abs.startsWith(dir) && abs.endsWith('.json') ? readJSON(abs, null) : null;
   if (!patch || patch.project !== project.key || !patch.parsed) throw new EngineError(msg('ai.apply.badPatch'), 'bad_patch');
 
-  const fresh = planPatch(project.path, patch.parsed);
+  // config files (package.json scripts, bundler/hosting configs, lockfiles) need their own approval (WP01)
+  const fresh = planPatch(project.path, patch.parsed, { allowConfig });
   const before = new Map((patch.planned || []).map((p) => [p.path, p.after]));
   for (const p of fresh) p.changedSince = p.applicable && before.has(p.path) && before.get(p.path) !== p.after;
   const selected = files && files !== true ? String(files).split(',').map((s) => s.trim()).filter(Boolean) : null;
   ev.step('ai-apply', { label: t('ai.apply.label'), category: 'AI', status: 'running' });
   // undo record (V11): what every file looked like before, so `ai undo` can put it back
-  const willWrite = fresh.filter((p) => p.applicable && (!selected || selected.includes(p.path)));
+  const willWrite = fresh.filter((p) => p.applicable && !(p.needsApproval && !allowConfig) && (!selected || selected.includes(p.path)));
   const undo = willWrite.map((p) => {
     let before = null;
     try {
@@ -129,7 +131,7 @@ export async function aiApply(project, { patchFile, files, yes = false, commit =
     } catch {}
     return { path: p.path, before, after: p.after ?? null, action: p.action };
   });
-  const { applied, skipped } = applyPatch(project.path, fresh, selected);
+  const { applied, skipped } = applyPatch(project.path, fresh, selected, { allowConfig });
   let undoFile = null;
   if (applied.length) {
     undoFile = writeUndoRecord(project.key, { project: project.key, step: patch.step, at: nowISO(), files: undo.filter((u) => applied.includes(u.path)) });
@@ -156,7 +158,7 @@ export async function aiApply(project, { patchFile, files, yes = false, commit =
       fs.unlinkSync(abs); // everything landed — the proposal is no longer needed
     } catch {}
   }
-  const out = { applied, skipped, committed, changedSince: fresh.filter((p) => p.changedSince).map((p) => p.path), undoFile };
+  const out = { applied, skipped, committed, changedSince: fresh.filter((p) => p.changedSince).map((p) => p.path), needsApproval: allowConfig ? [] : fresh.filter((p) => p.needsApproval).map((p) => p.path), undoFile };
   if (recheck && applied.length) out.recheck = await verifyAfterFix(project, patch.step);
   return out;
 }
@@ -228,7 +230,13 @@ export async function aiUndo(project, { yes = false } = {}) {
   const restored = [];
   const skipped = [];
   for (const f of rec.files) {
-    const abs = path.join(project.path, f.path);
+    // the undo record lives under APP_DIR, but its paths are still checked like any other write (audit E5)
+    const r = resolveInProject(project.path, f.path, { op: 'restore' });
+    if (!r.ok) {
+      skipped.push({ path: String(f.path), reason: r.reason });
+      continue;
+    }
+    const abs = r.abs;
     let current = null;
     try {
       current = fs.readFileSync(abs, 'utf8');
@@ -238,8 +246,8 @@ export async function aiUndo(project, { yes = false } = {}) {
       continue;
     }
     try {
-      if (f.before === null) fs.rmSync(abs, { force: true });
-      else fs.writeFileSync(abs, f.before);
+      if (f.before === null) removeNoFollow(project.path, abs);
+      else writeNoFollow(project.path, abs, f.before);
       restored.push(f.path);
     } catch (e) {
       skipped.push({ path: f.path, reason: e.code || 'write_failed' });

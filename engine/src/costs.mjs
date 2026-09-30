@@ -145,7 +145,7 @@ function collectQuotas(obj, prefix = '', out = []) {
 }
 
 async function netlifyUsage() {
-  const cli = which('netlify') ? { cmd: 'netlify', pre: [] } : which('npx') ? { cmd: 'npx', pre: ['--yes', 'netlify-cli'] } : null;
+  const cli = which('netlify') ? { cmd: 'netlify', pre: [] } : null; // installed CLI only (audit E10)
   if (!cli) return { service: 'netlify', connected: false, error: t('costs.netlify.noCli'), errorKey: 'costs.netlify.noCli' };
   const r = await runStream(cli.cmd, [...cli.pre, 'api', 'listAccountsForUser'], { cwd: HOME, quiet: true, captureStdout: true, timeout: 120000 });
   const data = extractJSON(r.stdout);

@@ -19,6 +19,7 @@ function ourProcess(st) {
   return !st.procStart || procStart(st.pid) === st.procStart;
 }
 import { detect, pmRunArgs } from './detect.mjs';
+import { scriptEnv, isolate } from './isolation.mjs';
 import { getState, setState, updateProject } from './store.mjs';
 import { t, msg } from './i18n.mjs';
 
@@ -109,7 +110,7 @@ function plan(project, d, port, mode, stopToken = '') {
         mode: 'build',
         label: `Build output (${d.publishDir})`,
         cmd: process.execPath,
-        args: [path.join(ENGINE_DIR, 'src', 'static-server.cjs'), staticDir, String(port), project.key, stopToken],
+        args: [path.join(ENGINE_DIR, 'src', 'static-server.cjs'), staticDir, String(port), project.key],
       };
     }
     if (mode === 'build' && has('preview')) {
@@ -140,7 +141,7 @@ function plan(project, d, port, mode, stopToken = '') {
       mode: 'build',
       label: 'static files',
       cmd: process.execPath,
-      args: [path.join(ENGINE_DIR, 'src', 'static-server.cjs'), dir, String(port), project.key, stopToken],
+      args: [path.join(ENGINE_DIR, 'src', 'static-server.cjs'), dir, String(port), project.key],
     };
   }
   throw new EngineError(msg('local.noServer'), 'no_server');
@@ -162,11 +163,15 @@ export async function localStart(project, { mode = 'auto' } = {}) {
 
   ev.step('local', { label: 'Local Preview', status: 'running', summary: t('local.starting', { label: p.label, port }) });
 
-  const child = spawn(p.cmd, p.args, {
+  // a dev server is the project's own code: isolated like a check; the static server is ours and gets the
+  // stop token through the environment, never argv (visible in `ps`) or the log header
+  const own = p.cmd === process.execPath;
+  const [cmd, args] = own ? [p.cmd, p.args] : isolate(p.cmd, p.args);
+  const child = spawn(cmd, args, {
     cwd: project.path,
     detached: true,
     stdio: ['ignore', fd, fd],
-    env: { ...process.env, PORT: String(port), HOST: '127.0.0.1', BROWSER: 'none', FORCE_COLOR: '0' },
+    env: own ? { ...scriptEnv(), PORT: String(port), HOST: '127.0.0.1', BID_STOP_TOKEN: stopToken } : scriptEnv({ PORT: String(port), HOST: '127.0.0.1', BROWSER: 'none' }),
   });
   child.unref();
   fs.closeSync(fd);

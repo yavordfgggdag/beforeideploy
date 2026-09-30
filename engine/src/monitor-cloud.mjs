@@ -9,6 +9,7 @@ import dns from 'node:dns/promises';
 import net from 'node:net';
 import { EngineError } from './util.mjs';
 import { msg, t } from './i18n.mjs';
+import { testEndpoint } from './isolation.mjs';
 import { cloudConfig, currentSession } from './account.mjs';
 import { listProjects, findProject, getState } from './store.mjs';
 
@@ -141,7 +142,7 @@ export async function validateWebhookUrl(text) {
   if (url.username || url.password) throw new EngineError(msg('monitor.webhook.invalid', { reason: 'credentials_in_url' }), 'webhook_rejected', 2);
   const host = url.hostname.toLowerCase();
   if (net.isIP(host) || host === 'localhost' || host.endsWith('.local') || !host.includes('.')) throw new EngineError(msg('monitor.webhook.invalid', { reason: 'host' }), 'webhook_rejected', 2);
-  if (process.env.BID_TEST_ALLOW_PRIVATE_WEBHOOK === '1') return url.toString(); // test receivers on 127.0.0.1 only
+  if (testEndpoint('BID_TEST_ALLOW_PRIVATE_WEBHOOK')) return url.toString(); // test receivers on 127.0.0.1 only, never in the app bundle
   let addrs = [];
   try {
     addrs = await dns.lookup(host, { all: true });
@@ -154,7 +155,7 @@ export async function validateWebhookUrl(text) {
 
 /** Posts one JSON payload to the configured webhook; bounded, never throws for a channel problem. */
 export async function postWebhook(url, payload, { timeoutMs = 5000, fetchImpl = fetch } = {}) {
-  const target = process.env.BID_TEST_WEBHOOK_TARGET && process.env.BID_TEST_ALLOW_PRIVATE_WEBHOOK === '1' ? process.env.BID_TEST_WEBHOOK_TARGET : url;
+  const target = testEndpoint('BID_TEST_WEBHOOK_TARGET') || url;
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), timeoutMs);
   try {

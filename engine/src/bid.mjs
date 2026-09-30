@@ -8,6 +8,7 @@ import { listProjects, upsertProject, removeProject, resolveProject, updateProje
 import { runChecks } from './checks.mjs';
 import { deriveIssues } from './issues.mjs';
 import { pushoverConnect, pushoverDisconnect, pushoverStatus } from './pushover.mjs';
+import { endpoints, isProductionBundle, isolationLevel } from './isolation.mjs';
 import { monitorOnce, monitorStatus, monitorStatusMerged, listIncidents, setMonitorSettings, agentInstall, agentRemove, maintenanceCommand, notifyTest } from './monitor.mjs';
 import { monitorCloudStatus, monitorCloudEnable, monitorCloudDisable, monitorCloudTest } from './monitor-cloud.mjs';
 import { assistantChat, assistantHistory, assistantReset, assistantSettings, setAssistantSettings, listPrompts } from './ai/assistant.mjs';
@@ -51,7 +52,7 @@ const HELP = `Before I Deploy engine ${VERSION}
   bid project list | add --path P | remove --project K | touch --project K | rename --project K --name N
   bid status  --project P            dashboard snapshot (fast)
   bid detect  --project P
-  bid check   --project P [--stop-on-fail] [--force]     --force ignores the incremental cache
+  bid check   --project P [--stop-on-fail] [--force] [--auto]   --force ignores the incremental cache; --auto (file watcher) refuses changed scripts
   bid smart   --project P [--prod --confirm DEPLOY] [--force]   check → draft (or production)
   bid local   start|stop|restart|status --project P [--mode auto|build|dev]
   bid git     status|fetch|push --project P
@@ -63,7 +64,7 @@ const HELP = `Before I Deploy engine ${VERSION}
   bid history [--project P] [--limit N]
   bid aifix   --project P --step ID --target chatgpt|claude|codex|claude-code|copy
   bid ai      fix --project P --step ID [--deep] [--model M] [--provider anthropic|openai|cloud]   built-in AI Fix (streams 'ai' events)
-  bid ai      explain --project P --step ID | apply --project P --patch-file F --yes [--files a,b] [--commit] | usage
+  bid ai      explain --project P --step ID | apply --project P --patch-file F --yes [--files a,b] [--commit] [--allow-config] | usage
   bid demo create                  sample website in ~/Documents/Before I Deploy Demo, added to the list
   bid billing catalog | status | usage | sync | trial | portal | checkout --plan flash|high|knight [--yearly] | checkout --pack ID
   bid costs   [--refresh]          costs, credits, price table, budgets
@@ -74,8 +75,8 @@ const HELP = `Before I Deploy engine ${VERSION}
   bid spaceship status [--refresh] | connect (env BID_SPACESHIP_KEY/SECRET) | disconnect
   bid spaceship dns --domain D
   bid spaceship connect-domain --project P --domain D [--yes]   A @ + CNAME www → Netlify
-  bid account status | signup --email E --password P [--name N] | login --email E --password P
-  bid account logout | recover --email E | resend --email E | oauth [--provider github] | session --access A --refresh R | sync
+  bid account status | signup --email E [--name N] | login --email E        password in env BID_PASSWORD (never a flag)
+  bid account logout | recover --email E | resend --email E | oauth [--provider github] | session (env BID_ACCESS + BID_REFRESH) | sync
   bid account export | delete --confirm DELETE      GDPR: data export to ~/Downloads / delete the cloud account
   bid account locale --set L | keys status | keys set --provider anthropic|openai (env BID_AI_KEY) | keys delete --provider P
   bid admin   <action> [--user ID] [--json '{…}']   (admin only) actions: ${ADMIN_ACTIONS.join(', ')}
@@ -152,7 +153,17 @@ function doctor() {
     netlifyAuth: netlifyAuth(),
     path: process.env.PATH,
     log: LOG_FILE(),
+    // where keys go and what isolates project scripts on this machine (WP01)
+    endpoints: endpoints(),
+    production: isProductionBundle(),
+    isolation: isolationLevel(),
   };
+}
+
+// Secrets never travel as command-line flags: argv is visible to every process (`ps`). The app and scripts
+// pass them through the environment (audit E9).
+function refuseSecretFlag(flags, flag, env) {
+  if (flags[flag] !== undefined) throw new EngineError(msg('cli.secretInArgv', { flag: `--${flag}`, env }), 'secret_in_argv', 2);
 }
 
 async function main() {
@@ -217,7 +228,7 @@ async function main() {
 
     case 'check': {
       const p = proj();
-      const check = await runChecks(p, { stopOnFail: !!flags['stop-on-fail'], force: !!flags.force });
+      const check = await runChecks(p, { stopOnFail: !!flags['stop-on-fail'], force: !!flags.force, auto: !!flags.auto });
       if (check.status === 'blocked') ev.notify(`❌ ${p.name}`, t('check.notify.blocked'), null);
       return ok(check);
     }
@@ -316,7 +327,7 @@ async function main() {
       const p = proj();
       if (sub === 'fix') return ok(await aiFix(p, { step: flags.step, model: flags.model, deep: !!flags.deep, provider: flags.provider }));
       if (sub === 'explain') return ok(await aiFix(p, { step: flags.step, model: flags.model, provider: flags.provider, mode: 'explain' }));
-      if (sub === 'apply') return ok(await aiApply(p, { patchFile: flags['patch-file'], files: flags.files, yes: !!flags.yes, commit: !!flags.commit, recheck: !!flags.recheck }));
+      if (sub === 'apply') return ok(await aiApply(p, { patchFile: flags['patch-file'], files: flags.files, yes: !!flags.yes, commit: !!flags.commit, recheck: !!flags.recheck, allowConfig: !!flags['allow-config'] }));
       if (sub === 'undo') return ok(await aiUndo(p, { yes: !!flags.yes }));
       if (sub === 'chat') return ok(await assistantChat(p, { action: flags.action, message: flags.message, issue: flags.issue, files: flags.files, patchFile: flags['patch-file'], budget: flags.budget, yes: !!flags.yes, newConversation: !!flags.new, provider: flags.provider, model: flags.model }));
       if (sub === 'history') return ok(assistantHistory(p, { limit: flags.limit ? Number(flags.limit) : 50 }));
@@ -346,7 +357,11 @@ async function main() {
 
     case 'spaceship': {
       if (!sub || sub === 'status') return ok(await spaceshipDomains({ refresh: !!flags.refresh }));
-      if (sub === 'connect') return ok(await spaceshipConnect({ key: flags.key, secret: flags.secret }));
+      if (sub === 'connect') {
+        refuseSecretFlag(flags, 'key', 'BID_SPACESHIP_KEY');
+        refuseSecretFlag(flags, 'secret', 'BID_SPACESHIP_SECRET');
+        return ok(await spaceshipConnect({}));
+      }
       if (sub === 'disconnect') return ok(spaceshipDisconnect());
       if (sub === 'dns') return ok(await spaceshipDns(flags.domain));
       if (sub === 'connect-domain') return ok(await connectDomainToNetlify(proj(), { domain: flags.domain, yes: !!flags.yes }));
@@ -355,7 +370,8 @@ async function main() {
 
     case 'account': {
       const email = flags.email;
-      const password = flags.password || process.env.BID_PASSWORD;
+      refuseSecretFlag(flags, 'password', 'BID_PASSWORD');
+      const password = process.env.BID_PASSWORD;
       if (!sub || sub === 'status') return ok(await accountStatus());
       if (sub === 'signup') return ok(await signup({ email, password, name: flags.name }));
       if (sub === 'login') return ok(await login({ email, password }));
@@ -363,7 +379,11 @@ async function main() {
       if (sub === 'recover') return ok(await recover({ email }));
       if (sub === 'resend') return ok(await resendConfirmation({ email }));
       if (sub === 'oauth') return ok(oauthUrl({ provider: flags.provider || 'github' }));
-      if (sub === 'session') return ok(await completeOAuth({ access: flags.access || process.env.BID_ACCESS, refresh: flags.refresh || process.env.BID_REFRESH }));
+      if (sub === 'session') {
+        refuseSecretFlag(flags, 'access', 'BID_ACCESS');
+        refuseSecretFlag(flags, 'refresh', 'BID_REFRESH');
+        return ok(await completeOAuth({ access: process.env.BID_ACCESS, refresh: process.env.BID_REFRESH }));
+      }
       if (sub === 'sync') return ok(await syncProjects());
       if (sub === 'locale') return ok(await setLocale(flags.set));
       if (sub === 'export') return ok(await exportAccount());
@@ -455,7 +475,10 @@ async function main() {
       if (sub === 'maintenance') return ok(await maintenanceCommand(positional[1], flags));
       if (sub === 'notify') return ok(await notifyTest());
       if (sub === 'pushover') {
-        if (positional[1] === 'connect') return ok(await pushoverConnect({ user: flags.user, token: flags.token }));
+        if (positional[1] === 'connect') {
+          refuseSecretFlag(flags, 'token', 'BID_PUSHOVER_TOKEN');
+          return ok(await pushoverConnect({ user: flags.user }));
+        }
         if (positional[1] === 'disconnect') return ok(pushoverDisconnect());
         return ok(pushoverStatus());
       }

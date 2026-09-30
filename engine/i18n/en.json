@@ -128,7 +128,7 @@
   "check.hosting.linked": "{name} — connected",
   "check.hosting.netlifyLinked": "Netlify is connected",
   "check.hosting.netlifyNotLinked": "Netlify is not connected",
-  "check.hosting.noNetlifyCli": "No Netlify CLI (and no npx)",
+  "check.hosting.noNetlifyCli": "The Netlify CLI is not installed — Setup installs it (it is never downloaded on the fly).",
   "check.hosting.noSsr": "{name} does not support server rendering/functions",
   "check.hosting.notLoggedIn": "You are not signed in to {name}",
   "check.hosting.willCreate": "{name} — will be created on the first deploy",
@@ -721,5 +721,14 @@
   "monitor.notify.none": "No notification channel is configured (a webhook URL or Pushover in the monitoring settings).",
   "monitor.pushover.missingKeys": "Pushover needs your user key and an application token (BID_PUSHOVER_USER + BID_PUSHOVER_TOKEN).",
   "monitor.pushover.rejected": "Pushover rejected the keys ({reason}). Copy the user key from pushover.net and the token of an application you created there.",
-  "monitor.pushover.openSite": "Open the site"
+  "monitor.pushover.openSite": "Open the site",
+  "ai.apply.reason.blocked": "protected file or folder (.git, node_modules, CI, tool configs)",
+  "ai.apply.reason.secret": "secret file (.env, keys, certificates) — the AI never reads or writes it",
+  "ai.apply.reason.symlink": "a symbolic link is on the way — refused",
+  "ai.apply.reason.config_needs_approval": "changes what runs or gets published (scripts, build or hosting config) — needs a separate approval",
+  "assistant.secretFile": "{path} is a secret file (.env, key, certificate). It is never sent to an AI model.",
+  "check.scriptsChanged": "The project's scripts or build configuration changed ({files}). Automatic checks do not run changed scripts — start the check yourself once to approve them.",
+  "deploy.artifactMismatch": "The files to publish ({actual}) are not the ones the check verified ({expected}). Run the check again, then publish.",
+  "hosting.ghpages.cliMissing": "GitHub Pages needs the gh-pages tool installed (Setup, or `npm i -g gh-pages`). It is not downloaded on the fly.",
+  "cli.secretInArgv": "{flag} is not accepted on the command line (every process can read it). Put the value in the {env} environment variable instead."
 }

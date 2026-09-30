@@ -26,6 +26,7 @@ import { getState, setState, addHistory, listHistory } from '../store.mjs';
 import { deriveIssues } from '../issues.mjs';
 import { redact } from '../aifix.mjs';
 import { safePath, plan as planPatch } from './patch.mjs';
+import { resolveInProject } from '../pathpolicy.mjs';
 import { chooseProvider, stream } from './providers.mjs';
 import { accountStatus } from '../account.mjs';
 import { loadPrompt, renderPrompt, extractJSON, validateOutput, listPrompts } from './prompts.mjs';
@@ -138,9 +139,13 @@ function issueById(project, id) {
 
 function fileSnapshots(project, files, settings, evidence) {
   const out = [];
-  for (const rel of files.slice(0, settings.maxFiles)) {
-    const abs = safePath(project.path, rel);
-    if (!abs) throw new EngineError(msg('assistant.badPath', { path: rel }), 'bad_path', 2);
+  for (let rel of files.slice(0, settings.maxFiles)) {
+    // secrets never enter a model context, however they were selected (WP01)
+    const r = resolveInProject(project.path, rel, { op: 'read' });
+    if (!r.ok && r.reason === 'secret') throw new EngineError(msg('assistant.secretFile', { path: rel }), 'secret_file', 2);
+    if (!r.ok) throw new EngineError(msg('assistant.badPath', { path: rel }), 'bad_path', 2);
+    const abs = r.abs;
+    rel = r.rel;
     let content;
     try {
       content = fs.readFileSync(abs, 'utf8');
@@ -346,7 +351,8 @@ export async function assistantChat(project, opts = {}) {
       const snaps = fileSnapshots(project, targetFiles, settings, evidence);
       for (const e of evidence) refs.evidence.add(e.id);
       refs.allowed_paths = new Set(snaps.map((s) => s.path));
-      refs.allowed_dirs = new Set(snaps.map((s) => (path.posix.dirname(s.path) === '.' ? '' : path.posix.dirname(s.path) + '/')));
+      // a file in the project root allows only itself — never the whole project (audit E1)
+      refs.allowed_dirs = new Set(snaps.map((s) => path.posix.dirname(s.path)).filter((d) => d && d !== '.').map((d) => d + '/'));
       stage('propose', { status: 'running', summary: t('assistant.stage.proposing', { iteration: iter, max: maxIter }) });
       announce({ template: `${prompt.id}.v${prompt.version}` });
       const pkg = readJSON(path.join(project.path, 'package.json'), null);

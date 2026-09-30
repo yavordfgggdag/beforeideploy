@@ -192,6 +192,10 @@ struct AIPatchFileCard: View {
         "ambiguous": "ai.reason.ambiguous",
         "search_not_found": "ai.reason.search_not_found",
         "not_applicable": "ai.reason.not_applicable",
+        "blocked": "ai.reason.blocked",
+        "secret": "ai.reason.secret",
+        "symlink": "ai.reason.symlink",
+        "config_needs_approval": "ai.reason.config_needs_approval",
     ]
 
     private var status: (String, Color)? {
@@ -212,6 +216,10 @@ struct AIPatchFileCard: View {
                 }
                 Text(file.path).font(.system(size: 12.5, weight: .semibold, design: .monospaced)).foregroundColor(Theme.text).lineLimit(1).truncationMode(.middle)
                 Chip(text: file.action, tint: file.action == "delete" ? Theme.blocked : file.action == "create" ? Theme.ready : Theme.accent)
+                if file.needsApproval == true {
+                    Label(L("ai.configChip"), systemImage: "exclamationmark.shield.fill").font(.system(size: 10.5, weight: .semibold)).foregroundColor(Theme.warn)
+                        .help(L("ai.configWarning"))
+                }
                 Text("+\(file.additions)").font(.system(size: 11, design: .monospaced)).foregroundColor(Theme.ready)
                 Text("−\(file.deletions)").font(.system(size: 11, design: .monospaced)).foregroundColor(Theme.blocked)
                 Spacer()

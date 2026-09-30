@@ -227,9 +227,10 @@ export async function releasePreview(project, { force = false } = {}) {
 
     stage(op, 'preview', { status: 'running' });
     await assertArtifactUnchanged(op, p, 'before');
-    const dep = await deployProject(p, { prod: false });
-    await assertArtifactUnchanged(op, p, 'after');
-    op.preview = { url: dep.url, deployId: dep.deployId || null, at: nowISO(), artifact: op.snapshot.artifact?.hash || null };
+    // the upload goes out from a staged copy that must equal the snapshot and is re-hashed after the upload
+    // (staging.mjs) — edits in the project folder during the upload can no longer change what is sent
+    const dep = await deployProject(p, { prod: false, expectedArtifact: op.snapshot.artifact?.hash ?? null, artifactCode: 'stale_release' });
+    op.preview = { url: dep.url, deployId: dep.deployId || null, at: nowISO(), artifact: dep.artifact?.hash || op.snapshot.artifact?.hash || null, uploaded: dep.artifact || null };
     stage(op, 'preview', { status: 'pass', summary: dep.url });
 
     stage(op, 'smoke', { status: 'running', summary: dep.url });
@@ -255,7 +256,7 @@ export async function releasePreview(project, { force = false } = {}) {
   } catch (e) {
     if (!FINAL.has(op.state)) {
       op.state = 'failed';
-      op.failure = op.failure || e.code || 'error';
+      op.failure = op.failure || e.failure || e.code || 'error';
       logLine(op, `error: ${e.message}`);
       saveOp(op);
     }
@@ -310,8 +311,7 @@ export async function releasePromote(project, { op: opId, confirm } = {}) {
     } else {
       // no publish-by-id on this provider: the checked artifact is uploaded again, re-hashed before and after
       await assertArtifactUnchanged(op, p, 'before');
-      const dep = await deployProject(p, { prod: true, confirm: 'DEPLOY' });
-      await assertArtifactUnchanged(op, p, 'after');
+      const dep = await deployProject(p, { prod: true, confirm: 'DEPLOY', expectedArtifact: op.snapshot.artifact?.hash ?? null, artifactCode: 'stale_release' });
       production = { url: dep.url, deployId: dep.deployId || null, at: nowISO(), artifact: op.snapshot.artifact?.hash || null };
     }
     op.production = { ...(op.production || {}), ...production };
@@ -343,7 +343,7 @@ export async function releasePromote(project, { op: opId, confirm } = {}) {
   } catch (e) {
     if (!FINAL.has(op.state)) {
       op.state = 'failed';
-      op.failure = e.code || 'error';
+      op.failure = e.failure || e.code || 'error';
       logLine(op, `error: ${e.message}`);
       op.rollback = rollbackInfo(op, caps);
       saveOp(op);
@@ -484,7 +484,7 @@ export async function releaseRollback(project, { confirm, deploy } = {}) {
   } catch (e) {
     if (!FINAL.has(op.state)) {
       op.state = 'failed';
-      op.failure = e.code || 'error';
+      op.failure = e.failure || e.code || 'error';
       logLine(op, `error: ${e.message}`);
       saveOp(op);
     }

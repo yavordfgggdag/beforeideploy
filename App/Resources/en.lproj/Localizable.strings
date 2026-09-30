@@ -68,6 +68,8 @@
 "ai.askIssueHelp" = "Let the assistant diagnose this issue with the evidence it has.";
 "ai.changes" = "Proposed changes";
 "ai.commitAfter" = "Commit after applying";
+"ai.configChip" = "Config";
+"ai.configWarning" = "This file decides what runs or gets published (scripts, build or hosting config, lockfile). It is not selected with the rest: tick it only after reading the diff.";
 "ai.consent.accept" = "Send and continue";
 "ai.consent.body" = "AI Fix sends the failed step's log (with keys and passwords removed) and the project files it names to the AI model — Anthropic through the Before I Deploy cloud, or the provider of your own key. Nothing is changed in your project until you apply the proposed changes. This is asked once.";
 "ai.consent.title" = "Send this error to the AI?";
@@ -88,12 +90,16 @@
 "ai.planHelp" = "Cloud AI is part of the Flash, High and Knight plans; VIP accounts use their own key.";
 "ai.planNeeded" = "The AI runs on a plan (Flash, High or Knight). Pick one — Free never spends anything.";
 "ai.reason.ambiguous" = "the search text matches more than once";
+"ai.reason.blocked" = "protected file or folder";
+"ai.reason.config_needs_approval" = "config change — needs its own tick";
 "ai.reason.exists" = "file already exists";
 "ai.reason.not_applicable" = "cannot be applied";
 "ai.reason.not_found" = "file not found";
 "ai.reason.other" = "unknown reason";
 "ai.reason.outside_project" = "path outside the project";
 "ai.reason.search_not_found" = "search text not found (file changed?)";
+"ai.reason.secret" = "secret file — never read or written by the AI";
+"ai.reason.symlink" = "a symbolic link is on the way";
 "ai.recheckAfter" = "Check again after applying";
 "ai.renewsOn" = "renews %@";
 "ai.selectAll" = "Select all";
@@ -267,6 +273,7 @@
 "autocheck.nowReady" = "All checks pass again.";
 "autocheck.nowReadyToast" = "%@: ready again";
 "autocheck.running" = "checking automatically…";
+"autocheck.scriptsChanged" = "%@: the scripts or build config changed, so the automatic check did not run them. Start the check yourself (⌘R) to approve them.";
 
 "backup.honest" = "No backup is being taken by Before I Deploy. A hosting rollback restores files only.";
 "backup.missing" = "Missing to connect:";

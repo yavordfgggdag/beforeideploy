@@ -1,16 +1,17 @@
 // Own AI API keys for VIP/admin accounts (V10 WP2). Stored only in the macOS Keychain (accounts
 // `ai-anthropic`, `ai-openai`); verified with one cheap request before being saved. The key itself is
 // never written to files, logs or the cloud — `status` returns only a masked hint.
+import { testEndpoint } from './isolation.mjs';
 import { EngineError } from './util.mjs';
 import { getSecret, setSecret, deleteSecret } from './secrets.mjs';
 import { msg } from './i18n.mjs';
 import { AI_KEY_PROVIDERS } from './features.mjs';
 
-// Base URLs are overridable for tests (BID_ANTHROPIC_API / BID_OPENAI_API).
+// Base URLs are overridable for the test suite only (isolation.mjs testEndpoint: BID_TEST_ENDPOINTS=1, never in the app bundle).
 const PROVIDERS = {
   anthropic: {
     name: 'Anthropic',
-    base: () => process.env.BID_ANTHROPIC_API || 'https://api.anthropic.com',
+    base: () => testEndpoint('BID_ANTHROPIC_API') || 'https://api.anthropic.com',
     prefix: 'sk-ant-',
     verify: async (base, key) =>
       fetch(`${base}/v1/models?limit=1`, { headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01' } }),
@@ -18,7 +19,7 @@ const PROVIDERS = {
   },
   openai: {
     name: 'OpenAI',
-    base: () => process.env.BID_OPENAI_API || 'https://api.openai.com',
+    base: () => testEndpoint('BID_OPENAI_API') || 'https://api.openai.com',
     prefix: 'sk-',
     verify: async (base, key) => fetch(`${base}/v1/models`, { headers: { Authorization: `Bearer ${key}` } }),
     console: 'https://platform.openai.com/api-keys',

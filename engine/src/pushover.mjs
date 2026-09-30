@@ -11,13 +11,14 @@
 import { EngineError, nowISO } from './util.mjs';
 import { getSecret, setSecret, deleteSecret } from './secrets.mjs';
 import { msg } from './i18n.mjs';
+import { testEndpoint } from './isolation.mjs';
 
 const ACCOUNT = 'pushover';
 const API = 'https://api.pushover.net/1';
 
 /** Pushover's real API, or the test receiver when the explicit test switch is on (never in production). */
 function apiBase() {
-  return process.env.BID_TEST_PUSHOVER_URL && process.env.BID_TEST_ALLOW_PRIVATE_WEBHOOK === '1' ? process.env.BID_TEST_PUSHOVER_URL : API;
+  return testEndpoint('BID_TEST_PUSHOVER_URL') || API;
 }
 
 /** `uQiRzpo4…` → `uQiR…` — enough to recognise the key, never enough to use it. */

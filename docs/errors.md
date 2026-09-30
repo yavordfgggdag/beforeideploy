@@ -14,7 +14,9 @@ quota, 127 Node missing; everything else exits 1.
 | `usage` | 2 | A command got wrong or missing arguments. | Only reachable from the CLI; the app always passes complete arguments. `bid help` lists the commands. |
 | `confirm_required` | 2 | A production deploy, an account deletion, a paid setup step or a fix needs its confirmation word (`DEPLOY`, `DELETE`, `--yes`). | Type the word in the sheet; the engine refuses silently otherwise. |
 | `blocked` | 3 | The last check ended BLOCKED — deploying would publish a broken site. | Open the failed step, fix it (AI Fix or by hand) and check again. |
-| `stale_check` | 3 | Files changed after the last check, so its result no longer describes the working tree. | Run the check again (⌘R). |
+| `stale_check` | 3 | Files changed after the last check, so its result no longer describes the working tree — or the staged files to publish differ from the manifest the check recorded. | Run the check again (⌘R). |
+| `scripts_changed` | 2 | An automatic check (`check --auto`, the app's file watcher) found changed project scripts or executable configs since the user last started a check. Nothing ran. | Start the check yourself once; that approves the scripts as they are. |
+| `secret_in_argv` | 2 | A secret was given as a command-line flag (`--password`, `--access`, `--refresh`, `--key`, `--secret`, `--token`). Refused before anything happened. | Pass it through the environment variable the message names. |
 | `needs_check` | 3 | No check has been run for this project yet. | Run the check first. |
 | `forbidden` | 3 | The account's role or plan does not allow the action (Admin panel, Deep fix, cloud sync…). | An admin can change the role or plan; plans come with WP4. |
 | `not_linked` | 4 | The project is not linked to a site on its hosting yet. | Use Smart Deploy: it creates or links the site on the first run. |
@@ -54,6 +56,7 @@ quota, 127 Node missing; everything else exits 1.
 | `prompt_not_found` | 1 | An assistant prompt resource (`engine/prompts/<id>.v<n>.json`) is missing — broken engine install. | Reinstall the engine (Settings → Engine → Reinstall). |
 | `prompt_input_missing` | 2 | The engine tried to render an assistant prompt without one of its declared inputs. | Report it; the prompt files and `assistant.mjs` disagree. |
 | `bad_path` | 2 | `ai chat --files` named a file outside the project, in a protected folder, or through a symlink. | Select files inside the project. |
+| `secret_file` | 2 | `ai chat --files` named a secret file (`.env*`, keys, certificates). Secrets are never sent to a model. | Select source files; describe the configuration in the message instead. |
 | `budget_exceeded` | 1 | The assistant operation would exceed its token budget (AI settings → max tokens per operation). | Reduce the selected files or raise the budget. |
 | `ai_timeout` | 1 | The AI provider did not answer within the call timeout (default 120 s). Nothing was changed. | Try again; check the provider status. |
 | `monitor_cloud_failed` | 1 | The `monitor` Edge Function refused or failed a cloud-monitoring call (the message carries the cloud's reason). | See the message: sync the project, deploy first, or check the function deployment. |

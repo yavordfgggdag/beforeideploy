@@ -2,14 +2,15 @@
 //   anthropic / openai — the user's own key from the Keychain (VIP / admin)
 //   cloud              — the metered `ai-fix` Edge Function (normal users with a plan; the central key never leaves the backend)
 // Every provider yields { type: 'delta', text } · { type: 'usage', input?, output?, model? } · { type: 'done', stopReason? }.
+import { testEndpoint } from '../isolation.mjs';
 import { EngineError } from '../util.mjs';
 import { msg } from '../i18n.mjs';
 import { ownKey } from '../aikeys.mjs';
 import { cloudConfig, currentSession } from '../account.mjs';
 
 // Base URLs are overridable for tests (the test suite runs fake endpoints on 127.0.0.1).
-export const ANTHROPIC_API = () => process.env.BID_ANTHROPIC_API || 'https://api.anthropic.com';
-export const OPENAI_API = () => process.env.BID_OPENAI_API || 'https://api.openai.com';
+export const ANTHROPIC_API = () => testEndpoint('BID_ANTHROPIC_API') || 'https://api.anthropic.com';
+export const OPENAI_API = () => testEndpoint('BID_OPENAI_API') || 'https://api.openai.com';
 
 // ---------------------------------------------------------------- SSE
 

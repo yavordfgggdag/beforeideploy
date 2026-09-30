@@ -2,10 +2,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { ev, sh, which, runStream, logDir, nowISO, exists, publishIncludes } from './util.mjs';
+import { ev, sh, which, runStream, logDir, nowISO, exists, publishIncludes, EngineError } from './util.mjs';
+import { scriptEnv, isolate, isolationLevel } from './isolation.mjs';
+import { classify } from './pathpolicy.mjs';
 import { detect, pmRunArgs } from './detect.mjs';
 import { getState, setState, addHistory, updateProject } from './store.mjs';
-import { t } from './i18n.mjs';
+import { t, msg } from './i18n.mjs';
 import { scanSite } from './site.mjs';
 
 export const STEPS = [
@@ -240,7 +242,9 @@ async function runScript(ctx, stepId, script, okText) {
   const { dir, d, key } = ctx;
   const logFile = path.join(logDir(key), `${stepId}.log`);
   const [cmd, args] = pmRunArgs(d.packageManager, script);
-  const r = await runStream(cmd, args, { cwd: dir, logFile, step: stepId, env: { ...process.env, CI: '1' }, timeout: 15 * 60 * 1000 });
+  // someone else's code: allowlisted environment, sandboxed on macOS (isolation.mjs, WP01)
+  const [icmd, iargs] = isolate(cmd, args);
+  const r = await runStream(icmd, iargs, { cwd: dir, logFile, step: stepId, env: scriptEnv(), timeout: 15 * 60 * 1000, display: `${cmd} ${args.join(' ')}` });
   if (r.code === 0) return { status: 'pass', summary: okText, log: logFile, duration: r.duration };
   return {
     status: 'fail',
@@ -299,7 +303,7 @@ async function stepHosting(ctx) {
     const link = projectLink(proj, id);
     return { status: 'pass', summary: t(link.linked ? 'check.hosting.linked' : 'check.hosting.willCreate', { name: st.name }), details: [PROVIDERS[id].free] };
   }
-  const cli = which('netlify') ? 'netlify' : which('npx') ? 'npx netlify-cli' : null;
+  const cli = which('netlify') ? 'netlify' : null;
   if (!cli) return { status: 'warn', summary: t('check.hosting.noNetlifyCli') };
   if (!d.netlifyLinked) return { status: 'info', summary: t('check.hosting.netlifyNotLinked'), fixes: ['netlify.link'] };
   return { status: 'pass', summary: t('check.hosting.netlifyLinked'), details: [`Site ID: ${d.siteId}`, `CLI: ${cli}`] };
@@ -357,11 +361,12 @@ function statSig(dir, rel) {
  * next to the project logs so a mismatch can be explained file by file; the artifact hash is the SHA-256 of
  * the manifest lines. null when there is nothing publishable (SSR, no index.html).
  */
-export async function artifactHash(dir, publishDir, { manifestDir = null } = {}) {
+export async function artifactHash(dir, publishDir, { manifestDir = null, asRoot = null } = {}) {
   if (!publishDir) return null;
   const root = path.resolve(dir, publishDir);
   if (!exists(path.join(root, 'index.html'))) return null;
-  const isRoot = publishDir === '.' || publishDir === './' || root === path.resolve(dir);
+  // asRoot: a staged copy is hashed with the filter of the folder it was copied from (staging.mjs)
+  const isRoot = asRoot ?? (publishDir === '.' || publishDir === './' || root === path.resolve(dir));
   const entries = [];
   const walk = (rel, top) => {
     let list = [];
@@ -477,8 +482,46 @@ export function overallStatus(steps) {
   return { status, counts };
 }
 
-export async function runChecks(project, { stopOnFail = false, skip = [], force = false } = {}) {
+// Root files that decide what a check runs: package.json scripts and every executable config (pathpolicy
+// class 'config', lockfiles aside — a check never installs). An automatic check (--auto: the app's file
+// watcher) runs project scripts only while this fingerprint equals the one the user approved by starting a
+// check themselves; after a change — by the AI, a git pull, anyone — a person has to start the next run.
+export function scriptsFingerprint(dir) {
+  const LOCKS = /^(package-lock\.json|npm-shrinkwrap\.json|yarn\.lock|pnpm-lock\.yaml|bun\.lockb)$/i;
+  const files = [];
+  const h = crypto.createHash('sha256');
+  let names = [];
+  try {
+    names = fs.readdirSync(dir, { withFileTypes: true }).filter((e) => e.isFile()).map((e) => e.name).sort();
+  } catch {}
+  for (const name of names) {
+    if (LOCKS.test(name) || classify(name) !== 'config') continue;
+    let content = '';
+    try {
+      content = fs.readFileSync(path.join(dir, name), 'utf8');
+    } catch {}
+    if (name === 'package.json') {
+      try {
+        const pkg = JSON.parse(content);
+        content = JSON.stringify({ scripts: pkg.scripts || {}, packageManager: pkg.packageManager || null });
+      } catch {}
+    }
+    files.push(name);
+    h.update(`${name}\0${content}\n`);
+  }
+  return { hash: h.digest('hex'), files };
+}
+
+export async function runChecks(project, { stopOnFail = false, skip = [], force = false, auto = false } = {}) {
   const dir = project.path;
+  const scripts = scriptsFingerprint(dir);
+  const trust = getState(project.key).scriptsTrust;
+  if (auto && trust?.hash !== scripts.hash) {
+    const changed = trust?.files ? scripts.files.filter((f) => !trust.files.includes(f)).concat(trust.files.filter((f) => !scripts.files.includes(f))) : scripts.files;
+    throw new EngineError(msg('check.scriptsChanged', { files: (changed.length ? changed : scripts.files).join(', ') || 'package.json' }), 'scripts_changed', 2);
+  }
+  // a check the user started is their approval of the scripts as they are now
+  if (!auto) setState(project.key, { scriptsTrust: { hash: scripts.hash, files: scripts.files, at: nowISO() } });
   const ctx = { dir, key: project.key, d: detect(dir) };
   const started = Date.now();
   const results = [];
@@ -536,7 +579,7 @@ export async function runChecks(project, { stopOnFail = false, skip = [], force 
   const { status, counts } = overallStatus(results);
   // the fingerprint lets a deploy see whether the code changed after this check (audit E7)
   const artifact = !ctx.d.ssr && ctx.d.publishReady ? await artifactHash(dir, ctx.d.publishDir, { manifestDir: logDir(project.key) }) : null;
-  const check = { status, at: nowISO(), counts, steps: results, duration: (Date.now() - started) / 1000, cached: results.filter((r) => r.cached).map((r) => r.id), fingerprint: fp, buildConfig: buildConfigHash(dir, ctx.d), artifact };
+  const check = { status, at: nowISO(), counts, steps: results, duration: (Date.now() - started) / 1000, cached: results.filter((r) => r.cached).map((r) => r.id), fingerprint: fp, buildConfig: buildConfigHash(dir, ctx.d), artifact, isolation: isolationLevel(), auto };
   setState(project.key, { check, stepCache });
   updateProject(project.key, { framework: ctx.d.framework, packageManager: ctx.d.packageManager, publishDir: ctx.d.publishDir });
   addHistory({

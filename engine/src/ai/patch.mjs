@@ -14,7 +14,7 @@
 // Exact search/replace is far more reliable from a model than hand-written unified diffs; the unified
 // diff shown in the app is computed here from before/after. Nothing is written without `apply(..., yes)`.
 import fs from 'node:fs';
-import path from 'node:path';
+import { resolveInProject, safePath as policySafePath, writeNoFollow, removeNoFollow } from '../pathpolicy.mjs';
 
 const FILE_RE = /^<<<(FILE|NEW FILE|DELETE FILE) (.+?)>>>\s*$/;
 
@@ -27,12 +27,13 @@ export const REASON_KEYS = {
   search_not_found: 'ai.apply.reason.search_not_found',
   not_applicable: 'ai.apply.reason.not_applicable',
   not_selected: 'ai.apply.reason.not_selected',
+  blocked: 'ai.apply.reason.blocked',
+  secret: 'ai.apply.reason.secret',
+  symlink: 'ai.apply.reason.symlink',
+  config_needs_approval: 'ai.apply.reason.config_needs_approval',
 };
 export const reasonKey = (reason) => REASON_KEYS[reason] || 'ai.apply.reason.other';
-// Compared case-insensitively: the default macOS volume (APFS) is case-insensitive, so `.GIT/config` IS `.git/config`.
-const BLOCKED_DIRS = new Set(['node_modules', '.git', '.netlify', '.vercel', '.next', 'dist', 'build', '.husky', '.github']);
-// files that make tools run commands (git hooks via config, npm script-shell, yarn plugins)
-const BLOCKED_FILES = new Set(['.gitmodules', '.npmrc', '.yarnrc', '.yarnrc.yml', '.pnpmfile.cjs']);
+// Which paths a patch may touch is decided by one policy for every file operation (../pathpolicy.mjs).
 
 /** Splits the model answer into { explanation, files[] } without touching the disk. */
 export function parseAnswer(text) {
@@ -103,27 +104,12 @@ export function parseAnswer(text) {
 // ---------------------------------------------------------------- safety
 
 /** Resolves `rel` inside `dir`; returns null for anything that escapes the project or points at tooling dirs. */
+/** The absolute path when the policy lets the AI read `rel` (blocked, secret, outside, symlink → null). */
 export function safePath(dir, rel) {
-  if (!rel || path.isAbsolute(rel) || rel.includes('\0')) return null;
-  const abs = path.resolve(dir, rel);
-  const root = path.resolve(dir) + path.sep;
-  if (!abs.startsWith(root)) return null;
-  const parts = path.relative(dir, abs).split(path.sep);
-  const lower = parts.map((p) => p.toLowerCase());
-  if (lower.some((p) => BLOCKED_DIRS.has(p) || p === '..')) return null;
-  if (BLOCKED_FILES.has(lower[lower.length - 1])) return null;
-  // a symlink anywhere on the way could point outside the project
-  let probe = path.resolve(dir);
-  for (const p of parts) {
-    probe = path.join(probe, p);
-    try {
-      if (fs.lstatSync(probe).isSymbolicLink()) return null;
-    } catch {
-      break; // not created yet — fine
-    }
-  }
-  return abs;
+  return policySafePath(dir, rel);
 }
+
+const OP = { create: 'create', edit: 'edit', delete: 'delete' };
 
 // ---------------------------------------------------------------- matching & diff
 
@@ -164,11 +150,15 @@ function hunk(before, after, startLine, path_) {
 }
 
 /** Applies the parsed files against the project on disk (in memory only) and describes what would change. */
-export function plan(dir, parsed) {
+export function plan(dir, parsed, { allowConfig = false } = {}) {
   return parsed.files.map((f) => {
-    const out = { path: f.path, action: f.action, additions: 0, deletions: 0, diff: '', applicable: false, error: null };
-    const abs = safePath(dir, f.path);
-    if (!abs) return { ...out, error: 'outside_project' };
+    const out = { path: f.path, action: f.action, additions: 0, deletions: 0, diff: '', applicable: false, error: null, cls: null };
+    const r = resolveInProject(dir, f.path, { op: OP[f.action] || 'edit', allowConfig });
+    out.cls = r.cls;
+    // a config change is still shown as a diff, so the user can read it before approving it separately
+    if (!r.ok && r.reason !== 'config_needs_approval') return { ...out, error: r.reason === 'blocked' ? 'outside_project' : r.reason };
+    const abs = r.abs;
+    out.needsApproval = r.reason === 'config_needs_approval';
     let current = null;
     try {
       current = fs.readFileSync(abs, 'utf8');
@@ -204,7 +194,7 @@ export function plan(dir, parsed) {
 
 /** Writes the planned changes for `selected` paths (all applicable ones when null). Returns { applied, skipped }.
  * All or nothing (audit E15): if one write fails, the files already written are put back as they were. */
-export function apply(dir, planned, selected = null) {
+export function apply(dir, planned, selected = null, { allowConfig = false } = {}) {
   const applied = [];
   const skipped = [];
   const undo = []; // { abs, before } — before === null means the file did not exist
@@ -219,12 +209,12 @@ export function apply(dir, planned, selected = null) {
       skipped.push({ path: p.path, reason: 'not_selected' });
       continue;
     }
-    const abs = safePath(dir, p.path);
-    if (!abs) {
-      skipped.push({ path: p.path, reason: 'outside_project' });
+    const r = resolveInProject(dir, p.path, { op: OP[p.action] || 'edit', allowConfig });
+    if (!r.ok) {
+      skipped.push({ path: p.path, reason: r.reason === 'blocked' ? 'outside_project' : r.reason });
       continue;
     }
-    writes.push({ p, abs });
+    writes.push({ p, abs: r.abs });
   }
   try {
     for (const { p, abs } of writes) {
@@ -233,18 +223,15 @@ export function apply(dir, planned, selected = null) {
         before = fs.readFileSync(abs);
       } catch {}
       undo.push({ abs, before });
-      if (p.action === 'delete') fs.unlinkSync(abs);
-      else {
-        fs.mkdirSync(path.dirname(abs), { recursive: true });
-        fs.writeFileSync(abs, p.after);
-      }
+      if (p.action === 'delete') removeNoFollow(dir, abs);
+      else writeNoFollow(dir, abs, p.after, { exclusive: p.action === 'create' });
       applied.push(p.path);
     }
   } catch (e) {
     for (const { abs, before } of undo.reverse()) {
       try {
         if (before === null) fs.rmSync(abs, { force: true });
-        else fs.writeFileSync(abs, before);
+        else writeNoFollow(dir, abs, before);
       } catch {}
     }
     throw e;

@@ -2,6 +2,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { HOME, CACHE_DIR, EngineError, ev, sh, which, runStream, logDir, readJSON, exists, nowISO, publishIncludes } from './util.mjs';
+import { stageArtifact } from './staging.mjs';
+import { cliEnv } from './isolation.mjs';
 import { detect } from './detect.mjs';
 import { getState, setState, updateProject, addHistory, findProject } from './store.mjs';
 import { netlifyAuth, netlifyDeploy, deployGuard } from './netlify.mjs';
@@ -93,7 +95,7 @@ function ghAuthed() {
 
 export function providerStatus(id) {
   const p = PROVIDERS[id];
-  const installed = id === 'netlify' ? !!(which('netlify') || which('npx')) : !!which(p.cli);
+  const installed = id === 'netlify' ? !!which('netlify') : id === 'ghpages' ? !!which('gh') && !!which('gh-pages') : !!which(p.cli);
   const loggedIn =
     id === 'netlify' ? netlifyAuth().loggedIn : id === 'vercel' ? vercelAuthed() : id === 'cloudflare' ? wranglerAuthed() : ghAuthed();
   return { ...p, installed, loggedIn };
@@ -207,14 +209,15 @@ async function vercelDeploy(project, { prod }) {
   if (prod) args.push('--prod');
   ev.step('deploy', { label: t(prod ? 'deploy.label.production' : 'deploy.label.draft'), category: 'Hosting', status: 'running', summary: 'Vercel build + upload' });
   const t0 = Date.now();
-  const r = await runStream('vercel', args, { cwd: project.path, step: 'deploy', logFile, captureStdout: true, timeout: 20 * 60 * 1000 });
+  // Vercel uploads the source and builds remotely: no local artifact to verify (the result says so)
+  const r = await runStream('vercel', args, { cwd: project.path, step: 'deploy', logFile, captureStdout: true, timeout: 20 * 60 * 1000, env: cliEnv() });
   const duration = (Date.now() - t0) / 1000;
   const url = (r.stdout.match(/https:\/\/[^\s]+\.vercel\.app/g) || []).pop();
   if (r.code !== 0 || !url) return failDeploy(project, 'vercel', { prod, r, logFile, duration });
   return finishDeploy(project, 'vercel', { prod, url, duration, logFile });
 }
 
-async function cloudflareDeploy(project, { prod }) {
+async function cloudflareDeploy(project, { prod, expectedArtifact, artifactCode }) {
   const d = detect(project.path);
   if (d.ssr || d.hasFunctions) throw new EngineError(msg('hosting.cloudflare.staticOnly'), 'unsupported');
   if (!d.publishReady) throw new EngineError(msg('hosting.noBuild', { dir: d.publishDir }), 'no_build');
@@ -223,16 +226,23 @@ async function cloudflareDeploy(project, { prod }) {
   ev.step('deploy', { label: t(prod ? 'deploy.label.production' : 'deploy.label.draft'), category: 'Hosting', status: 'running', summary: 'Cloudflare Pages upload' });
   if (!name) {
     name = slugify(project.name === 'ПОРТФОЛИО' ? 'portfolio' : project.name);
-    const c = await runStream('wrangler', ['pages', 'project', 'create', name, '--production-branch=main'], { cwd: project.path, step: 'deploy', logFile, timeout: 120000 });
+    const c = await runStream('wrangler', ['pages', 'project', 'create', name, '--production-branch=main'], { cwd: project.path, step: 'deploy', logFile, timeout: 120000, env: cliEnv() });
     if (c.code !== 0 && !c.tail.join('\n').match(/already exists/i)) return failDeploy(project, 'cloudflare', { prod, r: c, logFile, reason: t('hosting.cloudflare.createFailed') });
     updateProject(project.key, { cloudflare: { projectName: name } });
   }
   const t0 = Date.now();
-  const r = await runStream(
-    'wrangler',
-    ['pages', 'deploy', stagePublicCopy(project.path, d.publishDir), `--project-name=${name}`, `--branch=${prod ? 'main' : 'preview'}`, '--commit-dirty=true'],
-    { cwd: project.path, step: 'deploy', logFile, captureStdout: true, timeout: 20 * 60 * 1000 }
-  );
+  const staged = await stageArtifact(project, d.publishDir, { expected: expectedArtifact, code: artifactCode });
+  let r;
+  try {
+    r = await runStream(
+      'wrangler',
+      ['pages', 'deploy', staged.dir, `--project-name=${name}`, `--branch=${prod ? 'main' : 'preview'}`, '--commit-dirty=true'],
+      { cwd: project.path, step: 'deploy', logFile, captureStdout: true, timeout: 20 * 60 * 1000, env: cliEnv() }
+    );
+    await staged.verify();
+  } finally {
+    staged.cleanup();
+  }
   const duration = (Date.now() - t0) / 1000;
   const all = `${r.stdout}\n${r.tail.join('\n')}`;
   const url = (all.match(/https:\/\/[^\s]+\.pages\.dev/g) || []).pop();
@@ -247,7 +257,8 @@ async function cloudflareDeploy(project, { prod }) {
  */
 export function stagePublicCopy(projectDir, publishDir) {
   if (publishDir && publishDir !== '.' && publishDir !== './') return publishDir;
-  const out = path.join(CACHE_DIR, 'publish', path.basename(projectDir).replace(/[^\w.-]/g, '_'));
+  // unique per call: two projects with the same folder name never share (or wipe) one copy (audit E15)
+  const out = path.join(CACHE_DIR, 'publish', `${path.basename(projectDir).replace(/[^\w.-]/g, '_')}-${process.pid}-${Date.now().toString(36)}`);
   fs.rmSync(out, { recursive: true, force: true });
   const copy = (from, to, root) => {
     fs.mkdirSync(to, { recursive: true });
@@ -263,7 +274,7 @@ export function stagePublicCopy(projectDir, publishDir) {
   return out;
 }
 
-async function ghPagesDeploy(project, { prod }) {
+async function ghPagesDeploy(project, { prod, expectedArtifact, artifactCode }) {
   if (!prod) throw new EngineError(msg('hosting.ghpages.noPreview'), 'unsupported');
   const d = detect(project.path);
   if (d.ssr || d.hasFunctions) throw new EngineError(msg('hosting.ghpages.staticOnly'), 'unsupported');
@@ -275,14 +286,22 @@ async function ghPagesDeploy(project, { prod }) {
   ev.step('deploy', { label: t('deploy.label.production'), category: 'Hosting', status: 'running', summary: `gh-pages ← ${d.publishDir}/` });
   const t0 = Date.now();
   // no -t (dotfiles); --nojekyll adds the marker on the gh-pages branch instead of in the user's folder
-  const publish = stagePublicCopy(project.path, d.publishDir);
-  const r = await runStream('npx', ['--yes', 'gh-pages', '-d', publish, '--nojekyll', '-m', `Before I Deploy — ${new Date().toISOString()}`], {
-    cwd: project.path,
-    step: 'deploy',
-    logFile,
-    env: { ...process.env, GIT_TERMINAL_PROMPT: '0' },
-    timeout: 10 * 60 * 1000,
-  });
+  // the installed `gh-pages` CLI only — never `npx --yes gh-pages` (audit E10); Setup installs it on request
+  if (!which('gh-pages')) throw new EngineError(msg('hosting.ghpages.cliMissing'), 'no_cli');
+  const staged = await stageArtifact(project, d.publishDir, { expected: expectedArtifact, code: artifactCode });
+  let r;
+  try {
+    r = await runStream('gh-pages', ['-d', staged.dir, '--nojekyll', '-m', `Before I Deploy — ${new Date().toISOString()}`], {
+      cwd: project.path,
+      step: 'deploy',
+      logFile,
+      env: cliEnv({ GIT_TERMINAL_PROMPT: '0' }),
+      timeout: 10 * 60 * 1000,
+    });
+    await staged.verify();
+  } finally {
+    staged.cleanup();
+  }
   const duration = (Date.now() - t0) / 1000;
   if (r.code !== 0) return failDeploy(project, 'ghpages', { prod, r, logFile, duration });
   sh('gh', ['api', '-X', 'POST', `repos/${owner}/${repo}/pages`, '-f', 'source[branch]=gh-pages', '-f', 'source[path]=/'], { timeout: 20000 });
@@ -291,9 +310,9 @@ async function ghPagesDeploy(project, { prod }) {
 }
 
 /** Deploys with the project's selected hosting provider. */
-export async function deployProject(project, { prod = false, confirm = null } = {}) {
+export async function deployProject(project, { prod = false, confirm = null, expectedArtifact, artifactCode = 'stale_check' } = {}) {
   const provider = (findProject(project.key) || project).hosting || 'netlify';
-  if (provider === 'netlify') return netlifyDeploy(project, { prod, confirm });
+  if (provider === 'netlify') return netlifyDeploy(project, { prod, confirm, expectedArtifact, artifactCode });
   if (prod && confirm !== 'DEPLOY') throw new EngineError(msg('deploy.confirmRequired'), 'confirm_required', 2);
   deployGuard(project);
   const st = providerStatus(provider);
@@ -301,8 +320,9 @@ export async function deployProject(project, { prod = false, confirm = null } = 
   if (!st.loggedIn) throw new EngineError(msg('hosting.notLoggedIn', { name: st.name }), 'not_logged_in', 5);
   const p = findProject(project.key) || project;
   if (provider === 'vercel') return vercelDeploy(p, { prod });
-  if (provider === 'cloudflare') return cloudflareDeploy(p, { prod });
-  if (provider === 'ghpages') return ghPagesDeploy(p, { prod });
+  const expected = expectedArtifact === undefined ? getState(p.key).check?.artifact?.hash || null : expectedArtifact;
+  if (provider === 'cloudflare') return cloudflareDeploy(p, { prod, expectedArtifact: expected, artifactCode });
+  if (provider === 'ghpages') return ghPagesDeploy(p, { prod, expectedArtifact: expected, artifactCode });
   throw new EngineError(msg('hosting.unknown', { provider }), 'usage', 2);
 }
 

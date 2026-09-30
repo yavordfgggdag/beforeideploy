@@ -1038,6 +1038,9 @@ final class AppModel: ObservableObject, Feedback {
         }
     }
 
+    /// Projects whose changed scripts were already reported by the automatic check (one toast each).
+    private var scriptsChangedWarned: Set<String> = []
+
     private func runQuietCheck(_ key: String) async {
         autoChecking = true
         lastAutoCheck = Date()
@@ -1049,9 +1052,20 @@ final class AppModel: ObservableObject, Feedback {
         }
         let before = projects.first { $0.key == key }?.lastStatus
         AppLog.ui.debug("auto-check")
-        _ = try? await engine.run(["check", "--project", key], handle: handle)
+        // --auto: the engine refuses to run scripts or build configs that changed since the user last started a
+        // check (WP01); the user is told once per project and starts the next check themselves
+        let outcome = try? await engine.run(["check", "--project", key, "--auto"], handle: handle)
         // a run the user started stopped this one: its verdict is not worth a notification
         guard quietCheck === handle else { return }
+        if outcome?.errorCode == "scripts_changed" {
+            if !scriptsChangedWarned.contains(key) {
+                scriptsChangedWarned.insert(key)
+                let name = projects.first { $0.key == key }?.name ?? key
+                flash(L("autocheck.scriptsChanged", name), error: false)
+            }
+            return
+        }
+        scriptsChangedWarned.remove(key)
         await loadProjects()
         await refreshStatus(quiet: true)
         let after = status?.check?.status

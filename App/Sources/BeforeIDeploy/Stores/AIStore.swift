@@ -76,7 +76,7 @@ final class AIStore: ObservableObject {
                 if outcome.ok {
                     let r = try outcome.decode(AIFixOutcome.self)
                     current?.outcome = r
-                    current?.selected = Set((r.files ?? []).filter { $0.applicable }.map(\.path))
+                    current?.selected = Set((r.files ?? []).filter { $0.applicable && $0.needsApproval != true }.map(\.path))
                 } else {
                     current?.error = outcome.errorMessage ?? L("common.error")
                 }
@@ -95,7 +95,8 @@ final class AIStore: ObservableObject {
 
     func selectAll(_ on: Bool) {
         guard var st = current else { return }
-        st.selected = on ? Set(st.files.filter { $0.applicable }.map(\.path)) : []
+        // "select all" never includes config changes: each one needs its own tick (WP01)
+        st.selected = on ? Set(st.files.filter { $0.applicable && $0.needsApproval != true }.map(\.path)) : []
         current = st
     }
 
@@ -105,6 +106,8 @@ final class AIStore: ObservableObject {
         current = st
         var args = ["ai", "apply", "--project", st.projectKey, "--patch-file", patch, "--files", st.selected.sorted().joined(separator: ","), "--yes"]
         if commitAfterApply { args.append("--commit") }
+        // a config file the user ticked individually is their separate approval for it
+        if st.files.contains(where: { $0.needsApproval == true && st.selected.contains($0.path) }) { args.append("--allow-config") }
         // the engine re-checks and reports `verified`; a failed re-check is shown, never hidden (V11)
         if recheckAfterApply { args.append("--recheck") }
         Task {

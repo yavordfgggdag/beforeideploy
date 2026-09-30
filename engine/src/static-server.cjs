@@ -10,7 +10,7 @@ const port = Number(process.argv[3] || 4173);
 const projectKey = process.argv[4] || '';
 // Secret stop token (argv[5]): only the engine that started the server knows it. X-BID-Project stays public
 // (it only identifies the server), so it must never be enough to shut the server down.
-const stopToken = process.argv[5] || '';
+const stopToken = process.env.BID_STOP_TOKEN || '';
 const allowedHosts = new Set([`127.0.0.1:${port}`, `localhost:${port}`, `[::1]:${port}`]);
 
 const types = {

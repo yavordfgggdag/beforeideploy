@@ -198,11 +198,12 @@ for (const sig of ['SIGTERM', 'SIGINT', 'SIGHUP']) {
  * stdout+stderr are merged into the log unless `captureStdout` is set,
  * in which case stdout is collected separately (still written to the log file).
  */
-export function runStream(cmd, args, { cwd, env, logFile, step, captureStdout = false, timeout = 0, quiet = false } = {}) {
+export function runStream(cmd, args, { cwd, env, logFile, step, captureStdout = false, timeout = 0, quiet = false, display = null } = {}) {
   return new Promise((resolve) => {
     const started = Date.now();
     const logStream = logFile ? fs.createWriteStream(logFile, { flags: 'w' }) : null;
-    if (logStream) logStream.write(`$ ${cmd} ${args.join(' ')}\n# ${cwd || process.cwd()}\n# ${new Date().toString()}\n\n`);
+    // `display` keeps wrapper arguments (the sandbox profile) and anything sensitive out of the log header
+    if (logStream) logStream.write(`$ ${display || `${cmd} ${args.join(' ')}`}\n# ${cwd || process.cwd()}\n# ${new Date().toString()}\n\n`);
 
     let child;
     try {

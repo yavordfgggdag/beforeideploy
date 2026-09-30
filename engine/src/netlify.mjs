@@ -3,6 +3,8 @@ import path from 'node:path';
 import { HOME, EngineError, ev, which, runStream, logDir, readJSON, extractJSON, nowISO } from './util.mjs';
 import { detect } from './detect.mjs';
 import { fingerprint } from './checks.mjs';
+import { stageArtifact } from './staging.mjs';
+import { cliEnv } from './isolation.mjs';
 import { getState, setState, updateProject, addHistory } from './store.mjs';
 import { recordCost } from './costs.mjs';
 import { gitHead } from './git.mjs';
@@ -10,9 +12,10 @@ import { t, msg } from './i18n.mjs';
 
 const CHECK_MAX_AGE_MIN = 30;
 
+// Only an installed CLI (Setup installs it with the user's consent). No `npx --yes netlify-cli`: that
+// downloads and runs whatever version is newest at that moment, silently (audit E10).
 export function netlifyCommand() {
   if (which('netlify')) return { cmd: 'netlify', pre: [], label: 'netlify' };
-  if (which('npx')) return { cmd: 'npx', pre: ['--yes', 'netlify-cli'], label: 'npx netlify-cli' };
   return null;
 }
 
@@ -32,6 +35,7 @@ async function nl(project, args, opts = {}) {
     captureStdout: opts.captureStdout,
     timeout: opts.timeout ?? 10 * 60 * 1000,
     quiet: opts.quiet,
+    env: cliEnv(),
   });
 }
 
@@ -242,7 +246,7 @@ export function deployGuard(project) {
   return check;
 }
 
-export async function netlifyDeploy(project, { prod = false, confirm = null } = {}) {
+export async function netlifyDeploy(project, { prod = false, confirm = null, expectedArtifact, artifactCode = 'stale_check' } = {}) {
   if (prod && confirm !== 'DEPLOY') {
     throw new EngineError(msg('deploy.confirmRequired'), 'confirm_required', 2);
   }
@@ -256,7 +260,10 @@ export async function netlifyDeploy(project, { prod = false, confirm = null } = 
   const message = `Before I Deploy — ${new Date().toLocaleString('bg-BG')}`;
   const args = ['deploy', '--json', '--message', message];
   const useStatic = !d.ssr && !d.hasFunctions && d.publishReady;
-  if (useStatic) args.push('--no-build', '--dir', d.publishDir);
+  // static sites go out from a staged copy whose manifest is checked against the check / release (staging.mjs)
+  const expected = expectedArtifact === undefined ? getState(project.key).check?.artifact?.hash || null : expectedArtifact;
+  const staged = useStatic ? await stageArtifact(project, d.publishDir, { expected, code: artifactCode }) : null;
+  if (useStatic) args.push('--no-build', '--dir', staged.dir);
   if (prod) args.push('--prod');
 
   ev.step(stepId, {
@@ -268,7 +275,13 @@ export async function netlifyDeploy(project, { prod = false, confirm = null } = 
 
   const logFile = path.join(logDir(project.key), prod ? 'deploy-prod.log' : 'deploy-draft.log');
   const t0 = Date.now();
-  const r = await nl(project, args, { step: stepId, logFile, captureStdout: true, timeout: 20 * 60 * 1000 });
+  let r;
+  try {
+    r = await nl(project, args, { step: stepId, logFile, captureStdout: true, timeout: 20 * 60 * 1000 });
+    if (staged) await staged.verify();
+  } finally {
+    staged?.cleanup();
+  }
   const duration = (Date.now() - t0) / 1000;
   const json = extractJSON(r.stdout);
 
@@ -291,5 +304,5 @@ export async function netlifyDeploy(project, { prod = false, confirm = null } = 
   const cost = recordCost({ project: project.key, projectName: project.name, service: 'netlify', op: prod ? 'production' : 'draft', ref: record.deployId });
   ev.step(stepId, { label, category: 'Hosting', status: 'pass', summary: url, duration, log: logFile });
   ev.notify(prod ? t('deploy.notify.live', { project: project.name }) : t('deploy.notify.previewReady', { project: project.name }), url, url);
-  return { prod, url, deployId: record.deployId, adminLogs: record.logs, duration, cost };
+  return { prod, url, deployId: record.deployId, adminLogs: record.logs, duration, cost, artifact: staged ? { hash: staged.hash, files: staged.files, bytes: staged.bytes } : null };
 }

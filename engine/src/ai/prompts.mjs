@@ -133,7 +133,12 @@ function checkRef(v, ref, at, errors, refs) {
   if (ref === 'evidence') {
     if (refs.evidence && !refs.evidence.has(v)) errors.push(`${at}: unknown evidence id ${v}`);
   } else if (ref === 'allowed_paths') {
-    if (refs.allowed_paths && !refs.allowed_paths.has(v) && !(refs.allowed_dirs && [...refs.allowed_dirs].some((d) => v.startsWith(d)))) errors.push(`${at}: path ${v} is outside the allowed paths`);
+    // checked as written: `src/../x`, absolute paths and empty prefixes never pass (audit E1)
+    const p = String(v);
+    const segs = p.split(/[\\/]+/);
+    const malformed = !p || p.startsWith('/') || p.includes('\0') || segs.some((s) => s === '..' || s === '.') || /^[a-zA-Z]:/.test(p);
+    const inDir = refs.allowed_dirs && [...refs.allowed_dirs].some((d) => d && d.endsWith('/') && p.startsWith(d));
+    if (refs.allowed_paths && (malformed || (!refs.allowed_paths.has(p) && !inDir))) errors.push(`${at}: path ${v} is outside the allowed paths`);
   } else if (ref === 'engine_status') {
     if (refs.engine_status !== undefined && v !== refs.engine_status) errors.push(`${at}: must equal the engine status "${refs.engine_status}" (got "${v}")`);
   }
