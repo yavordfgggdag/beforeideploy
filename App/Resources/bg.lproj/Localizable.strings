@@ -310,6 +310,7 @@
 "billing.menu" = "План и кредити…";
 "billing.monthly" = "Месечно";
 "billing.noPlanLine" = "Безплатен — външните AI бутони работят винаги.";
+"billing.notReady" = "Плановете и покупките още не са отворени — облачната част се настройва. Всичко останало работи.";
 "billing.packHint" = "Еднократно, важи 12 месеца";
 "billing.packTokens" = "+%@ кредита";
 "billing.packs" = "Допълнителни кредити";
@@ -553,6 +554,8 @@
 "fix.unresolved" = "Още отворени: %@";
 "fix.unverified" = "Поправката е приложена, но повторната проверка още се проваля: %@";
 "fix.verified" = "Поправката е проверена: %@ отново минава";
+
+"framework.unknown" = "неразпознат";
 
 "git.addRemote" = "Добави remote";
 "git.changes" = "промени";
@@ -814,6 +817,7 @@
 "overlay.dontCancelProd" = "Не прекъсвай качването на production";
 "overlay.fullLog" = "Пълен лог";
 "overlay.noOutput" = "Няма изход за тази стъпка.";
+"overlay.nothingToDo" = "Нямаше нищо за правене.";
 "overlay.safeFix" = "Има безопасна поправка за тази стъпка";
 "overlay.starting" = "Стартирам…";
 "overlay.stopsProcess" = "Спира процеса";

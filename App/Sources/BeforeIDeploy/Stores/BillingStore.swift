@@ -14,6 +14,9 @@ final class BillingStore: ObservableObject {
     /// Plan & usage (V11 RC): what the cloud says, in tokens; nil until loaded or when signed out.
     @Published var usage: UsageReport?
     @Published var usageError: String?
+    /// The cloud's billing function is not deployed yet: plans are simply not available — shown as a quiet note
+    /// where plans would be, never as a red error toast on every screen that loads them.
+    @Published var billingUnavailable: String?
 
     let engine: EngineClient
     weak var feedback: Feedback?
@@ -33,6 +36,9 @@ final class BillingStore: ObservableObject {
             async let s = engine.call(["billing", "status"], as: BillingStatus.self)
             catalog = try await c
             status = try await s
+            billingUnavailable = nil
+        } catch let e as EngineError where e.code == "cloud_function_missing" || e.code == "not_configured" {
+            billingUnavailable = e.localizedDescription
         } catch { feedback?.show(error) }
     }
 

@@ -734,5 +734,15 @@
   "update.tooLarge": "The update is larger than {mb} MB — refused.",
   "ai.streamIdle": "The AI provider stopped answering for {seconds} s. Nothing was changed.",
   "cloud.rateLimited": "Too many requests of this kind — try again in {seconds} s.",
-  "cloud.rateLimitUnavailable": "The cloud could not check its request limit right now. Try again in a moment."
+  "cloud.rateLimitUnavailable": "The cloud could not check its request limit right now. Try again in a moment.",
+  "costs.quota.planCredits": "Credits in the plan",
+  "costs.quota.autoTopup": "Auto top-up credits",
+  "costs.quota.credits": "Credits",
+  "costs.quota.devCpu": "Dev server CPU cores",
+  "costs.quota.devMemory": "Dev server memory (GB)",
+  "costs.quota.devServers": "Dev servers",
+  "costs.quota.bandwidth": "Bandwidth",
+  "costs.quota.buildMinutes": "Build minutes",
+  "costs.quota.sites": "Sites",
+  "costs.quota.members": "Team members"
 }

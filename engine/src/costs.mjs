@@ -129,17 +129,39 @@ export function setBudgets(patch) {
 // ---------------------------------------------------------------- provider usage
 
 /** Walks an object and collects anything that looks like a quota: {included/limit, used}. */
+// Netlify's capability names are API field paths (capabilities.credits, swar_auto_topup_credits …): the
+// known ones get a readable label, the rest lose the path and underscores (never shown raw).
+const QUOTA_LABELS = [
+  [/(^|\.)plan_credits$/, 'costs.quota.planCredits'],
+  [/auto_topup_credits$/, 'costs.quota.autoTopup'],
+  [/(^|\.)credits$/, 'costs.quota.credits'],
+  [/dev_server_cpu_cores$/, 'costs.quota.devCpu'],
+  [/dev_server_memory_gb$/, 'costs.quota.devMemory'],
+  [/dev_servers$/, 'costs.quota.devServers'],
+  [/bandwidth/, 'costs.quota.bandwidth'],
+  [/build_minutes|build-minutes/, 'costs.quota.buildMinutes'],
+  [/sites$/, 'costs.quota.sites'],
+  [/members$/, 'costs.quota.members'],
+];
+const QUOTA_TEXT = { 'costs.quota.planCredits': () => t('costs.quota.planCredits'), 'costs.quota.autoTopup': () => t('costs.quota.autoTopup'), 'costs.quota.credits': () => t('costs.quota.credits'), 'costs.quota.devCpu': () => t('costs.quota.devCpu'), 'costs.quota.devMemory': () => t('costs.quota.devMemory'), 'costs.quota.devServers': () => t('costs.quota.devServers'), 'costs.quota.bandwidth': () => t('costs.quota.bandwidth'), 'costs.quota.buildMinutes': () => t('costs.quota.buildMinutes'), 'costs.quota.sites': () => t('costs.quota.sites'), 'costs.quota.members': () => t('costs.quota.members') };
+export function quotaLabel(name) {
+  const hit = QUOTA_LABELS.find(([re]) => re.test(name));
+  if (hit) return QUOTA_TEXT[hit[1]]();
+  const last = String(name).split('.').pop().replace(/[_-]+/g, ' ').trim();
+  return last.charAt(0).toUpperCase() + last.slice(1);
+}
+
 function collectQuotas(obj, prefix = '', out = []) {
   if (!obj || typeof obj !== 'object' || out.length > 40) return out;
   const inc = obj.included ?? obj.limit ?? obj.quota ?? obj.total;
   const used = obj.used ?? obj.usage ?? obj.consumed;
   if (typeof inc === 'number' && typeof used === 'number') {
-    out.push({ name: prefix || 'quota', included: inc, used, remaining: Math.max(0, inc - used), unit: obj.unit || null });
+    out.push({ name: prefix || 'quota', label: quotaLabel(prefix || 'quota'), included: inc, used, remaining: Math.max(0, inc - used), unit: obj.unit || null });
     return out;
   }
   for (const [k, v] of Object.entries(obj)) {
     if (v && typeof v === 'object' && !Array.isArray(v)) collectQuotas(v, prefix ? `${prefix}.${k}` : k, out);
-    else if (/credit/i.test(k) && typeof v === 'number') out.push({ name: prefix ? `${prefix}.${k}` : k, value: v });
+    else if (/credit/i.test(k) && typeof v === 'number') out.push({ name: prefix ? `${prefix}.${k}` : k, label: quotaLabel(prefix ? `${prefix}.${k}` : k), value: v });
   }
   return out;
 }

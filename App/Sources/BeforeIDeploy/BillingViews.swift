@@ -14,6 +14,12 @@ struct PlansSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     if store.waitingForPayment { WaitingBanner { store.stopWaiting() } }
+                    if let why = store.billingUnavailable {
+                        Label(L("billing.notReady"), systemImage: "info.circle")
+                            .font(.system(size: 12.5)).foregroundColor(Theme.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .help(why)
+                    }
                     if let s = store.status { BalanceCard(status: s) }
                     if let s = store.status, s.trialAvailable, let t = store.catalog?.trial {
                         TrialCard(trial: t, busy: store.busy == "trial") { store.startTrial() }

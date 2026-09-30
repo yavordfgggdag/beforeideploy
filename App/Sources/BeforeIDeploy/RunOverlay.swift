@@ -116,9 +116,15 @@ struct RunOverlay: View {
                         .entrance(i, offset: 8)
                 }
                 if session.steps.isEmpty {
+                    // a run that finished without steps (nothing to install) must not spin "Starting…" forever
                     HStack(spacing: 8) {
-                        Spinner(size: 12)
-                        Text(L("overlay.starting")).font(.system(size: 12)).foregroundColor(Theme.secondary)
+                        if session.finished {
+                            Image(systemName: "checkmark.circle.fill").foregroundColor(Theme.ready)
+                            Text(L("overlay.nothingToDo")).font(.system(size: 12)).foregroundColor(Theme.secondary)
+                        } else {
+                            Spinner(size: 12)
+                            Text(L("overlay.starting")).font(.system(size: 12)).foregroundColor(Theme.secondary)
+                        }
                     }
                     .padding(.top, 16)
                 }

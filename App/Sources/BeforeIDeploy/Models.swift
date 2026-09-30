@@ -777,6 +777,8 @@ struct Budgets: Codable {
 }
 
 struct Quota: Codable, Hashable {
+    /// Readable name from the engine (Netlify's field paths are never shown raw).
+    var label: String?
     var name: String
     var included: Double?
     var used: Double?

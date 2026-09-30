@@ -310,6 +310,7 @@
 "billing.menu" = "Plan & credits…";
 "billing.monthly" = "Monthly";
 "billing.noPlanLine" = "Free — the external AI buttons always work.";
+"billing.notReady" = "Plans and purchases are not open yet — the cloud part is still being set up. Everything else works.";
 "billing.packHint" = "One-time, valid 12 months";
 "billing.packTokens" = "+%@ credits";
 "billing.packs" = "Extra credits";
@@ -553,6 +554,8 @@
 "fix.unresolved" = "Still open: %@";
 "fix.unverified" = "Fix applied, but the re-check still fails: %@";
 "fix.verified" = "Fix verified: %@ passes again";
+
+"framework.unknown" = "not recognised";
 
 "git.addRemote" = "Add remote";
 "git.changes" = "changes";
@@ -814,6 +817,7 @@
 "overlay.dontCancelProd" = "Do not interrupt a production upload";
 "overlay.fullLog" = "Full log";
 "overlay.noOutput" = "No output for this step.";
+"overlay.nothingToDo" = "Nothing needed doing.";
 "overlay.safeFix" = "There is a safe fix for this step";
 "overlay.starting" = "Starting…";
 "overlay.stopsProcess" = "Stops the process";

@@ -30,6 +30,12 @@ struct AccountView: View {
                                 Button(L("billing.manage")) { billing.openPortal() }.bidButton(.secondary, compact: true)
                             }
                         }
+                        if let why = billing.billingUnavailable {
+                            // the cloud side of plans is not deployed yet: say it calmly, where the plans would be
+                            Label(L("billing.notReady"), systemImage: "info.circle")
+                                .font(.system(size: 12)).foregroundColor(Theme.secondary)
+                                .help(why)
+                        }
                         if let s = billing.status {
                             BalanceCard(status: s)
                             if !s.usage.isEmpty { UsageList(usage: Array(s.usage.prefix(8))) }

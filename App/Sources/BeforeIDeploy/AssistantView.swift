@@ -89,14 +89,13 @@ struct AssistantView: View {
                     Button(L("assistant.send")) { store.send(action: "ask") }.bidButton(.primary, compact: true).disabled(!store.canRun)
                 }
             }
-            HStack(spacing: 6) {
+            FlowLayout(spacing: 6, lineSpacing: 6) {
                 actionButton("diagnose", "questionmark.circle", needsIssue: true)
                 actionButton("propose", "wand.and.stars", needsIssue: true)
                 actionButton("fix", "checkmark.seal", needsIssue: true)
                 actionButton("readiness", "paperplane", needsIssue: false)
                 actionButton("triage", "waveform.path.ecg", needsIssue: false)
                 actionButton("explain", "text.magnifyingglass", needsIssue: false)
-                Spacer()
             }
         }
         .padding(.horizontal, 20).padding(.vertical, 12)
@@ -105,7 +104,7 @@ struct AssistantView: View {
     private func actionButton(_ action: String, _ icon: String, needsIssue: Bool) -> some View {
         Button {
             store.send(action: action, yes: false)
-        } label: { Label(K.assistantAction(action), systemImage: icon) }
+        } label: { Label(K.assistantAction(action), systemImage: icon).lineLimit(1).fixedSize() }
             .bidButton(.secondary, compact: true)
             .disabled(!store.canRun || (needsIssue && store.selectedIssue == nil))
             .help(needsIssue && store.selectedIssue == nil ? L("assistant.pickIssue") : K.assistantAction(action))

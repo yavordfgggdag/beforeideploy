@@ -236,7 +236,7 @@ struct SignalPill: View {
                 .lineLimit(1).truncationMode(.middle)
             if let at = signal?.at { Text(Fmt.relative(at)).font(.system(size: 10)).foregroundColor(Theme.tertiary).lineLimit(1) }
         }
-        .fixedSize(horizontal: false, vertical: true)
+        .fixedSize()
         .padding(.horizontal, 7).padding(.vertical, 3)
         .background(Capsule().fill(tint.opacity(signal?.state == "healthy" || signal?.state == "problem" ? 0.12 : 0.06)))
         .help("\(name): \(signal?.value ?? K.signalState(signal?.state ?? "unchecked"))\(signal?.source.map { " · \($0)" } ?? "")\(signal?.detail.map { " · \($0)" } ?? "")")

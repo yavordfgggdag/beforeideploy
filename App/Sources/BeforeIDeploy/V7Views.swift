@@ -328,12 +328,13 @@ struct ProjectOverviewCard: View {
                 ProjectAvatar(name: card.name, size: 32)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(card.name).font(.system(size: 14.5, weight: .bold)).foregroundColor(Theme.text).lineLimit(1)
-                    Text([card.client ?? L("portfolio.noClient"), card.framework, card.branch].compactMap { $0 }.joined(separator: " · "))
+                    Text([card.client ?? L("portfolio.noClient"), card.framework.map { $0 == "unknown" ? L("framework.unknown") : $0 }, card.branch].compactMap { $0 }.joined(separator: " · "))
                         .font(.system(size: 11)).foregroundColor(Theme.tertiary).lineLimit(1)
                 }
                 Spacer()
                 Text(statusText)
                     .font(.system(size: 10, weight: .heavy)).tracking(0.8)
+                    .lineLimit(1).fixedSize() // "ПРЕДУПРЕЖДЕНИЯ" must never break onto two lines
                     .foregroundColor(Theme.color(for: card.status ?? "idle"))
                     .padding(.horizontal, 8).padding(.vertical, 4)
                     .background(Capsule().fill(Theme.color(for: card.status ?? "idle").opacity(0.14)))
@@ -372,7 +373,7 @@ struct ProjectOverviewCard: View {
                 }
                 if let sig = card.signals {
                     // wraps onto a second row instead of squeezing five pills into one (text broke letter by letter)
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 118), spacing: 6, alignment: .leading)], alignment: .leading, spacing: 6) {
+                    FlowLayout(spacing: 6, lineSpacing: 6) {
                         SignalPill(name: L("signal.deploy"), signal: sig["deploy"], icon: "paperplane")
                         SignalPill(name: L("signal.uptime"), signal: sig["uptime"], icon: "dot.radiowaves.left.and.right")
                         SignalPill(name: L("signal.ssl"), signal: sig["ssl"], icon: "lock.fill")
@@ -633,7 +634,7 @@ struct QuotaRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
-                Text(quota.name.replacingOccurrences(of: "_", with: " ")).font(.system(size: 11.5)).foregroundColor(Theme.secondary)
+                Text(quota.label ?? quota.name.replacingOccurrences(of: "_", with: " ")).font(.system(size: 11.5)).foregroundColor(Theme.secondary)
                 Spacer()
                 if let inc = quota.included, let used = quota.used {
                     Text(L("costs.remainingOf", CostsView.amount(max(0, inc - used)), CostsView.amount(inc)))

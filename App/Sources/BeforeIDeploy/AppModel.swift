@@ -1049,8 +1049,15 @@ final class AppModel: ObservableObject, Feedback {
 
     /// Every failure goes through here (WP7): the message, the engine's error code and, when the cloud
     /// settings carry `help.url`, a link to the page for that code (`<help.url>/<code>`).
+    /// "Not set up yet" codes are said once per session, not on every screen that touches the cloud.
+    private var onceShown: Set<String> = []
+
     func show(_ error: Error) {
         if case EngineError.missing = error { engineMissing = true }
+        if case EngineError.failed(_, let code) = error, let code, ["cloud_function_missing", "not_configured"].contains(code) {
+            guard !onceShown.contains(code) else { return }
+            onceShown.insert(code)
+        }
         var t = Toast(text: error.localizedDescription, isError: true)
         if case EngineError.failed(_, let code) = error, let code, !code.isEmpty, code != "error" {
             t.code = code
