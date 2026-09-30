@@ -1,7 +1,7 @@
 // Admin operations (V10 WP2): thin client for the `admin` Edge Function. The engine never holds the
 // service role — every action is verified server-side against profiles.role = 'admin' and logged in
 // admin_audit. `bid admin <action> [--json '{…}'] [--user <uuid>]`.
-import { EngineError } from './util.mjs';
+import { EngineError, fetchT } from './util.mjs';
 import { cloudConfig, currentSession } from './account.mjs';
 import { msg } from './i18n.mjs';
 
@@ -15,7 +15,7 @@ export async function adminCall(action, params = {}) {
   if (!s) throw new EngineError(msg('account.notLoggedIn'), 'not_logged_in', 5);
   let res;
   try {
-    res = await fetch(`${c.url}/functions/v1/admin`, {
+    res = await fetchT(`${c.url}/functions/v1/admin`, {
       method: 'POST',
       headers: { apikey: c.anonKey, Authorization: `Bearer ${s.accessToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ action, ...params }),

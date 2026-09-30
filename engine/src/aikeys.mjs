@@ -2,7 +2,7 @@
 // `ai-anthropic`, `ai-openai`); verified with one cheap request before being saved. The key itself is
 // never written to files, logs or the cloud — `status` returns only a masked hint.
 import { testEndpoint } from './isolation.mjs';
-import { EngineError } from './util.mjs';
+import { EngineError, fetchT } from './util.mjs';
 import { getSecret, setSecret, deleteSecret } from './secrets.mjs';
 import { msg } from './i18n.mjs';
 import { AI_KEY_PROVIDERS } from './features.mjs';
@@ -14,14 +14,14 @@ const PROVIDERS = {
     base: () => testEndpoint('BID_ANTHROPIC_API') || 'https://api.anthropic.com',
     prefix: 'sk-ant-',
     verify: async (base, key) =>
-      fetch(`${base}/v1/models?limit=1`, { headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01' } }),
+      fetchT(`${base}/v1/models?limit=1`, { headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01' } }),
     console: 'https://console.anthropic.com/settings/keys',
   },
   openai: {
     name: 'OpenAI',
     base: () => testEndpoint('BID_OPENAI_API') || 'https://api.openai.com',
     prefix: 'sk-',
-    verify: async (base, key) => fetch(`${base}/v1/models`, { headers: { Authorization: `Bearer ${key}` } }),
+    verify: async (base, key) => fetchT(`${base}/v1/models`, { headers: { Authorization: `Bearer ${key}` } }),
     console: 'https://platform.openai.com/api-keys',
   },
 };

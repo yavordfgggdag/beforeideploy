@@ -1,6 +1,6 @@
 // Spaceship — domains, expiry, DNS and one-click “connect domain to Netlify”
 import path from 'node:path';
-import { EngineError, ev, nowISO, readJSON, writeJSON, APP_DIR, runStream, which, extractJSON, HOME } from './util.mjs';
+import { EngineError, ev, nowISO, readJSON, writeJSON, APP_DIR, runStream, which, extractJSON, HOME, fetchT } from './util.mjs';
 import { testEndpoint } from './isolation.mjs';
 import { getSecret, setSecret, deleteSecret } from './secrets.mjs';
 import { detect } from './detect.mjs';
@@ -23,7 +23,7 @@ async function api(method, p, body) {
   const c = creds();
   let res;
   try {
-    res = await fetch(BASE + p, {
+    res = await fetchT(BASE + p, {
       method,
       headers: { 'X-API-Key': c.key, 'X-API-Secret': c.secret, 'Content-Type': 'application/json', Accept: 'application/json' },
       body: body === undefined ? undefined : JSON.stringify(body),

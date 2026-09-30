@@ -310,11 +310,11 @@ async function ghPagesDeploy(project, { prod, expectedArtifact, artifactCode }) 
 }
 
 /** Deploys with the project's selected hosting provider. */
-export async function deployProject(project, { prod = false, confirm = null, expectedArtifact, artifactCode = 'stale_check' } = {}) {
+export async function deployProject(project, { prod = false, confirm = null, expectedArtifact, artifactCode = 'stale_check', releaseVerified = false } = {}) {
   const provider = (findProject(project.key) || project).hosting || 'netlify';
-  if (provider === 'netlify') return netlifyDeploy(project, { prod, confirm, expectedArtifact, artifactCode });
+  if (provider === 'netlify') return netlifyDeploy(project, { prod, confirm, expectedArtifact, artifactCode, releaseVerified });
   if (prod && confirm !== 'DEPLOY') throw new EngineError(msg('deploy.confirmRequired'), 'confirm_required', 2);
-  deployGuard(project);
+  deployGuard(project, { releaseVerified });
   const st = providerStatus(provider);
   if (!st.installed) throw new EngineError(msg('hosting.cliMissing', { name: st.name }), 'no_cli');
   if (!st.loggedIn) throw new EngineError(msg('hosting.notLoggedIn', { name: st.name }), 'not_logged_in', 5);

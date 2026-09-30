@@ -72,7 +72,13 @@ struct MenuBarView: View {
                 Spacer()
                 if model.autoChecking { Spinner(size: 11) }
             }
-            if model.projects.isEmpty {
+            if model.engineMissing || model.nodeMissing {
+                // the menu must say why nothing is listed, not look empty (WP02, audit A11)
+                Label(model.nodeMissing ? L("node.missing.title") : L("root.engineMissing"), systemImage: "exclamationmark.triangle.fill")
+                    .font(.system(size: 11.5, weight: .semibold)).foregroundColor(Theme.warn)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button(L("common.retry")) { Task { await model.start() } }.bidButton(.secondary, compact: true)
+            } else if model.projects.isEmpty {
                 Text(L("root.emptyHint")).font(.system(size: 11.5)).foregroundColor(Theme.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             } else {

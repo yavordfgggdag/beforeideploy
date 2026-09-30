@@ -4,7 +4,7 @@ import { testEndpoint, isProductionBundle } from './isolation.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { APP_DIR, ENGINE_DIR, EngineError, readJSON, writeJSON, nowISO, ensureDir } from './util.mjs';
+import { APP_DIR, ENGINE_DIR, EngineError, readJSON, writeJSON, nowISO, ensureDir, fetchT } from './util.mjs';
 import { getSecret, setSecret, deleteSecret } from './secrets.mjs';
 import { listProjects } from './store.mjs';
 import { msg, currentLang } from './i18n.mjs';
@@ -44,7 +44,7 @@ async function auth(p, { method = 'POST', body, token } = {}) {
   const c = cfg();
   let res;
   try {
-    res = await fetch(`${c.url}/auth/v1${p}`, {
+    res = await fetchT(`${c.url}/auth/v1${p}`, {
       method,
       // New Supabase keys (sb_publishable_…) are not JWTs — only send Authorization with a real user token
       headers: {
@@ -76,7 +76,7 @@ export async function rest(p, { method = 'GET', body, token, headers = {} } = {}
   const c = cfg();
   let res;
   try {
-    res = await fetch(`${c.url}/rest/v1${p}`, {
+    res = await fetchT(`${c.url}/rest/v1${p}`, {
       method,
       headers: { apikey: c.anonKey, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...headers },
       body: body === undefined ? undefined : JSON.stringify(body),
@@ -334,7 +334,7 @@ async function accountFunction(session, action) {
   const c = cfg();
   let res;
   try {
-    res = await fetch(`${c.url}/functions/v1/account`, {
+    res = await fetchT(`${c.url}/functions/v1/account`, {
       method: 'POST',
       headers: { apikey: c.anonKey, Authorization: `Bearer ${session.accessToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ action }),
@@ -410,7 +410,7 @@ export async function syncProjects() {
   if (!rows.length) return { synced: 0 };
   let res;
   try {
-    res = await fetch(`${c.url}/rest/v1/bid_projects?on_conflict=user_id,key`, {
+    res = await fetchT(`${c.url}/rest/v1/bid_projects?on_conflict=user_id,key`, {
       method: 'POST',
       headers: {
         apikey: c.anonKey,

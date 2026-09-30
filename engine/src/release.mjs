@@ -311,7 +311,7 @@ export async function releasePromote(project, { op: opId, confirm } = {}) {
     } else {
       // no publish-by-id on this provider: the checked artifact is uploaded again, re-hashed before and after
       await assertArtifactUnchanged(op, p, 'before');
-      const dep = await deployProject(p, { prod: true, confirm: 'DEPLOY', expectedArtifact: op.snapshot.artifact?.hash ?? null, artifactCode: 'stale_release' });
+      const dep = await deployProject(p, { prod: true, confirm: 'DEPLOY', expectedArtifact: op.snapshot.artifact?.hash ?? null, artifactCode: 'stale_release', releaseVerified: true });
       production = { url: dep.url, deployId: dep.deployId || null, at: nowISO(), artifact: op.snapshot.artifact?.hash || null };
     }
     op.production = { ...(op.production || {}), ...production };

@@ -55,6 +55,9 @@ final class AppModel: ObservableObject, Feedback {
     @Published var loadingCosts = false
     @Published var setup: SetupStatus?
     @Published var loadingSetup = false
+    /// Why a screen's first load failed, by screen ("overview", "setup", "costs", "monitor"): shown with Retry
+    /// instead of an endless placeholder (WP02, audit A1). Cleared by the next successful load.
+    @Published var loadErrors: [String: String] = [:]
     @Published var showPalette = false
     @Published var update: UpdateInfo?
 
@@ -145,6 +148,7 @@ final class AppModel: ObservableObject, Feedback {
             forward(adminStore.objectWillChange),
             forward(aiStore.objectWillChange),
             forward(billingStore.objectWillChange),
+            forward(assistantStore.objectWillChange),
         ]
     }
 
@@ -198,6 +202,8 @@ final class AppModel: ObservableObject, Feedback {
         set { accountStore.offlineMode = newValue }
     }
     var mustAuthenticate: Bool { accountStore.mustAuthenticate }
+    var accountLoadFailed: Bool { accountStore.accountLoadFailed }
+    var accountError: String? { accountStore.accountError }
 
     var advice: HostingAdvice? {
         get { hostingStore.advice }
@@ -232,9 +238,17 @@ final class AppModel: ObservableObject, Feedback {
         engineMissing = !engine.isInstalled
         guard !engineMissing else { return }
         // Node.js is the one thing the app cannot bring along: say so with a way out (audit B4)
-        let probe = try? await engine.run(["version"])
+        let probe = try? await engine.run(["version"], timeout: 30)
         nodeMissing = probe?.errorCode == "no_node"
         guard !nodeMissing else { return }
+        // any other failure (a crash, garbage instead of JSON, no answer) is a broken engine, not "Node is fine"
+        // (WP02, audit A8): the engine screen says so, with the engine's own words and Retry
+        if probe?.ok != true {
+            lastError = probe?.errorMessage ?? (probe.map { String($0.stderr.suffix(400)) } ?? L("engine.noResult"))
+            engineMissing = true
+            return
+        }
+        lastError = nil
         await loadAccount()
         await loadProjects()
         started = true
@@ -276,7 +290,12 @@ final class AppModel: ObservableObject, Feedback {
     // MARK: - Monitoring (V11)
 
     func loadMonitor() async {
-        monitor = try? await engine.call(["monitor", "status"], as: MonitorStatus.self)
+        do {
+            monitor = try await engine.call(["monitor", "status"], as: MonitorStatus.self)
+            loadErrors["monitor"] = nil
+        } catch {
+            loadErrors["monitor"] = error.localizedDescription
+        }
     }
 
     /// One monitoring pass now (network probes only, never a project check).
@@ -342,8 +361,8 @@ final class AppModel: ObservableObject, Feedback {
         busy.insert("monitor-webhook")
         Task {
             defer { busy.remove("monitor-webhook") }
-            let value = (url?.isEmpty ?? true) ? "null" : "\"\(url!.replacingOccurrences(of: "\"", with: "\\\""))\""
-            let o = try? await engine.run(["monitor", "settings", "--json", "{\"channels\":{\"webhook\":\(value)}}"])
+            let value: Any = url.flatMap { $0.isEmpty ? nil : $0 } ?? NSNull()
+            let o = try? await engine.run(["monitor", "settings", "--json", Self.json(["channels": ["webhook": value]])])
             if o?.ok == true { flash(L("monitor.webhookSaved")) } else { flash(o?.errorMessage ?? L("common.error"), error: true) }
             await loadMonitor()
         }
@@ -387,9 +406,10 @@ final class AppModel: ObservableObject, Feedback {
         if let ssl { n.ssl = ssl }
         if let domain { n.domain = domain }
         if let recovered { n.recovered = recovered }
-        let json = "{\"notify\":{\"down\":\(n.down),\"ssl\":\(n.ssl),\"domain\":\(n.domain),\"recovered\":\(n.recovered)}}"
+        let json = Self.json(["notify": ["down": n.down, "ssl": n.ssl, "domain": n.domain, "recovered": n.recovered]])
         Task {
-            _ = try? await engine.run(["monitor", "settings", "--json", json])
+            let o = try? await engine.run(["monitor", "settings", "--json", json])
+            if o?.ok != true { flash(o?.errorMessage ?? L("common.error"), error: true) }
             await loadMonitor()
         }
     }
@@ -714,6 +734,12 @@ final class AppModel: ObservableObject, Feedback {
         flash(L("common.copied"))
     }
 
+    /// JSON for `--json` flags, always through JSONSerialization — never glued together by hand (WP02, audit A4).
+    static func json(_ object: [String: Any]) -> String {
+        guard let d = try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys]), let s = String(data: d, encoding: .utf8) else { return "{}" }
+        return s
+    }
+
     // MARK: - Mission Control / Costs / Setup
 
     func loadOverview(network: Bool = true) async {
@@ -725,7 +751,13 @@ final class AppModel: ObservableObject, Feedback {
         }
         var args = ["overview"]
         if !network { args.append("--no-network") }
-        if let o = try? await engine.call(args, as: Overview.self) { overview = o }
+        do {
+            overview = try await engine.call(args, as: Overview.self)
+            loadErrors["overview"] = nil
+        } catch {
+            // the local first paint stays on screen; without it the error replaces the skeleton
+            loadErrors["overview"] = error.localizedDescription
+        }
     }
 
     func loadCosts(refresh: Bool = false) async {
@@ -733,19 +765,31 @@ final class AppModel: ObservableObject, Feedback {
         defer { loadingCosts = false }
         var args = ["costs"]
         if refresh { args.append("--refresh") }
-        do { costs = try await engine.call(args, as: CostSummary.self) } catch { show(error) }
+        do {
+            costs = try await engine.call(args, as: CostSummary.self)
+            loadErrors["costs"] = nil
+        } catch {
+            loadErrors["costs"] = error.localizedDescription
+            if costs != nil { show(error) }
+        }
     }
 
     func loadSetup() async {
         loadingSetup = true
         defer { loadingSetup = false }
-        if let s = try? await engine.call(["setup", "status"], as: SetupStatus.self) { setup = s }
+        do {
+            setup = try await engine.call(["setup", "status"], as: SetupStatus.self)
+            loadErrors["setup"] = nil
+        } catch {
+            loadErrors["setup"] = error.localizedDescription
+        }
     }
 
     func setBudget(netlifyMin: Double) {
         Task {
-            _ = try? await engine.run(["budget", "--netlify-min", String(Int(netlifyMin))])
-            flash(L("costs.budgetSaved"))
+            // "saved" only after the engine confirmed it (WP02, audit A5)
+            let o = try? await engine.run(["budget", "--netlify-min", String(Int(netlifyMin))])
+            if o?.ok == true { flash(L("costs.budgetSaved")) } else { flash(o?.errorMessage ?? L("common.error"), error: true) }
             await loadCosts()
         }
     }
@@ -864,7 +908,7 @@ final class AppModel: ObservableObject, Feedback {
         Task {
             defer { busy.remove("update") }
             do {
-                let r = try await engine.call(["update", "download", "--channel", updateChannel] + Self.currentVersionArgs, as: UpdateDownload.self)
+                let r = try await engine.call(["update", "download", "--channel", updateChannel] + Self.currentVersionArgs, as: UpdateDownload.self, timeout: nil)
                 flash(L("update.downloaded", r.version))
                 openFile(r.path)
             } catch { show(error) }

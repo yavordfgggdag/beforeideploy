@@ -38,6 +38,15 @@ struct MonitorCard: View {
                 .toggleStyle(.switch).controlSize(.small)
                 .disabled(model.busy.contains("monitor-agent"))
             }
+            if m == nil, let e = model.loadErrors["monitor"] {
+                // the status could not be read: the reason and Retry, not an empty card (WP02)
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill").foregroundColor(Theme.warn)
+                    Text(e).font(.system(size: 11.5)).foregroundColor(Theme.secondary).lineLimit(2)
+                    Spacer()
+                    Button(L("common.retry")) { Task { await model.loadMonitor() } }.bidButton(.ghost, compact: true)
+                }
+            }
             cloudSection(m)
             if let w = m?.maintenance, !w.isEmpty {
                 ForEach(w) { win in

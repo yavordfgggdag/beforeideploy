@@ -9,7 +9,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { APP_DIR, EngineError, readJSON, writeJSON, nowISO, ensureDir } from './util.mjs';
+import { APP_DIR, EngineError, readJSON, writeJSON, nowISO, ensureDir, fetchT } from './util.mjs';
+import { isProductionBundle } from './isolation.mjs';
 import { msg } from './i18n.mjs';
 
 const CACHE = () => path.join(APP_DIR, 'update-cache.json');
@@ -52,7 +53,7 @@ export async function updateCheck({ current, force = false, channel = 'stable' }
   }
   let res;
   try {
-    res = await fetch(url, { headers: { 'cache-control': 'no-cache' } });
+    res = await fetchT(url, { headers: { 'cache-control': 'no-cache' } });
   } catch (e) {
     throw new EngineError(msg('update.network', { error: e.message }), 'network');
   }
@@ -88,22 +89,56 @@ export async function updateDownload({ current, channel = 'stable' } = {}) {
   } catch {
     throw new EngineError(msg('update.insecure'), 'update_failed');
   }
-  const local = u.protocol === 'http:' && ['127.0.0.1', 'localhost'].includes(u.hostname);
+  // plain http only for a local test feed, and never from the engine inside the app
+  const local = u.protocol === 'http:' && ['127.0.0.1', 'localhost'].includes(u.hostname) && !isProductionBundle();
   if ((u.protocol !== 'https:' && !local) || !/^[0-9a-f]{64}$/i.test(String(r.sha256 || ''))) {
     throw new EngineError(msg('update.insecure'), 'update_failed');
   }
   let res;
   try {
-    res = await fetch(r.url);
+    res = await fetchT(r.url, {}, 60000);
   } catch (e) {
     throw new EngineError(msg('update.network', { error: e.message }), 'network');
   }
   if (!res.ok) throw new EngineError(msg('update.http', { status: res.status }), 'update_failed');
-  const bytes = Buffer.from(await res.arrayBuffer());
-  const sha256 = crypto.createHash('sha256').update(bytes).digest('hex');
-  if (sha256 !== String(r.sha256).toLowerCase()) throw new EngineError(msg('update.corrupt'), 'update_corrupt');
+  // streamed to disk and hashed on the way, with a size cap and an idle timeout (WP02) — never the whole DMG in memory
+  const max = Number(process.env.BID_UPDATE_MAX_BYTES) || 600 * 1024 * 1024;
+  const declared = Number(res.headers.get('content-length') || 0);
+  if (declared > max) throw new EngineError(msg('update.tooLarge', { mb: Math.round(max / 1048576) }), 'update_failed');
   const dir = ensureDir(path.join(os.homedir(), 'Downloads'));
   const file = path.join(dir, `Before I Deploy ${r.latest}.dmg`);
-  fs.writeFileSync(file, bytes);
-  return { path: file, version: r.latest, sha256, bytes: bytes.length, notes: r.notes };
+  const part = `${file}.part`;
+  const hash = crypto.createHash('sha256');
+  const out = fs.createWriteStream(part);
+  let bytes = 0;
+  let idle = null;
+  const arm = () => {
+    clearTimeout(idle);
+    idle = setTimeout(() => res.abortController?.abort(), 60000);
+  };
+  try {
+    arm();
+    for await (const chunk of res.body) {
+      arm();
+      bytes += chunk.length;
+      if (bytes > max) throw new EngineError(msg('update.tooLarge', { mb: Math.round(max / 1048576) }), 'update_failed');
+      hash.update(chunk);
+      if (!out.write(chunk)) await new Promise((ok) => out.once('drain', ok));
+    }
+    await new Promise((ok, bad) => out.end((e) => (e ? bad(e) : ok())));
+  } catch (e) {
+    out.destroy();
+    fs.rmSync(part, { force: true });
+    if (e instanceof EngineError) throw e;
+    throw new EngineError(msg('update.network', { error: e.message }), 'network');
+  } finally {
+    clearTimeout(idle);
+  }
+  const sha256 = hash.digest('hex');
+  if (sha256 !== String(r.sha256).toLowerCase()) {
+    fs.rmSync(part, { force: true });
+    throw new EngineError(msg('update.corrupt'), 'update_corrupt');
+  }
+  fs.renameSync(part, file);
+  return { path: file, version: r.latest, sha256, bytes, notes: r.notes };
 }

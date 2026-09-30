@@ -112,7 +112,7 @@ final class AIStore: ObservableObject {
         if recheckAfterApply { args.append("--recheck") }
         Task {
             do {
-                let res = try await engine.call(args, as: AIApplyResult.self)
+                let res = try await engine.call(args, as: AIApplyResult.self, timeout: nil)
                 current?.applied = res
                 if let rc = res.recheck {
                     feedback?.flash(rc.verified ? L("ai.verified") : L("ai.unverified", rc.step ?? st.step), error: !rc.verified)

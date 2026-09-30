@@ -7,7 +7,7 @@
 //   bid monitor maintenance add --from ISO --to ISO [--project P] | list | clear
 import dns from 'node:dns/promises';
 import net from 'node:net';
-import { EngineError } from './util.mjs';
+import { EngineError, fetchT } from './util.mjs';
 import { msg, t } from './i18n.mjs';
 import { testEndpoint } from './isolation.mjs';
 import { cloudConfig, currentSession } from './account.mjs';
@@ -30,7 +30,7 @@ async function monitorCall(action, params = {}, { timeoutMs = 8000 } = {}) {
   const timer = setTimeout(() => ctl.abort(), timeoutMs);
   let res;
   try {
-    res = await fetch(`${c.url}/functions/v1/monitor`, {
+    res = await fetchT(`${c.url}/functions/v1/monitor`, {
       method: 'POST',
       headers: { apikey: c.anonKey, Authorization: `Bearer ${s.accessToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ action, ...params }),

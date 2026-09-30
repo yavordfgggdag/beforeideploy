@@ -8,7 +8,7 @@
 //   bid billing checkout --pack pack-500k    → { url }
 //   bid billing trial                        starts the one-time trial
 //   bid billing portal                       → { url } (change card, cancel, invoices)
-import { EngineError } from './util.mjs';
+import { EngineError, fetchT } from './util.mjs';
 import { cloudConfig, currentSession } from './account.mjs';
 import { msg } from './i18n.mjs';
 
@@ -29,7 +29,7 @@ async function billingCall(action, params = {}) {
   if (!s) throw new EngineError(msg('account.notLoggedIn'), 'not_logged_in', 5);
   let res;
   try {
-    res = await fetch(`${c.url}/functions/v1/billing`, {
+    res = await fetchT(`${c.url}/functions/v1/billing`, {
       method: 'POST',
       headers: { apikey: c.anonKey, Authorization: `Bearer ${s.accessToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ action, ...params }),

@@ -150,7 +150,7 @@ final class AssistantStore: ObservableObject {
         Task {
             defer { applying = false }
             do {
-                let res = try await engine.call(["ai", "apply", "--project", p.key, "--patch-file", patch, "--yes", "--recheck"], as: AIApplyResult.self)
+                let res = try await engine.call(["ai", "apply", "--project", p.key, "--patch-file", patch, "--yes", "--recheck"], as: AIApplyResult.self, timeout: nil)
                 if let rc = res.recheck { feedback?.flash(rc.verified ? L("ai.verified") : L("ai.unverified", rc.step ?? ""), error: !rc.verified) }
                 else { feedback?.flash(L("ai.applied", count: res.applied.count), error: res.applied.isEmpty) }
                 if let i = turns.lastIndex(where: { $0.result?.patchFile == patch }) {

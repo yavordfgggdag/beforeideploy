@@ -56,26 +56,37 @@ struct ResultEnvelope<V: Decodable>: Decodable {
 enum EngineError: LocalizedError {
     case failed(String, String?)
     case missing(String)
+    case timedOut(Int)
 
     var errorDescription: String? {
         switch self {
         case .failed(let m, _): return m
         case .missing(let p): return L("engine.missingAt", p)
+        case .timedOut(let s): return L("engine.timedOut", String(s))
         }
     }
 
     var code: String? {
-        if case .failed(_, let c) = self { return c }
-        return "missing"
+        switch self {
+        case .failed(_, let c): return c
+        case .missing: return "missing"
+        case .timedOut: return "timeout"
+        }
     }
 }
 
 /// Handle for a running engine process (used to cancel long runs).
+/// Cancel is real (WP02, audit A3): SIGTERM first — the engine stops its own child process groups — and
+/// SIGKILL five seconds later if the engine is still there.
 final class EngineHandle {
     fileprivate var process: Process?
     func cancel() {
         guard let p = process, p.isRunning else { return }
         p.terminate()
+        let pid = p.processIdentifier
+        DispatchQueue.global().asyncAfter(deadline: .now() + 5) {
+            if p.isRunning { kill(pid, SIGKILL) }
+        }
     }
 }
 
@@ -96,11 +107,15 @@ final class EngineClient {
     }
 
     /// Runs `bid <args>`; streams every event to `onEvent` on the main actor.
+    /// `timeout`: seconds until the run is cancelled (SIGTERM, then SIGKILL) and `EngineError.timedOut` is
+    /// thrown; nil = no deadline (long runs with a Cancel button: check, deploy, AI).
     func run(_ args: [String],
              handle: EngineHandle? = nil,
              env extra: [String: String] = [:],
+             timeout: TimeInterval? = nil,
              onEvent: (@MainActor (EngineEvent) -> Void)? = nil) async throws -> EngineOutcome {
         guard isInstalled else { throw EngineError.missing(enginePath) }
+        let control = handle ?? EngineHandle()
 
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/bin/zsh")
@@ -118,7 +133,7 @@ final class EngineClient {
         let err = Pipe()
         process.standardOutput = out
         process.standardError = err
-        handle?.process = process
+        control.process = process
 
         // stderr and the exit are collected by callbacks, never by a blocking read: blocking calls would park
         // threads of Swift's small cooperative pool and, with a few engine calls at once, hang all of them (audit A3)
@@ -137,6 +152,18 @@ final class EngineClient {
 
         try process.run()
 
+        let expired = TimeoutFlag()
+        var watchdog: Task<Void, Never>?
+        if let timeout {
+            watchdog = Task.detached {
+                try? await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
+                guard !Task.isCancelled else { return }
+                expired.set()
+                control.cancel()
+            }
+        }
+        defer { watchdog?.cancel() }
+
         var resultLine: Data? = nil
         for try await line in out.fileHandleForReading.bytes.lines {
             guard let d = line.data(using: .utf8),
@@ -149,6 +176,10 @@ final class EngineClient {
         let status = await exit.wait()
         let errData = await errBuffer.drained()
         let name = AppLog.commandName(args)
+        if expired.value, let timeout {
+            AppLog.engine.error("\(name, privacy: .public) timed out after \(Int(timeout), privacy: .public) s")
+            throw EngineError.timedOut(Int(timeout))
+        }
         if status == 0 {
             AppLog.engine.debug("\(name, privacy: .public) ok")
         } else {
@@ -161,11 +192,13 @@ final class EngineClient {
         )
     }
 
-    /// Convenience: run and decode the result payload.
+    /// Convenience: run and decode the result payload. Short questions get a deadline (default 120 s);
+    /// callers that start long work (AI apply with a re-check, update download) pass `timeout: nil`.
     func call<T: Decodable>(_ args: [String], as type: T.Type,
                             env: [String: String] = [:],
+                            timeout: TimeInterval? = 120,
                             onEvent: (@MainActor (EngineEvent) -> Void)? = nil) async throws -> T {
-        let outcome = try await run(args, env: env, onEvent: onEvent)
+        let outcome = try await run(args, env: env, timeout: timeout, onEvent: onEvent)
         do {
             return try outcome.decode(T.self)
         } catch {
@@ -174,6 +207,14 @@ final class EngineClient {
             throw error
         }
     }
+}
+
+/// Set once by the timeout watchdog; read after the process ended.
+final class TimeoutFlag: @unchecked Sendable {
+    private let lock = NSLock()
+    private var fired = false
+    func set() { lock.lock(); fired = true; lock.unlock() }
+    var value: Bool { lock.lock(); defer { lock.unlock() }; return fired }
 }
 
 /// Collects a pipe's output from its readability handler (a background queue) without blocking anyone.

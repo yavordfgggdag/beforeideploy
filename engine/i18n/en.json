@@ -730,5 +730,7 @@
   "check.scriptsChanged": "The project's scripts or build configuration changed ({files}). Automatic checks do not run changed scripts — start the check yourself once to approve them.",
   "deploy.artifactMismatch": "The files to publish ({actual}) are not the ones the check verified ({expected}). Run the check again, then publish.",
   "hosting.ghpages.cliMissing": "GitHub Pages needs the gh-pages tool installed (Setup, or `npm i -g gh-pages`). It is not downloaded on the fly.",
-  "cli.secretInArgv": "{flag} is not accepted on the command line (every process can read it). Put the value in the {env} environment variable instead."
+  "cli.secretInArgv": "{flag} is not accepted on the command line (every process can read it). Put the value in the {env} environment variable instead.",
+  "update.tooLarge": "The update is larger than {mb} MB — refused.",
+  "ai.streamIdle": "The AI provider stopped answering for {seconds} s. Nothing was changed."
 }

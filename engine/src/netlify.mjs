@@ -232,12 +232,14 @@ export async function netlifyPublishDeploy(project, deployId) {
 
 // ---------------------------------------------------------------- deploy
 
-export function deployGuard(project) {
+export function deployGuard(project, { releaseVerified = false } = {}) {
   const check = getState(project.key).check;
   if (!check) throw new EngineError(msg('deploy.needsCheck'), 'needs_check', 3);
   const age = (Date.now() - Date.parse(check.at)) / 60000;
-  // an unreadable date counts as stale, never as fresh
-  if (!Number.isFinite(age) || age > CHECK_MAX_AGE_MIN) throw new EngineError(msg('deploy.staleCheck', { minutes: Number.isFinite(age) ? Math.round(age) : '?' }), 'stale_check', 3);
+  // an unreadable date counts as stale, never as fresh. A release promote has just re-verified its snapshot
+  // (source, build config, artifact) and uploads a copy that must equal it, so the check's age does not
+  // decide there (WP02, audit E8) — a blocked check or changed code still does.
+  if (!releaseVerified && (!Number.isFinite(age) || age > CHECK_MAX_AGE_MIN)) throw new EngineError(msg('deploy.staleCheck', { minutes: Number.isFinite(age) ? Math.round(age) : '?' }), 'stale_check', 3);
   if (check.status === 'blocked') throw new EngineError(msg('deploy.blocked'), 'blocked', 3);
   // the code must still be the code that was checked (audit E7)
   if (check.fingerprint && fingerprint(project.path, detect(project.path)) !== check.fingerprint) {
@@ -246,11 +248,11 @@ export function deployGuard(project) {
   return check;
 }
 
-export async function netlifyDeploy(project, { prod = false, confirm = null, expectedArtifact, artifactCode = 'stale_check' } = {}) {
+export async function netlifyDeploy(project, { prod = false, confirm = null, expectedArtifact, artifactCode = 'stale_check', releaseVerified = false } = {}) {
   if (prod && confirm !== 'DEPLOY') {
     throw new EngineError(msg('deploy.confirmRequired'), 'confirm_required', 2);
   }
-  deployGuard(project);
+  deployGuard(project, { releaseVerified });
   requireAuth();
   const d = detect(project.path);
   if (!d.netlifyLinked) throw new EngineError(msg('netlify.notLinked'), 'not_linked', 4);

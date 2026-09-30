@@ -222,6 +222,8 @@ struct MissionControlView: View {
                             }
                         }
                     }
+                } else if let e = model.loadErrors["overview"] {
+                    LoadFailedView(message: e) { await model.loadOverview() }
                 } else {
                     MissionControlSkeleton()
                         .accessibilityLabel(L("overview.loading"))
@@ -514,6 +516,8 @@ struct CostsView: View {
                         }
                     }
                     .card()
+                } else if let e = model.loadErrors["costs"] {
+                    LoadFailedView(message: e) { await model.loadCosts() }
                 } else {
                     HStack { Spinner(size: 16); Text(L("costs.loading")).foregroundColor(Theme.secondary) }
                         .frame(maxWidth: .infinity, minHeight: 200)
@@ -704,6 +708,8 @@ struct SetupView: View {
                         .lift()
                         .entrance(gi + 1)
                     }
+                } else if let e = model.loadErrors["setup"] {
+                    LoadFailedView(message: e) { await model.loadSetup() }
                 } else {
                     HStack { Spinner(size: 16); Text(L("setup.checking")).foregroundColor(Theme.secondary) }
                         .frame(maxWidth: .infinity, minHeight: 200)

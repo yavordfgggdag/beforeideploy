@@ -6,6 +6,9 @@ import SwiftUI
 final class AccountStore: ObservableObject {
     @Published var account: AccountState?
     @Published var accountChecked = false
+    /// Why `account status` failed (engine not answering, broken install). Never turned into a silent
+    /// anonymous session (WP02, audit A2): RootView shows it with Retry and "continue offline".
+    @Published var accountError: String?
     @Published var aiKeys: [AIKeyStatus] = []
     /// Engine code of the last failed sign-in / sign-up (`email_not_confirmed` unlocks "send it again").
     @Published var lastAuthCode: String?
@@ -35,9 +38,18 @@ final class AccountStore: ObservableObject {
     }
 
     func loadAccount() async {
-        account = try? await engine.call(["account", "status"], as: AccountState.self)
+        do {
+            account = try await engine.call(["account", "status"], as: AccountState.self)
+            accountError = nil
+        } catch {
+            // a failed refresh keeps the last known account; only a first load without one is an error screen
+            accountError = error.localizedDescription
+        }
         accountChecked = true
     }
+
+    /// The first account load failed and the user has not chosen offline mode.
+    var accountLoadFailed: Bool { accountChecked && account == nil && accountError != nil && !offlineMode }
 
     /// Returns an error message, or nil on success.
     func signup(email: String, password: String, name: String) async -> String? {

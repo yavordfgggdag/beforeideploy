@@ -12,6 +12,8 @@ struct RootView: View {
                 WelcomeLanguageView()
             } else if !tourSeen {
                 WelcomeTourView()
+            } else if model.accountLoadFailed {
+                AccountLoadFailedView()
             } else if model.mustAuthenticate {
                 if model.account?.configured == true {
                     AuthView()
@@ -31,6 +33,7 @@ struct RootView: View {
             }
         }
         .animation(.easeInOut(duration: 0.25), value: model.mustAuthenticate)
+        .animation(.easeInOut(duration: 0.25), value: model.accountLoadFailed)
         .animation(.easeInOut(duration: 0.25), value: tourSeen)
     }
 
@@ -254,10 +257,93 @@ struct EngineMissingView: View {
                 .font(.system(size: 12, design: .monospaced))
                 .foregroundColor(Theme.tertiary)
                 .textSelection(.enabled)
+            if let why = model.lastError, !why.isEmpty {
+                Text(why)
+                    .font(.system(size: 11.5, design: .monospaced))
+                    .foregroundColor(Theme.warn)
+                    .textSelection(.enabled)
+                    .frame(maxWidth: 560)
+            }
             Button(L("common.retry")) { Task { await model.start() } }
                 .bidButton(.secondary)
         }
         .padding(40)
+    }
+}
+
+/// The first `account status` failed (engine not answering, broken install): said plainly, with Retry and
+/// offline mode — never a silent anonymous session (WP02, audit A2).
+struct AccountLoadFailedView: View {
+    @EnvironmentObject var model: AppModel
+    @Local private var retrying = false
+    var body: some View {
+        VStack(spacing: 14) {
+            Image(systemName: "person.crop.circle.badge.exclamationmark")
+                .font(.system(size: 40))
+                .foregroundColor(Theme.warn)
+            Text(L("account.loadFailed.title"))
+                .font(.system(size: 22, weight: .bold))
+                .foregroundColor(Theme.text)
+            Text(L("account.loadFailed.body"))
+                .multilineTextAlignment(.center)
+                .foregroundColor(Theme.secondary)
+                .frame(maxWidth: 460)
+            if let e = model.accountError {
+                Text(e)
+                    .font(.system(size: 12, design: .monospaced))
+                    .foregroundColor(Theme.tertiary)
+                    .textSelection(.enabled)
+                    .frame(maxWidth: 520)
+            }
+            HStack(spacing: 10) {
+                Button {
+                    retrying = true
+                    Task {
+                        await model.loadAccount()
+                        retrying = false
+                    }
+                } label: {
+                    if retrying { Spinner(size: 12, color: .white) } else { Text(L("common.retry")) }
+                }
+                .bidButton(.primary)
+                .disabled(retrying)
+                Button(L("auth.continueOffline")) { model.offlineMode = true }
+                    .bidButton(.secondary)
+            }
+        }
+        .padding(40)
+    }
+}
+
+/// A screen whose first load failed: the reason and Retry instead of an endless placeholder (WP02, audit A1).
+struct LoadFailedView: View {
+    let message: String
+    let retry: () async -> Void
+    @Local private var retrying = false
+    var body: some View {
+        VStack(spacing: 10) {
+            Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 24)).foregroundColor(Theme.warn)
+            Text(L("load.failedTitle")).font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.text)
+            Text(message)
+                .font(.system(size: 12))
+                .foregroundColor(Theme.secondary)
+                .multilineTextAlignment(.center)
+                .textSelection(.enabled)
+                .frame(maxWidth: 520)
+            Button {
+                retrying = true
+                Task {
+                    await retry()
+                    retrying = false
+                }
+            } label: {
+                if retrying { Spinner(size: 12) } else { Label(L("common.retry"), systemImage: "arrow.clockwise") }
+            }
+            .bidButton(.secondary)
+            .disabled(retrying)
+        }
+        .frame(maxWidth: .infinity, minHeight: 200)
+        .accessibilityElement(children: .combine)
     }
 }
 

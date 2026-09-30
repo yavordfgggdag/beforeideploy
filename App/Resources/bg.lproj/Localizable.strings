@@ -8,6 +8,8 @@
 "account.export" = "Експортирай данните ми…";
 "account.exportHint" = "Експортът е JSON с всичко, което облакът пази за теб. Изтриването маха акаунта и абонамента; проектите на този Mac остават.";
 "account.exported" = "Експортът е готов — показвам го във Finder";
+"account.loadFailed.body" = "Engine-ът не отговори за акаунта. Нищо не е влязло или излязло. Опитай отново или продължи без акаунт — проектите остават на този Mac.";
+"account.loadFailed.title" = "Акаунтът не можа да се провери";
 "account.monthlyGrant" = "кредита на месец";
 "account.offline" = "Офлайн режим";
 "account.offlineCopy" = "офлайн копие";
@@ -510,6 +512,7 @@
 "engine.noResponse" = "Engine-ът не отговори (код %@)";
 "engine.noResult" = "Няма резултат";
 "engine.nodeBundled" = "%@ (вграден в приложението)";
+"engine.timedOut" = "Engine-ът не отговори за %@ s и беше спрян. Нищо друго не е променено.";
 "engine.unknownError" = "Неизвестна грешка";
 
 "firstSteps.account" = "Влез — или остани локално";
@@ -651,6 +654,8 @@
 "link.addFolder.add" = "Добави папката";
 "link.addFolder.body" = "Линк поиска от Before I Deploy да добави и провери тази папка:\n\n%@\n\nПроверката пуска скриптовете на проекта. Добави я само ако имаш доверие на източника на линка.";
 "link.addFolder.title" = "Да добавя ли тази папка от линк?";
+
+"load.failedTitle" = "Този екран не можа да се зареди";
 
 "local.buildPreview" = "Преглед на build-а";
 "local.devHelp" = "npm run dev с hot reload";

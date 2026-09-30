@@ -887,6 +887,41 @@ t('WP01 endpoints: override-ите важат само в тестовия ре�
   assert(!r.stdout.includes('evil.example.com'), 'a non-Supabase URL from the environment is ignored: ' + r.stdout + r.stderr);
 });
 
+t('WP02 мрежа: сървър, който не отговаря, дава грешка за секунди, не вечно чакане (E7)', () => {
+  // a server that accepts the connection and never answers
+  const port = 4700 + (process.pid % 90);
+  const srv = spawnChild(process.execPath, ['-e', `require('net').createServer(()=>{}).listen(${port},'127.0.0.1');setTimeout(()=>process.exit(0),20000)`], { stdio: 'ignore', detached: true });
+  srv.unref();
+  spawnSync('sleep', ['0.4']);
+  try {
+    const t0 = Date.now();
+    const r = bidEnv({ BID_FETCH_TIMEOUT_MS: '700', BID_SUPABASE_URL: `http://127.0.0.1:${port}`, BID_SUPABASE_ANON_KEY: 'x', BID_PASSWORD: 'whatever-123' }, 'account', 'login', '--email', 'hang@example.com');
+    const ms = Date.now() - t0;
+    assert(!r.result.ok && r.result.code === 'network' && /timed out/.test(r.result.error) && ms < 8000, `timeout reported in ${ms} ms: ` + JSON.stringify(r.result));
+  } finally {
+    try { process.kill(srv.pid); } catch {}
+  }
+});
+
+t('WP02 release: проверен snapshot не се отказва заради възрастта на проверката; обикновен deploy — да (E8)', () => {
+  const dir = mk('wp02-age', { 'index.html': HTML });
+  bid('project', 'add', '--path', dir);
+  const key = bid('status', '--project', dir).data.project.key;
+  assert(bid('check', '--project', dir).result.ok, 'check');
+  const sf = path.join(ENV.BID_APP_DIR, 'state', `${key}.json`);
+  const st = JSON.parse(fs.readFileSync(sf, 'utf8'));
+  st.check.at = new Date(Date.now() - 2 * 3600 * 1000).toISOString();
+  fs.writeFileSync(sf, JSON.stringify(st));
+  const r = runModule(`const { deployGuard } = await import(${JSON.stringify(path.join(ROOT, 'engine', 'src', 'netlify.mjs'))});
+const p = { key: ${JSON.stringify(key)}, path: ${JSON.stringify(dir)} };
+const out = {};
+try { deployGuard(p); out.plain = 'passed'; } catch (e) { out.plain = e.code; }
+try { deployGuard(p, { releaseVerified: true }); out.release = 'passed'; } catch (e) { out.release = e.code; }
+console.log(JSON.stringify(out));`);
+  const o = JSON.parse(r.stdout.trim().split('\n').pop() || '{}');
+  assert(o.plain === 'stale_check' && o.release === 'passed', r.stdout + r.stderr);
+});
+
 t('WP01 argv: пароли, токени и ключове не се приемат като флагове (E9)', () => {
   for (const [args, env] of [[['account', 'login', '--email', 'a@b.co', '--password', 'p4ss-in-argv'], 'BID_PASSWORD'], [['account', 'session', '--access', 'a', '--refresh', 'r'], 'BID_ACCESS'], [['spaceship', 'connect', '--key', 'k', '--secret', 's'], 'BID_SPACESHIP_KEY'], [['monitor', 'pushover', 'connect', '--token', 't'], 'BID_PUSHOVER_TOKEN']]) {
     const r = bid(...args);
@@ -1016,7 +1051,7 @@ const ANSWER_PARTS=[ANSWER.slice(0,40),ANSWER.slice(40,120),ANSWER.slice(120)];
 const evalCalls={};
 function evalScenario(name,text){const f=path.join(process.env.BID_EVAL_DIR||'',name+'.json');let sc;try{sc=JSON.parse(fs.readFileSync(f,'utf8'));}catch{return {text:'{"error":"no such eval scenario '+name+'"}'};}
   evalCalls[name]=(evalCalls[name]||0)+1;const n=evalCalls[name];const pick=Array.isArray(sc.responses)?sc.responses[Math.min(n,sc.responses.length)-1]:sc;
-  if(pick.status||pick.delayMs||pick.abort)return pick;let out=typeof pick==='string'?pick:JSON.stringify(pick.response!==undefined?pick.response:pick);
+  if(pick.status||pick.delayMs||pick.abort||pick.stall)return pick;let out=typeof pick==='string'?pick:JSON.stringify(pick.response!==undefined?pick.response:pick);
   out=out.replace(/\\{\\{base:([^}]+)\\}\\}/g,(_,p)=>{const m=new RegExp('\\\\] '+p.replace(/[.\/-]/g,(c)=>'\\\\'+c)+' \\\\(sha256 ([0-9a-f]{64})\\\\)').exec(text);return m?m[1]:'unknown';});
   out=out.replace(/\\{\\{engine_status\\}\\}/g,()=>{const m=/\\\\"status\\\\": \\\\"([a-z_]+)\\\\"/.exec(text);return m?m[1]:'unknown';});
   return {text:out};}
@@ -1038,6 +1073,7 @@ http.createServer((q,r)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{r.setHea
    if(em){const sc=evalScenario(em[1],text);if(process.env.BID_LAST_AI_REQ)fs.writeFileSync(process.env.BID_LAST_AI_REQ,JSON.stringify({scenario:em[1],system:req.system,messages:req.messages}));
      if(sc.status){r.statusCode=sc.status;return r.end(JSON.stringify({type:'error',error:{message:sc.error||'x'}}));}
      if(sc.delayMs){r.setHeader('content-type','text/event-stream');return setTimeout(()=>{ev({type:'message_start',message:{model:'claude-sonnet-5',usage:{input_tokens:10,output_tokens:1}}});r.end();},sc.delayMs);}
+     if(sc.stall){r.setHeader('content-type','text/event-stream');ev({type:'message_start',message:{model:'claude-sonnet-5',usage:{input_tokens:10,output_tokens:1}}});return;}
      if(sc.abort){r.setHeader('content-type','text/event-stream');ev({type:'message_start',message:{model:'claude-sonnet-5',usage:{input_tokens:10,output_tokens:1}}});ev({type:'content_block_delta',index:0,delta:{type:'text_delta',text:'{"summ'}});return r.socket.destroy();}
      parts=[sc.text.slice(0,30),sc.text.slice(30)];}
    r.setHeader('content-type','text/event-stream');
@@ -1702,6 +1738,10 @@ t('assistant: readiness огледално на engine gate, заобикаля�
   const slow = chat(asstApp, '--action', 'diagnose', '--issue', issue.id, '--message', '[[eval:slow]]');
   assert(slow.result.code === 'ai_timeout', JSON.stringify(slow.result));
   bid('ai', 'settings', '--json', '{"callTimeoutMs": 120000, "maxIterations": 3}');
+  // WP02: a stream that goes silent is cut by the idle timeout, long before the call timeout
+  const t0 = Date.now();
+  const stalled = bidEnv({ BID_AI_IDLE_MS: '800' }, 'ai', 'chat', '--project', asstApp, '--action', 'diagnose', '--issue', issue.id, '--message', '[[eval:stall]]');
+  assert(stalled.result.code === 'ai_timeout' && Date.now() - t0 < 15000, 'silent stream → ai_timeout in seconds: ' + JSON.stringify(stalled.result) + ' ' + (Date.now() - t0) + ' ms');
   assert(bid('ai', 'settings').data.autoApplyLowRisk === false, 'auto-apply is off by default');
   assert(bid('ai', 'history', '--project', asstApp).data.entries.length >= 8, 'history kept every operation');
   assert(bid('ai', 'reset', '--project', asstApp).data.cleared && bid('ai', 'history', '--project', asstApp).data.entries.length === 0, 'reset');

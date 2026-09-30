@@ -81,7 +81,8 @@ export async function gitCommit(project, { message, files }) {
     ev.step('commit', { label: 'Commit', status: 'fail', summary: add.stderr.trim() });
     throw new EngineError(msg('git.addFailed', { error: add.stderr.trim() }), 'git_failed');
   }
-  const r = await runStream('git', ['commit', '-m', message], { cwd: dir, env: GIT_ENV(), step: 'commit', logFile });
+  // hooks can hang (an editor, a prompt): a commit gets two minutes (WP02)
+  const r = await runStream('git', ['commit', '-m', message], { cwd: dir, env: GIT_ENV(), step: 'commit', logFile, timeout: 120000 });
   if (r.code !== 0) {
     ev.step('commit', { label: 'Commit', status: 'fail', summary: r.tail.slice(-1)[0] || t('git.commitFailed'), log: logFile });
     throw new EngineError(msg('git.commitFailed'), 'git_failed');

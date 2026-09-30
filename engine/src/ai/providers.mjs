@@ -3,7 +3,7 @@
 //   cloud              — the metered `ai-fix` Edge Function (normal users with a plan; the central key never leaves the backend)
 // Every provider yields { type: 'delta', text } · { type: 'usage', input?, output?, model? } · { type: 'done', stopReason? }.
 import { testEndpoint } from '../isolation.mjs';
-import { EngineError } from '../util.mjs';
+import { EngineError, fetchT } from '../util.mjs';
 import { msg } from '../i18n.mjs';
 import { ownKey } from '../aikeys.mjs';
 import { cloudConfig, currentSession } from '../account.mjs';
@@ -15,9 +15,17 @@ export const OPENAI_API = () => testEndpoint('BID_OPENAI_API') || 'https://api.o
 // ---------------------------------------------------------------- SSE
 
 /** Turns a text/event-stream body into { event, data } objects (multi-line data joined with \n). */
-export async function* sseEvents(body) {
+export async function* sseEvents(body, { abort = null, idleMs = Number(process.env.BID_AI_IDLE_MS) || 120000 } = {}) {
   const decoder = new TextDecoder();
   let buf = '';
+  // a stream that stops sending is cut after idleMs without a byte (WP02) — never an endless wait
+  let idle = false;
+  let timer = null;
+  const arm = () => {
+    clearTimeout(timer);
+    if (abort) timer = setTimeout(() => { idle = true; abort.abort(); }, idleMs);
+  };
+  arm();
   const parse = (raw) => {
     let event = 'message';
     const data = [];
@@ -27,7 +35,9 @@ export async function* sseEvents(body) {
     }
     return data.length ? { event, data: data.join('\n') } : null;
   };
+  try {
   for await (const chunk of body) {
+    arm();
     buf += decoder.decode(chunk, { stream: true }).replace(/\r\n/g, '\n');
     let idx;
     while ((idx = buf.indexOf('\n\n')) !== -1) {
@@ -36,14 +46,22 @@ export async function* sseEvents(body) {
       if (ev) yield ev;
     }
   }
+  } catch (e) {
+    if (idle) throw new EngineError(msg('ai.streamIdle', { seconds: Math.round(idleMs / 1000) }), 'ai_timeout');
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
   const last = parse(buf);
   if (last) yield last;
 }
 
 async function post(url, headers, body) {
   try {
-    return await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream', ...headers }, body: JSON.stringify(body) });
+    // the deadline covers the connection and the response headers; the body has its own idle timeout
+    return await fetchT(url, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream', ...headers }, body: JSON.stringify(body) }, Number(process.env.BID_AI_CONNECT_MS) || 60000);
   } catch (e) {
+    if (e.code === 'ETIMEDOUT') throw new EngineError(msg('ai.streamIdle', { seconds: Math.round((Number(process.env.BID_AI_CONNECT_MS) || 60000) / 1000) }), 'ai_timeout');
     throw new EngineError(msg('ai.network', { error: e.message }), 'network');
   }
 }
@@ -85,7 +103,7 @@ async function* anthropic({ key, model, system, messages, maxTokens = 8000, effo
   }
   if (!res.ok) throw await apiError('Anthropic', res);
   let gotText = false;
-  for await (const { data } of sseEvents(res.body)) {
+  for await (const { data } of sseEvents(res.body, { abort: res.abortController })) {
     const j = parseJSON(data);
     if (!j) continue;
     switch (j.type) {
@@ -123,7 +141,7 @@ async function* openai({ key, model, system, messages, maxTokens = 8000 }) {
     { model, stream: true, stream_options: { include_usage: true }, max_completion_tokens: maxTokens, messages: [{ role: 'system', content: system }, ...messages] }
   );
   if (!res.ok) throw await apiError('OpenAI', res);
-  for await (const { data } of sseEvents(res.body)) {
+  for await (const { data } of sseEvents(res.body, { abort: res.abortController })) {
     if (data === '[DONE]') break;
     const j = parseJSON(data);
     if (!j) continue;
@@ -144,12 +162,13 @@ async function* cloud({ prompt, system, step, project, locale, deep, model }) {
   if (!s) throw new EngineError(msg('account.notLoggedIn'), 'not_logged_in', 5);
   let res;
   try {
-    res = await fetch(`${c.url}/functions/v1/ai-fix`, {
+    res = await fetchT(`${c.url}/functions/v1/ai-fix`, {
       method: 'POST',
       headers: { apikey: c.anonKey, Authorization: `Bearer ${s.accessToken}`, 'Content-Type': 'application/json', Accept: 'text/event-stream' },
       body: JSON.stringify({ prompt, system, step, project, locale, deep: !!deep, model: model || undefined }),
-    });
+    }, Number(process.env.BID_AI_CONNECT_MS) || 60000);
   } catch (e) {
+    if (e.code === 'ETIMEDOUT') throw new EngineError(msg('ai.streamIdle', { seconds: Math.round((Number(process.env.BID_AI_CONNECT_MS) || 60000) / 1000) }), 'ai_timeout');
     throw new EngineError(msg('ai.network', { error: e.message }), 'network');
   }
   if (!res.ok) {
@@ -162,7 +181,7 @@ async function* cloud({ prompt, system, step, project, locale, deep, model }) {
     if (res.status === 401) throw new EngineError(msg('account.notLoggedIn'), 'not_logged_in', 5);
     throw new EngineError(msg('ai.providerHttp', { name: 'ai-fix', status: res.status, detail: j.error || '' }), 'ai_failed');
   }
-  for await (const { data } of sseEvents(res.body)) {
+  for await (const { data } of sseEvents(res.body, { abort: res.abortController })) {
     const j = parseJSON(data);
     if (!j) continue;
     if (j.type === 'error') throw new EngineError(msg('ai.providerError', { name: 'ai-fix', error: j.error || 'error' }), 'ai_failed');

@@ -20,6 +20,30 @@ export function ensureDir(d) {
   return d;
 }
 
+// ---------------------------------------------------------------- network
+
+/**
+ * fetch with a deadline (WP02, audit E7). The timer covers the request and the response headers; bodies are
+ * read by the caller (streams get their own idle timeout, ai/providers.mjs). A timeout rejects with an Error
+ * whose code is ETIMEDOUT, so the callers' existing network-error handling reports it.
+ */
+export async function fetchT(url, opts = {}, timeoutMs = Number(process.env.BID_FETCH_TIMEOUT_MS) || 20000) {
+  const ctl = new AbortController();
+  const outer = opts.signal;
+  if (outer) outer.addEventListener('abort', () => ctl.abort(), { once: true });
+  const timer = setTimeout(() => ctl.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { ...opts, signal: ctl.signal });
+    res.abortController = ctl;
+    return res;
+  } catch (e) {
+    if (ctl.signal.aborted && !outer?.aborted) throw Object.assign(new Error(`timed out after ${Math.round(timeoutMs / 1000)} s`), { code: 'ETIMEDOUT', name: 'TimeoutError' });
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // ---------------------------------------------------------------- output
 
 export function emit(obj) {
