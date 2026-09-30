@@ -2,6 +2,22 @@
 
 All notable changes, newest first. Versions come from `engine/VERSION`. Each entry has an English and a Bulgarian part; the in-app update banner shows the notes from `latest.json`, which are generated from this file at release time (WP8).
 
+## 11.1.0-rc.1 (2026-09-30) — "Launchpad"
+
+From a folder to a live, watched site with the fewest steps. Everything in 11.0.0-rc.1, plus:
+
+### English
+- **Site quality check** (roadmap WP10): a new check step reads the built pages and says whether the site is ready for visitors — page title and description, `<html lang>`, canonical and social preview, placeholder text and images, links to localhost, broken internal links and missing files, resources over http://, empty links, TODOs, images without alt text, form fields without labels, empty buttons, image and page budgets, and the launch files (404, robots.txt, sitemap.xml, favicon). Real problems block the release; recommendations warn; file hints never change the status but get a one-click safe fix (`site.robots`, `site.sitemap`, `site.404`) that writes into the folder the build ships. Per-project `bid.config.json` → `site.disable / severity / budgets`. Every finding is an issue with file, line and evidence; the AI can fix the page-level ones. Server-rendered sites are checked after deploy instead.
+- **Launch checklist**: the project screen opens with folder → check → ready for visitors → hosting → live → own domain → watching, each step derived from what the engine knows, with the next action as a button (`bid launch`, also inside `status`). Disappears when everything required is done.
+- **New site from a template** (roadmap WP19): "New site…" in the sidebar and the palette creates a folder from a curated static template (landing page or portfolio) with the site's name, language (Bulgarian or English), description, a privacy page, 404, robots, sitemap, favicon, social image, `netlify.toml`, `.gitignore`, a project config and one Git commit — and it passes the whole check on its first run (`bid new list | create`). Templates ship inside the engine bundle.
+- Health grid gains the "Ready for visitors" tile; `exists` error code for `bid new`.
+
+### Български
+- **Проверка на качеството на сайта** (WP10 от плана): нова стъпка чете построените страници и казва дали сайтът е готов за посетители — заглавие и описание, `<html lang>`, canonical и преглед за социални мрежи, примерен текст и изображения, линкове към localhost, счупени вътрешни линкове и липсващи файлове, ресурси през http://, празни линкове, TODO, изображения без alt, полета без етикет, празни бутони, бюджети за изображения и страници, и файловете за пускане (404, robots.txt, sitemap.xml, favicon). Истинските проблеми спират пускането; препоръките предупреждават; подсказките за файлове не променят статуса, но имат безопасна поправка с един клик (`site.robots`, `site.sitemap`, `site.404`) в папката, която build-ът публикува. `bid.config.json` на проекта → `site.disable / severity / budgets`. Всяка находка е проблем с файл, ред и доказателство; AI може да поправи тези на ниво страница. Сървърно рендираните сайтове се проверяват след deploy.
+- **Списък „Пускане“**: екранът на проекта започва с папка → проверка → готов за посетители → хостинг → на живо → собствен домейн → наблюдение, всяка стъпка изведена от това, което engine-ът знае, със следващото действие като бутон (`bid launch`, и вътре в `status`). Изчезва, когато всичко задължително е готово.
+- **Нов сайт от шаблон** (WP19): „Нов сайт…“ в страничната лента и палитрата създава папка от куриран статичен шаблон (landing или портфолио) с името на сайта, езика (български или английски), описание, страница за поверителност, 404, robots, sitemap, favicon, социална картинка, `netlify.toml`, `.gitignore`, конфигурация на проекта и един Git commit — и минава цялата проверка от първия път (`bid new list | create`). Шаблоните са в бандъла на engine-а.
+- Мрежата на здравето получава плочка „Готов за посетители“; код `exists` за `bid new`.
+
 ## 11.0.0-rc.1 (2026-09-29) — release candidate
 
 Everything in the 11.0.0 entry below, plus what makes it a candidate the owner can install and test (`docs/RELEASE-CANDIDATE-AUDIT.md`, `docs/OWNER-ACCEPTANCE-TEST-BG.md`). Not for public release until the blockers listed there are closed.

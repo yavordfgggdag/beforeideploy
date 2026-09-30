@@ -13,7 +13,7 @@ import { t } from './i18n.mjs';
 export const SEVERITIES = ['blocker', 'high', 'medium', 'low', 'info'];
 const SEV_RANK = Object.fromEntries(SEVERITIES.map((s, i) => [s, i]));
 const CONF_RANK = { confirmed: 0, likely: 1, heuristic: 2 };
-const STEP_ORDER = ['build', 'secrets', 'deps', 'git', 'typecheck', 'lint', 'hosting'];
+const STEP_ORDER = ['build', 'secrets', 'deps', 'git', 'typecheck', 'lint', 'site', 'hosting'];
 
 /** Which check steps prove a fix worked. */
 export const FIX_VERIFIES = {
@@ -24,7 +24,15 @@ export const FIX_VERIFIES = {
   'deps.install': ['deps', 'build'],
   'github.create': ['git'],
   'netlify.link': ['hosting'],
+  'site.robots': ['site'],
+  'site.sitemap': ['site'],
+  'site.404': ['site'],
 };
+
+/** Site rules the AI can fix in the page source (the rest need a file the safe fix creates, or a human). */
+const SITE_AI_RULES = new Set(['seo.title', 'seo.titleLength', 'seo.description', 'seo.lang', 'seo.canonical', 'seo.og', 'content.lorem', 'content.localhost', 'content.brokenLinks', 'content.mixedContent', 'a11y.imgAlt', 'a11y.inputLabel', 'a11y.buttonText', 'content.emptyHref', 'content.todo', 'seo.favicon']);
+const SITE_SEVERITY = { fail: 'high', warn: 'medium', info: 'low' };
+const SITE_KIND = { fail: 'defect', warn: 'recommendation', info: 'recommendation' };
 
 /** Every rule's texts (kept literal so the catalog check can prove each key exists and is used). */
 export const RULE_KEYS = [
@@ -70,6 +78,52 @@ export const RULE_KEYS = [
   'issue.typecheck.failed.title',
   'issue.typecheck.none.impact',
   'issue.typecheck.none.title',
+  'issue.site.seo.title.impact',
+  'issue.site.seo.title.title',
+  'issue.site.seo.titleLength.impact',
+  'issue.site.seo.titleLength.title',
+  'issue.site.seo.description.impact',
+  'issue.site.seo.description.title',
+  'issue.site.seo.lang.impact',
+  'issue.site.seo.lang.title',
+  'issue.site.seo.noindex.impact',
+  'issue.site.seo.noindex.title',
+  'issue.site.seo.canonical.impact',
+  'issue.site.seo.canonical.title',
+  'issue.site.seo.og.impact',
+  'issue.site.seo.og.title',
+  'issue.site.seo.robots.impact',
+  'issue.site.seo.robots.title',
+  'issue.site.seo.sitemap.impact',
+  'issue.site.seo.sitemap.title',
+  'issue.site.seo.favicon.impact',
+  'issue.site.seo.favicon.title',
+  'issue.site.content.lorem.impact',
+  'issue.site.content.lorem.title',
+  'issue.site.content.placeholderImage.impact',
+  'issue.site.content.placeholderImage.title',
+  'issue.site.content.localhost.impact',
+  'issue.site.content.localhost.title',
+  'issue.site.content.brokenLinks.impact',
+  'issue.site.content.brokenLinks.title',
+  'issue.site.content.mixedContent.impact',
+  'issue.site.content.mixedContent.title',
+  'issue.site.content.emptyHref.impact',
+  'issue.site.content.emptyHref.title',
+  'issue.site.content.todo.impact',
+  'issue.site.content.todo.title',
+  'issue.site.a11y.imgAlt.impact',
+  'issue.site.a11y.imgAlt.title',
+  'issue.site.a11y.inputLabel.impact',
+  'issue.site.a11y.inputLabel.title',
+  'issue.site.a11y.buttonText.impact',
+  'issue.site.a11y.buttonText.title',
+  'issue.site.assets.imageSize.impact',
+  'issue.site.assets.imageSize.title',
+  'issue.site.assets.pageSize.impact',
+  'issue.site.assets.pageSize.title',
+  'issue.site.structure.notFound.impact',
+  'issue.site.structure.notFound.title',
 ];
 
 function issue(step, rule, over) {
@@ -132,6 +186,23 @@ function fromStep(s, ctx) {
       if (s.status === 'fail') out.push(issue('build', 'failed', { severity: 'blocker', evidence: { detail: details.slice(-12).join('\n'), log }, fix: aiFix('build') }));
       else if (s.status === 'warn') out.push(issue('build', 'noOutput', { severity: 'high', evidence: { detail: s.summary, log }, fix: aiFix('build') }));
       else if (s.status === 'info') out.push(issue('build', 'noSite', { severity: 'medium', kind: 'signal', confidence: 'heuristic', fix: manual() }));
+      break;
+    case 'site':
+      for (const f of s.findings || []) {
+        // a page that must not be indexed on production blocks the release like a broken build would
+        const severity = f.rule === 'seo.noindex' ? 'blocker' : f.rule === 'content.lorem' || f.rule === 'content.localhost' ? (f.severity === 'fail' ? 'high' : SITE_SEVERITY[f.severity]) : SITE_SEVERITY[f.severity] || 'medium';
+        out.push(
+          issue('site', f.rule, {
+            id: `site.${f.rule}${f.file ? `:${f.file}` : ''}${f.line ? `:${f.line}` : ''}`,
+            severity,
+            kind: SITE_KIND[f.severity] || 'recommendation',
+            confidence: f.rule.startsWith('content.') || f.rule.startsWith('seo.') ? 'confirmed' : 'likely',
+            evidence: { file: f.file, line: f.line, detail: f.detail },
+            fix: f.fixId ? safeFix(f.fixId) : SITE_AI_RULES.has(f.rule) ? aiFix('site') : manual(),
+            verify: { steps: ['site'] },
+          })
+        );
+      }
       break;
     case 'hosting':
       if (s.status === 'fail') out.push(issue('hosting', 'unsupported', { severity: 'blocker', evidence: { detail: s.summary }, fix: uiFix('hosting-chooser') }));

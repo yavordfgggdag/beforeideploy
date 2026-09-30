@@ -6,6 +6,7 @@ import { ev, sh, which, runStream, logDir, nowISO, exists, publishIncludes } fro
 import { detect, pmRunArgs } from './detect.mjs';
 import { getState, setState, addHistory, updateProject } from './store.mjs';
 import { t } from './i18n.mjs';
+import { scanSite } from './site.mjs';
 
 export const STEPS = [
   { id: 'git', label: t('check.step.git'), category: 'Source Control' },
@@ -14,6 +15,7 @@ export const STEPS = [
   { id: 'lint', label: t('check.step.lint'), category: 'Code Quality' },
   { id: 'typecheck', label: t('check.step.typecheck'), category: 'Code Quality' },
   { id: 'build', label: t('check.step.build'), category: 'Build' },
+  { id: 'site', label: t('check.step.site'), category: 'Site Quality' },
   { id: 'hosting', label: t('check.step.hosting'), category: 'Hosting' },
 ];
 
@@ -303,8 +305,21 @@ async function stepHosting(ctx) {
   return { status: 'pass', summary: t('check.hosting.netlifyLinked'), details: [`Site ID: ${d.siteId}`, `CLI: ${cli}`] };
 }
 
+/** Site quality (V11.1): reads the publish output; SSR sites have no static output to read. */
+async function stepSite(ctx) {
+  const { d } = ctx;
+  if (d.ssr) return { status: 'info', summary: t('site.summary.ssr') };
+  if (!d.publishReady) return { status: 'info', summary: t('site.summary.noOutput') };
+  const { findProject } = await import('./store.mjs');
+  const proj = findProject(ctx.key);
+  const liveUrl = proj?.liveUrl || proj?.netlify?.liveUrl || null;
+  const r = scanSite(ctx.dir, d, { liveUrl });
+  return { status: r.status, summary: r.summary, details: r.details, findings: r.findings, pages: r.pages, fixes: r.fixes };
+}
+
 const RUNNERS = {
   git: stepGit,
+  site: stepSite,
   secrets: stepSecrets,
   deps: stepDeps,
   lint: stepLint,

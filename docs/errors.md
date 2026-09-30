@@ -22,6 +22,7 @@ quota, 127 Node missing; everything else exits 1.
 | `spaceship_error` | 6 | The Spaceship API returned an error for a DNS or domain operation. | The message carries Spaceship's text; check the domain in Spaceship and retry. |
 | `not_configured` | 7 | No cloud (Supabase) is configured on this Mac. | Owner: Cloud setup screen (URL + anon key). Users normally never see this — the config ships with the app. |
 | `quota_exhausted` | 8 | The monthly AI credits are used up. | Wait for the renewal date shown in the message, buy a pack (WP4) or use the external AI buttons. |
+| `exists` | 1 | `bid new` would overwrite a folder that already exists. | Pick another site name or parent folder. |
 | `network` | 1 | A server (Supabase, hosting, registrar, AI, release feed) could not be reached. | Check the connection, VPN or proxy and retry; the app keeps working offline. |
 | `auth_error` | 1 | Supabase Auth refused the request: wrong email or password, unconfirmed email, expired link. | Read the message; "Forgot your password?" sends a new link. |
 | `weak_password` | 1 | The password is shorter than 8 characters. | Choose a longer password. |

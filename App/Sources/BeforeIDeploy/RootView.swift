@@ -126,6 +126,7 @@ struct RootView: View {
                 case .deleteAccount: DeleteAccountSheet()
                 case .plans: PlansSheet()
                 case .aiKeys: AIKeysSheet()
+                case .newSite: NewSiteSheet()
                 }
             }
             .environmentObject(model)

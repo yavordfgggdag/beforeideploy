@@ -629,6 +629,7 @@ struct CommandPalette: View {
         }
         c += [
             PaletteCommand(title: L("common.addProject"), subtitle: L("palette.pickFolder"), icon: "plus") { model.addProjectPanel() },
+            PaletteCommand(title: L("newsite.button"), subtitle: L("newsite.subtitle"), icon: "sparkles.rectangle.stack") { model.sheet = .newSite },
         ]
         if let p = model.selected {
             c += [

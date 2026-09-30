@@ -122,6 +122,17 @@ struct SidebarView: View {
                 }
                 .bidButton(.secondary)
 
+                Button { model.sheet = .newSite } label: {
+                    HStack {
+                        Image(systemName: "sparkles.rectangle.stack")
+                        Text(L("newsite.button"))
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .bidButton(.primary)
+                .help(L("newsite.buttonHelp"))
+
                 Button { model.showPalette = true } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "magnifyingglass")

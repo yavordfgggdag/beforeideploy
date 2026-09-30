@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="{{LANG}}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{NAME}} — {{TAGLINE}}</title>
+  <meta name="description" content="{{DESCRIPTION}}">
+  <link rel="canonical" href="/">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta property="og:title" content="{{NAME}}">
+  <meta property="og:description" content="{{DESCRIPTION}}">
+  <meta property="og:image" content="/og.svg">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/">{{NAME}}</a>
+    <nav aria-label="Main"><a href="/work.html">Work</a><a href="/about.html">About</a><a href="/#contact">Contact</a></nav>
+  </header>
+  <main>
+    <section class="hero">
+      <h1>{{NAME}}</h1>
+      <p class="lead">{{DESCRIPTION}}</p>
+      <a class="button" href="/work.html">See the work</a>
+    </section>
+    <section id="contact" class="contact">
+      <h2>Contact</h2>
+      <p><a href="mailto:hello@example.com">hello@example.com</a></p>
+    </section>
+  </main>
+  <footer><p>© {{YEAR}} {{NAME}} · <a href="/privacy.html">{{PRIVACY_TITLE}}</a></p></footer>
+</body>
+</html>

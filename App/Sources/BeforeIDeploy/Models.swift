@@ -148,6 +148,45 @@ struct ProjectStatus: Codable {
     var issues: IssueList?
     var release: ReleaseInfo?
     var backup: BackupStatus?
+    /// V11.1: where the site is on the way from a folder to a live, watched site.
+    var launch: LaunchStatus?
+}
+
+/// `bid launch` — the checklist the project screen opens with until every required step is done.
+struct LaunchStatus: Codable, Hashable {
+    struct Step: Codable, Hashable, Identifiable {
+        var id: String
+        var status: String      // done | attention | todo | waiting
+        var optional: Bool
+        var title: String
+        var hint: String
+        var action: String?     // check | fix | hosting | deploy | release | domain | monitor
+    }
+    var steps: [Step]
+    var done: Int
+    var total: Int
+    var requiredDone: Int
+    var requiredTotal: Int
+    var next: String?
+    var complete: Bool
+}
+
+/// `bid new list` — a template the engine ships.
+struct SiteTemplate: Codable, Hashable, Identifiable {
+    var id: String
+    var title: String
+    var description: String
+    var pages: Int
+}
+
+/// `bid new create` — the site that was just created.
+struct NewSiteResult: Codable {
+    var project: Project
+    var path: String
+    var template: String
+    var lang: String
+    var git: Bool
+    var files: [String]
 }
 
 struct HostingInfo: Codable, Hashable {

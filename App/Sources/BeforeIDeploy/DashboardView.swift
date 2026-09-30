@@ -40,6 +40,9 @@ struct DashboardView: View {
 
                 switch tab {
                 case .overview:
+                    if let launch = status.launch, !launch.complete {
+                        LaunchCard(launch: launch, tab: $tab).entrance(0, offset: 10)
+                    }
                     HeroCard(status: status)
                     IssuesCard(status: status)
                     HealthGrid(status: status)
@@ -375,6 +378,96 @@ struct HeroCard: View {
     }
 }
 
+// MARK: - Launch checklist (V11.1)
+
+/// Folder → check → ready for visitors → hosting → live → domain → watching. Shown until the required steps
+/// are done; every row offers the same action the rest of the app would.
+struct LaunchCard: View {
+    @EnvironmentObject var model: AppModel
+    let launch: LaunchStatus
+    @Binding var tab: ProjectTab
+    @Local private var collapsed = false
+
+    private func symbol(_ s: LaunchStatus.Step) -> (String, Color) {
+        switch s.status {
+        case "done": return ("checkmark.circle.fill", Theme.ready)
+        case "attention": return ("exclamationmark.circle.fill", Theme.blocked)
+        case "todo": return ("arrow.right.circle.fill", Theme.accent)
+        default: return ("circle.dashed", Theme.tertiary)
+        }
+    }
+
+    private func buttonTitle(_ s: LaunchStatus.Step) -> String? {
+        switch s.action {
+        case "check": return L("launch.action.check")
+        case "fix": return s.id == "site" ? L("launch.action.fixSite") : L("launch.action.fix")
+        case "hosting": return L("launch.action.hosting")
+        case "deploy": return L("launch.action.deploy")
+        case "release": return L("launch.action.release")
+        case "domain": return L("launch.action.domain")
+        case "monitor": return L("launch.action.monitor")
+        default: return nil
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 12) {
+                ZStack {
+                    ProgressRing(fraction: Double(launch.requiredDone) / Double(max(1, launch.requiredTotal)), lineWidth: 5)
+                    Text("\(launch.requiredDone)/\(launch.requiredTotal)").font(.system(size: 11, weight: .bold)).foregroundColor(Theme.text)
+                }
+                .frame(width: 44, height: 44)
+                VStack(alignment: .leading, spacing: 2) {
+                    GradientText(text: L("launch.title"), font: .system(size: 17, weight: .bold))
+                    Text(launch.next.flatMap { id in launch.steps.first { $0.id == id } }.map { L("launch.nextLine", $0.title) } ?? L("launch.allDone"))
+                        .font(.system(size: 12)).foregroundColor(Theme.secondary)
+                }
+                Spacer()
+                Button { withAnimation(Motion.spring) { collapsed.toggle() } } label: {
+                    Image(systemName: collapsed ? "chevron.down" : "chevron.up")
+                }
+                .bidButton(.ghost, compact: true)
+                .help(collapsed ? L("launch.expand") : L("launch.collapse"))
+            }
+            if !collapsed {
+                VStack(spacing: 0) {
+                    ForEach(Array(launch.steps.enumerated()), id: \.element.id) { i, s in
+                        let (icon, tint) = symbol(s)
+                        HStack(alignment: .top, spacing: 12) {
+                            VStack(spacing: 0) {
+                                Image(systemName: icon).font(.system(size: 15)).foregroundColor(tint)
+                                    .breath(tint, strong: s.status == "attention")
+                                if i < launch.steps.count - 1 {
+                                    Rectangle().fill(s.status == "done" ? Theme.ready.opacity(0.5) : Theme.hairline).frame(width: 2).frame(maxHeight: .infinity)
+                                }
+                            }
+                            .frame(width: 18)
+                            VStack(alignment: .leading, spacing: 2) {
+                                HStack(spacing: 6) {
+                                    Text(s.title).font(.system(size: 13, weight: s.status == "todo" || s.status == "attention" ? .bold : .semibold))
+                                        .foregroundColor(s.status == "waiting" ? Theme.tertiary : Theme.text)
+                                    if s.optional { Text(L("launch.optional")).font(.system(size: 10, weight: .semibold)).foregroundColor(Theme.tertiary).padding(.horizontal, 6).padding(.vertical, 1).background(Capsule().fill(Theme.elevated)) }
+                                }
+                                Text(s.hint).font(.system(size: 11.5)).foregroundColor(s.status == "waiting" ? Theme.tertiary : Theme.secondary).fixedSize(horizontal: false, vertical: true)
+                            }
+                            Spacer()
+                            if let title = buttonTitle(s), s.status != "done" && s.status != "waiting" {
+                                Button(title) { model.launchAction(s, tab: $tab) }
+                                    .bidButton(s.id == launch.next ? .primary : .secondary, compact: true)
+                            }
+                        }
+                        .padding(.vertical, 6)
+                        .entrance(i + 1, offset: 8)
+                    }
+                }
+            }
+        }
+        .card(padding: 18)
+        .glowBorder(launch.steps.contains { $0.status == "attention" } ? Theme.blocked : Theme.accent, strength: 0.8)
+    }
+}
+
 struct CountPill: View {
     let value: Int
     let symbol: String
@@ -414,7 +507,7 @@ struct HealthGrid: View {
 
     static let placeholders: [(String, String)] = [
         ("git", "Git"), ("secrets", "Secrets"), ("deps", L("common.dependencies")), ("lint", "Lint"),
-        ("typecheck", "Typecheck"), ("build", "Build"), ("hosting", "Hosting"),
+        ("typecheck", "Typecheck"), ("build", "Build"), ("site", L("launch.site.title")), ("hosting", "Hosting"),
     ]
 
     var body: some View {
@@ -446,6 +539,7 @@ struct HealthTile: View {
         case "lint": return "text.magnifyingglass"
         case "typecheck": return "curlybraces"
         case "build": return "hammer"
+        case "site": return "checkmark.seal"
         case "hosting": return "globe"
         default: return "circle"
         }

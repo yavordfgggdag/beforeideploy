@@ -616,6 +616,22 @@
 "language.subtitle" = "You can change it any time in Settings.";
 "language.title" = "Choose your language";
 
+"launch.action.check" = "Run the check";
+"launch.action.deploy" = "Publish a preview";
+"launch.action.domain" = "Domains";
+"launch.action.fix" = "See the problems";
+"launch.action.fixSite" = "Fix with AI";
+"launch.action.hosting" = "Connect hosting";
+"launch.action.monitor" = "Monitoring";
+"launch.action.release" = "Release…";
+"launch.allDone" = "Everything required is done — the site is live.";
+"launch.collapse" = "Hide the steps";
+"launch.expand" = "Show the steps";
+"launch.nextLine" = "Next: %@";
+"launch.optional" = "optional";
+"launch.site.title" = "Ready for visitors";
+"launch.title" = "Launch";
+
 "legal.contact" = "Contact support";
 "legal.privacy" = "Privacy";
 "legal.refund" = "Refund policy";
@@ -733,6 +749,23 @@
 "netlifySetup.siteName" = "Site name";
 "netlifySetup.subtitle" = "No `netlify init` — GitHub CI will not be enabled, deploys stay manual";
 "netlifySetup.team" = "Team";
+
+"newsite.button" = "New site…";
+"newsite.buttonHelp" = "Create a site from a template: SEO, 404, robots, sitemap, favicon and a privacy page are already in place.";
+"newsite.chooseFolder" = "Choose…";
+"newsite.create" = "Create the site";
+"newsite.created" = "%@ is ready — run the check and connect hosting.";
+"newsite.folder" = "Create in";
+"newsite.folderMessage" = "The site gets its own folder inside the one you pick";
+"newsite.language" = "Language of the site";
+"newsite.loading" = "Loading templates…";
+"newsite.name" = "Site name";
+"newsite.namePlaceholder" = "e.g. Iva's Hair Salon";
+"newsite.pages" = "%@ pages";
+"newsite.subtitle" = "A folder with a site that passes the check on its first run";
+"newsite.template" = "Template";
+"newsite.title" = "New site";
+"newsite.whatYouGet" = "You get: a page with your name and description, a privacy page, 404, robots.txt, sitemap.xml, favicon, netlify.toml and a Git repository with one commit. Edit the texts, run the check, connect hosting — the launch list guides you.";
 
 "node.missing.body" = "Before I Deploy checks and builds your projects with Node.js (version 18 or newer). Install it from nodejs.org or with Homebrew, then press Check again.";
 "node.missing.download" = "Download Node.js";

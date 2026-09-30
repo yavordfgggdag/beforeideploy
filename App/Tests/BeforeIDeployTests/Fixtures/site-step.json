@@ -1,0 +1,155 @@
+{
+  "id": "site",
+  "label": "Site quality",
+  "category": "Site Quality",
+  "details": [
+    "INFO structure.notFound — No 404 page: a wrong link shows the host's default error page.",
+    "INFO seo.robots — No robots.txt: search engines get no instructions and no sitemap hint.",
+    "INFO seo.sitemap — No sitemap.xml: search engines discover pages slower.",
+    "WARN seo.titleLength · index.html:3 — Title has 2 characters (10–70 read well): “Hi”",
+    "WARN seo.description · index.html — No meta description: search engines make up the snippet.",
+    "WARN seo.lang · index.html:2 — <html> has no lang attribute: screen readers and translators guess the language.",
+    "INFO seo.canonical · index.html — No canonical link.",
+    "INFO seo.og · index.html — No og:title / og:image: shared links show no preview.",
+    "INFO seo.favicon · index.html — No favicon.",
+    "FAIL content.lorem · index.html:5 — Placeholder text (lorem ipsum) is still on the page.",
+    "FAIL content.placeholderImage · index.html:7 — https://via.placeholder.com/300",
+    "FAIL content.localhost · index.html:9 — http://localhost:3000/admin",
+    "INFO content.emptyHref · index.html:10 — Link with href=\"#\" goes nowhere.",
+    "WARN content.mixedContent · index.html:11 — http://cdn.example.com/x.js",
+    "WARN a11y.inputLabel · index.html:12 — Input “email” has no label.",
+    "WARN a11y.buttonText · index.html:13 — Button without text or aria-label.",
+    "FAIL content.brokenLinks · index.html:8 — about.html",
+    "WARN a11y.imgAlt · index.html — 1 image(s) without alt text."
+  ],
+  "fixes": [
+    "site.404",
+    "site.robots",
+    "site.sitemap"
+  ],
+  "duration": 0.005,
+  "status": "fail",
+  "summary": "1 page(s) checked — 4 problem(s), 7 recommendation(s).",
+  "findings": [
+    {
+      "rule": "structure.notFound",
+      "severity": "info",
+      "detail": "No 404 page: a wrong link shows the host's default error page.",
+      "fixId": "site.404"
+    },
+    {
+      "rule": "seo.robots",
+      "severity": "info",
+      "detail": "No robots.txt: search engines get no instructions and no sitemap hint.",
+      "fixId": "site.robots"
+    },
+    {
+      "rule": "seo.sitemap",
+      "severity": "info",
+      "detail": "No sitemap.xml: search engines discover pages slower.",
+      "fixId": "site.sitemap"
+    },
+    {
+      "rule": "seo.titleLength",
+      "severity": "warn",
+      "file": "index.html",
+      "line": 3,
+      "detail": "Title has 2 characters (10–70 read well): “Hi”"
+    },
+    {
+      "rule": "seo.description",
+      "severity": "warn",
+      "file": "index.html",
+      "detail": "No meta description: search engines make up the snippet."
+    },
+    {
+      "rule": "seo.lang",
+      "severity": "warn",
+      "file": "index.html",
+      "line": 2,
+      "detail": "<html> has no lang attribute: screen readers and translators guess the language."
+    },
+    {
+      "rule": "seo.canonical",
+      "severity": "info",
+      "file": "index.html",
+      "detail": "No canonical link."
+    },
+    {
+      "rule": "seo.og",
+      "severity": "info",
+      "file": "index.html",
+      "detail": "No og:title / og:image: shared links show no preview."
+    },
+    {
+      "rule": "seo.favicon",
+      "severity": "info",
+      "file": "index.html",
+      "detail": "No favicon."
+    },
+    {
+      "rule": "content.lorem",
+      "severity": "fail",
+      "file": "index.html",
+      "line": 5,
+      "detail": "Placeholder text (lorem ipsum) is still on the page."
+    },
+    {
+      "rule": "content.placeholderImage",
+      "severity": "fail",
+      "file": "index.html",
+      "line": 7,
+      "detail": "https://via.placeholder.com/300"
+    },
+    {
+      "rule": "content.localhost",
+      "severity": "fail",
+      "file": "index.html",
+      "line": 9,
+      "detail": "http://localhost:3000/admin"
+    },
+    {
+      "rule": "content.emptyHref",
+      "severity": "info",
+      "file": "index.html",
+      "line": 10,
+      "detail": "Link with href=\"#\" goes nowhere."
+    },
+    {
+      "rule": "content.mixedContent",
+      "severity": "warn",
+      "file": "index.html",
+      "line": 11,
+      "detail": "http://cdn.example.com/x.js"
+    },
+    {
+      "rule": "a11y.inputLabel",
+      "severity": "warn",
+      "file": "index.html",
+      "line": 12,
+      "detail": "Input “email” has no label."
+    },
+    {
+      "rule": "a11y.buttonText",
+      "severity": "warn",
+      "file": "index.html",
+      "line": 13,
+      "detail": "Button without text or aria-label."
+    },
+    {
+      "rule": "content.brokenLinks",
+      "severity": "fail",
+      "file": "index.html",
+      "line": 8,
+      "detail": "about.html"
+    },
+    {
+      "rule": "a11y.imgAlt",
+      "severity": "warn",
+      "file": "index.html",
+      "count": 1,
+      "detail": "1 image(s) without alt text."
+    }
+  ],
+  "pages": 1
+}

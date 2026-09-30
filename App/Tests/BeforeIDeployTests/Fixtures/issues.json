@@ -1,5 +1,5 @@
 {
-  "project": "1b1d7b927872",
+  "project": "559d111de64c",
   "issues": [
     {
       "id": "secrets.trackedEnv:.env",
@@ -73,6 +73,129 @@
       "blocksRelease": false
     },
     {
+      "id": "site.seo.robots",
+      "step": "site",
+      "rule": "seo.robots",
+      "severity": "low",
+      "kind": "recommendation",
+      "confidence": "confirmed",
+      "title": "No robots.txt",
+      "impact": "Search engines get no instructions and no sitemap hint.",
+      "evidence": {
+        "detail": "No robots.txt: search engines get no instructions and no sitemap hint."
+      },
+      "fix": {
+        "type": "safe",
+        "id": "site.robots",
+        "risk": "low"
+      },
+      "verify": {
+        "steps": [
+          "site"
+        ]
+      },
+      "blocksRelease": false
+    },
+    {
+      "id": "site.seo.sitemap",
+      "step": "site",
+      "rule": "seo.sitemap",
+      "severity": "low",
+      "kind": "recommendation",
+      "confidence": "confirmed",
+      "title": "No sitemap.xml",
+      "impact": "Search engines discover the pages slower.",
+      "evidence": {
+        "detail": "No sitemap.xml: search engines discover pages slower."
+      },
+      "fix": {
+        "type": "safe",
+        "id": "site.sitemap",
+        "risk": "low"
+      },
+      "verify": {
+        "steps": [
+          "site"
+        ]
+      },
+      "blocksRelease": false
+    },
+    {
+      "id": "site.seo.canonical:index.html",
+      "step": "site",
+      "rule": "seo.canonical",
+      "severity": "low",
+      "kind": "recommendation",
+      "confidence": "confirmed",
+      "title": "No canonical link",
+      "impact": "Duplicated addresses may split ranking.",
+      "evidence": {
+        "file": "index.html",
+        "detail": "No canonical link."
+      },
+      "fix": {
+        "type": "ai",
+        "id": "site",
+        "risk": "medium"
+      },
+      "verify": {
+        "steps": [
+          "site"
+        ]
+      },
+      "blocksRelease": false
+    },
+    {
+      "id": "site.seo.og:index.html",
+      "step": "site",
+      "rule": "seo.og",
+      "severity": "low",
+      "kind": "recommendation",
+      "confidence": "confirmed",
+      "title": "No social preview",
+      "impact": "Links shared on social networks and chats show no image or title.",
+      "evidence": {
+        "file": "index.html",
+        "detail": "No og:title / og:image: shared links show no preview."
+      },
+      "fix": {
+        "type": "ai",
+        "id": "site",
+        "risk": "medium"
+      },
+      "verify": {
+        "steps": [
+          "site"
+        ]
+      },
+      "blocksRelease": false
+    },
+    {
+      "id": "site.seo.favicon:index.html",
+      "step": "site",
+      "rule": "seo.favicon",
+      "severity": "low",
+      "kind": "recommendation",
+      "confidence": "confirmed",
+      "title": "No favicon",
+      "impact": "The tab and bookmarks show a blank icon.",
+      "evidence": {
+        "file": "index.html",
+        "detail": "No favicon."
+      },
+      "fix": {
+        "type": "ai",
+        "id": "site",
+        "risk": "medium"
+      },
+      "verify": {
+        "steps": [
+          "site"
+        ]
+      },
+      "blocksRelease": false
+    },
+    {
       "id": "typecheck.none",
       "step": "typecheck",
       "rule": "none",
@@ -113,19 +236,43 @@
         ]
       },
       "blocksRelease": false
+    },
+    {
+      "id": "site.structure.notFound",
+      "step": "site",
+      "rule": "structure.notFound",
+      "severity": "low",
+      "kind": "recommendation",
+      "confidence": "likely",
+      "title": "No 404 page",
+      "impact": "A wrong link shows the host's default error page.",
+      "evidence": {
+        "detail": "No 404 page: a wrong link shows the host's default error page."
+      },
+      "fix": {
+        "type": "safe",
+        "id": "site.404",
+        "risk": "low"
+      },
+      "verify": {
+        "steps": [
+          "site"
+        ]
+      },
+      "blocksRelease": false
     }
   ],
   "counts": {
-    "total": 5,
+    "total": 11,
     "blocker": 1,
     "high": 1,
     "medium": 1,
-    "low": 2,
+    "low": 8,
     "info": 0,
     "defects": 1,
-    "recommendations": 4,
+    "recommendations": 10,
     "signals": 0
   },
-  "checkedAt": "2026-09-29T07:25:21.468Z",
+  "checkedAt": "2026-09-30T13:43:37.297Z",
   "partial": false
 }

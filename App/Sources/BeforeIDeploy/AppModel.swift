@@ -5,7 +5,7 @@ import SwiftUI
 enum Screen: Hashable { case overview, project, domains, costs, setup, admin, account, assistant, usage }
 
 enum SheetKind: Identifiable {
-    case production, netlifySetup, commit, history, settings, remote, spaceshipConnect, connectDomain, deleteAccount, plans, release, rollback, client, aiKeys
+    case production, netlifySetup, commit, history, settings, remote, spaceshipConnect, connectDomain, deleteAccount, plans, release, rollback, client, aiKeys, newSite
     var id: Int { hashValue }
 }
 
@@ -418,6 +418,40 @@ final class AppModel: ObservableObject, Feedback {
 
     /// Whether the embedded AI can run right now: an own key on this Mac, or a paid plan for the cloud model.
     var aiReady: Bool { account?.features?.aiBuiltin == true }
+
+    // MARK: - Launchpad (V11.1)
+
+    @Published var templates: [SiteTemplate] = []
+
+    func loadTemplates() async {
+        templates = (try? await engine.call(["new", "list"], as: [SiteTemplate].self)) ?? []
+    }
+
+    /// Creates a site from a template, adds it to the library and opens it. Returns an error message, or nil.
+    func createSite(name: String, template: String, dir: String, lang: String) async -> String? {
+        do {
+            let r = try await engine.call(["new", "create", "--template", template, "--name", name, "--dir", dir, "--lang", lang], as: NewSiteResult.self)
+            await projectStore.loadProjects()
+            flash(L("newsite.created", r.project.name))
+            await select(r.project.key)
+            return nil
+        } catch { return error.localizedDescription }
+    }
+
+    /// The one thing the launch checklist asks for on a step: the same actions the rest of the app uses.
+    func launchAction(_ step: LaunchStatus.Step, tab: Binding<ProjectTab>) {
+        switch step.action {
+        case "check": runCheck()
+        case "fix":
+            if step.id == "site" { if aiReady { aiStore.start(step: "site") } else { aiUnavailableAction() } } else { tab.wrappedValue = .overview }
+        case "hosting": tab.wrappedValue = .hosting
+        case "deploy": smartDeploy()
+        case "release": sheet = .release
+        case "domain": screen = .domains; Task { await loadSpaceship() }
+        case "monitor": screen = .overview
+        default: break
+        }
+    }
 
     /// The right door when the AI cannot run yet: VIP/admin add a key, members pick a plan, guests sign in.
     func aiUnavailableAction() {

@@ -625,6 +625,101 @@ struct LegalLinks: View {
     }
 }
 
+// MARK: - New site from a template (V11.1 Launchpad)
+
+struct NewSiteSheet: View {
+    @EnvironmentObject var model: AppModel
+    @Environment(\.dismiss) private var dismiss
+    @Local private var name = ""
+    @Local private var template = "landing"
+    @Local private var lang = Localization.current.hasPrefix("bg") ? "bg" : "en"
+    @Local private var dir = (NSSearchPathForDirectoriesInDomains(.desktopDirectory, .userDomainMask, true).first ?? NSHomeDirectory())
+    @Local private var busy = false
+    @Local private var error: String?
+
+    var body: some View {
+        SheetScaffold(icon: "plus.square.on.square", iconTint: Theme.accent, title: L("newsite.title"), subtitle: L("newsite.subtitle"), width: 620) {
+            VStack(alignment: .leading, spacing: 14) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(L("newsite.name")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                    BIDTextField(placeholder: L("newsite.namePlaceholder"), text: $name)
+                }
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(L("newsite.template")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                    if model.templates.isEmpty {
+                        HStack(spacing: 8) { Spinner(size: 12); Text(L("newsite.loading")).font(.system(size: 12)).foregroundColor(Theme.tertiary) }
+                    }
+                    HStack(spacing: 10) {
+                        ForEach(model.templates) { t in
+                            Button { template = t.id } label: {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack {
+                                        Image(systemName: t.id == "portfolio" ? "rectangle.3.group" : "rectangle.inset.filled").foregroundColor(Theme.accent)
+                                        Text(t.title).font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.text)
+                                        Spacer()
+                                        if template == t.id { Image(systemName: "checkmark.circle.fill").foregroundColor(Theme.accent) }
+                                    }
+                                    Text(t.description).font(.system(size: 11.5)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
+                                    Text(L("newsite.pages", t.pages)).font(.system(size: 10.5)).foregroundColor(Theme.tertiary)
+                                }
+                                .padding(12)
+                                .frame(maxWidth: .infinity, alignment: .topLeading)
+                                .background(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).fill(template == t.id ? Theme.accentSoft : Theme.elevated))
+                                .overlay(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).strokeBorder(template == t.id ? Theme.accent : Color.clear, lineWidth: 1))
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .lift(radius: Theme.smallRadius, amount: 1.02)
+                        }
+                    }
+                }
+                HStack(spacing: 14) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(L("newsite.language")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                        SegmentedControl(options: [(Localization.nativeName("bg"), "bg"), (Localization.nativeName("en"), "en")], selection: $lang)
+                    }
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(L("newsite.folder")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                        HStack(spacing: 8) {
+                            Text((dir as NSString).abbreviatingWithTildeInPath).font(.system(size: 12, design: .monospaced)).foregroundColor(Theme.secondary).lineLimit(1).truncationMode(.middle)
+                            Button(L("newsite.chooseFolder")) { pickFolder() }.bidButton(.secondary, compact: true)
+                        }
+                    }
+                }
+                Text(L("newsite.whatYouGet")).font(.system(size: 11.5)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
+                if let error { Label(error, systemImage: "exclamationmark.circle.fill").font(.system(size: 12.5)).foregroundColor(Theme.blocked).fixedSize(horizontal: false, vertical: true) }
+            }
+        } actions: {
+            Button(L("common.cancel")) { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
+            Button {
+                busy = true
+                error = nil
+                Task {
+                    let e = await model.createSite(name: name.trimmingCharacters(in: .whitespaces), template: template, dir: dir, lang: lang)
+                    busy = false
+                    if let e { error = e } else { dismiss() }
+                }
+            } label: {
+                HStack { if busy { Spinner(size: 12, color: .white) }; Text(L("newsite.create")) }
+            }
+            .bidButton(.primary)
+            .keyboardShortcut(.defaultAction)
+            .disabled(busy || name.trimmingCharacters(in: .whitespaces).isEmpty || model.templates.isEmpty)
+        }
+        .task { if model.templates.isEmpty { await model.loadTemplates() } }
+    }
+
+    private func pickFolder() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.canCreateDirectories = true
+        panel.prompt = L("newsite.chooseFolder")
+        panel.message = L("newsite.folderMessage")
+        if panel.runModal() == .OK, let u = panel.url { dir = u.path }
+    }
+}
+
 // MARK: - AI key (embedded AI on your own key)
 
 /// One place to connect an Anthropic or OpenAI key: reached from every "AI" button when no key or plan is set.

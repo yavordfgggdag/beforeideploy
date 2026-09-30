@@ -33,6 +33,8 @@ import { logEvent, logTail, redactArgv, createReport, LOG_FILE } from './log.mjs
 import { hostingStatus, advise, setHosting, deployProject, hostingReady, providerStatus } from './hosting.mjs';
 import { spaceshipConnect, spaceshipDisconnect, spaceshipDomains, spaceshipDns, connectDomainToNetlify } from './spaceship.mjs';
 import { t, msg } from './i18n.mjs';
+import { launchStatus } from './launch.mjs';
+import { createSite, listTemplates } from './newsite.mjs';
 
 // engine/VERSION is the single source of the product version (build.sh writes it into Info.plist)
 const VERSION = (() => {
@@ -84,6 +86,8 @@ const HELP = `Before I Deploy engine ${VERSION}
   bid hosting status | advise --project P | set --project P --provider netlify|vercel|cloudflare|ghpages
   bid deploy  --project P [--prod --confirm DEPLOY] [--recheck-if-stale]   with the selected hosting
   bid issues  --project P          prioritized issues from the last check (severity, evidence, fix, verification)
+  bid launch  --project P          launch checklist: folder → check → site quality → hosting → deploy → domain → monitoring
+  bid new list | create --template landing|portfolio --name N --dir PARENT [--lang bg|en] [--description D]
   bid monitor once [--project P] | status [--no-network] | incidents [--limit N] | settings --json '{…}' | agent install --yes | agent remove
   bid monitor cloud status | enable [--project P] [--interval N] [--paths /a,/b] | disable [--project P] | test --project P
   bid monitor maintenance add --from ISO --to ISO [--project P] [--note T] | list | clear · bid monitor notify test
@@ -119,6 +123,7 @@ function statusSnapshot(project) {
       const st = providerStatus(id);
       return { provider: id, name: st.name, ready: hostingReady(p), preview: st.preview, installed: st.installed, loggedIn: st.loggedIn, liveUrl: p.liveUrl || p.netlify?.liveUrl || null };
     })(),
+    launch: launchStatus({ project: p, detect: d, check: st.check || null, lastDraft: st.lastDraft || null, lastProd: st.lastProd || null, hostingReady: hostingReady(p), liveUrl: p.liveUrl || p.netlify?.liveUrl || null }),
   };
 }
 
@@ -195,6 +200,15 @@ async function main() {
 
     case 'status':
       return ok(statusSnapshot(proj()));
+
+    case 'launch':
+      return ok(statusSnapshot(proj()).launch);
+
+    case 'new': {
+      if (sub === 'list' || !sub) return ok(listTemplates());
+      if (sub === 'create') return ok(createSite({ template: flags.template, name: flags.name, dir: flags.dir, lang: flags.lang, description: flags.description }));
+      throw new EngineError(msg('cli.unknownCommand', { command: `new ${sub}` }), 'usage', 2);
+    }
 
     case 'detect':
       return ok(detect(proj().path));

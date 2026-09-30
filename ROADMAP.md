@@ -77,7 +77,7 @@
   идемпотентност и заключване (`engine/src/release.mjs`, `postdeploy.mjs`), портфолио със сигнали и клиенти,
   наблюдение с инциденти на този Mac (`engine/src/monitor.mjs`), честна граница за backup/CodeGuard;
 - WP12 (rollback / post-deploy) ✅ за Netlify; WP13 ✅ локално (без сървърен scheduler — блокер: облачен cron);
-  WP10/WP11 (SEO, достъпност, Lighthouse) ⏳; WP15/WP16 ⏳; WP17 частично (портфолио, без светла тема).
+  WP10 ✅ (11.1, стъпка `site` + `bid.config.json`), WP19 ✅ (11.1, `bid new` с 2 шаблона), WP11 (Lighthouse) ⏳; WP15/WP16 ⏳; WP17 частично (портфолио, без светла тема).
   Доказателства и ограничения: `docs/AUDIT-V11.md`; архитектура и команди: `docs/V11-HANDOFF.md`.
 
 **V11 release candidate (2026-09-29, `11.0.0-rc.1`)** — завършване до инсталируем кандидат за тест от собственика:
@@ -94,6 +94,13 @@
 - RLS тестове на истински Postgres (PGlite) за всички таблици; вграден Node runtime в .app (`scripts/bundle-node.sh`);
 - блокери за публично пускане: подпис/нотаризация (Developer ID), реален тест на Mac с реален Netlify/Paddle
   sandbox — `docs/OWNER-ACCEPTANCE-TEST-BG.md`; пълният tracker: `docs/RELEASE-CANDIDATE-AUDIT.md`.
+
+**V11.1 „Launchpad“ (2026-09-30, `11.1.0-rc.1`)** — най-лесният път от папка до жив сайт:
+- стъпка `site` (WP10): SEO, съдържание, достъпност, бюджети, файлове за пускане; `bid.config.json`; безопасни
+  поправки `site.robots / site.sitemap / site.404`; проблеми с файл и ред; AI поправя на ниво страница;
+- списък „Пускане“ (`bid launch`, в `status`): папка → проверка → готов за посетители → хостинг → на живо →
+  домейн → наблюдение, със следващото действие;
+- „Нов сайт“ (WP19): `bid new` с шаблони `landing` и `portfolio` (BG/EN), минават проверката от първия път.
 
 Незавършени от седмици 1–3:
 

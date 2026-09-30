@@ -616,6 +616,22 @@
 "language.subtitle" = "Можеш да го смениш по всяко време от Настройки.";
 "language.title" = "Избери език";
 
+"launch.action.check" = "Пусни проверката";
+"launch.action.deploy" = "Публикувай preview";
+"launch.action.domain" = "Домейни";
+"launch.action.fix" = "Виж проблемите";
+"launch.action.fixSite" = "Поправи с AI";
+"launch.action.hosting" = "Свържи хостинг";
+"launch.action.monitor" = "Наблюдение";
+"launch.action.release" = "Пусни на живо…";
+"launch.allDone" = "Всичко задължително е готово — сайтът е на живо.";
+"launch.collapse" = "Скрий стъпките";
+"launch.expand" = "Покажи стъпките";
+"launch.nextLine" = "Следва: %@";
+"launch.optional" = "по избор";
+"launch.site.title" = "Готов за посетители";
+"launch.title" = "Пускане";
+
 "legal.contact" = "Пиши на поддръжката";
 "legal.privacy" = "Поверителност";
 "legal.refund" = "Възстановяване на суми";
@@ -733,6 +749,23 @@
 "netlifySetup.siteName" = "Име на сайта";
 "netlifySetup.subtitle" = "Без `netlify init` — GitHub CI няма да се включи, deploy-ите остават ръчни";
 "netlifySetup.team" = "Екип";
+
+"newsite.button" = "Нов сайт…";
+"newsite.buttonHelp" = "Създай сайт от шаблон: SEO, 404, robots, sitemap, favicon и страница за поверителност вече са на място.";
+"newsite.chooseFolder" = "Избери…";
+"newsite.create" = "Създай сайта";
+"newsite.created" = "%@ е готов — пусни проверката и свържи хостинг.";
+"newsite.folder" = "Създай в";
+"newsite.folderMessage" = "Сайтът получава своя папка в тази, която избереш";
+"newsite.language" = "Език на сайта";
+"newsite.loading" = "Зареждам шаблоните…";
+"newsite.name" = "Име на сайта";
+"newsite.namePlaceholder" = "напр. Фризьорски салон Ива";
+"newsite.pages" = "%@ страници";
+"newsite.subtitle" = "Папка със сайт, който минава проверката от първия път";
+"newsite.template" = "Шаблон";
+"newsite.title" = "Нов сайт";
+"newsite.whatYouGet" = "Получаваш: страница с твоето име и описание, страница за поверителност, 404, robots.txt, sitemap.xml, favicon, netlify.toml и Git хранилище с един commit. Редактирай текстовете, пусни проверката, свържи хостинг — списъкът „Пускане“ те води.";
 
 "node.missing.body" = "Before I Deploy проверява и build-ва проектите ти с Node.js (версия 18 или по-нова). Инсталирай го от nodejs.org или с Homebrew и натисни „Провери отново“.";
 "node.missing.download" = "Изтегли Node.js";

@@ -99,10 +99,10 @@ function mk(name, files, { repo = true, commit = true } = {}) {
 const stepOf = (check, id) => check.steps.find((s) => s.id === id);
 
 // ------------------------------------------------------------------ fixtures
-const HTML = '<!doctype html><title>ok</title><h1>Hello</h1>';
+const HTML = '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Test site — a page for the suite</title><meta name="description" content="A test page used by the engine suite."></head><body><h1>Hello</h1></body></html>';
 const staticSite = mk('static-site', { 'index.html': HTML, '.gitignore': 'node_modules/\n.env\n.env.*\n!.env.example\n.netlify/\n.DS_Store\n*.log\n' });
 
-const buildJs = `const fs=require('fs');fs.mkdirSync('dist',{recursive:true});fs.writeFileSync('dist/index.html','<h1>built</h1>');`;
+const buildJs = `const fs=require('fs');fs.mkdirSync('dist',{recursive:true});fs.writeFileSync('dist/index.html','<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Built site — vite fixture</title><meta name="description" content="Built by the fixture."></head><body><h1>built</h1></body></html>');`;
 const viteApp = mk('vite-app', {
   'package.json': JSON.stringify({ name: 'vite-app', scripts: { build: 'node build.js', lint: 'node -e "process.exit(0)"', typecheck: 'node -e "console.log(\'types ok\')"' }, devDependencies: { vite: '^5.0.0' } }, null, 2),
   'build.js': buildJs,
@@ -301,6 +301,128 @@ t('check: статичен сайт → ready', () => {
   assert(r.result.ok, r.result?.error);
   assert(r.data.status === 'ready', `status=${r.data.status} ${JSON.stringify(r.data.steps.map((s) => [s.id, s.status, s.summary]))}`);
   assert(r.events.some((e) => e.type === 'step' && e.status === 'running'), 'no live step events');
+});
+
+t('site: качеството на сайта — правила, доказателства, конфигурация, безопасни поправки (V11.1)', () => {
+  const html = `<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Hi</title></head>
+<body>
+<h1>Lorem ipsum dolor sit amet</h1>
+<img src="img/hero.png">
+<img src="https://via.placeholder.com/300" alt="x">
+<a href="about.html">About</a>
+<a href="http://localhost:3000/admin">Admin</a>
+<a href="#">Nothing</a>
+<script src="http://cdn.example.com/x.js"></script>
+<form><input type="text" name="email"></form>
+<button></button>
+</body>
+</html>`;
+  const site = mk('site-quality', { 'index.html': html, 'img/hero.png': 'x' });
+  bid('project', 'add', '--path', site);
+  const r = bid('check', '--project', site);
+  assert(r.result.ok, r.result?.error);
+  const step = r.data.steps.find((x) => x.id === 'site');
+  assert(step && step.status === 'fail' && step.pages === 1, JSON.stringify(step).slice(0, 300));
+  const rules = step.findings.map((f) => f.rule);
+  assert(step.findings.find((f) => f.rule === 'seo.robots').severity === 'info' && step.findings.find((f) => f.rule === 'seo.lang').severity === 'warn', 'file hints are info, page rules warn');
+  for (const want of ['seo.titleLength', 'seo.description', 'seo.lang', 'seo.robots', 'seo.sitemap', 'seo.favicon', 'content.lorem', 'content.placeholderImage', 'content.localhost', 'content.brokenLinks', 'content.mixedContent', 'content.emptyHref', 'a11y.imgAlt', 'a11y.inputLabel', 'a11y.buttonText', 'structure.notFound']) {
+    assert(rules.includes(want), `rule ${want} missing: ${rules.join(',')}`);
+  }
+  const lorem = step.findings.find((f) => f.rule === 'content.lorem');
+  assert(lorem.severity === 'fail' && lorem.file === 'index.html' && lorem.line === 5, JSON.stringify(lorem));
+  assert(step.findings.find((f) => f.rule === 'content.brokenLinks').detail === 'about.html', 'broken link evidence');
+  // issues: severity from the rule, evidence with file and line, a safe fix where a file can be created
+  const issues = bid('issues', '--project', site).data.issues.filter((i) => i.step === 'site');
+  const robots = issues.find((i) => i.rule === 'seo.robots');
+  assert(robots.fix.type === 'safe' && robots.fix.id === 'site.robots' && robots.verify.steps.join() === 'site', JSON.stringify(robots.fix));
+  assert(issues.find((i) => i.rule === 'content.lorem').severity === 'high' && issues.find((i) => i.rule === 'content.lorem').evidence.line === 5, 'lorem issue');
+  assert(issues.find((i) => i.rule === 'seo.canonical').severity === 'low', 'info rule → low');
+  fixture('site-step', step);
+  // the three launch files are safe fixes and verified by the site step
+  const fixes = bid('fix', 'list', '--project', site).data.map((f) => f.id);
+  assert(['site.robots', 'site.sitemap', 'site.404'].every((id) => fixes.includes(id)), fixes.join(','));
+  for (const id of ['site.robots', 'site.sitemap', 'site.404']) {
+    const a = bid('fix', 'apply', id, '--project', site, '--yes');
+    assert(a.result.ok, JSON.stringify(a.result));
+  }
+  assert(fs.existsSync(path.join(site, 'robots.txt')) && fs.existsSync(path.join(site, 'sitemap.xml')) && fs.existsSync(path.join(site, '404.html')), 'files created');
+  assert(fs.readFileSync(path.join(site, 'sitemap.xml'), 'utf8').includes('<loc>/</loc>'), 'sitemap lists the home page');
+  const again = bid('fix', 'apply', 'site.robots', '--project', site, '--yes');
+  assert(again.result.ok && /already exists|вече съществува/.test(again.data.summary), 'second apply changes nothing: ' + again.data.summary);
+  // bid.config.json: a disabled rule disappears, a severity override is honoured, the error page is not judged as a landing page
+  fs.writeFileSync(path.join(site, 'bid.config.json'), JSON.stringify({ site: { disable: ['seo.canonical'], severity: { 'content.lorem': 'warn' } } }));
+  const r2 = bid('check', '--project', site, '--force');
+  const step2 = r2.data.steps.find((x) => x.id === 'site');
+  const rules2 = step2.findings.map((f) => f.rule);
+  assert(!rules2.includes('seo.canonical') && !rules2.includes('seo.robots') && !rules2.includes('structure.notFound') && !rules2.includes('seo.noindex'), rules2.join(','));
+  assert(step2.findings.find((f) => f.rule === 'content.lorem').severity === 'warn', 'severity override');
+  assert(step2.pages === 2, 'the 404 page counts as a page');
+  // a clean page passes
+  const clean = mk('site-clean', {
+    'index.html': '<!doctype html><html lang="bg"><head><meta charset="utf-8"><title>Чиста страница за тест</title><meta name="description" content="Описание на страницата за търсачките."><link rel="icon" href="/favicon.svg"><link rel="canonical" href="/"><meta property="og:title" content="x"><meta property="og:image" content="/og.svg"></head><body><h1>Здравей</h1><img src="/favicon.svg" alt="лого"><a href="/privacy.html">Поверителност</a></body></html>',
+    'privacy.html': '<!doctype html><html lang="bg"><head><meta charset="utf-8"><title>Политика за поверителност</title><meta name="description" content="Какви данни пазим."></head><body><p>Нищо.</p></body></html>',
+    '404.html': '<!doctype html><html lang="bg"><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>404</title></head><body>404</body></html>',
+    'robots.txt': 'User-agent: *\nAllow: /\n', 'sitemap.xml': '<urlset></urlset>', 'favicon.svg': '<svg xmlns="http://www.w3.org/2000/svg"/>', 'og.svg': '<svg xmlns="http://www.w3.org/2000/svg"/>',
+  });
+  bid('project', 'add', '--path', clean);
+  const rc = bid('check', '--project', clean);
+  const sc = rc.data.steps.find((x) => x.id === 'site');
+  assert(sc.status === 'pass' && sc.findings.length === 0, JSON.stringify(sc.findings));
+  assert(rc.data.status === 'ready', rc.data.status);
+  // the suite's minimal page: no launch files → still 'pass', with hints
+  const minimal = bid('check', '--project', staticSite, '--force').data.steps.find((x) => x.id === 'site');
+  assert(minimal.status === 'pass' && /hint|подсказк/.test(minimal.summary) && minimal.findings.every((f) => f.severity === 'info'), JSON.stringify(minimal).slice(0, 300));
+});
+
+t('launch: чеклистът извежда следващата стъпка от това, което engine-ът знае', () => {
+  const site = mk('launch-site', { 'index.html': '<!doctype html><html lang="en"><head><title>Launch test site</title><meta name="description" content="A test site for the launch list."></head><body>hi</body></html>' });
+  bid('project', 'add', '--path', site);
+  const before = bid('launch', '--project', site).data;
+  assert(before.next === 'check' && before.steps.find((s) => s.id === 'check').status === 'todo' && before.steps.find((s) => s.id === 'site').status === 'waiting', JSON.stringify(before));
+  assert(before.steps.find((s) => s.id === 'project').status === 'done' && before.complete === false, 'folder step');
+  bid('check', '--project', site);
+  const after = bid('launch', '--project', site).data;
+  assert(after.steps.find((s) => s.id === 'check').status === 'done', JSON.stringify(after.steps));
+  assert(after.steps.find((s) => s.id === 'site').status === 'done', 'site with recommendations still counts as done');
+  assert(after.next === 'hosting' && after.steps.find((s) => s.id === 'hosting').action === 'hosting', 'next is hosting');
+  assert(after.steps.find((s) => s.id === 'deploy').status === 'waiting' && after.steps.find((s) => s.id === 'domain').optional === true, 'deploy waits for a host');
+  assert(after.requiredTotal === 5 && after.total === 7, JSON.stringify([after.requiredTotal, after.total]));
+  // the same object rides in `status`, so the app needs no extra call
+  const st = bid('status', '--project', site).data;
+  assert(st.launch && st.launch.next === 'hosting', 'launch in status');
+  fixture('launch-status', st.launch);
+  // a blocked check turns the deploy into "waiting" and the check into "attention"
+  fs.writeFileSync(path.join(site, 'index.html'), '<html><body><h1>Lorem ipsum</h1></body></html>');
+  bid('check', '--project', site, '--force');
+  const blocked = bid('launch', '--project', site).data;
+  assert(blocked.steps.find((s) => s.id === 'site').status === 'attention' && blocked.next === 'check' && blocked.steps.find((s) => s.id === 'site').action === 'fix', JSON.stringify(blocked.steps.find((s) => s.id === 'site')));
+});
+
+t('new: шаблонът създава сайт, който минава проверката на качеството от първия път', () => {
+  const list = bid('new', 'list').data;
+  assert(list.map((x) => x.id).join() === 'landing,portfolio' && list.every((x) => x.title && x.description && x.pages >= 3), JSON.stringify(list));
+  const parent = path.join(TMP, 'new-sites');
+  fs.mkdirSync(parent, { recursive: true });
+  const bad = bid('new', 'create', '--template', 'nope', '--name', 'X', '--dir', parent);
+  assert(bad.result.code === 'usage', 'unknown template');
+  const r = bidEnv({ BID_LANG: 'bg' }, 'new', 'create', '--template', 'landing', '--name', 'Фризьорски салон Ива', '--dir', parent, '--lang', 'bg');
+  assert(r.result.ok, JSON.stringify(r.result));
+  assert(r.data.path === path.join(parent, 'frizyorski-salon-iva') && r.data.git === true && r.data.project.name === 'Фризьорски салон Ива', JSON.stringify(r.data).slice(0, 300));
+  for (const f of ['index.html', '404.html', 'privacy.html', 'robots.txt', 'sitemap.xml', 'favicon.svg', 'netlify.toml', '.gitignore', 'bid.config.json']) assert(fs.existsSync(path.join(r.data.path, f)), f);
+  const index = fs.readFileSync(path.join(r.data.path, 'index.html'), 'utf8');
+  assert(index.includes('<html lang="bg">') && index.includes('<title>Фризьорски салон Ива') && !index.includes('{{'), 'placeholders substituted');
+  assert(fs.readFileSync(path.join(r.data.path, 'privacy.html'), 'utf8').includes('lang="bg"') && !fs.existsSync(path.join(r.data.path, 'privacy.en.html')), 'one privacy page in the site language');
+  assert(git(r.data.path, 'log', '--oneline').split('\n').filter(Boolean).length === 1, 'one initial commit');
+  const dup = bid('new', 'create', '--template', 'landing', '--name', 'Фризьорски салон Ива', '--dir', parent);
+  assert(dup.result.code === 'exists', 'no overwrite');
+  const chk = bid('check', '--project', r.data.path);
+  assert(chk.data.status === 'ready' && chk.data.steps.find((s) => s.id === 'site').status === 'pass', JSON.stringify(chk.data.steps.map((s) => [s.id, s.status])));
+  const en = bid('new', 'create', '--template', 'portfolio', '--name', 'Studio North', '--dir', parent, '--lang', 'en');
+  assert(en.result.ok && fs.existsSync(path.join(en.data.path, 'work.html')) && fs.readFileSync(path.join(en.data.path, 'privacy.html'), 'utf8').includes('lang="en"'), JSON.stringify(en.result).slice(0, 200));
+  assert(bid('check', '--project', en.data.path).data.steps.find((s) => s.id === 'site').status === 'pass', 'portfolio passes too');
+  fixture('new-site', r.data);
 });
 
 t('check: vite app — build създава dist, статус ready', () => {

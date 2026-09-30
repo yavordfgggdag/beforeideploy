@@ -259,7 +259,7 @@ Each item names the seam to build on; none of them requires touching the rules i
    artifact hash match, skip the check stage (today it always re-runs, cached incrementally).
 7. **External notification channels** (email / Slack) for confirmed incidents — user-configured only, through the
    existing `ev.notify` → app path; no default channel.
-8. Roadmap leftovers: light theme, WP10 SEO/accessibility rules, WP15 DNS providers, WP16 SFTP.
+8. Roadmap leftovers: light theme, WP15 DNS providers, WP16 SFTP, WP11 Lighthouse. (WP10 site quality and WP19 templates shipped in 11.1 — `engine/src/site.mjs`, `launch.mjs`, `newsite.mjs`.)
 
 ## 9. How to verify a change to V11 quickly
 

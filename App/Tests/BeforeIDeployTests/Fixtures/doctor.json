@@ -1,11 +1,12 @@
 {
-  "engine": "11.0.0-dev",
+  "engine": "11.0.0-rc.1",
   "engineDir": "/home/user/beforeideploy/engine",
-  "appDir": "/tmp/bid-test-EZ4j6h/app",
-  "cacheDir": "/tmp/bid-test-EZ4j6h/cache",
+  "appDir": "/tmp/bid-test-JZ1qhU/app",
+  "cacheDir": "/tmp/bid-test-JZ1qhU/cache",
   "node": {
     "path": "/opt/node22/bin/node",
-    "version": "v22.22.2"
+    "version": "v22.22.2",
+    "runtime": "system"
   },
   "npm": {
     "path": "/opt/node22/bin/npm",
@@ -34,6 +35,6 @@
     "email": null,
     "cli": "npx netlify-cli"
   },
-  "path": "/root/.local/bin:/root/.cargo/bin:/usr/local/go/bin:/opt/node22/bin:/opt/maven/bin:/opt/gradle/bin:/opt/rbenv/bin:/root/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/tmp/bid-test-EZ4j6h/home/.volta/bin:/tmp/bid-test-EZ4j6h/home/.asdf/shims:/opt/homebrew/bin:/usr/local/bin:/tmp/bid-test-EZ4j6h/home/.bun/bin:/tmp/bid-test-EZ4j6h/home/.local/bin:/tmp/bid-test-EZ4j6h/home/Library/pnpm:/usr/bin:/bin:/usr/sbin:/sbin",
-  "log": "/tmp/bid-test-EZ4j6h/app/logs/engine.log"
+  "path": "/root/.local/bin:/root/.cargo/bin:/usr/local/go/bin:/opt/node22/bin:/opt/maven/bin:/opt/gradle/bin:/opt/rbenv/bin:/root/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/tmp/bid-test-JZ1qhU/home/.volta/bin:/tmp/bid-test-JZ1qhU/home/.asdf/shims:/opt/homebrew/bin:/usr/local/bin:/tmp/bid-test-JZ1qhU/home/.bun/bin:/tmp/bid-test-JZ1qhU/home/.local/bin:/tmp/bid-test-JZ1qhU/home/Library/pnpm:/usr/bin:/bin:/usr/sbin:/sbin",
+  "log": "/tmp/bid-test-JZ1qhU/app/logs/engine.log"
 }

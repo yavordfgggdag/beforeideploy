@@ -55,6 +55,26 @@ final class ModelsTests: XCTestCase {
         XCTAssertEqual(legacy.oauthProviders, ["github"])
     }
 
+    func testLaunchChecklistAndNewSiteDecode() throws {
+        let l = try Fixtures.decode("launch-status", as: LaunchStatus.self)
+        XCTAssertEqual(l.steps.map(\.id), ["project", "check", "site", "hosting", "deploy", "domain", "monitor"])
+        XCTAssertEqual(l.next, "hosting")
+        XCTAssertFalse(l.complete)
+        XCTAssertEqual(l.requiredTotal, 5)
+        XCTAssertTrue(l.steps.filter(\.optional).map(\.id).contains("domain"))
+        XCTAssertEqual(l.steps.first { $0.id == "hosting" }?.action, "hosting")
+        let n = try Fixtures.decode("new-site", as: NewSiteResult.self)
+        XCTAssertEqual(n.template, "landing")
+        XCTAssertTrue(n.git)
+        XCTAssertTrue(n.files.contains("robots.txt") && n.files.contains("404.html"))
+        let s = try Fixtures.decode("site-step", as: StepResult.self)
+        XCTAssertEqual(s.id, "site")
+        XCTAssertEqual(s.status, "fail")
+        // status carries the launch list, so the project screen needs no extra call; an older engine leaves it nil
+        let legacy = try JSONDecoder().decode(LaunchStatus.self, from: Data(#"{"steps":[],"done":0,"total":0,"requiredDone":0,"requiredTotal":0,"next":null,"complete":false}"#.utf8))
+        XCTAssertNil(legacy.next)
+    }
+
     func testCloudDoctorDecodesTheOwnerSetupState() throws {
         let d = try Fixtures.decode("cloud-doctor", as: CloudDoctorResult.self)
         XCTAssertTrue(d.configured)

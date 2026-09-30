@@ -5,6 +5,8 @@ import { EngineError, ev, sh, exists, runStream, logDir, which } from './util.mj
 import { detect } from './detect.mjs';
 import { addHistory, getState, setState } from './store.mjs';
 import { t, msg } from './i18n.mjs';
+import { siteFilesDir, robotsText, sitemapText, notFoundHtml } from './site.mjs';
+import { findProject } from './store.mjs';
 
 const BG = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'h', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'sht', ъ: 'a', ь: 'y', ю: 'yu', я: 'ya' };
 
@@ -115,6 +117,22 @@ export function listFixes(dir) {
     });
   }
 
+  // the files every launched site needs (V11.1); only where the build ships them (static output, public/)
+  if (!d.ssr && d.publishReady) {
+    const out = siteFilesDir(dir, d);
+    const rel = path.relative(dir, out) || '.';
+    const pub = path.resolve(dir, d.publishDir || '.');
+    if (!exists(path.join(pub, 'robots.txt')) && !exists(path.join(out, 'robots.txt'))) {
+      fixes.push({ id: 'site.robots', title: t('fix.siteRobots.title'), description: t('fix.siteRobots.description', { dir: rel }), preview: robotsText(null).trim(), risk: 'safe' });
+    }
+    if (!exists(path.join(pub, 'sitemap.xml')) && !exists(path.join(out, 'sitemap.xml'))) {
+      fixes.push({ id: 'site.sitemap', title: t('fix.siteSitemap.title'), description: t('fix.siteSitemap.description', { dir: rel }), preview: sitemapText(dir, d, null).split('\n').slice(0, 6).join('\n'), risk: 'safe' });
+    }
+    if (!exists(path.join(pub, '404.html')) && !exists(path.join(out, '404.html'))) {
+      fixes.push({ id: 'site.404', title: t('fix.site404.title'), description: t('fix.site404.description', { dir: rel }), preview: `${rel}/404.html`, risk: 'safe' });
+    }
+  }
+
   if (!d.netlifyLinked) {
     fixes.push({
       id: 'netlify.link',
@@ -213,6 +231,24 @@ export async function applyFix(project, id, { yes = false, recheck = false } = {
         throw new EngineError(msg('fix.github.failed'), 'fix_failed');
       }
       summary = t('fix.github.done', { repo });
+      break;
+    }
+    case 'site.robots':
+    case 'site.sitemap':
+    case 'site.404': {
+      const out = siteFilesDir(dir, d);
+      fs.mkdirSync(out, { recursive: true });
+      const proj = findProject(project.key);
+      const liveUrl = proj?.liveUrl || proj?.netlify?.liveUrl || null;
+      const name = id === 'site.robots' ? 'robots.txt' : id === 'site.sitemap' ? 'sitemap.xml' : '404.html';
+      const file = path.join(out, name);
+      if (exists(file)) {
+        summary = t('fix.site.exists', { file: path.relative(dir, file) });
+        break;
+      }
+      const lang = /<html[^>]*\slang\s*=\s*["']?([a-zA-Z-]+)/i.exec((() => { try { return fs.readFileSync(path.join(path.resolve(dir, d.publishDir || '.'), 'index.html'), 'utf8'); } catch { return ''; } })())?.[1] || null;
+      fs.writeFileSync(file, id === 'site.robots' ? robotsText(liveUrl) : id === 'site.sitemap' ? sitemapText(dir, d, liveUrl) : notFoundHtml(lang, project.name));
+      summary = t('fix.site.created', { file: path.relative(dir, file) });
       break;
     }
     case 'netlify.link':

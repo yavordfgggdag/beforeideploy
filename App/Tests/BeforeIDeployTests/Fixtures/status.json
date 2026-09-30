@@ -1,9 +1,9 @@
 {
   "project": {
-    "key": "cbff0525327f",
-    "path": "/tmp/bid-test-EZ4j6h/vite-app",
+    "key": "28fd210718ff",
+    "path": "/tmp/bid-test-JZ1qhU/vite-app",
     "name": "vite-app",
-    "addedAt": "2026-09-29T07:25:11.050Z",
+    "addedAt": "2026-09-30T13:43:18.320Z",
     "framework": "vite",
     "packageManager": "npm",
     "publishDir": "dist",
@@ -11,14 +11,14 @@
     "netlify": {
       "siteName": "vite-app-demo"
     },
-    "lastOpened": "2026-09-29T07:25:11.051Z",
+    "lastOpened": "2026-09-30T13:43:18.320Z",
     "hosting": "netlify",
     "lastPort": 4180,
     "exists": true
   },
   "detect": {
     "exists": true,
-    "path": "/tmp/bid-test-EZ4j6h/vite-app",
+    "path": "/tmp/bid-test-JZ1qhU/vite-app",
     "name": "vite-app",
     "framework": "vite",
     "ssr": false,
@@ -60,9 +60,9 @@
     "ahead": null,
     "behind": null,
     "lastCommit": {
-      "hash": "9dfc0ff",
+      "hash": "83d8827",
       "subject": "touch build",
-      "relative": "2 minutes ago"
+      "relative": "3 minutes ago"
     }
   },
   "local": {
@@ -70,9 +70,9 @@
   },
   "check": {
     "status": "ready",
-    "at": "2026-09-29T07:27:01.635Z",
+    "at": "2026-09-30T13:45:53.449Z",
     "counts": {
-      "pass": 7,
+      "pass": 8,
       "info": 0,
       "warn": 0,
       "fail": 0
@@ -87,7 +87,7 @@
           "No origin remote"
         ],
         "fixes": [],
-        "duration": 0.012,
+        "duration": 0.014,
         "status": "pass",
         "summary": "Clean working tree"
       },
@@ -111,7 +111,7 @@
           "Package manager: npm"
         ],
         "fixes": [],
-        "duration": 0.014,
+        "duration": 0.012,
         "status": "pass",
         "summary": "npm · node_modules is in order"
       },
@@ -123,7 +123,7 @@
         "fixes": [],
         "status": "pass",
         "summary": "Lint passed · cached",
-        "log": "/tmp/bid-test-EZ4j6h/cache/cbff0525327f/lint.log",
+        "log": "/tmp/bid-test-JZ1qhU/cache/28fd210718ff/lint.log",
         "duration": 0,
         "cached": true
       },
@@ -135,7 +135,7 @@
         "fixes": [],
         "status": "pass",
         "summary": "Types are OK · cached",
-        "log": "/tmp/bid-test-EZ4j6h/cache/cbff0525327f/typecheck.log",
+        "log": "/tmp/bid-test-JZ1qhU/cache/28fd210718ff/typecheck.log",
         "duration": 0,
         "cached": true
       },
@@ -149,9 +149,69 @@
         "fixes": [],
         "status": "pass",
         "summary": "Production build passed · cached",
-        "log": "/tmp/bid-test-EZ4j6h/cache/cbff0525327f/build.log",
+        "log": "/tmp/bid-test-JZ1qhU/cache/28fd210718ff/build.log",
         "duration": 0,
         "cached": true
+      },
+      {
+        "id": "site",
+        "label": "Site quality",
+        "category": "Site Quality",
+        "details": [
+          "INFO structure.notFound — No 404 page: a wrong link shows the host's default error page.",
+          "INFO seo.robots — No robots.txt: search engines get no instructions and no sitemap hint.",
+          "INFO seo.sitemap — No sitemap.xml: search engines discover pages slower.",
+          "INFO seo.canonical · index.html — No canonical link.",
+          "INFO seo.og · index.html — No og:title / og:image: shared links show no preview.",
+          "INFO seo.favicon · index.html — No favicon."
+        ],
+        "fixes": [
+          "site.404",
+          "site.robots",
+          "site.sitemap"
+        ],
+        "duration": 0.003,
+        "status": "pass",
+        "summary": "1 page(s) ready for visitors — 6 hint(s) for the launch files (robots, sitemap, 404, favicon).",
+        "findings": [
+          {
+            "rule": "structure.notFound",
+            "severity": "info",
+            "detail": "No 404 page: a wrong link shows the host's default error page.",
+            "fixId": "site.404"
+          },
+          {
+            "rule": "seo.robots",
+            "severity": "info",
+            "detail": "No robots.txt: search engines get no instructions and no sitemap hint.",
+            "fixId": "site.robots"
+          },
+          {
+            "rule": "seo.sitemap",
+            "severity": "info",
+            "detail": "No sitemap.xml: search engines discover pages slower.",
+            "fixId": "site.sitemap"
+          },
+          {
+            "rule": "seo.canonical",
+            "severity": "info",
+            "file": "index.html",
+            "detail": "No canonical link."
+          },
+          {
+            "rule": "seo.og",
+            "severity": "info",
+            "file": "index.html",
+            "detail": "No og:title / og:image: shared links show no preview."
+          },
+          {
+            "rule": "seo.favicon",
+            "severity": "info",
+            "file": "index.html",
+            "detail": "No favicon."
+          }
+        ],
+        "pages": 1
       },
       {
         "id": "hosting",
@@ -162,23 +222,26 @@
           "CLI: netlify"
         ],
         "fixes": [],
-        "duration": 0.013,
+        "duration": 0.01,
         "status": "pass",
         "summary": "Netlify is connected"
       }
     ],
-    "duration": 0.08,
+    "duration": 0.081,
     "cached": [
       "lint",
       "typecheck",
       "build"
     ],
-    "fingerprint": "d6b6b1ed695087262a99aab5c8ea5c3948c5f2fe",
+    "fingerprint": "89555e72228e5a729f88a3445ad73bc6c1f5468a",
+    "buildConfig": "9ed7c34c013722e8a34a2c9bf45ee30a3207baf4367fae5b6241824db52024c4",
     "artifact": {
-      "hash": "e1bd13a2abda521eb6729a7664bd9cd910b176f0",
+      "hash": "a3079b731542a6775281421cc423cc9f0e68179eb459a5aa47fc7aa844c961fc",
+      "algo": "sha256",
       "dir": "dist",
       "files": 1,
-      "bytes": 14
+      "bytes": 199,
+      "manifestFile": "/tmp/bid-test-JZ1qhU/cache/28fd210718ff/artifact-a3079b731542a677.json"
     }
   },
   "lastDraft": null,
@@ -189,21 +252,191 @@
     "name": null,
     "cli": "netlify"
   },
-  "fixes": [],
+  "fixes": [
+    {
+      "id": "site.robots",
+      "title": "Create robots.txt",
+      "description": "Writes public/robots.txt that allows all crawlers and points at the sitemap.",
+      "preview": "User-agent: *\nAllow: /",
+      "risk": "safe"
+    },
+    {
+      "id": "site.sitemap",
+      "title": "Create sitemap.xml",
+      "description": "Writes public/sitemap.xml with every HTML page of the built site.",
+      "preview": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n  <url><loc>/</loc></url>\n</urlset>\n",
+      "risk": "safe"
+    },
+    {
+      "id": "site.404",
+      "title": "Create a 404 page",
+      "description": "Writes public/404.html in the site's language with a link back home.",
+      "preview": "public/404.html",
+      "risk": "safe"
+    }
+  ],
   "issues": {
-    "issues": [],
+    "issues": [
+      {
+        "id": "site.seo.robots",
+        "step": "site",
+        "rule": "seo.robots",
+        "severity": "low",
+        "kind": "recommendation",
+        "confidence": "confirmed",
+        "title": "No robots.txt",
+        "impact": "Search engines get no instructions and no sitemap hint.",
+        "evidence": {
+          "detail": "No robots.txt: search engines get no instructions and no sitemap hint."
+        },
+        "fix": {
+          "type": "safe",
+          "id": "site.robots",
+          "risk": "low"
+        },
+        "verify": {
+          "steps": [
+            "site"
+          ]
+        },
+        "blocksRelease": false
+      },
+      {
+        "id": "site.seo.sitemap",
+        "step": "site",
+        "rule": "seo.sitemap",
+        "severity": "low",
+        "kind": "recommendation",
+        "confidence": "confirmed",
+        "title": "No sitemap.xml",
+        "impact": "Search engines discover the pages slower.",
+        "evidence": {
+          "detail": "No sitemap.xml: search engines discover pages slower."
+        },
+        "fix": {
+          "type": "safe",
+          "id": "site.sitemap",
+          "risk": "low"
+        },
+        "verify": {
+          "steps": [
+            "site"
+          ]
+        },
+        "blocksRelease": false
+      },
+      {
+        "id": "site.seo.canonical:index.html",
+        "step": "site",
+        "rule": "seo.canonical",
+        "severity": "low",
+        "kind": "recommendation",
+        "confidence": "confirmed",
+        "title": "No canonical link",
+        "impact": "Duplicated addresses may split ranking.",
+        "evidence": {
+          "file": "index.html",
+          "detail": "No canonical link."
+        },
+        "fix": {
+          "type": "ai",
+          "id": "site",
+          "risk": "medium"
+        },
+        "verify": {
+          "steps": [
+            "site"
+          ]
+        },
+        "blocksRelease": false
+      },
+      {
+        "id": "site.seo.og:index.html",
+        "step": "site",
+        "rule": "seo.og",
+        "severity": "low",
+        "kind": "recommendation",
+        "confidence": "confirmed",
+        "title": "No social preview",
+        "impact": "Links shared on social networks and chats show no image or title.",
+        "evidence": {
+          "file": "index.html",
+          "detail": "No og:title / og:image: shared links show no preview."
+        },
+        "fix": {
+          "type": "ai",
+          "id": "site",
+          "risk": "medium"
+        },
+        "verify": {
+          "steps": [
+            "site"
+          ]
+        },
+        "blocksRelease": false
+      },
+      {
+        "id": "site.seo.favicon:index.html",
+        "step": "site",
+        "rule": "seo.favicon",
+        "severity": "low",
+        "kind": "recommendation",
+        "confidence": "confirmed",
+        "title": "No favicon",
+        "impact": "The tab and bookmarks show a blank icon.",
+        "evidence": {
+          "file": "index.html",
+          "detail": "No favicon."
+        },
+        "fix": {
+          "type": "ai",
+          "id": "site",
+          "risk": "medium"
+        },
+        "verify": {
+          "steps": [
+            "site"
+          ]
+        },
+        "blocksRelease": false
+      },
+      {
+        "id": "site.structure.notFound",
+        "step": "site",
+        "rule": "structure.notFound",
+        "severity": "low",
+        "kind": "recommendation",
+        "confidence": "likely",
+        "title": "No 404 page",
+        "impact": "A wrong link shows the host's default error page.",
+        "evidence": {
+          "detail": "No 404 page: a wrong link shows the host's default error page."
+        },
+        "fix": {
+          "type": "safe",
+          "id": "site.404",
+          "risk": "low"
+        },
+        "verify": {
+          "steps": [
+            "site"
+          ]
+        },
+        "blocksRelease": false
+      }
+    ],
     "counts": {
-      "total": 0,
+      "total": 6,
       "blocker": 0,
       "high": 0,
       "medium": 0,
-      "low": 0,
+      "low": 6,
       "info": 0,
       "defects": 0,
-      "recommendations": 0,
+      "recommendations": 6,
       "signals": 0
     },
-    "checkedAt": "2026-09-29T07:27:01.635Z",
+    "checkedAt": "2026-09-30T13:45:53.449Z",
     "partial": false
   },
   "backup": {
@@ -217,7 +450,7 @@
       "Keychain: account \"codeguard\" (bid backup connect, once the API token exists)",
       "CodeGuard API documentation and a partner agreement — not in this repository"
     ],
-    "project": "cbff0525327f",
+    "project": "28fd210718ff",
     "lastBackupAt": null,
     "capabilities": {
       "status": false,
@@ -226,7 +459,7 @@
       "restore": false
     },
     "source": null,
-    "at": "2026-09-29T07:27:24.147Z"
+    "at": "2026-09-30T13:46:28.086Z"
   },
   "release": {
     "currentOp": null,
@@ -251,5 +484,71 @@
     "installed": true,
     "loggedIn": true,
     "liveUrl": null
+  },
+  "launch": {
+    "steps": [
+      {
+        "id": "project",
+        "status": "done",
+        "optional": false,
+        "title": "Site folder",
+        "hint": "Added and recognised (vite).",
+        "action": null
+      },
+      {
+        "id": "check",
+        "status": "done",
+        "optional": false,
+        "title": "Check",
+        "hint": "Everything passed.",
+        "action": null
+      },
+      {
+        "id": "site",
+        "status": "done",
+        "optional": false,
+        "title": "Ready for visitors",
+        "hint": "1 page(s) with titles, descriptions, working links and the launch files.",
+        "action": null
+      },
+      {
+        "id": "hosting",
+        "status": "done",
+        "optional": false,
+        "title": "Hosting",
+        "hint": "Connected to netlify.",
+        "action": null
+      },
+      {
+        "id": "deploy",
+        "status": "todo",
+        "optional": false,
+        "title": "Go live",
+        "hint": "Publish a preview, look at it, then release to production.",
+        "action": "deploy"
+      },
+      {
+        "id": "domain",
+        "status": "waiting",
+        "optional": true,
+        "title": "Own domain",
+        "hint": "After the first release.",
+        "action": null
+      },
+      {
+        "id": "monitor",
+        "status": "waiting",
+        "optional": true,
+        "title": "Watching",
+        "hint": "After the site is live.",
+        "action": null
+      }
+    ],
+    "done": 4,
+    "total": 7,
+    "requiredDone": 4,
+    "requiredTotal": 5,
+    "next": "deploy",
+    "complete": false
   }
 }
