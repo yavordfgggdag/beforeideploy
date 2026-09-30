@@ -26,6 +26,15 @@ export function emit(obj) {
   process.stdout.write(JSON.stringify(obj) + '\n');
 }
 
+/**
+ * Exits once stdout has drained. On macOS (and whenever stdout is a pipe) writes are asynchronous, so a
+ * plain process.exit() right after a large result line (e.g. `bid logs`) cut the output at 64 KB.
+ */
+export function exitAfterFlush(code = 0) {
+  const c = typeof code === 'number' ? code : 0;
+  process.stdout.write('', () => process.exit(c));
+}
+
 export const ev = {
   step: (id, fields = {}) => emit({ type: 'step', id, ...fields }),
   log: (step, line) => emit({ type: 'log', step, line }),
@@ -180,7 +189,7 @@ for (const sig of ['SIGTERM', 'SIGINT', 'SIGHUP']) {
   process.on(sig, () => {
     for (const c of children) killTree(c, 'SIGTERM');
     emit({ type: 'result', ok: false, error: t('run.cancelled'), code: 'cancelled', key: 'run.cancelled' });
-    process.exit(130);
+    exitAfterFlush(130);
   });
 }
 

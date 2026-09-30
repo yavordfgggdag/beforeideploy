@@ -2,7 +2,7 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 // Before I Deploy V6 — engine entrypoint. Every command prints NDJSON; the last line is {"type":"result",...}.
-import { parseArgs, ok, fail, ev, sh, which, EngineError, APP_DIR, CACHE_DIR, ENGINE_DIR, ensureDir } from './util.mjs';
+import { parseArgs, ok, fail, ev, sh, which, EngineError, APP_DIR, CACHE_DIR, ENGINE_DIR, ensureDir, exitAfterFlush } from './util.mjs';
 import { detect } from './detect.mjs';
 import { listProjects, upsertProject, removeProject, resolveProject, updateProject, getState, listHistory, findProject } from './store.mjs';
 import { runChecks } from './checks.mjs';
@@ -500,7 +500,7 @@ const argvForLog = redactArgv(process.argv.slice(2));
 const logOutcome = (extra) => logEvent({ cmd: argvForLog[0] || 'help', argv: argvForLog, ms: Date.now() - startedAt, ...extra });
 const crash = (e) => {
   logOutcome({ ok: false, code: e?.code || 'crash', error: String(e?.message || e), stack: e?.stack ? String(e.stack).split('\n').slice(0, 5) : undefined });
-  process.exit(fail(e));
+  exitAfterFlush(fail(e));
 };
 process.on('unhandledRejection', crash);
 process.on('uncaughtException', crash);
@@ -508,9 +508,9 @@ process.on('uncaughtException', crash);
 main()
   .then((code) => {
     logOutcome({ ok: true, exit: typeof code === 'number' ? code : 0 });
-    process.exit(typeof code === 'number' ? code : 0);
+    exitAfterFlush(code);
   })
   .catch((e) => {
     logOutcome({ ok: false, code: e?.code || 'error', error: String(e?.message || e) });
-    process.exit(fail(e));
+    exitAfterFlush(fail(e));
   });
