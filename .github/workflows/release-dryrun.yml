@@ -39,7 +39,7 @@ jobs:
           set -e
           APP="build/Before I Deploy.app"
           ENG="$APP/Contents/Resources/engine"
-          test -x "$ENG/runtime/arm64/bin/node" && test -x "$ENG/runtime/x64/bin/node"
+          test -x "$ENG/runtime/arm64/bin/node" && test -x "$ENG/runtime/x86_64/bin/node"
           test -f "$ENG/.production"
           # no Homebrew, no setup-node, no nvm: only what every Mac has
           OUT="$(env -i HOME="$RUNNER_TEMP/home" PATH=/usr/bin:/bin:/usr/sbin:/sbin BID_APP_DIR="$RUNNER_TEMP/app" BID_CACHE_DIR="$RUNNER_TEMP/cache" "$ENG/bid" doctor)"
