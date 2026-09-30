@@ -97,22 +97,40 @@ struct AIFixBar: View {
                 Button { model.openAssistant() } label: { Label(L("ai.askAssistant"), systemImage: "bubble.left.and.text.bubble") }
                     .bidButton(.secondary, compact: true)
                     .help(L("ai.askAssistantHelp"))
-                Button { model.aiFix(step: step, target: "chatgpt") } label: { Label(L("aifix.chatgpt"), systemImage: "bubble.left.and.bubble.right.fill") }
-                    .bidButton(builtin ? .secondary : .primary, compact: true)
-                    .help(L("aifix.chatgptHelp"))
-                Button { model.aiFix(step: step, target: "claude") } label: { Label("Claude", systemImage: "sparkle") }
-                    .bidButton(.secondary, compact: true)
-                    .help(L("aifix.claudeHelp"))
-                Button { model.aiFix(step: step, target: "codex") } label: { Label("Codex", systemImage: "terminal") }
-                    .bidButton(.secondary, compact: true)
-                    .help(L("aifix.codexHelp"))
-                Button { model.aiFix(step: step, target: "claude-code") } label: { Label("Claude Code", systemImage: "chevron.left.forwardslash.chevron.right") }
-                    .bidButton(.secondary, compact: true)
-                    .help(L("aifix.claudeCodeHelp"))
-                Button { model.aiFix(step: step, target: "copy") } label: { Image(systemName: "doc.on.doc") }
-                    .bidButton(.ghost, compact: true)
-                    .help(L("aifix.copyOnly"))
+                if compact {
+                    // the hero card has no room for five external buttons: one menu, same actions
+                    Menu {
+                        Button { model.aiFix(step: step, target: "chatgpt") } label: { Label(L("aifix.chatgpt"), systemImage: "bubble.left.and.bubble.right.fill") }
+                        Button { model.aiFix(step: step, target: "claude") } label: { Label("Claude", systemImage: "sparkle") }
+                        Button { model.aiFix(step: step, target: "codex") } label: { Label("Codex", systemImage: "terminal") }
+                        Button { model.aiFix(step: step, target: "claude-code") } label: { Label("Claude Code", systemImage: "chevron.left.forwardslash.chevron.right") }
+                        Divider()
+                        Button { model.aiFix(step: step, target: "copy") } label: { Label(L("aifix.copyOnly"), systemImage: "doc.on.doc") }
+                    } label: {
+                        Label(L("aifix.external"), systemImage: "arrow.up.right.square")
+                    }
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
+                    .help(L("aifix.externalHelp"))
+                } else {
+                    Button { model.aiFix(step: step, target: "chatgpt") } label: { Label(L("aifix.chatgpt"), systemImage: "bubble.left.and.bubble.right.fill") }
+                        .bidButton(builtin ? .secondary : .primary, compact: true)
+                        .help(L("aifix.chatgptHelp"))
+                    Button { model.aiFix(step: step, target: "claude") } label: { Label("Claude", systemImage: "sparkle") }
+                        .bidButton(.secondary, compact: true)
+                        .help(L("aifix.claudeHelp"))
+                    Button { model.aiFix(step: step, target: "codex") } label: { Label("Codex", systemImage: "terminal") }
+                        .bidButton(.secondary, compact: true)
+                        .help(L("aifix.codexHelp"))
+                    Button { model.aiFix(step: step, target: "claude-code") } label: { Label("Claude Code", systemImage: "chevron.left.forwardslash.chevron.right") }
+                        .bidButton(.secondary, compact: true)
+                        .help(L("aifix.claudeCodeHelp"))
+                    Button { model.aiFix(step: step, target: "copy") } label: { Image(systemName: "doc.on.doc") }
+                        .bidButton(.ghost, compact: true)
+                        .help(L("aifix.copyOnly"))
+                }
             }
+            .fixedSize(horizontal: false, vertical: true)
         }
     }
 }

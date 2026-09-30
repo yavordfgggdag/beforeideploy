@@ -119,6 +119,8 @@
 "aifix.copiedChars" = "The prompt is copied (%@ characters)";
 "aifix.copiedPaste" = "The prompt is copied — paste it with ⌘V";
 "aifix.copyOnly" = "Just copy the prompt";
+"aifix.external" = "External AI…";
+"aifix.externalHelp" = "ChatGPT, Claude, Codex, Claude Code or copy the prepared prompt — free, opens outside the app.";
 "aifix.help" = "Fix with AI — a new chat with a dedicated prompt: log, files, versions (keys are hidden)";
 "aifix.openedChat" = "Opened a new chat with a ready prompt";
 "aifix.openedCli" = "Opened %@ in the project folder";

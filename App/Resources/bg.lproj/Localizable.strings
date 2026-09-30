@@ -119,6 +119,8 @@
 "aifix.copiedChars" = "Prompt-ът е копиран (%@ символа)";
 "aifix.copiedPaste" = "Prompt-ът е копиран — постави го с ⌘V";
 "aifix.copyOnly" = "Само копирай prompt-а";
+"aifix.external" = "Външен AI…";
+"aifix.externalHelp" = "ChatGPT, Claude, Codex, Claude Code или копирай готовия текст — безплатно, отваря се извън приложението.";
 "aifix.help" = "Оправи с AI — нов чат със специален prompt: лог, файлове, версии (ключовете се скриват)";
 "aifix.openedChat" = "Отворих нов чат с готов prompt";
 "aifix.openedCli" = "Отворих %@ в папката на проекта";
