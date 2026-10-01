@@ -97,7 +97,7 @@ struct GitCard: View {
     var body: some View {
         let g = status.git
         VStack(alignment: .leading, spacing: 14) {
-            PanelHeader(title: "GitHub", icon: "arrow.triangle.branch",
+            PanelHeader(title: K.step("git"), icon: "arrow.triangle.branch",
                         status: g.isRepo ? ((g.changedCount ?? 0) > 0 ? "warn" : "pass") : nil)
 
             if !g.isRepo {
@@ -108,10 +108,10 @@ struct GitCard: View {
                     .bidButton(.primary, compact: true)
             } else {
                 HStack(spacing: 16) {
-                    Metric(value: g.branch ?? "—", label: "branch")
+                    Metric(value: g.branch ?? "—", label: L("git.branch"))
                     Metric(value: "\(g.changedCount ?? 0)", label: L("git.changes"), tint: (g.changedCount ?? 0) > 0 ? Theme.warn : Theme.text)
                     if g.hasUpstream == true {
-                        Metric(value: "↑\(g.ahead ?? 0) ↓\(g.behind ?? 0)", label: "ahead / behind",
+                        Metric(value: "↑\(g.ahead ?? 0) ↓\(g.behind ?? 0)", label: L("git.aheadBehind"),
                                tint: (g.behind ?? 0) > 0 ? Theme.warn : Theme.text)
                     } else if g.remote != nil {
                         Metric(value: "—", label: L("git.notPushed"))

@@ -26,4 +26,6 @@ const history = spawnSync(bid, ['ai', 'history', '--project', project], { env: p
 const result = JSON.parse(history.stdout.trim().split('\n').at(-1));
 assert.equal(result.data.entries.at(-1).stopped, 'cancelled');
 assert.equal(result.data.entries.at(-1).request.issue, issue);
+assert.equal(events.find(e => e.historyId)?.historyId, result.data.entries.at(-1).historyId,
+  'cancelled turns retain the same identity when history is loaded again');
 console.log('cancellation closes stages, emits one final result and retains retry scope');

@@ -3,6 +3,7 @@ import SwiftUI
 
 struct RootView: View {
     @EnvironmentObject var model: AppModel
+    @Local private var columns: NavigationSplitViewVisibility = .all
     @AppStorage(Localization.storageKey) private var locale = ""
     @AppStorage(Onboarding.tourSeenKey) private var tourSeen = false
 
@@ -24,8 +25,8 @@ struct RootView: View {
                 mainView
             }
         }
+        .settingsNavigation()
         .background(Theme.bg)
-        .ignoresSafeArea()
         .overlay {
             // below minVersion the app must not be used until it is updated (audit R4)
             if let u = model.update, u.mandatory == true, u.available {
@@ -44,10 +45,10 @@ struct RootView: View {
     }
 
     var mainView: some View {
-        HStack(spacing: 0) {
+        NavigationSplitView(columnVisibility: $columns) {
             SidebarView()
-                .frame(width: 248)
-            Rectangle().fill(Theme.hairline).frame(width: 1)
+                .navigationSplitViewColumnWidth(min: 220, ideal: 248, max: 320)
+        } detail: {
             ZStack {
                 AuroraBackground(tint: backdropTint)
                 if model.engineMissing {
@@ -87,8 +88,17 @@ struct RootView: View {
             .animation(Motion.spring, value: model.screen)
             .animation(Motion.spring, value: model.selectedKey)
         }
+        .navigationSplitViewStyle(.balanced)
+        .toolbar {
+            ToolbarItemGroup(placement: .primaryAction) {
+                Group {
+                IconButton(symbol: "plus", help: L("common.addProject")) { model.addProjectPanel() }
+                IconButton(symbol: "sparkles.rectangle.stack", help: L("newsite.button")) { model.sheet = .newSite }.help(L("newsite.buttonHelp"))
+                IconButton(symbol: "magnifyingglass", help: L("sidebar.search")) { model.showPalette = true }
+                }.disabled(model.run != nil || model.aiStore.current != nil || model.showPalette)
+            }
+        }
         .background(Theme.bg)
-        .ignoresSafeArea()
         .accessibilityHidden(model.run != nil || model.aiStore.current != nil || model.showPalette)
         .overlay {
             if let run = model.run {
@@ -124,7 +134,7 @@ struct RootView: View {
                 case .netlifySetup: NetlifySetupSheet()
                 case .commit: CommitSheet()
                 case .history: HistorySheet()
-                case .settings: SettingsSheet()
+                case .settings: SettingsView()
                 case .remote: RemoteSheet()
                 case .spaceshipConnect: SpaceshipConnectSheet()
                 case .connectDomain: ConnectDomainSheet()

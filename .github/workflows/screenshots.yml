@@ -110,8 +110,8 @@ jobs:
           "$ENGINE/bid" project add --path "$HOME/Sites/много-дълго-име-на-онлайн-магазин-за-клиент" > /dev/null
           for appearance in light dark; do
             defaults write "$APP_ID" appearance -string "$appearance"
-            for screen in overview project setup settings; do
-              shoot "v12-$appearance-$screen-small" -BIDScreen "$screen" -BIDWindowSize 1080x700
+            for screen in overview project setup settings domains costs; do
+              shoot "v12-$appearance-$screen-small" -BIDScreen "$screen" -BIDWindowSize 900x640
             done
           done
           for appearance in light dark; do
@@ -122,6 +122,7 @@ jobs:
           done
           for appearance in light dark; do
             defaults write "$APP_ID" appearance -string "$appearance"
+            shoot "v12-$appearance-usage-compact" -BIDScreen usage -BIDBillingDemo 1 -BIDWindowSize 900x640
             for screen in plans usage; do
               shoot "v12-$appearance-$screen-demo" -BIDScreen "$screen" -BIDBillingDemo 1 -BIDWindowSize 1080x700
             done

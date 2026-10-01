@@ -275,7 +275,7 @@ t('i18n: ценоразписът следва BID_LANG, редактирани�
   stored.items['github:push'].label = 'Моят push';
   fs.writeFileSync(file, JSON.stringify(stored));
   const bg = bidEnv({ BID_LANG: 'bg' }, 'prices');
-  assert(bg.data.items['local:check'].label === 'Локална проверка / build', bg.data.items['local:check'].label);
+  assert(bg.data.items['local:check'].label === 'Локална проверка / изграждане', bg.data.items['local:check'].label);
   assert(bg.data.items['github:push'].label === 'Моят push' && bidEnv({ BID_LANG: 'en' }, 'prices').data.items['github:push'].label === 'Моят push', 'edited label changed');
   const setup = bidEnv({ BID_LANG: 'bg' }, 'setup', 'status');
   assert(setup.data.items.some((i) => i.group === 'Основа'), 'setup group not bg');
@@ -1104,7 +1104,7 @@ http.createServer((q,r)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{r.setHea
   if(!dir){r.statusCode=404;return r.end('no deploy');}const rp=rel.split('?')[0];const f=require('path').join(dir,rp==='/'?'index.html':rp);try{const body=require('fs').readFileSync(f);r.setHeader('content-type','text/html');return r.end(body);}catch(e){r.statusCode=404;return r.end('404');}}
  if(q.url.startsWith('/mon')){let st={};try{st=JSON.parse(require('fs').readFileSync(process.argv[3],'utf8'));}catch{}if(st.monDown){r.statusCode=503;return r.end('down');}r.setHeader('content-type','text/html');return r.end('<title>m</title>ok');}
  if(q.url==='/releases/latest.json'){const dmg='dmg-bytes';const sha=require('crypto').createHash('sha256').update(dmg).digest('hex');
-   return r.end(JSON.stringify({version:'11.1.0',minVersion:'9.0.0',url:'http://127.0.0.1:'+port+'/releases/bid.dmg',sha256:sha,notes:{en:'Fixes',bg:'Поправки'},publishedAt:'2026-10-01T00:00:00Z',beta:{version:'11.2.0-beta.1',url:'http://127.0.0.1:'+port+'/releases/bid.dmg',sha256:sha}}));}
+   return r.end(JSON.stringify({version:'99.1.0',minVersion:'9.0.0',url:'http://127.0.0.1:'+port+'/releases/bid.dmg',sha256:sha,notes:{en:'Fixes',bg:'Поправки'},publishedAt:'2026-10-01T00:00:00Z',beta:{version:'99.2.0-beta.1',url:'http://127.0.0.1:'+port+'/releases/bid.dmg',sha256:sha}}));}
  if(q.url==='/releases/insecure.json'){return r.end(JSON.stringify({version:'99.0.0',url:'http://example.com/x.dmg',sha256:'a'.repeat(64)}));}
  if(q.url==='/releases/nosha.json'){return r.end(JSON.stringify({version:'99.0.0',url:'https://example.com/x.dmg'}));}
  if(q.url==='/releases/bid.dmg'){r.setHeader('content-type','application/octet-stream');return r.end('dmg-bytes');}
@@ -1736,7 +1736,7 @@ t('assistant: предложение → patch файл с base hash, риск �
   assert(stale.result.ok && stale.data.valid === false && stale.data.stopped === 'stale_base_hash' && !stale.data.patchFile, JSON.stringify(stale.data));
   const ni = chat(asstApp, '--action', 'propose', '--issue', issue.id, '--files', 'src/app.js', '--message', '[[eval:propose-needs-input]]');
   assert(ni.result.ok && ni.data.stopped === 'needs_input' && ni.data.output.missing_context.length === 1, JSON.stringify(ni.data));
-  const rev = chat(asstApp, '--action', 'review', '--patch-file', p.data.patchFile, '--message', '[[eval:review-ok]]');
+  const rev = chat(asstApp, '--action', 'review', '--patch-file', p.data.patchFile, '--issue', 'stale-unrelated-issue', '--message', '[[eval:review-ok]]');
   assert(rev.result.ok && rev.data.valid && rev.data.output.findings.length === 1 && rev.data.output.required_checks.includes('build'), JSON.stringify(rev.data));
   assert(chat(asstApp, '--action', 'review', '--patch-file', '/etc/hosts').result.code === 'bad_patch', 'review reads only this project\'s patch files');
   fs.rmSync(p.data.patchFile, { force: true });
@@ -1905,12 +1905,12 @@ t('update: latest.json → налична версия, beta канал, изт�
   assert(none.data.configured === false && none.data.available === false, JSON.stringify(none.data));
   const r = bidEnv({ BID_UPDATE_URL: feed }, 'update', 'check');
   fixture('update-check', r.data);
-  assert(r.result.ok && r.data.current === fs.readFileSync(path.join(ROOT, 'engine', 'VERSION'), 'utf8').trim() && r.data.latest === '11.1.0' && r.data.available === true && r.data.mandatory === false, JSON.stringify(r.data));
+  assert(r.result.ok && r.data.current === fs.readFileSync(path.join(ROOT, 'engine', 'VERSION'), 'utf8').trim() && r.data.latest === '99.1.0' && r.data.available === true && r.data.mandatory === false, JSON.stringify(r.data));
   assert(r.data.notes.bg === 'Поправки', 'notes');
   const cached = bidEnv({ BID_UPDATE_URL: feed }, 'update', 'check');
   assert(cached.data.fromCache === true, 'second check should use the 6h cache');
   const beta = bidEnv({ BID_UPDATE_URL: feed }, 'update', 'check', '--channel', 'beta');
-  assert(beta.data.latest === '11.2.0-beta.1' && beta.data.available === true, JSON.stringify(beta.data));
+  assert(beta.data.latest === '99.2.0-beta.1' && beta.data.available === true, JSON.stringify(beta.data));
   const dl = bidEnv({ BID_UPDATE_URL: feed }, 'update', 'download');
   assert(dl.result.ok && fs.existsSync(dl.data.path) && fs.readFileSync(dl.data.path, 'utf8') === 'dmg-bytes', JSON.stringify(dl.result));
   assert(dl.data.path.startsWith(path.join(ENV.HOME, 'Downloads')), 'must land in ~/Downloads');
@@ -1918,9 +1918,9 @@ t('update: latest.json → налична версия, beta канал, изт�
     const x = bidEnv({ BID_UPDATE_URL: `http://127.0.0.1:${sbPort}/releases/${bad}.json` }, 'update', 'download');
     assert(x.result.key === 'update.insecure', bad + ': ' + JSON.stringify(x.result));
   }
-  // the app's own version decides (audit B5): an app already on 11.1.0 is up to date
-  const same = bidEnv({ BID_UPDATE_URL: feed }, 'update', 'check', '--current', '11.1.0', '--force');
-  assert(same.data.current === '11.1.0' && same.data.available === false, JSON.stringify(same.data));
+  // the app's own version decides (audit B5): an app already on 99.1.0 is up to date
+  const same = bidEnv({ BID_UPDATE_URL: feed }, 'update', 'check', '--current', '99.1.0', '--force');
+  assert(same.data.current === '99.1.0' && same.data.available === false, JSON.stringify(same.data));
 });
 
 t('logs & report: engine.log пази командите с маскирани пароли; докладът е без secrets', () => {

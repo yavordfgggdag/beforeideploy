@@ -57,7 +57,7 @@ struct MonitorCard: View {
             channelRow(m)
 
             if let s = m?.settings {
-                HStack(spacing: 14) {
+                FlowLayout(spacing: Space.m, lineSpacing: Space.s) {
                     Text(L("monitor.notifyLabel")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.secondary)
                     notifyToggle(L("monitor.notify.down"), s.notify.down) { model.setMonitorNotify(down: $0) }
                     notifyToggle(L("monitor.notify.ssl"), s.notify.ssl) { model.setMonitorNotify(ssl: $0) }

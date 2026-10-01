@@ -119,7 +119,7 @@
 "ai.thinking" = "Thinking…";
 "ai.title" = "Fix with AI";
 "ai.tokensCount" = "%@ credits";
-"ai.tokensUsed" = "%@ tokens (own key)";
+"ai.tokensUsed" = "Own key · %@ app credits";
 "ai.undo" = "Undo AI fix";
 "ai.undoSkipped" = "%@ files were edited since and were kept";
 "ai.undone" = "%@ files restored";
@@ -170,14 +170,14 @@
 "assistant.appliedFiles" = "Applied: %@";
 "assistant.applyVerify" = "Apply and verify";
 "assistant.budget" = "Budget for this operation";
-"assistant.budgetUsed" = "%@ of %@ tokens used";
+"assistant.budgetUsed" = "Text processed: %@ of %@ units";
 "assistant.cancelled" = "Stopped. Any completed work and usage remain in the conversation.";
 "assistant.chars" = "%@ chars";
 "assistant.contextTitle" = "What will be sent";
-"assistant.costLine" = "%@ tokens · %@";
-"assistant.dataNote" = "Before each request the panel on the right lists exactly what leaves this Mac (issue, logs, selected files, git summary) with secrets masked, and how many tokens it will cost.";
+"assistant.costLine" = "%@ credits · %@";
+"assistant.dataNote" = "The panel lists the issue, logs, selected files and Git summary sent to the model, with private values masked. App credit charges appear after each reply. With your own key, the provider bills you separately.";
 "assistant.emptyBody" = "Explain the problem, propose a fix, apply and verify it, review release readiness or investigate an incident. Every answer is validated by the engine before you see it; nothing is published, restored or bought from here.";
-"assistant.estimate" = "About %@ tokens for this request";
+"assistant.estimate" = "Estimated context size: %@ text units";
 "assistant.evidence.diff" = "diff";
 "assistant.evidence.file" = "file";
 "assistant.evidence.git" = "git";
@@ -203,7 +203,7 @@
 "assistant.filesHint" = "Only files inside the project; protected folders and symlinks are refused. Each file is masked for secrets and capped in size before it is sent.";
 "assistant.invalidTitle" = "The answer did not pass validation — nothing was changed:";
 "assistant.issue" = "Issue";
-"assistant.lastCost" = "Last answer: %@ tokens";
+"assistant.lastCost" = "Last reply: %@ credits";
 "assistant.nav" = "AI assistant";
 "assistant.neverList" = "Never automatic, whatever the setting: production deploy, restore, purchases and plan changes, project deletion, secrets.";
 "assistant.noIssue" = "No issue selected";
@@ -597,7 +597,6 @@
 "issue.fix.ui.netlify-setup" = "Connect hosting";
 "issue.fix.ui.setup" = "Open Setup";
 "issue.fixRisk" = "Fix risk: %@";
-"issue.impact" = "Impact";
 "issue.kind.defect" = "confirmed defect";
 "issue.kind.recommendation" = "recommendation";
 "issue.kind.signal" = "heuristic signal";
@@ -1321,3 +1320,49 @@
 "admin.pauseReason" = "Enter a reason above to pause a site. The action is recorded in the admin log.";
 "usage.quotaReset" = "Resets on %@";
 "usage.scheduledSites" = "Your %@ plan starts on %@ and includes %@ active sites. Pause the sites you want to keep inactive before then.";
+
+"settings.general" = "General";
+"settings.engine" = "Engine";
+
+"k.other" = "Other (%@)";
+"k.role.normal" = "Standard";
+"k.role.vip" = "VIP";
+"k.role.admin" = "Administrator";
+"k.plan.free" = "Free";
+"k.provider.cloud" = "Built-in AI";
+"k.provider.local" = "Local";
+"k.step.git" = "Version history";
+"k.step.secrets" = "Private data";
+"k.step.lint" = "Code quality";
+"k.step.typecheck" = "Type checks";
+"k.step.build" = "Build";
+"k.step.hosting" = "Hosting";
+"k.audit.set_role" = "Role changed";
+"k.audit.set_plan" = "Plan changed";
+"k.audit.grant" = "Credits adjusted";
+"k.audit.set_ai_disabled" = "AI access changed";
+"k.audit.pause_site" = "Site paused";
+"k.audit.set_settings" = "Settings changed";
+"k.audit.invite" = "User invited";
+"k.audit.delete_account" = "Account deleted";
+"git.branch" = "Branch";
+"git.aheadBehind" = "To upload / download";
+"git.record" = "Saved change %@";
+"git.defaultMessage" = "Update — %@";
+"domains.netlifyMapping" = "Netlify: connect %@ and www.%@";
+"domains.autoRenew" = "Automatic renewal";
+"domains.dnsError" = "Could not load DNS records. Try again.";
+"dashboard.liveProvider" = "Live · %@";
+"dashboard.checkHelp" = "⌘R — version history, private data, code quality, types and build";
+"costs.more" = "Show all operations";
+"costs.aiFix" = "AI fix · %@";
+"hosting.tool" = "Hosting tool";
+"settings.openAccount" = "Open account";
+
+"k.provider.manual" = "Manual";
+
+"usage.op.unknown" = "Unconfirmed";
+
+"billing.intervalNotice" = "You can change plans with your current billing interval. Switching between monthly and annual billing is not available yet.";
+
+"assistant.textUnits" = "text units";

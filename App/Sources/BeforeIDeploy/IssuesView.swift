@@ -59,7 +59,7 @@ struct IssueRow: View {
         switch severity {
         case "blocker": return Theme.blocked
         case "high": return Theme.warn
-        case "medium": return Theme.accent
+        case "medium": return Tone.info.text
         case "low": return Theme.secondary
         default: return Theme.tertiary
         }
@@ -80,7 +80,7 @@ struct IssueRow: View {
                     .foregroundColor(issue.severity == "blocker" ? .white : tint)
                     .padding(.horizontal, 7).padding(.vertical, 3)
                     .background(Capsule().fill(issue.severity == "blocker" ? tint : tint.opacity(0.14)))
-                    .frame(width: 74, alignment: .leading)
+                    .fixedSize(horizontal: true, vertical: false)
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 6) {
                         Text(issue.title).font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.text)
@@ -108,15 +108,12 @@ struct IssueRow: View {
     }
 
     @ViewBuilder private var fixButton: some View {
-        Button { model.openAssistant(issue: issue.id) } label: { Label(L("ai.askAssistant"), systemImage: "sparkles") }
-            .bidButton(.ghost, compact: true)
-            .help(L("ai.askIssueHelp"))
         if let fix = issue.fix {
             switch fix.type {
             case "safe":
-                Button(L("issue.fix.safe")) { if let id = fix.id { model.requestFix(id) } }.bidButton(.primary, compact: true)
+                Button(L("issue.fix.safe")) { if let id = fix.id { model.requestFix(id) } }.bidButton(.secondary, compact: true)
             case "ai":
-                Button(L("issue.fix.ai")) { if model.aiReady { model.aiStore.start(step: issue.step) } else { model.aiUnavailableAction() } }.bidButton(.primary, compact: true)
+                Button(L("issue.fix.ai")) { if model.aiReady { model.aiStore.start(step: issue.step) } else { model.aiUnavailableAction() } }.bidButton(.secondary, compact: true)
             case "ui":
                 Button(K.fixUI(fix.id ?? "setup")) { route(fix.id ?? "setup") }.bidButton(.secondary, compact: true)
             default:
@@ -140,9 +137,10 @@ struct IssueRow: View {
             HStack(spacing: 14) {
                 Text(K.confidence(issue.confidence)).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
                 if let risk = issue.fix?.risk { Text(L("issue.fixRisk", K.risk(risk))).font(Typo.font(.caption)).foregroundColor(Theme.tertiary) }
-                if let steps = issue.verify?.steps, !steps.isEmpty { Text(L("issue.verify", steps.joined(separator: ", "))).font(Typo.font(.caption)).foregroundColor(Theme.tertiary) }
+                if let steps = issue.verify?.steps, !steps.isEmpty { Text(L("issue.verify", steps.map(K.step).joined(separator: ", "))).font(Typo.font(.caption)).foregroundColor(Theme.tertiary) }
             }
-            Text("\(L("issue.impact")): \(issue.impact)").font(Typo.font(.callout)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
+            Button { model.openAssistant(issue: issue.id) } label: { Label(L("ai.askAssistant"), systemImage: "sparkles") }
+                .bidButton(.ghost, compact: true).help(L("ai.askIssueHelp"))
             if let detail = issue.evidence?.detail, !detail.isEmpty {
                 Text(L("issue.evidence")).font(Typo.font(.caption, weight: .bold)).tracking(0.5).foregroundColor(Theme.tertiary)
                 ScrollView {
@@ -161,6 +159,6 @@ struct IssueRow: View {
                 }
             }
         }
-        .padding(.leading, 84)
+
     }
 }

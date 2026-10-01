@@ -131,7 +131,7 @@ struct TurnView: View {
                                 if let r = turn.result {
                                     Text([r.provider, r.model, r.template].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · "))
                                     if let u = r.usage {
-                                        Text(L("assistant.costLine", Fmt.tokens(u.charged ?? ((u.input ?? 0) + (u.output ?? 0))), u.model ?? r.model ?? ""))
+                                        Text(L("assistant.costLine", u.charged.map(Fmt.tokens) ?? "—", u.model ?? r.model ?? ""))
                                     }
                                 }
                             }.font(Typo.font(.caption)).foregroundColor(Theme.tertiary).textSelection(.enabled)

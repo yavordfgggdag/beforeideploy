@@ -26,53 +26,56 @@ struct SidebarView: View {
                         .font(Typo.font(.subhead, weight: .bold))
                         .foregroundColor(Theme.text)
                     Text(L("sidebar.tagline"))
+                        .lineLimit(2).fixedSize(horizontal: false, vertical: true)
                         .font(Typo.font(.caption))
                         .foregroundColor(Theme.tertiary)
                 }
             }
-            .padding(.top, 44)
+            .padding(.top, 16)
             .padding(.horizontal, 18)
-            .padding(.bottom, 22)
+            .padding(.bottom, 16)
 
             VStack(spacing: 2) {
-                NavRow(symbol: "square.grid.2x2.fill", title: L("nav.missionControl"), selected: model.screen == .overview) {
+                NavRow(symbol: "square.grid.2x2.fill", title: L("nav.missionControl"), selected: model.screen == .overview, shortcut: "1") {
                     model.screen = .overview
                     Task { await model.loadOverview() }
                 }
-                NavRow(symbol: "network", title: L("common.domains"), selected: model.screen == .domains,
+                NavRow(symbol: "network", title: L("common.domains"), selected: model.screen == .domains, shortcut: "2",
                        badge: expiring > 0 ? "\(expiring)" : nil) {
                     model.screen = .domains
                     Task { await model.loadSpaceship() }
                 }
-                NavRow(symbol: "sparkles", title: L("assistant.nav"), selected: model.screen == .assistant) {
+                NavRow(symbol: "sparkles", title: L("assistant.nav"), selected: model.screen == .assistant, shortcut: "3") {
                     model.screen = .assistant
                 }
-                NavRow(symbol: "creditcard.fill", title: L("common.costs"), selected: model.screen == .costs) {
+                NavRow(symbol: "creditcard.fill", title: L("common.costs"), selected: model.screen == .costs, shortcut: "4") {
                     model.screen = .costs
                     Task { await model.loadCosts() }
                 }
-                NavRow(symbol: "wand.and.stars", title: L("common.setup"), selected: model.screen == .setup,
+                NavRow(symbol: "wand.and.stars", title: L("common.setup"), selected: model.screen == .setup, shortcut: "5",
                        badge: (model.setup?.missingRequired ?? 0) > 0 ? "\(model.setup?.missingRequired ?? 0)" : nil) {
                     model.screen = .setup
                     Task { await model.loadSetup() }
                 }
-                if model.account?.loggedIn == true {
-                    NavRow(symbol: "gauge.with.dots.needle.33percent", title: L("usage.nav"), selected: model.screen == .usage) {
+                if model.account?.loggedIn == true || model.billingStore.demo {
+                    NavRow(symbol: "gauge.with.dots.needle.33percent", title: L("usage.nav"), selected: model.screen == .usage, shortcut: "6") {
                         model.screen = .usage
                         Task { await model.billingStore.loadUsage() }
                     }
-                    NavRow(symbol: "person.crop.circle.fill", title: L("common.account"), selected: model.screen == .account) {
+                }
+                if model.account?.loggedIn == true {
+                    NavRow(symbol: "person.crop.circle.fill", title: L("common.account"), selected: model.screen == .account, shortcut: "7") {
                         model.screen = .account
                     }
                 }
                 if model.account?.isAdmin == true {
-                    NavRow(symbol: "person.2.badge.gearshape.fill", title: L("admin.title"), selected: model.screen == .admin) {
+                    NavRow(symbol: "person.2.badge.gearshape.fill", title: L("admin.title"), selected: model.screen == .admin, shortcut: "8") {
                         model.screen = .admin
                     }
                 }
             }
             .padding(.horizontal, 10)
-            .padding(.bottom, 18)
+            .padding(.bottom, 12)
             .environment(\.navNamespace, navPill)
             .animation(Motion.spring, value: model.screen)
 
@@ -104,55 +107,17 @@ struct SidebarView: View {
                 }
                 .padding(.horizontal, 10)
             }
-
-            Spacer(minLength: 0)
+            .frame(minHeight: 80)
+            .layoutPriority(1)
 
             VStack(spacing: 8) {
-                Button {
-                    model.addProjectPanel()
-                } label: {
-                    HStack {
-                        Image(systemName: "plus")
-                        Text(L("common.addProject"))
-                        Spacer()
-                        Text("⌘O").foregroundColor(Theme.tertiary).font(Typo.font(.caption))
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                .bidButton(.secondary)
-
-                Button { model.sheet = .newSite } label: {
-                    HStack {
-                        Image(systemName: "sparkles.rectangle.stack")
-                        Text(L("newsite.button"))
-                        Spacer()
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                .bidButton(.primary)
-                .help(L("newsite.buttonHelp"))
-
-                Button { model.showPalette = true } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "magnifyingglass")
-                        Text(L("sidebar.search"))
-                        Spacer()
-                        Text("⌘K").foregroundColor(Theme.tertiary).font(Typo.font(.caption))
-                    }
-                    .font(Typo.font(.body))
-                    .foregroundColor(Theme.secondary)
-                    .padding(.horizontal, 10).padding(.vertical, 7)
-                    .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(Theme.panel))
-                }
-                .buttonStyle(.plain)
                 if let u = model.update, u.available {
-                    UpdateBanner(info: u)
+                    Button(L("update.available", u.latest ?? "")) { model.downloadUpdate() }
+                        .bidButton(.secondary, compact: true)
+                        .disabled(model.busy.contains("update"))
                 }
                 AccountBadge()
-                HStack(spacing: 8) {
-                    SidebarFooterButton(symbol: "clock.arrow.circlepath", title: L("common.history")) { model.sheet = .history }
-                    SidebarFooterButton(symbol: "gearshape", title: L("common.settings")) { model.sheet = .settings }
-                }
+
             }
             .padding(14)
         }
@@ -266,6 +231,7 @@ struct NavRow: View {
     let symbol: String
     let title: String
     let selected: Bool
+    var shortcut: String? = nil
     var badge: String? = nil
     let action: () -> Void
     @Local private var hover = false
@@ -308,6 +274,7 @@ struct NavRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .help(shortcut.map { "\(title) · ⌘\($0)" } ?? title)
         .onHover { hover = $0 }
         .animation(Motion.quick, value: hover)
         .animation(Motion.quick, value: selected)

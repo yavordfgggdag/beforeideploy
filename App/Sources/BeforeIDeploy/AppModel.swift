@@ -1026,7 +1026,7 @@ final class AppModel: ObservableObject, Feedback {
 
     func disconnectSpaceship() { hostingStore.disconnectSpaceship() }
 
-    func dns(_ domain: String) async -> [DnsRecord] { await hostingStore.dns(domain) }
+    func dns(_ domain: String) async throws -> [DnsRecord] { try await hostingStore.dns(domain) }
 
     func planDomain(_ domain: String) async throws -> DomainPlan { try await hostingStore.planDomain(domain) }
 
@@ -1166,7 +1166,7 @@ final class AppModel: ObservableObject, Feedback {
         case "usage": screen = .usage
         case "admin": screen = .admin
         case "plans": sheet = .plans
-        case "settings": sheet = .settings
+        case "settings": SettingsWindow.open()
         case "palette": showPalette = true
         default: screen = .overview
         }

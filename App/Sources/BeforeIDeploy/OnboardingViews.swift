@@ -86,10 +86,12 @@ struct WelcomeTourView: View {
 
                 HStack(spacing: 8) {
                     ForEach(Onboarding.pages) { p in
-                        Capsule()
-                            .fill(p.id == page.id ? Color.white : Color.white.opacity(0.35))
-                            .frame(width: p.id == page.id ? 22 : 7, height: 7)
-                            .animation(Motion.spring, value: page.id)
+                        Button { withAnimation(Motion.quick) { index = p.id } } label: {
+                            Capsule().fill(p.id == page.id ? Color.white : Color.white.opacity(0.35))
+                                .frame(width: p.id == page.id ? 22 : 7, height: 7).padding(.vertical, Space.s)
+                        }.buttonStyle(.plain)
+                            .accessibilityLabel(L("tour.pageOf", p.id + 1, Onboarding.pages.count))
+                            .accessibilityAddTraits(p.id == page.id ? .isSelected : [])
                     }
                 }
                 .accessibilityLabel(L("tour.pageOf", page.id + 1, Onboarding.pages.count))
@@ -210,7 +212,7 @@ struct FirstStepsCard: View {
             }
         }
         .padding(18)
-        .frame(width: 460)
+        .frame(maxWidth: 460)
         .background(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).fill(Theme.panel))
         .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
     }

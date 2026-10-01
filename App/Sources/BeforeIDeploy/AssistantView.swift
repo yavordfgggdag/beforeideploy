@@ -313,7 +313,7 @@ private struct AssistantWorkspace: View {
             UsageBar(used: b.used, reserved: 0, total: b.limit)
             Text(L("assistant.budgetUsed", Fmt.tokens(b.used), Fmt.tokens(b.limit))).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
             if let last = store.turns.last?.result?.usage {
-                Text(L("assistant.lastCost", Fmt.tokens((last.charged ?? ((last.input ?? 0) + (last.output ?? 0))))) + (last.balance.map { " · " + L("ai.creditsLeft", Fmt.tokens($0)) } ?? ""))
+                Text(L("assistant.lastCost", last.charged.map(Fmt.tokens) ?? "—") + (last.balance.map { " · " + L("ai.creditsLeft", Fmt.tokens($0)) } ?? ""))
                     .font(Typo.font(.caption)).foregroundColor(Theme.secondary)
             }
         }

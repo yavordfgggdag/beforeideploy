@@ -10,6 +10,10 @@ private struct PlansContent: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var store: BillingStore
     @Local private var yearly = false
+    private var intervalBlocked: Bool {
+        guard let subscription = store.status?.subscription, subscription.provider == "paddle" else { return false }
+        return (subscription.interval == "year") != yearly
+    }
 
     var body: some View {
         SheetScaffold(icon: "sparkles", title: L("billing.title"), subtitle: L("billing.subtitle"), width: 880, scrollResetID: store.catalog?.currency) {
@@ -25,11 +29,12 @@ private struct PlansContent: View {
                         Spacer()
                         SegmentedControl(options: [(L("billing.monthly"), false), (L("billing.yearly"), true)], selection: $yearly).frame(width: 290)
                     }
+                    if intervalBlocked { Text(L("billing.intervalNotice")).font(Typo.font(.callout)).foregroundColor(Theme.secondary) }
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 190), spacing: 12)], alignment: .leading, spacing: 12) {
                         freeCard(currency: c.currency)
                         ForEach(c.plans) { p in
                             PlanCard(plan: p, currency: c.currency, current: store.status?.plan == p.id && (store.status?.subscription?.interval == "year") == yearly,
-                                     yearly: yearly, busy: store.busy != nil || !store.canReadUsage) { store.checkout(plan: p.id, yearly: yearly) }
+                                     yearly: yearly, busy: store.busy != nil, unavailable: !store.canReadUsage || intervalBlocked) { store.checkout(plan: p.id, yearly: yearly) }
                         }
                     }
                     if !store.canReadUsage {
@@ -42,7 +47,7 @@ private struct PlansContent: View {
                     SectionLabel(text: L("billing.packs"), icon: "plus.circle.fill")
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 250), spacing: 12)], spacing: 12) {
                         ForEach(c.packs) { p in
-                            PackCard(pack: p, currency: c.currency, busy: store.busy != nil || !store.canReadUsage) { store.checkout(pack: p.id) }
+                            PackCard(pack: p, currency: c.currency, busy: store.busy != nil, unavailable: !store.canReadUsage) { store.checkout(pack: p.id) }
                         }
                     }
                     Text(L("billing.packWindows")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
@@ -57,7 +62,7 @@ private struct PlansContent: View {
             Button(L("common.refresh")) { Task { await store.load() } }.bidButton(.ghost).disabled(store.loadingCatalog)
             Button(L("common.close")) { dismiss() }.bidButton(.primary).keyboardShortcut(.cancelAction)
         }
-        .task { await store.load() }
+        .task { await store.load(); yearly = store.status?.subscription?.interval == "year" }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             Task { await store.load(); await store.loadUsage() }
         }
@@ -91,7 +96,7 @@ private struct PlansContent: View {
 
 enum BillingFormat {
     static func planName(_ id: String) -> String {
-        id == "free" ? L("billing.free") : id.prefix(1).uppercased() + id.dropFirst()
+        id == "free" ? L("billing.free") : K.plan(id)
     }
 
     static func money(_ amount: Double?, currency: String) -> String {
@@ -209,6 +214,7 @@ private struct PlanCard: View {
     let current: Bool
     var yearly = false
     let busy: Bool
+    var unavailable = false
     let choose: () -> Void
     @Local private var hover = false
 
@@ -265,7 +271,7 @@ private struct PlanCard: View {
                 }
             }
             .bidButton(recommended && !current ? .primary : .secondary)
-            .disabled(current || !onSale || busy)
+            .disabled(current || !onSale || busy || unavailable)
         }
         .frame(maxWidth: .infinity, minHeight: 300, maxHeight: 300, alignment: .topLeading)
         .card(padding: 16, fill: hover ? Theme.elevated : Theme.panel, tint: recommended ? Theme.accent : nil)
@@ -284,6 +290,7 @@ private struct PackCard: View {
     let pack: BillingCatalog.Pack
     let currency: String
     let busy: Bool
+    var unavailable = false
     let buy: () -> Void
     var body: some View {
         HStack(spacing: 12) {
@@ -297,7 +304,7 @@ private struct PackCard: View {
             Spacer()
             Button(pack.available ? L("billing.choose") : L("billing.soon"), action: buy)
                 .bidButton(.secondary, compact: true)
-                .disabled(!pack.available || busy)
+                .disabled(!pack.available || busy || unavailable)
         }
         .frame(maxWidth: .infinity)
         .card(padding: 14)
@@ -312,7 +319,7 @@ struct UsageList: View {
             ForEach(usage) { u in
                 HStack(spacing: 10) {
                     Text(Fmt.relative(u.at)).font(Typo.font(.callout)).foregroundColor(Theme.tertiary).frame(width: 110, alignment: .leading)
-                    Text(u.step ?? "—").font(Typo.font(.callout, weight: .medium)).foregroundColor(Theme.text)
+                    Text(u.step.map(K.step) ?? "—").font(Typo.font(.callout, weight: .medium)).foregroundColor(Theme.text)
                     Text(u.model ?? "").font(Typo.font(.caption, design: .monospaced)).foregroundColor(Theme.tertiary)
                     Spacer()
                     Text(L("ai.tokensCount", Fmt.tokens(u.tokens))).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.secondary).monospacedDigit()

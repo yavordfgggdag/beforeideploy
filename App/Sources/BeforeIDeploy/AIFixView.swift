@@ -49,9 +49,9 @@ struct AIFixOverlay: View {
                             Text(L("ai.renewsOn", BillingFormat.day(renews))).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
                         }
                     } else {
-                        Label(L("ai.tokensUsed", Fmt.tokens((u.input ?? 0) + (u.output ?? 0))), systemImage: "bolt").font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
+                        Label(L("ai.tokensUsed", "0"), systemImage: "bolt").font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
                     }
-                    Text(L("ai.viaProvider", state.outcome?.provider ?? "", u.model ?? state.outcome?.model ?? ""))
+                    Text(L("ai.viaProvider", K.provider(state.outcome?.provider ?? "local"), u.model ?? state.outcome?.model ?? ""))
                         .font(Typo.font(.caption, design: .monospaced)).foregroundColor(Theme.tertiary)
                 }
             } else if state.running {
@@ -141,7 +141,7 @@ struct AIFixOverlay: View {
             }
             if let a = state.applied {
                 Label(L("ai.applied", count: a.applied.count), systemImage: "checkmark.circle.fill").font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.ready)
-                if let c = a.committed { Text("commit \(c)").font(Typo.font(.callout, design: .monospaced)).foregroundColor(Theme.tertiary) }
+                if let c = a.committed { Text(L("git.record", c)).font(Typo.font(.callout, design: .monospaced)).foregroundColor(Theme.tertiary) }
                 if let rc = a.recheck {
                     Label(rc.verified ? L("ai.verified") : L("ai.unverified", rc.step ?? state.step), systemImage: rc.verified ? "checkmark.seal.fill" : "xmark.octagon.fill")
                         .font(Typo.font(.callout, weight: .semibold)).foregroundColor(rc.verified ? Theme.ready : Theme.blocked)

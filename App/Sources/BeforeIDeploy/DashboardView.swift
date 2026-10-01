@@ -7,7 +7,7 @@ enum ProjectTab: String, CaseIterable, Hashable {
         switch self {
         case .overview: return L("dashboard.tab.overview")
         case .local: return L("dashboard.tab.local")
-        case .git: return "GitHub"
+        case .git: return K.step("git")
         case .hosting: return L("dashboard.tab.hosting")
         case .history: return L("common.history")
         }
@@ -50,12 +50,12 @@ struct DashboardView: View {
                     if !extraFixes.isEmpty {
                         FixesCard(fixes: extraFixes)
                     }
-                    HStack(alignment: .top, spacing: 14) {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 180), spacing: Space.m)], spacing: Space.m) {
                         MiniStat(title: L("dashboard.localTitle"), value: status.local.running ? Fmt.host(status.local.url) : L("dashboard.stopped"),
                                  tint: status.local.running ? Theme.ready : Theme.tertiary, icon: "desktopcomputer") { tab = .local }
-                        MiniStat(title: "GitHub", value: status.git.isRepo ? L("dashboard.changes", count: status.git.changedCount ?? 0) : L("dashboard.noRepo"),
+                        MiniStat(title: K.step("git"), value: status.git.isRepo ? L("dashboard.changes", count: status.git.changedCount ?? 0) : L("dashboard.noRepo"),
                                  tint: (status.git.changedCount ?? 0) > 0 ? Theme.warn : Theme.text, icon: "arrow.triangle.branch") { tab = .git }
-                        MiniStat(title: "Live · \(status.hosting?.name ?? "Netlify")",
+                        MiniStat(title: L("dashboard.liveProvider", status.hosting?.name ?? "Netlify"),
                                  value: (status.hosting?.liveUrl ?? status.project.netlify?.liveUrl).map { Fmt.host($0) } ?? (status.hosting?.ready == true ? L("common.connectedLower") : L("common.notConnectedLower")),
                                  tint: status.hosting?.ready == true ? Theme.text : Theme.tertiary, icon: "globe") { tab = .hosting }
                     }
@@ -291,14 +291,14 @@ struct HeroCard: View {
                 }
             }
 
-            HStack(spacing: 10) {
+            FlowLayout(spacing: Space.m) {
                 Button {
                     model.runCheck()
                 } label: {
                     Label(L("common.check"), systemImage: "arrow.triangle.2.circlepath")
                 }
                 .bidButton(.secondary)
-                .help("⌘R — Git, secrets, lint, typecheck, build")
+                .help(L("dashboard.checkHelp"))
 
                 Button {
                     model.smartDeploy()
@@ -464,8 +464,8 @@ struct HealthGrid: View {
     let status: ProjectStatus
 
     static let placeholders: [(String, String)] = [
-        ("git", "Git"), ("secrets", "Secrets"), ("deps", L("common.dependencies")), ("lint", "Lint"),
-        ("typecheck", "Typecheck"), ("build", "Build"), ("site", L("launch.site.title")), ("hosting", "Hosting"),
+        ("git", K.step("git")), ("secrets", K.step("secrets")), ("deps", L("common.dependencies")), ("lint", K.step("lint")),
+        ("typecheck", K.step("typecheck")), ("build", K.step("build")), ("site", L("launch.site.title")), ("hosting", K.step("hosting")),
     ]
 
     var body: some View {
@@ -513,7 +513,7 @@ struct HealthTile: View {
                     Image(systemName: Self.icon(step.id))
                         .font(Typo.font(.callout, weight: .semibold))
                         .foregroundColor(Theme.secondary)
-                    Text(step.label ?? step.id)
+                    Text(K.step(step.id))
                         .font(Typo.font(.body, weight: .semibold))
                         .foregroundColor(Theme.text)
                     Spacer()
@@ -557,7 +557,7 @@ struct StepDetailPopover: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Image(systemName: Theme.symbol(for: step.status)).foregroundColor(Theme.color(for: step.status))
-                Text(step.label ?? step.id).font(Typo.font(.subhead, weight: .bold))
+                Text(K.step(step.id)).font(Typo.font(.subhead, weight: .bold))
                 Spacer()
                 if let d = step.duration, d > 0 { Text(Fmt.duration(d)).foregroundColor(Theme.tertiary).font(Typo.font(.caption)) }
             }

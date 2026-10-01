@@ -199,7 +199,8 @@ async function callModel({ provider, model, system, prompt, action, project, set
     clearTimeout(timer);
     clearTimeout(idleTimer);
     controller.abort();
-    budget.used += usage.charged ?? usage.input + usage.output;
+    // The generation budget is a text-size limit; provider credits have a separate monetary unit.
+    budget.used += usage.input + usage.output;
     calls.push({ ...usage, ...(params.operationId ? {operationId:params.operationId} : {}) });
   }
 }
@@ -240,6 +241,8 @@ export async function assistantChat(project, opts = {}) {
   const entry = { historyId: crypto.randomUUID(), at: nowISO(), conversation, action, message,
     request: { action, message, issue: typeof opts.issue === 'string' ? opts.issue : null, files: typeof opts.files === 'string' ? opts.files : null,
       provider: typeof opts.provider === 'string' ? opts.provider : null, model: typeof opts.model === 'string' ? opts.model : null, patchFile: typeof opts.patchFile === 'string' ? opts.patchFile : null } };
+  // The UI must keep the durable identity even when provider selection or generation fails.
+  emit({ type: 'info', historyId: entry.historyId, conversation });
   let status, provider, model;
   try {
     status = await accountStatus();
@@ -276,7 +279,7 @@ export async function assistantChat(project, opts = {}) {
       summary, usage: result.usage, duration: full.duration, patchFile: result.patchFile || null, result: historyResult(full) });
     addHistory({ project: project.key, projectName: project.name, kind: 'assistant', status: result.valid && !result.stopped ? 'ok' : 'fail', message: `${action}${summary ? `: ${summary.slice(0, 120)}` : ''}${result.stopped ? ` (${result.stopped})` : ''}`, duration: (Date.now() - started) / 1000 });
     if (result.usage?.input || result.usage?.output) {
-      recordCost({ project: project.key, projectName: project.name, service: provider === 'cloud' ? 'ai-cloud' : `ai-${provider}`, op: `assistant:${action}`, amount: result.usage.charged ?? result.usage.input + result.usage.output, unit: 'tokens', estimated: false, ref: result.usage.model || null });
+      recordCost({ project: project.key, projectName: project.name, service: provider === 'cloud' ? 'ai-cloud' : `ai-${provider}`, op: `assistant:${action}`, amount: result.usage.charged ?? result.usage.input + result.usage.output, unit: result.usage.charged != null ? 'credits' : 'tokens', estimated: false, ref: result.usage.model || null });
     }
     return full;
   };
@@ -297,7 +300,8 @@ export async function assistantChat(project, opts = {}) {
   try {
   const meta = metadata(project);
   const checks = checkSummary(project);
-  const { issue, issues } = issueById(project, opts.issue && opts.issue !== true ? String(opts.issue) : null);
+  // A review is bound to its saved patch, even after the selected/current issue has changed.
+  const { issue, issues } = issueById(project, action !== 'review' && opts.issue && opts.issue !== true ? String(opts.issue) : null);
   const files = opts.files && opts.files !== true ? String(opts.files).split(',').map((s) => s.trim()).filter(Boolean) : [];
 
   // ---- evidence per action
@@ -510,7 +514,7 @@ export async function assistantChat(project, opts = {}) {
       appendHistory(project.key, { ...entry, valid: false, error: error.message, code: error.code, usage, duration: (Date.now() - started) / 1000 });
       if (usage && (usage.input || usage.output || usage.charged)) recordCost({ project: project.key, projectName: project.name,
         service: provider === 'cloud' ? 'ai-cloud' : `ai-${provider}`, op: `assistant:${action}`, amount: usage.charged ?? usage.input + usage.output,
-        unit: 'tokens', estimated: false, ref: usage.model || null });
+        unit: usage.charged != null ? 'credits' : 'tokens', estimated: false, ref: usage.model || null });
     }
     throw error;
   }

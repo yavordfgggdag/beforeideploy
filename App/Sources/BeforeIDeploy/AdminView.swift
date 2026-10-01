@@ -16,7 +16,7 @@ struct AdminView: View {
                 }
             }
 
-            HStack(alignment: .top, spacing: 16) {
+            AdaptiveColumns(spacing: 16) {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(spacing: 8) {
                         BIDTextField(placeholder: L("admin.search"), text: Binding(get: { store.query }, set: { store.query = $0 }))
@@ -33,9 +33,9 @@ struct AdminView: View {
                                 Text(L("admin.noUsers")).font(Typo.font(.body)).foregroundColor(Theme.tertiary).padding(20)
                             }
                         }
-                    }
+                    }.frame(height: 420)
                 }
-                .frame(minWidth: 320, maxWidth: 420)
+                .frame(maxWidth: .infinity)
                 .card(padding: 14)
 
                 if let u = store.selected {
@@ -49,7 +49,7 @@ struct AdminView: View {
 
             AdminDiagnosticsCard()
 
-            HStack(alignment: .top, spacing: 16) {
+            AdaptiveColumns(spacing: 16) {
                 AdminInviteCard()
                     .frame(maxWidth: 420)
                 AdminSettingsCard()
@@ -64,7 +64,7 @@ struct AdminView: View {
                     ForEach(store.audit.prefix(30)) { e in
                         HStack(spacing: 10) {
                             Text(Fmt.time(e.createdAt)).font(Typo.font(.caption, design: .monospaced)).foregroundColor(Theme.tertiary).frame(width: 90, alignment: .leading)
-                            Text(e.action).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
+                            Text(K.auditAction(e.action)).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
                             Text(store.users.first { $0.userId == e.target }?.email ?? e.target ?? "").font(Typo.font(.callout)).foregroundColor(Theme.secondary).lineLimit(1)
                             Spacer()
                         }
@@ -98,7 +98,7 @@ struct AdminUserRow: View {
                 .frame(width: 24, height: 24)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(user.email).font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.text).lineLimit(1)
-                    Text("\(user.role) · \(user.plan) · \(Fmt.tokens(user.balance ?? 0))").font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
+                    Text("\(K.role(user.role)) · \(K.plan(user.plan)) · \(Fmt.tokens(user.balance ?? 0))").font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
                 }
                 Spacer()
                 if user.aiDisabled == true { Image(systemName: "sparkles.slash").font(Typo.font(.caption)).foregroundColor(Theme.warn) }
@@ -138,12 +138,12 @@ struct AdminUserDetail: View {
             SectionLabel(text: L("admin.roleAndPlan"))
             HStack(spacing: 14) {
                 Picker(L("admin.role"), selection: Binding(get: { user.role }, set: { r in Task { await store.setRole(user, r) } })) {
-                    ForEach(roles, id: \.self) { Text($0).tag($0) }
+                    ForEach(roles, id: \.self) { Text(K.role($0)).tag($0) }
                 }
                 .pickerStyle(.menu).frame(width: 190)
                 .disabled(user.userId == model.account?.id)
                 Picker(L("admin.plan"), selection: Binding(get: { user.plan }, set: { p in Task { await store.setPlan(user, p) } })) {
-                    ForEach(plans, id: \.self) { Text($0).tag($0) }
+                    ForEach(plans, id: \.self) { Text(K.plan($0)).tag($0) }
                 }
                 .pickerStyle(.menu).frame(width: 190)
                 Spacer()
@@ -189,7 +189,7 @@ struct AdminUserDetail: View {
                     ForEach(store.usage.prefix(12)) { u in
                         HStack(spacing: 10) {
                             Text(Fmt.relative(u.createdAt)).font(Typo.font(.caption)).foregroundColor(Theme.tertiary).frame(width: 110, alignment: .leading)
-                            Text(u.step ?? "—").font(Typo.font(.callout, weight: .medium)).foregroundColor(Theme.text)
+                            Text(u.step.map(K.step) ?? "—").font(Typo.font(.callout, weight: .medium)).foregroundColor(Theme.text)
                             Text(u.model ?? "").font(Typo.font(.caption, design: .monospaced)).foregroundColor(Theme.tertiary)
                             if let st = u.status, st != "ok" { Chip(text: st, tint: Theme.warn) }
                             Spacer()
@@ -219,7 +219,7 @@ struct AdminInviteCard: View {
             BIDTextField(placeholder: L("auth.email"), text: $email)
             HStack {
                 Picker(L("admin.role"), selection: $role) {
-                    ForEach(["vip", "normal", "admin"], id: \.self) { Text($0).tag($0) }
+                    ForEach(["vip", "normal", "admin"], id: \.self) { Text(K.role($0)).tag($0) }
                 }
                 .pickerStyle(.menu).frame(width: 180)
                 Spacer()

@@ -93,9 +93,9 @@ struct AccountView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(a?.name ?? a?.email ?? "").font(Typo.font(.title, weight: .bold)).foregroundColor(Theme.text)
                 HStack(spacing: 6) {
-                    if let role = a?.role { Chip(text: role, icon: role == "admin" ? "crown.fill" : role == "vip" ? "star.fill" : "person.fill", tint: role == "normal" ? Theme.secondary : Theme.accent) }
+                    if let role = a?.role { Chip(text: K.role(role), icon: role == "admin" ? "crown.fill" : role == "vip" ? "star.fill" : "person.fill", tint: role == "normal" ? Theme.secondary : Theme.accent) }
                     if let plan = a?.plan { Chip(text: BillingFormat.planName(plan), icon: "sparkles", tint: plan == "free" ? Theme.secondary : Theme.ready) }
-                    if let p = a?.provider { Chip(text: p, icon: p == "apple" ? "apple.logo" : p == "github" ? "chevron.left.forwardslash.chevron.right" : "envelope") }
+                    if let p = a?.provider { Chip(text: K.provider(p), icon: p == "apple" ? "apple.logo" : p == "github" ? "chevron.left.forwardslash.chevron.right" : "envelope") }
                     if a?.profileStale == true { Chip(text: L("account.offlineCopy"), icon: "wifi.slash", tint: Theme.warn) }
                 }
                 if let c = a?.credits {

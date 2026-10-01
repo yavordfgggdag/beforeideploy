@@ -210,3 +210,24 @@ Phase 4 local checks so far: Swift build succeeds; 98 Deno tests and 12 SQL/RLS 
 | Собствен хостинг/CodeGuard | provider provisioning pending | No fabricated activation or backup adapter; Netlify allowance remains disabled |
 
 Локално: 35 SQL/RLS, 112 Deno, 6 billing client теста; Swift build успешен. Проверени и поправени числовите формати във визуален преглед. Следва CI върху новия commit, после етап 6.
+
+### Етап 6 — навигация и български, 12.0.0-rc.1
+
+| Finding | Статус | Проверена промяна |
+|---|---|---|
+| UI-6 | fixed | Version-named view files split into `Screens/` and `DesignSystem/KPITile.swift` |
+| UI-15–17 | fixed | Native collapsible NavigationSplitView, toolbar actions, account footer, project-list minimum, matching ⌘1–8, 900×640 |
+| UI-18–19 | fixed | Wrapping filters, adaptive columns/KPIs, aligned page padding/content width |
+| UI-20 | fixed | Admin inner user list has bounded 420pt height; detail panels stack at compact widths |
+| UI-21 | verified existing | Selected-project animation uses separate identity; motion uses shared Motion settings |
+| UI-22–23 | verified existing | Ready-transition celebration; production button already secondary on current branch |
+| UI-24–25 | fixed | Issue fixes secondary; assistant action in details; duplicate impact removed; no fixed 74pt severity column |
+| UI-26–27 | fixed | Explicit domain/DNS/history errors and retry; stale domain responses ignored |
+| UI-28 | fixed | Native Settings scene with General/Behavior/Environment/Account/Support tabs; macOS13 compatibility route |
+| UI-29 | verified existing | Shared SheetScaffold sizes and scrolling retained |
+| UI-30 | fixed | Onboarding page buttons with selected accessibility state; flexible first-steps width |
+| UI-31–32 | fixed | Adaptive costs, 50-row initial ledger grouped by day with Show all; full palette list and keyboard scroll |
+| UI-41–46 | fixed | Bulgarian publishing glossary; K.role/plan/step/provider/auditAction; unknown fallback identified; stricter localization lint. Raw source/code and exact external-product menu identifiers remain verbatim where needed |
+| UI-47–48 | fixed in source | Two-line names/setup details; 900×640 light/dark CI coverage extended for domains/costs/usage; native Settings snapshots |
+
+Проверено локално: Swift build, 114 engine, 35 SQL/RLS, 112 Deno. Примерен сайт е създаден в отделна папка и проверен успешно. Прегледани са компактният изглед за използване и native Settings; следва окончателен CI и визуален преглед на новия кандидат. Сценарий за собственика: `V12-OWNER-TEST-BG.md`. Външните проверки от раздел 4 и ограниченията за billing-interval conversion/CodeGuard/owner-hosting остават изрично описани.

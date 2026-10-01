@@ -49,6 +49,7 @@ final class AssistantStore: ObservableObject {
         var request: Request?
         var discarded = false
         var stream: AssistantStreamBuffer?
+        var historyId: String?
     }
     struct Stage: Identifiable, Hashable {
         let id: String
@@ -182,6 +183,7 @@ final class AssistantStore: ObservableObject {
         Task {
             do {
                 let outcome = try await engine.run(args, handle: handle, timeout: 900) { [weak self] event in
+                    if let id = event.string("historyId") { live.historyId = id }
                     guard !s.cancelling else { return }
                     if event.type == "ai" {
                         if event.raw["reset"] as? Bool == true { buffer.reset() }
@@ -310,7 +312,7 @@ final class AssistantStore: ObservableObject {
     private func replace(_ turn: Turn, in s: Session) {
         if let i = s.turns.firstIndex(where: { $0.id == turn.id }) {
             var saved = turn
-            if let id = turn.result?.historyId {
+            if let id = turn.result?.historyId ?? turn.historyId {
                 saved.id = id + "-assistant"
                 if i > 0, s.turns[i - 1].role == "user" { s.turns[i - 1].id = id + "-user" }
             }

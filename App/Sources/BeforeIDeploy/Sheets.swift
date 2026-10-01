@@ -264,7 +264,7 @@ struct CommitSheet: View {
         if !m.isEmpty { return m }
         let f = DateFormatter()
         f.dateFormat = "dd.MM.yyyy HH:mm"
-        return "Update — \(f.string(from: Date()))"
+        return L("git.defaultMessage", f.string(from: Date()))
     }
 }
 
@@ -339,6 +339,8 @@ struct HistorySheet: View {
     @Environment(\.dismiss) private var dismiss
     @Local private var all = false
     @Local private var entries: [HistoryEntry] = []
+    @Local private var loadingHistory = true
+    @Local private var historyError: String?
 
     var body: some View {
         SheetScaffold(icon: "clock.arrow.circlepath", title: L("historySheet.title"),
@@ -348,10 +350,10 @@ struct HistorySheet: View {
                     .frame(width: 320)
                 ScrollView {
                     VStack(spacing: 0) {
-                        ForEach(entries) { e in
-                            HistoryRow(entry: e, showProject: all)
-                        }
-                        if entries.isEmpty {
+                        if loadingHistory { LoadingState() }
+                        else if let historyError { ErrorState(message: historyError, retry: { Task { await load() } }) }
+                        else { ForEach(entries) { e in HistoryRow(entry: e, showProject: all) } }
+                        if !loadingHistory && historyError == nil && entries.isEmpty {
                             Text(L("historySheet.empty")).foregroundColor(Theme.tertiary).padding(30)
                         }
                     }
@@ -367,107 +369,16 @@ struct HistorySheet: View {
     func load() async {
         var args = ["history", "--limit", "200"]
         if !all, let k = model.selectedKey { args += ["--project", k] }
-        entries = (try? await model.engine.call(args, as: [HistoryEntry].self)) ?? []
+        loadingHistory = true; historyError = nil
+        do {
+            let result = try await model.engine.call(args, as: [HistoryEntry].self)
+            guard !Task.isCancelled else { return }; entries = result
+        } catch { guard !Task.isCancelled else { return }; historyError = error.localizedDescription }
+        loadingHistory = false
     }
 }
 
 // MARK: - Settings
-
-struct SettingsSheet: View {
-    @EnvironmentObject var model: AppModel
-    @Environment(\.dismiss) private var dismiss
-    @AppStorage(Appearance.storageKey) private var appearance = "system"
-    @AppStorage("autoOpenPreview") private var autoOpenPreview = true
-    @AppStorage("checkOnSelect") private var checkOnSelect = false
-    @AppStorage("notificationsEnabled") private var notificationsEnabled = true
-    @Local private var doctor: DoctorInfo?
-
-    var body: some View {
-        SheetScaffold(icon: "gearshape.fill", title: L("common.settings"), subtitle: "Before I Deploy \(doctor.map { "v\($0.engine)" } ?? "")", width: 600) {
-            VStack(alignment: .leading, spacing: 16) {
-                VStack(alignment: .leading, spacing: 10) {
-                    SectionLabel(text: L("settings.languageSection"))
-                    LanguageRow()
-                    Picker(L("appearance.title"), selection: $appearance) {
-                        ForEach(Appearance.allCases, id: \.rawValue) { Text($0.label).tag($0.rawValue) }
-                    }.pickerStyle(.segmented)
-                    .onChange(of: appearance) { (Appearance(rawValue: $0) ?? .system).apply() }
-                }
-                VStack(alignment: .leading, spacing: 10) {
-                    SectionLabel(text: L("settings.behavior"))
-                    ToggleRow(title: L("settings.autoOpenPreview"), subtitle: L("settings.autoOpenPreviewHint"), isOn: $autoOpenPreview)
-                    ToggleRow(title: L("settings.autoCheck"), subtitle: L("settings.autoCheckHint"),
-                              isOn: Binding(get: { model.autoCheck }, set: { model.autoCheck = $0 }))
-                    ToggleRow(title: L("settings.checkOnSelect"), subtitle: L("settings.checkOnSelectHint"), isOn: $checkOnSelect)
-                    ToggleRow(title: L("settings.notifications"), subtitle: L("settings.notificationsHint"), isOn: $notificationsEnabled)
-                }
-                VStack(alignment: .leading, spacing: 8) {
-                    SectionLabel(text: L("settings.environment"))
-                    if let d = doctor {
-                        InfoRow(label: "Engine", value: "v\(d.engine)")
-                        InfoRow(label: "Node", value: d.node.runtime == "bundled" ? L("engine.nodeBundled", d.node.version) : d.node.version)
-                        InfoRow(label: "npm", value: d.npm?.version ?? "—")
-                        if let p = d.pnpm { InfoRow(label: "pnpm", value: p.version) }
-                        InfoRow(label: "git", value: d.git?.version ?? L("common.none"), tint: d.git == nil ? Theme.blocked : Theme.text)
-                        InfoRow(label: "Netlify CLI", value: d.netlify?.version ?? L("settings.netlifyMissing"))
-                        InfoRow(label: L("settings.netlifyAccount"), value: d.netlifyAuth.email ?? (d.netlifyAuth.loggedIn ? L("common.signedInLower") : L("common.notSignedInLower")))
-                        HStack {
-                            Button(L("settings.dataFolder")) { model.openFile(d.appDir) }.bidButton(.ghost, compact: true)
-                            Button(L("settings.logs")) { model.openFile(d.cacheDir) }.bidButton(.ghost, compact: true)
-                        }
-                    } else {
-                        HStack { Spinner(size: 12); Text(L("settings.checking")).foregroundColor(Theme.secondary).font(Typo.font(.callout)) }
-                    }
-                }
-                VStack(alignment: .leading, spacing: 8) {
-                    SectionLabel(text: L("settings.support"))
-                    InfoRow(label: L("settings.version"), value: doctor.map { "v\($0.engine)" } ?? "—")
-                    ToggleRow(title: L("update.betaChannel"), subtitle: L("update.betaChannelHint"),
-                              isOn: Binding(get: { model.updateChannel == "beta" }, set: { model.updateChannel = $0 ? "beta" : "stable" }))
-                    if let u = model.update, u.available { UpdateBanner(info: u) }
-                    HStack {
-                        Button(L("update.checkNow")) { Task { await model.checkForUpdates(force: true, announce: true) } }.bidButton(.secondary, compact: true)
-                        Button(L("report.save")) { model.saveReport() }.bidButton(.secondary, compact: true).disabled(model.busy.contains("report"))
-                    }
-                    // its own row: three buttons side by side were cut off in Bulgarian
-                    Button { model.prepareFeedback() } label: { Label(L("feedback.send"), systemImage: "envelope") }
-                        .bidButton(.secondary, compact: true).disabled(model.busy.contains("report"))
-                    Text(L("report.hint")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
-                    if let r = model.feedbackReport {
-                        // what the report holds, before the user decides to send it (WP08, audit D6)
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(L("feedback.contains")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
-                            ForEach(r.files, id: \.self) { f in
-                                Label(f, systemImage: "doc.text").font(Typo.font(.caption, design: .monospaced)).foregroundColor(Theme.secondary)
-                            }
-                            Text(L("feedback.redacted")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
-                            HStack {
-                                Button(L("feedback.writeMail")) { model.writeFeedbackMail(r) }.bidButton(.primary, compact: true)
-                                Button(L("common.cancel")) { model.feedbackReport = nil }.bidButton(.ghost, compact: true)
-                            }
-                        }
-                        .padding(10)
-                        .background(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).fill(Theme.bg))
-                    }
-                    LegalLinks()
-                }
-                if model.account?.loggedIn == true {
-                    VStack(alignment: .leading, spacing: 8) {
-                        SectionLabel(text: L("settings.account"))
-                        HStack {
-                            Button(L("account.export")) { model.exportAccountData() }.bidButton(.secondary, compact: true)
-                            Button(L("account.deleteButton")) { model.sheet = .deleteAccount }.bidButton(.danger, compact: true)
-                        }
-                        Text(L("account.exportHint")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
-                    }
-                }
-            }
-        } actions: {
-            Button(L("common.done")) { dismiss() }.bidButton(.primary).keyboardShortcut(.defaultAction)
-        }
-        .task { doctor = try? await model.engine.call(["doctor"], as: DoctorInfo.self) }
-    }
-}
 
 /// Privacy, Terms, Refund policy and "Contact support" — each only when its link is configured (audit B6/R6).
 struct LegalLinks: View {

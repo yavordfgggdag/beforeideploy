@@ -51,7 +51,7 @@ private struct PlanUsageContent: View {
                         if model.account?.isAdmin == true { Text(store.usageError ?? "").font(Typo.font(.caption)).textSelection(.enabled) }
                     }.card()
                 }
-            }.frame(maxWidth: 860, alignment: .leading).padding(24).frame(maxWidth: .infinity)
+            }.frame(maxWidth: 1120, alignment: .leading).padding(.horizontal, Space.page).padding(.top, Space.top).padding(.bottom, Space.page).frame(maxWidth: .infinity)
         }
         .task(id: model.account?.id) { await store.load(); await store.observeUsage(every: 10) }
         .sheet(item: $store.auditReport) { CloudAuditSheet(receipt: $0) }
@@ -101,7 +101,7 @@ private struct PlanUsageContent: View {
                     }
                     Divider()
                     CreditsMeter(title: L("usage.period"), used: u.used.tokens, reserved: u.reserved.tokens,
-                                 total: max(u.included.tokens, u.used.tokens + u.reserved.tokens + u.remaining.available),
+                                 total: u.included.tokens,
                                  detail: L("usage.periodDates", BillingFormat.day(u.period.start), BillingFormat.day(u.period.end)))
                 }
             }

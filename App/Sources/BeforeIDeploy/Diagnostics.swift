@@ -166,7 +166,9 @@ enum Snapshot {
 
     @MainActor
     static func write(to url: URL) {
-        guard let main = NSApp.windows.first(where: { $0.isVisible && $0.contentView != nil && $0.sheetParent == nil }),
+        let windows = NSApp.windows
+        let preferred = UserDefaults.standard.string(forKey: "BIDScreen") == "settings" ? windows.first(where: { $0.isKeyWindow }) : nil
+        guard let main = preferred ?? windows.first(where: { $0.isVisible && $0.contentView != nil && $0.sheetParent == nil }),
               let window = Optional(main.attachedSheet ?? main),
               let view = window.contentView?.superview ?? window.contentView,
               let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else {

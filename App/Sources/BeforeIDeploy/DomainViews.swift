@@ -7,6 +7,7 @@ struct DomainsView: View {
     @Local private var selectedDomain: String?
     @Local private var records: [DnsRecord] = []
     @Local private var loadingDNS = false
+    @Local private var dnsError: String?
 
     var body: some View {
         ScrollView {
@@ -23,9 +24,13 @@ struct DomainsView: View {
                     }
                 }
 
-                if let s = model.spaceship, s.connected {
+                if let error = model.hostingStore.spaceshipError {
+                    ErrorState(message: error, retry: { Task { await model.loadSpaceship(refresh: true) } })
+                } else if model.spaceship == nil && model.loadingSpaceship {
+                    LoadingState()
+                } else if let s = model.spaceship, s.connected {
                     let expiring = s.domains.filter { ($0.daysLeft ?? 999) < 30 }.count
-                    HStack(spacing: 12) {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 180), spacing: Space.m)], spacing: Space.m) {
                         KPITile(value: "\(s.domains.count)", label: L("domains.countLabel"), icon: "network")
                         KPITile(value: "\(expiring)", label: L("domains.expiring30"), icon: "calendar.badge.exclamationmark",
                                 tint: expiring > 0 ? Theme.warn : Theme.text)
@@ -33,7 +38,7 @@ struct DomainsView: View {
                                 tint: s.domains.contains { !$0.autoRenew } ? Theme.warn : Theme.text)
                     }
 
-                    HStack(alignment: .top, spacing: 14) {
+                    AdaptiveColumns(spacing: 14) {
                         VStack(alignment: .leading, spacing: 2) {
                             SectionLabel(text: L("domains.yours"), icon: "list.bullet").padding(.bottom, 8)
                             if s.domains.isEmpty {
@@ -45,7 +50,7 @@ struct DomainsView: View {
                             }
                         }
                         .card()
-                        .frame(width: 380)
+                        .frame(maxWidth: .infinity)
 
                         VStack(alignment: .leading, spacing: 12) {
                             if let dom = selectedDomain {
@@ -65,6 +70,8 @@ struct DomainsView: View {
                                 SectionLabel(text: L("domains.dnsRecords"), icon: "list.dash")
                                 if loadingDNS {
                                     HStack { Spinner(size: 13); Text(L("domains.loadingDns")).foregroundColor(Theme.secondary).font(Typo.font(.callout)) }
+                                } else if dnsError != nil {
+                                    ErrorState(message: L("domains.dnsError"), retry: { select(dom) })
                                 } else if records.isEmpty {
                                     Text(L("domains.noRecords")).foregroundColor(Theme.tertiary).font(Typo.font(.callout))
                                 } else {
@@ -117,9 +124,16 @@ struct DomainsView: View {
 
     func select(_ name: String) {
         selectedDomain = name
-        loadingDNS = true
+        loadingDNS = true; dnsError = nil; records = []
         Task {
-            records = await model.dns(name)
+            do {
+                let result = try await model.dns(name)
+                guard selectedDomain == name else { return }
+                records = result
+            } catch {
+                guard selectedDomain == name else { return }
+                dnsError = error.localizedDescription
+            }
             loadingDNS = false
         }
     }
@@ -140,7 +154,7 @@ struct DomainRow: View {
                 HStack(spacing: 6) {
                     Text(domain.daysLeft.map { L("domains.expiresIn", count: $0) } ?? "—")
                     Text("·")
-                    Text(domain.autoRenew ? "auto-renew" : L("domains.noAutoRenew"))
+                    Text(domain.autoRenew ? L("domains.autoRenew") : L("domains.noAutoRenew"))
                 }
                 .font(Typo.font(.caption))
                 .foregroundColor(selected ? Color.white.opacity(0.8) : (days < 30 ? Theme.warn : Theme.tertiary))
@@ -307,7 +321,7 @@ struct ConnectDomainSheet: View {
                         }
                         HStack(spacing: 8) {
                             Image(systemName: "globe").foregroundColor(Theme.accent)
-                            Text("Netlify: custom domain \(plan.domain) + www.\(plan.domain)")
+                            Text(L("domains.netlifyMapping", plan.domain, plan.domain))
                                 .font(Typo.font(.callout, design: .monospaced)).foregroundColor(Theme.text)
                         }
                     }

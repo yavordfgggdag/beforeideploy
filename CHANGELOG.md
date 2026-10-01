@@ -2,9 +2,12 @@
 
 All notable changes, newest first. Versions come from `engine/VERSION`. Each entry has an English and a Bulgarian part; the in-app update banner shows the notes from `latest.json`, which are generated from this file at release time (WP8).
 
-## Unreleased — V12 setup, design and AI assistant (2026-10-01)
+## 12.0.0-rc.1 (2026-10-01) — V12 review candidate
 
 ### English
+- Adds a collapsible native sidebar, matching navigation shortcuts, compact layouts down to 900×640, and a separate Settings window with five tabs. Search exposes every destination and scrolls with keyboard selection; project rows retain space in the sidebar.
+- Applies the Bulgarian publishing glossary, translates role/plan/step/provider/audit labels, and rejects untranslated English or unsupported numeric placeholders. Splits legacy version-named view files into named screens and components.
+- Domain/DNS and history failures now show retry states instead of empty data. Costs group a bounded history by day; narrow filters, panels and notification controls wrap. Plan-period usage compares against the included grant; own-key text units are never mislabeled as app credits. Unsupported interval conversions are explained before checkout.
 - Adds billed cloud reports and a bounded live-site audit with private receipt-backed history. Cloud prices are available offline; AI quota panels show reset times and Knight Boost. Administrators can inspect reconciliation drift and pause sites with an audit reason; upcoming downgrades explain the future site limit.
 - Annual upgrades keep future credit differences separately refundable. Out-of-order and repeated refunds cannot restore paid credits, and partial refunds retain their original payment basis. Missing annual receipts require reconciliation. Monthly/annual interval conversion is explicitly unavailable pending sandbox validation; same-interval plan changes work.
 - V1 and V2 usage now share the atomic SQL totals. Session changes cannot restore old profile/usage caches. Fixes numeric display formats and checks that every app placeholder uses the supported text format.
@@ -22,6 +25,9 @@ All notable changes, newest first. Versions come from `engine/VERSION`. Each ent
 - Removes an accidentally committed machine-specific node_modules symlink from the SQL test harness; install its declared development dependencies normally.
 
 ### Български
+- Свиваема странична лента, съвпадащи клавишни комбинации, подредба от 900×640 нагоре и отделен прозорец с пет раздела за настройки. Търсенето показва всички действия; проектите имат повече място.
+- Последователни български названия за публикуване, роли, планове и проверки, с автоматична проверка срещу непреведени текстове. Екраните са разделени в ясно именувани файлове.
+- Грешките при домейни, записи и история вече имат повторен опит. Разходите се групират по дни; контролите се пренареждат на тесен екран. Процентът за периода се смята спрямо включените кредити. Размерът на текста за собствен AI ключ не се представя като разход в кредити.
 - Добавени са платени облачни отчети и ограничен технически одит на сайт на живо с лична история. Цените в кредити се виждат и офлайн. При достигнато ограничение асистентът показва кога се нулира и възможността за ускорение с Knight. Администраторът вижда разминавания и спира сайтове със записана причина; предстоящо понижаване показва новия лимит.
 - Годишните надграждания отчитат отделно допълнителните кредити. Късни и повторени известия за възстановено плащане не връщат вече отменени кредити. Липсващ годишен платежен документ изисква съгласуване. Смяната между месечно и годишно плащане е недостъпна до проверка в тестовата платежна среда; смяната на план със същия период работи.
 - Старият и новият изглед на използването четат едни и същи суми. Излизането от акаунта предотвратява връщане на стари данни. Поправени са числови формати и е добавена автоматична проверка за тях.
