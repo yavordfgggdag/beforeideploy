@@ -379,7 +379,15 @@ begin
   take:=least(remaining,greatest(0,r.left_credits-held));
   if take>0 then insert into credit_allocations(user_id,hold_id,grant_id,credits) values(p_user,h.id,r.id,take); remaining:=remaining-take; end if;
  end loop;
- if remaining>0 then raise exception 'credit grants and ledger need reconciliation'; end if;
+ -- B8: the ledger allowed the hold but the lots cannot pin all of it (a ledger write without a lot: V1 code,
+ -- manual SQL). The request proceeds (settlement draws FIFO, any shortfall becomes debt); the drift is logged
+ -- and left for the owner to reconcile instead of failing the user's request with a 503.
+ if remaining>0 then
+  raise warning 'credit grants and ledger need reconciliation for % (% credits unpinned)',p_user,remaining;
+  insert into admin_notifications(kind,user_id,ref,payload,created_at)
+  values('ledger_drift',p_user,p_user::text||':'||(p_now at time zone 'UTC')::date,jsonb_build_object('operation',p_operation_id,'unpinned',remaining,'ledgerAvailable',available),p_now)
+  on conflict(kind,ref) do update set payload=excluded.payload;
+ end if;
  insert into credit_ledger(user_id,delta,bucket,reason,ref,operation_id,created_at) values(p_user,-p_credits,'hold','hold',h.id::text,p_operation_id,p_now);
  return jsonb_build_object('ok',true,'holdId',h.id,'reserved',p_credits,'balance',available-p_credits,'windows',win);
 end $$;

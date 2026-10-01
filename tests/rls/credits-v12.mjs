@@ -500,4 +500,14 @@ export async function testCredits({db,t,assert,rejects,as}) {
   await rpc('bid_v12_apply_adjustment',{p_user:id,p_adjustment:rev,p_now:later(1,1)});
   assert(await balance(id)===199800 && (await notes(id,'chargeback_reverse')).length===1,'reverse applied once');
  });
+
+ await t('B8 holds: ledger/lot drift is a logged reconciliation warning, not a failed request',async()=>{
+  const id=await user('high'); await grant(id,1000,'b8-lot','high');
+  await db.query("insert into credit_ledger(user_id,delta,bucket,reason,ref) values($1,5000,'topup','admin_grant','manual-sql-no-lot')",[id]);
+  const h=await rpc('bid_hold',{p_user:id,p_action:'ai.fix',p_credits:3000,p_operation_id:'b8-drift-op',p_now:now});
+  assert(h.ok,'the request proceeds');
+  const n=(await db.query("select * from admin_notifications where user_id=$1 and kind='ledger_drift'",[id])).rows;
+  assert(n.length===1 && Number(n[0].payload.unpinned)===2000,'owner sees a reconciliation row');
+  assert((await rpc('bid_settle',{p_user:id,p_operation_id:'b8-drift-op',p_credits:3000,p_now:now})).ok,'settles');
+ });
 }
