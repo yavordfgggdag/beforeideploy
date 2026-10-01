@@ -1,0 +1,38 @@
+name: desktop
+on:
+  push:
+    paths: ['desktop/**', 'web/**', 'engine/**', '.github/workflows/desktop.yml']
+  workflow_dispatch:
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, windows-latest, ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: web/package-lock.json }
+      - name: Linux system libraries (WebKitGTK 4.1)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libsoup-3.0-dev libjavascriptcoregtk-4.1-dev librsvg2-dev libayatana-appindicator3-dev patchelf
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with: { workspaces: desktop/src-tauri }
+      - name: Build the UI
+        working-directory: web
+        run: npm ci --no-audit --no-fund && npx vite build
+      - name: Tests (allowlist, keychain account guard, engine runner)
+        working-directory: desktop/src-tauri
+        run: cargo test --locked
+      - name: Release build (no installer yet — signing is a later stage)
+        working-directory: desktop/src-tauri
+        run: cargo build --release --locked
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.os }}
+          path: |
+            desktop/src-tauri/target/release/before-i-deploy
+            desktop/src-tauri/target/release/before-i-deploy.exe
+          retention-days: 7
