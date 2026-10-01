@@ -1,7 +1,7 @@
 // Embedded AI assistant (V11 RC): one conversation per project, a fixed set of actions, structured answers.
 //
 //   bid ai chat --project P --action ask|diagnose|propose|review|explain|readiness|triage|fix
-//               [--message "…"] [--issue ID] [--files a,b] [--patch-file F] [--budget N] [--yes] [--new]
+//               [--message "…"] [--issue ID] [--files a,b] [--patch-file F] [--allow-create a,b] [--budget N] [--yes] [--new]
 //   bid ai history --project P [--limit N]        bid ai settings [--json '{…}']       bid ai prompts
 //
 // What the model gets is decided here, never by the model: evidence blocks with ids (issue, check logs,
@@ -13,7 +13,7 @@
 //
 // Actions never execute anything on their own. `propose` writes a patch file the user applies with
 // `ai apply --yes`; `fix` (analyze → patch → apply → verify) runs only with --yes or the auto-apply setting
-// for low-risk patches, is bounded by iterations and a token budget, stops on no progress, and undoes a
+// for patches the ENGINE rates low-risk (never config, scripts or new files), is bounded by iterations and a token budget, stops on no progress, and undoes a
 // change that made the check worse. Deploy, restore, billing, secrets and project deletion are not tools
 // of the assistant at all.
 import fs from 'node:fs';
@@ -24,7 +24,8 @@ import { t, msg, currentLang } from '../i18n.mjs';
 import { detect } from '../detect.mjs';
 import { getState, setState, addHistory, listHistory } from '../store.mjs';
 import { deriveIssues } from '../issues.mjs';
-import { redact } from '../aifix.mjs';
+import { redact, REDACTION_MARKERS } from '../aifix.mjs';
+import { newNonce, clean, fence, untrusted, restateRules } from './untrusted.mjs';
 import { safePath, plan as planPatch } from './patch.mjs';
 import { resolveInProject } from '../pathpolicy.mjs';
 import { chooseProvider, stream } from './providers.mjs';
@@ -86,14 +87,20 @@ function tailText(file, lines) {
   }
 }
 
-/** One redacted, capped evidence block. `redactions` counts what was masked so the app can say so. */
+/**
+ * One redacted, capped evidence block. `redactions` counts what was masked so the app can say so.
+ * `altered` / `truncated` (and `omitted`, set when the context is trimmed) mean the model did not see the
+ * file as it is on disk — such a file is read-only for a patch (V13 S5). `list.nonce` is the request's
+ * fence nonce; the text is neutralized against it.
+ */
 function block(list, kind, label, raw, cap) {
   const text = String(raw || '');
-  const red = redact(text);
+  const red = clean(text, list.nonce);
   const redactions = (red.match(/\[[A-Z_]+\]/g) || []).length - (text.match(/\[[A-Z_]+\]/g) || []).length;
-  const cut = red.length > cap ? red.slice(0, cap) + `\n… (${red.length - cap} chars omitted)` : red;
+  const truncated = red.length > cap;
+  const cut = truncated ? red.slice(0, cap) + `\n… (${red.length - cap} chars omitted)` : red;
   const id = `E${list.length + 1}`;
-  list.push({ id, kind, label, chars: cut.length, redactions: Math.max(0, redactions), text: cut });
+  list.push({ id, kind, label, chars: cut.length, redactions: Math.max(0, redactions), text: cut, altered: red !== text, truncated, omitted: false });
   return id;
 }
 
@@ -124,7 +131,7 @@ function fileSnapshots(project, files, settings, evidence) {
     }
     const hash = sha256(content);
     const id = block(evidence, 'file', rel, content, settings.maxFileChars);
-    out.push({ path: rel, hash, id, chars: content.length });
+    out.push({ path: rel, hash, id, chars: content.length, content });
   }
   return out;
 }
@@ -142,8 +149,96 @@ function checkSummary(project) {
   return [`status: ${c.status} (${c.at})`, ...c.steps.map((s) => `- ${s.id}: ${s.status}${s.summary ? ` — ${s.summary}` : ''}`)].join('\n');
 }
 
+/** Evidence blocks, each fenced with the request's nonce (V13 S1). */
 function evidenceText(list) {
-  return list.map((e) => `[${e.id}] ${e.kind}: ${e.label}\n${e.text}`).join('\n\n') || 'No evidence blocks were selected. Only the supplied project metadata and check results are available.';
+  return list.map((e) => fence(list.nonce, `[${e.id}] ${e.kind}: ${clean(e.label, list.nonce)}`, e.text)).join('\n\n') || 'No evidence blocks were selected. Only the supplied project metadata and check results are available.';
+}
+
+// ---------------------------------------------------------------- patch scope and risk (V13)
+
+const OMISSION_MARKERS = [/… \(\d+ chars omitted\)/g, /\(omitted: \d+ chars/g, /UNTRUSTED_DATA/g, /\[nonce\]/g];
+const count = (text, m) => (typeof m === 'string' ? String(text).split(m).length - 1 : (String(text).match(m) || []).length);
+
+/**
+ * What a valid patch may still not do, checked in code after the schema: change a file the model saw only
+ * redacted/truncated/omitted, create a file the user did not allow, empty a file with a content-less
+ * replace, or write a redaction placeholder / omission marker it never saw on disk (V13 S4, S5, S3).
+ */
+function patchProblems(out, scope, nonce) {
+  const errors = [];
+  if (!out || out.status !== 'patch' || !Array.isArray(out.changes)) return errors;
+  out.changes.forEach((c, i) => {
+    if (!c || typeof c !== 'object') return;
+    const at = `$.changes[${i}]`;
+    if (scope.readOnly.has(c.path)) errors.push(`${at}.path: ${c.path} was shown redacted or truncated (READ-ONLY) and cannot be changed`);
+    if (c.action === 'create' && !scope.allowNew.has(c.path)) errors.push(`${at}: creating ${c.path} was not allowed by the user`);
+    if (c.action !== 'create' && scope.allowNew.has(c.path)) errors.push(`${at}: ${c.path} does not exist yet; it can only be created`);
+    if (c.action !== 'replace' && c.action !== 'create') return;
+    if (typeof c.content !== 'string') return errors.push(`${at}.content: required for ${c.action}`);
+    if (c.action === 'replace' && !c.content.trim()) errors.push(`${at}.content: empty — a replace carries the complete new file; use delete to remove a file`);
+    const before = scope.original.get(c.path) ?? '';
+    for (const m of [...REDACTION_MARKERS, ...OMISSION_MARKERS, nonce]) {
+      if (m && count(c.content, m) > count(before, m)) errors.push(`${at}.content: contains ${typeof m === 'string' ? (m === nonce ? 'the request nonce' : m) : 'an omission marker'} — a placeholder for content the model never saw`);
+    }
+  });
+  return errors;
+}
+
+const RISK = ['low', 'medium', 'high'];
+const SCRIPT_PATH = /(^|\/)(scripts?|bin|\.husky|\.github|hooks)\/|\.(sh|bash|zsh|command|ps1|bat|cmd)$|(^|\/)(makefile|dockerfile|procfile|justfile)$/i;
+const SERVER_PATH = /(^|\/)(api|functions|edge-functions|server|middleware)(\/|\.)/i;
+const REMOTE_SCRIPT = /<script\b[^>]*\bsrc\s*=\s*["']?\s*(?:https?:)?\/\//i;
+const RUNS_CODE = /\bchild_process\b|\bexecSync\s*\(|\bspawnSync?\s*\(|\beval\s*\(|\bnew\s+Function\s*\(|\bimport\s*\(\s*["'`]https?:/;
+const NETWORK = /\bfetch\s*\(|XMLHttpRequest|sendBeacon|\bWebSocket\s*\(|\bhttps?\.(request|get)\s*\(/;
+
+/** Lines added and removed (as multisets — order-insensitive, good enough for a size/risk estimate). */
+function lineDelta(before, after) {
+  const left = new Map();
+  for (const l of String(before).split('\n')) left.set(l, (left.get(l) || 0) + 1);
+  const added = [];
+  for (const l of String(after).split('\n')) {
+    const n = left.get(l) || 0;
+    if (n) left.set(l, n - 1);
+    else added.push(l);
+  }
+  const removed = [...left.values()].reduce((a, n) => a + n, 0);
+  return { added, removed };
+}
+
+/**
+ * The patch's risk, decided by the engine from what the planned change does — never by the model, which
+ * can only raise it (V13 S2). `autoApply` is false for anything that touches config or scripts, creates or
+ * deletes files, adds a remote <script> or code that runs programs: auto-apply never covers those.
+ */
+export function engineRisk(planned, original, modelRisk = null) {
+  let level = 0;
+  let autoApply = true;
+  const reasons = [];
+  const raise = (l, reason, noAuto = false) => {
+    level = Math.max(level, RISK.indexOf(l));
+    reasons.push(reason);
+    if (noAuto) autoApply = false;
+  };
+  let changed = 0;
+  for (const p of planned) {
+    const before = p.action === 'create' ? '' : original.get(p.path) ?? '';
+    const { added, removed } = p.action === 'delete' ? { added: [], removed: before.split('\n').length } : lineDelta(before, p.after ?? '');
+    changed += added.length + removed;
+    const addedText = added.join('\n');
+    if (p.cls === 'config' || p.needsApproval) raise('high', `config: ${p.path}`, true);
+    if (SCRIPT_PATH.test(p.path)) raise('high', `script: ${p.path}`, true);
+    if (p.action === 'create') raise('high', `new file: ${p.path}`, true);
+    if (p.action === 'delete') raise('high', `deleted: ${p.path}`, true);
+    if (REMOTE_SCRIPT.test(addedText)) raise('high', `remote script: ${p.path}`, true);
+    if (RUNS_CODE.test(addedText)) raise('high', `runs code: ${p.path}`, true);
+    if (SERVER_PATH.test(p.path)) raise('medium', `server code: ${p.path}`);
+    if (NETWORK.test(addedText)) raise('medium', `network call: ${p.path}`);
+  }
+  if (planned.length > 2) raise('medium', `${planned.length} files`);
+  if (changed > 200) raise('high', `${changed} changed lines`);
+  else if (changed > 40) raise('medium', `${changed} changed lines`);
+  if (RISK.indexOf(modelRisk) > level) raise(modelRisk, `model: ${modelRisk}`);
+  return { level: RISK[level], reasons, autoApply: autoApply && level === 0 };
 }
 
 /** Files the issue points at (its evidence file + files mentioned in the failing step log). */
@@ -160,6 +255,9 @@ function issueFiles(project, issue) {
 // ---------------------------------------------------------------- the model call
 
 async function callModel({ provider, model, system, prompt, action, project, settings, budget, conversation = [], field = 'answer', calls }) {
+  // last line of defence: whatever an action put into the prompt, secrets never leave the Mac (V13 S6)
+  prompt = redact(prompt);
+  conversation = conversation.map((m) => ({ ...m, content: redact(m.content) }));
   const estimate = Math.ceil((system.length + prompt.length + conversation.reduce((n, m) => n + m.content.length, 0)) / 4);
   if (budget.used + estimate > budget.limit) throw new EngineError(msg('assistant.budgetExceeded', { need: estimate, left: Math.max(0, budget.limit - budget.used) }), 'budget_exceeded');
   const d = detect(project.path);
@@ -206,13 +304,21 @@ async function callModel({ provider, model, system, prompt, action, project, set
 }
 
 /** Parse + validate, with one bounded repair round on an invalid answer. */
-async function structured(ctx, prompt, refs, vars) {
-  const rendered = renderPrompt(prompt, { ...vars, conversation: ctx.provider === 'cloud' ? JSON.stringify(ctx.conversation) : '' });
+async function structured(ctx, prompt, refs, vars, { rules = [], extraCheck = null } = {}) {
+  const conversation = ctx.provider === 'cloud' && ctx.conversation.length ? untrusted(ctx.nonce, 'conversation history', JSON.stringify(ctx.conversation)) : '';
+  // the rules come again AFTER the data, so nothing inside a data block is the last word (V13 S1)
+  const rendered = `${renderPrompt(prompt, { ...vars, conversation })}\n\n${restateRules(ctx.nonce, { evidenceIds: [...(refs.evidence || [])], extra: rules })}`;
   ctx = { ...ctx, field: ['answer', 'summary', 'observed_impact'].find(k => prompt.output?.properties?.[k]?.type === 'string') || '__none__' };
+  const validate = (output) => {
+    if (!output) return { ok: false, errors: ['no JSON object in the answer'] };
+    const v = validateOutput(prompt, output, refs);
+    const more = extraCheck ? extraCheck(output) : [];
+    return more.length ? { ok: false, errors: [...v.errors, ...more] } : v;
+  };
   emit({ type: 'ai', reset: true });
   let { text, usage } = await callModel({ ...ctx, prompt: rendered });
   let output = extractJSON(text);
-  let v = output ? validateOutput(prompt, output, refs) : { ok: false, errors: ['no JSON object in the answer'] };
+  let v = validate(output);
   let repairs = 0;
   if (!v.ok && ctx.budget.used < ctx.budget.limit) {
     repairs = 1;
@@ -223,7 +329,7 @@ async function structured(ctx, prompt, refs, vars) {
     usage = mergeUsage(usage, second.usage);
     text = second.text;
     output = extractJSON(text);
-    v = output ? validateOutput(prompt, output, refs) : { ok: false, errors: ['no JSON object in the answer'] };
+    v = validate(output);
   }
   return { output: v.ok ? output : null, valid: v.ok, errors: v.errors, repairs, usage, raw: text };
 }
@@ -240,7 +346,7 @@ export async function assistantChat(project, opts = {}) {
   const started = Date.now();
   const entry = { historyId: crypto.randomUUID(), at: nowISO(), conversation, action, message,
     request: { action, message, issue: typeof opts.issue === 'string' ? opts.issue : null, files: typeof opts.files === 'string' ? opts.files : null,
-      provider: typeof opts.provider === 'string' ? opts.provider : null, model: typeof opts.model === 'string' ? opts.model : null, patchFile: typeof opts.patchFile === 'string' ? opts.patchFile : null } };
+      provider: typeof opts.provider === 'string' ? opts.provider : null, model: typeof opts.model === 'string' ? opts.model : null, patchFile: typeof opts.patchFile === 'string' ? opts.patchFile : null, allowCreate: typeof opts.allowCreate === 'string' ? opts.allowCreate : null } };
   // The UI must keep the durable identity even when provider selection or generation fails.
   emit({ type: 'info', historyId: entry.historyId, conversation });
   let status, provider, model;
@@ -255,9 +361,13 @@ export async function assistantChat(project, opts = {}) {
   }
   const budget = { limit: Math.min(settings.maxTokensPerOperation, Number(opts.budget) || settings.maxTokensPerOperation), used: 0, calls: 0 };
   const system = renderPrompt(loadPrompt('system'), { locale: currentLang() === 'bg' ? 'Bulgarian (bg)' : 'English (en)', project_name: 'selected website', tools: TOOLS.map((x) => `- ${x}`).join('\n') });
-  const ctx = { provider, model, system, action, project, settings, budget, calls: [], conversation: conversationMessages(history.entries, conversation) };
+  // one random fence nonce per request: untrusted data cannot close its block or forge one (V13 S1)
+  const nonce = newNonce();
+  const ctx = { provider, model, system, action, project, settings, budget, nonce, calls: [], conversation: conversationMessages(history.entries, conversation) };
   let stopped = null;
   const evidence = [];
+  evidence.nonce = nonce;
+  const data = (header, raw) => untrusted(nonce, header, raw);
   const refs = { evidence: new Set() };
   const stages = new Map();
   const stage = (id, fields) => { ctx.stageId = id; stages.set(id, fields.status); ev.step(`assistant-${id}`, { category: 'AI', label: STAGE_LABELS()[id], ...fields }); };
@@ -292,6 +402,7 @@ export async function assistantChat(project, opts = {}) {
       for (const f of files) {
         f.text = `(omitted: ${f.chars} chars, over the context budget)`;
         f.chars = f.text.length;
+        f.omitted = true;
         if (Math.ceil((system.length + evidence.reduce((n, e) => n + e.chars, 0)) / 4) <= settings.maxContextChars / 4) break;
       }
     }
@@ -324,8 +435,8 @@ export async function assistantChat(project, opts = {}) {
     stage('analyze', { status: 'running', summary: t('assistant.stage.analyzing', { model: model || t('ai.step.cloudModel') }) });
     announce({ template: `${prompt.id}.v${prompt.version}` });
     vars = action === 'ask'
-      ? { question: message, evidence: evidenceText(evidence), project_metadata: meta, check_results: checks }
-      : { issue: `${issue.id}: ${issue.title}\n${issue.impact}`, question: message, evidence: evidenceText(evidence), project_metadata: meta, check_results: checks };
+      ? { question: message, evidence: evidenceText(evidence), project_metadata: data('project metadata', meta), check_results: data('check results', checks) }
+      : { issue: clean(`${issue.id}: ${issue.title}\n${issue.impact}`, nonce), question: message, evidence: evidenceText(evidence), project_metadata: data('project metadata', meta), check_results: data('check results', checks) };
     const r = await structured(ctx, prompt, refs, vars);
     stage('analyze', { status: r.valid ? 'pass' : 'fail', summary: r.valid ? summarize(action, r.output) : t('assistant.invalidOutput', { count: r.errors.length }), details: r.valid ? [] : r.errors.slice(0, 10) });
     return finish({ template: `${prompt.id}.v${prompt.version}`, output: r.output, valid: r.valid, errors: r.errors, repairs: r.repairs, usage: r.usage, stopped: r.valid ? null : 'invalid_output', evidence: evidence.map(({ text: _t, ...e }) => e) });
@@ -336,6 +447,14 @@ export async function assistantChat(project, opts = {}) {
     prompt = loadPrompt('propose_patch');
     const targetFiles = [...new Set([...issueFiles(project, issue), ...files])];
     if (!targetFiles.length) throw new EngineError(msg('assistant.noFiles'), 'usage', 2);
+    // new files only where the user explicitly allowed them (--allow-create a,b), never "anything in the folder" (V13 S3)
+    const allowNew = new Set();
+    for (const rel of opts.allowCreate && opts.allowCreate !== true ? String(opts.allowCreate).split(',').map((x) => x.trim()).filter(Boolean) : []) {
+      const r = resolveInProject(project.path, rel, { op: 'create' });
+      if (!r.ok && r.reason !== 'config_needs_approval') throw new EngineError(msg('assistant.badPath', { path: rel }), 'bad_path', 2);
+      if (fs.existsSync(path.join(project.path, r.rel))) throw new EngineError(msg('assistant.createExists', { path: r.rel }), 'bad_path', 2);
+      allowNew.add(r.rel);
+    }
     const maxIter = action === 'fix' ? settings.maxIterations : 1;
     let feedback = '';
     let lastResult = null;
@@ -351,22 +470,33 @@ export async function assistantChat(project, opts = {}) {
       if (issue.evidence?.log) block(evidence, 'log', path.basename(issue.evidence.log), tailText(issue.evidence.log, 80), 6000);
       const snaps = fileSnapshots(project, targetFiles, settings, evidence);
       for (const e of evidence) refs.evidence.add(e.id);
-      refs.allowed_paths = new Set(snaps.map((s) => s.path));
-      // a file in the project root allows only itself — never the whole project (audit E1)
-      refs.allowed_dirs = new Set(snaps.map((s) => path.posix.dirname(s.path)).filter((d) => d && d !== '.').map((d) => d + '/'));
       stage('propose', { status: 'running', summary: t('assistant.stage.proposing', { iteration: iter, max: maxIter }) });
       announce({ template: `${prompt.id}.v${prompt.version}` });
+      // exactly the listed files the model saw verbatim; a redacted, truncated or omitted file is read-only (V13 S3, S5)
+      const blockOf = (s) => evidence.find((e) => e.id === s.id);
+      const readOnly = new Set(snaps.filter((s) => { const e = blockOf(s); return e.altered || e.truncated || e.omitted; }).map((s) => s.path));
+      const writable = snaps.filter((s) => !readOnly.has(s.path)).map((s) => s.path);
+      refs.allowed_paths = new Set([...writable, ...allowNew]);
+      if (!refs.allowed_paths.size) throw new EngineError(msg('assistant.readOnlyContext', { files: [...readOnly].join(', ') }), 'read_only_context', 2);
+      const scope = { readOnly, allowNew, original: new Map(snaps.map((s) => [s.path, s.content])) };
+      const list = (xs) => (xs.length ? xs.map((x) => `- ${x}`).join('\n') : '- (none)');
       const pkg = readJSON(path.join(project.path, 'package.json'), null);
       vars = {
-        confirmed_issue: `${issue.id}: ${issue.title}\n${issue.impact}\n${message}`,
-        allowed_paths: snaps.map((s) => `- ${s.path}`).join('\n'),
-        file_snapshots: snaps.map((s) => `[${s.id}] ${s.path} (sha256 ${s.hash})\n${evidence.find((e) => e.id === s.id).text}`).join('\n\n'),
-        project_conventions: `${meta}\nscripts: ${JSON.stringify(pkg?.scripts || {})}\nNo new dependencies. Keep the file's existing style.`,
+        confirmed_issue: `${clean(`${issue.id}: ${issue.title}\n${issue.impact}`, nonce)}\n${message}`,
+        allowed_paths: `Files you may change (exactly these):\n${list(writable)}\nNew files you may create:\n${list([...allowNew])}\nRead-only files (shown redacted or truncated; never change them):\n${list([...readOnly])}`,
+        file_snapshots: snaps.map((s) => fence(nonce, `[${s.id}] ${s.path} (sha256 ${s.hash})${readOnly.has(s.path) ? ' READ-ONLY' : ''}`, blockOf(s).text)).join('\n\n'),
+        project_conventions: `${data('project metadata', meta)}\n${data('package.json scripts', JSON.stringify(pkg?.scripts || {}))}\nNo new dependencies. Keep the file's existing style.`,
         feedback,
       };
+      const rules = [
+        `Files you may change: ${writable.join(', ') || 'none'} (exactly these files, not their folders).`,
+        `New files you may create: ${[...allowNew].join(', ') || 'none'}.`,
+        ...(readOnly.size ? [`Read-only files (never change them): ${[...readOnly].join(', ')}.`] : []),
+        'replace and create carry the complete new file content; never write redaction placeholders or omission markers.',
+      ];
       let r;
       try {
-        r = await structured(ctx, prompt, refs, vars);
+        r = await structured(ctx, prompt, refs, vars, { rules, extraCheck: (o) => patchProblems(o, scope, nonce) });
       } catch (e) {
         if (e.code === 'budget_exceeded') {
           stage('propose', { status: 'fail', summary: e.message });
@@ -395,22 +525,27 @@ export async function assistantChat(project, opts = {}) {
         return finish({ template: `${prompt.id}.v${prompt.version}`, output: out, valid: false, errors: stale.map((c) => `${c.path}: base hash does not match the file`), repairs: lastResult.repairs, usage: lastResult.usage, stopped: 'stale_base_hash', iterations: iter, applied, recheck });
       }
       // to the existing patch pipeline (plan → patch file → ai apply → undo record)
+      // validated above: replace/create always carry content (a missing one would have emptied the file — V13 S4)
+      if (out.changes.some((c) => c.action !== 'delete' && typeof c.content !== 'string')) throw new EngineError(msg('assistant.invalidOutput', { count: 1 }), 'ai_failed');
       const parsed = {
         explanation: out.summary,
-        files: out.changes.map((c) => (c.action === 'delete' ? { path: c.path, action: 'delete', edits: [], content: null } : c.action === 'create' ? { path: c.path, action: 'create', edits: [], content: c.content ?? '' } : { path: c.path, action: 'edit', edits: [{ search: fs.readFileSync(path.join(project.path, c.path), 'utf8'), replace: c.content ?? '' }], content: null })),
+        files: out.changes.map((c) => (c.action === 'delete' ? { path: c.path, action: 'delete', edits: [], content: null } : c.action === 'create' ? { path: c.path, action: 'create', edits: [], content: c.content } : { path: c.path, action: 'edit', edits: [{ search: fs.readFileSync(path.join(project.path, c.path), 'utf8'), replace: c.content }], content: null })),
       };
       const planned = planPatch(project.path, parsed);
+      // the engine decides the risk from what the change does; the model's own rating can only raise it (V13 S2)
+      const risk = engineRisk(planned, scope.original, out.risk);
       const patchFile = path.join(logDir(project.key), `ai-patch-${issue.step}-${Date.now()}.json`);
-      writeJSON(patchFile, { project: project.key, projectPath: project.path, step: issue.step, model: r.usage.model, provider, createdAt: nowISO(), parsed, planned, assistant: { template: `${prompt.id}.v${prompt.version}`, risk: out.risk, verification_plan: out.verification_plan, rollback_notes: out.rollback_notes, issue: issue.id } });
+      writeJSON(patchFile, { project: project.key, projectPath: project.path, step: issue.step, model: r.usage.model, provider, createdAt: nowISO(), parsed, planned, assistant: { template: `${prompt.id}.v${prompt.version}`, risk: risk.level, riskReasons: risk.reasons, modelRisk: out.risk, autoApply: risk.autoApply, verification_plan: out.verification_plan, rollback_notes: out.rollback_notes, issue: issue.id } });
       const filesOut = planned.map(({ after, ...rest }) => rest);
-      stage('propose', { status: 'pass', summary: t('assistant.proposed', { count: filesOut.filter((f) => f.applicable).length, risk: out.risk }), details: filesOut.map((f) => `${f.applicable ? '✓' : '✗'} ${f.path} (+${f.additions} −${f.deletions})${f.error ? ` — ${f.error}` : ''}`) });
-      const base = { template: `${prompt.id}.v${prompt.version}`, output: out, valid: true, errors: [], repairs: lastResult.repairs, usage: lastResult.usage, patchFile, files: filesOut, risk: out.risk, verificationPlan: out.verification_plan, rollbackNotes: out.rollback_notes };
+      stage('propose', { status: 'pass', summary: t('assistant.proposed', { count: filesOut.filter((f) => f.applicable).length, risk: risk.level }), details: filesOut.map((f) => `${f.applicable ? '✓' : '✗'} ${f.path} (+${f.additions} −${f.deletions})${f.error ? ` — ${f.error}` : ''}`) });
+      const base = { template: `${prompt.id}.v${prompt.version}`, output: out, valid: true, errors: [], repairs: lastResult.repairs, usage: lastResult.usage, patchFile, files: filesOut, risk: risk.level, riskReasons: risk.reasons, modelRisk: out.risk, verificationPlan: out.verification_plan, rollbackNotes: out.rollback_notes };
       if (action === 'propose') return finish({ ...base, stopped: null, iterations: iter });
 
-      // ---- fix: apply only with consent (or auto-apply for low risk), then verify
-      const mayApply = !!opts.yes || (settings.autoApplyLowRisk && out.risk === 'low');
+      // ---- fix: apply only with consent (or auto-apply for an engine-rated low-risk patch), then verify.
+      // Auto-apply is off by default and never covers config, scripts, new/deleted files or remote scripts.
+      const mayApply = !!opts.yes || (settings.autoApplyLowRisk === true && risk.level === 'low' && risk.autoApply);
       if (!mayApply) {
-        stage('apply', { status: 'skipped', summary: t('assistant.needsConfirmation', { risk: out.risk }) });
+        stage('apply', { status: 'skipped', summary: t('assistant.needsConfirmation', { risk: risk.level }) });
         return finish({ ...base, stopped: 'needs_confirmation', iterations: iter });
       }
       stage('apply', { status: 'running' });
@@ -435,7 +570,8 @@ export async function assistantChat(project, opts = {}) {
         return finish({ ...base, stopped: 'no_progress', iterations: iter, applied, recheck });
       }
       lastFailing = failingNow;
-      feedback = `Attempt ${iter} was applied and verified by the engine: step ${issue.step} is now "${recheck?.stepStatus}" (check status ${recheck?.status}). Still failing steps: ${failingNow || 'none'}. Log tail:\n${issue.evidence?.log ? tailText(issue.evidence.log, 40) : ''}`;
+      // the log tail is untrusted and may hold secrets: redacted and fenced like any evidence (V13 S6)
+      feedback = `Attempt ${iter} was applied and verified by the engine: step ${issue.step} is now "${recheck?.stepStatus}" (check status ${recheck?.status}). Still failing steps: ${failingNow || 'none'}. Log tail:\n${data('log tail', issue.evidence?.log ? tailText(issue.evidence.log, 40) : '')}`;
     }
     return finish({ template: `${prompt.id}.v${prompt.version}`, output: lastResult?.output || null, valid: !!lastResult?.valid, errors: [], repairs: lastResult?.repairs || 0, usage: lastResult?.usage || null, stopped: 'max_iterations', iterations: maxIter, applied, recheck });
   }
@@ -452,7 +588,7 @@ export async function assistantChat(project, opts = {}) {
     for (const e of evidence) refs.evidence.add(e.id);
     stage('analyze', { status: 'running', summary: t('assistant.stage.reviewing') });
     announce({ template: `${prompt.id}.v${prompt.version}` });
-    vars = { candidate_diff: evidenceText(evidence), original_issue: `${patch.step}: ${patch.parsed?.explanation || ''}\n${message}`, project_constraints: `${meta}\nNo new dependencies, no config or secret changes.`, available_tests: Object.keys(pkg?.scripts || {}).filter((s) => /test|lint|check|build/.test(s)).join(', ') || 'none' };
+    vars = { candidate_diff: evidenceText(evidence), original_issue: `${patch.step}: ${data('proposal summary', patch.parsed?.explanation || '')}\n${message}`, project_constraints: `${data('project metadata', meta)}\nNo new dependencies, no config or secret changes.`, available_tests: clean(Object.keys(pkg?.scripts || {}).filter((s) => /test|lint|check|build/.test(s)).join(', ') || 'none', nonce) };
     const r = await structured(ctx, prompt, refs, vars);
     stage('analyze', { status: r.valid ? 'pass' : 'fail', summary: r.valid ? summarize(action, r.output) : t('assistant.invalidOutput', { count: r.errors.length }) });
     return finish({ template: `${prompt.id}.v${prompt.version}`, output: r.output, valid: r.valid, errors: r.errors, repairs: r.repairs, usage: r.usage, stopped: r.valid ? null : 'invalid_output', patchFile: pf });
@@ -466,7 +602,7 @@ export async function assistantChat(project, opts = {}) {
     refs.engine_status = String(result.status);
     stage('analyze', { status: 'running', summary: t('assistant.stage.explaining') });
     announce({ template: `${prompt.id}.v${prompt.version}` });
-    vars = { engine_verification_result: JSON.stringify(result, null, 1), locale: currentLang(), note: message };
+    vars = { engine_verification_result: clean(JSON.stringify(result, null, 1), nonce), locale: currentLang(), note: message };
     const r = await structured(ctx, prompt, refs, vars);
     stage('analyze', { status: r.valid ? 'pass' : 'fail', summary: r.valid ? r.output.summary : t('assistant.invalidOutput', { count: r.errors.length }), details: r.valid ? [] : r.errors.slice(0, 10) });
     return finish({ template: `${prompt.id}.v${prompt.version}`, output: r.output, valid: r.valid, errors: r.errors, repairs: r.repairs, usage: r.usage, stopped: r.valid ? null : 'invalid_output', engineStatus: refs.engine_status });
@@ -484,7 +620,7 @@ export async function assistantChat(project, opts = {}) {
     refs.engine_status = gate;
     stage('analyze', { status: 'running', summary: t('assistant.stage.readiness') });
     announce({ template: `${prompt.id}.v${prompt.version}` });
-    vars = { snapshot: JSON.stringify({ fingerprint: check?.fingerprint || null, buildConfig: check?.buildConfig || null, artifact: check?.artifact || null }, null, 1), check_results: checks, preview_results: JSON.stringify(ops.map((o) => ({ id: o.id, state: o.state, preview: o.preview, smoke: o.smoke ? { ok: o.smoke.ok, checks: o.smoke.checks?.length } : null, failure: o.failure })), null, 1), provider_capabilities: JSON.stringify(caps), engine_release_gates: JSON.stringify(gates, null, 1), note: message };
+    vars = { snapshot: clean(JSON.stringify({ fingerprint: check?.fingerprint || null, buildConfig: check?.buildConfig || null, artifact: check?.artifact || null }, null, 1), nonce), check_results: data('check results', checks), preview_results: data('preview results', JSON.stringify(ops.map((o) => ({ id: o.id, state: o.state, preview: o.preview, smoke: o.smoke ? { ok: o.smoke.ok, checks: o.smoke.checks?.length } : null, failure: o.failure })), null, 1)), provider_capabilities: JSON.stringify(caps), engine_release_gates: clean(JSON.stringify(gates, null, 1), nonce), note: message };
     const r = await structured(ctx, prompt, refs, vars);
     stage('analyze', { status: r.valid ? 'pass' : 'fail', summary: r.valid ? r.output.summary : t('assistant.invalidOutput', { count: r.errors.length }), details: r.valid ? [] : r.errors.slice(0, 10) });
     return finish({ template: `${prompt.id}.v${prompt.version}`, output: r.output, valid: r.valid, errors: r.errors, repairs: r.repairs, usage: r.usage, stopped: r.valid ? null : 'invalid_output', gates });
@@ -500,7 +636,7 @@ export async function assistantChat(project, opts = {}) {
     const caps = capabilities(project.hosting || 'netlify');
     stage('analyze', { status: 'running', summary: t('assistant.stage.triage') });
     announce({ template: `${prompt.id}.v${prompt.version}` });
-    vars = { incident_timeline: incidents.map((i) => `${i.openedAt} ${i.kind} ${i.status}${i.resolvedAt ? ` → ${i.resolvedAt}` : ''} (${i.detail || ''})`).join('\n'), recent_deployments: deploys.map((h) => `${h.at} ${h.kind} ${h.status} ${h.url || ''} ${h.message || ''}`).join('\n') || 'none recorded', probe_evidence: evidenceText(evidence), rollback_supported: caps.rollback ? 'yes (files only)' : 'no', note: message };
+    vars = { incident_timeline: data('incident timeline', incidents.map((i) => `${i.openedAt} ${i.kind} ${i.status}${i.resolvedAt ? ` → ${i.resolvedAt}` : ''} (${i.detail || ''})`).join('\n')), recent_deployments: data('recent deployments', deploys.map((h) => `${h.at} ${h.kind} ${h.status} ${h.url || ''} ${h.message || ''}`).join('\n') || 'none recorded'), probe_evidence: evidenceText(evidence), rollback_supported: caps.rollback ? 'yes (files only)' : 'no', note: message };
     const r = await structured(ctx, prompt, refs, vars);
     stage('analyze', { status: r.valid ? 'pass' : 'fail', summary: r.valid ? r.output.observed_impact : t('assistant.invalidOutput', { count: r.errors.length }), details: r.valid ? [] : r.errors.slice(0, 10) });
     return finish({ template: `${prompt.id}.v${prompt.version}`, output: r.output, valid: r.valid, errors: r.errors, repairs: r.repairs, usage: r.usage, stopped: r.valid ? null : 'invalid_output' });

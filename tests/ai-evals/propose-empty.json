@@ -1,0 +1,25 @@
+{
+  "purpose": "V13 S4: a replace without content must be refused, never empty the file",
+  "response": {
+    "status": "patch",
+    "summary": "Complete the expression.",
+    "base_hashes": {
+      "src/app.js": "{{base:src/app.js}}"
+    },
+    "changes": [
+      {
+        "path": "src/app.js",
+        "action": "replace"
+      }
+    ],
+    "risk": "low",
+    "rationale_evidence_ids": [
+      "E1"
+    ],
+    "verification_plan": [
+      "node src/app.js"
+    ],
+    "rollback_notes": "undo restores the file",
+    "missing_context": []
+  }
+}

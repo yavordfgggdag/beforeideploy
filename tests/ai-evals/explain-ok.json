@@ -1,0 +1,14 @@
+{
+  "purpose": "mirrors the engine status",
+  "response": {
+    "engine_status": "{{engine_status}}",
+    "summary": "The check is blocked by the build.",
+    "completed_checks": [
+      "build"
+    ],
+    "unresolved": [
+      "build"
+    ],
+    "next_action": "fix the build"
+  }
+}

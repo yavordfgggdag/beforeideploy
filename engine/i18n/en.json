@@ -522,6 +522,8 @@
   "assistant.issueRequired": "Choose an issue first (--issue ID).",
   "assistant.messageRequired": "Type a question first.",
   "assistant.noFiles": "The issue points at no file — select the files to change (--files).",
+  "assistant.readOnlyContext": "The AI saw these files only redacted or truncated ({files}), so it cannot rewrite them safely. Remove the secret or e-mail address from the file, select a smaller file, or edit it by hand.",
+  "assistant.createExists": "\"{path}\" already exists — --allow-create only allows new files.",
   "assistant.needsInput": "The AI needs more context before it can propose a safe change.",
   "assistant.noChange": "The AI found no change worth making.",
   "assistant.staleBase": "The files changed after the AI read them ({files}). Ask for a new proposal.",

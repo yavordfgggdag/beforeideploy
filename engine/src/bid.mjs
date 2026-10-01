@@ -104,7 +104,7 @@ const HELP = `Before I Deploy engine ${VERSION}
   bid release promote --project P --op ID --confirm DEPLOY   publishes the smoke-tested preview, verifies production
   bid release status  --project P [--op ID] | rollback --confirm ROLLBACK [--deploy ID] | cancel --op ID
   bid fix apply ID --project P --yes [--recheck]   · bid ai apply … [--recheck] · bid ai undo --project P --yes
-  bid ai chat --project P --action ask|diagnose|propose|review|explain|readiness|triage|fix [--message M] [--issue ID] [--files a,b] [--patch-file F] [--budget N] [--yes] [--new]
+  bid ai chat --project P --action ask|diagnose|propose|review|explain|readiness|triage|fix [--message M] [--issue ID] [--files a,b] [--patch-file F] [--allow-create a,b] [--budget N] [--yes] [--new]
   bid ai history --project P [--limit N] · bid ai reset --project P · bid ai settings [--json '{…}'] · bid ai prompts
   bid doctor`;
 
@@ -343,7 +343,7 @@ async function main() {
       if (sub === 'explain') return ok(await aiFix(p, { step: flags.step, model: flags.model, provider: flags.provider, mode: 'explain' }));
       if (sub === 'apply') return ok(await aiApply(p, { patchFile: flags['patch-file'], files: flags.files, yes: !!flags.yes, commit: !!flags.commit, recheck: !!flags.recheck, allowConfig: !!flags['allow-config'] }));
       if (sub === 'undo') return ok(await aiUndo(p, { yes: !!flags.yes, expectedUndoFile: flags['expected-undo-file'] }));
-      if (sub === 'chat') return ok(await assistantChat(p, { action: flags.action, message: flags.message, issue: flags.issue, files: flags.files, patchFile: flags['patch-file'], budget: flags.budget, yes: !!flags.yes, newConversation: !!flags.new, provider: flags.provider, model: flags.model }));
+      if (sub === 'chat') return ok(await assistantChat(p, { action: flags.action, message: flags.message, issue: flags.issue, files: flags.files, patchFile: flags['patch-file'], allowCreate: flags['allow-create'], budget: flags.budget, yes: !!flags.yes, newConversation: !!flags.new, provider: flags.provider, model: flags.model }));
       if (sub === 'history') return ok(assistantHistory(p, { limit: flags.limit ? Number(flags.limit) : 50 }));
       if (sub === 'reset') return ok(assistantReset(p));
       if (sub === 'discard') return ok(discardConversationPatch(p, flags['patch-file']));

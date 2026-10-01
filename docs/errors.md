@@ -57,6 +57,7 @@ quota, 127 Node missing; everything else exits 1.
 | `prompt_input_missing` | 2 | The engine tried to render an assistant prompt without one of its declared inputs. | Report it; the prompt files and `assistant.mjs` disagree. |
 | `bad_path` | 2 | `ai chat --files` named a file outside the project, in a protected folder, or through a symlink. | Select files inside the project. |
 | `secret_file` | 2 | `ai chat --files` named a secret file (`.env*`, keys, certificates). Secrets are never sent to a model. | Select source files; describe the configuration in the message instead. |
+| `read_only_context` | 2 | `ai chat --action propose/fix`: every selected file reached the model only redacted (a secret, an e-mail address), truncated or omitted, and no new file was allowed — a rewrite would overwrite content the model never saw. Nothing was sent. | Remove the secret from the file (move it to `.env`), select a smaller file, or make the change by hand. |
 | `budget_exceeded` | 1 | The assistant operation would exceed its token budget (AI settings → max tokens per operation). | Reduce the selected files or raise the budget. |
 | `ai_timeout` | 1 | The AI provider did not answer within the call timeout (default 120 s). Nothing was changed. | Try again; check the provider status. |
 | `monitor_cloud_failed` | 1 | The `monitor` Edge Function refused or failed a cloud-monitoring call (the message carries the cloud's reason). | See the message: sync the project, deploy first, or check the function deployment. |
