@@ -79,6 +79,8 @@ struct SettingsView: View {
                     LanguageRow()
                     Text(L("appearance.title")).font(Typo.font(.body))
                     Segmented(options: Appearance.allCases.map { ($0.label, $0.rawValue) }, selection: $appearance)
+                    .accessibilityElement(children: .contain)
+                    .accessibilityLabel(L("appearance.title"))
                     .onChange(of: appearance) { (Appearance(rawValue: $0) ?? .system).apply() }
                 }
     }

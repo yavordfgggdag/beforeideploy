@@ -225,6 +225,7 @@ struct AIPatchFileCard: View {
                     Text(L(Self.reasonKeys[e] ?? "ai.reason.other")).font(Typo.font(.caption)).foregroundColor(Theme.warn)
                 }
                 Button { expanded.toggle() } label: { Image(systemName: expanded ? "chevron.up" : "chevron.down") }.bidButton(.ghost, compact: true)
+                    .accessibilityLabel(L("common.details"))
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
