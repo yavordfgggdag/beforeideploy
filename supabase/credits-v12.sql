@@ -83,6 +83,8 @@ create table if not exists public.netlify_allocations (
   primary key(user_id,period_ref)
 );
 alter table public.subscriptions add column if not exists window_anchor timestamptz;
+-- B6: time of the first failed renewal payment; past_due entitlements last 7 days from it.
+alter table public.subscriptions add column if not exists past_due_since timestamptz;
 update public.subscriptions set window_anchor=coalesce((raw->>'started_at')::timestamptz,period_start) where window_anchor is null;
 alter table public.monitor_targets add column if not exists site_id uuid references public.sites(id) on delete set null;
 alter table public.credit_ledger add column if not exists operation_id text;
@@ -519,8 +521,12 @@ declare ent jsonb; lim integer; n integer:=0; r record; rank integer:=0; debt_at
 begin
  perform bid_v12_refresh(p_user,p_now);
  -- The scheduler must expire entitlements even when the owner's Mac never opens the app.
- update subscriptions set status='expired',updated_at=p_now where user_id=p_user and status in ('active','trial','past_due') and period_end is not null
-  and period_end+case when provider='paddle' and status in ('active','past_due') then interval '3 days' else interval '0 days' end<=p_now;
+ -- An active Paddle subscription keeps 3 days after period_end for a late renewal webhook. past_due counts
+ -- 7 days from the first failed payment (B6): Paddle moves period_end forward when it creates the renewal.
+ update subscriptions set status='expired',updated_at=p_now where user_id=p_user and (
+  (status in ('active','trial') and period_end is not null
+   and period_end+case when provider='paddle' and status='active' then interval '3 days' else interval '0 days' end<=p_now)
+  or (status='past_due' and coalesce(past_due_since,event_at,period_end) is not null and coalesce(past_due_since,event_at,period_end)+interval '7 days'<=p_now));
  if exists(select 1 from subscriptions where user_id=p_user) and exists(select 1 from profiles where user_id=p_user and role='normal') then
   select effective into best_tier from (
    select coalesce((select c.from_tier from billing_changes c where c.user_id=p_user and c.provider_ref=sub.provider_ref and c.to_tier=sub.tier::text and c.status in ('applying','applied') and c.effective_at>p_now order by c.created_at desc limit 1),sub.tier::text) as effective
@@ -768,6 +774,11 @@ language plpgsql security definer set search_path=public,pg_temp as $$
 begin
  if TG_OP='UPDATE' then new.window_anchor:=coalesce(old.window_anchor,old.period_start,new.window_anchor); end if;
  new.window_anchor:=coalesce(new.window_anchor,(new.raw->>'started_at')::timestamptz,new.period_start);
+ if new.status='past_due' then
+  new.past_due_since:=coalesce(case when TG_OP='UPDATE' and old.status='past_due' then old.past_due_since end,new.past_due_since,new.event_at,now());
+ else
+  new.past_due_since:=null;
+ end if;
  return new;
 end $$;
 drop trigger if exists bid_v12_subscription_anchor on subscriptions;

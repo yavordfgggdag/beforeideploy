@@ -165,10 +165,13 @@ async function handleWebhook(req: Request, deps: BillingDeps): Promise<Response>
           period_end: d.current_billing_period?.ends_at ?? null,
           cancel_at: d.scheduled_change?.action === "cancel" ? d.scheduled_change.effective_at : (d.canceled_at ?? null),
           event_at: occurredAt,
+          past_due_since: null as string | null,
           raw: d,
           updated_at: now.toISOString(),
         };
         const { data: existing } = await db.from("subscriptions").select("*").eq("provider", "paddle").eq("provider_ref", row.provider_ref).maybeSingle();
+        // B6: the 7-day past_due grace counts from the first failed payment, kept across retries
+        if (row.status === "past_due") row.past_due_since = existing?.status === "past_due" && existing.past_due_since ? existing.past_due_since : occurredAt;
         // Paddle does not promise order: an older event must not undo a newer one (audit C5)
         if (existing?.event_at && new Date(existing.event_at).getTime() > new Date(occurredAt).getTime()) {
           result = { ignored: "older than the stored state", subscription: row.provider_ref };
@@ -413,6 +416,7 @@ export function createBillingHandler(deps: BillingDeps): (req: Request) => Promi
               raw: { ...(s.raw ?? {}), billing_cycle: remote.billing_cycle ?? s.raw?.billing_cycle },
               updated_at: now.toISOString(),
             };
+            patch.past_due_since = patch.status === "past_due" ? (s.status === "past_due" && s.past_due_since ? s.past_due_since : now.toISOString()) : null;
             const tier = ((remote.items ?? []) as Row[]).map(i=>tierForPrice(catalog,i.price?.id)).filter((p):p is Plan=>!!p).sort((a,b)=>PAID.indexOf(b)-PAID.indexOf(a))[0];
             if (tier) patch.tier = tier;
             must(await db.from("subscriptions").update(patch).eq("id", s.id));

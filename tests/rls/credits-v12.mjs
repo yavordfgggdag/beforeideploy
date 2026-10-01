@@ -412,4 +412,20 @@ export async function testCredits({db,t,assert,rejects,as}) {
   assert(rows.filter(r=>r.state==='paused').every(r=>r.paused_reason==='plan_limit'),'others paused with a visible reason');
   assert(Number((await db.query("select count(*)::int n from monitor_targets where user_id=$1 and site_id is not null",[m])).rows[0].n)===3,'targets linked');
  });
+ await t('B6 past_due: grace is 7 days from the first failed payment, not from period_end',async()=>{
+  const id=await user('high'); await grant(id,300000,'b6-lot','high');
+  // Paddle moved the period forward when the renewal was created; the payment failed at +1 day
+  await db.query("update subscriptions set status='past_due',event_at=$2,period_start=$3,period_end=$4 where user_id=$1",[id,later(1),later(1),later(32)]);
+  await db.query("update subscriptions set event_at=$2,raw='{\"retry\":2}' where user_id=$1",[id,later(4)]);
+  const since=(await db.query('select past_due_since from subscriptions where user_id=$1',[id])).rows[0].past_due_since;
+  assert(since && Date.parse(since)===Date.parse(later(1)),'first failure time is kept across later past_due events');
+  await rpc('bid_enforce_sites',{p_user:id,p_now:later(7)});
+  assert((await db.query('select status from subscriptions where user_id=$1',[id])).rows[0].status==='past_due','still entitled within 7 days');
+  await rpc('bid_enforce_sites',{p_user:id,p_now:later(8,1)});
+  assert((await db.query('select status from subscriptions where user_id=$1',[id])).rows[0].status==='expired','entitlement ends 7 days after the failure');
+  assert((await db.query('select plan::text from profiles where user_id=$1',[id])).rows[0].plan==='free','plan drops to free');
+  assert(await balance(id)===300000,'paid credits are not touched');
+  await db.query("update subscriptions set status='active',event_at=$2 where user_id=$1",[id,later(9)]);
+  assert((await db.query('select past_due_since from subscriptions where user_id=$1',[id])).rows[0].past_due_since===null,'recovered payment clears the failure');
+ });
 }
