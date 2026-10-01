@@ -146,3 +146,25 @@ final class AutoCheckTests: XCTestCase {
         XCTAssertFalse(ProjectWatcher.isRelevant(["/p/tsconfig.tsbuildinfo", "/p/.eslintcache"], root: "/p"))
     }
 }
+
+final class SetupRunTests: XCTestCase {
+    @MainActor
+    func testUnfinishedStepsNeverBecomeSuccessful() {
+        let s = RunSession(title: "setup", subtitle: "", kind: .setup)
+        s.steps = [RunStep(id: "a", label: "A", status: "running"), RunStep(id: "b", label: "B", status: "pending"), RunStep(id: "c", label: "C", status: "waiting_user")]
+        XCTAssertEqual(s.progress, 0)
+        s.finish(success: false, title: "incomplete", message: nil)
+        XCTAssertFalse(s.success)
+        XCTAssertTrue(s.steps.allSatisfy { $0.status == "skipped" })
+        XCTAssertEqual(s.progress, 1)
+    }
+    func testLineBufferPreservesSplitUnicodeAndFinishesExactlyOnce() async {
+        let lines = EngineLines()
+        let data = Data("héllo\nresult".utf8)
+        lines.append(data.prefix(2)); lines.append(data.dropFirst(2))
+        lines.finish(); lines.finish(); lines.append(Data("ignored".utf8))
+        var received: [String] = []
+        for await line in lines.stream { received.append(line) }
+        XCTAssertEqual(received, ["héllo", "result"])
+    }
+}

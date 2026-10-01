@@ -101,7 +101,7 @@ Deno.test("ai-fix: 403 no_profile / disabled / no_plan", async () => {
   res = await world({ aiDisabled: true }).handle(post("ai-fix", PROMPT));
   assert.equal(res.status, 403);
   assert.equal((await res.json()).code, "disabled");
-  res = await world({ plan: "free" }).handle(post("ai-fix", PROMPT));
+  res = await world({ plan: "free", balance:0 }).handle(post("ai-fix", PROMPT));
   assert.equal(res.status, 403);
   assert.equal((await res.json()).code, "no_plan");
   // vip on the free plan is fine (own key or cloud — the cloud path is allowed by role)
@@ -130,32 +130,32 @@ Deno.test("ai-fix: 429 after 6 requests in a minute", async () => {
   assert.equal((await world({ usage: other }).handle(post("ai-fix", PROMPT))).status, 200);
 });
 
-Deno.test("ai-fix: 403 session_cap at 20% of the monthly credits inside the 5-hour session, with the reset time", async () => {
-  // High = 250 000 credits → 50 000 per session; one request 2 h ago spent them all
+Deno.test("ai-fix: 403 window_5h at 20% of the monthly credits inside the 5-hour session, with the reset time", async () => {
+  // High = 300 000 credits → 60 000 per session; one request 2 h ago spent them all
   const twoHoursAgo = new Date(Date.now() - 2 * 3600_000).toISOString();
-  const usage = [{ user_id: USER.id, created_at: twoHoursAgo, charged_tokens: 50000 }];
+  const usage = [{ user_id: USER.id, created_at: twoHoursAgo, charged_tokens: 60000 }];
   const res = await world({ usage }).handle(post("ai-fix", PROMPT));
   assert.equal(res.status, 403);
   const j = await res.json();
-  assert.equal(j.code, "session_cap");
-  assert.equal(j.cap, 50000);
+  assert.equal(j.code, "window_5h");
+  assert.equal(j.cap, 60000);
   assert.equal(j.windowHours, 5);
   assert.equal(j.resetsAt, new Date(new Date(twoHoursAgo).getTime() + 5 * 3600_000).toISOString());
   // the same spend six hours ago is outside the session
-  const old = [{ user_id: USER.id, created_at: new Date(Date.now() - 6 * 3600_000).toISOString(), charged_tokens: 50000 }];
+  const old = [{ user_id: USER.id, created_at: new Date(Date.now() - 6 * 3600_000).toISOString(), charged_tokens: 60000 }];
   assert.equal((await world({ usage: old }).handle(post("ai-fix", PROMPT))).status, 200);
 });
 
-Deno.test("ai-fix: credits follow the model's real price and the plan's rate, so the owner's cap holds", () => {
-  // one typical fix on High (Opus 5.5, 4 $ / 20 $ per MTok): 0.048 $ → 0.04416 € → 1472 credits at 0.00003 €
+Deno.test("ai-fix: credits follow the model's real price and the shared V2 rate, so the owner's cap holds", () => {
+  // one typical fix on High (Opus 5.5, 4 $ / 20 $ per MTok): 0.048 $ → 0.04416 € → 1767 credits at 0.000025 €
   const high = creditsFor(DEFAULTS, "high", "claude-opus-5-5", 4500, 1500);
   assert.ok(Math.abs(high.costUsd - 0.048) < 1e-9);
-  assert.equal(high.credits, 1472);
-  // Flash pays Sonnet 5.5 prices at its own rate: 0.024 $ → 0.02208 € → 887 credits at 0.0000249 €
-  assert.equal(creditsFor(DEFAULTS, "flash", "claude-sonnet-5-5", 4500, 1500).credits, 887);
-  // the whole monthly grant can never cost more than the cap: Flash 100 000 × 0.0000249 = 2.49 €, High 7.50 €, Knight 30 €
-  for (const [plan, cap] of [["flash", 2.49], ["high", 7.5], ["knight", 30]] as const) {
-    assert.ok(Math.abs(DEFAULTS.plans[plan].tokens * DEFAULTS["ai.creditEur"][plan] - cap) < 1e-6, plan);
+  assert.equal(high.credits, 1767);
+  // Flash pays Sonnet 5.5 prices at the shared rate: 0.024 $ → 0.02208 € → 884 credits at 0.000025 €
+  assert.equal(creditsFor(DEFAULTS, "flash", "claude-sonnet-5-5", 4500, 1500).credits, 884);
+  // the whole monthly grant can never cost more than the cap: Flash 100 000 × 0.000025 = 2.50 €, High 7.50 €, Knight 25 €
+  for (const [plan, cap] of [["flash", 2.5], ["high", 7.5], ["knight", 25]] as const) {
+    assert.ok(Math.abs(DEFAULTS.plans[plan].tokens * Number(DEFAULTS["ai.creditEur"]) - cap) < 1e-6, plan);
   }
   // an answer that produced nothing costs nothing; anything that reached the model costs at least one credit
   assert.equal(creditsFor(DEFAULTS, "high", "claude-opus-5-5", 0, 0).credits, 0);
@@ -192,9 +192,9 @@ Deno.test("ai-fix: streams deltas, bills the real tokens and records usage", asy
   assert.equal(rows[0].input_tokens, 4000);
   assert.equal(rows[0].output_tokens, 2000);
   assert.equal(rows[0].charged_tokens, charge("high"));
-  assert.equal(rows[0].charged_tokens, 859); // 0.028 $ × 0.92 / 0.00003 €, rounded up
+  assert.equal(rows[0].charged_tokens, 1031); // 0.028 $ × 0.92 / 0.000025 €, rounded up
   assert.ok(Math.abs(rows[0].cost_usd - 0.028) < 1e-9);
-  const ledger = db.rows("credit_ledger").filter((r) => r.reason === "ai_fix");
+  const ledger = db.rows("credit_ledger").filter((r) => r.reason === "action");
   assert.equal(ledger.length, 1);
   assert.equal(ledger[0].delta, -charge("high"));
   assert.equal(ledger[0].bucket, "plan");
@@ -217,13 +217,13 @@ Deno.test("ai-fix: deep fix uses the strongest model at xhigh effort for Knight,
   assert.deepEqual(knight.up.calls[0].body.output_config, { effort: "xhigh" });
   // the fake stream reports Sonnet 5.5 as the model that answered, so that is what is charged
   assert.equal(ev.find((e) => e.type === "usage")!.charged, charge("knight"));
-  assert.equal(knight.db.rows("credit_ledger").find((r) => r.reason === "ai_fix")!.delta, -charge("knight"));
+  assert.equal(knight.db.rows("credit_ledger").find((r) => r.reason === "action")!.delta, -charge("knight"));
 
   const high = world({ plan: "high" });
   await events(await high.handle(post("ai-fix", { ...PROMPT, deep: true })));
   assert.equal(high.up.calls[0].body.model, "claude-opus-5-5");
   assert.deepEqual(high.up.calls[0].body.output_config, { effort: "medium" });
-  assert.equal(high.db.rows("credit_ledger").find((r) => r.reason === "ai_fix")!.delta, -charge("high"));
+  assert.equal(high.db.rows("credit_ledger").find((r) => r.reason === "action")!.delta, -charge("high"));
 });
 
 Deno.test("ai-fix: explain mode takes the fast model without output_config", async () => {
@@ -237,7 +237,7 @@ Deno.test("ai-fix: explain mode takes the fast model without output_config", asy
 Deno.test("ai-fix: the settings table overrides models, multipliers and limits", async () => {
   const settings = [
     { key: "ai.models", value: { flash: "claude-haiku-4-5", high: "claude-opus-5-5", knight: "claude-opus-5-5", deep: "claude-opus-5-5" } },
-    { key: "ai.creditEur", value: { ...DEFAULTS["ai.creditEur"], knight: 0.00006 } },
+    { key: "ai.creditEur", value: { default: 0.000025, knight: 0.00005 } },
     { key: "ai.rate", value: { perMinute: 1, perHour: 60 } },
   ];
   const w = world({ plan: "high", settings });
@@ -249,9 +249,9 @@ Deno.test("ai-fix: the settings table overrides models, multipliers and limits",
   const k = world({ plan: "knight", settings });
   await events(await k.handle(post("ai-fix", { ...PROMPT, deep: true })));
   // a Knight credit worth twice as much → half the credits for the same answer
-  const halved = creditsFor({ ...DEFAULTS, "ai.creditEur": { ...DEFAULTS["ai.creditEur"], knight: 0.00006 } }, "knight", "claude-sonnet-5-5", 4000, 2000).credits;
+  const halved = creditsFor({ ...DEFAULTS, "ai.creditEur": { default: 0.000025, knight: 0.00005 } }, "knight", "claude-sonnet-5-5", 4000, 2000).credits;
   assert.equal(halved, Math.ceil(charge("knight") / 2));
-  assert.equal(k.db.rows("credit_ledger").find((r) => r.reason === "ai_fix")!.delta, -halved);
+  assert.equal(k.db.rows("credit_ledger").find((r) => r.reason === "action")!.delta, -halved);
 });
 
 Deno.test("ai-fix: an upstream failure is a 502 and bills nothing", async () => {
@@ -296,14 +296,14 @@ Deno.test("ai-fix: plan tokens are spent first, the rest comes from top-up packs
     { user_id: USER.id, delta: 10000, bucket: "topup", reason: "topup", ref: "p" },
   ] });
   await events(await w.handle(post("ai-fix", PROMPT)));
-  const charges = w.db.rows("credit_ledger").filter((r) => r.reason === "ai_fix");
+  const charges = w.db.rows("credit_ledger").filter((r) => r.reason === "action");
   assert.deepEqual(charges.map((r) => [r.bucket, r.delta]), [["plan", -500], ["topup", -(charge("high") - 500)]]);
 });
 
 // ---------------------------------------------------------------- audit batch 2 (C1, C6, C9, C10)
 
 Deno.test("ai-fix: parallel requests see each other's reservations and cannot all overspend", async () => {
-  // each request reserves ≈ 4,900 credits (prompt estimate + a full 8,000-token Opus answer); the model is
+  // each request reserves ≈ 5,900 credits (prompt estimate + a full 8,000-token Opus answer); the model is
   // held back until all three have made their reservation, so with 6,000 left the third one always sees
   // the two other holds and is refused — no settle can sneak in between (that is the race the hold prevents)
   let open!: () => void;
@@ -318,17 +318,17 @@ Deno.test("ai-fix: parallel requests see each other's reservations and cannot al
   assert.ok(rs.every((r) => r.status === 200 || r.status === 402));
   for (const r of rs) await r.text();
   assert.equal(up.calls.length, passed.length);
-  assert.equal(db.rows("credit_ledger").filter((r) => r.reason === "hold").length, 0, "holds are settled or released");
+  assert.equal(db.rows("credit_ledger").filter((r) => r.bucket === "hold").reduce((n,r)=>n+r.delta,0), 0, "holds are settled or released");
   assert.equal(db.rows("ai_usage").length, passed.length, "a refused request leaves no usage row");
 });
 
 Deno.test("ai-fix: the hold disappears after the answer and after an upstream failure", async () => {
   const ok = world();
   await events(await ok.handle(post("ai-fix", PROMPT)));
-  assert.equal(ok.db.rows("credit_ledger").filter((r) => r.bucket === "hold").length, 0);
+  assert.equal(ok.db.rows("credit_ledger").filter((r) => r.bucket === "hold").reduce((n,r)=>n+r.delta,0), 0);
   const bad = world({ upstream: { status: 500, body: "boom" } });
   assert.equal((await bad.handle(post("ai-fix", PROMPT))).status, 502);
-  assert.equal(bad.db.rows("credit_ledger").length, 1, "only the original grant is left");
+  assert.equal(bad.db.rows("credit_ledger").reduce((n,r)=>n+r.delta,0), 100000, "reservation returned; original grant intact");
 });
 
 Deno.test("ai-fix: closing the answer aborts the model request", async () => {
@@ -342,12 +342,12 @@ Deno.test("ai-fix: Free with bought token packs may still use AI", async () => {
   const w = world({ plan: "free", ledger: [{ user_id: USER.id, delta: 100000, bucket: "topup", reason: "topup", ref: "txn:pri_pack" }] });
   const ev = await events(await w.handle(post("ai-fix", PROMPT)));
   assert.equal(ev.find((e) => e.type === "usage")!.charged, charge("free"));
-  assert.equal(w.db.rows("credit_ledger").find((r) => r.reason === "ai_fix")!.bucket, "topup");
+  assert.equal(w.db.rows("credit_ledger").find((r) => r.reason === "action")!.bucket, "topup");
 });
 
 Deno.test("ai-fix: an ended trial stops AI here too, not only in billing status", async () => {
   const past = new Date(Date.now() - 86400_000).toISOString();
-  const w = world({ plan: "high", subs: [{ id: "s1", user_id: USER.id, provider: "trial", tier: "high", status: "trial", period_end: past }] });
+  const w = world({ plan: "high", ledger:[{user_id:USER.id,delta:100000,bucket:"plan",reason:"trial_grant",ref:"s1"}], subs: [{ id: "s1", user_id: USER.id, provider: "trial", tier: "high", status: "trial", period_end: past }] });
   const res = await w.handle(post("ai-fix", PROMPT));
   assert.equal(res.status, 403);
   assert.equal((await res.json()).code, "no_plan");
@@ -363,16 +363,16 @@ Deno.test("ai-fix: the same operation id never bills twice; a retry gets the rec
   assert.equal(first.at(-1)?.type, "done");
   const row = db.rows("ai_usage")[0];
   assert.equal(row.operation_id, "op-12345678");
-  assert.match(String(row.pricing_version), /^p-[0-9a-f]{12}$/);
-  assert.ok(db.rows("credit_ledger").filter((r) => r.reason === "ai_fix").every((r) => r.pricing_version === row.pricing_version), "charges carry the price table version");
-  const spent = db.rows("credit_ledger").filter((r) => r.reason === "ai_fix").reduce((a, r) => a + Number(r.delta), 0);
+  assert.equal(row.pricing_version, "2026-10");
+  assert.ok(db.rows("credit_ledger").filter((r) => r.reason === "action").every((r) => r.pricing_version === row.pricing_version), "charges carry the price table version");
+  const spent = db.rows("credit_ledger").filter((r) => r.reason === "action").reduce((a, r) => a + Number(r.delta), 0);
   const retry = await handle(post("ai-fix", { ...PROMPT, operationId: "op-12345678" }));
   assert.equal(retry.status, 409);
   const j = await retry.json();
   assert.equal(j.code, "duplicate_operation");
   assert.equal(j.usage.charged, Number(row.charged_tokens));
   assert.equal(db.rows("ai_usage").length, 1, "no second usage row");
-  assert.equal(db.rows("credit_ledger").filter((r) => r.reason === "ai_fix").reduce((a, r) => a + Number(r.delta), 0), spent, "no second charge");
+  assert.equal(db.rows("credit_ledger").filter((r) => r.reason === "action").reduce((a, r) => a + Number(r.delta), 0), spent, "no second charge");
   // an operation still in flight is reported as such
   db.tables.ai_usage.push({ id: "u-run", user_id: USER.id, operation_id: "op-running1", status: "pending", created_at: new Date().toISOString() });
   const running = await handle(post("ai-fix", { ...PROMPT, operationId: "op-running1" }));
@@ -394,10 +394,34 @@ Deno.test("ai-fix: a hold abandoned by a crashed request is released before the 
   assert.equal(res.status, 200);
   await res.text();
   assert.equal(db.rows("ai_usage").find((r) => r.id === "u-dead")?.status, "orphaned");
-  assert.equal(db.rows("credit_ledger").filter((r) => r.reason === "hold").length, 0, "the abandoned hold is gone and the new one settled");
+  assert.equal(db.rows("credit_ledger").filter((r) => r.bucket === "hold").reduce((n,r)=>n+r.delta,0), 0, "the abandoned hold is gone and the new one settled");
   // a fresh in-flight hold is NOT released
   const fresh = world({ balance: 100000, usage: [{ id: "u-live", user_id: USER.id, status: "pending", charged_tokens: 0, created_at: new Date().toISOString() }] });
   fresh.db.tables.credit_ledger.push({ id: "h-live", user_id: USER.id, delta: -1000, bucket: "hold", reason: "hold", ref: "u-live", created_at: new Date().toISOString() });
   await (await fresh.handle(post("ai-fix", PROMPT))).text();
   assert.equal(fresh.db.rows("credit_ledger").filter((r) => r.reason === "hold" && r.ref === "u-live").length, 1);
+});
+
+Deno.test("ai-fix V12: accounting unavailable fails closed before contacting the model",async()=>{
+  for(const fn of ["bid_enforce_sites","bid_credit_status","bid_hold"]) {
+    const w=world(); w.db.missingFunctions=[fn];
+    const res=await w.handle(post("ai-fix",PROMPT));
+    assert.equal(res.status,503); assert.equal((await res.json()).code,"meter_unavailable");
+    assert.equal(w.up.calls.length,0);
+  }
+});
+Deno.test("ai-fix V12: cancellation residual credits work and insufficient worst-case reserve never reaches the model",async()=>{
+  const residual=world({plan:"free",balance:100000});
+  await events(await residual.handle(post("ai-fix",PROMPT)));
+  const low=world({balance:100}); const denied=await low.handle(post("ai-fix",PROMPT));
+  assert.equal(denied.status,402); assert.equal((await denied.json()).code,"quota_exhausted");
+  assert.equal(low.up.calls.length,0); assert.equal(low.db.rows("ai_usage").length,0);
+  assert.equal(low.db.rows("credit_ledger").reduce((n,r)=>n+r.delta,0),100);
+});
+
+Deno.test("ai-fix V12: missing model prices fail before the upstream call and before reserving credits", async()=>{
+ const w=world({settings:[{key:"ai.prices",value:{}}]});
+ const res=await w.handle(post("ai-fix",PROMPT));
+ assert.equal(res.status,503);assert.equal((await res.json()).code,"meter_unavailable");
+ assert.equal(w.up.calls.length,0);assert.equal(w.db.rows("credit_holds").length,0);
 });

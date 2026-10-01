@@ -96,7 +96,8 @@ Deno.test("admin: grant_credits inserts a top-up ledger row", async () => {
   assert.equal(ledger[0].delta, 500);
   assert.equal(ledger[0].bucket, "topup");
   assert.equal(ledger[0].reason, "admin_grant");
-  assert.equal(ledger[0].ref, "beta tester");
+  assert.match(ledger[0].ref, /^[0-9a-f-]{36}$/);
+  assert.equal(db.rpcCalls.find(c=>c.fn==="bid_grant")?.args.p_credits,500);
   assert.equal((await handle(post("admin", { action: "grant_credits", user_id: NORMAL.id, delta: 0 }))).status, 400);
 });
 
@@ -211,4 +212,28 @@ Deno.test("admin (WP03): diagnostics says what is missing with yes/no only — n
   assert.ok(j2.todo.includes("schema:bid_prune"));
   const normal = createAdminHandler({ ...fakeDeps(world(NORMAL.id).db), hasSecret: () => true });
   assert.equal((await normal(post("admin", { action: "diagnostics" }))).status, 403, "admins only");
+});
+
+Deno.test("admin V12: financial settings reject invalid prices, free-action fees and ungated Netlify credits", async()=>{
+ const {handle}=world();
+ for(const settings of [
+  {"pricing.actions":{"deploy.rollback":{credits:10,window:false}}},
+  {"pricing.actions":{"deploy.preview":{credits:150,window:false}}},
+  {"pricing.actions":{"ai.chat":{credits:1,window:true}}},
+  {"ai.prices":{"model":[0,0]}},{"ai.creditEur":0},{"ai.usdToEur":-1},
+  {"plans":{"high":{"tokens":300000}}}
+ ])assert.equal((await handle(post("admin",{action:"set_settings",settings}))).status,400);
+ assert.equal((await handle(post("admin",{action:"set_settings",settings:{"features.netlifyCredits":true}}))).status,409);
+ assert.equal((await handle(post("admin",{action:"set_settings",settings:{"pricing.actions":{"deploy.preview":{credits:150,window:true}},"pricing.version":"2026-10"}}))).status,200);
+});
+
+Deno.test("admin V12: site pause needs an explanation and role; credit drift reads are scoped to the selected account",async()=>{
+ const w=world();w.db.rpcResponses.bid_usage_summary={sites:{active:1,items:[]},remaining:{available:1200}};
+ w.db.tables.usage_drift=[{user_id:NORMAL.id,operation_id:'one',recorded:50,ledger_charged:40},{user_id:ADMIN.id,operation_id:'two',recorded:60,ledger_charged:10}];
+ const state=await (await w.handle(post('admin',{action:'get_credit_state',user_id:NORMAL.id}))).json();assert.equal(state.drift.length,1);assert.equal(state.drift[0].operation_id,'one');
+ assert.equal((await w.handle(post('admin',{action:'pause_site',user_id:NORMAL.id,project_key:'shop'}))).status,400);
+ w.db.rpcResponses.bid_site_change={ok:true};w.db.tables.sites=[{user_id:NORMAL.id,project_key:'shop',state:'paused'}];
+ assert.equal((await w.handle(post('admin',{action:'pause_site',user_id:NORMAL.id,project_key:'shop',reason:'Owner requested pause'}))).status,200);
+ assert.equal(w.db.rows('sites')[0].paused_reason,'admin');assert.ok(w.db.rows('admin_audit').some(r=>r.action==='pause_site'&&r.payload.reason==='Owner requested pause'));
+ const denied=world(NORMAL.id);assert.equal((await denied.handle(post('admin',{action:'get_credit_state',user_id:ADMIN.id}))).status,403);
 });

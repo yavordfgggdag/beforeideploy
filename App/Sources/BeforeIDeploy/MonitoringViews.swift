@@ -19,9 +19,9 @@ struct MonitorCard: View {
                 Spacer()
                 if let at = m?.lastRunAt {
                     Label(L("monitor.lastRun", Fmt.relative(at)), systemImage: m?.stale == true ? "exclamationmark.triangle.fill" : "clock")
-                        .font(.system(size: 11)).foregroundColor(m?.stale == true ? Theme.warn : Theme.tertiary)
+                        .font(Typo.font(.caption)).foregroundColor(m?.stale == true ? Theme.warn : Theme.tertiary)
                 } else {
-                    Text(L("monitor.neverRan")).font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                    Text(L("monitor.neverRan")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
                 }
                 Button { model.runMonitorOnce() } label: { Label(L("monitor.checkNow"), systemImage: "arrow.clockwise") }
                     .bidButton(.secondary, compact: true).disabled(model.busy.contains("monitor"))
@@ -30,7 +30,7 @@ struct MonitorCard: View {
             HStack(spacing: 8) {
                 Image(systemName: "desktopcomputer").foregroundColor(Theme.accent)
                 Text(m?.agent.installed == true ? L("monitor.runsOnAgent", m?.settings.intervalMin ?? 10) : L("monitor.runsOnApp", m?.settings.intervalMin ?? 10))
-                    .font(.system(size: 12)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
+                    .font(Typo.font(.callout)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
                 Spacer()
                 Toggle(L("monitor.agentToggle"), isOn: Binding(get: { m?.agent.installed == true }, set: { on in
                     if on { confirmAgent = true } else { model.setMonitorAgent(on: false) }
@@ -42,7 +42,7 @@ struct MonitorCard: View {
                 // the status could not be read: the reason and Retry, not an empty card (WP02)
                 HStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle.fill").foregroundColor(Theme.warn)
-                    Text(e).font(.system(size: 11.5)).foregroundColor(Theme.secondary).lineLimit(2)
+                    Text(e).font(Typo.font(.callout)).foregroundColor(Theme.secondary).lineLimit(2)
                     Spacer()
                     Button(L("common.retry")) { Task { await model.loadMonitor() } }.bidButton(.ghost, compact: true)
                 }
@@ -51,14 +51,14 @@ struct MonitorCard: View {
             if let w = m?.maintenance, !w.isEmpty {
                 ForEach(w) { win in
                     Label(L("monitor.maintenanceWindow", Fmt.dateTime(win.from), Fmt.dateTime(win.to), win.note ?? ""), systemImage: "wrench.and.screwdriver")
-                        .font(.system(size: 11)).foregroundColor(Theme.warn)
+                        .font(Typo.font(.caption)).foregroundColor(Theme.warn)
                 }
             }
             channelRow(m)
 
             if let s = m?.settings {
-                HStack(spacing: 14) {
-                    Text(L("monitor.notifyLabel")).font(.system(size: 11.5, weight: .semibold)).foregroundColor(Theme.secondary)
+                FlowLayout(spacing: Space.m, lineSpacing: Space.s) {
+                    Text(L("monitor.notifyLabel")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.secondary)
                     notifyToggle(L("monitor.notify.down"), s.notify.down) { model.setMonitorNotify(down: $0) }
                     notifyToggle(L("monitor.notify.ssl"), s.notify.ssl) { model.setMonitorNotify(ssl: $0) }
                     notifyToggle(L("monitor.notify.domain"), s.notify.domain) { model.setMonitorNotify(domain: $0) }
@@ -69,7 +69,7 @@ struct MonitorCard: View {
 
             if let open = m?.openIncidents, !open.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(L("monitor.openIncidents", count: open.count)).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.blocked)
+                    Text(L("monitor.openIncidents", count: open.count)).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.blocked)
                     ForEach(open) { i in IncidentRow(incident: i) }
                 }
             } else if m != nil {
@@ -79,7 +79,7 @@ struct MonitorCard: View {
                 DisclosureGroup(L("monitor.recentIncidents", count: recent.count)) {
                     VStack(alignment: .leading, spacing: 4) { ForEach(recent.prefix(10)) { i in IncidentRow(incident: i) } }.padding(.top, 4)
                 }
-                .font(.system(size: 12)).foregroundColor(Theme.secondary)
+                .font(Typo.font(.callout)).foregroundColor(Theme.secondary)
             }
         }
         .card()
@@ -100,23 +100,23 @@ struct MonitorCard: View {
             Image(systemName: "cloud").foregroundColor(c?.active == true ? Theme.ready : Theme.tertiary)
             VStack(alignment: .leading, spacing: 3) {
                 if m == nil || c == nil {
-                    Text(L("monitor.cloudUnknown")).font(.system(size: 12)).foregroundColor(Theme.secondary)
+                    Text(L("monitor.cloudUnknown")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
                 } else if c?.unavailable == true {
-                    Text(c?.reason == "not_logged_in" ? L("monitor.cloudSignedOut") : L("monitor.cloudOffline")).font(.system(size: 12)).foregroundColor(Theme.secondary)
+                    Text(c?.reason == "not_logged_in" ? L("monitor.cloudSignedOut") : L("monitor.cloudOffline")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
                 } else if c?.active == true {
-                    Text(L("monitor.cloudActive", c?.targets?.count ?? 0)).font(.system(size: 12)).foregroundColor(Theme.text)
-                    Text(L("monitor.cloudScheduler", Fmt.relative(c?.scheduler?.lastRunAt), c?.nextRunAt.map { Fmt.relative($0) } ?? "—", c?.retentionDays ?? 90)).font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                    Text(L("monitor.cloudActive", c?.targets?.count ?? 0)).font(Typo.font(.callout)).foregroundColor(Theme.text)
+                    Text(L("monitor.cloudScheduler", Fmt.relative(c?.scheduler?.lastRunAt), c?.nextRunAt.map { Fmt.relative($0) } ?? "—", c?.retentionDays ?? 90)).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
                 } else if c?.scheduler?.state == "never" {
-                    Text(L("monitor.cloudNever")).font(.system(size: 12)).foregroundColor(Theme.warn)
+                    Text(L("monitor.cloudNever")).font(Typo.font(.callout)).foregroundColor(Theme.warn)
                 } else if c?.scheduler?.state == "stale" {
-                    Text(L("monitor.cloudStale", Fmt.relative(c?.scheduler?.lastRunAt))).font(.system(size: 12)).foregroundColor(Theme.warn)
+                    Text(L("monitor.cloudStale", Fmt.relative(c?.scheduler?.lastRunAt))).font(Typo.font(.callout)).foregroundColor(Theme.warn)
                 } else {
-                    Text(L("monitor.cloudNoTargets")).font(.system(size: 12)).foregroundColor(Theme.secondary)
+                    Text(L("monitor.cloudNoTargets")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
                 }
                 if let t = target {
-                    Text(L("monitor.cloudTarget", t.url, t.intervalMin, t.lastOk.map { $0 ? L("signal.healthy") : L("signal.problem") } ?? L("signal.unchecked"))).font(.system(size: 11)).foregroundColor(Theme.tertiary).lineLimit(1).truncationMode(.middle)
+                    Text(L("monitor.cloudTarget", t.url, t.intervalMin, t.lastOk.map { $0 ? L("signal.healthy") : L("signal.problem") } ?? L("signal.unchecked"))).font(Typo.font(.caption)).foregroundColor(Theme.tertiary).lineLimit(1).truncationMode(.middle)
                 }
-                if m?.serverSide != true { Text(L("monitor.noServerSide")).font(.system(size: 11)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true) }
+                if m?.serverSide != true { Text(L("monitor.noServerSide")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true) }
             }
             Spacer()
             if key != nil, c?.unavailable != true, c != nil {
@@ -134,11 +134,11 @@ struct MonitorCard: View {
             HStack(spacing: 8) {
                 Image(systemName: "bell.badge").foregroundColor(Theme.accent)
                 if let w = m?.channels?.webhook {
-                    Text(L("monitor.webhookSet", w)).font(.system(size: 11.5)).foregroundColor(Theme.secondary).lineLimit(1).truncationMode(.middle)
+                    Text(L("monitor.webhookSet", w)).font(Typo.font(.callout)).foregroundColor(Theme.secondary).lineLimit(1).truncationMode(.middle)
                     Button(L("monitor.webhookTest")) { model.testMonitorWebhook() }.bidButton(.ghost, compact: true).disabled(model.busy.contains("monitor-webhook"))
                     Button(L("monitor.webhookRemove")) { model.setMonitorWebhook(nil) }.bidButton(.ghost, compact: true).disabled(model.busy.contains("monitor-webhook"))
                 } else {
-                    TextField(L("monitor.webhookPlaceholder"), text: $webhookDraft).textFieldStyle(.roundedBorder).font(.system(size: 11.5)).frame(maxWidth: 360)
+                    BIDField(placeholder: L("monitor.webhookPlaceholder"), text: $webhookDraft).font(Typo.font(.callout)).frame(maxWidth: 360)
                         .onSubmit { model.setMonitorWebhook(webhookDraft) }
                     Button(L("common.save")) { model.setMonitorWebhook(webhookDraft) }.bidButton(.secondary, compact: true).disabled(webhookDraft.isEmpty || model.busy.contains("monitor-webhook"))
                 }
@@ -147,13 +147,13 @@ struct MonitorCard: View {
             HStack(spacing: 8) {
                 Image(systemName: "iphone.radiowaves.left.and.right").foregroundColor(Theme.accent)
                 if let p = m?.channels?.pushover, p.connected {
-                    Text(L("monitor.pushoverSet", p.user ?? "…")).font(.system(size: 11.5)).foregroundColor(Theme.secondary).lineLimit(1)
+                    Text(L("monitor.pushoverSet", p.user ?? "…")).font(Typo.font(.callout)).foregroundColor(Theme.secondary).lineLimit(1)
                     if m?.channels?.webhook == nil {
                         Button(L("monitor.webhookTest")) { model.testMonitorWebhook() }.bidButton(.ghost, compact: true).disabled(model.busy.contains("monitor-webhook"))
                     }
                     Button(L("monitor.webhookRemove")) { model.disconnectPushover() }.bidButton(.ghost, compact: true).disabled(model.busy.contains("monitor-pushover"))
                 } else {
-                    Text(L("monitor.pushoverIntro")).font(.system(size: 11.5)).foregroundColor(Theme.tertiary).lineLimit(1)
+                    Text(L("monitor.pushoverIntro")).font(Typo.font(.callout)).foregroundColor(Theme.tertiary).lineLimit(1)
                     Button(L("monitor.pushoverConnect")) { model.sheet = .pushover }.bidButton(.secondary, compact: true)
                 }
                 Spacer()
@@ -162,7 +162,7 @@ struct MonitorCard: View {
     }
 
     private func notifyToggle(_ title: String, _ value: Bool, _ set: @escaping (Bool) -> Void) -> some View {
-        Toggle(title, isOn: Binding(get: { value }, set: set)).toggleStyle(.checkbox).font(.system(size: 11.5))
+        Toggle(title, isOn: Binding(get: { value }, set: set)).toggleStyle(.checkbox).font(Typo.font(.callout))
     }
 }
 
@@ -181,18 +181,18 @@ struct IncidentRow: View {
                 .foregroundColor(tint).frame(width: 16)
             VStack(alignment: .leading, spacing: 1) {
                 HStack(spacing: 6) {
-                    Text(incident.projectName ?? incident.project).font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.text)
-                    Text(K.incidentKind(incident.kind)).font(.system(size: 11)).foregroundColor(Theme.secondary)
+                    Text(incident.projectName ?? incident.project).font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.text)
+                    Text(K.incidentKind(incident.kind)).font(Typo.font(.caption)).foregroundColor(Theme.secondary)
                     if let src = incident.source {
-                        Text(src == "cloud" ? L("monitor.sourceCloud") : L("monitor.sourceMac")).font(.system(size: 10, weight: .semibold)).foregroundColor(Theme.tertiary)
+                        Text(src == "cloud" ? L("monitor.sourceCloud") : L("monitor.sourceMac")).font(Typo.font(.micro, weight: .semibold)).foregroundColor(Theme.tertiary)
                             .padding(.horizontal, 5).padding(.vertical, 1).background(Capsule().fill(Theme.hairline))
                     }
-                    if let d = incident.detail { Text(d).font(.system(size: 11, design: .monospaced)).foregroundColor(Theme.tertiary) }
+                    if let d = incident.detail { Text(d).font(Typo.font(.caption, design: .monospaced)).foregroundColor(Theme.tertiary) }
                 }
                 Text(incident.status == "open"
                      ? L("monitor.incidentOpen", Fmt.relative(incident.openedAt), incident.count ?? 1)
                      : L("monitor.incidentResolved", Fmt.relative(incident.openedAt), Fmt.relative(incident.resolvedAt)))
-                    .font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                    .font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
             }
             Spacer()
             if let u = incident.url {
@@ -231,10 +231,10 @@ struct SignalPill: View {
 
     var body: some View {
         HStack(spacing: 5) {
-            Image(systemName: icon).font(.system(size: 10, weight: .semibold)).foregroundColor(tint)
-            Text(shown).font(.system(size: 11, weight: .medium)).foregroundColor(signal?.state == "unsupported" || signal == nil ? Theme.tertiary : Theme.text)
+            Image(systemName: icon).font(Typo.font(.micro, weight: .semibold)).foregroundColor(tint)
+            Text(shown).font(Typo.font(.caption, weight: .medium)).foregroundColor(signal?.state == "unsupported" || signal == nil ? Theme.tertiary : Theme.text)
                 .lineLimit(1).truncationMode(.middle)
-            if let at = signal?.at { Text(Fmt.relative(at)).font(.system(size: 10)).foregroundColor(Theme.tertiary).lineLimit(1) }
+            if let at = signal?.at { Text(Fmt.relative(at)).font(Typo.font(.micro)).foregroundColor(Theme.tertiary).lineLimit(1) }
         }
         .fixedSize()
         .padding(.horizontal, 7).padding(.vertical, 3)
@@ -253,8 +253,8 @@ struct ClientSheet: View {
     var body: some View {
         SheetScaffold(icon: "person.crop.rectangle", title: L("client.title"), subtitle: model.status?.project.name ?? "", width: 420) {
             VStack(alignment: .leading, spacing: 8) {
-                Text(L("client.hint")).font(.system(size: 12)).foregroundColor(Theme.secondary)
-                TextField(L("client.placeholder"), text: $name).textFieldStyle(.roundedBorder)
+                Text(L("client.hint")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
+                BIDField(placeholder: L("client.placeholder"), text: $name)
                     .onAppear { name = model.status?.project.client ?? "" }
             }
         } actions: {
@@ -274,11 +274,11 @@ struct BackupCard: View {
                 InfoRow(label: L("signal.backup"), value: Fmt.relative(at))
             } else {
                 EmptyLine(icon: "xmark.circle", text: L("backup.notConnected"))
-                Text(L("backup.honest")).font(.system(size: 11.5)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
+                Text(L("backup.honest")).font(Typo.font(.callout)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
                 if let missing = backup?.missing, !missing.isEmpty {
-                    Text(L("backup.missing")).font(.system(size: 11, weight: .semibold)).foregroundColor(Theme.tertiary)
+                    Text(L("backup.missing")).font(Typo.font(.caption, weight: .semibold)).foregroundColor(Theme.tertiary)
                     ForEach(missing, id: \.self) { m in
-                        Text("• \(m)").font(.system(size: 11, design: .monospaced)).foregroundColor(Theme.tertiary).textSelection(.enabled)
+                        Text("• \(m)").font(Typo.font(.caption, design: .monospaced)).foregroundColor(Theme.tertiary).textSelection(.enabled)
                     }
                 }
             }

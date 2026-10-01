@@ -136,3 +136,15 @@ Deno.test("account (WP03): export pages past 1000 rows and includes the monitori
   assert.equal(j.monitor_incidents.length, 1);
   assert.ok(j.monitor_targets.every((r: { user_id: string }) => r.user_id === ME.id), "only the caller's rows");
 });
+
+Deno.test("account V12: export includes all credit/site records, paginated and tenant-scoped",async()=>{
+ const w=world();
+ for(const table of ["credit_refunds","cloud_reports","credit_periods","credit_accounts","credit_grants","credit_holds","credit_allocations","sites","usage_events","usage_windows","usage_daily","usage_nudges","domain_orders","netlify_allocations","billing_changes"]) {
+  w.db.tables[table]=Array.from({length:1005},(_,n)=>({id:String(n),user_id:ME.id,created_at:String(n)}));
+  w.db.tables[table].push({id:"private-other",user_id:OTHER});
+ }
+ const data=await (await w.handle(post("account",{action:"export"}))).json();
+ for(const table of ["credit_refunds","cloud_reports","credit_periods","credit_accounts","credit_grants","credit_holds","credit_allocations","sites","usage_events","usage_windows","usage_daily","usage_nudges","domain_orders","netlify_allocations","billing_changes"]) {
+  assert.equal(data[table].length,1005,table);assert.ok(data[table].every((r:{user_id:string})=>r.user_id===ME.id));
+ }
+});

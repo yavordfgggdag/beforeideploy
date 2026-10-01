@@ -18,7 +18,8 @@
 // (TLS verified for the hostname) → ≤3 same-site redirects, re-validated per hop → 5 s timeout, 256 KB cap.
 // A failure becomes an incident only after `confirmFailures` consecutive failed runs; one open incident per
 // (target, kind); recovery closes it. Nothing here scans a project or touches a deployment.
-import { callerOf, type Deps, internalError, json, must, readJson, type Row } from "../_shared/db.ts";
+import {creditRpc,expireDue} from "../_shared/credits.ts";
+import { allRows, callerOf, type Deps, internalError, json, must, readJson, type Row } from "../_shared/db.ts";
 import { rateLimited } from "../_shared/ratelimit.ts";
 import { type ProbeOptions, type ProbeResult, probe as netProbe, validateTargetUrl } from "../_shared/netguard.ts";
 
@@ -99,21 +100,10 @@ export function createMonitorHandler(deps: MonitorDeps): (req: Request) => Promi
           if (!known.includes(wanted)) return json(403, { error: "url host is not this project's live host", code: "not_owner", known });
           const checks = Array.isArray(body.checks) ? body.checks.filter((c: unknown) => (CHECK_KINDS as readonly string[]).includes(String(c))) : ["down", "ssl"];
           const paths = Array.isArray(body.paths) ? body.paths.filter((p: unknown) => typeof p === "string" && /^\/[^\s]{0,200}$/.test(p)).slice(0, 10) : [];
-          const at = now().toISOString();
-          const row = {
-            user_id: user.id,
-            project_key: key,
-            url: v.url.toString(),
-            enabled: true,
-            interval_min: clampInterval(body.intervalMin ?? 10),
-            checks: { kinds: checks, paths },
-            next_run_at: at,
-            updated_at: at,
-          };
-          const { data: existing } = await db.from("monitor_targets").select("id").eq("user_id", user.id).eq("project_key", key).maybeSingle();
-          if (existing) must(await db.from("monitor_targets").update(row).eq("id", existing.id));
-          else must(await db.from("monitor_targets").insert(row));
-          return json(200, { registered: true, target: row });
+          const at=now();
+          await expireDue(db,user.id,at);
+          const receipt=await creditRpc(db,"bid_monitor_register",{p_user:user.id,p_project:key,p_url:v.url.toString(),p_interval:clampInterval(body.intervalMin??10),p_checks:{kinds:checks,paths},p_now:at.toISOString()});
+          return json(receipt.ok===false ? receipt.code==="quota_exhausted"?402:403 : 200,receipt);
         }
         case "unregister": {
           const key = String(body.projectKey ?? "").trim();
@@ -121,11 +111,14 @@ export function createMonitorHandler(deps: MonitorDeps): (req: Request) => Promi
           return json(200, { registered: false });
         }
         case "status": {
-          const [targets, open, beat] = await Promise.all([
-            db.from("monitor_targets").select("*").eq("user_id", user.id).then((r) => r.data ?? []),
+          await expireDue(db,user.id,now());
+          const [targets, open, beat, sites] = await Promise.all([
+            allRows(()=>db.from("monitor_targets").select("*").eq("user_id", user.id).order("id")),
             db.from("monitor_incidents").select("*").eq("user_id", user.id).eq("status", "open").then((r) => r.data ?? []),
             db.from("monitor_heartbeat").select("*").order("at", { ascending: false }).limit(1).maybeSingle().then((r) => r.data),
+            allRows(()=>db.from("sites").select("id,state").eq("user_id",user.id).order("id")),
           ]);
+          const activeIds=new Set(sites.filter(s=>s.state==="active").map(s=>s.id));
           const t = now().getTime();
           const beatAt = beat?.at ? Date.parse(String(beat.at)) : null;
           const scheduler = {
@@ -137,13 +130,13 @@ export function createMonitorHandler(deps: MonitorDeps): (req: Request) => Promi
           return json(200, {
             runsOn: "cloud",
             serverSide: true,
-            active: scheduler.healthy && targets.some((x) => x.enabled),
+            active: scheduler.healthy && targets.some((x) => x.enabled && activeIds.has(x.site_id)),
             scheduler,
             limits: LIMITS,
             targets: targets.map((x) => ({
               projectKey: x.project_key,
               url: x.url,
-              enabled: x.enabled,
+              enabled: x.enabled && activeIds.has(x.site_id),
               intervalMin: x.interval_min,
               checks: x.checks,
               lastRunAt: x.last_run_at ?? null,
@@ -165,6 +158,9 @@ export function createMonitorHandler(deps: MonitorDeps): (req: Request) => Promi
         case "test": {
           const { data: target } = await db.from("monitor_targets").select("*").eq("user_id", user.id).eq("project_key", String(body.projectKey ?? "")).maybeSingle();
           if (!target) return json(404, { error: "not registered", code: "not_registered" });
+          await expireDue(db,user.id,now());
+          const {data:site}=await db.from("sites").select("state").eq("user_id",user.id).eq("id",target.site_id??"").maybeSingle();
+          if(site?.state!=="active")return json(403,{error:"Site is paused",code:"site_paused"});
           const r = await probe(String(target.url), probeOpts());
           return json(200, { probe: publicProbe(r) });
         }
@@ -172,6 +168,8 @@ export function createMonitorHandler(deps: MonitorDeps): (req: Request) => Promi
           return json(400, { error: `unknown action: ${body.action}` });
       }
     } catch (e) {
+      const err=e as Error & {status?:number;code?:string};
+      if(err.status)return json(err.status,{error:"Monitoring is temporarily unavailable",code:err.code});
       return internalError("monitor", e);
     }
   };
@@ -190,9 +188,17 @@ function publicProbe(r: ProbeResult) {
 async function runDue(deps: MonitorDeps, probe: NonNullable<MonitorDeps["probe"]>, opts: ProbeOptions, now: Date) {
   const db = deps.service();
   const t = now.getTime();
-  const { data: all } = await db.from("monitor_targets").select("*").eq("enabled", true);
+  const {data:pruned,error:pruneError}=await db.rpc("bid_prune",{p_batch:5000});
+  if(pruneError)console.error(`monitor: retention skipped — ${pruneError.message}`);
+  await creditRpc(db,"bid_scheduler_credits",{p_batch:1000,p_now:now.toISOString()});
+  const burn=await creditRpc(db,"bid_site_burn",{p_day:now.toISOString().slice(0,10),p_batch:1000,p_now:now.toISOString()});
+  const [all,sites]=await Promise.all([
+    allRows(()=>db.from("monitor_targets").select("*").eq("enabled",true).order("id")),
+    allRows(()=>db.from("sites").select("id,state").eq("state","active").order("id")),
+  ]);
+  const activeIds=new Set(sites.map(s=>s.id));
   const due = (all ?? [])
-    .filter((x) => !x.next_run_at || Date.parse(String(x.next_run_at)) <= t)
+    .filter((x) => activeIds.has(x.site_id) && (!x.next_run_at || Date.parse(String(x.next_run_at)) <= t))
     .sort((a, b) => String(a.next_run_at ?? "").localeCompare(String(b.next_run_at ?? "")))
     .slice(0, LIMITS.batch);
   const events: Row[] = [];
@@ -236,13 +242,8 @@ async function runDue(deps: MonitorDeps, probe: NonNullable<MonitorDeps["probe"]
       events.push(...await incidentStep(db, target, "page", !!bad, !bad, bad ?? "", "warning", at));
     }
   }
-  // retention (WP03): one bounded, indexed delete per table inside the database (bid_prune, schema.sql) — the
-  // old "select everything, delete one by one" stopped at PostgREST's 1000 rows and never pruned the heartbeat
-  const { data: pruned, error: pruneError } = await db.rpc("bid_prune", { p_batch: 5000 });
-  if (pruneError) console.error(`monitor: retention skipped — ${pruneError.message}`);
-
   must(await db.from("monitor_heartbeat").insert({ at: now.toISOString(), checked, due: due.length, targets: (all ?? []).length }));
-  return { at: now.toISOString(), checked, due: due.length, targets: (all ?? []).length, events, pruned: pruned ?? null };
+  return { at: now.toISOString(), checked, due: due.length, targets: (all ?? []).length, events, pruned: pruned ?? null, burn };
 }
 
 /** One incident per (target, kind): open when confirmed, count while it lasts, resolve on recovery. */

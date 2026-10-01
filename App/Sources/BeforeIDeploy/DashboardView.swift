@@ -7,7 +7,7 @@ enum ProjectTab: String, CaseIterable, Hashable {
         switch self {
         case .overview: return L("dashboard.tab.overview")
         case .local: return L("dashboard.tab.local")
-        case .git: return "GitHub"
+        case .git: return K.step("git")
         case .hosting: return L("dashboard.tab.hosting")
         case .history: return L("common.history")
         }
@@ -41,7 +41,7 @@ struct DashboardView: View {
                 switch tab {
                 case .overview:
                     if let launch = status.launch, !launch.complete {
-                        LaunchCard(launch: launch, tab: $tab).entrance(0, offset: 10)
+                        LaunchCard(launch: launch, tab: $tab)
                     }
                     HeroCard(status: status)
                     IssuesCard(status: status)
@@ -50,12 +50,12 @@ struct DashboardView: View {
                     if !extraFixes.isEmpty {
                         FixesCard(fixes: extraFixes)
                     }
-                    HStack(alignment: .top, spacing: 14) {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 180), spacing: Space.m)], spacing: Space.m) {
                         MiniStat(title: L("dashboard.localTitle"), value: status.local.running ? Fmt.host(status.local.url) : L("dashboard.stopped"),
                                  tint: status.local.running ? Theme.ready : Theme.tertiary, icon: "desktopcomputer") { tab = .local }
-                        MiniStat(title: "GitHub", value: status.git.isRepo ? L("dashboard.changes", count: status.git.changedCount ?? 0) : L("dashboard.noRepo"),
+                        MiniStat(title: K.step("git"), value: status.git.isRepo ? L("dashboard.changes", count: status.git.changedCount ?? 0) : L("dashboard.noRepo"),
                                  tint: (status.git.changedCount ?? 0) > 0 ? Theme.warn : Theme.text, icon: "arrow.triangle.branch") { tab = .git }
-                        MiniStat(title: "Live · \(status.hosting?.name ?? "Netlify")",
+                        MiniStat(title: L("dashboard.liveProvider", status.hosting?.name ?? "Netlify"),
                                  value: (status.hosting?.liveUrl ?? status.project.netlify?.liveUrl).map { Fmt.host($0) } ?? (status.hosting?.ready == true ? L("common.connectedLower") : L("common.notConnectedLower")),
                                  tint: status.hosting?.ready == true ? Theme.text : Theme.tertiary, icon: "globe") { tab = .hosting }
                     }
@@ -79,10 +79,10 @@ struct DashboardView: View {
                     HistoryStrip()
                 }
             }
-            .padding(.horizontal, 32)
-            .padding(.top, 40)
-            .padding(.bottom, 32)
-            .frame(maxWidth: 1100)
+            .padding(.horizontal, Space.page)
+            .padding(.top, Space.top)
+            .padding(.bottom, Space.page)
+            .frame(maxWidth: 1120)
             .frame(maxWidth: .infinity)
         }
     }
@@ -108,43 +108,8 @@ struct TabStrip: View {
     @Namespace private var pill
 
     var body: some View {
-        HStack(spacing: 4) {
-            ForEach(ProjectTab.allCases, id: \.self) { t in
-                Button {
-                    withAnimation(Motion.spring) { selection = t }
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: t.icon).font(.system(size: 11.5, weight: .semibold))
-                        Text(t.title).font(.system(size: 12.5, weight: .semibold))
-                        if let b = badges[t] {
-                            Text(b)
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundColor(selection == t ? .white : Theme.secondary)
-                                .padding(.horizontal, 5).padding(.vertical, 1)
-                                .background(Capsule().fill(selection == t ? Color.white.opacity(0.25) : Theme.hover))
-                        }
-                    }
-                    .foregroundColor(selection == t ? .white : Theme.secondary)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 7)
-                    .background {
-                        if selection == t {
-                            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                .fill(Theme.accentGradient)
-                                .shadow(color: Theme.accent.opacity(0.35), radius: 6, y: 2)
-                                .matchedGeometryEffect(id: "tab", in: pill)
-                        }
-                    }
-                    .contentShape(Rectangle())
-                }
-                .accessibilityAddTraits(selection == t ? .isSelected : [])
-                .buttonStyle(.plain)
-            }
-            Spacer()
-        }
-        .padding(4)
-        .background(RoundedRectangle(cornerRadius: 11, style: .continuous).fill(Theme.panel))
-        .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous).strokeBorder(Theme.edgeHighlight, lineWidth: 1))
+        Segmented(options: ProjectTab.allCases.map { ($0.title, $0) }, selection: $selection,
+                  icons: Dictionary(uniqueKeysWithValues: ProjectTab.allCases.map { ($0, $0.icon) }), badges: badges)
     }
 }
 
@@ -159,18 +124,18 @@ struct MiniStat: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 12) {
-                Image(systemName: icon).font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.accent).frame(width: 22)
+                Image(systemName: icon).font(Typo.font(.subhead, weight: .semibold)).foregroundColor(Theme.accent).frame(width: 22)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(title.uppercased()).font(.system(size: 10, weight: .bold)).tracking(0.8).foregroundColor(Theme.tertiary)
-                    Text(value).font(.system(size: 13.5, weight: .semibold)).foregroundColor(tint).lineLimit(1)
+                    Text(title.uppercased()).font(Typo.font(.micro, weight: .bold)).tracking(0.8).foregroundColor(Theme.tertiary)
+                    Text(value).font(Typo.font(.subhead, weight: .semibold)).foregroundColor(tint).lineLimit(1)
                 }
                 Spacer()
-                Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundColor(Theme.tertiary)
+                Image(systemName: "chevron.right").font(Typo.font(.micro, weight: .bold)).foregroundColor(Theme.tertiary)
             }
             .padding(14)
             .frame(maxWidth: .infinity)
-            .background(RoundedRectangle(cornerRadius: 13, style: .continuous).fill(hover ? Theme.elevated : Theme.panel))
-            .overlay(RoundedRectangle(cornerRadius: 13, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
+            .background(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).fill(hover ? Theme.elevated : Theme.panel))
+            .overlay(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -189,7 +154,7 @@ struct HeaderView: View {
         HStack(alignment: .center, spacing: 16) {
             VStack(alignment: .leading, spacing: 8) {
                 Text(status.project.name)
-                    .font(.system(size: 28, weight: .bold))
+                    .font(Typo.font(.display, weight: .bold))
                     .foregroundColor(Theme.text)
                     .lineLimit(1)
                 HStack(spacing: 6) {
@@ -206,7 +171,7 @@ struct HeaderView: View {
                     }
                 }
                 Text(status.project.path)
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(Typo.font(.caption, design: .monospaced))
                     .foregroundColor(Theme.tertiary)
                     .lineLimit(1)
                     .truncationMode(.middle)
@@ -266,11 +231,11 @@ struct HeroCard: View {
             HStack(alignment: .center, spacing: 16) {
                 StatusRing(fraction: passFraction, tint: tint,
                            symbol: state == "unknown" ? "questionmark" : Theme.symbol(for: state))
-                    .breath(tint, strong: state == "blocked")
+
                     .accessibilityLabel(title)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
-                        .font(.system(size: 20, weight: .heavy))
+                        .font(Typo.font(.title, weight: .heavy))
                         .tracking(0.6)
                         .foregroundColor(Theme.text)
                     HStack(spacing: 6) {
@@ -281,12 +246,16 @@ struct HeroCard: View {
                         } else {
                             Text(L("dashboard.runCheckHint"))
                         }
+                        if let reason = model.autoCheckPaused[status.project.key] {
+                            Label(reason, systemImage: "pause.circle").foregroundColor(Theme.warn)
+                            Button(L("common.check")) { model.runCheck() }.buttonStyle(.link)
+                        }
                         if model.autoChecking {
                             Spinner(size: 10)
                             Text(L("autocheck.running")).foregroundColor(Theme.accent)
                         }
                     }
-                    .font(.system(size: 12))
+                    .font(Typo.font(.callout))
                     .foregroundColor(Theme.secondary)
                 }
                 Spacer()
@@ -307,29 +276,29 @@ struct HeroCard: View {
                     let hasFail = issues.contains { $0.status == "fail" }
                     HStack(alignment: .center, spacing: 12) {
                         Image(systemName: hasFail ? "xmark.octagon.fill" : "exclamationmark.triangle.fill")
-                            .font(.system(size: 18)).foregroundColor(hasFail ? Theme.blocked : Theme.warn)
+                            .font(Typo.font(.headline)).foregroundColor(hasFail ? Theme.blocked : Theme.warn)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(issues.map { $0.label ?? $0.id }.joined(separator: " · "))
-                                .font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.text).lineLimit(1)
+                                .font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.text).lineLimit(1)
                             Text(issues.count == 1 ? (issues[0].summary ?? "") : L("dashboard.issuesOnePrompt", issues.count))
-                                .font(.system(size: 11.5)).foregroundColor(Theme.secondary).lineLimit(1)
+                                .font(Typo.font(.callout)).foregroundColor(Theme.secondary).lineLimit(1)
                         }
                         Spacer()
                         AIFixBar(step: issues.count == 1 ? issues[0].id : "all", compact: true)
                     }
                     .padding(12)
-                    .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill((hasFail ? Theme.blocked : Theme.warn).opacity(0.08)))
+                    .background(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).fill((hasFail ? Theme.blocked : Theme.warn).opacity(0.08)))
                 }
             }
 
-            HStack(spacing: 10) {
+            FlowLayout(spacing: Space.m) {
                 Button {
                     model.runCheck()
                 } label: {
                     Label(L("common.check"), systemImage: "arrow.triangle.2.circlepath")
                 }
                 .bidButton(.secondary)
-                .help("⌘R — Git, secrets, lint, typecheck, build")
+                .help(L("dashboard.checkHelp"))
 
                 Button {
                     model.smartDeploy()
@@ -344,7 +313,7 @@ struct HeroCard: View {
 
                 if !(status.hosting?.ready ?? (status.detect.netlifyLinked == true)) {
                     Text(L("dashboard.connectHostingHelp"))
-                        .font(.system(size: 12))
+                        .font(Typo.font(.callout))
                         .foregroundColor(Theme.tertiary)
                     Button(L("dashboard.setUpHosting")) {
                         if (status.hosting?.provider ?? "netlify") == "netlify" { model.sheet = .netlifySetup } else { model.screen = .setup }
@@ -356,24 +325,21 @@ struct HeroCard: View {
                     } label: {
                         Label(L("hosting.productionButton"), systemImage: "paperplane.fill")
                     }
-                    .bidButton(.danger)
+                    .bidButton(.secondary)
                     .disabled(state == "blocked")
                     .help(state == "blocked" ? L("dashboard.fixErrorsFirst") : L("dashboard.productionHelp"))
                 }
             }
         }
         .card(padding: 22, tint: state == "unknown" ? nil : tint)
-        .glowBorder(tint, strength: state == "ready" ? 0.9 : state == "blocked" ? 0.7 : 0.45)
+        .glowBorder(tint, strength: state == "blocked" ? 0.7 : 0)
         .overlay { if celebrate { Celebration().frame(maxWidth: .infinity, maxHeight: .infinity) } }
-        .onChange(of: status.check?.at) { _ in
+        .onChange(of: status.check?.status) { _ in
             guard state == "ready", !Motion.reduced else { return }
             celebrate = true
             Task { try? await Task.sleep(nanoseconds: 2_000_000_000); celebrate = false }
         }
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
-                .strokeBorder(tint.opacity(state == "unknown" ? 0 : 0.25), lineWidth: 1)
-        )
+
         .animation(Motion.gentle, value: state)
     }
 }
@@ -415,13 +381,13 @@ struct LaunchCard: View {
             HStack(spacing: 12) {
                 ZStack {
                     ProgressRing(fraction: Double(launch.requiredDone) / Double(max(1, launch.requiredTotal)), lineWidth: 5)
-                    Text("\(launch.requiredDone)/\(launch.requiredTotal)").font(.system(size: 11, weight: .bold)).foregroundColor(Theme.text)
+                    Text("\(launch.requiredDone)/\(launch.requiredTotal)").font(Typo.font(.caption, weight: .bold)).foregroundColor(Theme.text)
                 }
                 .frame(width: 44, height: 44)
                 VStack(alignment: .leading, spacing: 2) {
-                    GradientText(text: L("launch.title"), font: .system(size: 17, weight: .bold))
+                    GradientText(text: L("launch.title"), font: Typo.font(.headline, weight: .bold))
                     Text(launch.next.flatMap { id in launch.steps.first { $0.id == id } }.map { L("launch.nextLine", $0.title) } ?? L("launch.allDone"))
-                        .font(.system(size: 12)).foregroundColor(Theme.secondary)
+                        .font(Typo.font(.callout)).foregroundColor(Theme.secondary)
                 }
                 Spacer()
                 Button { withAnimation(Motion.spring) { collapsed.toggle() } } label: {
@@ -436,8 +402,8 @@ struct LaunchCard: View {
                         let (icon, tint) = symbol(s)
                         HStack(alignment: .top, spacing: 12) {
                             VStack(spacing: 0) {
-                                Image(systemName: icon).font(.system(size: 15)).foregroundColor(tint)
-                                    .breath(tint, strong: s.status == "attention")
+                                Image(systemName: icon).font(Typo.font(.subhead)).foregroundColor(tint)
+
                                 if i < launch.steps.count - 1 {
                                     Rectangle().fill(s.status == "done" ? Theme.ready.opacity(0.5) : Theme.hairline).frame(width: 2).frame(maxHeight: .infinity)
                                 }
@@ -445,11 +411,11 @@ struct LaunchCard: View {
                             .frame(width: 18)
                             VStack(alignment: .leading, spacing: 2) {
                                 HStack(spacing: 6) {
-                                    Text(s.title).font(.system(size: 13, weight: s.status == "todo" || s.status == "attention" ? .bold : .semibold))
+                                    Text(s.title).font(Typo.font(.body, weight: s.status == "todo" || s.status == "attention" ? .bold : .semibold))
                                         .foregroundColor(s.status == "waiting" ? Theme.tertiary : Theme.text)
-                                    if s.optional { Text(L("launch.optional")).font(.system(size: 10, weight: .semibold)).foregroundColor(Theme.tertiary).padding(.horizontal, 6).padding(.vertical, 1).background(Capsule().fill(Theme.elevated)) }
+                                    if s.optional { Text(L("launch.optional")).font(Typo.font(.micro, weight: .semibold)).foregroundColor(Theme.tertiary).padding(.horizontal, 6).padding(.vertical, 1).background(Capsule().fill(Theme.elevated)) }
                                 }
-                                Text(s.hint).font(.system(size: 11.5)).foregroundColor(s.status == "waiting" ? Theme.tertiary : Theme.secondary).fixedSize(horizontal: false, vertical: true)
+                                Text(s.hint).font(Typo.font(.callout)).foregroundColor(s.status == "waiting" ? Theme.tertiary : Theme.secondary).fixedSize(horizontal: false, vertical: true)
                             }
                             Spacer()
                             if let title = buttonTitle(s), s.status != "done" && s.status != "waiting" {
@@ -458,7 +424,7 @@ struct LaunchCard: View {
                             }
                         }
                         .padding(.vertical, 6)
-                        .entrance(i + 1, offset: 8)
+
                     }
                 }
             }
@@ -472,16 +438,7 @@ struct CountPill: View {
     let value: Int
     let symbol: String
     let tint: Color
-    var body: some View {
-        HStack(spacing: 4) {
-            Image(systemName: symbol).font(.system(size: 9, weight: .black))
-            Text("\(value)").font(.system(size: 12, weight: .bold)).monospacedDigit()
-        }
-        .foregroundColor(value == 0 ? Theme.tertiary : tint)
-        .padding(.horizontal, 9)
-        .padding(.vertical, 5)
-        .background(Capsule().fill(value == 0 ? Theme.elevated : tint.opacity(0.12)))
-    }
+    var body: some View { Badge(text: String(value), icon: symbol, tint: value == 0 ? Theme.secondary : tint) }
 }
 
 struct HealthBar: View {
@@ -492,8 +449,9 @@ struct HealthBar: View {
                 Capsule(style: .continuous)
                     .fill(s.status == "skipped" ? Theme.elevated : Theme.color(for: s.status).opacity(s.status == "info" ? 0.45 : 0.9))
                     .frame(height: 6)
-                    .shadow(color: s.status == "fail" ? Theme.blocked.opacity(0.6) : .clear, radius: 4)
                     .help("\(s.label ?? s.id): \(s.summary ?? s.status)")
+                    .accessibilityLabel(s.label ?? s.id)
+                    .accessibilityValue(s.summary ?? s.status)
             }
         }
     }
@@ -506,8 +464,8 @@ struct HealthGrid: View {
     let status: ProjectStatus
 
     static let placeholders: [(String, String)] = [
-        ("git", "Git"), ("secrets", "Secrets"), ("deps", L("common.dependencies")), ("lint", "Lint"),
-        ("typecheck", "Typecheck"), ("build", "Build"), ("site", L("launch.site.title")), ("hosting", "Hosting"),
+        ("git", K.step("git")), ("secrets", K.step("secrets")), ("deps", L("common.dependencies")), ("lint", K.step("lint")),
+        ("typecheck", K.step("typecheck")), ("build", K.step("build")), ("site", L("launch.site.title")), ("hosting", K.step("hosting")),
     ]
 
     var body: some View {
@@ -518,7 +476,7 @@ struct HealthGrid: View {
             SectionLabel(text: L("dashboard.projectHealth"), icon: "waveform.path.ecg")
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 150, maximum: 400), spacing: 10)], spacing: 10) {
                 ForEach(Array(steps.enumerated()), id: \.element.id) { i, s in
-                    HealthTile(step: s).entrance(i, offset: 10)
+                    HealthTile(step: s)
                 }
             }
         }
@@ -553,18 +511,18 @@ struct HealthTile: View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Image(systemName: Self.icon(step.id))
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(Typo.font(.callout, weight: .semibold))
                         .foregroundColor(Theme.secondary)
-                    Text(step.label ?? step.id)
-                        .font(.system(size: 12.5, weight: .semibold))
+                    Text(K.step(step.id))
+                        .font(Typo.font(.body, weight: .semibold))
                         .foregroundColor(Theme.text)
                     Spacer()
                     Image(systemName: Theme.symbol(for: step.status))
-                        .font(.system(size: 12))
+                        .font(Typo.font(.callout))
                         .foregroundColor(tint)
                 }
                 Text(step.summary ?? "—")
-                    .font(.system(size: 11.5))
+                    .font(Typo.font(.callout))
                     .foregroundColor(Theme.secondary)
                     .lineLimit(2)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -573,11 +531,11 @@ struct HealthTile: View {
             .padding(12)
             .frame(maxWidth: .infinity, minHeight: 74, alignment: .topLeading)
             .background(
-                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                RoundedRectangle(cornerRadius: Radius.m, style: .continuous)
                     .fill(hover ? Theme.elevated : Theme.panel)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 13, style: .continuous)
+                RoundedRectangle(cornerRadius: Radius.m, style: .continuous)
                     .strokeBorder(step.status == "fail" ? Theme.blocked.opacity(0.45) : Theme.hairline, lineWidth: 1)
             )
         }
@@ -599,16 +557,16 @@ struct StepDetailPopover: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Image(systemName: Theme.symbol(for: step.status)).foregroundColor(Theme.color(for: step.status))
-                Text(step.label ?? step.id).font(.system(size: 14, weight: .bold))
+                Text(K.step(step.id)).font(Typo.font(.subhead, weight: .bold))
                 Spacer()
-                if let d = step.duration, d > 0 { Text(Fmt.duration(d)).foregroundColor(Theme.tertiary).font(.system(size: 11)) }
+                if let d = step.duration, d > 0 { Text(Fmt.duration(d)).foregroundColor(Theme.tertiary).font(Typo.font(.caption)) }
             }
-            Text(step.summary ?? "").foregroundColor(Theme.secondary).font(.system(size: 12.5))
+            Text(step.summary ?? "").foregroundColor(Theme.secondary).font(Typo.font(.body))
             if let details = step.details, !details.isEmpty {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 3) {
                         ForEach(Array(details.enumerated()), id: \.offset) { _, l in
-                            Text(l).font(.system(size: 11, design: .monospaced)).foregroundColor(Theme.text)
+                            Text(l).font(Typo.font(.caption, design: .monospaced)).foregroundColor(Theme.text)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .textSelection(.enabled)
                         }
@@ -616,7 +574,7 @@ struct StepDetailPopover: View {
                     .padding(10)
                 }
                 .frame(maxHeight: 220)
-                .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.bg))
+                .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(Theme.bg))
             }
             if step.status == "fail" || step.status == "warn" {
                 AIFixBar(step: step.id, compact: true)
@@ -652,8 +610,8 @@ struct FixesCard: View {
                         .foregroundColor(f.risk == "caution" ? Theme.warn : Theme.accent)
                         .frame(width: 20)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(f.title).font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.text)
-                        Text(f.description).font(.system(size: 11.5)).foregroundColor(Theme.secondary).lineLimit(2)
+                        Text(f.title).font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.text)
+                        Text(f.description).font(Typo.font(.callout)).foregroundColor(Theme.secondary).lineLimit(2)
                     }
                     Spacer()
                     Button(L("dashboard.review")) { model.requestFix(f.id) }
@@ -679,7 +637,7 @@ struct HistoryStrip: View {
             }
             if model.history.isEmpty {
                 Text(L("dashboard.noEvents"))
-                    .font(.system(size: 12))
+                    .font(Typo.font(.callout))
                     .foregroundColor(Theme.tertiary)
                     .padding(.vertical, 6)
             } else {
@@ -706,24 +664,24 @@ struct HistoryRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Text(Fmt.time(entry.ts))
-                .font(.system(size: 11.5, design: .monospaced))
+                .font(Typo.font(.callout, design: .monospaced))
                 .foregroundColor(Theme.tertiary)
                 .frame(width: 78, alignment: .leading)
             Image(systemName: entry.symbol)
-                .font(.system(size: 11))
+                .font(Typo.font(.caption))
                 .foregroundColor(entry.status == "ok" ? Theme.ready : Theme.blocked)
                 .frame(width: 16)
             Text(entry.title)
-                .font(.system(size: 12.5, weight: .medium))
+                .font(Typo.font(.body, weight: .medium))
                 .foregroundColor(Theme.text)
             if showProject, let n = entry.projectName {
-                Text(n).font(.system(size: 11.5)).foregroundColor(Theme.secondary)
+                Text(n).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
             }
             if let m = entry.message {
-                Text(m).font(.system(size: 11.5)).foregroundColor(Theme.tertiary).lineLimit(1)
+                Text(m).font(Typo.font(.callout)).foregroundColor(Theme.tertiary).lineLimit(1)
             }
             Spacer()
-            if let d = entry.duration { Text(Fmt.duration(d)).font(.system(size: 11)).foregroundColor(Theme.tertiary) }
+            if let d = entry.duration { Text(Fmt.duration(d)).font(Typo.font(.caption)).foregroundColor(Theme.tertiary) }
             if let url = entry.url {
                 Button { model.open(url) } label: { Image(systemName: "arrow.up.right.square") }
                     .buttonStyle(.plain).foregroundColor(Theme.secondary).help(url)
@@ -735,7 +693,7 @@ struct HistoryRow: View {
         }
         .padding(.vertical, 8)
         .padding(.horizontal, 6)
-        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(hover ? Theme.elevated : .clear))
+        .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(hover ? Theme.elevated : .clear))
         .onHover { hover = $0 }
     }
 }

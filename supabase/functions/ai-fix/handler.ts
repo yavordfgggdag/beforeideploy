@@ -1,9 +1,10 @@
+import catalogData from "../_shared/plans-catalog.json" with { type: "json" };
 // Before I Deploy — `ai-fix` Edge Function, request handler (V10 WP3, testable since L6): the metered
 // AI proxy for normal users. The central Anthropic key lives only in Supabase secrets. The engine sends
 // the redacted prompt + the user's JWT; we check role/plan/credits/limits, stream the model's answer
 // back as normalized SSE ({type: delta|usage|done|error}) and bill the real token counts to credit_ledger.
 import { callerOf, type DbClient, type Deps, json, must, readJson, type Row } from "../_shared/db.ts";
-import { bucketBalance, ensureMonthlyGrant, expireDue, pricingVersion, reconcileHolds } from "../_shared/credits.ts";
+import { creditRpc, creditStatus, ensureMonthlyGrant, expireDue, pricingVersion, reconcileHolds } from "../_shared/credits.ts";
 
 export type Plan = "free" | "flash" | "high" | "knight";
 export type Role = "normal" | "vip" | "admin";
@@ -32,8 +33,9 @@ export interface AiFixDeps extends Deps {
 export const DEFAULTS = {
   // model per plan (docs/PLANS-AND-CREDITS-BG.md §1); `explain` is the cheap model for explanations, `deep` the Knight-only deep fix
   "ai.models": { flash: "claude-sonnet-5-5", high: "claude-opus-5-5", knight: "claude-opus-5-5", deep: "claude-opus-5-5", explain: "claude-haiku-4-5" } as Record<string, string>,
-  // what one credit costs the owner, per plan (EUR): Flash 100 000 credits = 2.49 €, High 250 000 = 7.50 €, Knight 1 000 000 = 30 €
-  "ai.creditEur": { flash: 0.0000249, high: 0.00003, knight: 0.00003, default: 0.00003 } as Record<string, number>,
+  // One EUR rate for all V2 plans; legacy admin objects remain readable during migration.
+  "ai.creditEur": 0.000025 as number | Record<string, number>,
+  "pricing.version": "2026-10",
   "ai.usdToEur": 0.92,
   // the rolling session (as in Claude): 20 % of the monthly credits per 5 hours
   "ai.sessionHours": 5,
@@ -43,7 +45,7 @@ export const DEFAULTS = {
   // USD per million tokens (input / output) — used for cost_usd bookkeeping only
   "ai.prices": { "claude-haiku-4-5": [1, 5], "claude-sonnet-5-5": [2, 10], "claude-opus-5-5": [4, 20] } as Record<string, [number, number]>,
   // credits per month per plan (the ledger column is still called tokens)
-  plans: { flash: { tokens: 100000 }, high: { tokens: 250000 }, knight: { tokens: 1000000 } } as Record<string, { tokens: number }>,
+  plans: Object.fromEntries(Object.entries(catalogData.plans).map(([id, p]) => [id, { tokens: p.credits }])) as Record<string, { tokens: number }>,
 };
 
 export type Settings = typeof DEFAULTS & Record<string, unknown>;
@@ -75,17 +77,23 @@ export function chooseModel(settings: Settings, role: Role, plan: Plan, body: Pi
  * (docs/PLANS-AND-CREDITS-BG.md §2). At least one credit for any request that reached the model.
  */
 export function creditsFor(settings: Settings, plan: string, model: string, inputTokens: number, outputTokens: number) {
-  const [pin, pout] = settings["ai.prices"][model] ?? [0, 0];
+  const price = settings["ai.prices"]?.[model];
+  if (!Array.isArray(price) || price.length !== 2 || price.some(x => !Number.isFinite(x) || x <= 0)) throw Object.assign(new Error("AI model pricing is unavailable"), {status:503,code:"meter_unavailable"});
+  const [pin, pout] = price;
   const costUsd = (inputTokens * pin + outputTokens * pout) / 1_000_000;
   const rates = settings["ai.creditEur"] ?? {};
-  const rate = Number(rates[plan] ?? rates.default ?? 0.00003);
-  const costEur = costUsd * Number(settings["ai.usdToEur"] ?? 0.92);
+  const rate = Number(typeof rates === "number" ? rates : rates[plan] ?? rates.default ?? 0.000025);
+  if (!Number.isFinite(rate) || rate <= 0) throw new Error("Invalid AI credit rate");
+  const exchange = Number(settings["ai.usdToEur"] ?? 0.92);
+  if (!Number.isFinite(exchange) || exchange <= 0) throw Object.assign(new Error("AI exchange rate is unavailable"), {status:503,code:"meter_unavailable"});
+  const costEur = costUsd * exchange;
   const credits = costUsd > 0 ? Math.max(1, Math.ceil(costEur / rate - 1e-9)) : 0; // 1e-9 absorbs float noise on exact quotients
   return { costUsd, costEur, rate, credits };
 }
 
 export function createAiFixHandler(deps: AiFixDeps): (req: Request) => Promise<Response> {
   return async (req) => {
+    try {
     if (req.method !== "POST") return json(405, { error: "POST only" });
     if (!deps.anthropicKey) return json(500, { error: "ANTHROPIC_API_KEY is not configured", code: "not_configured" });
     const body = await readJson<AiFixBody>(req);
@@ -109,7 +117,7 @@ export function createAiFixHandler(deps: AiFixDeps): (req: Request) => Promise<R
     // a yearly plan's monthly tokens are granted here when due
     await ensureMonthlyGrant(db, user.id, settings.plans, now);
     // Free with bought token packs may still use them (audit C9)
-    if (role === "normal" && plan === "free" && (await bucketBalance(db, user.id, "topup")) <= 0) {
+    if (role === "normal" && plan === "free" && Number((await creditStatus(db,user.id,now)).available) <= 0) {
       return json(403, { error: "a paid plan is required", code: "no_plan" });
     }
 
@@ -136,7 +144,7 @@ export function createAiFixHandler(deps: AiFixDeps): (req: Request) => Promise<R
     if (body.system !== undefined && typeof body.system !== "string") return json(400, { error: "system must be text" });
     if (inputChars > Number(settings["ai.promptMaxChars"]) + SYSTEM_ALLOWANCE) return json(413, { error: "prompt too long", code: "prompt_too_long" });
 
-    const balanceOf = async () => Number((await db.from("credit_balance").select("balance").eq("user_id", user.id).maybeSingle()).data?.balance ?? 0);
+    const balanceOf = async () => Number((await creditStatus(db,user.id,now)).balance ?? 0);
     const balance = await balanceOf();
     // plan tokens renew with the next monthly grant; the app shows the date
     const renewsAt = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)).toISOString();
@@ -156,11 +164,19 @@ export function createAiFixHandler(deps: AiFixDeps): (req: Request) => Promise<R
       user_id: user.id, project_key: body.project?.key ?? null, step: body.step ?? null, model, status: "pending", charged_tokens: 0, operation_id: operationId, pricing_version: priceVersion,
     }).select("id").maybeSingle());
     const usageId = String((usageIns.data as Row | null)?.id ?? crypto.randomUUID());
-    must(await db.from("credit_ledger").insert({ user_id: user.id, delta: -estimate, bucket: "hold", reason: "hold", ref: usageId }));
-    // a request that never reached the model leaves nothing behind: no hold, no usage row
+    const accountingId = operationId ?? usageId;
+    const action = body.deep && plan === "knight" ? "ai.fix.deep" : body.mode === "assistant" ? "ai.chat" : "ai.fix";
+    let held: Row;
+    try { held = await creditRpc(db,"bid_hold",{p_user:user.id,p_action:action,p_credits:estimate,p_operation_id:accountingId,p_counts_window:true,p_pricing_version:priceVersion,p_ai_usage:usageId,p_now:now.toISOString()}); }
+    catch(error) { await db.from("ai_usage").delete().eq("id",usageId); throw error; }
+    if(!held.ok) {
+      await db.from("ai_usage").delete().eq("id",usageId);
+      return json(held.code === "quota_exhausted" ? 402 : 403,{error:"Credit limit reached",...held});
+    }
+    // No model call has happened yet; release the reservation if any preflight/provider step fails.
     const release = async (why: string) => {
-      await db.from("credit_ledger").delete().eq("user_id", user.id).eq("ref", usageId).eq("reason", "hold");
-      await db.from("ai_usage").delete().eq("id", usageId);
+      await creditRpc(db,"bid_release",{p_user:user.id,p_operation_id:accountingId});
+      await db.from("ai_usage").delete().eq("id",usageId);
       if (why === "upstream") console.warn("ai-fix released", usageId, why);
     };
 
@@ -172,28 +188,6 @@ export function createAiFixHandler(deps: AiFixDeps): (req: Request) => Promise<R
       await release("rate_limited");
       return json(429, { error: "too many requests", code: "rate_limited" });
     }
-    const monthly = settings.plans[plan]?.tokens ?? 0;
-    if (monthly > 0) {
-      // the rolling session: what was charged in the last N hours against a share of the monthly credits
-      const hours = Number(settings["ai.sessionHours"] ?? 5);
-      const windowStart = new Date(t - hours * 3600_000);
-      const { data: inWindow } = await db.from("ai_usage").select("charged_tokens,created_at").eq("user_id", user.id).gte("created_at", windowStart.toISOString());
-      const rowsInWindow = ((inWindow ?? []) as Row[]).filter((r) => String(r.created_at) >= windowStart.toISOString());
-      const spent = rowsInWindow.reduce((a: number, r: Row) => a + Number(r.charged_tokens ?? 0), 0);
-      const cap = Math.floor((monthly * Number(settings["ai.sessionCapPercent"] ?? 20)) / 100);
-      if (spent >= cap) {
-        const oldest = rowsInWindow.map((r) => String(r.created_at)).sort()[0];
-        const resetsAt = oldest ? new Date(new Date(oldest).getTime() + hours * 3600_000).toISOString() : new Date(t + hours * 3600_000).toISOString();
-        await release("session_cap");
-        return json(403, { error: "session limit reached", code: "session_cap", cap, spent, resetsAt, windowHours: hours });
-      }
-    }
-    // other requests' holds are visible now: without them in flight this one would have credits left
-    if ((await balanceOf()) + estimate <= 0) {
-      await release("quota");
-      return quota();
-    }
-
     // ---- call the model (streaming); aborted when the client goes away (audit C6)
     const upstreamBody: Record<string, unknown> = {
       model,
@@ -210,7 +204,7 @@ export function createAiFixHandler(deps: AiFixDeps): (req: Request) => Promise<R
         method: "POST",
         headers: { "content-type": "application/json", "x-api-key": deps.anthropicKey, "anthropic-version": "2023-06-01" },
         body: JSON.stringify(upstreamBody),
-        signal: abort.signal,
+        signal: AbortSignal.any([abort.signal,AbortSignal.timeout(5*60_000)]),
       });
     } catch (e) {
       console.error("anthropic", (e as Error).message);
@@ -240,20 +234,10 @@ export function createAiFixHandler(deps: AiFixDeps): (req: Request) => Promise<R
       settled ??= (async () => {
         const inTok = input || estInput;
         const outTok = outputReported ? output : Math.max(output, Math.ceil(deltaChars / CHARS_PER_TOKEN));
-        const { credits: charged, costUsd } = creditsFor(settings, plan, usedModel, inTok, outTok);
-        await db.from("credit_ledger").delete().eq("user_id", user.id).eq("ref", usageId).eq("reason", "hold");
-        must(await db.from("ai_usage").update({ model: usedModel, input_tokens: inTok, output_tokens: outTok, cost_usd: costUsd, charged_tokens: charged, status }).eq("id", usageId));
-        if (charged > 0) {
-          // the monthly plan tokens are spent first, then the top-up packs (they last 12 months)
-          const planLeft = Math.max(0, await bucketBalance(db, user.id, "plan"));
-          const fromPlan = Math.min(charged, planLeft);
-          const fromTopup = charged - fromPlan;
-          const rows: Row[] = [];
-          if (fromPlan > 0) rows.push({ user_id: user.id, delta: -fromPlan, bucket: "plan", reason: "ai_fix", ref: usageId, pricing_version: priceVersion });
-          if (fromTopup > 0) rows.push({ user_id: user.id, delta: -fromTopup, bucket: "topup", reason: "ai_fix", ref: usageId, pricing_version: priceVersion });
-          must(await db.from("credit_ledger").insert(rows));
-        }
-        return { charged, balance: await balanceOf() };
+        const { credits: charged, costUsd } = creditsFor(settings, plan, settings["ai.prices"]?.[usedModel] ? usedModel : model, inTok, outTok);
+        const receipt = await creditRpc(db,"bid_settle",{p_user:user.id,p_operation_id:accountingId,p_credits:charged,p_ai:{model:usedModel,input:inTok,output:outTok,costUsd,status}});
+        if(!receipt.ok) throw new Error("Credit settlement was not accepted");
+        return {charged:Number(receipt.charged),balance:Number(receipt.balance ?? await balanceOf())};
       })();
       return settled;
     };
@@ -341,5 +325,10 @@ export function createAiFixHandler(deps: AiFixDeps): (req: Request) => Promise<R
     });
 
     return new Response(stream, { headers: { "content-type": "text/event-stream", "cache-control": "no-cache", connection: "keep-alive" } });
+    } catch(error) {
+      const e=error as Error & {status?:number;code?:string};
+      console.error("ai-fix request",e.code ?? "internal");
+      return json(e.status ?? 500,{error:"The request could not be completed",code:e.code === "23505" ? "operation_in_progress" : e.code ?? "internal"});
+    }
   };
 }

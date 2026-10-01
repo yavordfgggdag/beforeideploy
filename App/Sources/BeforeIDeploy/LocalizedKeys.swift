@@ -2,7 +2,7 @@ import Foundation
 
 /// Catalog keys for values the engine sends as enums (severity, release state, …). Kept as literal
 /// switches so `scripts/i18n-check.mjs` can prove every key exists in both languages; an unknown value
-/// falls back to the value itself rather than showing a raw key.
+/// shows an explicitly unknown value instead of pretending it is translated.
 enum K {
     static func severity(_ v: String) -> String {
         switch v {
@@ -11,7 +11,7 @@ enum K {
         case "medium": return L("issue.severity.medium")
         case "low": return L("issue.severity.low")
         case "info": return L("issue.severity.info")
-        default: return v
+        default: return other(v)
         }
     }
 
@@ -20,7 +20,7 @@ enum K {
         case "defect": return L("issue.kind.defect")
         case "recommendation": return L("issue.kind.recommendation")
         case "signal": return L("issue.kind.signal")
-        default: return v
+        default: return other(v)
         }
     }
 
@@ -29,7 +29,7 @@ enum K {
         case "confirmed": return L("issue.confidence.confirmed")
         case "likely": return L("issue.confidence.likely")
         case "heuristic": return L("issue.confidence.heuristic")
-        default: return v
+        default: return other(v)
         }
     }
 
@@ -38,7 +38,7 @@ enum K {
         case "low": return L("issue.risk.low")
         case "medium": return L("issue.risk.medium")
         case "high": return L("issue.risk.high")
-        default: return v
+        default: return other(v)
         }
     }
 
@@ -64,7 +64,7 @@ enum K {
         case "cancelled": return L("release.state.cancelled")
         case "stale": return L("release.state.stale")
         case "interrupted": return L("release.state.interrupted")
-        default: return v
+        default: return other(v)
         }
     }
 
@@ -75,7 +75,7 @@ enum K {
         case "smoke": return L("release.stage.smoke")
         case "promote": return L("release.stage.promote")
         case "verify": return L("release.stage.verify")
-        default: return v
+        default: return other(v)
         }
     }
 
@@ -86,7 +86,7 @@ enum K {
         case "status": return L("release.cap.status")
         case "rollback": return L("release.cap.rollback")
         case "publishArtifact": return L("release.cap.publishArtifact")
-        default: return v
+        default: return other(v)
         }
     }
 
@@ -101,7 +101,7 @@ enum K {
         switch v {
         case "app": return L("release.actor.app")
         case "cli": return L("release.actor.cli")
-        default: return v
+        default: return other(v)
         }
     }
 
@@ -124,7 +124,7 @@ enum K {
         case "down": return L("incident.kind.down")
         case "ssl": return L("incident.kind.ssl")
         case "domain": return L("incident.kind.domain")
-        default: return v
+        default: return other(v)
         }
     }
 
@@ -137,7 +137,7 @@ enum K {
         case "past_due": return L("usage.status.past_due")
         case "canceled": return L("usage.status.canceled")
         case "expired": return L("usage.status.expired")
-        default: return v
+        default: return other(v)
         }
     }
 
@@ -148,8 +148,9 @@ enum K {
         case "orphaned": return L("usage.op.orphaned")
         case "truncated": return L("usage.op.truncated")
         case "refused": return L("usage.op.refused")
-        case "error": return L("usage.op.error")
-        default: return v
+        case "error", "failed": return L("usage.op.error")
+        case "unknown": return L("usage.op.unknown")
+        default: return other(v)
         }
     }
 
@@ -163,7 +164,7 @@ enum K {
         case "admin_grant": return L("usage.reason.admin_grant")
         case "refund": return L("usage.reason.refund")
         case "expiry": return L("usage.reason.expiry")
-        default: return v
+        default: return other(v)
         }
     }
 
@@ -172,7 +173,7 @@ enum K {
         case "plan": return L("usage.bucket.plan")
         case "topup": return L("usage.bucket.topup")
         case "hold": return L("usage.bucket.hold")
-        default: return v
+        default: return other(v)
         }
     }
 
@@ -186,7 +187,7 @@ enum K {
         case "explain": return L("assistant.action.explain")
         case "readiness": return L("assistant.action.readiness")
         case "triage": return L("assistant.action.triage")
-        default: return v
+        default: return other(v)
         }
     }
 
@@ -204,7 +205,7 @@ enum K {
         case "max_iterations": return L("assistant.stopped.max_iterations")
         case "budget": return L("assistant.stopped.budget")
         case "cancelled": return L("assistant.cancelled")
-        default: return v
+        default: return v.map(other)
         }
     }
 
@@ -216,7 +217,7 @@ enum K {
         case "git": return L("assistant.evidence.git")
         case "diff": return L("assistant.evidence.diff")
         case "incident": return L("assistant.evidence.incident")
-        default: return v
+        default: return other(v)
         }
     }
 
@@ -239,7 +240,111 @@ enum K {
         case "recovery_options": return L("assistant.field.recovery_options")
         case "timeline_summary": return L("assistant.field.timeline")
         case "evidence_ids": return L("assistant.field.evidence")
-        default: return v.replacingOccurrences(of: "_", with: " ")
+        default: return other(v)
+        }
+    }
+}
+
+
+extension K {
+    static func assistantStatus(_ value: String) -> String {
+        switch value {
+        case "confirmed": return L("assistant.status.confirmed")
+        case "likely": return L("assistant.status.likely")
+        case "unverified": return L("assistant.status.unverified")
+        default: return other(value)
+        }
+    }
+    static func aiSkipReason(_ value: String) -> String {
+        switch value {
+        case "changed_since": return L("assistant.skip.changed")
+        case "config_approval", "needs_approval": return L("assistant.skip.config")
+        case "not_applicable": return L("assistant.skip.invalid")
+        default: return L("assistant.skip.other", value)
+        }
+    }
+}
+
+extension K {
+    static func other(_ value: String) -> String {
+        AppLog.ui.debug("unmapped display value: \(value, privacy: .private)")
+        return L("k.other", value)
+    }
+    static func role(_ value: String) -> String {
+        switch value {
+        case "normal": return L("k.role.normal")
+        case "vip": return L("k.role.vip")
+        case "admin": return L("k.role.admin")
+        default: return other(value)
+        }
+    }
+    static func plan(_ value: String) -> String {
+        switch value {
+        case "free": return L("k.plan.free")
+        case "flash": return "Flash"
+        case "high": return "High"
+        case "knight": return "Knight"
+        default: return other(value)
+        }
+    }
+    static func provider(_ value: String) -> String {
+        switch value {
+        case "cloud": return L("k.provider.cloud")
+        case "local": return L("k.provider.local")
+        case "anthropic": return "Anthropic"
+        case "apple": return "Apple"
+        case "email": return L("auth.email")
+        case "openai": return "OpenAI"
+        case "claude": return "Claude"
+        case "codex": return "Codex"
+        case "chatgpt": return "ChatGPT"
+        case "netlify": return "Netlify"
+        case "vercel": return "Vercel"
+        case "cloudflare": return "Cloudflare Pages"
+        case "ghpages": return "GitHub Pages"
+        case "github": return "GitHub"
+        case "spaceship": return "Spaceship"
+        case "paddle": return "Paddle"
+        case "manual": return L("k.provider.manual")
+        case "trial": return L("usage.status.trial")
+        default: return other(value)
+        }
+    }
+    static func step(_ value: String) -> String {
+        switch value {
+        case "git": return L("k.step.git")
+        case "secrets": return L("k.step.secrets")
+        case "deps": return L("common.dependencies")
+        case "lint": return L("k.step.lint")
+        case "typecheck": return L("k.step.typecheck")
+        case "build": return L("k.step.build")
+        case "site": return L("launch.site.title")
+        case "hosting": return L("k.step.hosting")
+        case "assistant:ask": return L("assistant.nav")
+        case "assistant:diagnose": return L("assistant.field.findings")
+        case "assistant:propose", "assistant:fix": return L("issue.fix.ai")
+        case "node": return "Node.js"
+        case "npm": return "npm"
+        case "pnpm": return "pnpm"
+        case "netlify": return "Netlify"
+        case "vercel": return "Vercel"
+        case "cloudflare": return "Cloudflare Pages"
+        case "gh": return "GitHub"
+        case "cloud": return L("k.provider.cloud")
+        default: return other(value)
+        }
+    }
+    static func auditAction(_ value: String) -> String {
+        switch value {
+        case "set_role": return L("k.audit.set_role")
+        case "set_plan": return L("k.audit.set_plan")
+        case "grant": return L("k.audit.grant")
+        case "set_ai_disabled": return L("k.audit.set_ai_disabled")
+        case "pause_site": return L("k.audit.pause_site")
+        case "set_settings": return L("k.audit.set_settings")
+        case "invite": return L("k.audit.invite")
+        case "delete_account": return L("k.audit.delete_account")
+        default: return other(value)
         }
     }
 }

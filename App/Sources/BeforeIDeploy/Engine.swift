@@ -119,13 +119,14 @@ final class EngineClient {
 
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/bin/zsh")
-        process.arguments = [enginePath] + args
+        process.arguments = ["-f", enginePath] + args
         process.standardInput = FileHandle.nullDevice
         var env = ProcessInfo.processInfo.environment
         env["BID_CLIENT"] = "app"
         if env["BID_LANG"] == nil { env["BID_LANG"] = Self.engineLanguage }
         // screenshot / CI runs: never touch the login keychain (`open --args -BIDNoKeychain 1`)
         if Snapshot.argument("BIDNoKeychain") { env["BID_NO_KEYCHAIN"] = "1" }
+        if Snapshot.argument("BIDSnapshot"), Snapshot.argument("BIDBillingDemo") { env["BID_BILLING_DEMO"] = "1" }
         for (k, v) in extra { env[k] = v }
         process.environment = env
 
@@ -147,9 +148,30 @@ final class EngineClient {
                 errBuffer.append(chunk)
             }
         }
+        let lines = EngineLines()
+        out.fileHandleForReading.readabilityHandler = { h in
+            let chunk = h.availableData
+            if chunk.isEmpty {
+                h.readabilityHandler = nil
+                lines.finish()
+            } else { lines.append(chunk) }
+        }
         let exit = ExitSignal()
-        process.terminationHandler = { p in exit.fire(p.terminationStatus) }
-
+        process.terminationHandler = { p in
+            exit.fire(p.terminationStatus)
+            // A grandchild can inherit stdout and keep it open after the engine exits.
+            DispatchQueue.global().asyncAfter(deadline: .now() + 2) {
+                out.fileHandleForReading.readabilityHandler = nil
+                lines.finish()
+            }
+        }
+        defer {
+            out.fileHandleForReading.readabilityHandler = nil
+            err.fileHandleForReading.readabilityHandler = nil
+            lines.finish()
+            try? out.fileHandleForReading.close()
+            try? err.fileHandleForReading.close()
+        }
         try process.run()
 
         let expired = TimeoutFlag()
@@ -165,7 +187,7 @@ final class EngineClient {
         defer { watchdog?.cancel() }
 
         var resultLine: Data? = nil
-        for try await line in out.fileHandleForReading.bytes.lines {
+        for await line in lines.stream {
             guard let d = line.data(using: .utf8),
                   let obj = (try? JSONSerialization.jsonObject(with: d)) as? [String: Any] else { continue }
             let event = EngineEvent(raw: obj, data: d)
@@ -264,5 +286,36 @@ final class ExitSignal: @unchecked Sendable {
                 lock.unlock()
             }
         }
+    }
+}
+
+/// Byte buffering preserves split UTF-8 and flushes the final line exactly once.
+final class EngineLines: @unchecked Sendable {
+    let stream: AsyncStream<String>
+    private let continuation: AsyncStream<String>.Continuation
+    private let lock = NSLock()
+    private var pending = Data()
+    private var done = false
+    init() {
+        var c: AsyncStream<String>.Continuation!
+        stream = AsyncStream { c = $0 }
+        continuation = c
+    }
+    func append(_ data: Data) {
+        lock.lock(); defer { lock.unlock() }
+        guard !done else { return }
+        pending.append(data)
+        while let newline = pending.firstIndex(of: 10) {
+            continuation.yield(String(decoding: pending[..<newline], as: UTF8.self))
+            pending.removeSubrange(...newline)
+        }
+    }
+    func finish() {
+        lock.lock(); defer { lock.unlock() }
+        guard !done else { return }
+        done = true
+        if !pending.isEmpty { continuation.yield(String(decoding: pending, as: UTF8.self)) }
+        pending.removeAll()
+        continuation.finish()
     }
 }

@@ -4,7 +4,7 @@ import SwiftUI
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillFinishLaunching(_ notification: Notification) {
         CrashReporter.install()
-        NSApp.appearance = NSAppearance(named: .darkAqua)
+        (Appearance(rawValue: UserDefaults.standard.string(forKey: Appearance.storageKey) ?? "system") ?? .system).apply()
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -30,10 +30,11 @@ struct BeforeIDeployApp: App {
     @StateObject private var model = AppModel.shared
     /// Changing the language rebuilds the window content, so every L() text is read again.
     @AppStorage(Localization.storageKey) private var locale = ""
+    @AppStorage(Appearance.storageKey) private var appearance = "system"
     @AppStorage(Onboarding.tourSeenKey) private var tourSeen = false
 
     /// Project commands only while the main screen is showing — never behind the sign-in or the tour (audit A8).
-    private var projectCommandsOff: Bool { locale.isEmpty || !tourSeen || model.mustAuthenticate || model.selectedKey == nil }
+    private var projectCommandsOff: Bool { locale.isEmpty || !tourSeen || model.mustAuthenticate || model.selectedKey == nil || model.run != nil || model.aiStore.current != nil || model.showPalette }
 
     var body: some Scene {
         Window("Before I Deploy", id: "main") {
@@ -41,21 +42,30 @@ struct BeforeIDeployApp: App {
                 .id(locale)
                 .environment(\.locale, Localization.locale)
                 .environmentObject(model)
-                .frame(minWidth: 1080, minHeight: 700)
-                .preferredColorScheme(.dark)
+                .frame(minWidth: 900, minHeight: 640)
+
                 .tint(Theme.accent)
                 .accentColor(Theme.accent)
                 .task { await model.start() }
+                .onChange(of: appearance) { (Appearance(rawValue: $0) ?? .system).apply() }
         }
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 1280, height: 820)
         .commands { commands }
 
+        Settings {
+            SettingsView()
+                .id(locale)
+                .environment(\.locale, Localization.locale)
+                .environmentObject(model)
+                .tint(Theme.accent)
+        }
+
         MenuBarExtra {
             MenuBarView()
                 .environment(\.locale, Localization.locale)
                 .environmentObject(model)
-                .preferredColorScheme(.dark)
+
         } label: {
             Image(systemName: model.menuBarSymbol)
                 .accessibilityLabel("Before I Deploy")
@@ -67,6 +77,10 @@ struct BeforeIDeployApp: App {
             CommandGroup(replacing: .newItem) {
                 Button(L("menu.addProject")) { model.addProjectPanel() }
                     .keyboardShortcut("o")
+            }
+            CommandGroup(replacing: .appSettings) {
+                if #available(macOS 14, *) { SettingsLink { Text(L("menu.settings")) }.keyboardShortcut(",") }
+                else { Button(L("menu.settings")) { SettingsWindow.legacyOpen() }.keyboardShortcut(",") }
             }
             CommandMenu(L("menu.actions")) {
                 Button(L("menu.commands")) { model.showPalette.toggle() }
@@ -106,12 +120,11 @@ struct BeforeIDeployApp: App {
                     .keyboardShortcut("1")
                 Button(L("common.domains")) { model.screen = .domains }
                     .keyboardShortcut("2")
-                Button(L("common.costs")) { model.screen = .costs }
-                    .keyboardShortcut("3")
-                Button(L("common.setup")) { model.screen = .setup }
-                    .keyboardShortcut("4")
-                // every screen of the sidebar is reachable from the keyboard (WP08, audit A9)
                 Button(L("assistant.nav")) { model.screen = .assistant }
+                    .keyboardShortcut("3")
+                Button(L("common.costs")) { model.screen = .costs }
+                    .keyboardShortcut("4")
+                Button(L("common.setup")) { model.screen = .setup }
                     .keyboardShortcut("5")
                 Button(L("usage.nav")) { model.screen = .usage }
                     .keyboardShortcut("6")
@@ -128,9 +141,6 @@ struct BeforeIDeployApp: App {
                 Button(L("menu.previousProject")) { model.selectAdjacent(-1) }
                     .keyboardShortcut("[")
             }
-            CommandGroup(replacing: .appSettings) {
-                Button(L("menu.settings")) { model.sheet = .settings }
-                    .keyboardShortcut(",")
-            }
+
     }
 }

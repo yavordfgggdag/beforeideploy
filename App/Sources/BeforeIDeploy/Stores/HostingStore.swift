@@ -6,6 +6,7 @@ final class HostingStore: ObservableObject {
     @Published var advice: HostingAdvice?
     @Published var spaceship: SpaceshipStatus?
     @Published var loadingSpaceship = false
+    @Published var spaceshipError: String?
     @Published var domainForConnect: String?
 
     let engine: EngineClient
@@ -40,11 +41,13 @@ final class HostingStore: ObservableObject {
     // MARK: - Spaceship
 
     func loadSpaceship(refresh: Bool = false) async {
+        guard !loadingSpaceship else { return }
         loadingSpaceship = true
+        spaceshipError = nil
         defer { loadingSpaceship = false }
         var args = ["spaceship", "status"]
         if refresh { args.append("--refresh") }
-        do { spaceship = try await engine.call(args, as: SpaceshipStatus.self) } catch { feedback?.show(error) }
+        do { spaceship = try await engine.call(args, as: SpaceshipStatus.self) } catch { spaceshipError = error.localizedDescription; feedback?.show(error) }
     }
 
     func connectSpaceship(key: String, secret: String) async -> Bool {
@@ -74,8 +77,8 @@ final class HostingStore: ObservableObject {
         }
     }
 
-    func dns(_ domain: String) async -> [DnsRecord] {
-        (try? await engine.call(["spaceship", "dns", "--domain", domain], as: DnsResult.self))?.records ?? []
+    func dns(_ domain: String) async throws -> [DnsRecord] {
+        try await engine.call(["spaceship", "dns", "--domain", domain], as: DnsResult.self).records
     }
 
     func planDomain(_ domain: String) async throws -> DomainPlan {

@@ -1,3 +1,4 @@
+import { meteredProviderCall } from './meter.mjs';
 // Hosting adapters — Netlify, Vercel, Cloudflare Pages, GitHub Pages behind one interface.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -210,7 +211,7 @@ async function vercelDeploy(project, { prod }) {
   ev.step('deploy', { label: t(prod ? 'deploy.label.production' : 'deploy.label.draft'), category: 'Hosting', status: 'running', summary: 'Vercel build + upload' });
   const t0 = Date.now();
   // Vercel uploads the source and builds remotely: no local artifact to verify (the result says so)
-  const r = await runStream('vercel', args, { cwd: project.path, step: 'deploy', logFile, captureStdout: true, timeout: 20 * 60 * 1000, env: cliEnv() });
+  const r = await meteredProviderCall(project, prod ? 'deploy.production' : 'deploy.preview', () => runStream('vercel', args, { cwd: project.path, step: 'deploy', logFile, captureStdout: true, timeout: 20 * 60 * 1000, env: cliEnv() }));
   const duration = (Date.now() - t0) / 1000;
   const url = (r.stdout.match(/https:\/\/[^\s]+\.vercel\.app/g) || []).pop();
   if (r.code !== 0 || !url) return failDeploy(project, 'vercel', { prod, r, logFile, duration });
@@ -234,11 +235,11 @@ async function cloudflareDeploy(project, { prod, expectedArtifact, artifactCode 
   const staged = await stageArtifact(project, d.publishDir, { expected: expectedArtifact, code: artifactCode });
   let r;
   try {
-    r = await runStream(
+    r = await meteredProviderCall(project, prod ? 'deploy.production' : 'deploy.preview', () => runStream(
       'wrangler',
       ['pages', 'deploy', staged.dir, `--project-name=${name}`, `--branch=${prod ? 'main' : 'preview'}`, '--commit-dirty=true'],
       { cwd: project.path, step: 'deploy', logFile, captureStdout: true, timeout: 20 * 60 * 1000, env: cliEnv() }
-    );
+    ));
     await staged.verify();
   } finally {
     staged.cleanup();
@@ -291,13 +292,13 @@ async function ghPagesDeploy(project, { prod, expectedArtifact, artifactCode }) 
   const staged = await stageArtifact(project, d.publishDir, { expected: expectedArtifact, code: artifactCode });
   let r;
   try {
-    r = await runStream('gh-pages', ['-d', staged.dir, '--nojekyll', '-m', `Before I Deploy — ${new Date().toISOString()}`], {
+    r = await meteredProviderCall(project, 'deploy.production', () => runStream('gh-pages', ['-d', staged.dir, '--nojekyll', '-m', `Before I Deploy — ${new Date().toISOString()}`], {
       cwd: project.path,
       step: 'deploy',
       logFile,
       env: cliEnv({ GIT_TERMINAL_PROMPT: '0' }),
       timeout: 10 * 60 * 1000,
-    });
+    }));
     await staged.verify();
   } finally {
     staged.cleanup();

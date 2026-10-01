@@ -33,7 +33,7 @@ struct AccountView: View {
                         if let why = billing.billingUnavailable {
                             // the cloud side of plans is not deployed yet: say it calmly, where the plans would be
                             Label(L("billing.notReady"), systemImage: "info.circle")
-                                .font(.system(size: 12)).foregroundColor(Theme.secondary)
+                                .font(Typo.font(.callout)).foregroundColor(Theme.secondary)
                                 .help(why)
                         }
                         if let s = billing.status {
@@ -58,7 +58,7 @@ struct AccountView: View {
 
                 VStack(alignment: .leading, spacing: 10) {
                     SectionLabel(text: L("account.yourData"), icon: "externaldrive.fill")
-                    Text(L("account.yourDataHint")).font(.system(size: 12)).foregroundColor(Theme.secondary)
+                    Text(L("account.yourDataHint")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                     HStack(spacing: 8) {
                         Button(L("account.export")) { model.exportAccountData() }.bidButton(.secondary, compact: true)
@@ -69,10 +69,10 @@ struct AccountView: View {
                 }
                 .card()
             }
-            .padding(.horizontal, 32)
-            .padding(.top, 40)
-            .padding(.bottom, 32)
-            .frame(maxWidth: 1000)
+            .padding(.horizontal, Space.page)
+            .padding(.top, Space.top)
+            .padding(.bottom, Space.page)
+            .frame(maxWidth: 1120)
             .frame(maxWidth: .infinity)
         }
         .task { if a?.features?.billingPlans == true || a?.credits?.monthlyGrant != nil { await billing.load() } }
@@ -83,27 +83,23 @@ struct AccountView: View {
             ZStack {
                 Circle().fill(Theme.avatarGradient(for: a?.email ?? "?")).frame(width: 64, height: 64)
                 Text(String((a?.name ?? a?.email ?? "?").prefix(1)).uppercased())
-                    .font(.system(size: 26, weight: .bold, design: .rounded)).foregroundColor(.white)
+                    .font(Typo.font(.display, weight: .bold, design: .rounded)).foregroundColor(.white)
                 if let f = a?.credits?.fraction {
-                    Circle().stroke(Theme.elevated, lineWidth: 4).frame(width: 76, height: 76)
-                    Circle().trim(from: 0, to: max(0.02, f))
-                        .stroke(f < 0.1 ? Theme.warn : Theme.ready, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                        .rotationEffect(.degrees(-90)).frame(width: 76, height: 76)
-                        .animation(Motion.gentle, value: f)
+                    CreditRing(fraction: f, size: 76)
                 }
             }
             .frame(width: 80, height: 80)
             .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 6) {
-                Text(a?.name ?? a?.email ?? "").font(.system(size: 20, weight: .bold)).foregroundColor(Theme.text)
+                Text(a?.name ?? a?.email ?? "").font(Typo.font(.title, weight: .bold)).foregroundColor(Theme.text)
                 HStack(spacing: 6) {
-                    if let role = a?.role { Chip(text: role, icon: role == "admin" ? "crown.fill" : role == "vip" ? "star.fill" : "person.fill", tint: role == "normal" ? Theme.secondary : Theme.accent) }
+                    if let role = a?.role { Chip(text: K.role(role), icon: role == "admin" ? "crown.fill" : role == "vip" ? "star.fill" : "person.fill", tint: role == "normal" ? Theme.secondary : Theme.accent) }
                     if let plan = a?.plan { Chip(text: BillingFormat.planName(plan), icon: "sparkles", tint: plan == "free" ? Theme.secondary : Theme.ready) }
-                    if let p = a?.provider { Chip(text: p, icon: p == "apple" ? "apple.logo" : p == "github" ? "chevron.left.forwardslash.chevron.right" : "envelope") }
+                    if let p = a?.provider { Chip(text: K.provider(p), icon: p == "apple" ? "apple.logo" : p == "github" ? "chevron.left.forwardslash.chevron.right" : "envelope") }
                     if a?.profileStale == true { Chip(text: L("account.offlineCopy"), icon: "wifi.slash", tint: Theme.warn) }
                 }
                 if let c = a?.credits {
-                    Text(creditsLine(c)).font(.system(size: 12)).foregroundColor(Theme.secondary)
+                    Text(creditsLine(c)).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
                 }
             }
             Spacer()

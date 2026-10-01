@@ -16,7 +16,7 @@ struct AdminView: View {
                 }
             }
 
-            HStack(alignment: .top, spacing: 16) {
+            AdaptiveColumns(spacing: 16) {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(spacing: 8) {
                         BIDTextField(placeholder: L("admin.search"), text: Binding(get: { store.query }, set: { store.query = $0 }))
@@ -30,12 +30,12 @@ struct AdminView: View {
                                 Rectangle().fill(Theme.hairline).frame(height: 1)
                             }
                             if store.users.isEmpty && !store.loading {
-                                Text(L("admin.noUsers")).font(.system(size: 12.5)).foregroundColor(Theme.tertiary).padding(20)
+                                Text(L("admin.noUsers")).font(Typo.font(.body)).foregroundColor(Theme.tertiary).padding(20)
                             }
                         }
-                    }
+                    }.frame(height: 420)
                 }
-                .frame(minWidth: 320, maxWidth: 420)
+                .frame(maxWidth: .infinity)
                 .card(padding: 14)
 
                 if let u = store.selected {
@@ -49,7 +49,7 @@ struct AdminView: View {
 
             AdminDiagnosticsCard()
 
-            HStack(alignment: .top, spacing: 16) {
+            AdaptiveColumns(spacing: 16) {
                 AdminInviteCard()
                     .frame(maxWidth: 420)
                 AdminSettingsCard()
@@ -59,13 +59,13 @@ struct AdminView: View {
             VStack(alignment: .leading, spacing: 6) {
                 SectionLabel(text: L("admin.audit"), icon: "list.bullet.rectangle").padding(.bottom, 4)
                 if store.audit.isEmpty {
-                    Text(L("admin.auditEmpty")).font(.system(size: 12)).foregroundColor(Theme.tertiary)
+                    Text(L("admin.auditEmpty")).font(Typo.font(.callout)).foregroundColor(Theme.tertiary)
                 } else {
                     ForEach(store.audit.prefix(30)) { e in
                         HStack(spacing: 10) {
-                            Text(Fmt.time(e.createdAt)).font(.system(size: 11, design: .monospaced)).foregroundColor(Theme.tertiary).frame(width: 90, alignment: .leading)
-                            Text(e.action).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
-                            Text(store.users.first { $0.userId == e.target }?.email ?? e.target ?? "").font(.system(size: 12)).foregroundColor(Theme.secondary).lineLimit(1)
+                            Text(Fmt.time(e.createdAt)).font(Typo.font(.caption, design: .monospaced)).foregroundColor(Theme.tertiary).frame(width: 90, alignment: .leading)
+                            Text(K.auditAction(e.action)).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
+                            Text(store.users.first { $0.userId == e.target }?.email ?? e.target ?? "").font(Typo.font(.callout)).foregroundColor(Theme.secondary).lineLimit(1)
                             Spacer()
                         }
                         .padding(.vertical, 3)
@@ -74,10 +74,10 @@ struct AdminView: View {
             }
             .card()
         }
-        .padding(.horizontal, 32)
-        .padding(.top, 40)
-        .padding(.bottom, 32)
-        .frame(maxWidth: 1100)
+        .padding(.horizontal, Space.page)
+        .padding(.top, Space.top)
+        .padding(.bottom, Space.page)
+        .frame(maxWidth: 1120)
         .frame(maxWidth: .infinity)
         .task { await store.load(); await store.loadAudit() }
     }
@@ -93,19 +93,19 @@ struct AdminUserRow: View {
             HStack(spacing: 10) {
                 ZStack {
                     Circle().fill(user.role == "admin" ? Theme.accentGradient : LinearGradient(colors: [Theme.elevated, Theme.elevated], startPoint: .top, endPoint: .bottom))
-                    Text(String((user.displayName ?? user.email).prefix(1)).uppercased()).font(.system(size: 11, weight: .bold)).foregroundColor(.white)
+                    Text(String((user.displayName ?? user.email).prefix(1)).uppercased()).font(Typo.font(.caption, weight: .bold)).foregroundColor(.white)
                 }
                 .frame(width: 24, height: 24)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(user.email).font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.text).lineLimit(1)
-                    Text("\(user.role) · \(user.plan) · \(Fmt.tokens(user.balance ?? 0))").font(.system(size: 10.5)).foregroundColor(Theme.tertiary)
+                    Text(user.email).font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.text).lineLimit(1)
+                    Text("\(K.role(user.role)) · \(K.plan(user.plan)) · \(Fmt.tokens(user.balance ?? 0))").font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
                 }
                 Spacer()
-                if user.aiDisabled == true { Image(systemName: "sparkles.slash").font(.system(size: 11)).foregroundColor(Theme.warn) }
+                if user.aiDisabled == true { Image(systemName: "sparkles.slash").font(Typo.font(.caption)).foregroundColor(Theme.warn) }
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 7)
-            .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(selected ? Theme.accentSoft : Color.clear))
+            .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(selected ? Theme.accentSoft : Color.clear))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -126,8 +126,8 @@ struct AdminUserDetail: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(user.displayName ?? user.email).font(.system(size: 17, weight: .bold)).foregroundColor(Theme.text)
-                Text(user.email).font(.system(size: 12)).foregroundColor(Theme.secondary)
+                Text(user.displayName ?? user.email).font(Typo.font(.headline, weight: .bold)).foregroundColor(Theme.text)
+                Text(user.email).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
             }
             HStack(spacing: 10) {
                 KPITile(value: Fmt.tokens(user.balance ?? 0), label: L("admin.creditsBalance"), icon: "bolt.fill", tint: Theme.accent)
@@ -138,12 +138,12 @@ struct AdminUserDetail: View {
             SectionLabel(text: L("admin.roleAndPlan"))
             HStack(spacing: 14) {
                 Picker(L("admin.role"), selection: Binding(get: { user.role }, set: { r in Task { await store.setRole(user, r) } })) {
-                    ForEach(roles, id: \.self) { Text($0).tag($0) }
+                    ForEach(roles, id: \.self) { Text(K.role($0)).tag($0) }
                 }
                 .pickerStyle(.menu).frame(width: 190)
                 .disabled(user.userId == model.account?.id)
                 Picker(L("admin.plan"), selection: Binding(get: { user.plan }, set: { p in Task { await store.setPlan(user, p) } })) {
-                    ForEach(plans, id: \.self) { Text($0).tag($0) }
+                    ForEach(plans, id: \.self) { Text(K.plan($0)).tag($0) }
                 }
                 .pickerStyle(.menu).frame(width: 190)
                 Spacer()
@@ -162,22 +162,39 @@ struct AdminUserDetail: View {
                 }
                 .bidButton(.primary, compact: true).disabled(busy || Int(grantAmount.replacingOccurrences(of: " ", with: "")) == nil)
             }
-            Text(L("admin.grantHint")).font(.system(size: 11)).foregroundColor(Theme.tertiary)
+            Text(L("admin.grantHint")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
+
+            if let state = store.creditState {
+                InfoRow(label: L("usage.available"), value: L("usage.creditsCount", Fmt.tokens(state.usage.remaining.available)))
+                Text(state.drift.isEmpty ? L("admin.creditsMatch") : L("admin.creditsDrift", state.drift.count)).font(Typo.font(.callout)).foregroundColor(state.drift.isEmpty ? Theme.ready : Theme.warn)
+                ForEach(state.usage.sites?.items ?? []) { site in
+                    HStack {
+                        Text(site.name).font(Typo.font(.body)).lineLimit(2)
+                        Spacer()
+                        if site.state == "active" {
+                            Button(L("usage.pauseSite")) { Task { await store.pauseSite(user, projectKey: site.projectKey, reason: grantReason) } }.bidButton(.secondary, compact: true).disabled(grantReason.trimmingCharacters(in: .whitespaces).count < 3)
+                        } else { Text(L("usage.sitePaused")).font(Typo.font(.caption)).foregroundColor(Theme.secondary) }
+                    }
+                }
+                Text(L("admin.pauseReason")).font(Typo.font(.caption)).foregroundColor(Theme.secondary)
+            } else if let error = store.creditError {
+                Text(error).font(Typo.font(.caption)).foregroundColor(Theme.warn).textSelection(.enabled)
+            }
 
             SectionLabel(text: L("admin.usage"), icon: "sparkles")
             if store.usage.isEmpty {
-                Text(L("admin.usageEmpty")).font(.system(size: 12)).foregroundColor(Theme.tertiary)
+                Text(L("admin.usageEmpty")).font(Typo.font(.callout)).foregroundColor(Theme.tertiary)
             } else {
                 VStack(spacing: 4) {
                     ForEach(store.usage.prefix(12)) { u in
                         HStack(spacing: 10) {
-                            Text(Fmt.relative(u.createdAt)).font(.system(size: 11)).foregroundColor(Theme.tertiary).frame(width: 110, alignment: .leading)
-                            Text(u.step ?? "—").font(.system(size: 12, weight: .medium)).foregroundColor(Theme.text)
-                            Text(u.model ?? "").font(.system(size: 11, design: .monospaced)).foregroundColor(Theme.tertiary)
+                            Text(Fmt.relative(u.createdAt)).font(Typo.font(.caption)).foregroundColor(Theme.tertiary).frame(width: 110, alignment: .leading)
+                            Text(u.step.map(K.step) ?? "—").font(Typo.font(.callout, weight: .medium)).foregroundColor(Theme.text)
+                            Text(u.model ?? "").font(Typo.font(.caption, design: .monospaced)).foregroundColor(Theme.tertiary)
                             if let st = u.status, st != "ok" { Chip(text: st, tint: Theme.warn) }
                             Spacer()
                             Text(L("ai.tokensCount", Fmt.tokens(u.chargedTokens ?? 0)))
-                                .font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.secondary).monospacedDigit()
+                                .font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.secondary).monospacedDigit()
                         }
                     }
                 }
@@ -198,11 +215,11 @@ struct AdminInviteCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             SectionLabel(text: L("admin.invite"), icon: "envelope.badge.fill")
-            Text(L("admin.inviteHint")).font(.system(size: 11.5)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
+            Text(L("admin.inviteHint")).font(Typo.font(.callout)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
             BIDTextField(placeholder: L("auth.email"), text: $email)
             HStack {
                 Picker(L("admin.role"), selection: $role) {
-                    ForEach(["vip", "normal", "admin"], id: \.self) { Text($0).tag($0) }
+                    ForEach(["vip", "normal", "admin"], id: \.self) { Text(K.role($0)).tag($0) }
                 }
                 .pickerStyle(.menu).frame(width: 180)
                 Spacer()
@@ -243,17 +260,17 @@ struct AdminSettingsCard: View {
                 .labelsHidden().pickerStyle(.menu).frame(width: 200)
             }
             TextEditor(text: $text)
-                .font(.system(size: 11.5, design: .monospaced))
+                .font(Typo.font(.callout, design: .monospaced))
                 .scrollContentBackground(.hidden)
                 .padding(8)
                 .frame(minHeight: 150, maxHeight: 220)
-                .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.bg))
-                .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(error == nil ? Theme.hairline : Theme.blocked.opacity(0.6), lineWidth: 1))
+                .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(Theme.bg))
+                .overlay(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).strokeBorder(error == nil ? Theme.hairline : Theme.blocked.opacity(0.6), lineWidth: 1))
             HStack {
                 if let error {
-                    Label(error, systemImage: "exclamationmark.circle.fill").font(.system(size: 11.5)).foregroundColor(Theme.blocked).lineLimit(2)
+                    Label(error, systemImage: "exclamationmark.circle.fill").font(Typo.font(.callout)).foregroundColor(Theme.blocked).lineLimit(2)
                 } else {
-                    Text(L("admin.settingsHint")).font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                    Text(L("admin.settingsHint")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
                 }
                 Spacer()
                 Button(L("common.save")) {
@@ -281,7 +298,7 @@ struct AIKeysCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             SectionLabel(text: L("aikeys.group"), icon: "key.fill").padding(.bottom, 6)
-            Text(L("aikeys.intro")).font(.system(size: 12)).foregroundColor(Theme.secondary).padding(.bottom, 6)
+            Text(L("aikeys.intro")).font(Typo.font(.callout)).foregroundColor(Theme.secondary).padding(.bottom, 6)
             ForEach(model.aiKeys) { k in
                 AIKeyRow(status: k)
                 if k.id != model.aiKeys.last?.id { Rectangle().fill(Theme.hairline).frame(height: 1) }
@@ -301,21 +318,17 @@ struct AIKeyRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: status.connected ? "checkmark.circle.fill" : "circle.dashed")
-                .font(.system(size: 15)).foregroundColor(status.connected ? Theme.ready : Theme.tertiary).frame(width: 20)
+                .font(Typo.font(.subhead)).foregroundColor(status.connected ? Theme.ready : Theme.tertiary).frame(width: 20)
             VStack(alignment: .leading, spacing: 2) {
-                Text(status.name).font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.text)
+                Text(status.name).font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.text)
                 Text(status.connected ? L("aikeys.connectedHint", status.hint ?? "") : L("aikeys.notConnected"))
-                    .font(.system(size: 11.5)).foregroundColor(Theme.tertiary)
+                    .font(Typo.font(.callout)).foregroundColor(Theme.tertiary)
             }
             Spacer()
             if status.connected {
                 Button(L("aikeys.remove")) { Task { await model.deleteAIKey(provider: status.provider) } }.bidButton(.ghost, compact: true)
             } else {
-                SecureField(L("aikeys.placeholder"), text: $key)
-                    .textFieldStyle(.plain).font(.system(size: 12, design: .monospaced)).foregroundColor(Theme.text)
-                    .padding(.horizontal, 10).padding(.vertical, 7)
-                    .background(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).fill(Theme.bg))
-                    .overlay(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
+                BIDField(placeholder: L("aikeys.placeholder"), text: $key, kind: .secure)
                     .frame(width: 260)
                 if let c = status.console { Button(L("aikeys.getKey")) { model.open(c) }.bidButton(.ghost, compact: true) }
                 Button(busy ? L("aikeys.checking") : L("common.connect")) {
@@ -348,9 +361,9 @@ struct AdminDiagnosticsCard: View {
             }
             if let d = store.diagnostics {
                 if d.ready {
-                    Label(L("admin.diag.ready"), systemImage: "checkmark.seal.fill").font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.ready)
+                    Label(L("admin.diag.ready"), systemImage: "checkmark.seal.fill").font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.ready)
                 } else {
-                    Text(L("admin.diag.todo", String(d.todo.count))).font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.warn)
+                    Text(L("admin.diag.todo", String(d.todo.count))).font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.warn)
                 }
                 row(L("admin.diag.scheduler"), ok: d.scheduler.state == "ok", detail: d.scheduler.lastRunAt.map { Fmt.relative($0) } ?? L("admin.diag.never"))
                 ForEach(d.secrets.keys.sorted(), id: \.self) { k in row(k, ok: d.secrets[k] == true, detail: d.secrets[k] == true ? L("admin.diag.set") : L("admin.diag.missing")) }
@@ -358,7 +371,7 @@ struct AdminDiagnosticsCard: View {
                 row(L("admin.diag.prices"), ok: d.missingPrices.isEmpty, detail: d.missingPrices.isEmpty ? L("admin.diag.set") : d.missingPrices.joined(separator: ", "))
                 ForEach(d.links.keys.sorted(), id: \.self) { k in row(k, ok: d.links[k] == true, detail: d.links[k] == true ? L("admin.diag.set") : L("admin.diag.missing")) }
             } else if let e = store.diagnosticsError {
-                Text(e).font(.system(size: 12)).foregroundColor(Theme.warn).textSelection(.enabled)
+                Text(e).font(Typo.font(.callout)).foregroundColor(Theme.warn).textSelection(.enabled)
             } else {
                 Spinner(size: 14)
             }
@@ -370,9 +383,9 @@ struct AdminDiagnosticsCard: View {
     private func row(_ title: String, ok: Bool, detail: String) -> some View {
         HStack(spacing: 8) {
             Image(systemName: ok ? "checkmark.circle.fill" : "exclamationmark.circle.fill").foregroundColor(ok ? Theme.ready : Theme.warn)
-            Text(title).font(.system(size: 12, design: .monospaced)).foregroundColor(Theme.text)
+            Text(title).font(Typo.font(.callout, design: .monospaced)).foregroundColor(Theme.text)
             Spacer()
-            Text(detail).font(.system(size: 11.5)).foregroundColor(Theme.secondary).lineLimit(1).truncationMode(.middle)
+            Text(detail).font(Typo.font(.callout)).foregroundColor(Theme.secondary).lineLimit(1).truncationMode(.middle)
         }
         .accessibilityElement(children: .combine)
     }

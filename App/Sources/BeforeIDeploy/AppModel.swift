@@ -5,7 +5,7 @@ import SwiftUI
 enum Screen: Hashable { case overview, project, domains, costs, setup, admin, account, assistant, usage }
 
 enum SheetKind: Identifiable {
-    case production, netlifySetup, commit, history, settings, remote, spaceshipConnect, connectDomain, deleteAccount, plans, release, rollback, client, aiKeys, newSite, pushover
+    case production, netlifySetup, commit, history, settings, remote, spaceshipConnect, connectDomain, deleteAccount, plans, release, rollback, client, aiKeys, newSite, pushover, gitIdentity
     var id: Int { hashValue }
 }
 
@@ -42,7 +42,8 @@ final class AppModel: ObservableObject, Feedback {
 
     @Published var sheet: SheetKind?
     @Published var pendingFix: PendingFix?
-    @Published var toast: Toast?
+    let toastCenter = ToastCenter()
+    var toast: Toast? { toastCenter.current }
     @Published var engineMissing = false
     @Published var nodeMissing = false
     @Published var lastError: String?
@@ -71,6 +72,7 @@ final class AppModel: ObservableObject, Feedback {
     }
     /// A quiet automatic check is running (hero and menu bar show a small spinner).
     @Published var autoChecking = false
+    @Published var autoCheckPaused: [String: String] = [:]
     private var watcher: ProjectWatcher?
     private var autoCheckTask: Task<Void, Never>?
     private var quietCheck: EngineHandle?
@@ -114,12 +116,18 @@ final class AppModel: ObservableObject, Feedback {
         accountStore.feedback = self
         hostingStore.feedback = self
         runController.feedback = self
-        runController.beforeRun = { [weak self] in self?.stopQuietCheck() }
+        runController.beforeRun = { [weak self] in
+            self?.stopQuietCheck()
+            if let key = self?.selectedKey { self?.autoCheckPaused[key] = nil }
+        }
         adminStore.feedback = self
         aiStore.feedback = self
         assistantStore.feedback = self
+        assistantStore.onSpend = { [weak self] in await self?.billingStore.loadUsage(); await self?.loadAccount() }
+        accountStore.onSessionChanged = { [weak self] account in self?.billingStore.sessionChanged(account) }
+        aiStore.onSpend = { [weak self] in await self?.billingStore.loadUsage(); await self?.loadAccount() }
         billingStore.feedback = self
-        billingStore.onChanged = { [weak self] in await self?.accountStore.loadAccount() }
+        billingStore.onChanged = { [weak self] in await self?.accountStore.loadAccount(); await self?.billingStore.loadUsage() }
         aiStore.onApplied = { [weak self] in
             guard let self else { return }
             self.aiStore.dismiss()
@@ -142,13 +150,13 @@ final class AppModel: ObservableObject, Feedback {
         }
         storeObservers = [
             forward(projectStore.objectWillChange),
+            forward(toastCenter.objectWillChange),
             forward(accountStore.objectWillChange),
             forward(hostingStore.objectWillChange),
             forward(runController.objectWillChange),
             forward(adminStore.objectWillChange),
             forward(aiStore.objectWillChange),
             forward(billingStore.objectWillChange),
-            forward(assistantStore.objectWillChange),
         ]
     }
 
@@ -511,14 +519,11 @@ final class AppModel: ObservableObject, Feedback {
     }
 
     /// Opens the AI assistant for the selected project, with an issue preselected when given. Without a
-    /// key or plan it opens the key sheet instead, so the first click never ends in a dead button.
+    /// key or plan the workspace explains how to connect AI while preserving the selected scope.
     func openAssistant(issue: String? = nil, projectKey: String? = nil) {
         Task {
             if let k = projectKey, projectStore.selected?.key != k { await select(k, show: false) }
-            guard aiReady else {
-                aiUnavailableAction()
-                return
-            }
+            if let key = projectStore.selected?.key { assistantStore.activate(key) }
             if let issue { assistantStore.selectedIssue = issue }
             screen = .assistant
         }
@@ -778,7 +783,7 @@ final class AppModel: ObservableObject, Feedback {
         loadingSetup = true
         defer { loadingSetup = false }
         do {
-            setup = try await engine.call(["setup", "status"], as: SetupStatus.self)
+            setup = try await engine.call(["setup", "status"], as: SetupStatus.self, timeout: 30)
             loadErrors["setup"] = nil
         } catch {
             loadErrors["setup"] = error.localizedDescription
@@ -798,10 +803,10 @@ final class AppModel: ObservableObject, Feedback {
         guard let a = item.action else { return }
         switch a.type {
         case "run":
-            let s = RunSession(title: L("setup.installing", item.title), subtitle: a.display ?? "", kind: .fix)
-            runController.startRun(s, args: ["setup", "run", item.id, "--yes"], successTitle: L("setup.itemReady", item.title)) { [weak self] _ in
-                Task { await self?.loadSetup() }
-            }
+            let s = RunSession(title: L("setup.installing", item.title), subtitle: a.display ?? "", kind: .setup)
+            runController.startRun(s, args: ["setup", "run", item.id, "--yes"], successTitle: L("setup.itemReady", item.title), onDone: { [weak self] in
+                await self?.loadSetup()
+            })
         case "terminal":
             Task {
                 do {
@@ -814,6 +819,7 @@ final class AppModel: ObservableObject, Feedback {
             open(a.url)
         case "app":
             if a.appAction == "ai-key" { sheet = .aiKeys }
+            if a.appAction == "git-identity" { sheet = .gitIdentity }
             if a.appAction == "cloud-schema" {
                 Task {
                     if await copyCloudSchema() {
@@ -830,22 +836,10 @@ final class AppModel: ObservableObject, Feedback {
     }
 
     func setupAuto() {
-        let s = RunSession(title: L("setup.autoTitle"), subtitle: L("setup.autoSubtitle"), kind: .fix)
-        runController.startRun(s, args: ["setup", "auto", "--yes"], successTitle: L("setup.autoDone")) { [weak self] outcome in
-            guard let self else { return }
-            if let r = try? outcome.decode(SetupAutoResult.self) {
-                self.setup = r.status
-                if let f = r.commandFile {
-                    s.outcomeMessage = L("setup.autoSignInsLeft")
-                    self.openCommand(f)
-                } else if r.status.ready {
-                    s.outcomeMessage = L("setup.autoAllSet")
-                }
-            }
-            if self.setup?.items.contains(where: { !$0.ok && $0.action?.appAction == "netlify-login" }) == true {
-                s.outcomeMessage = (s.outcomeMessage ?? "") + L("setup.autoNetlifyToo")
-            }
-        }
+        let s = RunSession(title: L("setup.autoTitle"), subtitle: L("setup.autoSubtitle"), kind: .setup)
+        runController.startRun(s, args: ["setup", "auto", "--yes"], successTitle: L("setup.autoDone"), onDone: { [weak self] in
+            await self?.loadSetup()
+        })
     }
 
     func openCommand(_ path: String) {
@@ -869,6 +863,7 @@ final class AppModel: ObservableObject, Feedback {
         guard confirm == "DELETE" else { return false }
         do {
             _ = try await engine.call(["account", "delete", "--confirm", "DELETE"], as: DeleteAccountResult.self)
+            billingStore.reset()
             offlineMode = false
             await loadAccount()
             flash(L("deleteAccount.done"))
@@ -1031,7 +1026,7 @@ final class AppModel: ObservableObject, Feedback {
 
     func disconnectSpaceship() { hostingStore.disconnectSpaceship() }
 
-    func dns(_ domain: String) async -> [DnsRecord] { await hostingStore.dns(domain) }
+    func dns(_ domain: String) async throws -> [DnsRecord] { try await hostingStore.dns(domain) }
 
     func planDomain(_ domain: String) async throws -> DomainPlan { try await hostingStore.planDomain(domain) }
 
@@ -1068,17 +1063,9 @@ final class AppModel: ObservableObject, Feedback {
         present(t, seconds: 6)
     }
 
-    func dismissToast() {
-        withAnimation(.easeOut(duration: 0.2)) { toast = nil }
-    }
+    func dismissToast() { toastCenter.dismiss() }
 
-    private func present(_ t: Toast, seconds: Double) {
-        withAnimation(.spring(response: 0.35)) { toast = t }
-        Task {
-            try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
-            if toast == t { withAnimation(.easeOut(duration: 0.25)) { toast = nil } }
-        }
-    }
+    private func present(_ t: Toast, seconds: Double) { toastCenter.enqueue(t) }
 
     // MARK: - Automatic check (V10)
 
@@ -1110,7 +1097,7 @@ final class AppModel: ObservableObject, Feedback {
             guard let self, !Task.isCancelled else { return }
             let wait = 20 - Date().timeIntervalSince(self.lastAutoCheck)
             if wait > 0 { try? await Task.sleep(nanoseconds: UInt64(wait * 1_000_000_000)) }
-            guard !Task.isCancelled, self.run == nil, !self.autoChecking, self.selectedKey == key else { return }
+            guard !Task.isCancelled, self.run == nil, !self.autoChecking, self.selectedKey == key, self.autoCheckPaused[key] == nil else { return }
             await self.runQuietCheck(key)
         }
     }
@@ -1131,10 +1118,11 @@ final class AppModel: ObservableObject, Feedback {
         AppLog.ui.debug("auto-check")
         // --auto: the engine refuses to run scripts or build configs that changed since the user last started a
         // check (WP01); the user is told once per project and starts the next check themselves
-        let outcome = try? await engine.run(["check", "--project", key, "--auto"], handle: handle)
+        let outcome = try? await engine.run(["check", "--project", key, "--auto"], handle: handle, timeout: 1200)
         // a run the user started stopped this one: its verdict is not worth a notification
         guard quietCheck === handle else { return }
-        if outcome?.errorCode == "scripts_changed" {
+        if outcome?.errorCode == "scripts_changed" || outcome?.errorCode == "scripts_untrusted" {
+            autoCheckPaused[key] = outcome?.errorCode == "scripts_untrusted" ? L("autocheck.untrusted") : (outcome?.errorMessage ?? L("autocheck.paused"))
             if !scriptsChangedWarned.contains(key) {
                 scriptsChangedWarned.insert(key)
                 let name = projects.first { $0.key == key }?.name ?? key
@@ -1142,6 +1130,8 @@ final class AppModel: ObservableObject, Feedback {
             }
             return
         }
+        if outcome?.ok != true { autoCheckPaused[key] = outcome?.errorMessage ?? L("autocheck.paused"); return }
+        autoCheckPaused[key] = nil
         scriptsChangedWarned.remove(key)
         await loadProjects()
         await refreshStatus(quiet: true)
@@ -1160,17 +1150,23 @@ final class AppModel: ObservableObject, Feedback {
     /// UserDefaults' argument domain). Used by the screenshot workflow; harmless for everyone else.
     private func openRequestedScreen() async {
         guard Snapshot.argument("BIDScreen"), let name = UserDefaults.standard.string(forKey: "BIDScreen") else { return }
+        if billingStore.demo { await billingStore.loadUsage() }
         switch name {
         case "project": if let first = projects.first { await select(first.key) }
         case "domains": screen = .domains
         case "costs": screen = .costs
         case "setup": screen = .setup
         case "account": screen = .account
-        case "assistant": screen = .assistant
+        case "assistant":
+            if let first = projects.first { await select(first.key, show: false) }
+            if Snapshot.argument("BIDSnapshot"), Snapshot.argument("BIDAssistantDemo"), let mode = UserDefaults.standard.string(forKey: "BIDAssistantDemo") {
+                Snapshot.prepareAssistant(model: self, mode: mode)
+            }
+            screen = .assistant
         case "usage": screen = .usage
         case "admin": screen = .admin
         case "plans": sheet = .plans
-        case "settings": sheet = .settings
+        case "settings": SettingsWindow.open()
         case "palette": showPalette = true
         default: screen = .overview
         }

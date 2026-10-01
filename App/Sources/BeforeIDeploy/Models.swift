@@ -826,6 +826,7 @@ struct CostSummary: Codable {
     var budgets: Budgets
     var usage: UsageInfo
     var pricesFile: String
+    var cloudPricing: UsageReport.Pricing?
 }
 
 // MARK: - Spaceship
@@ -911,6 +912,8 @@ struct AccountState: Codable {
     /// Privacy / Terms / Refund pages and the support address (engine `publicLinks`).
     var links: Links?
 
+    var settings: [String: JSONValue]?
+
     struct Links: Codable, Hashable {
         var privacy: String?
         var terms: String?
@@ -944,10 +947,11 @@ struct AccountState: Codable {
         var adminPanel = false
         var billingPlans = false
         var projectsMax: Int?
+        var sitesActiveMax: Int?
 
         enum CodingKeys: String, CodingKey {
             case aiCloud = "ai.cloud", aiOwnKey = "ai.ownKey", aiBuiltin = "ai.builtin", aiExternal = "ai.external", aiDeep = "ai.deep"
-            case cloudSync = "cloud.sync", adminPanel = "admin.panel", billingPlans = "billing.plans", projectsMax = "projects.max"
+            case cloudSync = "cloud.sync", adminPanel = "admin.panel", billingPlans = "billing.plans", projectsMax = "projects.max", sitesActiveMax = "sites.activeMax"
         }
     }
 
@@ -1060,18 +1064,28 @@ struct BillingCatalog: Codable, Hashable {
         var available: Bool
         var yearlyPrice: Double?
         var yearlyAvailable: Bool?
+        var activeSites: Int?
+        var activeSitesMax: Int?
+        var validityMonths: Int?
+        var window5h: Int?
+        var weekly: Int?
+        var extras: [String: Bool]?
     }
     struct Pack: Codable, Hashable, Identifiable {
         var id: String
         var tokens: Int
         var price: Double?
         var available: Bool
+        var validityMonths: Int?
     }
     struct Trial: Codable, Hashable {
         var days: Int
         var plan: String
         var tokens: Int
     }
+    var source: String?
+    var version: String?
+    var taxInclusive: Bool?
     var currency: String
     var plans: [Plan]
     var packs: [Pack]
@@ -1092,6 +1106,7 @@ struct BillingStatus: Codable, Hashable {
         var plan: Int
         var topup: Int
         var total: Int
+        var available: Int?
     }
     struct Usage: Codable, Hashable, Identifiable {
         var at: String
@@ -1099,7 +1114,9 @@ struct BillingStatus: Codable, Hashable {
         var model: String?
         var tokens: Int
         var project: String?
-        var id: String { at + (step ?? "") }
+        var serverID: String?
+        var id: String { serverID ?? [at, step ?? "", model ?? "", project ?? "", String(tokens)].joined(separator: "|") }
+        enum CodingKeys: String, CodingKey { case at, step, model, tokens, project; case serverID = "id" }
     }
     var plan: String
     var subscription: Subscription?
@@ -1109,7 +1126,15 @@ struct BillingStatus: Codable, Hashable {
 }
 
 struct BillingURL: Codable, Hashable {
-    var url: String
+    struct Preview: Codable, Hashable {
+        var id: String; var plan: String; var amount: Int; var nextAmount: Int; var currency: String
+        var effectiveAt: String; var expiresAt: String; var downgrade: Bool
+    }
+    var url: String?
+    var changed: Bool?
+    var unchanged: Bool?
+    var effectiveAt: String?
+    var preview: Preview?
 }
 
 
@@ -1327,6 +1352,8 @@ struct AssistantResult: Codable, Hashable {
     var undone: Bool?
     var evidence: [AssistantEvidence]?
     var engineStatus: String?
+    var historyId: String?
+    var discarded: Bool?
 }
 
 struct AssistantHistoryEntry: Codable, Identifiable, Hashable {
@@ -1340,13 +1367,22 @@ struct AssistantHistoryEntry: Codable, Identifiable, Hashable {
     var summary: String?
     var patchFile: String?
     var duration: Double?
-    var id: String { at + action }
+    var historyId: String?
+    var id: String { historyId ?? (at + action) }
+    var result: AssistantResult?
+    var request: AssistantStore.Request?
+    var usage: AIUsage?
+    var provider: String?
+    var error: String?
+    var code: String?
+
 }
 
 struct AssistantHistory: Codable {
     var project: String
     var conversation: String?
     var entries: [AssistantHistoryEntry]
+    var hasMore: Bool?
 }
 
 struct AssistantSettings: Codable, Hashable {
@@ -1372,15 +1408,16 @@ struct PromptInfo: Codable, Identifiable, Hashable {
 // MARK: - Plan & usage (V11 RC): server-authoritative, all in tokens
 
 struct UsageReport: Codable {
-    struct Period: Codable, Hashable { var start: String; var end: String; var renewsAt: String?; var source: String }
+    struct Period: Codable, Hashable { var start: String; var end: String; var renewsAt: String?; var source: String; var debt: Int?; var forecastDaysLeft: Double? }
     struct Tokens: Codable, Hashable { var tokens: Int; var operations: Int? }
     struct Remaining: Codable, Hashable { var plan: Int; var purchased: Int; var total: Int; var available: Int }
     struct Purchased: Codable, Hashable { var tokens: Int; var expires: String? }
-    struct Limits: Codable, Hashable { var perMinute: Int; var perHour: Int; var sessionHours: Int?; var sessionCapPercent: Int?; var sessionCap: Int?; var sessionUsed: Int? }
+    struct Limits: Codable, Hashable { var perMinute: Int; var perHour: Int; var sessionHours: Double?; var sessionCapPercent: Double?; var sessionCap: Int?; var sessionUsed: Int? }
     /// The rolling session (as in Claude): a share of the monthly credits per N hours, with the time it resets.
-    struct Session: Codable, Hashable { var windowHours: Int; var capPercent: Int; var cap: Int; var used: Int; var remaining: Int; var resetsAt: String? }
+    struct Session: Codable, Hashable { var windowHours: Double; var capPercent: Double; var cap: Int; var used: Int; var remaining: Int; var resetsAt: String?; var reserved: Int? }
     struct ModelUsage: Codable, Hashable, Identifiable { var model: String; var tokens: Int; var operations: Int; var id: String { model } }
-    struct Pricing: Codable, Hashable { var version: String; var spendOrder: [String]? }
+    struct ActionPrice: Codable, Hashable { var credits: Int?; var window: Bool?; var actual: Bool? }
+    struct Pricing: Codable, Hashable { var version: String; var spendOrder: [String]?; var actions: [String: ActionPrice]? }
     struct Reconciled: Codable, Hashable { var releasedHolds: Int }
     struct Operation: Codable, Identifiable, Hashable {
         var id: String
@@ -1406,6 +1443,24 @@ struct UsageReport: Codable {
     }
     struct History: Codable { var operations: [Operation]; var ledger: [LedgerRow] }
 
+    struct Window: Codable { var used: Int; var cap: Int; var remaining: Int; var resetsAt: String?; var reserved: Int?; var boostAvailable: Bool?; var boostUntil: String? }
+    struct Sites: Codable { var active: Int; var limit: Int; var paused: Int?; var items: [Site]? }
+    struct Site: Codable, Identifiable { var id: String; var projectKey: String; var name: String; var state: String; var hostingOwner: String?; var pausedReason: String?; var graceUntil: String?; var credits: Int? }
+    struct Nudge: Codable { var threshold: Int; var periodRef: String; var kind: String; var target: String? }
+    struct PackLot: Codable, Identifiable { var id: String; var remaining: Int; var expiresAt: String }
+    struct ActionUsage: Codable, Identifiable { var action: String; var credits: Int; var operations: Int; var id: String { action } }
+    struct DailyUsage: Codable, Identifiable { var date: String; var credits: Int; var id: String { date } }
+    var v: Int?
+    var source: String?
+    var stale: Bool?
+    struct ScheduledChange: Codable { var plan: String; var effectiveAt: String; var siteLimit: Int }
+    var scheduledChange: ScheduledChange?
+    var nudge: Nudge?
+    var weekly: Window?
+    var sites: Sites?
+    var packs: [PackLot]?
+    var byAction: [ActionUsage]?
+    var daily: [DailyUsage]?
     var serverTime: String
     var unit: String
     var plan: String
@@ -1444,4 +1499,24 @@ struct AdminDiagnostics: Codable, Hashable {
     var functions: [String: Bool]
     var todo: [String]
     var ready: Bool
+}
+
+struct CreditActionReceipt: Decodable { var ok: Bool?; var state: String?; var credits: Int?; var pricingVersion: String? }
+
+struct CloudAuditReceipt: Decodable, Identifiable {
+    var operationId: String
+    var id: String { operationId }
+    var charged: Int?
+    var report: Report
+    struct Report: Decodable {
+        var status: String; var url: String?; var httpStatus: Int?; var responseMs: Double?; var bytes: Int?; var titlePresent: Bool?; var metadata: Metadata?; var links: [Link]?
+    }
+    struct Metadata: Decodable { var description: Bool; var language: Bool; var canonical: Bool; var h1: Bool; var missingAlt: Int; var securityHeaders: [String]; var truncated: Bool }
+    struct Link: Decodable, Identifiable { var url: String; var ok: Bool; var status: Int?; var id: String { url } }
+}
+
+struct AdminCreditState: Decodable {
+    var usage: UsageReport
+    var drift: [Drift]
+    struct Drift: Decodable, Identifiable { var operation_id: String; var recorded: Int; var ledger_charged: Int; var id: String { operation_id } }
 }

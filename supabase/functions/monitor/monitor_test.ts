@@ -176,6 +176,7 @@ function world(user = ME) {
       { user_id: ME.id, key: "shop", name: "Shop", live_url: "https://shop.example.com", domain: "shop.example.com" },
       { user_id: OTHER.id, key: "theirs", name: "Theirs", live_url: "https://theirs.example.com" },
     ],
+    sites:[{id:"site-shop",user_id:ME.id,project_key:"shop",state:"active"},{id:"site-theirs",user_id:OTHER.id,project_key:"theirs",state:"active"}],
     monitor_targets: [],
     monitor_probes: [],
     monitor_incidents: [],
@@ -324,6 +325,7 @@ Deno.test("monitor: page checks and TLS expiry open their own incidents; the bat
   // bounded batch: more due targets than the batch size → the rest wait for the next pass
   for (let i = 0; i < LIMITS.batch + 5; i++) {
     w.db.rows("bid_projects").push({ user_id: ME.id, key: `p${i}`, live_url: `https://p${i}.example.com` });
+    w.db.rows("sites").push({id:`site-${i}`,user_id:ME.id,project_key:`p${i}`,state:"active"});
     await w.handle(post("monitor", { action: "register", projectKey: `p${i}`, url: `https://p${i}.example.com/` }));
   }
   r = await (await w.run()).json();
@@ -360,4 +362,15 @@ Deno.test("monitor (WP03): an on-demand test probe is rate limited per user", as
   assert.equal(codes[10], 429, "the 11th probe within a minute is refused");
   w.tick(2);
   assert.equal((await w.handle(post("monitor", { action: "test", projectKey: "shop" }))).status, 200, "the window moves on");
+});
+
+Deno.test("monitor V12: paused sites cannot register, run or test; accounting failures stop the scheduler",async()=>{
+ const w=world(); await w.handle(post("monitor",{action:"register",projectKey:"shop",url:"https://shop.example.com"}));
+ w.db.rows("sites")[0].state="paused";
+ assert.equal((await w.handle(post("monitor",{action:"register",projectKey:"shop",url:"https://shop.example.com"}))).status,403);
+ assert.equal((await w.handle(post("monitor",{action:"test",projectKey:"shop"}))).status,403);
+ assert.equal((await (await w.run()).json()).checked,0);assert.equal(w.probed.length,0);
+ assert.equal((await (await w.handle(post("monitor",{action:"status"}))).json()).active,false);
+ w.db.missingFunctions=["bid_site_burn"];
+ assert.equal((await w.run()).status,503);assert.equal(w.probed.length,0);
 });

@@ -15,6 +15,7 @@ final class AIStore: ObservableObject {
         var text = "" // streamed answer
         var outcome: AIFixOutcome?
         var error: String?
+        var errorCode: String?
         var running = true
         var applying = false
         var applied: AIApplyResult?
@@ -32,6 +33,7 @@ final class AIStore: ObservableObject {
     let projects: ProjectStore
     weak var feedback: Feedback?
     /// Called after a successful apply when the user wants a new check (the facade closes overlays and runs it).
+    var onSpend: (@MainActor () async -> Void)?
     var onApplied: (@MainActor () -> Void)?
 
     init(engine: EngineClient, projects: ProjectStore) {
@@ -79,11 +81,13 @@ final class AIStore: ObservableObject {
                     current?.selected = Set((r.files ?? []).filter { $0.applicable && $0.needsApproval != true }.map(\.path))
                 } else {
                     current?.error = outcome.errorMessage ?? L("common.error")
+                    current?.errorCode = outcome.errorCode
                 }
             } catch {
                 if current?.handle === handle { current?.error = error.localizedDescription }
             }
             if current?.handle === handle { current?.running = false }
+            await onSpend?()
         }
     }
 

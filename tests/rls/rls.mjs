@@ -171,7 +171,7 @@ await t('subscriptions, ai_usage: own rows only; billing_events, admin_audit, tr
 
 await t('settings: readable by signed-in users, not by anonymous, never writable by clients', async () => {
   const s = await asA((q) => q(`select key from public.settings order by key`));
-  assert(s.rows.map((r) => r.key).join() === 'billing.catalog,plans', JSON.stringify(s.rows));
+  assert(s.rows.map((r) => r.key).join() === 'ai.creditEur,billing.catalog,billing.graceDays,credits.migration,credits.sitesMigrated,features.knightDomain,features.netlifyCredits,plans,pricing.actions,pricing.version', JSON.stringify(s.rows));
   assert((await asAnon((q) => q('select key from public.settings'))).rows.length === 0, 'anon');
   await rejects(() => asA((q) => q(`insert into public.settings (key, value) values ('ai.models', '{}')`)), /row-level security/);
   const u = await asA((q) => q(`update public.settings set value = '{}' where key = 'plans'`));
@@ -229,6 +229,22 @@ await t('WP03 rate limit: bid_rate_hit is atomic per user and action, separate p
   assert((await asA((q) => q('select * from public.rate_events'))).rows.length === 0, 'clients see no rate events');
 });
 
+await t('V12 subscription changes: tenant reads, service-only writes, one provider mutation at a time', async () => {
+  const insert = async (uid, status) => (await asService(q => q(`insert into public.billing_changes(user_id,provider_ref,from_tier,to_tier,status,request,quote,fingerprint,effective_at,expires_at) values($1,'sub_test','flash','high',$2,'{}','{}','abc',now(),now()+interval '10 minutes') returning id`, [uid,status]))).rows[0].id;
+  const first = await insert(A,'preview');
+  const second = await insert(A,'preview');
+  assert((await asA(q => q('select id from public.billing_changes'))).rows.length === 2,'own previews visible');
+  assert((await asB(q => q('select id from public.billing_changes'))).rows.length === 0,'other tenant hidden');
+  assert((await asAnon(q => q('select id from public.billing_changes'))).rows.length === 0,'anonymous hidden');
+  assert((await asA(q => q("update public.billing_changes set status='applying' returning id"))).rows.length === 0,'clients cannot confirm directly');
+  await asService(q => q("update public.billing_changes set status='applying' where id=$1",[first]));
+  await rejects(() => asService(q => q("update public.billing_changes set status='applying' where id=$1",[second])),/duplicate key/);
+  await asService(q => q("update public.billing_changes set status='applied' where id=$1",[first]));
+  await asService(q => q("update public.billing_changes set status='applying' where id=$1",[second]));
+});
+
+await (await import('./credits-v12.mjs')).testCredits({db,t,assert,rejects,as});
+
 await t('account deletion cascades: removing the auth user removes every row of that tenant and nothing of the other', async () => {
   await db.query(`delete from auth.users where id = $1`, [B]); // the auth service (owner), not the API role
   for (const table of ['profiles', 'bid_projects', 'credit_ledger', 'subscriptions', 'monitor_targets']) {
@@ -236,6 +252,21 @@ await t('account deletion cascades: removing the auth user removes every row of 
     assert(n === 0, `${table}: B's rows gone`);
   }
   assert((await asA((q) => q('select key from public.bid_projects'))).rows.length === 1, 'A untouched');
+});
+
+await t('V12 catalog migration: preserves provider IDs, disables changed prices, runs once', async () => {
+  const old = { currency: 'EUR', plans: { high: { price: 29.99, paddlePriceId: 'pri_old_high', yearly: { price: 299.9, paddlePriceId: 'pri_year' } } }, packs: [{ id: 'pack-100k', price: 3.99, paddlePriceId: 'pri_old_pack' }], custom: true };
+  await db.query("update public.settings set value=$1::jsonb where key='billing.catalog'", [JSON.stringify(old)]);
+  const migration = fs.readFileSync(path.join(ROOT, 'supabase/migrations/202610010001_catalog_v12.sql'), 'utf8');
+  await db.exec(migration);
+  const current = (await db.query("select value from public.settings where key='billing.catalog'")).rows[0].value;
+  assert(current.custom && current.plans.high.paddlePriceId === 'pri_old_high', 'provider IDs and unrelated settings retained');
+  assert(current.plans.high.needsReconciliation === false, 'unchanged price stays available');
+  assert(current.packs[0].price === 4.99 && current.packs[0].needsReconciliation === true && current.packs[0].paddlePriceId === 'pri_old_pack', 'price mismatch disables sales but retains historical webhook mapping');
+  await db.query("update public.settings set value=jsonb_set(value,'{plans,high,price}','31') where key='billing.catalog'");
+  await db.exec(schema);
+  const again = (await db.query("select value from public.settings where key='billing.catalog'")).rows[0].value;
+  assert(again.plans.high.price === 31, 'repeat owner deploy preserves reviewed custom settings');
 });
 
 console.log(`\n${failed ? '❌' : '✅'} ${passed} passed, ${failed} failed`);

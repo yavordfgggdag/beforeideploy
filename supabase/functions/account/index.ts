@@ -9,8 +9,8 @@ const url = Deno.env.get("SUPABASE_URL")!;
 const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const paddleKey = Deno.env.get("PADDLE_API_KEY") ?? "";
-const paddleBase = Deno.env.get("PADDLE_ENV") === "live" ? "https://api.paddle.com" : "https://sandbox-api.paddle.com";
+const paddleKey = Deno.env.get("PADDLE_ENV") === "live" ? "" : Deno.env.get("PADDLE_API_KEY") ?? "";
+const paddleBase = "https://sandbox-api.paddle.com";
 
 Deno.serve(createAccountHandler({
   asUser: (auth) => createClient(url, anonKey, { global: { headers: { Authorization: auth } } }) as unknown as DbClient,

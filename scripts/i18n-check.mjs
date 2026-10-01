@@ -65,6 +65,24 @@ if (fs.existsSync(resDir)) {
   }
 }
 compare('app', app, (s) => String(cFormats(s)));
+// L converts every argument to text. Numeric C format specifiers print pointers, not numbers.
+for(const [lang,cat] of Object.entries(app)) for(const [key,value] of Object.entries(cat)) {
+  if(/%(?:\d+\$)?(?:[+\-0.\d]*)(?:ll|l|h)?[diufgescx]/i.test(value.replace(/%%/g,''))) errors.push(`app ${lang}: ${key} must use %@ text placeholders`);
+}
+
+
+// Identical text is permitted only for brands/protocols, placeholders and external UI identifiers.
+const unchangedBrands = new Set(['Before I Deploy','SSL','HTTP','VIP','Git','Node','Node.js','npm','pnpm','Netlify CLI','Netlify','GitHub','OpenAI','Anthropic','Claude','ChatGPT','Codex','Spaceship','Paddle','Vercel','Cloudflare Pages']);
+const externalLabels = new Set(['setup.display.deployWorkflow','setup.display.authProviders','setup.display.keychain']);
+for(const [label,catalogs] of [['app',app],['engine',engine]]) {
+  for(const [key,value] of Object.entries(catalogs.en)) {
+    if(key.startsWith('_meta') || value !== catalogs.bg?.[key]) continue;
+    // Website copy follows the site's language, not the desktop's current UI language.
+    if(label==='engine' && /^newsite\..+\.(bg|en)$/.test(key)) continue;
+    const fixed = value.replace(/%\d*\$?@|\{[a-zA-Z0-9_]+\}/g,'').replace(/[^a-zA-Z ]/g,'').trim();
+    if(fixed && !unchangedBrands.has(fixed) && !(label==='engine' && externalLabels.has(key))) errors.push(`${label} bg: untranslated English in ${key}`);
+  }
+}
 
 const swiftDir = path.join(ROOT, 'App', 'Sources');
 const swiftFiles = [];
@@ -76,6 +94,14 @@ const walk = (d) => {
   }
 };
 walk(swiftDir);
+
+// Visible literals must be localized; source code, URLs, and brand names are not translated.
+for(const file of swiftFiles) {
+  const text = fs.readFileSync(file,'utf8');
+  for(const hit of text.matchAll(/(?:\bText\(\s*|\blabel:\s*)"([A-Za-z][^"\n]*)"/g)) {
+    if(!unchangedBrands.has(hit[1])) errors.push(`${path.relative(ROOT,file)}: hard-coded display text "${hit[1]}"`);
+  }
+}
 
 const used = new Set();
 const pluralBases = new Set();

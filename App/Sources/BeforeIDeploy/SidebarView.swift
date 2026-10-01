@@ -20,60 +20,62 @@ struct SidebarView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 10) {
-                AppGlyph(size: 26).breath(Theme.accent)
+                AppGlyph(size: 26)
                 VStack(alignment: .leading, spacing: 1) {
                     Text("Before I Deploy")
-                        .font(.system(size: 13.5, weight: .bold))
+                        .font(Typo.font(.subhead, weight: .bold))
                         .foregroundColor(Theme.text)
                     Text(L("sidebar.tagline"))
-                        .font(.system(size: 10.5))
+                        .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                        .font(Typo.font(.caption))
                         .foregroundColor(Theme.tertiary)
                 }
             }
-            .padding(.top, 44)
+            .padding(.top, 16)
             .padding(.horizontal, 18)
-            .padding(.bottom, 22)
+            .padding(.bottom, 16)
 
             VStack(spacing: 2) {
-                NavRow(symbol: "square.grid.2x2.fill", title: L("nav.missionControl"), selected: model.screen == .overview) {
+                NavRow(symbol: "square.grid.2x2.fill", title: L("nav.missionControl"), selected: model.screen == .overview, shortcut: "1") {
                     model.screen = .overview
                     Task { await model.loadOverview() }
                 }
-                NavRow(symbol: "network", title: L("common.domains"), selected: model.screen == .domains,
+                NavRow(symbol: "network", title: L("common.domains"), selected: model.screen == .domains, shortcut: "2",
                        badge: expiring > 0 ? "\(expiring)" : nil) {
                     model.screen = .domains
                     Task { await model.loadSpaceship() }
                 }
-                NavRow(symbol: "sparkles", title: L("assistant.nav"), selected: model.screen == .assistant) {
+                NavRow(symbol: "sparkles", title: L("assistant.nav"), selected: model.screen == .assistant, shortcut: "3") {
                     model.screen = .assistant
-                    Task { await model.assistantStore.load() }
                 }
-                NavRow(symbol: "creditcard.fill", title: L("common.costs"), selected: model.screen == .costs) {
+                NavRow(symbol: "creditcard.fill", title: L("common.costs"), selected: model.screen == .costs, shortcut: "4") {
                     model.screen = .costs
                     Task { await model.loadCosts() }
                 }
-                NavRow(symbol: "wand.and.stars", title: L("common.setup"), selected: model.screen == .setup,
+                NavRow(symbol: "wand.and.stars", title: L("common.setup"), selected: model.screen == .setup, shortcut: "5",
                        badge: (model.setup?.missingRequired ?? 0) > 0 ? "\(model.setup?.missingRequired ?? 0)" : nil) {
                     model.screen = .setup
                     Task { await model.loadSetup() }
                 }
-                if model.account?.loggedIn == true {
-                    NavRow(symbol: "gauge.with.dots.needle.33percent", title: L("usage.nav"), selected: model.screen == .usage) {
+                if model.account?.loggedIn == true || model.billingStore.demo {
+                    NavRow(symbol: "gauge.with.dots.needle.33percent", title: L("usage.nav"), selected: model.screen == .usage, shortcut: "6") {
                         model.screen = .usage
                         Task { await model.billingStore.loadUsage() }
                     }
-                    NavRow(symbol: "person.crop.circle.fill", title: L("common.account"), selected: model.screen == .account) {
+                }
+                if model.account?.loggedIn == true {
+                    NavRow(symbol: "person.crop.circle.fill", title: L("common.account"), selected: model.screen == .account, shortcut: "7") {
                         model.screen = .account
                     }
                 }
                 if model.account?.isAdmin == true {
-                    NavRow(symbol: "person.2.badge.gearshape.fill", title: L("admin.title"), selected: model.screen == .admin) {
+                    NavRow(symbol: "person.2.badge.gearshape.fill", title: L("admin.title"), selected: model.screen == .admin, shortcut: "8") {
                         model.screen = .admin
                     }
                 }
             }
             .padding(.horizontal, 10)
-            .padding(.bottom, 18)
+            .padding(.bottom, 12)
             .environment(\.navNamespace, navPill)
             .animation(Motion.spring, value: model.screen)
 
@@ -81,7 +83,7 @@ struct SidebarView: View {
                 SectionLabel(text: L("common.projects"))
                 Spacer()
                 Text("\(model.projects.count)")
-                    .font(.system(size: 10.5, weight: .semibold))
+                    .font(Typo.font(.caption, weight: .semibold))
                     .foregroundColor(Theme.tertiary)
             }
             .padding(.horizontal, 18)
@@ -105,55 +107,17 @@ struct SidebarView: View {
                 }
                 .padding(.horizontal, 10)
             }
-
-            Spacer(minLength: 0)
+            .frame(minHeight: 80)
+            .layoutPriority(1)
 
             VStack(spacing: 8) {
-                Button {
-                    model.addProjectPanel()
-                } label: {
-                    HStack {
-                        Image(systemName: "plus")
-                        Text(L("common.addProject"))
-                        Spacer()
-                        Text("⌘O").foregroundColor(Theme.tertiary).font(.system(size: 11))
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                .bidButton(.secondary)
-
-                Button { model.sheet = .newSite } label: {
-                    HStack {
-                        Image(systemName: "sparkles.rectangle.stack")
-                        Text(L("newsite.button"))
-                        Spacer()
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                .bidButton(.primary)
-                .help(L("newsite.buttonHelp"))
-
-                Button { model.showPalette = true } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "magnifyingglass")
-                        Text(L("sidebar.search"))
-                        Spacer()
-                        Text("⌘K").foregroundColor(Theme.tertiary).font(.system(size: 11))
-                    }
-                    .font(.system(size: 12.5))
-                    .foregroundColor(Theme.secondary)
-                    .padding(.horizontal, 10).padding(.vertical, 7)
-                    .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Theme.panel))
-                }
-                .buttonStyle(.plain)
                 if let u = model.update, u.available {
-                    UpdateBanner(info: u)
+                    Button(L("update.available", u.latest ?? "")) { model.downloadUpdate() }
+                        .bidButton(.secondary, compact: true)
+                        .disabled(model.busy.contains("update"))
                 }
                 AccountBadge()
-                HStack(spacing: 8) {
-                    SidebarFooterButton(symbol: "clock.arrow.circlepath", title: L("common.history")) { model.sheet = .history }
-                    SidebarFooterButton(symbol: "gearshape", title: L("common.settings")) { model.sheet = .settings }
-                }
+
             }
             .padding(14)
         }
@@ -171,9 +135,9 @@ struct UpdateBanner: View {
         HStack(spacing: 8) {
             Image(systemName: "arrow.down.circle.fill").foregroundColor(Theme.accent)
             VStack(alignment: .leading, spacing: 1) {
-                Text(L("update.available", info.latest ?? "")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                Text(L("update.available", info.latest ?? "")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
                 if let n = info.notes?[Localization.current] ?? info.notes?["en"] {
-                    Text(n).font(.system(size: 10.5)).foregroundColor(Theme.tertiary).lineLimit(2)
+                    Text(n).font(Typo.font(.caption)).foregroundColor(Theme.tertiary).lineLimit(2)
                 }
             }
             Spacer()
@@ -182,7 +146,7 @@ struct UpdateBanner: View {
                 .disabled(model.busy.contains("update"))
         }
         .padding(10)
-        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.accentSoft))
+        .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(Theme.accentSoft))
     }
 }
 
@@ -197,11 +161,11 @@ struct SidebarFooterButton: View {
                 Image(systemName: symbol)
                 Text(title)
             }
-            .font(.system(size: 12, weight: .medium))
+            .font(Typo.font(.callout, weight: .medium))
             .foregroundColor(hover ? Theme.text : Theme.secondary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 7)
-            .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(hover ? Theme.elevated : .clear))
+            .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(hover ? Theme.elevated : .clear))
         }
         .buttonStyle(.plain)
         .onHover { hover = $0 }
@@ -223,17 +187,17 @@ struct ProjectRow: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(project.name)
-                    .font(.system(size: 13, weight: selected ? .semibold : .medium))
+                    .font(Typo.font(.body, weight: selected ? .semibold : .medium))
                     .foregroundColor(project.exists == false ? Theme.tertiary : Theme.text)
                     .lineLimit(1)
                 Text(project.exists == false ? L("sidebar.folderMissing") : (subtitle.isEmpty ? "—" : subtitle))
-                    .font(.system(size: 10.5))
+                    .font(Typo.font(.caption))
                     .foregroundColor(Theme.tertiary)
                     .lineLimit(1)
             }
             Spacer(minLength: 4)
             if project.lastStatus == "blocked" {
-                PulseDot(color: Theme.color(for: project.lastStatus), size: 7).frame(width: 12, height: 12)
+                StatusDot(status: project.lastStatus, size: 7).frame(width: 12, height: 12)
             } else {
                 StatusDot(status: project.lastStatus, size: 7)
             }
@@ -241,17 +205,16 @@ struct ProjectRow: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 7)
         .background(
-            RoundedRectangle(cornerRadius: 11, style: .continuous)
+            RoundedRectangle(cornerRadius: Radius.m, style: .continuous)
                 .fill(selected ? Theme.elevated : (hover ? Theme.panel : .clear))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 11, style: .continuous)
+            RoundedRectangle(cornerRadius: Radius.m, style: .continuous)
                 .strokeBorder(selected ? Theme.edgeHighlight : LinearGradient(colors: [.clear], startPoint: .top, endPoint: .bottom), lineWidth: 1)
         )
         .overlay(alignment: .leading) {
             if selected {
                 Capsule().fill(Theme.accentGradient).frame(width: 3, height: 18).offset(x: -6)
-                    .shadow(color: Theme.accent.opacity(0.7), radius: 4)
             }
         }
         .contentShape(Rectangle())
@@ -268,6 +231,7 @@ struct NavRow: View {
     let symbol: String
     let title: String
     let selected: Bool
+    var shortcut: String? = nil
     var badge: String? = nil
     let action: () -> Void
     @Local private var hover = false
@@ -277,40 +241,40 @@ struct NavRow: View {
         Button(action: action) {
             HStack(spacing: 10) {
                 Image(systemName: symbol)
-                    .font(.system(size: 12.5, weight: .semibold))
+                    .font(Typo.font(.body, weight: .semibold))
                     .foregroundColor(selected ? Theme.accent : Theme.secondary)
                     .frame(width: 20)
                     .scaleEffect(hover && !Motion.reduced ? 1.12 : 1)
                     .rotationEffect(.degrees(hover && !Motion.reduced ? -6 : 0))
                 Text(title)
-                    .font(.system(size: 13, weight: selected ? .semibold : .medium))
+                    .font(Typo.font(.body, weight: selected ? .semibold : .medium))
                     .foregroundColor(selected ? Theme.text : Theme.secondary)
                 Spacer()
                 if let badge {
                     Text(badge)
-                        .font(.system(size: 10.5, weight: .bold))
+                        .font(Typo.font(.caption, weight: .bold))
                         .foregroundColor(.white)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(Capsule().fill(Theme.accent))
+                        .background(Capsule().fill(Theme.accentFill))
                 }
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
             .background {
                 if selected {
-                    let pill = RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    let pill = RoundedRectangle(cornerRadius: Radius.s, style: .continuous)
                         .fill(LinearGradient(colors: [Theme.accent.opacity(0.28), Theme.accent.opacity(0.10)], startPoint: .leading, endPoint: .trailing))
-                        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Theme.accent.opacity(0.32), lineWidth: 1))
-                        .shadow(color: Theme.accent.opacity(0.25), radius: 10, y: 3)
-                    if let ns { pill.matchedGeometryEffect(id: "nav-pill", in: ns) } else { pill }
+                        .overlay(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).strokeBorder(Theme.accent.opacity(0.32), lineWidth: 1))
+                        if let ns { pill.matchedGeometryEffect(id: "nav-pill", in: ns) } else { pill }
                 } else {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous).fill(hover ? Theme.panel : .clear)
+                    RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(hover ? Theme.panel : .clear)
                 }
             }
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .help(shortcut.map { "\(title) · ⌘\($0)" } ?? title)
         .onHover { hover = $0 }
         .animation(Motion.quick, value: hover)
         .animation(Motion.quick, value: selected)

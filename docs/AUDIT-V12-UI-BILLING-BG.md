@@ -137,3 +137,97 @@ deno test --allow-env --allow-net --allow-read supabase/functions
 node scripts/i18n-check.mjs && node scripts/error-codes.mjs
 # Swift: само в CI (app.yml, screenshots.yml); DMG: release-dryrun.yml (workflow_dispatch)
 ```
+
+
+## Изпълнение — 2026-10-01, setup foundation
+
+Работно копие: `codex/v12-completion`, база `a9376bd`. Това е междинен checkpoint, не обявяване на завършена V12.
+
+| Находки | Статус | Доказателство / оставаща проверка |
+|---|---|---|
+| SU-1–5, SU-7 | implemented | PATH преди bundled exec; npm/npx в двата runtime пакета; managed prefix и проверка преди атомарен symlink switch; `tests/setup-v12.mjs` |
+| SU-6 | implemented | `gitAvailable` пази setup, doctor, status и git панела от CLT shim; реален Mac без CLT предстои |
+| SU-8–12 | implemented | false result + nonzero exit, terminal step states, стабилни IDs, failed-before-start UI, refresh след грешка |
+| SU-13–14 | implemented | 40 min setup deadline, stdout приключва до 2 s след exit, 5 s heartbeat, npm fetch logs |
+| Required set / cloud rows | implemented | providers определят задължителните редове; cloud rows са незадължителни и само за admin/custom cloud |
+| Browser login / recovery | partial | device code/URL, timeout, retry, in-app Git identity; реалните Netlify/GitHub login сценарии и cancel/reinstall walkthrough предстоят |
+| Auto-check trust | implemented | `scripts_untrusted`, `scripts_changed`, видима причина и ръчна проверка за продължаване |
+| Setup log rotation / report inclusion | implemented | последни 5 лог файла за стъпка; съществуващият report collector включва setup/ с redaction |
+| UI-1–4, 33–37, 40 | implemented foundation | динамични цветове, избор на изглед, type/radius/elevation tokens, спокойни фонове, модални панели, опашка за известия; визуално приемане предстои |
+| UI-5, 7–14, 28–29 | in progress | общи Badge/Meter/Field/SheetScaffold/ModalShell; съвместими wrappers, последваща миграция на специализираните екрани |
+| UI-48 | implemented CI coverage | light/dark 1080×700 + дълго име; чака визуален преглед на резултатите |
+| AI chat foundation | implemented / validation in progress | decoded stream, Markdown/code, proposal selection and guarded Undo, batched rendering, per-project sessions, durable history/retry; screenshot and Swift CI pending |
+| AI-22 | partial | selected issue chip; selection remains a native Picker |
+| AI quota / balance | partial | error-specific actions; v2 balance, windows and packs follow in phases 4-5 |
+| PU-1–7, PU-14, PU-33, PU-46 | implemented, CI pending | public/offline canonical catalog, read-only demo, generated schema + guarded migration + site; 300k High, V2 packs |
+| PU-8–13, PU-15–18 | implemented UI foundation | Plans: Free + 3 cards, visible prices, yearly savings; Usage: meters, packs, chart, collapsible history; V2 live server summaries follow in phase 5 |
+| PU-19 | implemented, provider sandbox walkthrough pending | reviewed PATCH + server mutation claim; retain add-ons; defer downgrade entitlement locally; cancellation retains another active Paddle subscription |
+| PU-20–22, PU-26, PU-29–32 | implemented | trial base, calendar monthly slices with year-scoped grant IDs, available balance, fractional settings, account-scoped polling/reset and mutation serialization |
+| PU-23–25, PU-34, PU-36–44 | phase 5 | anchored windows, grants/FIFO/expiry/cap, one AI credit rate, server summary/metering/sites/nudges |
+| PU-27–28 | partial | quota actions in chat + AI Fix; localized reset and Boost follow with V2 window contract |
+| PU-47–48 | phase 6 cleanup | recent list identity strengthened; unknown status fallback and glossary still to review |
+| Phases 5-6 | pending | not yet a V12 release |
+
+Проверки: engine 112/112 (включва 7 setup regression scenarios); Deno 87/87; SQL/RLS 10/10; локален `swift build` успешен. `swift test` е блокиран локално от липсващ XCTest в CLT; нужен е macOS CI. Fresh-Mac acceptance и real-provider login не са изпълнени. Числата са за този checkpoint и се обновяват при следващите промени.
+
+
+### Phase 4 verification note — 2026-10-01
+
+Phase 3 CI passed on `999d71f` (app, engine Linux/macOS and screenshots). Its code/proposal/empty/quota screenshots were reviewed.
+Phase 4 local checks so far: Swift build succeeds; 98 Deno tests and 12 SQL/RLS tests pass. The full engine run passed 114/114; macOS XCTest and screenshot CI are still required. Review uses isolated demo data and makes no paid model call or payment.
+
+**Correction to PU-19:** Paddle does not accept a top-level `effective_from` for subscription item updates. That literal fix is skipped as unsupported. The implementation uses `do_not_bill` for the provider item change and a server-only `billing_changes` record to retain the original entitlement until the reviewed period end. Sources: [update subscription](https://developer.paddle.com/api-reference/subscriptions/update-subscription/) and [preview subscription update](https://developer.paddle.com/api-reference/subscriptions/preview-subscription-update/). Real sandbox acceptance remains required, particularly annual/monthly interval changes.
+
+### Етап 5 — междинна проверка на отчитането (2026-10-01)
+
+| Обхват | Статус | Проверка |
+|---|---|---|
+| Партиди, FIFO, валидност, таван; атомарни hold/settle/release/charge | Изпълнено в SQL и свързано към AI/плащанията | 25 PostgreSQL/RLS теста, включително резервирани партиди и закъснели резултати |
+| Единен курс, старите грантове, годишни месечни грантове, refunds | Изпълнен основен път; пропорционалният upgrade grant предстои | 101 Deno теста; V1 остатъкът не се занулява |
+| Usage v2, агрегати над 1000 реда, ETag на сървъра | Изпълнено; ETag в engine предстои | SQL + HTTP тестове |
+| Сайтове, прозорци, Boost, дневен разход и подкани | SQL основа проверена; endpoints, планировчик и UI предстоят | 100k стандартен профил и High/Knight сценарии минават |
+| Домейн, административни контроли, експорт, обща проверка | Предстои | Не е извършвано публикуване или реално плащане |
+
+
+### Етап 5 — свързани услуги и управление (след d3c12f2)
+
+- Свързани endpoints за сайтове, разходи, Boost, подкани и заявка за домейн; пробният период и пропорционалният грант са атомарни. Допълненията за наблюдение се отчитат по дневни идентификатори.
+- Планировчикът работи само с активни сайтове и начислява платените годишни месечни партиди при затворено приложение. Потвърдените стари годишни плащания се прехвърлят без повторение на грантовете. Пълният refund спира бъдещото начисляване.
+- Екранът за използване има управление на сайтове, преглед на дневната цена, Boost, прогноза, задължения и подкани. Engine използва ETag и пази отчетите за публикуване при прекъсване. Приложението се компилира локално.
+- Проверки: SQL/RLS 31; Deno 107; billing client 5; full engine 114 преди последните дребни промени. Нужна е проверка на новия commit в CI.
+- Етапът още не е завършен: V1 usage, годишни промени на план/интервал, облачни отчети/одити, административни контроли, снимки и финална интеграция. Домейнът е заявка за ръчен преглед; CodeGuard/owner-hosting не са provisioned. Етап 6 следва. Няма публикуване в реалния облак или реално плащане.
+
+### Етап 5 — отчети, годишни компоненти и окончателни суми
+
+| Обхват | Статус | Доказателство |
+|---|---|---|
+| PU-23–25, PU-34, PU-36–44 | implemented in source | Atomic FIFO/grants/windows/sites/nudges; V1/V2 read the same SQL aggregates; cloud reports, bounded audit and provider receipts; admin reconciliation/site pause |
+| Годишни кредити и надграждане | implemented in source | Unattended monthly slices, separately refundable upgrade components, original basis for partial refunds; verified legacy receipts migrate |
+| Разменен ред на платежни известия | fixed | Real SQL tests: refund before payment and before upgrade linkage; repeat does not debit net future slices again |
+| Смяна месечно ↔ годишно | unavailable | Explicit error before provider mutation; requires separate sandbox-validated conversion workflow |
+| Липсващ стар годишен документ | reconciliation required | No speculative monthly credits; preserves existing valid balances |
+| Облачен одит | implemented, bounded scope | Public HTML metadata/response and up to six internal links; no browser/Core Web Vitals claim |
+| Собствен хостинг/CodeGuard | provider provisioning pending | No fabricated activation or backup adapter; Netlify allowance remains disabled |
+
+Локално: 35 SQL/RLS, 112 Deno, 6 billing client теста; Swift build успешен. Проверени и поправени числовите формати във визуален преглед. Следва CI върху новия commit, после етап 6.
+
+### Етап 6 — навигация и български, 12.0.0-rc.1
+
+| Finding | Статус | Проверена промяна |
+|---|---|---|
+| UI-6 | fixed | Version-named view files split into `Screens/` and `DesignSystem/KPITile.swift` |
+| UI-15–17 | fixed | Native collapsible NavigationSplitView, toolbar actions, account footer, project-list minimum, matching ⌘1–8, 900×640 |
+| UI-18–19 | fixed | Wrapping filters, adaptive columns/KPIs, aligned page padding/content width |
+| UI-20 | fixed | Admin inner user list has bounded 420pt height; detail panels stack at compact widths |
+| UI-21 | verified existing | Selected-project animation uses separate identity; motion uses shared Motion settings |
+| UI-22–23 | verified existing | Ready-transition celebration; production button already secondary on current branch |
+| UI-24–25 | fixed | Issue fixes secondary; assistant action in details; duplicate impact removed; no fixed 74pt severity column |
+| UI-26–27 | fixed | Explicit domain/DNS/history errors and retry; stale domain responses ignored |
+| UI-28 | fixed | Native Settings scene with General/Behavior/Environment/Account/Support tabs; macOS13 compatibility route |
+| UI-29 | verified existing | Shared SheetScaffold sizes and scrolling retained |
+| UI-30 | fixed | Onboarding page buttons with selected accessibility state; flexible first-steps width |
+| UI-31–32 | fixed | Adaptive costs, 50-row initial ledger grouped by day with Show all; full palette list and keyboard scroll |
+| UI-41–46 | fixed | Bulgarian publishing glossary; K.role/plan/step/provider/auditAction; unknown fallback identified; stricter localization lint. Raw source/code and exact external-product menu identifiers remain verbatim where needed |
+| UI-47–48 | fixed in source | Two-line names/setup details; 900×640 light/dark CI coverage extended for domains/costs/usage; native Settings snapshots |
+
+Проверено локално: Swift build, 114 engine, 35 SQL/RLS, 112 Deno. Примерен сайт е създаден в отделна папка и проверен успешно. Прегледани са компактният изглед за използване и native Settings; следва окончателен CI и визуален преглед на новия кандидат. Сценарий за собственика: `V12-OWNER-TEST-BG.md`. Външните проверки от раздел 4 и ограниченията за billing-interval conversion/CodeGuard/owner-hosting остават изрично описани.

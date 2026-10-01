@@ -27,7 +27,7 @@ final class RunSession: ObservableObject, Identifiable {
     let startedAt = Date()
     let handle = EngineHandle()
 
-    enum Kind { case check, smart, production, draft, git, netlify, fix, local }
+    enum Kind { case check, smart, production, draft, git, netlify, fix, local, setup }
 
     @Published var steps: [RunStep] = []
     @Published var selectedStep: String?
@@ -40,6 +40,7 @@ final class RunSession: ObservableObject, Identifiable {
     @Published var deviceCode: String?
     @Published var deviceURL: String?
     @Published var deviceService: String?
+    @Published var deviceExpiresAt: Date?
 
     init(title: String, subtitle: String, kind: Kind) {
         self.title = title
@@ -47,11 +48,11 @@ final class RunSession: ObservableObject, Identifiable {
         self.kind = kind
     }
 
-    var runningStep: RunStep? { steps.first { $0.status == "running" } }
+    var runningStep: RunStep? { steps.first { ["running", "waiting_user"].contains($0.status) } }
 
     var progress: Double {
         guard !steps.isEmpty else { return finished ? 1 : 0 }
-        let done = steps.filter { !["pending", "running"].contains($0.status) }.count
+        let done = steps.filter { !["pending", "running", "waiting_user"].contains($0.status) }.count
         return Double(done) / Double(steps.count)
     }
 
@@ -132,6 +133,7 @@ final class RunSession: ObservableObject, Identifiable {
             deviceCode = e.string("code")
             deviceURL = e.string("url")
             deviceService = e.string("service")
+            deviceExpiresAt = Date().addingTimeInterval(e.double("expiresIn") ?? 300)
             if let c = deviceCode {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(c, forType: .string)
@@ -155,8 +157,8 @@ final class RunSession: ObservableObject, Identifiable {
         self.finished = true
         self.finishedAt = Date()
         // anything still spinning is no longer running
-        for i in steps.indices where steps[i].status == "running" {
-            steps[i].status = success ? "pass" : "skipped"
+        for i in steps.indices where ["pending", "running", "waiting_user"].contains(steps[i].status) {
+            steps[i].status = "skipped"
         }
         if !success, let failed = steps.last(where: { $0.status == "fail" }) {
             selectedStep = failed.id

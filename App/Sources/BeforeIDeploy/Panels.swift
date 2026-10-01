@@ -7,15 +7,10 @@ struct PanelHeader: View {
     var trailing: String? = nil
     var body: some View {
         HStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundColor(Theme.accent)
-            Text(title)
-                .font(.system(size: 13.5, weight: .bold))
-                .foregroundColor(Theme.text)
+            SectionHeader(title: title, icon: icon)
             Spacer()
             if let trailing {
-                Text(trailing).font(.system(size: 11.5)).foregroundColor(Theme.secondary)
+                Text(trailing).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
             }
             if let status { StatusDot(status: status) }
         }
@@ -36,21 +31,21 @@ struct LocalCard: View {
             HStack(spacing: 10) {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(l.running ? L("local.running") : L("local.stopped"))
-                        .font(.system(size: 17, weight: .bold))
+                        .font(Typo.font(.headline, weight: .bold))
                         .foregroundColor(l.running ? Theme.ready : Theme.secondary)
                     if l.running, let url = l.url {
                         Text(Fmt.host(url))
-                            .font(.system(size: 12, design: .monospaced))
+                            .font(Typo.font(.callout, design: .monospaced))
                             .foregroundColor(Theme.text)
                             .textSelection(.enabled)
                         Text(L("local.since", l.label ?? l.mode ?? "", Fmt.time(l.startedAt)))
-                            .font(.system(size: 11))
+                            .font(Typo.font(.caption))
                             .foregroundColor(Theme.tertiary)
                     } else {
                         Text(status.detect.publishReady == true && status.detect.ssr != true
                              ? L("local.willServeBuild", status.detect.publishDir ?? "dist")
                              : L("local.willStartDev"))
-                            .font(.system(size: 11.5))
+                            .font(Typo.font(.callout))
                             .foregroundColor(Theme.tertiary)
                     }
                 }
@@ -102,21 +97,21 @@ struct GitCard: View {
     var body: some View {
         let g = status.git
         VStack(alignment: .leading, spacing: 14) {
-            PanelHeader(title: "GitHub", icon: "arrow.triangle.branch",
+            PanelHeader(title: K.step("git"), icon: "arrow.triangle.branch",
                         status: g.isRepo ? ((g.changedCount ?? 0) > 0 ? "warn" : "pass") : nil)
 
             if !g.isRepo {
                 Text(L("git.notRepo"))
-                    .font(.system(size: 12.5))
+                    .font(Typo.font(.body))
                     .foregroundColor(Theme.secondary)
                 Button(L("git.init")) { model.requestFix("git.init") }
                     .bidButton(.primary, compact: true)
             } else {
                 HStack(spacing: 16) {
-                    Metric(value: g.branch ?? "—", label: "branch")
+                    Metric(value: g.branch ?? "—", label: L("git.branch"))
                     Metric(value: "\(g.changedCount ?? 0)", label: L("git.changes"), tint: (g.changedCount ?? 0) > 0 ? Theme.warn : Theme.text)
                     if g.hasUpstream == true {
-                        Metric(value: "↑\(g.ahead ?? 0) ↓\(g.behind ?? 0)", label: "ahead / behind",
+                        Metric(value: "↑\(g.ahead ?? 0) ↓\(g.behind ?? 0)", label: L("git.aheadBehind"),
                                tint: (g.behind ?? 0) > 0 ? Theme.warn : Theme.text)
                     } else if g.remote != nil {
                         Metric(value: "—", label: L("git.notPushed"))
@@ -127,10 +122,10 @@ struct GitCard: View {
 
                 if let c = g.lastCommit {
                     HStack(spacing: 6) {
-                        Text(c.hash).font(.system(size: 11, design: .monospaced)).foregroundColor(Theme.accent)
-                        Text(c.subject).font(.system(size: 11.5)).foregroundColor(Theme.secondary).lineLimit(1)
+                        Text(c.hash).font(Typo.font(.caption, design: .monospaced)).foregroundColor(Theme.accent)
+                        Text(c.subject).font(Typo.font(.callout)).foregroundColor(Theme.secondary).lineLimit(1)
                         Spacer()
-                        Text(c.relative).font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                        Text(c.relative).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
                     }
                 }
 
@@ -138,15 +133,15 @@ struct GitCard: View {
                     VStack(alignment: .leading, spacing: 3) {
                         ForEach(changed.prefix(4)) { f in
                             HStack(spacing: 8) {
-                                Text(f.code).font(.system(size: 10.5, weight: .bold, design: .monospaced))
+                                Text(f.code).font(Typo.font(.caption, weight: .bold, design: .monospaced))
                                     .foregroundColor(f.code.contains("D") ? Theme.blocked : f.code.contains("?") || f.code.contains("A") ? Theme.ready : Theme.warn)
                                     .frame(width: 18, alignment: .leading)
-                                Text(f.path).font(.system(size: 11.5, design: .monospaced)).foregroundColor(Theme.secondary)
+                                Text(f.path).font(Typo.font(.callout, design: .monospaced)).foregroundColor(Theme.secondary)
                                     .lineLimit(1).truncationMode(.middle)
                             }
                         }
                         if changed.count > 4 {
-                            Text(L("git.more", (g.changedCount ?? changed.count) - 4)).font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                            Text(L("git.more", (g.changedCount ?? changed.count) - 4)).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
                         }
                     }
                 }
@@ -185,8 +180,8 @@ struct Metric: View {
     var tint: Color = Theme.text
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(value).font(.system(size: 15, weight: .bold)).foregroundColor(tint).lineLimit(1)
-            Text(label).font(.system(size: 10.5)).foregroundColor(Theme.tertiary)
+            Text(value).font(Typo.font(.subhead, weight: .bold)).foregroundColor(tint).lineLimit(1)
+            Text(label).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
         }
     }
 }
@@ -210,16 +205,16 @@ struct NetlifyCard: View {
             if !auth.loggedIn {
                 HStack {
                     Text(L("netlify.signInHint"))
-                        .font(.system(size: 12.5)).foregroundColor(Theme.secondary)
+                        .font(Typo.font(.body)).foregroundColor(Theme.secondary)
                     Spacer()
                     Button(L("netlify.signIn")) { model.netlifyLogin() }.bidButton(.primary, compact: true)
                 }
             } else if !linked {
                 HStack {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(L("netlify.notLinked")).font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.text)
+                        Text(L("netlify.notLinked")).font(Typo.font(.subhead, weight: .semibold)).foregroundColor(Theme.text)
                         Text(L("netlify.linkHint"))
-                            .font(.system(size: 12)).foregroundColor(Theme.secondary)
+                            .font(Typo.font(.callout)).foregroundColor(Theme.secondary)
                     }
                     Spacer()
                     Button(L("netlify.connect")) { model.sheet = .netlifySetup }.bidButton(.primary, compact: true)
@@ -227,17 +222,17 @@ struct NetlifyCard: View {
             } else {
                 HStack(alignment: .top, spacing: 24) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(L("hosting.liveLabel")).font(.system(size: 10, weight: .bold)).tracking(1).foregroundColor(Theme.tertiary)
+                        Text(L("hosting.liveLabel")).font(Typo.font(.micro, weight: .bold)).tracking(1).foregroundColor(Theme.tertiary)
                         if let live {
                             Button { model.open(live) } label: {
-                                Text(Fmt.host(live)).font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.text)
+                                Text(Fmt.host(live)).font(Typo.font(.subhead, weight: .semibold)).foregroundColor(Theme.text)
                             }.buttonStyle(.plain)
                         } else {
-                            Text(n?.siteName ?? "—").font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.text)
+                            Text(n?.siteName ?? "—").font(Typo.font(.subhead, weight: .semibold)).foregroundColor(Theme.text)
                         }
                         if n?.repoLinked == true {
                             Label(L("netlify.hasCi"), systemImage: "exclamationmark.triangle")
-                                .font(.system(size: 11)).foregroundColor(Theme.warn)
+                                .font(Typo.font(.caption)).foregroundColor(Theme.warn)
                         }
                     }
                     DeployStat(title: L("hosting.lastProduction"), record: status.lastProd, fallback: n?.lastPublishedAt)
@@ -276,9 +271,9 @@ struct DeployStat: View {
     let fallback: String?
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title.uppercased()).font(.system(size: 10, weight: .bold)).tracking(1).foregroundColor(Theme.tertiary)
+            Text(title.uppercased()).font(Typo.font(.micro, weight: .bold)).tracking(1).foregroundColor(Theme.tertiary)
             Text(Fmt.relative(record?.at ?? fallback))
-                .font(.system(size: 13.5, weight: .semibold))
+                .font(Typo.font(.subhead, weight: .semibold))
                 .foregroundColor((record?.at ?? fallback) == nil ? Theme.tertiary : Theme.text)
         }
     }

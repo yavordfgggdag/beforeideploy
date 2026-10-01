@@ -1,3 +1,5 @@
+> V12: плановете, кредитите и цените от V1 в този документ са заменени от [одобрения модел V2](PLANS-AND-CREDITS-V2-BG.md), §17.2. Актуалният каталог е `supabase/functions/_shared/plans-catalog.json`.
+
 # Billing and usage — ledger, tariffs, periods, entitlements, retries, reconciliation (V11 RC)
 
 One source of truth for AI credits: `public.credit_ledger` in the cloud. The app shows what the cloud returns

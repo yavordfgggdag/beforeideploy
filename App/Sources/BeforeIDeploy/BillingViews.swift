@@ -1,91 +1,102 @@
 import SwiftUI
 
-/// "Plans & credits" (V10 WP4): balance, trial offer, the three plans, token packs and recent AI usage.
-/// Payment and the customer portal are Paddle pages in the browser; the sheet waits for the webhook.
 struct PlansSheet: View {
     @EnvironmentObject var model: AppModel
+    var body: some View { PlansContent(store: model.billingStore) }
+}
+
+private struct PlansContent: View {
+    @EnvironmentObject var model: AppModel
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject var store: BillingStore
     @Local private var yearly = false
-
-    private var store: BillingStore { model.billingStore }
-
-    var body: some View {
-        SheetScaffold(icon: "sparkles", title: L("billing.title"), subtitle: subtitle, width: 880) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
-                    if store.waitingForPayment { WaitingBanner { store.stopWaiting() } }
-                    if let why = store.billingUnavailable {
-                        Label(L("billing.notReady"), systemImage: "info.circle")
-                            .font(.system(size: 12.5)).foregroundColor(Theme.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .help(why)
-                    }
-                    if let s = store.status { BalanceCard(status: s) }
-                    if let s = store.status, s.trialAvailable, let t = store.catalog?.trial {
-                        TrialCard(trial: t, busy: store.busy == "trial") { store.startTrial() }
-                    }
-                    if let c = store.catalog {
-                        HStack {
-                            SectionLabel(text: L("billing.plans"), icon: "square.stack.3d.up.fill")
-                            Spacer()
-                            if c.plans.contains(where: { $0.yearlyAvailable == true }) {
-                                SegmentedControl(options: [(L("billing.monthly"), false), (L("billing.yearly"), true)], selection: $yearly)
-                                    .frame(width: 240)
-                            }
-                        }
-                        HStack(alignment: .top, spacing: 12) {
-                            ForEach(c.plans) { p in
-                                PlanCard(plan: p, currency: c.currency, current: store.status?.plan == p.id, yearly: yearly,
-                                         busy: store.busy == p.id) { store.checkout(plan: p.id, yearly: yearly) }
-                            }
-                        }
-                        if !c.packs.isEmpty {
-                            SectionLabel(text: L("billing.packs"), icon: "plus.circle.fill")
-                            HStack(spacing: 12) {
-                                ForEach(c.packs) { p in
-                                    PackCard(pack: p, currency: c.currency, busy: store.busy == p.id) { store.checkout(pack: p.id) }
-                                }
-                            }
-                        }
-                        Text(L("billing.legal"))
-                            .font(.system(size: 11)).foregroundColor(Theme.tertiary)
-                            .fixedSize(horizontal: false, vertical: true)
-                        LegalLinks()
-                    } else if store.loading {
-                        HStack { Spinner(size: 16); Text(L("billing.loading")).foregroundColor(Theme.secondary) }
-                            .frame(maxWidth: .infinity, minHeight: 240)
-                    }
-                    if let usage = store.status?.usage, !usage.isEmpty {
-                        UsageList(usage: Array(usage.prefix(6)))
-                    }
-                }
-                .padding(.vertical, 2)
-            }
-            .frame(height: 560)
-        } actions: {
-            if store.status?.subscription?.manageable == true {
-                Button { store.openPortal() } label: { Label(L("billing.manage"), systemImage: "creditcard") }
-                    .bidButton(.secondary)
-                    .disabled(store.busy == "portal")
-            }
-            Button { Task { await store.load() } } label: { Label(L("common.refresh"), systemImage: "arrow.clockwise") }
-                .bidButton(.ghost)
-            Button(L("common.close")) { dismiss() }
-                .bidButton(.primary)
-                .keyboardShortcut(.cancelAction)
-        }
-        .task { await store.load() }
+    private var intervalBlocked: Bool {
+        guard let subscription = store.status?.subscription, subscription.provider == "paddle" else { return false }
+        return (subscription.interval == "year") != yearly
     }
 
-    private var subtitle: String {
-        guard let s = store.status else { return L("billing.subtitle") }
-        return L("billing.currentPlan", BillingFormat.planName(s.plan))
+    var body: some View {
+        SheetScaffold(icon: "sparkles", title: L("billing.title"), subtitle: L("billing.subtitle"), width: 880, scrollResetID: store.catalog?.currency) {
+            VStack(alignment: .leading, spacing: 18) {
+                if store.demo { Label(L("billing.demo"), systemImage: "eye").foregroundColor(Theme.secondary) }
+                if store.waitingForPayment { WaitingBanner { store.stopWaiting() } }
+                if store.catalog?.source == "offline" || store.billingUnavailable != nil {
+                    Label(L("billing.offlineCatalog"), systemImage: "wifi.slash").font(Typo.font(.callout)).foregroundColor(Theme.secondary)
+                }
+                if let c = store.catalog {
+                    HStack {
+                        Text(L("billing.plans")).font(Typo.font(.headline))
+                        Spacer()
+                        SegmentedControl(options: [(L("billing.monthly"), false), (L("billing.yearly"), true)], selection: $yearly).frame(width: 290)
+                    }
+                    if intervalBlocked { Text(L("billing.intervalNotice")).font(Typo.font(.callout)).foregroundColor(Theme.secondary) }
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 190), spacing: 12)], alignment: .leading, spacing: 12) {
+                        freeCard(currency: c.currency)
+                        ForEach(c.plans) { p in
+                            PlanCard(plan: p, currency: c.currency, current: store.status?.plan == p.id && (store.status?.subscription?.interval == "year") == yearly,
+                                     yearly: yearly, busy: store.busy != nil, unavailable: !store.canReadUsage || intervalBlocked) { store.checkout(plan: p.id, yearly: yearly) }
+                        }
+                    }
+                    if !store.canReadUsage {
+                        Button(L("usage.signIn")) { model.offlineMode = false; dismiss() }.bidButton(.primary)
+                    }
+                    if let s = store.status, s.trialAvailable, let t = c.trial {
+                        TrialCard(trial: t, busy: store.busy != nil) { store.startTrial() }
+                    }
+                    comparison(c)
+                    SectionLabel(text: L("billing.packs"), icon: "plus.circle.fill")
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 250), spacing: 12)], spacing: 12) {
+                        ForEach(c.packs) { p in
+                            PackCard(pack: p, currency: c.currency, busy: store.busy != nil, unavailable: !store.canReadUsage) { store.checkout(pack: p.id) }
+                        }
+                    }
+                    Text(L("billing.packWindows")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
+                    Text(L("billing.legal")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
+                    LegalLinks()
+                } else if store.loadingCatalog { LoadingState(message: L("billing.loading")) }
+            }
+        } actions: {
+            if store.status?.subscription?.manageable == true {
+                Button(L("billing.manage")) { store.openPortal() }.bidButton(.secondary).disabled(store.busy != nil)
+            }
+            Button(L("common.refresh")) { Task { await store.load() } }.bidButton(.ghost).disabled(store.loadingCatalog)
+            Button(L("common.close")) { dismiss() }.bidButton(.primary).keyboardShortcut(.cancelAction)
+        }
+        .task { await store.load(); yearly = store.status?.subscription?.interval == "year" }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            Task { await store.load(); await store.loadUsage() }
+        }
+    }
+
+    private func freeCard(currency: String) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(L("billing.free")).font(Typo.font(.headline))
+            Text(BillingFormat.money(0, currency: currency)).font(Typo.font(.title))
+            Text(L("billing.freeDetail")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
+            Spacer()
+            Button(L("billing.continueFree")) { dismiss() }.bidButton(.secondary)
+        }
+        .frame(maxWidth: .infinity, minHeight: 300, maxHeight: 300, alignment: .topLeading).card(padding: 16)
+    }
+
+    private func comparison(_ c: BillingCatalog) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(L("billing.compare")).font(Typo.font(.subhead))
+            ForEach(c.plans) { p in
+                HStack {
+                    Text(BillingFormat.planName(p.id)).frame(width: 70, alignment: .leading)
+                    Text(p.window5h.map { L("billing.fiveHour", Fmt.tokens($0)) } ?? "—").frame(maxWidth: .infinity, alignment: .leading)
+                    Text(p.weekly.map { L("billing.weekly", Fmt.tokens($0)) } ?? "—").frame(maxWidth: .infinity, alignment: .leading)
+                }.font(Typo.font(.callout)).foregroundColor(Theme.secondary)
+            }
+            Text(L("billing.knightExtras")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
+        }.card(padding: 16)
     }
 }
 
 enum BillingFormat {
     static func planName(_ id: String) -> String {
-        id == "free" ? L("billing.free") : id.prefix(1).uppercased() + id.dropFirst()
+        id == "free" ? L("billing.free") : K.plan(id)
     }
 
     static func money(_ amount: Double?, currency: String) -> String {
@@ -113,8 +124,8 @@ private struct WaitingBanner: View {
         HStack(spacing: 12) {
             Spinner(size: 14)
             VStack(alignment: .leading, spacing: 2) {
-                Text(L("billing.waiting")).font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.text)
-                Text(L("billing.waitingHint")).font(.system(size: 11.5)).foregroundColor(Theme.secondary)
+                Text(L("billing.waiting")).font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.text)
+                Text(L("billing.waitingHint")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
             }
             Spacer()
             Button(L("common.cancel"), action: stop).bidButton(.ghost, compact: true)
@@ -131,28 +142,20 @@ struct BalanceCard: View {
         let total = max(b.total, 1)
         HStack(alignment: .center, spacing: 22) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(Fmt.tokens(b.total))
-                    .font(.system(size: 34, weight: .bold, design: .rounded))
+                Text(Fmt.tokens(b.available ?? b.total))
+                    .font(Typo.font(.display, weight: .bold, design: .rounded))
                     .foregroundColor(Theme.text)
                     .monospacedDigit()
-                Text(L("billing.tokensLeft")).font(.system(size: 12)).foregroundColor(Theme.secondary)
+                Text(L("billing.tokensLeft")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
             }
             VStack(alignment: .leading, spacing: 8) {
-                GeometryReader { geo in
-                    HStack(spacing: 2) {
-                        Capsule().fill(Theme.accentGradient)
-                            .frame(width: max(b.plan > 0 ? 6 : 0, geo.size.width * CGFloat(b.plan) / CGFloat(total)))
-                        Capsule().fill(LinearGradient(colors: [Color(hex: 0xB57BFF), Color(hex: 0x7A3FD6)], startPoint: .leading, endPoint: .trailing))
-                            .frame(width: max(b.topup > 0 ? 6 : 0, geo.size.width * CGFloat(b.topup) / CGFloat(total)))
-                        if b.total == 0 { Capsule().fill(Theme.elevated) }
-                    }
-                }
-                .frame(height: 8)
+                Meter(value: Double(b.total), total: Double(total), size: 8,
+                      segments: [.init(value: Double(b.plan), color: Theme.accent), .init(value: Double(b.topup), color: Theme.brandViolet)])
                 HStack(spacing: 14) {
                     Legend(color: Theme.accent, text: L("billing.fromPlan", Fmt.tokens(b.plan)))
-                    Legend(color: Color(hex: 0xB57BFF), text: L("billing.fromPacks", Fmt.tokens(b.topup)))
+                    Legend(color: Theme.brandViolet, text: L("billing.fromPacks", Fmt.tokens(b.topup)))
                 }
-                Text(subscriptionLine).font(.system(size: 12)).foregroundColor(Theme.secondary)
+                Text(subscriptionLine).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
             }
         }
         .card(padding: 20, tint: status.plan == "free" ? nil : Theme.accent)
@@ -175,7 +178,7 @@ struct Legend: View {
     var body: some View {
         HStack(spacing: 6) {
             Circle().fill(color).frame(width: 7, height: 7)
-            Text(text).font(.system(size: 11.5)).foregroundColor(Theme.secondary)
+            Text(text).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
         }
     }
 }
@@ -187,21 +190,21 @@ private struct TrialCard: View {
     var body: some View {
         HStack(spacing: 14) {
             Image(systemName: "gift.fill")
-                .font(.system(size: 18, weight: .semibold)).foregroundColor(.white)
+                .font(Typo.font(.headline, weight: .semibold)).foregroundColor(.white)
                 .frame(width: 42, height: 42)
-                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.accentGradient))
+                .background(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).fill(Theme.accentGradient))
             VStack(alignment: .leading, spacing: 3) {
                 Text(L("billing.trialTitle", BillingFormat.planName(trial.plan), trial.days))
-                    .font(.system(size: 14, weight: .bold)).foregroundColor(Theme.text)
+                    .font(Typo.font(.subhead, weight: .bold)).foregroundColor(Theme.text)
                 Text(L("billing.trialDetail", Fmt.tokens(trial.tokens)))
-                    .font(.system(size: 12)).foregroundColor(Theme.secondary)
+                    .font(Typo.font(.callout)).foregroundColor(Theme.secondary)
             }
             Spacer()
             Button(busy ? L("billing.starting") : L("billing.startTrial"), action: start)
                 .bidButton(.primary)
                 .disabled(busy)
         }
-        .card(padding: 16, tint: Color(hex: 0x7A3FD6))
+        .card(padding: 16, tint: Theme.brandViolet)
     }
 }
 
@@ -211,6 +214,7 @@ private struct PlanCard: View {
     let current: Bool
     var yearly = false
     let busy: Bool
+    var unavailable = false
     let choose: () -> Void
     @Local private var hover = false
 
@@ -218,21 +222,21 @@ private struct PlanCard: View {
     private var price: Double? { yearly ? plan.yearlyPrice : plan.price }
     private var onSale: Bool { yearly ? plan.yearlyAvailable == true : plan.available }
     private var bullets: [String] {
-        switch plan.id {
-        case "flash": return [L("billing.feature.builtin"), L("billing.feature.sync"), L("billing.feature.projects5")]
-        case "knight": return [L("billing.feature.builtin"), L("billing.feature.deep"), L("billing.feature.unlimited")]
-        default: return [L("billing.feature.builtin"), L("billing.feature.sync"), L("billing.feature.unlimited")]
-        }
+        var result = [L("billing.feature.builtin")]
+        if let sites = plan.activeSites { result.append(L("billing.activeSites", count: sites)) }
+        if let months = plan.validityMonths { result.append(L("billing.validity", count: months)) }
+        if plan.extras?["domain"] == true { result.append(L("billing.domainYear")) }
+        return result
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text(BillingFormat.planName(plan.id)).font(.system(size: 16, weight: .bold)).foregroundColor(Theme.text)
+                Text(BillingFormat.planName(plan.id)).font(Typo.font(.headline, weight: .bold)).foregroundColor(Theme.text)
                 Spacer()
                 if recommended {
                     Text(L("billing.recommended"))
-                        .font(.system(size: 9.5, weight: .heavy)).tracking(0.6)
+                        .font(Typo.font(.micro, weight: .heavy)).tracking(0.6)
                         .foregroundColor(.white)
                         .padding(.horizontal, 7).padding(.vertical, 3)
                         .background(Capsule().fill(Theme.accentGradient))
@@ -240,20 +244,20 @@ private struct PlanCard: View {
             }
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(BillingFormat.money(price, currency: currency))
-                    .font(.system(size: 26, weight: .bold, design: .rounded)).foregroundColor(Theme.text)
-                Text(yearly ? L("billing.perYear") : L("billing.perMonth")).font(.system(size: 12)).foregroundColor(Theme.tertiary)
+                    .font(Typo.font(.title, weight: .bold, design: .rounded)).foregroundColor(Theme.text)
+                Text(yearly ? L("billing.perYear") : L("billing.perMonth")).font(Typo.font(.callout)).foregroundColor(Theme.tertiary)
             }
             if yearly, let y = plan.yearlyPrice, let m = plan.price, m > 0 {
                 Text(L("billing.yearlySaving", BillingFormat.money(y / 12, currency: currency)))
-                    .font(.system(size: 11, weight: .semibold)).foregroundColor(Theme.ready)
+                    .font(Typo.font(.caption, weight: .semibold)).foregroundColor(Theme.ready)
             }
             Text(L("billing.tokensPerMonth", Fmt.tokens(plan.tokens)))
-                .font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.accent)
+                .font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.accent)
             VStack(alignment: .leading, spacing: 7) {
                 ForEach(bullets, id: \.self) { b in
                     HStack(alignment: .top, spacing: 8) {
-                        Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundColor(Theme.ready).padding(.top, 2)
-                        Text(b).font(.system(size: 12)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
+                        Image(systemName: "checkmark").font(Typo.font(.micro, weight: .bold)).foregroundColor(Theme.ready).padding(.top, 2)
+                        Text(b).font(Typo.font(.callout)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
                     }
                 }
             }
@@ -267,10 +271,10 @@ private struct PlanCard: View {
                 }
             }
             .bidButton(recommended && !current ? .primary : .secondary)
-            .disabled(current || !onSale || busy)
+            .disabled(current || !onSale || busy || unavailable)
         }
-        .frame(maxWidth: .infinity, minHeight: 250, alignment: .topLeading)
-        .card(padding: 18, fill: hover ? Theme.elevated : Theme.panel, tint: recommended ? Theme.accent : nil)
+        .frame(maxWidth: .infinity, minHeight: 300, maxHeight: 300, alignment: .topLeading)
+        .card(padding: 16, fill: hover ? Theme.elevated : Theme.panel, tint: recommended ? Theme.accent : nil)
         .overlay(
             RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
                 .strokeBorder(current ? Theme.ready.opacity(0.6) : (recommended ? Theme.accent.opacity(0.45) : .clear), lineWidth: 1.5)
@@ -286,20 +290,21 @@ private struct PackCard: View {
     let pack: BillingCatalog.Pack
     let currency: String
     let busy: Bool
+    var unavailable = false
     let buy: () -> Void
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: "bolt.fill").foregroundColor(Color(hex: 0xB57BFF))
+            Image(systemName: "bolt.fill").foregroundColor(Theme.brandViolet)
                 .frame(width: 30, height: 30)
-                .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Color(hex: 0xB57BFF).opacity(0.14)))
+                .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(Theme.brandViolet.opacity(0.14)))
             VStack(alignment: .leading, spacing: 2) {
-                Text(L("billing.packTokens", Fmt.tokens(pack.tokens))).font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.text)
-                Text(L("billing.packHint")).font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                Text(L("billing.packTokens", Fmt.tokens(pack.tokens))).font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.text)
+                Text(BillingFormat.money(pack.price, currency: currency) + " · " + L("billing.packHint")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
             }
             Spacer()
-            Button(pack.available ? BillingFormat.money(pack.price, currency: currency) : L("billing.soon"), action: buy)
+            Button(pack.available ? L("billing.choose") : L("billing.soon"), action: buy)
                 .bidButton(.secondary, compact: true)
-                .disabled(!pack.available || busy)
+                .disabled(!pack.available || busy || unavailable)
         }
         .frame(maxWidth: .infinity)
         .card(padding: 14)
@@ -313,11 +318,11 @@ struct UsageList: View {
             SectionLabel(text: L("billing.recentUsage"), icon: "clock")
             ForEach(usage) { u in
                 HStack(spacing: 10) {
-                    Text(Fmt.relative(u.at)).font(.system(size: 11.5)).foregroundColor(Theme.tertiary).frame(width: 110, alignment: .leading)
-                    Text(u.step ?? "—").font(.system(size: 12, weight: .medium)).foregroundColor(Theme.text)
-                    Text(u.model ?? "").font(.system(size: 11, design: .monospaced)).foregroundColor(Theme.tertiary)
+                    Text(Fmt.relative(u.at)).font(Typo.font(.callout)).foregroundColor(Theme.tertiary).frame(width: 110, alignment: .leading)
+                    Text(u.step.map(K.step) ?? "—").font(Typo.font(.callout, weight: .medium)).foregroundColor(Theme.text)
+                    Text(u.model ?? "").font(Typo.font(.caption, design: .monospaced)).foregroundColor(Theme.tertiary)
                     Spacer()
-                    Text(L("ai.tokensCount", Fmt.tokens(u.tokens))).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.secondary).monospacedDigit()
+                    Text(L("ai.tokensCount", Fmt.tokens(u.tokens))).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.secondary).monospacedDigit()
                 }
             }
         }

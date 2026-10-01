@@ -125,3 +125,47 @@ Returned as `code` in the JSON body; the engine maps them to the codes above (`q
 | `internal` | 500 | An unexpected server error; details stay in the function log (`internalError`), the client gets only this code. |
 | `rate_limited` | 429 | The shared per-user limit for this action is reached (`bid_rate_hit`, schema.sql). |
 | `rate_limit_unavailable` | 503 | The limit could not be checked (database error). The call is refused rather than skipping the limit; a database without the function (schema not updated) lets calls through and logs it. |
+## V12 setup
+
+| Code | Meaning | Recovery |
+|---|---|---|
+| `setup_busy` | Another setup owns the lock | Wait or retry after it exits |
+| `setup_npm_missing` | Neither user npm nor bundled npm exists | Reinstall the app |
+| `setup_disk_space` | Less than 1.5 GB free | Free disk space |
+| `setup_incomplete` | Required setup steps remain incomplete | Review failed/blocked steps and retry |
+| `offline` | A required setup service is unreachable | Check connectivity and retry |
+| `scripts_untrusted` | Automatic check has no approved script snapshot | Start a manual check |
+
+## V12 assistant
+
+| Code | Meaning | Recovery |
+|---|---|---|
+| `stale_undo` | The requested proposal is no longer the latest undoable change | Review the latest change before undoing it |
+
+| `demo_read_only` | A billing mutation was attempted in demo mode | Exit demo mode before making a purchase |
+
+| `billing_conflict` | 409 | A subscription change is already running, the subscription has a scheduled change, or multiple active subscriptions need reconciliation. | Sync or open the customer portal. |
+| `preview_expired` | 409 | The subscription or the reviewed price changed, or the ten-minute preview expired. | Review the plan again before confirming. |
+
+## V12 credit accounting
+
+| Code | HTTP | Meaning |
+|---|---|---|
+| `meter_unavailable` | 503 | Atomic credit accounting is unavailable or its migration is missing; no new paid work starts. |
+| `window_week` | 403 | The anchored weekly credit limit is reached; `resetsAt` gives the reset time. Packs do not bypass it. |
+| `operation_conflict` | 409 | An operation ID was reused for a different action or site. |
+| `operation_released` | 409 | A released reservation cannot be reused; start a new logical operation. |
+| `site_paused` | 403 | The site is paused or does not belong to this account. Rollback remains available. |
+| `site_limit` | 403 | The active-site limit is reached. Pause a site or change plans. |
+| `hosting_plan` | 403 | Hosting in the owner's account requires Knight. |
+| `hosting_not_ready` | 409 | Owner hosting has not been provisioned; no hosting service was activated. |
+| `boost_unavailable` | 403 | Boost requires an active Knight entitlement. |
+| `boost_used` | 409 | This subscription week's Boost was already used; wait until `resetsAt`. |
+| `invalid_domain` | 400 | Domain name is malformed; submit a public DNS name without a scheme or path. |
+| `domain_unavailable` | 403 | The included domain needs an active, paid Knight subscription. |
+| `domain_wait` | 403 | Monthly Knight's seven-day waiting period has not ended; `availableAt` gives the date. |
+| `domain_used` | 409 | The included domain for this subscription year has already been requested. |
+
+| `operation_in_progress` | Cloud billing, 409 | This operation already holds a reservation. Wait for its saved report; do not repeat the provider action. |
+
+| `billing_interval_change` | Cloud billing, 409 | Switching an existing subscription between monthly and annual billing is unavailable; same-interval plan changes remain supported. No provider mutation is sent. |

@@ -130,11 +130,10 @@ function hasOwnAiKey() {
  */
 function creditsOf(plan, balance, settingsRows, subs) {
   const settings = Object.fromEntries((Array.isArray(settingsRows) ? settingsRows : []).map((r) => [r.key, r.value]));
-  const monthlyGrant = Number(settings.plans?.[plan]?.tokens ?? 0) || null;
   const active = (Array.isArray(subs) ? subs : []).find((s) => ['active', 'trial', 'past_due'].includes(s.status));
   return {
-    balance: Number(balance?.[0]?.balance ?? 0),
-    monthlyGrant,
+    balance: Math.max(0, Number(balance?.[0]?.balance ?? 0)),
+    monthlyGrant: Number(active?.provider === "trial" ? settings["billing.catalog"]?.trial?.tokens ?? 50000 : settings.plans?.[plan]?.tokens ?? 0) || null,
     renewsAt: active && !active.cancel_at && active.provider !== 'trial' ? active.period_end || null : null,
     endsAt: active ? active.cancel_at || (active.provider === 'trial' ? active.period_end : null) || null : null,
   };
@@ -144,30 +143,47 @@ function creditsOf(plan, balance, settingsRows, subs) {
 async function loadProfile(session) {
   const id = session?.user?.id;
   if (!id) return null;
-  const cached = readJSON(PROFILE_CACHE(), null);
+  const origin = cloudConfig()?.url;
+  const saved = readJSON(PROFILE_CACHE(), null);
+  const cached = saved?.cloudUrl === origin ? saved : null;
+  const assertCurrent = () => { if (getSecret('session')?.user?.id !== id || cloudConfig()?.url !== origin) throw new EngineError(msg('account.notLoggedIn'), 'not_logged_in', 5); };
   try {
-    const [rows, balance, settingsRows, subs] = await Promise.all([
+    const { billingCall } = await import('./billing.mjs');
+    const [rows, billing, settingsRows, subs] = await Promise.all([
       rest(`/profiles?select=role,plan,locale,ai_disabled,display_name&user_id=eq.${encodeURIComponent(id)}`, { token: session.accessToken }),
-      rest(`/credit_balance?select=balance&user_id=eq.${encodeURIComponent(id)}`, { token: session.accessToken }).catch(() => []),
+      billingCall('status', {}, { session }).catch(error => {
+        if (['network','cloud_function_missing','not_configured','meter_unavailable'].includes(error.code)) return null;
+        throw error;
+      }),
       rest('/settings?select=key,value', { token: session.accessToken }).catch(() => []),
       rest(`/subscriptions?select=provider,status,period_end,cancel_at&user_id=eq.${encodeURIComponent(id)}&order=updated_at.desc&limit=5`, { token: session.accessToken }).catch(() => []),
     ]);
+    assertCurrent();
     const row = Array.isArray(rows) ? rows[0] : null;
     if (!row) return cached?.userId === id ? cached : { ...DEFAULT_PROFILE, userId: id, stale: true };
     const profile = {
       userId: id,
+      cloudUrl: origin,
       role: row.role || 'normal',
-      plan: row.plan || 'free',
+      plan: billing?.plan ?? row.plan ?? 'free',
       locale: row.locale || null,
       aiDisabled: !!row.ai_disabled,
       displayName: row.display_name || null,
-      credits: creditsOf(row.plan || 'free', balance, settingsRows, subs),
+      credits: {
+        ...creditsOf(billing?.plan ?? row.plan ?? 'free', [], settingsRows, subs),
+        balance: billing ? Math.max(0,Number(billing.balance?.available ?? billing.balance?.total ?? 0)) : (cached?.userId === id ? cached.credits?.balance ?? 0 : 0),
+        ...(billing?.entitlements ? {monthlyGrant:billing.entitlements.monthly} : {}),
+        ...(billing?.subscription ? {renewsAt:billing.subscription.renewsAt,endsAt:billing.subscription.endsAt} : {}),
+      },
+      sitesActiveMax: billing?.entitlements?.siteLimit ?? null,
+      stale: !billing,
       settings: Object.fromEntries((Array.isArray(settingsRows) ? settingsRows : []).map((r) => [r.key, r.value])),
       fetchedAt: nowISO(),
     };
     writeJSON(PROFILE_CACHE(), profile);
     return profile;
   } catch (e) {
+    assertCurrent();
     if (e.code === 'network' && cached?.userId === id) return { ...cached, stale: true };
     if (e.code === 'network') return { ...DEFAULT_PROFILE, userId: id, stale: true };
     // 404 = the profiles table does not exist: schema.sql was never applied. Sign-in itself succeeded, so the
@@ -201,7 +217,7 @@ function withFeatures(user, profile) {
     profileStale: !!p.stale,
     schemaMissing: !!p.schemaMissing,
     hasOwnKey,
-    features: features({ role: p.role, plan: p.plan, aiDisabled: p.aiDisabled, hasOwnKey }),
+    features: features({ role: p.role, plan: p.plan, aiDisabled: p.aiDisabled, hasOwnKey, credits: p.credits, sitesActiveMax: p.sitesActiveMax }),
   };
 }
 
@@ -264,8 +280,10 @@ export async function currentSession({ refresh = true } = {}) {
   if (refresh && s.expiresAt - Date.now() < 5 * 60 * 1000 && s.refreshToken) {
     try {
       const r = await auth('/token?grant_type=refresh_token', { body: { refresh_token: s.refreshToken } });
+      if (getSecret('session')?.accessToken !== s.accessToken) return getSecret('session');
       return saveSession(r);
     } catch (e) {
+      if (getSecret('session')?.accessToken !== s.accessToken) return getSecret('session');
       if (e.code === 'network') return s; // offline: keep the session, app still works locally
       // only a refused refresh token ends the session; an outage (5xx) or rate limit (429) must not log out (audit E13)
       if (e.status && e.status >= 400 && e.status < 500 && e.status !== 429) {
@@ -372,6 +390,9 @@ export async function deleteAccount({ confirm }) {
   try {
     fs.unlinkSync(PROFILE_CACHE());
   } catch {}
+  try {
+    fs.unlinkSync(path.join(APP_DIR, "usage-report.json"));
+  } catch {}
   return { deleted: true, ...(r || {}), loggedIn: false };
 }
 
@@ -385,6 +406,9 @@ export async function logout() {
   deleteSecret('session');
   try {
     fs.unlinkSync(PROFILE_CACHE());
+  } catch {}
+  try {
+    fs.unlinkSync(path.join(APP_DIR, "usage-report.json"));
   } catch {}
   return { configured: !!cloudConfig(), loggedIn: false };
 }
@@ -403,7 +427,7 @@ export async function syncProjects() {
     name: p.name,
     framework: p.framework || null,
     hosting: p.hosting || 'netlify',
-    live_url: p.netlify?.liveUrl || null,
+    live_url: p.liveUrl || p.netlify?.liveUrl || null,
     domain: p.domain || null,
     last_status: p.lastStatus || null,
     updated_at: nowISO(),

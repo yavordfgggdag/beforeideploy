@@ -1,8 +1,10 @@
 #!/usr/bin/env node
+import { discardConversationPatch } from './ai/conversation.mjs';
+import { gitAvailable } from './setup-tools.mjs';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 // Before I Deploy V6 — engine entrypoint. Every command prints NDJSON; the last line is {"type":"result",...}.
-import { parseArgs, ok, fail, ev, sh, which, EngineError, APP_DIR, CACHE_DIR, ENGINE_DIR, ensureDir, exitAfterFlush } from './util.mjs';
+import { parseArgs, ok, fail, ev, emit, sh, which, EngineError, APP_DIR, CACHE_DIR, ENGINE_DIR, ensureDir, exitAfterFlush } from './util.mjs';
 import { detect } from './detect.mjs';
 import { listProjects, upsertProject, removeProject, resolveProject, updateProject, getState, listHistory, findProject } from './store.mjs';
 import { runChecks } from './checks.mjs';
@@ -20,13 +22,14 @@ import { netlifyAuth, netlifyLogin, netlifyTeams, netlifySites, netlifyInfo, net
 import { listFixes, applyFix } from './fixes.mjs';
 import { aifix } from './aifix.mjs';
 import { costSummary, providerUsage, setBudgets, getPrices } from './costs.mjs';
-import { setupStatus, setupRun, setupAuto, setupTerminal, setupStatusFull } from './setup.mjs';
+import { setupStatus, setupRun, setupAuto, setupTerminal, setupStatusFull, setupIdentity } from './setup.mjs';
 import { cloudDoctor } from './cloud.mjs';
 import { overview } from './overview.mjs';
 import { accountStatus, signup, login, logout, recover, resendConfirmation, oauthUrl, completeOAuth, syncProjects, setCloudConfig, cloudConfig, setLocale, exportAccount, deleteAccount } from './account.mjs';
 import { aiKeysStatus, aiKeySet, aiKeyDelete } from './aikeys.mjs';
 import { adminCommand, ADMIN_ACTIONS } from './admin.mjs';
-import { billingCommand } from './billing.mjs';
+import { billingCommand, billingCall } from './billing.mjs';
+import { randomUUID } from 'node:crypto';
 import { demoCreate } from './demo.mjs';
 import { features as featureGates } from './features.mjs';
 import { aiFix, aiApply, aiUsage, aiUndo } from './ai/index.mjs';
@@ -52,6 +55,7 @@ const HELP = `Before I Deploy engine ${VERSION}
   bid project list | add --path P | remove --project K | touch --project K | rename --project K --name N
   bid status  --project P            dashboard snapshot (fast)
   bid detect  --project P
+  bid audit   --project P            cloud HTTP audit (400 credits, reviewed price in billing estimate)
   bid check   --project P [--stop-on-fail] [--force] [--auto]   --force ignores the incremental cache; --auto (file watcher) refuses changed scripts
   bid smart   --project P [--prod --confirm DEPLOY] [--force]   check → draft (or production)
   bid local   start|stop|restart|status --project P [--mode auto|build|dev]
@@ -118,7 +122,7 @@ function statusSnapshot(project) {
     lastProd: st.lastProd || null,
     netlifyAuth: netlifyAuth(),
     fixes: listFixes(project.path),
-    issues: deriveIssues(st.check, { gitInstalled: !!which('git'), hasGitignore: !!d.hasGitignore, hostingLoggedIn: providerStatus(p.hosting || 'netlify').loggedIn }),
+    issues: deriveIssues(st.check, { gitInstalled: !!gitAvailable(), hasGitignore: !!d.hasGitignore, hostingLoggedIn: providerStatus(p.hosting || 'netlify').loggedIn }),
     backup: backupStatus(p),
     release: { currentOp: st.release?.currentOp || null, lastOp: st.release?.lastOp || null, capabilities: capabilities(p.hosting || 'netlify'), aiUndo: st.aiUndo ? { at: st.aiUndo.at, step: st.aiUndo.step, files: st.aiUndo.applied } : null },
     hosting: (() => {
@@ -132,7 +136,7 @@ function statusSnapshot(project) {
 
 function doctor() {
   const v = (cmd, args = ['--version']) => {
-    const path = which(cmd);
+    const path = cmd === 'git' ? gitAvailable() : which(cmd);
     if (!path) return null;
     const r = sh(cmd, args, { timeout: 15000 });
     return { path, version: (r.stdout || r.stderr).trim().split('\n')[0] };
@@ -230,7 +234,17 @@ async function main() {
       const p = proj();
       const check = await runChecks(p, { stopOnFail: !!flags['stop-on-fail'], force: !!flags.force, auto: !!flags.auto });
       if (check.status === 'blocked') ev.notify(`❌ ${p.name}`, t('check.notify.blocked'), null);
+      if (flags.cloud) {
+        await syncProjects();
+        check.cloudReport = await billingCall('check_report', {projectKey:p.key,operationId:randomUUID(),status:check.status,counts:check.counts});
+      }
       return ok(check);
+    }
+
+    case 'audit': {
+      const p = proj();
+      await syncProjects();
+      return ok(await billingCommand('audit_run', {...flags,project:p.key}));
     }
 
     case 'smart': {
@@ -328,10 +342,11 @@ async function main() {
       if (sub === 'fix') return ok(await aiFix(p, { step: flags.step, model: flags.model, deep: !!flags.deep, provider: flags.provider }));
       if (sub === 'explain') return ok(await aiFix(p, { step: flags.step, model: flags.model, provider: flags.provider, mode: 'explain' }));
       if (sub === 'apply') return ok(await aiApply(p, { patchFile: flags['patch-file'], files: flags.files, yes: !!flags.yes, commit: !!flags.commit, recheck: !!flags.recheck, allowConfig: !!flags['allow-config'] }));
-      if (sub === 'undo') return ok(await aiUndo(p, { yes: !!flags.yes }));
+      if (sub === 'undo') return ok(await aiUndo(p, { yes: !!flags.yes, expectedUndoFile: flags['expected-undo-file'] }));
       if (sub === 'chat') return ok(await assistantChat(p, { action: flags.action, message: flags.message, issue: flags.issue, files: flags.files, patchFile: flags['patch-file'], budget: flags.budget, yes: !!flags.yes, newConversation: !!flags.new, provider: flags.provider, model: flags.model }));
       if (sub === 'history') return ok(assistantHistory(p, { limit: flags.limit ? Number(flags.limit) : 50 }));
       if (sub === 'reset') return ok(assistantReset(p));
+      if (sub === 'discard') return ok(discardConversationPatch(p, flags['patch-file']));
       throw new EngineError(msg('cli.unknownCommand', { command: `ai ${sub}` }), 'usage', 2);
     }
 
@@ -348,10 +363,16 @@ async function main() {
       return ok(setBudgets({ ...(flags['netlify-min'] !== undefined ? { netlifyMinCredits: Number(flags['netlify-min']) } : {}) }));
 
     case 'setup': {
-      if (!sub || sub === 'status') return ok(flags.local ? setupStatus() : await setupStatusFull());
+      if (sub === 'identity') return ok(setupIdentity({ name: flags.name, email: flags.email, yes: !!flags.yes }));
+      if (!sub || sub === 'status') return ok(flags.local ? await setupStatus() : await setupStatusFull());
       if (sub === 'run') return ok(await setupRun(positional[1] || flags.id, { yes: !!flags.yes }));
-      if (sub === 'auto') return ok(await setupAuto({ yes: !!flags.yes, includeOptional: !!flags.optional }));
-      if (sub === 'terminal') return ok(setupTerminal(positional[1] || flags.id || 'all'));
+      if (sub === 'auto') {
+        const data = await setupAuto({ yes: !!flags.yes, includeOptional: !!flags.optional });
+        if (data.ok) return ok(data);
+        emit({ type: 'result', ok: false, code: data.code, error: data.error, data });
+        return 1;
+      }
+      if (sub === 'terminal') return ok(await setupTerminal(positional[1] || flags.id || 'all'));
       throw new EngineError(msg('cli.unknownCommand', { command: `setup ${sub}` }), 'usage', 2);
     }
 
@@ -413,6 +434,13 @@ async function main() {
       return ok(await adminCommand(sub, flags));
 
     case 'billing':
+      if (sub === 'usage' && flags.watch) {
+        const interval = Math.max(10, Math.min(60, Number(flags.interval) || 10));
+        for (;;) {
+          emit({type:'usage',data:await billingCommand(sub, flags)});
+          await new Promise(resolve => setTimeout(resolve, interval * 1000));
+        }
+      }
       return ok(await billingCommand(sub, flags));
 
     case 'demo':
@@ -500,7 +528,7 @@ async function main() {
     case 'issues': {
       const p = proj();
       const st = getState(p.key);
-      return ok({ project: p.key, ...deriveIssues(st.check, { gitInstalled: !!which('git'), hasGitignore: !!detect(p.path).hasGitignore, hostingLoggedIn: providerStatus(p.hosting || 'netlify').loggedIn }) });
+      return ok({ project: p.key, ...deriveIssues(st.check, { gitInstalled: !!gitAvailable(), hasGitignore: !!detect(p.path).hasGitignore, hostingLoggedIn: providerStatus(p.hosting || 'netlify').loggedIn }) });
     }
 
     case 'release': {
@@ -537,7 +565,7 @@ process.on('uncaughtException', crash);
 
 main()
   .then((code) => {
-    logOutcome({ ok: true, exit: typeof code === 'number' ? code : 0 });
+    logOutcome({ ok: typeof code !== 'number' || code === 0, exit: typeof code === 'number' ? code : 0 });
     exitAfterFlush(code);
   })
   .catch((e) => {

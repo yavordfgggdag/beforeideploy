@@ -1,0 +1,113 @@
+{
+  "currency": "EUR",
+  "taxInclusive": true,
+  "source": "demo",
+  "reason": "demo",
+  "version": "v12.2",
+  "plans": [
+    {
+      "price": 9.99,
+      "paddlePriceId": null,
+      "yearly": {
+        "price": 99.9,
+        "paddlePriceId": null
+      },
+      "credits": 100000,
+      "activeSites": 1,
+      "activeSitesMax": 1,
+      "validityMonths": 1,
+      "window5h": 20000,
+      "weekly": 40000,
+      "extras": {
+        "domain": false,
+        "netlifyCredits": false,
+        "boost": false
+      },
+      "id": "flash",
+      "tokens": 100000,
+      "available": false,
+      "yearlyPrice": 99.9,
+      "yearlyAvailable": false
+    },
+    {
+      "price": 29.99,
+      "paddlePriceId": null,
+      "yearly": {
+        "price": 299.9,
+        "paddlePriceId": null
+      },
+      "credits": 300000,
+      "activeSites": 3,
+      "activeSitesMax": 3,
+      "validityMonths": 3,
+      "window5h": 60000,
+      "weekly": 120000,
+      "extras": {
+        "domain": false,
+        "netlifyCredits": false,
+        "boost": false
+      },
+      "id": "high",
+      "tokens": 300000,
+      "available": false,
+      "yearlyPrice": 299.9,
+      "yearlyAvailable": false
+    },
+    {
+      "price": 99.99,
+      "paddlePriceId": null,
+      "yearly": {
+        "price": 999.9,
+        "paddlePriceId": null
+      },
+      "credits": 1000000,
+      "activeSites": 10,
+      "activeSitesMax": 25,
+      "validityMonths": 10,
+      "window5h": 200000,
+      "weekly": 400000,
+      "extras": {
+        "domain": true,
+        "netlifyCredits": false,
+        "boost": true
+      },
+      "id": "knight",
+      "tokens": 1000000,
+      "available": false,
+      "yearlyPrice": 999.9,
+      "yearlyAvailable": false
+    }
+  ],
+  "packs": [
+    {
+      "id": "pack-100k",
+      "tokens": 100000,
+      "price": 4.99,
+      "validityMonths": 12,
+      "paddlePriceId": null,
+      "available": false
+    },
+    {
+      "id": "pack-500k",
+      "tokens": 500000,
+      "price": 19.99,
+      "validityMonths": 12,
+      "paddlePriceId": null,
+      "available": false
+    },
+    {
+      "id": "pack-1m",
+      "tokens": 1000000,
+      "price": 39.99,
+      "validityMonths": 12,
+      "paddlePriceId": null,
+      "available": false
+    }
+  ],
+  "trial": {
+    "days": 7,
+    "plan": "high",
+    "tokens": 50000,
+    "activeSites": 1
+  }
+}

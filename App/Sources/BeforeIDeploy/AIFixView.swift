@@ -10,25 +10,18 @@ struct AIFixOverlay: View {
     private var tint: Color { state.error != nil ? Theme.blocked : state.applied != nil ? Theme.ready : Theme.accent }
 
     var body: some View {
-        ZStack {
-            Color.black.opacity(0.55).ignoresSafeArea()
-                .onTapGesture { if !state.running && !state.applying { store.dismiss() } }
+        ModalShell(size: .xl, height: 660, dismiss: { if !state.running && !state.applying { store.dismiss() } }) {
             VStack(spacing: 0) {
                 header
                 Rectangle().fill(Theme.hairline).frame(height: 1)
                 HStack(spacing: 0) {
-                    explanationPane.frame(width: 400)
+                    explanationPane.frame(minWidth: 280, idealWidth: 340, maxWidth: 360)
                     Rectangle().fill(Theme.hairline).frame(width: 1)
                     filesPane
                 }
                 Rectangle().fill(Theme.hairline).frame(height: 1)
                 footer
             }
-            .frame(width: 1000, height: 660)
-            .background(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(Theme.panel))
-            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .shadow(color: .black.opacity(0.5), radius: 40, y: 16)
         }
         .onExitCommand { if !state.running && !state.applying { store.dismiss() } }
     }
@@ -39,30 +32,30 @@ struct AIFixOverlay: View {
         HStack(spacing: 14) {
             ZStack {
                 Circle().fill(tint.opacity(0.14)).frame(width: 40, height: 40)
-                if state.running { Spinner(size: 18) } else { Image(systemName: state.error != nil ? "xmark" : "sparkles").font(.system(size: 16, weight: .bold)).foregroundColor(tint) }
+                if state.running { Spinner(size: 18) } else { Image(systemName: state.error != nil ? "xmark" : "sparkles").font(Typo.font(.headline, weight: .bold)).foregroundColor(tint) }
             }
             VStack(alignment: .leading, spacing: 3) {
                 Text(state.mode == "explain" ? L("ai.explainTitle") : (state.deep ? L("ai.deepTitle") : L("ai.title")))
-                    .font(.system(size: 17, weight: .bold)).foregroundColor(Theme.text)
+                    .font(Typo.font(.headline, weight: .bold)).foregroundColor(Theme.text)
                 Text("\(state.projectName) · \(state.outcome?.stepLabel ?? state.step)")
-                    .font(.system(size: 12)).foregroundColor(Theme.secondary).lineLimit(1)
+                    .font(Typo.font(.callout)).foregroundColor(Theme.secondary).lineLimit(1)
             }
             Spacer()
             if let u = state.outcome?.usage {
                 VStack(alignment: .trailing, spacing: 2) {
                     if let b = u.balance {
-                        Label(L("ai.creditsLeft", Fmt.tokens(b)), systemImage: "bolt.fill").font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                        Label(L("ai.creditsLeft", Fmt.tokens(b)), systemImage: "bolt.fill").font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
                         if let renews = model.account?.credits?.renewsAt {
-                            Text(L("ai.renewsOn", BillingFormat.day(renews))).font(.system(size: 10.5)).foregroundColor(Theme.tertiary)
+                            Text(L("ai.renewsOn", BillingFormat.day(renews))).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
                         }
                     } else {
-                        Label(L("ai.tokensUsed", Fmt.tokens((u.input ?? 0) + (u.output ?? 0))), systemImage: "bolt").font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                        Label(L("ai.tokensUsed", "0"), systemImage: "bolt").font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
                     }
-                    Text(L("ai.viaProvider", state.outcome?.provider ?? "", u.model ?? state.outcome?.model ?? ""))
-                        .font(.system(size: 10.5, design: .monospaced)).foregroundColor(Theme.tertiary)
+                    Text(L("ai.viaProvider", K.provider(state.outcome?.provider ?? "local"), u.model ?? state.outcome?.model ?? ""))
+                        .font(Typo.font(.caption, design: .monospaced)).foregroundColor(Theme.tertiary)
                 }
             } else if state.running {
-                Text(L("ai.thinking")).font(.system(size: 12)).foregroundColor(Theme.secondary)
+                Text(L("ai.thinking")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
             }
         }
         .padding(.horizontal, 22)
@@ -83,12 +76,15 @@ struct AIFixOverlay: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 8) {
                         if let err = state.error {
-                            Text(err).font(.system(size: 12.5)).foregroundColor(Theme.blocked).textSelection(.enabled)
+                            Text(err).font(Typo.font(.body)).foregroundColor(Theme.blocked).textSelection(.enabled)
                                 .padding(12).frame(maxWidth: .infinity, alignment: .leading)
-                                .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.blocked.opacity(0.1)))
+                                .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(Theme.blocked.opacity(0.1)))
+                        }
+                        if ["quota_exhausted", "ai_session_cap", "window_5h", "window_week", "ai_unavailable"].contains(state.errorCode ?? "") {
+                            CreditQuotaActions(store: model.billingStore, code: state.errorCode ?? "quota_exhausted")
                         }
                         if explanationText.isEmpty && state.running {
-                            HStack(spacing: 8) { Spinner(size: 12); Text(L("ai.thinking")).font(.system(size: 12)).foregroundColor(Theme.secondary) }
+                            HStack(spacing: 8) { Spinner(size: 12); Text(L("ai.thinking")).font(Typo.font(.callout)).foregroundColor(Theme.secondary) }
                         } else {
                             MarkdownText(explanationText)
                         }
@@ -118,9 +114,9 @@ struct AIFixOverlay: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
                     if state.mode == "explain" {
-                        Text(L("ai.explainOnly")).font(.system(size: 12.5)).foregroundColor(Theme.tertiary)
+                        Text(L("ai.explainOnly")).font(Typo.font(.body)).foregroundColor(Theme.tertiary)
                     } else if state.files.isEmpty {
-                        if !state.running { Text(state.error == nil ? L("ai.noChanges") : "").font(.system(size: 12.5)).foregroundColor(Theme.tertiary) }
+                        if !state.running { Text(state.error == nil ? L("ai.noChanges") : "").font(Typo.font(.body)).foregroundColor(Theme.tertiary) }
                     } else {
                         ForEach(state.files) { f in
                             AIPatchFileCard(file: f, selected: state.selected.contains(f.path), applied: state.applied, locked: state.applied != nil || state.applying) {
@@ -144,11 +140,11 @@ struct AIFixOverlay: View {
                 Toggle(L("ai.recheckAfter"), isOn: Binding(get: { store.recheckAfterApply }, set: { store.recheckAfterApply = $0 })).toggleStyle(.checkbox)
             }
             if let a = state.applied {
-                Label(L("ai.applied", count: a.applied.count), systemImage: "checkmark.circle.fill").font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.ready)
-                if let c = a.committed { Text("commit \(c)").font(.system(size: 11.5, design: .monospaced)).foregroundColor(Theme.tertiary) }
+                Label(L("ai.applied", count: a.applied.count), systemImage: "checkmark.circle.fill").font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.ready)
+                if let c = a.committed { Text(L("git.record", c)).font(Typo.font(.callout, design: .monospaced)).foregroundColor(Theme.tertiary) }
                 if let rc = a.recheck {
                     Label(rc.verified ? L("ai.verified") : L("ai.unverified", rc.step ?? state.step), systemImage: rc.verified ? "checkmark.seal.fill" : "xmark.octagon.fill")
-                        .font(.system(size: 12, weight: .semibold)).foregroundColor(rc.verified ? Theme.ready : Theme.blocked)
+                        .font(Typo.font(.callout, weight: .semibold)).foregroundColor(rc.verified ? Theme.ready : Theme.blocked)
                 }
                 if a.undoFile != nil, !state.undone {
                     Button(L("ai.undo")) { store.undo() }.bidButton(.ghost, compact: true).disabled(state.applying)
@@ -214,19 +210,19 @@ struct AIPatchFileCard: View {
                     Image(systemName: file.applicable ? "checkmark.circle" : "exclamationmark.triangle.fill")
                         .foregroundColor(file.applicable ? Theme.tertiary : Theme.warn).frame(width: 16)
                 }
-                Text(file.path).font(.system(size: 12.5, weight: .semibold, design: .monospaced)).foregroundColor(Theme.text).lineLimit(1).truncationMode(.middle)
+                Text(file.path).font(Typo.font(.body, weight: .semibold, design: .monospaced)).foregroundColor(Theme.text).lineLimit(1).truncationMode(.middle)
                 Chip(text: file.action, tint: file.action == "delete" ? Theme.blocked : file.action == "create" ? Theme.ready : Theme.accent)
                 if file.needsApproval == true {
-                    Label(L("ai.configChip"), systemImage: "exclamationmark.shield.fill").font(.system(size: 10.5, weight: .semibold)).foregroundColor(Theme.warn)
+                    Label(L("ai.configChip"), systemImage: "exclamationmark.shield.fill").font(Typo.font(.caption, weight: .semibold)).foregroundColor(Theme.warn)
                         .help(L("ai.configWarning"))
                 }
-                Text("+\(file.additions)").font(.system(size: 11, design: .monospaced)).foregroundColor(Theme.ready)
-                Text("−\(file.deletions)").font(.system(size: 11, design: .monospaced)).foregroundColor(Theme.blocked)
+                Text("+\(file.additions)").font(Typo.font(.caption, design: .monospaced)).foregroundColor(Theme.ready)
+                Text("−\(file.deletions)").font(Typo.font(.caption, design: .monospaced)).foregroundColor(Theme.blocked)
                 Spacer()
                 if let s = status {
-                    Text(s.0).font(.system(size: 11, weight: .semibold)).foregroundColor(s.1)
+                    Text(s.0).font(Typo.font(.caption, weight: .semibold)).foregroundColor(s.1)
                 } else if let e = file.error {
-                    Text(L(Self.reasonKeys[e] ?? "ai.reason.other")).font(.system(size: 11)).foregroundColor(Theme.warn)
+                    Text(L(Self.reasonKeys[e] ?? "ai.reason.other")).font(Typo.font(.caption)).foregroundColor(Theme.warn)
                 }
                 Button { expanded.toggle() } label: { Image(systemName: expanded ? "chevron.up" : "chevron.down") }.bidButton(.ghost, compact: true)
             }
@@ -237,8 +233,8 @@ struct AIPatchFileCard: View {
                 DiffText(diff: file.diff).padding(10)
             }
         }
-        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.bg))
-        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(selected && file.applicable && applied == nil ? Theme.accent.opacity(0.6) : Theme.hairline, lineWidth: 1))
+        .background(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).fill(Theme.bg))
+        .overlay(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).strokeBorder(selected && file.applicable && applied == nil ? Theme.accent.opacity(0.6) : Theme.hairline, lineWidth: 1))
     }
 }
 
@@ -258,7 +254,7 @@ struct DiffText: View {
                     .background(background(line))
             }
         }
-        .font(.system(size: 11.5, design: .monospaced))
+        .font(Typo.font(.callout, design: .monospaced))
         .textSelection(.enabled)
     }
 
@@ -285,9 +281,9 @@ struct MarkdownText: View {
 
     var body: some View {
         if let attributed = try? AttributedString(markdown: text, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)) {
-            Text(attributed).font(.system(size: 13)).foregroundColor(Theme.text).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
+            Text(attributed).font(Typo.font(.body)).foregroundColor(Theme.text).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
         } else {
-            Text(text).font(.system(size: 13)).foregroundColor(Theme.text).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
+            Text(text).font(Typo.font(.body)).foregroundColor(Theme.text).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
         }
     }
 }

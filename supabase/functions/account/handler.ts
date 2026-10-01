@@ -41,7 +41,10 @@ export function createAccountHandler(deps: AccountDeps): (req: Request) => Promi
             rows("monitor_probes", "at"),
             rows("monitor_incidents", "opened_at"),
           ]);
+          const v2Tables={credit_refunds:"created_at",cloud_reports:"created_at",credit_periods:"starts_at",credit_accounts:"migrated_at",credit_grants:"granted_at",credit_holds:"created_at",credit_allocations:"hold_id",sites:"created_at",usage_events:"created_at",usage_windows:"opened_at",usage_daily:"day",usage_nudges:"shown_at",domain_orders:"created_at",netlify_allocations:"period_ref",billing_changes:"created_at"};
+          const creditData=Object.fromEntries(await Promise.all(Object.entries(v2Tables).map(async([table,order])=>[table,await rows(table,order)])));
           return json(200, {
+            ...creditData,
             exportedAt: new Date().toISOString(),
             user: { id: user.id, email: user.email, created_at: user.created_at },
             profile,
