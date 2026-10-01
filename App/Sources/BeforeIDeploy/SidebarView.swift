@@ -20,7 +20,7 @@ struct SidebarView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 10) {
-                AppGlyph(size: 26).breath(Theme.accent)
+                AppGlyph(size: 26)
                 VStack(alignment: .leading, spacing: 1) {
                     Text("Before I Deploy")
                         .font(Typo.font(.subhead, weight: .bold))
@@ -251,7 +251,6 @@ struct ProjectRow: View {
         .overlay(alignment: .leading) {
             if selected {
                 Capsule().fill(Theme.accentGradient).frame(width: 3, height: 18).offset(x: -6)
-                    .elevation(.popover)
             }
         }
         .contentShape(Rectangle())
@@ -302,8 +301,7 @@ struct NavRow: View {
                     let pill = RoundedRectangle(cornerRadius: Radius.s, style: .continuous)
                         .fill(LinearGradient(colors: [Theme.accent.opacity(0.28), Theme.accent.opacity(0.10)], startPoint: .leading, endPoint: .trailing))
                         .overlay(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).strokeBorder(Theme.accent.opacity(0.32), lineWidth: 1))
-                        .elevation(.popover)
-                    if let ns { pill.matchedGeometryEffect(id: "nav-pill", in: ns) } else { pill }
+                        if let ns { pill.matchedGeometryEffect(id: "nav-pill", in: ns) } else { pill }
                 } else {
                     RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(hover ? Theme.panel : .clear)
                 }

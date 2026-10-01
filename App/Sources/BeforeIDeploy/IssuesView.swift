@@ -31,7 +31,7 @@ struct IssuesCard: View {
                 VStack(spacing: 8) {
                     ForEach(Array(list.enumerated()), id: \.element.id) { i, issue in
                         IssueRow(issue: issue, projectPath: status.project.path)
-                            .entrance(i, offset: 8)
+
                     }
                 }
             } else {
@@ -46,13 +46,7 @@ struct EmptyLine: View {
     let icon: String
     let text: String
     var tint: Color = Theme.tertiary
-    var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: icon).foregroundColor(tint)
-            Text(text).font(Typo.font(.body)).foregroundColor(Theme.secondary)
-        }
-        .padding(.vertical, 4)
-    }
+    var body: some View { EmptyState(icon: icon, title: text, inline: true) }
 }
 
 struct IssueRow: View {

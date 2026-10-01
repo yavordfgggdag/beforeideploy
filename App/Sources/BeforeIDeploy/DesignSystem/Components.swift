@@ -124,12 +124,19 @@ struct EmptyState: View {
     let icon: String
     let title: String
     var message: String? = nil
+    var inline = false
     var body: some View {
+        Group {
+        if inline {
+            Label(title, systemImage: icon).font(Typo.font(.body)).foregroundColor(Theme.secondary).padding(.vertical, Space.xs)
+        } else {
         VStack(spacing: Space.m) {
             Image(systemName: icon).font(Typo.font(.display)).foregroundColor(Theme.secondary).accessibilityHidden(true)
             Text(title).font(Typo.font(.headline)).foregroundColor(Theme.text)
             if let message { Text(message).font(Typo.font(.body)).foregroundColor(Theme.secondary).multilineTextAlignment(.center) }
         }.padding(Space.page).frame(maxWidth: .infinity)
+        }
+        }
     }
 }
 struct LoadingState: View {
@@ -144,6 +151,7 @@ struct ErrorState: View {
     var retry: (() -> Void)? = nil
     var body: some View {
         VStack(spacing: Space.m) {
+            Text(L("load.failedTitle")).font(Typo.font(.headline)).foregroundColor(Theme.text)
             Label(message, systemImage: "exclamationmark.circle").font(Typo.font(.body)).foregroundColor(Theme.blocked)
             if let retry { Button(L("common.retry"), action: retry).bidButton(.secondary) }
         }.padding(Space.l).frame(maxWidth: .infinity)

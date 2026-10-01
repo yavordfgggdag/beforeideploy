@@ -715,9 +715,9 @@ struct PushoverSheet: View {
         SheetScaffold(icon: "iphone.radiowaves.left.and.right", iconTint: Theme.accent, title: L("pushover.title"), subtitle: L("pushover.subtitle"), width: 560) {
             VStack(alignment: .leading, spacing: 12) {
                 VStack(alignment: .leading, spacing: 8) {
-                    StepLine(n: 1, text: L("pushover.step1")).entrance(1, offset: 8)
-                    StepLine(n: 2, text: L("pushover.step2")).entrance(2, offset: 8)
-                    StepLine(n: 3, text: L("pushover.step3")).entrance(3, offset: 8)
+                    StepLine(n: 1, text: L("pushover.step1"))
+                    StepLine(n: 2, text: L("pushover.step2"))
+                    StepLine(n: 3, text: L("pushover.step3"))
                 }
                 HStack(spacing: 8) {
                     Button { model.open("https://pushover.net/") } label: { Label(L("pushover.openSite"), systemImage: "safari") }.bidButton(.secondary, compact: true)

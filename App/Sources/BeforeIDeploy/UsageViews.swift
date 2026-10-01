@@ -13,12 +13,12 @@ struct PlanUsageView: View {
                 header
                 if let u = store.usage {
                     HStack(alignment: .top, spacing: 16) {
-                        sessionCard(u).frame(maxWidth: .infinity).entrance(0)
-                        limitsCard(u).frame(width: 300).entrance(1)
+                        sessionCard(u).frame(maxWidth: .infinity)
+                        limitsCard(u).frame(width: 300)
                     }
-                    planCard(u).entrance(2)
-                    if let models = u.byModel, !models.isEmpty { modelsCard(u, models).entrance(3) }
-                    historyCard(u).entrance(4)
+                    planCard(u)
+                    if let models = u.byModel, !models.isEmpty { modelsCard(u, models) }
+                    historyCard(u)
                 } else if store.loading {
                     HStack(spacing: 10) { Spinner(size: 16); Text(L("usage.loading")).foregroundColor(Theme.secondary) }.card()
                 } else if let e = store.usageError {

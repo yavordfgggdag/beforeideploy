@@ -336,7 +336,7 @@ private struct WelcomeSkyFrame: View {
             let w = geo.size.width
             let h = geo.size.height
             ZStack {
-                LinearGradient(colors: [Color(hex: 0x0B3D91), Color(hex: 0x0A6EF0), Color(hex: 0x3B9CFF)],
+                LinearGradient(colors: [Color(hex: 0x08306B), Color(hex: 0x084FA8), Color(hex: 0x0A56B8)],
                                startPoint: .bottomLeading, endPoint: .topTrailing)
                 glow(size: max(w, h) * 0.9, x: w * (0.85 + 0.05 * sin(t * 0.19)), y: h * (0.05 + 0.06 * cos(t * 0.23)), opacity: 0.22)
                 glow(size: max(w, h) * 0.7, x: w * (0.05 + 0.06 * cos(t * 0.15)), y: h * (0.95 + 0.04 * sin(t * 0.21)), opacity: 0.16)

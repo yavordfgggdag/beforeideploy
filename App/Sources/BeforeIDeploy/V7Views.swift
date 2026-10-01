@@ -139,11 +139,11 @@ struct MissionControlView: View {
 
                 if let o = model.overview {
                     HStack(spacing: 12) {
-                        KPITile(value: "\(o.totals.projects)", label: L("common.projectsCaption"), icon: "folder.fill").entrance(0)
-                        KPITile(value: "\(o.totals.ready)", label: L("overview.readyToDeploy"), icon: "checkmark.seal.fill", tint: Theme.ready).entrance(1)
-                        KPITile(value: "\(o.totals.blocked)", label: L("overview.blockedCaption"), icon: "xmark.octagon.fill", tint: o.totals.blocked > 0 ? Theme.blocked : Theme.text).entrance(2)
+                        KPITile(value: "\(o.totals.projects)", label: L("common.projectsCaption"), icon: "folder.fill")
+                        KPITile(value: "\(o.totals.ready)", label: L("overview.readyToDeploy"), icon: "checkmark.seal.fill", tint: Theme.ready)
+                        KPITile(value: "\(o.totals.blocked)", label: L("overview.blockedCaption"), icon: "xmark.octagon.fill", tint: o.totals.blocked > 0 ? Theme.blocked : Theme.text)
                         KPITile(value: "\(o.totals.online)/\(o.totals.live)", label: L("overview.sitesOnline"), icon: "dot.radiowaves.left.and.right",
-                                tint: o.totals.online < o.totals.live ? Theme.warn : Theme.ready).entrance(3)
+                                tint: o.totals.online < o.totals.live ? Theme.warn : Theme.ready)
                     }
 
                     if !o.attention.isEmpty {
@@ -171,10 +171,10 @@ struct MissionControlView: View {
                             }
                         }
                         .card()
-                        .entrance(4)
+
                     }
 
-                    MonitorCard().entrance(5)
+                    MonitorCard()
 
                     if o.cards.isEmpty {
                         WelcomeView().frame(maxWidth: .infinity)
@@ -192,7 +192,7 @@ struct MissionControlView: View {
                                 ForEach(Array(shown.enumerated()), id: \.element.id) { i, c in
                                     ProjectOverviewCard(card: c)
                                         .tapAction { Task { await model.select(c.key) } }
-                                        .entrance(4 + i)
+
                                 }
                             }
                         }
@@ -399,7 +399,7 @@ struct CostsView: View {
                     SectionLabel(text: L("costs.accounts"), icon: "person.2.fill")
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 320), spacing: 14)], spacing: 14) {
                         ForEach(Array(c.usage.providers.enumerated()), id: \.element.id) { i, p in
-                            ProviderCard(provider: p).lift().entrance(i + 1)
+                            ProviderCard(provider: p).lift()
                         }
                     }
 
@@ -663,21 +663,21 @@ struct SetupView: View {
                     }
                     .card(padding: 20)
                     .glowBorder(s.ready ? Theme.ready : Theme.accent, strength: 0.8)
-                    .entrance(0)
 
-                    if model.account?.canUseOwnKey == true { AIKeysCard().lift().entrance(1) }
+
+                    if model.account?.canUseOwnKey == true { AIKeysCard().lift() }
 
                     ForEach(Array(groups(s.items).enumerated()), id: \.element.id) { gi, group in
                         VStack(alignment: .leading, spacing: 4) {
                             SectionLabel(text: group.name).padding(.bottom, 6)
                             ForEach(Array(group.items.enumerated()), id: \.element.id) { ii, item in
-                                SetupRow(item: item).entrance(gi * 3 + ii + 2, offset: 8)
+                                SetupRow(item: item)
                                 if item.id != group.items.last?.id { Rectangle().fill(Theme.hairline).frame(height: 1) }
                             }
                         }
                         .card()
                         .lift()
-                        .entrance(gi + 1)
+
                     }
                 } else if let e = model.loadErrors["setup"] {
                     LoadFailedView(message: e) { await model.loadSetup() }

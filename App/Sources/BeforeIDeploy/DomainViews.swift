@@ -170,7 +170,7 @@ struct SpaceshipConnectCard: View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 12) {
                 Image(systemName: "network").font(Typo.font(.title, weight: .semibold)).foregroundColor(Theme.accent)
-                    .breath(Theme.accent)
+
                 VStack(alignment: .leading, spacing: 3) {
                     Text(L("spaceship.connect")).font(Typo.font(.headline, weight: .bold)).foregroundColor(Theme.text)
                     Text(L("spaceship.connectIntro"))
@@ -178,9 +178,9 @@ struct SpaceshipConnectCard: View {
                 }
             }
             VStack(alignment: .leading, spacing: 8) {
-                StepLine(n: 1, text: L("spaceship.step1")).entrance(1, offset: 8)
-                StepLine(n: 2, text: L("spaceship.step2")).entrance(2, offset: 8)
-                StepLine(n: 3, text: L("spaceship.step3")).entrance(3, offset: 8)
+                StepLine(n: 1, text: L("spaceship.step1"))
+                StepLine(n: 2, text: L("spaceship.step2"))
+                StepLine(n: 3, text: L("spaceship.step3"))
             }
             Button { model.open("https://www.spaceship.com/application/api-manager/") } label: { Label(L("spaceship.openApiManager"), systemImage: "safari") }
                 .bidButton(.secondary)
@@ -204,7 +204,7 @@ struct SpaceshipConnectCard: View {
         }
         .card(padding: 22)
         .glowBorder(Theme.accent, strength: 0.8)
-        .entrance(0)
+
     }
 }
 

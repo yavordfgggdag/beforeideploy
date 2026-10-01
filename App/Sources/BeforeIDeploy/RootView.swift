@@ -328,29 +328,13 @@ struct LoadFailedView: View {
     let retry: () async -> Void
     @Local private var retrying = false
     var body: some View {
-        VStack(spacing: 10) {
-            Image(systemName: "exclamationmark.triangle.fill").font(Typo.font(.title)).foregroundColor(Theme.warn)
-            Text(L("load.failedTitle")).font(Typo.font(.subhead, weight: .semibold)).foregroundColor(Theme.text)
-            Text(message)
-                .font(Typo.font(.callout))
-                .foregroundColor(Theme.secondary)
-                .multilineTextAlignment(.center)
-                .textSelection(.enabled)
-                .frame(maxWidth: 520)
-            Button {
+        Group {
+            if retrying { LoadingState() }
+            else { ErrorState(message: message, retry: {
                 retrying = true
-                Task {
-                    await retry()
-                    retrying = false
-                }
-            } label: {
-                if retrying { Spinner(size: 12) } else { Label(L("common.retry"), systemImage: "arrow.clockwise") }
-            }
-            .bidButton(.secondary)
-            .disabled(retrying)
-        }
-        .frame(maxWidth: .infinity, minHeight: 200)
-        .accessibilityElement(children: .combine)
+                Task { await retry(); retrying = false }
+            }) }
+        }.frame(maxWidth: .infinity, minHeight: 200)
     }
 }
 
@@ -425,25 +409,5 @@ struct NodeMissingView: View {
             .padding(.top, 4)
         }
         .padding(40)
-    }
-}
-
-/// The app mark: a paperplane on a blue rounded tile.
-struct AppGlyph: View {
-    var size: CGFloat = 28
-    var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: size * 0.28, style: .continuous)
-                .fill(Theme.accentGradient)
-            RoundedRectangle(cornerRadius: size * 0.28, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
-            Image(systemName: "paperplane.fill")
-                .font(Typo.icon(size: size * 0.44, weight: .semibold))
-                .foregroundColor(.white)
-                .rotationEffect(.degrees(-8))
-                .offset(x: -size * 0.02, y: size * 0.02)
-        }
-        .frame(width: size, height: size)
-        .elevation(.popover)
     }
 }

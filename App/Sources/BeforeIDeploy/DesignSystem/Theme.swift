@@ -37,6 +37,7 @@ enum Theme {
     static let brandViolet = Color.adaptive(0x7A3FD6, 0xB57BFF)
     static let topup = brandViolet
     static let onAccent = Color.white
+    static let appleButtonFill = Color.black
     static let scrim = Color.adaptive(0, 0, lightAlpha: 0.25, darkAlpha: 0.45)
     static let accentGradient = LinearGradient(colors: [accentFill, accentFill], startPoint: .top, endPoint: .bottom)
     static let radius = Radius.l
@@ -191,10 +192,12 @@ struct StatusDot: View {
 // MARK: - Buttons
 
 enum ButtonKind { case primary, secondary, danger, ghost }
+enum ButtonSize { case small, regular, large }
 
 struct BIDButtonStyle: ButtonStyle {
     var kind: ButtonKind = .secondary
     var compact = false
+    var size: ButtonSize = .regular
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.isFocused) private var isFocused
 
@@ -216,7 +219,7 @@ struct BIDButtonStyle: ButtonStyle {
             .font(Typo.font(compact ? .callout : .body, weight: .semibold))
             .foregroundColor(fg)
             .padding(.horizontal, compact ? 10 : 14)
-            .padding(.vertical, compact ? 6 : 9)
+            .padding(.vertical, compact || size == .small ? Space.xs : size == .large ? Space.m : Space.s)
             .background(
                 ZStack {
                     if kind == .primary {

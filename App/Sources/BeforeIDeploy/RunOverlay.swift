@@ -39,7 +39,6 @@ struct RunOverlay: View {
         HStack(spacing: 14) {
             ZStack {
                 Circle().fill(headerTint.opacity(0.14)).frame(width: 40, height: 40)
-                    .elevation(.popover)
                 if session.finished {
                     Image(systemName: !session.success ? "xmark" : (headerTint == Theme.warn ? "exclamationmark" : "checkmark"))
                         .font(Typo.font(.headline, weight: .bold))
@@ -48,7 +47,7 @@ struct RunOverlay: View {
                     Orbit(size: 20)
                 }
             }
-            .breath(headerTint, strong: !session.finished)
+
             VStack(alignment: .leading, spacing: 3) {
                 Text(session.finished ? (session.outcomeTitle ?? session.title) : session.title)
                     .font(Typo.font(.headline, weight: .bold))
@@ -73,7 +72,6 @@ struct RunOverlay: View {
                 Capsule()
                     .fill(LinearGradient(colors: [headerTint.opacity(0.6), headerTint], startPoint: .leading, endPoint: .trailing))
                     .frame(width: geo.size.width * session.progress, height: 2)
-                    .elevation(.popover)
                     .shimmer(active: !session.finished)
                     .animation(Motion.gentle, value: session.progress)
             }
@@ -89,7 +87,7 @@ struct RunOverlay: View {
                 ForEach(Array(session.steps.enumerated()), id: \.element.id) { i, s in
                     RunStepRow(step: s, selected: session.selectedStep == s.id)
                         .tapAction { session.selectedStep = s.id }
-                        .entrance(i, offset: 8)
+
                 }
                 if session.steps.isEmpty {
                     // a run that finished without steps (nothing to install) must not spin "Starting…" forever

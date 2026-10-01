@@ -41,7 +41,7 @@ struct DashboardView: View {
                 switch tab {
                 case .overview:
                     if let launch = status.launch, !launch.complete {
-                        LaunchCard(launch: launch, tab: $tab).entrance(0, offset: 10)
+                        LaunchCard(launch: launch, tab: $tab)
                     }
                     HeroCard(status: status)
                     IssuesCard(status: status)
@@ -231,7 +231,7 @@ struct HeroCard: View {
             HStack(alignment: .center, spacing: 16) {
                 StatusRing(fraction: passFraction, tint: tint,
                            symbol: state == "unknown" ? "questionmark" : Theme.symbol(for: state))
-                    .breath(tint, strong: state == "blocked")
+
                     .accessibilityLabel(title)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
@@ -403,7 +403,7 @@ struct LaunchCard: View {
                         HStack(alignment: .top, spacing: 12) {
                             VStack(spacing: 0) {
                                 Image(systemName: icon).font(Typo.font(.subhead)).foregroundColor(tint)
-                                    .breath(tint, strong: s.status == "attention")
+
                                 if i < launch.steps.count - 1 {
                                     Rectangle().fill(s.status == "done" ? Theme.ready.opacity(0.5) : Theme.hairline).frame(width: 2).frame(maxHeight: .infinity)
                                 }
@@ -424,7 +424,7 @@ struct LaunchCard: View {
                             }
                         }
                         .padding(.vertical, 6)
-                        .entrance(i + 1, offset: 8)
+
                     }
                 }
             }
@@ -449,7 +449,6 @@ struct HealthBar: View {
                 Capsule(style: .continuous)
                     .fill(s.status == "skipped" ? Theme.elevated : Theme.color(for: s.status).opacity(s.status == "info" ? 0.45 : 0.9))
                     .frame(height: 6)
-                    .elevation(.popover)
                     .help("\(s.label ?? s.id): \(s.summary ?? s.status)")
                     .accessibilityLabel(s.label ?? s.id)
                     .accessibilityValue(s.summary ?? s.status)
@@ -477,7 +476,7 @@ struct HealthGrid: View {
             SectionLabel(text: L("dashboard.projectHealth"), icon: "waveform.path.ecg")
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 150, maximum: 400), spacing: 10)], spacing: 10) {
                 ForEach(Array(steps.enumerated()), id: \.element.id) { i, s in
-                    HealthTile(step: s).entrance(i, offset: 10)
+                    HealthTile(step: s)
                 }
             }
         }

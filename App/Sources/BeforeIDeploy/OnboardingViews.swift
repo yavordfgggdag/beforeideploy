@@ -37,15 +37,11 @@ struct WelcomeTourView: View {
 
             VStack(spacing: 22) {
                 HStack(spacing: 12) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: Radius.m, style: .continuous).fill(Color.white.opacity(0.18))
-                        Image(systemName: "paperplane.fill").font(Typo.font(.title, weight: .bold)).foregroundColor(.white).rotationEffect(.degrees(-8))
-                    }
-                    .frame(width: 50, height: 50)
-                    .floating()
+                    AppGlyph(size: 50, style: .onBrand)
+
                     Text("Before I Deploy").font(Typo.font(.title, weight: .bold)).foregroundColor(.white)
                 }
-                .entrance(0)
+
 
                 VStack(spacing: 18) {
                     Image(systemName: page.symbol)
@@ -53,8 +49,8 @@ struct WelcomeTourView: View {
                         .foregroundColor(Theme.accent)
                         .frame(width: 84, height: 84)
                         .background(RoundedRectangle(cornerRadius: Radius.xl, style: .continuous).fill(Theme.accentSoft))
-                        .breath(Theme.accent)
-                        .floating(amplitude: 3, period: 2.8)
+
+
                     VStack(spacing: 8) {
                         Text(L(page.titleKey))
                             .font(Typo.font(.title, weight: .heavy))
@@ -73,13 +69,13 @@ struct WelcomeTourView: View {
                                 Text(L(key)).font(Typo.font(.body)).foregroundColor(Theme.text)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
-                            .entrance(i + 3, offset: 10)
+
                         }
                     }
                     .padding(.horizontal, 8)
                 }
                 .padding(32)
-                .frame(width: 560)
+                .frame(maxWidth: 560)
                 .background(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).fill(Theme.panel))
                 .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
                 .glowBorder(Theme.accent, strength: 0.7)
@@ -115,7 +111,7 @@ struct WelcomeTourView: View {
                     .bidButton(.primary)
                     .keyboardShortcut(.defaultAction)
                 }
-                .frame(width: 560)
+                .frame(maxWidth: 560)
             }
             .padding(40)
         }
@@ -123,7 +119,7 @@ struct WelcomeTourView: View {
     }
 
     private func finish() {
-        withAnimation(.easeInOut(duration: 0.25)) { tourSeen = true }
+        withAnimation(Motion.quick) { tourSeen = true }
     }
 }
 
@@ -143,7 +139,7 @@ struct AppleSignInButton: View {
             .foregroundColor(.white)
             .padding(.horizontal, 14)
             .padding(.vertical, 9)
-            .background(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).fill(hovering ? Theme.panel : .black))
+            .background(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).fill(Theme.appleButtonFill))
             .overlay(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).strokeBorder(Color.white.opacity(0.22), lineWidth: 1))
             .contentShape(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous))
         }
@@ -199,7 +195,7 @@ struct FirstStepsCard: View {
                             .background(RoundedRectangle(cornerRadius: Radius.xs, style: .continuous).fill(Theme.elevated))
                     }
                 }
-                .entrance(i, offset: 8)
+
             }
             if let setup = model.setup, !setup.ready {
                 Rectangle().fill(Theme.hairline).frame(height: 1)

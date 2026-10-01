@@ -194,11 +194,7 @@ struct BrandPanel: View {
             WelcomeSky()
             VStack(alignment: .leading, spacing: 28) {
                 HStack(spacing: 12) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: Radius.m, style: .continuous).fill(Color.white.opacity(0.18))
-                        Image(systemName: "paperplane.fill").font(Typo.font(.title, weight: .bold)).foregroundColor(.white).rotationEffect(.degrees(-8))
-                    }
-                    .frame(width: 50, height: 50)
+                    AppGlyph(size: 50, style: .onBrand)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Before I Deploy").font(Typo.font(.title, weight: .bold)).foregroundColor(.white)
                         Text(L("welcome.tagline")).font(Typo.font(.body)).foregroundColor(.white.opacity(0.75))
@@ -332,7 +328,7 @@ struct CloudCheckLine: View {
                 .padding(12)
                 .background(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).fill(Theme.panel))
                 .overlay(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
-                .entrance(0, offset: 8)
+
             }
         }
     }
@@ -668,7 +664,7 @@ struct CommandPalette: View {
                                 .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)
-                            .entrance(index, offset: 8)
+
                         }
                         if filtered.isEmpty {
                             Text(L("palette.nothingFound")).foregroundColor(Theme.tertiary).padding(20)

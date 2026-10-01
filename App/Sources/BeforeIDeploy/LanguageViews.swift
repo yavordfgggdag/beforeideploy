@@ -14,22 +14,18 @@ struct WelcomeLanguageView: View {
 
             VStack(spacing: 24) {
                 HStack(spacing: 12) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: Radius.m, style: .continuous).fill(Color.white.opacity(0.18))
-                        Image(systemName: "paperplane.fill").font(Typo.font(.title, weight: .bold)).foregroundColor(.white).rotationEffect(.degrees(-8))
-                    }
-                    .frame(width: 50, height: 50)
-                    .floating()
+                    AppGlyph(size: 50, style: .onBrand)
+
                     Text("Before I Deploy").font(Typo.font(.title, weight: .bold)).foregroundColor(.white)
                 }
-                .entrance(0)
+
 
                 VStack(spacing: 6) {
                     Text(text("language.title")).font(Typo.font(.display, weight: .heavy)).foregroundColor(.white)
                     Text(text("language.subtitle")).font(Typo.font(.body)).foregroundColor(.white.opacity(0.8))
                         .multilineTextAlignment(.center)
                 }
-                .entrance(1)
+
 
                 let codes = Localization.available
                 let grid = LazyVGrid(columns: [GridItem(.adaptive(minimum: 170), spacing: 10)], spacing: 10) {
@@ -50,12 +46,12 @@ struct WelcomeLanguageView: View {
                 .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.edgeHighlight, lineWidth: 1))
                 .frame(width: codes.count > 2 ? 580 : 390)
                 .glowBorder(Theme.accent, strength: 0.7)
-                .entrance(2, offset: 22)
+
 
                 Button(text("language.continue")) { model.setLanguage(selected) }
                     .bidButton(.primary)
                     .keyboardShortcut(.defaultAction)
-                    .entrance(4)
+
             }
             .padding(40)
         }

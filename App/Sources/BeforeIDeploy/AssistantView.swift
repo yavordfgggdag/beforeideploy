@@ -34,7 +34,7 @@ struct AssistantView: View {
     private var conversation: some View {
         VStack(spacing: 0) {
             HStack(spacing: 10) {
-                Image(systemName: "sparkles").foregroundColor(Theme.accent).breath(Theme.accent)
+                Image(systemName: "sparkles").foregroundColor(Theme.accent)
                 VStack(alignment: .leading, spacing: 1) {
                     GradientText(text: L("assistant.title"), font: Typo.font(.subhead, weight: .bold))
                     Text(model.status?.project.name ?? "").font(Typo.font(.callout)).foregroundColor(Theme.secondary)
