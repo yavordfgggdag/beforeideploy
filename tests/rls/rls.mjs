@@ -19,7 +19,9 @@ const schema = fs.readFileSync(path.join(ROOT, 'supabase', 'schema.sql'), 'utf8'
 let passed = 0;
 let failed = 0;
 const results = [];
+const only = process.env.RLS_ONLY ? new RegExp(process.env.RLS_ONLY) : null; // dev filter, e.g. RLS_ONLY='B1|refund'
 async function t(name, fn) {
+  if (only && !only.test(name)) return;
   try {
     await fn();
     passed++;
