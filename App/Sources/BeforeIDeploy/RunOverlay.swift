@@ -118,9 +118,12 @@ struct RunOverlay: View {
                 if session.steps.isEmpty {
                     // a run that finished without steps (nothing to install) must not spin "Starting…" forever
                     HStack(spacing: 8) {
-                        if session.finished {
+                        if session.finished && session.success {
                             Image(systemName: "checkmark.circle.fill").foregroundColor(Theme.ready)
                             Text(L("overlay.nothingToDo")).font(.system(size: 12)).foregroundColor(Theme.secondary)
+                        } else if session.finished {
+                            Image(systemName: "xmark.circle.fill").foregroundColor(Theme.blocked)
+                            Text(L("overlay.failedBeforeStart")).font(.system(size: 12)).foregroundColor(Theme.secondary)
                         } else {
                             Spinner(size: 12)
                             Text(L("overlay.starting")).font(.system(size: 12)).foregroundColor(Theme.secondary)
@@ -198,7 +201,7 @@ struct RunOverlay: View {
                 .padding(.horizontal, 12)
                 .padding(.bottom, 12)
 
-                if s.status == "fail" || s.status == "warn" {
+                if session.kind != .setup && (s.status == "fail" || s.status == "warn") {
                     AIFixBar(step: s.id)
                         .padding(.horizontal, 16)
                         .padding(.bottom, 12)
@@ -259,6 +262,9 @@ struct RunOverlay: View {
                         model.draftPreview()
                     } label: { Label(L("run.draftPreview"), systemImage: "eye") }
                         .bidButton(.secondary)
+                }
+                if session.kind == .setup && !session.success {
+                    Button(L("setup.retryFailed")) { model.run = nil; model.setupAuto() }.bidButton(.secondary)
                 }
                 Button(L("common.close")) { close() }
                     .bidButton(session.resultURL == nil ? .primary : .secondary)

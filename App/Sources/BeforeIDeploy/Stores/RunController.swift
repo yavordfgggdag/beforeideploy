@@ -44,7 +44,7 @@ final class RunController: ObservableObject {
         run = session
         Task {
             do {
-                let outcome = try await engine.run(args, handle: session.handle) { [weak session] ev in
+                let outcome = try await engine.run(args, handle: session.handle, timeout: session.kind == .setup ? 2400 : nil) { [weak session] ev in
                     session?.handle(ev)
                 }
                 if outcome.ok {

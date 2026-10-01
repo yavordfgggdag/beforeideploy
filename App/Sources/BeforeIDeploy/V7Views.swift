@@ -674,11 +674,12 @@ struct SetupView: View {
                 }
 
                 if let s = model.setup {
-                    let done = s.items.filter(\.ok).count
+                    let required = s.items.filter { !$0.optional }
+                    let done = required.filter(\.ok).count
                     HStack(spacing: 18) {
                         ZStack {
-                            ProgressRing(fraction: s.items.isEmpty ? 0 : Double(done) / Double(s.items.count))
-                            Text("\(done)/\(s.items.count)").font(.system(size: 14, weight: .bold)).foregroundColor(Theme.text)
+                            ProgressRing(fraction: required.isEmpty ? 1 : Double(done) / Double(required.count))
+                            Text("\(done)/\(required.count)").font(.system(size: 14, weight: .bold)).foregroundColor(Theme.text)
                         }
                         .frame(width: 64, height: 64)
                         VStack(alignment: .leading, spacing: 4) {
@@ -690,7 +691,7 @@ struct SetupView: View {
                         Spacer()
                         Button { model.setupAuto() } label: { Label(L("setup.autoAll"), systemImage: "bolt.fill") }
                             .bidButton(.primary)
-                            .disabled(s.ready)
+                            .disabled(s.ready || model.loadingSetup || model.run?.finished == false)
                     }
                     .card(padding: 20)
                     .glowBorder(s.ready ? Theme.ready : Theme.accent, strength: 0.8)

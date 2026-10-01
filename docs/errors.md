@@ -125,3 +125,13 @@ Returned as `code` in the JSON body; the engine maps them to the codes above (`q
 | `internal` | 500 | An unexpected server error; details stay in the function log (`internalError`), the client gets only this code. |
 | `rate_limited` | 429 | The shared per-user limit for this action is reached (`bid_rate_hit`, schema.sql). |
 | `rate_limit_unavailable` | 503 | The limit could not be checked (database error). The call is refused rather than skipping the limit; a database without the function (schema not updated) lets calls through and logs it. |
+## V12 setup
+
+| Code | Meaning | Recovery |
+|---|---|---|
+| `setup_busy` | Another setup owns the lock | Wait or retry after it exits |
+| `setup_npm_missing` | Neither user npm nor bundled npm exists | Reinstall the app |
+| `setup_disk_space` | Less than 1.5 GB free | Free disk space |
+| `setup_incomplete` | Required setup steps remain incomplete | Review failed/blocked steps and retry |
+| `offline` | A required setup service is unreachable | Check connectivity and retry |
+| `scripts_untrusted` | Automatic check has no approved script snapshot | Start a manual check |

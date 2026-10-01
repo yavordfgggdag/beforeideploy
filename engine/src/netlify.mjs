@@ -1,6 +1,6 @@
 // Netlify: auth, teams, sites, link/create (NO `netlify init` — never enables CI), manual deploys
 import path from 'node:path';
-import { HOME, EngineError, ev, which, runStream, logDir, readJSON, extractJSON, nowISO } from './util.mjs';
+import { HOME, EngineError, ev, emit, which, runStream, logDir, readJSON, extractJSON, nowISO } from './util.mjs';
 import { detect } from './detect.mjs';
 import { fingerprint } from './checks.mjs';
 import { stageArtifact } from './staging.mjs';
@@ -35,7 +35,8 @@ async function nl(project, args, opts = {}) {
     captureStdout: opts.captureStdout,
     timeout: opts.timeout ?? 10 * 60 * 1000,
     quiet: opts.quiet,
-    env: cliEnv(),
+    env: cliEnv(opts.env),
+    onLine: opts.onLine,
   });
 }
 
@@ -58,15 +59,25 @@ export function netlifyAuth() {
   return { loggedIn: false, email: null, cli: cli?.label || null };
 }
 
-export async function netlifyLogin() {
-  ev.step('login', { label: t('netlify.login.label'), status: 'running', summary: t('netlify.login.opening') });
-  const r = await nl(null, ['login'], { step: 'login', timeout: 5 * 60 * 1000 });
+export async function netlifyLogin({ stepId = 'login', manageSteps = true } = {}) {
+  if (manageSteps) ev.step(stepId, { label: t('netlify.login.label'), status: 'running', summary: t('netlify.login.opening') });
+  let announced = false;
+  const r = await nl(null, ['login'], { step: stepId, timeout: 5 * 60 * 1000, env: { BROWSER: 'echo' },
+    onLine(line) {
+      const match = line.match(/https:\/\/app\.netlify\.com\/[^\s]+/);
+      if (match && !announced) {
+        announced = true;
+        emit({ type: 'devicecode', service: 'Netlify', code: null, url: match[0], expiresIn: 300 });
+        ev.step(stepId, { status: 'waiting_user', summary: t('netlify.login.opening') });
+      }
+    },
+  });
   const auth = netlifyAuth();
   if (!auth.loggedIn) {
-    ev.step('login', { label: t('netlify.login.label'), status: 'fail', summary: t('netlify.login.notConfirmed') });
+    if (manageSteps) ev.step(stepId, { label: t('netlify.login.label'), status: 'fail', summary: t('netlify.login.notConfirmed') });
     throw new EngineError(msg('netlify.login.failed'), 'login_failed');
   }
-  ev.step('login', { label: t('netlify.login.label'), status: 'pass', summary: auth.email || t('netlify.login.loggedIn') });
+  if (manageSteps) ev.step(stepId, { label: t('netlify.login.label'), status: 'pass', summary: auth.email || t('netlify.login.loggedIn') });
   return { ...auth, code: r.code };
 }
 

@@ -1,3 +1,4 @@
+import { gitAvailable } from './setup-tools.mjs';
 // Project detection: framework, package manager, scripts, publish dir, git, Netlify link
 import fs from 'node:fs';
 import path from 'node:path';

@@ -1,3 +1,4 @@
+import { gitAvailable } from './setup-tools.mjs';
 // GitHub panel: status, fetch, commit, push
 import path from 'node:path';
 import { EngineError, ev, sh, runStream, logDir, which } from './util.mjs';
@@ -8,7 +9,7 @@ import { t, msg } from './i18n.mjs';
 const GIT_ENV = () => ({ ...process.env, GIT_TERMINAL_PROMPT: '0', GIT_ASKPASS: '', SSH_ASKPASS: '' });
 
 export function gitStatus(dir) {
-  if (!which('git')) return { isRepo: false, installed: false };
+  if (!gitAvailable()) return { isRepo: false, installed: false };
   const base = gitBasics(dir);
   if (!base.isRepo) return { ...base, installed: true };
 

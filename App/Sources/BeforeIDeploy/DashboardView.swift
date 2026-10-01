@@ -281,6 +281,10 @@ struct HeroCard: View {
                         } else {
                             Text(L("dashboard.runCheckHint"))
                         }
+                        if let reason = model.autoCheckPaused[status.project.key] {
+                            Label(reason, systemImage: "pause.circle").foregroundColor(Theme.warn)
+                            Button(L("common.check")) { model.runCheck() }.buttonStyle(.link)
+                        }
                         if model.autoChecking {
                             Spinner(size: 10)
                             Text(L("autocheck.running")).foregroundColor(Theme.accent)

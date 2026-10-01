@@ -1,6 +1,5 @@
 // Setup Center — detects every tool/account the workflow needs and fixes what is missing
 import fs from 'node:fs';
-import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { HOME, ENGINE_DIR, CACHE_DIR, APP_DIR, EngineError, ev, emit, sh, which, runStream, ensureDir, exists, readJSON } from './util.mjs';
 import { netlifyAuth, netlifyLogin } from './netlify.mjs';
@@ -9,6 +8,9 @@ import { providerStatus } from './hosting.mjs';
 import { t, msg } from './i18n.mjs';
 import { cloudDoctor, cloudSetupItems } from './cloud.mjs';
 import { aiKeysStatus } from './aikeys.mjs';
+import { listProjects } from './store.mjs';
+import { cliEnv } from './isolation.mjs';
+import { gitAvailable, resolveNpm, TOOL_PACKAGES, installManaged, installGitHub, setupLock, setupPreflight } from './setup-tools.mjs';
 
 /** VIP/admin only (docs/PLANS-AND-CREDITS-BG.md): the last profile seen says which role this Mac has. */
 function ownKeyAllowed() {
@@ -24,45 +26,70 @@ function fileHas(file, re) {
   }
 }
 
-function version(cmd, args = ['--version']) {
-  const r = sh(cmd, args, { timeout: 15000 });
-  return r.code === 0 ? (r.stdout || r.stderr).trim().split('\n')[0] : null;
-}
+const npmInstall = (pkg) => ({ type: 'run', label: t('setup.action.install'), display: t('setup.managedInstall'), package: pkg });
 
-const npmInstall = (pkg) => ({ type: 'run', label: t('setup.action.install'), cmd: 'npm', args: ['install', '-g', pkg], display: `npm i -g ${pkg}` });
-
-export function setupStatus() {
+export async function setupStatus() {
+  const git = gitAvailable();
+  const commands = ['node', 'git', 'brew', 'netlify', 'gh', 'vercel', 'wrangler', 'codex', 'claude'];
+  const npm = resolveNpm();
+  const [pairs, npmVersion, ghToken, gitName, gitEmail] = await Promise.all([
+    Promise.all(commands.map(async cmd => {
+      const binary = cmd === 'node' ? process.execPath : cmd === 'git' ? git : which(cmd);
+      if (!binary) return [cmd, null];
+      const r = await runStream(binary, ['--version'], { timeout: 4000, quiet: true });
+      return [cmd, r.code === 0 ? r.tail[0] || 'OK' : null];
+    })),
+    npm ? runStream(npm.cmd, [...npm.args, '--version'], { timeout: 4000, quiet: true }) : null,
+    which('gh') ? runStream('gh', ['auth', 'token'], { timeout: 4000, quiet: true }) : null,
+    git ? runStream(git, ['config', '--global', 'user.name'], { timeout: 4000, quiet: true, captureStdout: true }) : null,
+    git ? runStream(git, ['config', '--global', 'user.email'], { timeout: 4000, quiet: true, captureStdout: true }) : null,
+  ]);
+  const versions = Object.fromEntries(pairs);
+  const version = cmd => versions[cmd];
+  const installed = cmd => !!versions[cmd];
+  const projects = listProjects();
+  const providers = new Set(projects.length ? projects.map(p => p.hosting || 'netlify') : ['netlify']);
+  const gitRequired = providers.has('ghpages') || projects.some(p => exists(path.join(p.path, '.git')) || p.github);
+  const requiredIds = new Set(['node', 'npm']);
+  if (providers.has('netlify')) ['netlify-cli', 'netlify-login'].forEach(id => requiredIds.add(id));
+  if (providers.has('vercel')) ['vercel', 'vercel-auth'].forEach(id => requiredIds.add(id));
+  if (providers.has('cloudflare')) ['wrangler', 'wrangler-auth'].forEach(id => requiredIds.add(id));
+  if (gitRequired) ['git', 'git-identity'].forEach(id => requiredIds.add(id));
+  if (providers.has('ghpages')) ['gh', 'gh-auth'].forEach(id => requiredIds.add(id));
   const items = [];
-  const add = (group, id, title, ok, detail, action = null, optional = false) =>
-    items.push({ group, id, title, ok, detail, action: ok ? null : action, optional });
-
+  const add = (group, id, title, ok, detail, action = null) => {
+    const required = requiredIds.has(id);
+    items.push({ group, id, title, ok, detail, action: ok ? null : action, optional: !required, required,
+      state: ok ? 'ok' : id.endsWith('auth') || id.endsWith('login') ? 'needs_login' : 'missing' });
+  };
   // ---------------------------------------------------------------- base
-  add(t('setup.group.base'), 'node', 'Node.js', !!which('node'), which('node') ? version('node') : t('setup.node.detail'), {
+  add(t('setup.group.base'), 'node', 'Node.js', true, process.env.BID_NODE_RUNTIME === 'bundled' ? t('setup.bundledNode', { version: process.version }) : process.version, {
     type: 'open',
     label: t('setup.action.download'),
     url: 'https://nodejs.org/en/download',
   });
-  add(t('setup.group.base'), 'git', 'Git', !!which('git'), which('git') ? version('git') : t('setup.git.detail'), {
-    type: 'terminal',
+  add(t('setup.group.base'), 'npm', 'npm', npmVersion?.code === 0, npmVersion?.code === 0 ? npmVersion.tail[0] : t('setup.npmMissing'));
+  add(t('setup.group.base'), 'git', 'Git', installed('git'), installed('git') ? version('git') : t('setup.git.detail'), {
+    type: 'run',
     label: t('setup.action.install'),
-    script: 'xcode-select --install',
+    display: t('setup.cltWaiting'),
   });
-  const name = which('git') ? sh('git', ['config', '--global', 'user.name']).stdout.trim() : '';
-  const email = which('git') ? sh('git', ['config', '--global', 'user.email']).stdout.trim() : '';
+  const name = installed('git') && gitName?.code === 0 ? gitName.stdout.trim() : '';
+  const email = installed('git') && gitEmail?.code === 0 ? gitEmail.stdout.trim() : '';
   add(t('setup.group.base'), 'git-identity', t('setup.identity.label'), !!(name && email), name && email ? `${name} <${email}>` : t('setup.identity.detail'), {
     type: 'run',
     label: t('setup.action.fromGitHub'),
     display: t('setup.display.fromProfile'),
   });
-  const brew = which('brew');
+  const brew = installed('brew');
   add(t('setup.group.base'), 'brew', 'Homebrew', !!brew, brew ? t('setup.brew.installed') : t('setup.brew.detail'), {
-    type: 'terminal',
-    label: t('setup.action.install'),
-    script: '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"',
+    type: 'open',
+    label: t('setup.action.download'),
+    url: 'https://brew.sh',
   }, true);
 
   // ---------------------------------------------------------------- hosting & git
-  const nlCli = which('netlify');
+  const nlCli = installed('netlify');
   add(t('setup.group.hosting'), 'netlify-cli', 'Netlify CLI', !!nlCli, nlCli ? version('netlify') : t('setup.netlifyCli.detail'), npmInstall('netlify-cli'));
   const na = netlifyAuth();
   add(t('setup.group.hosting'), 'netlify-login', t('setup.netlifyAccount.title'), na.loggedIn, na.loggedIn ? na.email || t('setup.loggedIn') : t('setup.netlifyAccount.detail'), {
@@ -70,35 +97,37 @@ export function setupStatus() {
     label: t('setup.action.browserLogin'),
     display: t('setup.display.opensBrowser'),
   });
-  const gh = which('gh');
+  const gh = installed('gh');
   add(
     t('setup.group.hosting'),
     'gh',
     'GitHub CLI',
     !!gh,
     gh ? version('gh') : t('setup.gh.detail'),
-    brew ? { type: 'run', label: t('setup.action.install'), cmd: 'brew', args: ['install', 'gh'], display: 'brew install gh' } : { type: 'open', label: t('setup.action.download'), url: 'https://cli.github.com' }
+    { type: 'run', label: t('setup.action.install'), display: t('setup.managedInstall') }
   );
-  const ghAuth = gh ? sh('gh', ['auth', 'status'], { timeout: 12000 }).code === 0 : false;
+  const ghAuth = gh && ghToken?.code === 0;
   add(t('setup.group.hosting'), 'gh-auth', t('setup.ghAccount.title'), ghAuth, ghAuth ? t('setup.loggedIn') : t('setup.ghAccount.detail'), {
     type: 'run',
     label: t('setup.action.browserLogin'),
     display: 'github.com/login/device',
   });
+  const identityItem = items.find(i => i.id === 'git-identity');
+  if (!ghAuth && !identityItem.ok) identityItem.action = { type: 'app', label: t('setup.identity.enter'), appAction: 'git-identity' };
   add(t('setup.group.hosting'), 'spaceship', t('setup.spaceship.title'), spaceshipConnected(), spaceshipConnected() ? t('setup.connected') : t('setup.spaceship.detail'), {
     type: 'app',
     label: t('setup.action.connect'),
     appAction: 'spaceship-connect',
   }, true);
 
-  const vc = which('vercel');
+  const vc = installed('vercel');
   add(t('setup.group.hosting'), 'vercel', 'Vercel CLI', !!vc, vc ? version('vercel') : t('setup.vercel.detail'), npmInstall('vercel'), true);
   const vcAuth = providerStatus('vercel').loggedIn;
-  add(t('setup.group.hosting'), 'vercel-auth', t('setup.vercelAccount.title'), vcAuth, vcAuth ? t('setup.loggedIn') : vc ? t('setup.action.browserLogin') : t('setup.vercelAccount.installFirst'), vc ? { type: 'terminal', label: t('setup.action.browserLogin'), script: 'vercel login' } : null, true);
-  const wr = which('wrangler');
+  add(t('setup.group.hosting'), 'vercel-auth', t('setup.vercelAccount.title'), vcAuth, vcAuth ? t('setup.loggedIn') : vc ? t('setup.action.browserLogin') : t('setup.vercelAccount.installFirst'), vc ? { type: 'run', label: t('setup.action.browserLogin'), cmd: 'vercel', args: ['login'], display: t('setup.display.opensBrowser') } : null, true);
+  const wr = installed('wrangler');
   add(t('setup.group.hosting'), 'wrangler', 'Cloudflare Wrangler', !!wr, wr ? version('wrangler') : t('setup.wrangler.detail'), npmInstall('wrangler'), true);
   const wrAuth = providerStatus('cloudflare').loggedIn;
-  add(t('setup.group.hosting'), 'wrangler-auth', t('setup.cloudflareAccount.title'), wrAuth, wrAuth ? t('setup.loggedIn') : wr ? t('setup.action.browserLogin') : t('setup.cloudflareAccount.installFirst'), wr ? { type: 'terminal', label: t('setup.action.browserLogin'), script: 'wrangler login' } : null, true);
+  add(t('setup.group.hosting'), 'wrangler-auth', t('setup.cloudflareAccount.title'), wrAuth, wrAuth ? t('setup.loggedIn') : wr ? t('setup.action.browserLogin') : t('setup.cloudflareAccount.installFirst'), wr ? { type: 'run', label: t('setup.action.browserLogin'), cmd: 'wrangler', args: ['login'], display: t('setup.display.opensBrowser') } : null, true);
 
   // ---------------------------------------------------------------- AI
   if (ownKeyAllowed()) {
@@ -111,7 +140,7 @@ export function setupStatus() {
       display: t('setup.display.keychain'),
     }, true);
   }
-  const codex = which('codex');
+  const codex = installed('codex');
   add(t('setup.group.ai'), 'codex', 'Codex CLI', !!codex, codex ? version('codex') : t('setup.codex.detail'), npmInstall('@openai/codex'), true);
   const codexAuth = exists(path.join(HOME, '.codex', 'auth.json')) || !!process.env.OPENAI_API_KEY;
   add(t('setup.group.ai'), 'codex-auth', t('setup.codexAuth.title'), codexAuth, codexAuth ? t('setup.loggedIn') : codex ? t('setup.codexAuth.detail') : t('setup.codexAuth.installFirst'), codex ? {
@@ -119,7 +148,7 @@ export function setupStatus() {
     label: t('setup.action.login'),
     script: 'codex login',
   } : null, true);
-  const claude = which('claude');
+  const claude = installed('claude');
   add(t('setup.group.ai'), 'claude-code', 'Claude Code', !!claude, claude ? version('claude') : t('setup.claude.detail'), npmInstall('@anthropic-ai/claude-code'), true);
   const claudeAuth = fileHas(path.join(HOME, '.claude.json'), /oauthAccount|primaryApiKey/) || !!process.env.ANTHROPIC_API_KEY;
   add(t('setup.group.ai'), 'claude-auth', t('setup.claudeAuth.title'), claudeAuth, claudeAuth ? t('setup.loggedIn') : claude ? t('setup.claudeAuth.detail') : t('setup.claudeAuth.installFirst'), claude ? {
@@ -139,8 +168,10 @@ export function setupStatus() {
 
 /** `setupStatus()` plus the cloud rows (network, ≤ 5 s when the project is unreachable) — what the Setup screen shows. */
 export async function setupStatusFull() {
-  const st = setupStatus();
-  const cloud = cloudSetupItems(await cloudDoctor());
+  const st = await setupStatus();
+  const admin = readJSON(path.join(APP_DIR, 'profile.json'), null)?.role === 'admin';
+  if (!admin && !exists(path.join(APP_DIR, 'cloud.json')) && !process.env.BID_SUPABASE_URL) return st;
+  const cloud = cloudSetupItems(await cloudDoctor()).map(i => ({ ...i, optional: true, required: false }));
   const items = [...cloud, ...st.items];
   const required = items.filter((i) => !i.optional);
   return {
@@ -148,7 +179,7 @@ export async function setupStatusFull() {
     ready: required.every((i) => i.ok),
     missingRequired: required.filter((i) => !i.ok).length,
     missingOptional: items.filter((i) => i.optional && !i.ok).length,
-    cloudReady: cloud.filter((i) => !i.optional).every((i) => i.ok),
+    cloudReady: cloud.filter((i) => ['cloud-config', 'cloud-schema', 'cloud-functions'].includes(i.id)).every((i) => i.ok),
   };
 }
 
@@ -168,8 +199,8 @@ function writeCommand(name, body) {
   return file;
 }
 
-export function setupTerminal(id) {
-  const st = setupStatus();
+export async function setupTerminal(id) {
+  const st = await setupStatus();
   const todo = id === 'all' ? st.items.filter((i) => !i.ok && i.action?.type === 'terminal' && !i.optional) : st.items.filter((i) => i.id === id);
   if (!todo.length) throw new EngineError(msg('setup.terminal.nothing'), 'nothing');
   const body = todo
@@ -180,102 +211,120 @@ export function setupTerminal(id) {
   return { commandFile: writeCommand(id, body) };
 }
 
+const DEPENDENCIES = { 'netlify-login': ['netlify-cli'], 'gh-auth': ['gh'], 'git-identity': ['git', 'gh-auth'], 'vercel-auth': ['vercel'], 'wrangler-auth': ['wrangler'] };
+
 export async function setupRun(id, { yes = false } = {}) {
   if (!yes) throw new EngineError(msg('setup.run.confirmRequired'), 'confirm_required', 2);
-  const item = setupStatus().items.find((i) => i.id === id);
-  if (!item) throw new EngineError(msg('setup.unknownStep', { id }), 'usage', 2);
-  if (item.ok) return { id, ok: true, skipped: true };
-  if (item.action?.type !== 'run') throw new EngineError(msg('setup.notRunnable'), 'not_runnable');
-  if (id === 'gh-auth') return ghDeviceLogin();
-  if (id === 'git-identity') return gitIdentityFromGitHub();
-  if (id === 'netlify-login') {
-    await netlifyLogin();
-    return { id, ok: true };
-  }
-  ev.step(id, { label: item.title, status: 'running', summary: item.action.display });
-  const r = await runStream(item.action.cmd, item.action.args, { step: id, cwd: HOME, logFile: path.join(setupDir(), `${id}.log`), timeout: 10 * 60 * 1000 });
-  const ok = r.code === 0;
-  ev.step(id, { label: item.title, status: ok ? 'pass' : 'fail', summary: ok ? t('setup.installed') : t('setup.errorCode', { code: r.code }), details: ok ? [] : r.tail.slice(-10) });
-  if (!ok) throw new EngineError(msg('setup.installFailed', { title: item.title }), 'install_failed');
-  return { id, ok: true };
+  const unlock = setupLock();
+  try { return await runItem(id); } finally { unlock(); }
 }
 
-/** Installs every missing non-interactive item, then returns what still needs a Terminal/browser/app step. */
-export async function setupAuto({ yes = false, includeOptional = false } = {}) {
-  if (!yes) throw new EngineError(msg('setup.auto.confirmRequired'), 'confirm_required', 2);
-  const st = setupStatus();
-  const ORDER = ['netlify-cli', 'gh', 'vercel', 'wrangler', 'codex', 'claude-code', 'gh-auth', 'git-identity', 'netlify-login'];
-  const rank = (id) => (ORDER.includes(id) ? ORDER.indexOf(id) : 50);
-  const runnable = st.items
-    .filter((i) => !i.ok && i.action?.type === 'run' && (includeOptional || !i.optional))
-    .sort((a, b) => rank(a.id) - rank(b.id));
-  for (const i of runnable) ev.step(i.id, { label: i.title, status: 'pending', summary: i.action.display });
-  const failed = [];
-  for (const i of runnable) {
-    try {
-      await setupRun(i.id, { yes: true });
-    } catch {
-      failed.push(i.id);
+async function runItem(id, known) {
+  const item = known || (await setupStatus()).items.find(i => i.id === id);
+  if (!item) throw new EngineError(msg('setup.unknownStep', { id }), 'usage', 2);
+  if (item.ok) { ev.step(id, { label: item.title, status: 'skipped' }); return { id, ok: true, skipped: true }; }
+  if (item.action?.type !== 'run') throw new EngineError(msg('setup.notRunnable'), 'not_runnable');
+  const log = path.join(setupDir(), `${id}.log`);
+  const started = Date.now();
+  ev.step(id, { label: item.title, status: 'running', summary: item.action.display, log });
+  const heartbeat = setInterval(() => ev.step(id, { elapsed: Math.floor((Date.now() - started) / 1000) }), 5000);
+  try {
+    if (TOOL_PACKAGES[id]) await installManaged(id, { logFile: log });
+    else if (id === 'gh') await installGitHub({ logFile: log });
+    else if (id === 'git') await installCLT(id, log);
+    else if (id === 'gh-auth') await ghDeviceLogin();
+    else if (id === 'git-identity') await gitIdentityFromGitHub();
+    else if (id === 'netlify-login') await netlifyLogin({ stepId: id, manageSteps: false });
+    else {
+      const r = await runStream(item.action.cmd, item.action.args, { step: id, cwd: HOME, logFile: log, timeout: 360000 });
+      if (r.code !== 0) throw new EngineError(msg('setup.installFailed', { title: item.title }), 'install_failed');
+      if (!(await setupStatus()).items.find(i => i.id === id)?.ok) throw new EngineError(msg('setup.toolFailed'), 'install_failed');
     }
-  }
-  const after = setupStatus();
-  const interactive = after.items.filter((i) => !i.ok && (includeOptional || !i.optional) && i.action && i.action.type !== 'run');
-  let commandFile = null;
-  const term = interactive.filter((i) => i.action.type === 'terminal');
-  if (term.length) {
-    commandFile = writeCommand('auto', term.map((i) => `echo "━━━ ${i.title} ━━━"\n${i.action.script}\necho`).join('\n'));
-  }
-  return { installed: runnable.map((i) => i.id).filter((id) => !failed.includes(id)), failed, interactive, commandFile, status: after };
+    ev.step(id, { label: item.title, status: 'pass', summary: t('setup.installed'), log });
+    return { id, ok: true };
+  } catch (e) {
+    ev.step(id, { label: item.title, status: 'fail', summary: e.message, log });
+    throw e;
+  } finally { clearInterval(heartbeat); }
+}
+
+/** Each announced step reaches a terminal state; readiness is independent of process exit success. */
+export async function setupAuto({ yes = false, includeOptional = false, preflight = setupPreflight } = {}) {
+  if (!yes) throw new EngineError(msg('setup.auto.confirmRequired'), 'confirm_required', 2);
+  const unlock = setupLock();
+  try {
+    const st = await setupStatus();
+    const ORDER = ['git', 'netlify-cli', 'gh', 'vercel', 'wrangler', 'codex', 'claude-code', 'gh-auth', 'git-identity', 'netlify-login'];
+    const rank = id => ORDER.includes(id) ? ORDER.indexOf(id) : 50;
+    const todo = st.items.filter(i => !i.ok && (includeOptional || !i.optional)).sort((a,b) => rank(a.id)-rank(b.id));
+    const steps = [], installed = [], failed = [], blocked = [];
+    for (const i of todo) ev.step(i.id, { label: i.title, status: 'pending', summary: i.action?.display });
+    if (todo.some(i => i.action?.type === 'run')) {
+      ev.step('preflight', { label: t('setup.preflight'), status: 'running' });
+      try {
+        await preflight();
+        ev.step('preflight', { status: 'pass' });
+      } catch (e) {
+        ev.step('preflight', { status: 'fail', summary: e.message });
+        for (const i of todo) {
+          steps.push({ id: i.id, status: 'skipped', reason: e.code });
+          ev.step(i.id, { status: 'skipped', reason: e.code, summary: e.message });
+        }
+        return { ok: false, code: e.code, error: e.message, steps, installed, failed, blocked, interactive: todo, commandFile: null, status: st };
+      }
+    }
+    const ready = new Set(st.items.filter(i => i.ok).map(i => i.id));
+    for (const i of todo) {
+      const missing = (DEPENDENCIES[i.id] || []).filter(id => !ready.has(id));
+      if (missing.length || i.action?.type !== 'run') {
+        const reason = missing.length ? missing.join(', ') : 'user_action';
+        steps.push({ id: i.id, status: 'blocked', reason }); blocked.push(i.id);
+        ev.step(i.id, { status: 'blocked', reason, summary: t('setup.requires', { items: reason }) });
+        continue;
+      }
+      try {
+        await runItem(i.id, i); installed.push(i.id); ready.add(i.id); steps.push({ id: i.id, status: 'pass' });
+      } catch (e) { failed.push(i.id); steps.push({ id: i.id, status: 'fail', reason: e.code }); }
+    }
+    const after = await setupStatus();
+    const interactive = after.items.filter(i => !i.ok && (includeOptional || !i.optional));
+    const complete = after.ready && failed.length === 0 && blocked.length === 0;
+    const incomplete = new EngineError(msg('setup.incomplete'), 'setup_incomplete');
+    return { ok: complete, ...(complete ? {} : { code: incomplete.code, error: incomplete.message }), steps, installed, failed, blocked, interactive, commandFile: null, status: after };
+  } finally { unlock(); }
 }
 
 // ---------------------------------------------------------------- GitHub device login (browser, no typing)
 
 export async function ghDeviceLogin() {
   if (!which('gh')) throw new EngineError(msg('setup.gh.installFirst'), 'missing_cli');
-  ev.step('gh-auth', { label: t('setup.gh.label'), status: 'running', summary: t('setup.gh.opening') });
-  let announced = false;
-  const r = await new Promise((resolve) => {
-    const child = spawn('gh', ['auth', 'login', '--web', '--hostname', 'github.com', '--git-protocol', 'https'], {
-      env: { ...process.env, GH_PROMPT_DISABLED: '1', NO_COLOR: '1' },
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
-    const onData = (buf) => {
-      const text = buf.toString();
-      for (const line of text.split('\n')) if (line.trim()) ev.log('gh-auth', line.trim());
-      const code = text.match(/one-time code:\s*([A-Z0-9]{4}-[A-Z0-9]{4})/i);
+  let announced = false, received = '';
+  const r = await runStream('gh', ['auth', 'login', '--web', '--hostname', 'github.com', '--git-protocol', 'https'], {
+    step: 'gh-auth', logFile: path.join(setupDir(), 'gh-auth.log'), input: true, timeout: 300000,
+    env: { ...cliEnv(), GH_PROMPT_DISABLED: '1', NO_COLOR: '1', BROWSER: 'echo' },
+    onChunk(text, stdin) {
+      received = (received + text).slice(-8192);
+      const code = received.match(/one-time code:\s*([A-Z0-9]{4}-[A-Z0-9]{4})/i);
       if (code && !announced) {
         announced = true;
-        emit({ type: 'devicecode', service: 'GitHub', code: code[1], url: 'https://github.com/login/device' });
-        ev.step('gh-auth', { label: t('setup.gh.label'), status: 'running', summary: t('setup.gh.code', { code: code[1] }) });
+        emit({ type: 'devicecode', service: 'GitHub', code: code[1], url: 'https://github.com/login/device', expiresIn: 300 });
+        ev.step('gh-auth', { label: t('setup.gh.label'), status: 'waiting_user', summary: t('setup.gh.code', { code: code[1] }) });
       }
-      if (/Press Enter/i.test(text)) child.stdin.write('\n');
-    };
-    child.stdout.on('data', onData);
-    child.stderr.on('data', onData);
-    const timer = setTimeout(() => child.kill('SIGTERM'), 5 * 60 * 1000);
-    child.on('close', (code) => {
-      clearTimeout(timer);
-      resolve(code);
-    });
+      if (/Press Enter/i.test(received)) { stdin?.write('\n'); received = ''; }
+    },
   });
-  const ok = sh('gh', ['auth', 'status'], { timeout: 15000 }).code === 0;
+  const ok = r.code === 0 && sh('gh', ['auth', 'token'], { timeout: 4000 }).code === 0;
   if (!ok) {
-    ev.step('gh-auth', { label: t('setup.gh.label'), status: 'fail', summary: t('setup.gh.notConfirmed', { code: r }) });
     throw new EngineError(msg('setup.gh.failed'), 'login_failed');
   }
   sh('gh', ['auth', 'setup-git'], { timeout: 15000 });
-  ev.step('gh-auth', { label: t('setup.gh.label'), status: 'pass', summary: t('setup.gh.connected') });
-  const id = sh('git', ['config', '--global', 'user.email']).stdout.trim();
-  if (!id) await gitIdentityFromGitHub();
   return { id: 'gh-auth', ok: true };
 }
 
 export async function gitIdentityFromGitHub() {
-  if (!which('gh') || sh('gh', ['auth', 'status'], { timeout: 15000 }).code !== 0) {
-    ev.step('git-identity', { label: t('setup.identity.label'), status: 'running', summary: t('setup.identity.needsLogin') });
-    await ghDeviceLogin();
+  if (!gitAvailable() || !which('gh') || sh('gh', ['auth', 'token'], { timeout: 4000 }).code !== 0) {
+    throw new EngineError(msg('setup.identity.needsLogin'), 'not_logged_in');
   }
-  ev.step('git-identity', { label: t('setup.identity.label'), status: 'running', summary: t('setup.identity.reading') });
   const r = sh('gh', ['api', 'user'], { timeout: 20000 });
   let u = null;
   try {
@@ -287,6 +336,31 @@ export async function gitIdentityFromGitHub() {
   const email = u.email || `${u.id}+${u.login}@users.noreply.github.com`;
   sh('git', ['config', '--global', 'user.name', name]);
   sh('git', ['config', '--global', 'user.email', email]);
-  ev.step('git-identity', { label: t('setup.identity.label'), status: 'pass', summary: `${name} <${email}>` });
   return { id: 'git-identity', ok: true, name, email };
+}
+
+async function installCLT(id, logFile) {
+  if (process.platform !== 'darwin') throw new EngineError(msg('setup.notRunnable'), 'not_runnable');
+  const launched = await runStream('/usr/bin/xcode-select', ['--install'], { step: id, logFile, timeout: 10000 });
+  if (launched.code !== 0 && !gitAvailable()) throw new EngineError(msg('setup.toolFailed'), 'install_failed');
+  ev.step(id, { status: 'waiting_user', summary: t('setup.cltWaiting') });
+  const until = Date.now() + 30 * 60 * 1000;
+  while (Date.now() < until) {
+    if (gitAvailable()) return;
+    await new Promise(resolve => setTimeout(resolve, 10000));
+  }
+  throw new EngineError(msg('setup.cltWaiting'), 'setup_incomplete');
+}
+
+export function setupIdentity({ name, email, yes = false } = {}) {
+  if (!yes) throw new EngineError(msg('setup.run.confirmRequired'), 'confirm_required', 2);
+  if (!gitAvailable()) throw new EngineError(msg('setup.git.detail'), 'missing_cli');
+  if (typeof name !== 'string' || typeof email !== 'string' || !name.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || /[\r\n\0]/.test(name + email)) throw new EngineError(msg('setup.identity.invalid'), 'usage', 2);
+  const unlock = setupLock();
+  try {
+    for (const [key, value] of [['user.name', name.trim()], ['user.email', email.trim()]]) {
+      if (sh('git', ['config', '--global', key, value], { timeout: 5000 }).code !== 0) throw new EngineError(msg('setup.identity.failed'), 'github_failed');
+    }
+    return { ok: true };
+  } finally { unlock(); }
 }

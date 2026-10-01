@@ -672,7 +672,9 @@ t('aifix: prompt с лога, скрити secrets, ChatGPT URL', () => {
 t('aifix: codex — без CLI ясна грешка, с CLI .command файл (независимо от машината)', () => {
   // PATH without any codex binary → missing_cli
   const noCodex = (process.env.PATH || '').split(':').filter((d) => d && !fs.existsSync(path.join(d, 'codex'))).join(':');
-  const missing = bidEnv({ PATH: noCodex }, 'aifix', '--project', failingBuild, '--step', 'build', '--target', 'codex');
+  // Test absence at the CLI layer: the launcher deliberately restores standard tool directories.
+  const absent = spawnSync(process.execPath, [path.join(ROOT, 'engine/src/bid.mjs'), 'aifix', '--project', failingBuild, '--step', 'build', '--target', 'codex'], { env: { ...ENV, PATH: noCodex }, encoding: 'utf8', timeout: 120000 });
+  const missing = { result: JSON.parse(absent.stdout.trim().split('\n').at(-1)) };
   assert(missing.result.code === 'missing_cli', JSON.stringify(missing.result));
   // a fake codex first in PATH → the command file is written (this path broke when the local `t` shadowed t())
   const fakeBin = path.join(TMP, 'fake-bin');
@@ -992,6 +994,11 @@ t('costs: AI fix се записва в ledger-а, има ценоразпис',
   assert(r.data.ledger.some((e) => e.op === 'aifix:build' && e.service === 'chatgpt'), 'ledger');
   assert(r.data.prices.items['netlify:production'].amount === 15, 'price table');
   assert(Array.isArray(r.data.usage.providers), 'usage');
+});
+
+t('setup V12: Finder PATH, honest failure, managed install, locks and offline', () => {
+  const r = spawnSync(process.execPath, ['--test', path.join(ROOT, 'tests/setup-v12.mjs')], { env: ENV, encoding: 'utf8', timeout: 120000 });
+  assert(r.status === 0, (r.stdout + r.stderr).slice(-6000));
 });
 
 t('setup: статус и защита без --yes', () => {

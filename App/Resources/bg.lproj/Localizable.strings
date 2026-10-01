@@ -1013,10 +1013,7 @@
 
 "setup.allRequiredSet" = "Всичко задължително е настроено";
 "setup.autoAll" = "Настрой всичко автоматично";
-"setup.autoAllSet" = "Всичко задължително е настроено ✓";
 "setup.autoDone" = "Настройката приключи";
-"setup.autoNetlifyToo" = " Влез и в Netlify от картата му.";
-"setup.autoSignInsLeft" = "Остава вход в някои акаунти — отворих Terminal.";
 "setup.autoSubtitle" = "Инсталира всичко липсващо, после отваря Terminal за входовете";
 "setup.autoTitle" = "Автоматична настройка";
 "setup.checking" = "Проверявам средата…";
@@ -1197,3 +1194,15 @@
 "welcome.feature.hostingDetail" = "Netlify, Vercel, Cloudflare Pages, GitHub Pages — с цени";
 "welcome.headline" = "От код до live сайт —\nбез нито една команда.";
 "welcome.tagline" = "Launchpad за уеб проекти";
+
+"overlay.failedBeforeStart" = "Операцията спря, преди да завърши някоя стъпка.";
+
+"setup.identity.title" = "Име и имейл за Git";
+"setup.identity.explanation" = "С това име и имейл ще се подписват промените ти в Git на този Mac.";
+"setup.identity.name" = "Име";
+"setup.identity.email" = "Имейл";
+
+"devicecode.browserHint" = "Завърши входа в браузъра.";
+"setup.retryFailed" = "Опитай пак незавършените стъпки";
+"autocheck.untrusted" = "Автоматичните проверки започват след първата ти ръчна проверка (⌘R).";
+"autocheck.paused" = "Автоматичните проверки са спрени. Пусни ръчна проверка, за да опиташ отново.";

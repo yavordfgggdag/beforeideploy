@@ -360,15 +360,18 @@ struct ConnectDomainSheet: View {
 struct DeviceCodeCard: View {
     @ObservedObject var session: RunSession
     var body: some View {
-        if let code = session.deviceCode, !session.finished {
+        if session.deviceURL != nil, !session.finished {
             VStack(spacing: 10) {
                 Text(L("devicecode.title", session.deviceService ?? "GitHub")).font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.secondary)
+                if let code = session.deviceCode {
                 Text(code)
                     .font(.system(size: 34, weight: .bold, design: .monospaced))
                     .tracking(4)
                     .foregroundColor(Theme.text)
                     .textSelection(.enabled)
-                Text(L("devicecode.hint"))
+                }
+                if let expiry = session.deviceExpiresAt { Text(expiry, style: .timer).monospacedDigit() }
+                Text(session.deviceCode == nil ? L("devicecode.browserHint") : L("devicecode.hint"))
                     .font(.system(size: 12)).foregroundColor(Theme.tertiary)
                 if let u = session.deviceURL, let url = URL(string: u) {
                     Button { NSWorkspace.shared.open(url) } label: { Label(L("devicecode.reopen"), systemImage: "safari") }

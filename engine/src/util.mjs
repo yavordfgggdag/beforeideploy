@@ -244,7 +244,7 @@ export function sh(cmd, args, opts = {}) {
 const children = new Set();
 
 function killTree(child, signal = 'SIGTERM') {
-  if (!child || child.exitCode !== null) return;
+  if (!child?.pid) return;
   try {
     process.kill(-child.pid, signal);
   } catch {
@@ -256,9 +256,14 @@ function killTree(child, signal = 'SIGTERM') {
 
 for (const sig of ['SIGTERM', 'SIGINT', 'SIGHUP']) {
   process.on(sig, () => {
-    for (const c of children) killTree(c, 'SIGTERM');
-    emit({ type: 'result', ok: false, error: t('run.cancelled'), code: 'cancelled', key: 'run.cancelled' });
-    exitAfterFlush(130);
+    const running = [...children];
+    for (const c of running) killTree(c, 'SIGTERM');
+    const finish = () => {
+      for (const c of running) killTree(c, 'SIGKILL');
+      emit({ type: 'result', ok: false, error: t('run.cancelled'), code: 'cancelled', key: 'run.cancelled' });
+      exitAfterFlush(130);
+    };
+    if (running.length) setTimeout(finish, 5000); else finish();
   });
 }
 
@@ -267,7 +272,7 @@ for (const sig of ['SIGTERM', 'SIGINT', 'SIGHUP']) {
  * stdout+stderr are merged into the log unless `captureStdout` is set,
  * in which case stdout is collected separately (still written to the log file).
  */
-export function runStream(cmd, args, { cwd, env, logFile, step, captureStdout = false, timeout = 0, quiet = false, display = null } = {}) {
+export function runStream(cmd, args, { cwd, env, logFile, step, captureStdout = false, timeout = 0, quiet = false, display = null, input = false, onChunk, onLine } = {}) {
   return new Promise((resolve) => {
     const started = Date.now();
     const logStream = logFile ? fs.createWriteStream(logFile, { flags: 'w' }) : null;
@@ -279,7 +284,7 @@ export function runStream(cmd, args, { cwd, env, logFile, step, captureStdout = 
       child = spawn(cmd, args, {
         cwd,
         env: { FORCE_COLOR: '0', NO_COLOR: '1', ...(env || process.env) },
-        stdio: ['ignore', 'pipe', 'pipe'],
+        stdio: [input ? 'pipe' : 'ignore', 'pipe', 'pipe'],
         detached: true,
       });
     } catch (e) {
@@ -287,6 +292,7 @@ export function runStream(cmd, args, { cwd, env, logFile, step, captureStdout = 
       return resolve({ code: 127, stdout: '', tail: [String(e.message)], duration: 0 });
     }
     children.add(child);
+    child.stdin?.on('error', () => {});
 
     const tail = [];
     let stdoutBuf = '';
@@ -298,10 +304,12 @@ export function runStream(cmd, args, { cwd, env, logFile, step, captureStdout = 
       tail.push(clean);
       if (tail.length > 200) tail.shift();
       if (!quiet) ev.log(step || 'run', clean);
+      onLine?.(clean);
     };
 
     const onData = (which) => (chunk) => {
       const s = chunk.toString();
+      onChunk?.(s, child.stdin);
       if (logStream) logStream.write(s);
       if (which === 'out' && captureStdout) {
         stdoutBuf += s;

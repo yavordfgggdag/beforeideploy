@@ -5,7 +5,7 @@ import SwiftUI
 enum Screen: Hashable { case overview, project, domains, costs, setup, admin, account, assistant, usage }
 
 enum SheetKind: Identifiable {
-    case production, netlifySetup, commit, history, settings, remote, spaceshipConnect, connectDomain, deleteAccount, plans, release, rollback, client, aiKeys, newSite, pushover
+    case production, netlifySetup, commit, history, settings, remote, spaceshipConnect, connectDomain, deleteAccount, plans, release, rollback, client, aiKeys, newSite, pushover, gitIdentity
     var id: Int { hashValue }
 }
 
@@ -71,6 +71,7 @@ final class AppModel: ObservableObject, Feedback {
     }
     /// A quiet automatic check is running (hero and menu bar show a small spinner).
     @Published var autoChecking = false
+    @Published var autoCheckPaused: [String: String] = [:]
     private var watcher: ProjectWatcher?
     private var autoCheckTask: Task<Void, Never>?
     private var quietCheck: EngineHandle?
@@ -114,7 +115,10 @@ final class AppModel: ObservableObject, Feedback {
         accountStore.feedback = self
         hostingStore.feedback = self
         runController.feedback = self
-        runController.beforeRun = { [weak self] in self?.stopQuietCheck() }
+        runController.beforeRun = { [weak self] in
+            self?.stopQuietCheck()
+            if let key = self?.selectedKey { self?.autoCheckPaused[key] = nil }
+        }
         adminStore.feedback = self
         aiStore.feedback = self
         assistantStore.feedback = self
@@ -778,7 +782,7 @@ final class AppModel: ObservableObject, Feedback {
         loadingSetup = true
         defer { loadingSetup = false }
         do {
-            setup = try await engine.call(["setup", "status"], as: SetupStatus.self)
+            setup = try await engine.call(["setup", "status"], as: SetupStatus.self, timeout: 30)
             loadErrors["setup"] = nil
         } catch {
             loadErrors["setup"] = error.localizedDescription
@@ -798,10 +802,10 @@ final class AppModel: ObservableObject, Feedback {
         guard let a = item.action else { return }
         switch a.type {
         case "run":
-            let s = RunSession(title: L("setup.installing", item.title), subtitle: a.display ?? "", kind: .fix)
-            runController.startRun(s, args: ["setup", "run", item.id, "--yes"], successTitle: L("setup.itemReady", item.title)) { [weak self] _ in
-                Task { await self?.loadSetup() }
-            }
+            let s = RunSession(title: L("setup.installing", item.title), subtitle: a.display ?? "", kind: .setup)
+            runController.startRun(s, args: ["setup", "run", item.id, "--yes"], successTitle: L("setup.itemReady", item.title), onDone: { [weak self] in
+                await self?.loadSetup()
+            })
         case "terminal":
             Task {
                 do {
@@ -814,6 +818,7 @@ final class AppModel: ObservableObject, Feedback {
             open(a.url)
         case "app":
             if a.appAction == "ai-key" { sheet = .aiKeys }
+            if a.appAction == "git-identity" { sheet = .gitIdentity }
             if a.appAction == "cloud-schema" {
                 Task {
                     if await copyCloudSchema() {
@@ -830,22 +835,10 @@ final class AppModel: ObservableObject, Feedback {
     }
 
     func setupAuto() {
-        let s = RunSession(title: L("setup.autoTitle"), subtitle: L("setup.autoSubtitle"), kind: .fix)
-        runController.startRun(s, args: ["setup", "auto", "--yes"], successTitle: L("setup.autoDone")) { [weak self] outcome in
-            guard let self else { return }
-            if let r = try? outcome.decode(SetupAutoResult.self) {
-                self.setup = r.status
-                if let f = r.commandFile {
-                    s.outcomeMessage = L("setup.autoSignInsLeft")
-                    self.openCommand(f)
-                } else if r.status.ready {
-                    s.outcomeMessage = L("setup.autoAllSet")
-                }
-            }
-            if self.setup?.items.contains(where: { !$0.ok && $0.action?.appAction == "netlify-login" }) == true {
-                s.outcomeMessage = (s.outcomeMessage ?? "") + L("setup.autoNetlifyToo")
-            }
-        }
+        let s = RunSession(title: L("setup.autoTitle"), subtitle: L("setup.autoSubtitle"), kind: .setup)
+        runController.startRun(s, args: ["setup", "auto", "--yes"], successTitle: L("setup.autoDone"), onDone: { [weak self] in
+            await self?.loadSetup()
+        })
     }
 
     func openCommand(_ path: String) {
@@ -1110,7 +1103,7 @@ final class AppModel: ObservableObject, Feedback {
             guard let self, !Task.isCancelled else { return }
             let wait = 20 - Date().timeIntervalSince(self.lastAutoCheck)
             if wait > 0 { try? await Task.sleep(nanoseconds: UInt64(wait * 1_000_000_000)) }
-            guard !Task.isCancelled, self.run == nil, !self.autoChecking, self.selectedKey == key else { return }
+            guard !Task.isCancelled, self.run == nil, !self.autoChecking, self.selectedKey == key, self.autoCheckPaused[key] == nil else { return }
             await self.runQuietCheck(key)
         }
     }
@@ -1131,10 +1124,11 @@ final class AppModel: ObservableObject, Feedback {
         AppLog.ui.debug("auto-check")
         // --auto: the engine refuses to run scripts or build configs that changed since the user last started a
         // check (WP01); the user is told once per project and starts the next check themselves
-        let outcome = try? await engine.run(["check", "--project", key, "--auto"], handle: handle)
+        let outcome = try? await engine.run(["check", "--project", key, "--auto"], handle: handle, timeout: 1200)
         // a run the user started stopped this one: its verdict is not worth a notification
         guard quietCheck === handle else { return }
-        if outcome?.errorCode == "scripts_changed" {
+        if outcome?.errorCode == "scripts_changed" || outcome?.errorCode == "scripts_untrusted" {
+            autoCheckPaused[key] = outcome?.errorCode == "scripts_untrusted" ? L("autocheck.untrusted") : (outcome?.errorMessage ?? L("autocheck.paused"))
             if !scriptsChangedWarned.contains(key) {
                 scriptsChangedWarned.insert(key)
                 let name = projects.first { $0.key == key }?.name ?? key
@@ -1142,6 +1136,8 @@ final class AppModel: ObservableObject, Feedback {
             }
             return
         }
+        if outcome?.ok != true { autoCheckPaused[key] = outcome?.errorMessage ?? L("autocheck.paused"); return }
+        autoCheckPaused[key] = nil
         scriptsChangedWarned.remove(key)
         await loadProjects()
         await refreshStatus(quiet: true)

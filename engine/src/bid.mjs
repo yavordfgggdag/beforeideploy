@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { gitAvailable } from './setup-tools.mjs';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 // Before I Deploy V6 — engine entrypoint. Every command prints NDJSON; the last line is {"type":"result",...}.
@@ -20,7 +21,7 @@ import { netlifyAuth, netlifyLogin, netlifyTeams, netlifySites, netlifyInfo, net
 import { listFixes, applyFix } from './fixes.mjs';
 import { aifix } from './aifix.mjs';
 import { costSummary, providerUsage, setBudgets, getPrices } from './costs.mjs';
-import { setupStatus, setupRun, setupAuto, setupTerminal, setupStatusFull } from './setup.mjs';
+import { setupStatus, setupRun, setupAuto, setupTerminal, setupStatusFull, setupIdentity } from './setup.mjs';
 import { cloudDoctor } from './cloud.mjs';
 import { overview } from './overview.mjs';
 import { accountStatus, signup, login, logout, recover, resendConfirmation, oauthUrl, completeOAuth, syncProjects, setCloudConfig, cloudConfig, setLocale, exportAccount, deleteAccount } from './account.mjs';
@@ -118,7 +119,7 @@ function statusSnapshot(project) {
     lastProd: st.lastProd || null,
     netlifyAuth: netlifyAuth(),
     fixes: listFixes(project.path),
-    issues: deriveIssues(st.check, { gitInstalled: !!which('git'), hasGitignore: !!d.hasGitignore, hostingLoggedIn: providerStatus(p.hosting || 'netlify').loggedIn }),
+    issues: deriveIssues(st.check, { gitInstalled: !!gitAvailable(), hasGitignore: !!d.hasGitignore, hostingLoggedIn: providerStatus(p.hosting || 'netlify').loggedIn }),
     backup: backupStatus(p),
     release: { currentOp: st.release?.currentOp || null, lastOp: st.release?.lastOp || null, capabilities: capabilities(p.hosting || 'netlify'), aiUndo: st.aiUndo ? { at: st.aiUndo.at, step: st.aiUndo.step, files: st.aiUndo.applied } : null },
     hosting: (() => {
@@ -132,7 +133,7 @@ function statusSnapshot(project) {
 
 function doctor() {
   const v = (cmd, args = ['--version']) => {
-    const path = which(cmd);
+    const path = cmd === 'git' ? gitAvailable() : which(cmd);
     if (!path) return null;
     const r = sh(cmd, args, { timeout: 15000 });
     return { path, version: (r.stdout || r.stderr).trim().split('\n')[0] };
@@ -348,10 +349,16 @@ async function main() {
       return ok(setBudgets({ ...(flags['netlify-min'] !== undefined ? { netlifyMinCredits: Number(flags['netlify-min']) } : {}) }));
 
     case 'setup': {
-      if (!sub || sub === 'status') return ok(flags.local ? setupStatus() : await setupStatusFull());
+      if (sub === 'identity') return ok(setupIdentity({ name: flags.name, email: flags.email, yes: !!flags.yes }));
+      if (!sub || sub === 'status') return ok(flags.local ? await setupStatus() : await setupStatusFull());
       if (sub === 'run') return ok(await setupRun(positional[1] || flags.id, { yes: !!flags.yes }));
-      if (sub === 'auto') return ok(await setupAuto({ yes: !!flags.yes, includeOptional: !!flags.optional }));
-      if (sub === 'terminal') return ok(setupTerminal(positional[1] || flags.id || 'all'));
+      if (sub === 'auto') {
+        const data = await setupAuto({ yes: !!flags.yes, includeOptional: !!flags.optional });
+        if (data.ok) return ok(data);
+        emit({ type: 'result', ok: false, code: data.code, error: data.error, data });
+        return 1;
+      }
+      if (sub === 'terminal') return ok(await setupTerminal(positional[1] || flags.id || 'all'));
       throw new EngineError(msg('cli.unknownCommand', { command: `setup ${sub}` }), 'usage', 2);
     }
 
@@ -500,7 +507,7 @@ async function main() {
     case 'issues': {
       const p = proj();
       const st = getState(p.key);
-      return ok({ project: p.key, ...deriveIssues(st.check, { gitInstalled: !!which('git'), hasGitignore: !!detect(p.path).hasGitignore, hostingLoggedIn: providerStatus(p.hosting || 'netlify').loggedIn }) });
+      return ok({ project: p.key, ...deriveIssues(st.check, { gitInstalled: !!gitAvailable(), hasGitignore: !!detect(p.path).hasGitignore, hostingLoggedIn: providerStatus(p.hosting || 'netlify').loggedIn }) });
     }
 
     case 'release': {
@@ -537,7 +544,7 @@ process.on('uncaughtException', crash);
 
 main()
   .then((code) => {
-    logOutcome({ ok: true, exit: typeof code === 'number' ? code : 0 });
+    logOutcome({ ok: typeof code !== 'number' || code === 0, exit: typeof code === 'number' ? code : 0 });
     exitAfterFlush(code);
   })
   .catch((e) => {

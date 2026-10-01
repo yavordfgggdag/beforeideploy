@@ -167,7 +167,7 @@ export async function localStart(project, { mode = 'auto' } = {}) {
   // stop token through the environment, never argv (visible in `ps`) or the log header
   const own = p.cmd === process.execPath;
   const [cmd, args] = own ? [p.cmd, p.args] : isolate(p.cmd, p.args);
-  const child = spawn(cmd, args, {
+  const child = spawn(own ? cmd : process.execPath, own ? args : [path.join(ENGINE_DIR, 'src', 'local-runner.cjs'), cmd, ...args], {
     cwd: project.path,
     detached: true,
     stdio: ['ignore', fd, fd],

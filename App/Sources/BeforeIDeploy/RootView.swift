@@ -131,6 +131,7 @@ struct RootView: View {
                 case .aiKeys: AIKeysSheet()
                 case .newSite: NewSiteSheet()
                 case .pushover: PushoverSheet()
+                case .gitIdentity: GitIdentitySheet()
                 }
             }
             .environmentObject(model)

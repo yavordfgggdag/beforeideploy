@@ -1013,10 +1013,7 @@
 
 "setup.allRequiredSet" = "Everything required is set up";
 "setup.autoAll" = "Set up everything automatically";
-"setup.autoAllSet" = "Everything required is set up ✓";
 "setup.autoDone" = "Setup finished";
-"setup.autoNetlifyToo" = " Also sign in to Netlify from its card.";
-"setup.autoSignInsLeft" = "Some accounts still need a sign-in — I opened Terminal.";
 "setup.autoSubtitle" = "Installs everything missing, then opens Terminal for the sign-ins";
 "setup.autoTitle" = "Automatic setup";
 "setup.checking" = "Checking the environment…";
@@ -1197,3 +1194,15 @@
 "welcome.feature.hostingDetail" = "Netlify, Vercel, Cloudflare Pages, GitHub Pages — with prices";
 "welcome.headline" = "From code to a live site —\nwithout a single command.";
 "welcome.tagline" = "Launchpad for web projects";
+
+"overlay.failedBeforeStart" = "The operation stopped before any steps completed.";
+
+"setup.identity.title" = "Git identity";
+"setup.identity.explanation" = "This name and email identify your commits on this Mac.";
+"setup.identity.name" = "Name";
+"setup.identity.email" = "Email";
+
+"devicecode.browserHint" = "Complete the sign-in in your browser.";
+"setup.retryFailed" = "Retry unfinished steps";
+"autocheck.untrusted" = "Automatic checks start after your first manual check (⌘R).";
+"autocheck.paused" = "Automatic checks are paused. Start a manual check to retry.";

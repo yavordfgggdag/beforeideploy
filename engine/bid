@@ -1,21 +1,15 @@
-#!/bin/zsh
+#!/bin/zsh -f
 # Before I Deploy — engine launcher. Sets up a login-like PATH, then runs the Node engine.
 ENGINE_DIR="${0:A:h}"
 
 # PATH captured by install.sh from your real Terminal session
 [ -f "$ENGINE_DIR/env.zsh" ] && source "$ENGINE_DIR/env.zsh"
 
-# Bundled Node runtime (scripts/bundle-node.sh, V11 RC): the app must not depend on a developer Node on the
-# client's Mac. When present it wins over anything on PATH; BID_NO_BUNDLED_NODE=1 forces the PATH lookup.
-BUNDLED_NODE="$ENGINE_DIR/runtime/$(uname -m)/bin/node"
-if [[ -z "${BID_NO_BUNDLED_NODE:-}" && -x "$BUNDLED_NODE" ]]; then
-  export BID_NODE_RUNTIME="bundled"
-  exec "$BUNDLED_NODE" "$ENGINE_DIR/src/bid.mjs" "$@"
-fi
-
 # the PATH from env.zsh (your Terminal) comes first, so nvm / asdf / volta pick the Node you chose;
 # the usual install places are only a fallback (audit E12)
-export PATH="$PATH:$HOME/.volta/bin:$HOME/.asdf/shims:/opt/homebrew/bin:/usr/local/bin:$HOME/.bun/bin:$HOME/.local/bin:$HOME/Library/pnpm:/usr/bin:/bin:/usr/sbin:/sbin"
+APP_SUPPORT="${BID_APP_DIR:-$HOME/Library/Application Support/BeforeIDeploy}"
+BUNDLED_NODE="$ENGINE_DIR/runtime/$(/usr/bin/uname -m)/bin/node"
+export PATH="$APP_SUPPORT/tools/bin:$PATH:$HOME/.volta/bin:$HOME/.asdf/shims:/opt/homebrew/bin:/usr/local/bin:$HOME/.bun/bin:$HOME/.local/bin:$HOME/Library/pnpm:$HOME/.npm-global/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 export LANG="en_US.UTF-8" LC_ALL="en_US.UTF-8"
 
 # nvm without the slow nvm.sh: prefer the default alias, else the newest installed version
@@ -32,6 +26,14 @@ if ! command -v node >/dev/null 2>&1 && [ -d "$HOME/.nvm/versions/node" ]; then
     NODE_BIN="${NODE_BIN[-1]}"
   fi
   [ -n "$NODE_BIN" ] && export PATH="$NODE_BIN:$PATH"
+fi
+
+# Project tools prefer the user's Node; the engine itself uses the verified bundled runtime.
+# Do this only after constructing PATH, so npm and every installed provider are visible from Finder.
+export PATH="$PATH:${BUNDLED_NODE:h}"
+if [[ -z "${BID_NO_BUNDLED_NODE:-}" && -x "$BUNDLED_NODE" ]]; then
+  export BID_NODE_RUNTIME="bundled"
+  exec "$BUNDLED_NODE" "$ENGINE_DIR/src/bid.mjs" "$@"
 fi
 
 if ! command -v node >/dev/null 2>&1; then

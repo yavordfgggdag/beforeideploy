@@ -519,6 +519,7 @@ export async function runChecks(project, { stopOnFail = false, skip = [], force 
   const dir = project.path;
   const scripts = scriptsFingerprint(dir);
   const trust = getState(project.key).scriptsTrust;
+  if (auto && !trust) throw new EngineError(msg('check.scriptsUntrusted'), 'scripts_untrusted', 2);
   if (auto && trust?.hash !== scripts.hash) {
     const changed = trust?.files ? scripts.files.filter((f) => !trust.files.includes(f)).concat(trust.files.filter((f) => !scripts.files.includes(f))) : scripts.files;
     throw new EngineError(msg('check.scriptsChanged', { files: (changed.length ? changed : scripts.files).join(', ') || 'package.json' }), 'scripts_changed', 2);

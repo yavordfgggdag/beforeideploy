@@ -137,3 +137,22 @@ deno test --allow-env --allow-net --allow-read supabase/functions
 node scripts/i18n-check.mjs && node scripts/error-codes.mjs
 # Swift: само в CI (app.yml, screenshots.yml); DMG: release-dryrun.yml (workflow_dispatch)
 ```
+
+
+## Изпълнение — 2026-10-01, setup foundation
+
+Работно копие: `codex/v12-completion`, база `a9376bd`. Това е междинен checkpoint, не обявяване на завършена V12.
+
+| Находки | Статус | Доказателство / оставаща проверка |
+|---|---|---|
+| SU-1–5, SU-7 | implemented | PATH преди bundled exec; npm/npx в двата runtime пакета; managed prefix и проверка преди атомарен symlink switch; `tests/setup-v12.mjs` |
+| SU-6 | implemented | `gitAvailable` пази setup, doctor, status и git панела от CLT shim; реален Mac без CLT предстои |
+| SU-8–12 | implemented | false result + nonzero exit, terminal step states, стабилни IDs, failed-before-start UI, refresh след грешка |
+| SU-13–14 | implemented | 40 min setup deadline, stdout приключва до 2 s след exit, 5 s heartbeat, npm fetch logs |
+| Required set / cloud rows | implemented | providers определят задължителните редове; cloud rows са незадължителни и само за admin/custom cloud |
+| Browser login / recovery | partial | device code/URL, timeout, retry, in-app Git identity; реалните Netlify/GitHub login сценарии и cancel/reinstall walkthrough предстоят |
+| Auto-check trust | implemented | `scripts_untrusted`, `scripts_changed`, видима причина и ръчна проверка за продължаване |
+| Setup log rotation / report inclusion | pending | да се довърши bounded retention и redacted export |
+| Фази 2–6 | pending | отделни следващи промени |
+
+Проверки: engine 112/112 (включва 7 setup regression scenarios); Deno 87/87; SQL/RLS 10/10; локален `swift build` успешен. `swift test` е блокиран локално от липсващ XCTest в CLT; нужен е macOS CI. Fresh-Mac acceptance и real-provider login не са изпълнени. Числата са за този checkpoint и се обновяват при следващите промени.
