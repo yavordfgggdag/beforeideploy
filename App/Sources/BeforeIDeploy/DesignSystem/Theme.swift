@@ -14,47 +14,37 @@ extension Color {
 }
 
 enum Theme {
-    // macOS dark system palette
-    static let bg = Color(hex: 0x1C1C1E)
-    static let sidebar = Color(hex: 0x161618)
-    static let panel = Color(hex: 0x232325)
-    static let elevated = Color(hex: 0x2C2C2E)
-    static let hover = Color(hex: 0x3A3A3C)
-    static let hairline = Color(hex: 0x38383A)
-    static let text = Color(hex: 0xF5F5F7)
-    static let secondary = Color(hex: 0x98989D)
-    /// ≥ 4.5:1 on the window and panel backgrounds (WCAG AA, audit A12); with Increase Contrast it
-    /// becomes the secondary grey.
+    static let bg = Color.adaptive(0xF5F5F7, 0x1C1C1E)
+    static let sidebar = Color.adaptive(0xECECEE, 0x161618)
+    static let panel = Color.adaptive(0xFFFFFF, 0x232325)
+    static let elevated = Color.adaptive(0xF2F2F4, 0x2C2C2E)
+    static let hover = Color.adaptive(0xE8E8ED, 0x3A3A3C)
+    static let inset = Color.adaptive(0xEDEDF0, 0x1C1C1E)
+    static let hairline = Color.adaptive(0x000000, 0x38383A, lightAlpha: 0.10)
+    static let text = Color.adaptive(0x1D1D1F, 0xF5F5F7)
+    static let secondary = Color.adaptive(0x5E5E63, 0xA1A1A6)
     static var tertiary: Color {
-        NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast ? secondary : Color(hex: 0x8E8E93)
+        NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast ? secondary : .adaptive(0x6E6E73, 0x9A9AA0)
     }
-    static let accent = Color(nsColor: .systemBlue)
-    static let accentSoft = Color(nsColor: .systemBlue).opacity(0.16)
-    static let ready = Color(nsColor: .systemGreen)
-    static let warn = Color(nsColor: .systemOrange)
-    static let blocked = Color(nsColor: .systemRed)
-    static let idle = Color(hex: 0x6E6E73)
-    static let info = Color(nsColor: .systemTeal)
-
-    static let accentGradient = LinearGradient(
-        colors: [Color(hex: 0x3B9CFF), Color(hex: 0x0A6EF0)],
-        startPoint: .top, endPoint: .bottom
-    )
-
-    static let radius: CGFloat = 16
-    static let smallRadius: CGFloat = 10
-
-    /// Top-lit edge of every raised surface: light catches the upper border, the lower one fades out.
+    static let accent = Tone.accent.text
+    static let accentFill = Tone.accent.fill
+    static let accentSoft = Tone.accent.soft
+    static let ready = Tone.success.text
+    static let warn = Tone.warning.text
+    static let blocked = Tone.danger.text
+    static let idle = secondary
+    static let info = Tone.info.text
+    static let brandViolet = Color.adaptive(0x7A3FD6, 0xB57BFF)
+    static let topup = brandViolet
+    static let onAccent = Color.white
+    static let scrim = Color.adaptive(0, 0, lightAlpha: 0.25, darkAlpha: 0.45)
+    static let accentGradient = LinearGradient(colors: [accentFill, accentFill], startPoint: .top, endPoint: .bottom)
+    static let radius = Radius.l
+    static let smallRadius = Radius.m
     static let edgeHighlight = LinearGradient(
-        colors: [Color.white.opacity(0.11), Color.white.opacity(0.035)],
-        startPoint: .top, endPoint: .bottom
-    )
-
-    /// A soft sheen over a surface's upper half — the "glass" in the V10 look.
-    static let sheen = LinearGradient(
-        colors: [Color.white.opacity(0.035), Color.white.opacity(0)],
-        startPoint: .top, endPoint: .center
-    )
+        colors: [.adaptive(0, 0xFFFFFF, lightAlpha: 0.06, darkAlpha: 0.11),
+                 .adaptive(0, 0xFFFFFF, lightAlpha: 0, darkAlpha: 0.035)], startPoint: .top, endPoint: .bottom)
+    static let sheen = LinearGradient(colors: [.clear, .clear], startPoint: .top, endPoint: .bottom)
 
     /// Stable, pleasant gradient per project name, so every project is recognizable at a glance.
     static func avatarGradient(for name: String) -> LinearGradient {
@@ -112,7 +102,7 @@ enum Motion {
 /// A raised surface: fill + sheen + top-lit edge + two-layer shadow (contact and ambient).
 /// `tint` washes the surface with a status color from the top-left corner.
 struct Card: ViewModifier {
-    var padding: CGFloat = 18
+    var padding: CGFloat = Space.l
     var fill: Color = Theme.panel
     var tint: Color? = nil
     func body(content: Content) -> some View {
@@ -130,28 +120,13 @@ struct Card: ViewModifier {
                 }
             )
             .overlay(shape.strokeBorder(Theme.edgeHighlight, lineWidth: 1))
-            .shadow(color: .black.opacity(0.20), radius: 1.5, x: 0, y: 1)
-            .shadow(color: .black.opacity(0.24), radius: 18, x: 0, y: 8)
+            .elevation(.card)
     }
 }
 
 extension View {
-    func card(padding: CGFloat = 18, fill: Color = Theme.panel, tint: Color? = nil) -> some View {
+    func card(padding: CGFloat = Space.l, fill: Color = Theme.panel, tint: Color? = nil) -> some View {
         modifier(Card(padding: padding, fill: fill, tint: tint))
-    }
-}
-
-/// The window backdrop: the base color with two slow, faint light pools (accent top-right, violet bottom-left).
-struct AmbientBackground: View {
-    var tint: Color = Theme.accent
-    var body: some View {
-        ZStack {
-            Theme.bg
-            RadialGradient(colors: [tint.opacity(0.10), .clear], center: .topTrailing, startRadius: 0, endRadius: 760)
-            RadialGradient(colors: [Color(hex: 0x7A3FD6).opacity(0.06), .clear], center: .bottomLeading, startRadius: 0, endRadius: 640)
-        }
-        .allowsHitTesting(false)
-        .animation(Motion.gentle, value: tint)
     }
 }
 
@@ -184,22 +159,8 @@ struct StatusRing: View {
     let symbol: String
     var size: CGFloat = 54
     var body: some View {
-        ZStack {
-            Circle().fill(tint.opacity(0.12))
-                .blur(radius: 10)
-                .frame(width: size + 8, height: size + 8)
-            Circle().stroke(Theme.elevated, lineWidth: 4)
-            Circle()
-                .trim(from: 0, to: max(0.001, min(1, fraction)))
-                .stroke(tint, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                .rotationEffect(.degrees(-90))
-                .shadow(color: tint.opacity(0.5), radius: 4)
-                .animation(Motion.gentle, value: fraction)
-            Image(systemName: symbol)
-                .font(.system(size: size * 0.36, weight: .bold))
-                .foregroundColor(tint)
-        }
-        .frame(width: size, height: size)
+        Meter(value: fraction, style: .ring, size: size, tint: tint)
+            .overlay(Image(systemName: symbol).font(Typo.icon(size: size * 0.36, weight: .bold)).foregroundColor(tint))
     }
 }
 
@@ -221,17 +182,7 @@ struct Chip: View {
     let text: String
     var icon: String? = nil
     var tint: Color = Theme.secondary
-    var body: some View {
-        HStack(spacing: 5) {
-            if let icon { Image(systemName: icon).font(.system(size: 10, weight: .semibold)) }
-            Text(text).font(.system(size: 11.5, weight: .medium)).lineLimit(1)
-        }
-        .foregroundColor(tint)
-        .padding(.horizontal, 9)
-        .padding(.vertical, 4)
-        .background(Capsule().fill(Theme.elevated))
-        .overlay(Capsule().strokeBorder(Theme.hairline, lineWidth: 1))
-    }
+    var body: some View { Badge(text: text, icon: icon, tint: tint) }
 }
 
 struct StatusDot: View {
@@ -241,7 +192,7 @@ struct StatusDot: View {
         Circle()
             .fill(Theme.color(for: status))
             .frame(width: size, height: size)
-            .shadow(color: Theme.color(for: status).opacity(status == nil ? 0 : 0.55), radius: 4)
+            .accessibilityLabel(status == "pass" || status == "ready" ? L("common.ready") : status == "fail" || status == "blocked" ? L("common.blocked") : L("signal.unchecked"))
     }
 }
 
@@ -253,6 +204,7 @@ struct BIDButtonStyle: ButtonStyle {
     var kind: ButtonKind = .secondary
     var compact = false
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.isFocused) private var isFocused
 
     func makeBody(configuration: Configuration) -> some View {
         let fg: Color
@@ -260,7 +212,7 @@ struct BIDButtonStyle: ButtonStyle {
         let border: Color
         switch kind {
         case .primary:
-            fg = .white; bg = Theme.accent; border = Color.white.opacity(0.12)
+            fg = Theme.onAccent; bg = Theme.accentFill; border = Color.white.opacity(0.12)
         case .secondary:
             fg = Theme.text; bg = Theme.elevated; border = Theme.hairline
         case .danger:
@@ -269,7 +221,7 @@ struct BIDButtonStyle: ButtonStyle {
             fg = Theme.secondary; bg = .clear; border = .clear
         }
         return configuration.label
-            .font(.system(size: compact ? 12 : 13, weight: .semibold))
+            .font(Typo.font(compact ? .callout : .body, weight: .semibold))
             .foregroundColor(fg)
             .padding(.horizontal, compact ? 10 : 14)
             .padding(.vertical, compact ? 6 : 9)
@@ -287,13 +239,13 @@ struct BIDButtonStyle: ButtonStyle {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous)
-                    .strokeBorder(border, lineWidth: 1)
+                    .strokeBorder(isFocused ? Theme.accent : border, lineWidth: isFocused ? 2 : 1)
             )
-            .shadow(color: kind == .primary && isEnabled ? Theme.accent.opacity(0.35) : .clear, radius: 10, y: 3)
+
             .contentShape(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous))
-            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .scaleEffect(configuration.isPressed && !Motion.reduced ? 0.98 : 1)
             .opacity(isEnabled ? 1 : 0.4)
-            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+            .animation(Motion.quick, value: configuration.isPressed)
     }
 }
 
@@ -308,6 +260,7 @@ struct IconButton: View {
     let help: String
     var action: () -> Void
     @Local private var hovering = false
+    @FocusState private var focused: Bool
     var body: some View {
         Button(action: action) {
             Image(systemName: symbol)
@@ -320,10 +273,11 @@ struct IconButton: View {
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 9, style: .continuous)
-                        .strokeBorder(Theme.hairline, lineWidth: 1)
+                        .strokeBorder(focused ? Theme.accent : Theme.hairline, lineWidth: focused ? 2 : 1)
                 )
         }
         .buttonStyle(.plain)
+        .focused($focused)
         .help(help)
         .accessibilityLabel(help)
         .onHover { hovering = $0 }
@@ -334,22 +288,7 @@ struct BIDTextField: View {
     let placeholder: String
     @Binding var text: String
     var mono = false
-    var body: some View {
-        TextField(placeholder, text: $text)
-            .textFieldStyle(.plain)
-            .font(mono ? .system(size: 13, design: .monospaced) : .system(size: 13))
-            .foregroundColor(Theme.text)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 9)
-            .background(
-                RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous)
-                    .fill(Theme.bg)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous)
-                    .strokeBorder(Theme.hairline, lineWidth: 1)
-            )
-    }
+    var body: some View { BIDField(placeholder: placeholder, text: $text, kind: mono ? .mono : .text) }
 }
 
 struct Spinner: View {
@@ -357,14 +296,15 @@ struct Spinner: View {
     var color: Color = Theme.accent
     @Local private var spin = false
     var body: some View {
-        Circle()
-            .trim(from: 0.12, to: 0.88)
-            .stroke(color, style: StrokeStyle(lineWidth: size / 6, lineCap: .round))
-            .frame(width: size, height: size)
-            .rotationEffect(.degrees(spin ? 360 : 0))
-            .onAppear {
-                withAnimation(.linear(duration: 0.8).repeatForever(autoreverses: false)) { spin = true }
+        Group {
+            if Motion.reduced {
+                Image(systemName: "hourglass").font(Typo.icon(size: size)).foregroundColor(color)
+            } else {
+                ProgressView().controlSize(.small).scaleEffect(max(0.7, size / 16))
             }
+        }
+        .frame(width: size, height: size)
+        .accessibilityLabel(L("common.loading"))
     }
 }
 

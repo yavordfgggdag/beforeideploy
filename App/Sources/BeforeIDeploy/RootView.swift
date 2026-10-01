@@ -32,9 +32,9 @@ struct RootView: View {
                 MandatoryUpdateView(info: u)
             }
         }
-        .animation(.easeInOut(duration: 0.25), value: model.mustAuthenticate)
-        .animation(.easeInOut(duration: 0.25), value: model.accountLoadFailed)
-        .animation(.easeInOut(duration: 0.25), value: tourSeen)
+        .animation(Motion.quick, value: model.mustAuthenticate)
+        .animation(Motion.quick, value: model.accountLoadFailed)
+        .animation(Motion.quick, value: tourSeen)
     }
 
     /// The backdrop's light follows the selected project's state: green when ready, red when blocked.
@@ -79,7 +79,7 @@ struct RootView: View {
                 } else {
                     VStack(spacing: 12) {
                         Spinner(size: 22)
-                        Text(L("root.loadingProject")).foregroundColor(Theme.secondary).font(.system(size: 13))
+                        Text(L("root.loadingProject")).foregroundColor(Theme.secondary).font(Typo.font(.body))
                     }
                 }
             }
@@ -88,6 +88,7 @@ struct RootView: View {
         }
         .background(Theme.bg)
         .ignoresSafeArea()
+        .accessibilityHidden(model.run != nil || model.aiStore.current != nil || model.showPalette)
         .overlay {
             if let run = model.run {
                 RunOverlay(session: run)
@@ -135,59 +136,62 @@ struct RootView: View {
                 }
             }
             .environmentObject(model)
-            .preferredColorScheme(.dark)
+
             .tint(Theme.accent)
         }
         .sheet(item: $model.pendingFix) { pending in
             FixConfirmSheet(fix: pending.fix)
                 .environmentObject(model)
-                .preferredColorScheme(.dark)
+
         }
-        .animation(.spring(response: 0.35), value: model.run?.id)
-        .animation(.easeInOut(duration: 0.2), value: model.status?.project.key)
-        .animation(.easeInOut(duration: 0.18), value: model.screen)
+        .animation(Motion.spring, value: model.run?.id)
+        .animation(Motion.quick, value: model.status?.project.key)
+
     }
 }
 
 struct ToastView: View {
     @EnvironmentObject var model: AppModel
     let toast: Toast
+    @Local private var copied = false
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: toast.isError ? "exclamationmark.circle.fill" : "checkmark.circle.fill")
                 .foregroundColor(toast.isError ? Theme.blocked : Theme.ready)
             Text(toast.text)
-                .font(.system(size: 12.5, weight: .medium))
+                .font(Typo.font(.body, weight: .medium))
                 .foregroundColor(Theme.text)
-                .lineLimit(3)
+                .lineLimit(toast.isError ? nil : 3)
                 .textSelection(.enabled)
             if let code = toast.code {
                 Text(code)
-                    .font(.system(size: 10.5, design: .monospaced))
+                    .font(Typo.font(.caption, design: .monospaced))
                     .foregroundColor(Theme.secondary)
                     .padding(.horizontal, 6).padding(.vertical, 2)
-                    .background(RoundedRectangle(cornerRadius: 5, style: .continuous).fill(Theme.panel))
+                    .background(RoundedRectangle(cornerRadius: Radius.xs, style: .continuous).fill(Theme.panel))
                     .help(L("toast.codeHelp"))
                 Button {
                     let pb = NSPasteboard.general
                     pb.clearContents()
                     pb.setString("\(toast.text) [\(code)]", forType: .string)
-                    model.flash(L("common.copied"))
+                    copied = true
                 } label: {
-                    Image(systemName: "doc.on.doc").font(.system(size: 11.5, weight: .medium)).foregroundColor(Theme.secondary)
+                    Image(systemName: copied ? "checkmark" : "doc.on.doc").font(Typo.font(.callout, weight: .medium)).foregroundColor(Theme.secondary)
                 }
                 .buttonStyle(.plain)
                 .help(L("toast.copy"))
+                .accessibilityLabel(copied ? L("common.copied") : L("toast.copy"))
                 if let url = toast.helpURL {
                     Button { NSWorkspace.shared.open(url) } label: {
-                        Image(systemName: "questionmark.circle").font(.system(size: 12, weight: .medium)).foregroundColor(Theme.accent)
+                        Image(systemName: "questionmark.circle").font(Typo.font(.callout, weight: .medium)).foregroundColor(Theme.accent)
                     }
                     .buttonStyle(.plain)
                     .help(L("toast.help"))
+                    .accessibilityLabel(L("toast.help"))
                 }
             }
             Button { model.dismissToast() } label: {
-                Image(systemName: "xmark").font(.system(size: 10, weight: .bold)).foregroundColor(Theme.tertiary)
+                Image(systemName: "xmark").font(Typo.font(.micro, weight: .bold)).foregroundColor(Theme.tertiary)
             }
             .buttonStyle(.plain)
             .help(L("common.close"))
@@ -198,8 +202,10 @@ struct ToastView: View {
         .padding(.vertical, 11)
         .background(Capsule().fill(Theme.elevated))
         .overlay(Capsule().strokeBorder(toast.isError ? Theme.blocked.opacity(0.35) : Theme.hairline, lineWidth: 1))
-        .shadow(color: .black.opacity(0.35), radius: 16, y: 6)
+        .elevation(.popover)
         .frame(maxWidth: 640)
+        .onHover { model.toastCenter.hover($0) }
+        .onChange(of: toast.id) { _ in copied = false }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(toast.code.map { "\(toast.text) (\($0))" } ?? toast.text)
     }
@@ -211,11 +217,11 @@ struct WelcomeView: View {
         VStack(spacing: 18) {
             AppGlyph(size: 84)
             Text("Before I Deploy")
-                .font(.system(size: 30, weight: .bold))
+                .font(Typo.font(.display, weight: .bold))
                 .foregroundColor(Theme.text)
             Text(L("root.emptyHint"))
                 .multilineTextAlignment(.center)
-                .font(.system(size: 14))
+                .font(Typo.font(.subhead))
                 .foregroundColor(Theme.secondary)
             HStack(spacing: 10) {
                 Button {
@@ -246,21 +252,21 @@ struct EngineMissingView: View {
     var body: some View {
         VStack(spacing: 14) {
             Image(systemName: "shippingbox")
-                .font(.system(size: 40))
+                .font(Typo.font(.display))
                 .foregroundColor(Theme.accent)
             Text(L("root.engineMissing"))
-                .font(.system(size: 22, weight: .bold))
+                .font(Typo.font(.title, weight: .bold))
                 .foregroundColor(Theme.text)
             Text(L("root.engineMissingHint"))
                 .multilineTextAlignment(.center)
                 .foregroundColor(Theme.secondary)
             Text(model.engine.enginePath)
-                .font(.system(size: 12, design: .monospaced))
+                .font(Typo.font(.callout, design: .monospaced))
                 .foregroundColor(Theme.tertiary)
                 .textSelection(.enabled)
             if let why = model.lastError, !why.isEmpty {
                 Text(why)
-                    .font(.system(size: 11.5, design: .monospaced))
+                    .font(Typo.font(.callout, design: .monospaced))
                     .foregroundColor(Theme.warn)
                     .textSelection(.enabled)
                     .frame(maxWidth: 560)
@@ -280,10 +286,10 @@ struct AccountLoadFailedView: View {
     var body: some View {
         VStack(spacing: 14) {
             Image(systemName: "person.crop.circle.badge.exclamationmark")
-                .font(.system(size: 40))
+                .font(Typo.font(.display))
                 .foregroundColor(Theme.warn)
             Text(L("account.loadFailed.title"))
-                .font(.system(size: 22, weight: .bold))
+                .font(Typo.font(.title, weight: .bold))
                 .foregroundColor(Theme.text)
             Text(L("account.loadFailed.body"))
                 .multilineTextAlignment(.center)
@@ -291,7 +297,7 @@ struct AccountLoadFailedView: View {
                 .frame(maxWidth: 460)
             if let e = model.accountError {
                 Text(e)
-                    .font(.system(size: 12, design: .monospaced))
+                    .font(Typo.font(.callout, design: .monospaced))
                     .foregroundColor(Theme.tertiary)
                     .textSelection(.enabled)
                     .frame(maxWidth: 520)
@@ -323,10 +329,10 @@ struct LoadFailedView: View {
     @Local private var retrying = false
     var body: some View {
         VStack(spacing: 10) {
-            Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 24)).foregroundColor(Theme.warn)
-            Text(L("load.failedTitle")).font(.system(size: 15, weight: .semibold)).foregroundColor(Theme.text)
+            Image(systemName: "exclamationmark.triangle.fill").font(Typo.font(.title)).foregroundColor(Theme.warn)
+            Text(L("load.failedTitle")).font(Typo.font(.subhead, weight: .semibold)).foregroundColor(Theme.text)
             Text(message)
-                .font(.system(size: 12))
+                .font(Typo.font(.callout))
                 .foregroundColor(Theme.secondary)
                 .multilineTextAlignment(.center)
                 .textSelection(.enabled)
@@ -357,17 +363,17 @@ struct MandatoryUpdateView: View {
             Theme.bg.opacity(0.94).ignoresSafeArea()
             VStack(spacing: 14) {
                 Image(systemName: "arrow.down.circle.fill")
-                    .font(.system(size: 44))
+                    .font(Typo.font(.display))
                     .foregroundColor(Theme.accent)
                 Text(L("update.required.title"))
-                    .font(.system(size: 22, weight: .bold))
+                    .font(Typo.font(.title, weight: .bold))
                     .foregroundColor(Theme.text)
                 Text(L("update.required.body", info.latest ?? ""))
                     .multilineTextAlignment(.center)
                     .foregroundColor(Theme.secondary)
                     .frame(maxWidth: 440)
                 if let n = info.notes?[Localization.current] ?? info.notes?["en"] {
-                    Text(n).font(.system(size: 12)).foregroundColor(Theme.tertiary).frame(maxWidth: 440)
+                    Text(n).font(Typo.font(.callout)).foregroundColor(Theme.tertiary).frame(maxWidth: 440)
                 }
                 Button(L("update.download")) { model.downloadUpdate() }
                     .bidButton(.primary)
@@ -386,10 +392,10 @@ struct NodeMissingView: View {
     var body: some View {
         VStack(spacing: 14) {
             Image(systemName: "cube.transparent")
-                .font(.system(size: 40))
+                .font(Typo.font(.display))
                 .foregroundColor(Theme.accent)
             Text(L("node.missing.title"))
-                .font(.system(size: 22, weight: .bold))
+                .font(Typo.font(.title, weight: .bold))
                 .foregroundColor(Theme.text)
             Text(L("node.missing.body"))
                 .multilineTextAlignment(.center)
@@ -397,7 +403,7 @@ struct NodeMissingView: View {
                 .frame(maxWidth: 460)
             HStack(spacing: 8) {
                 Text(brewCommand)
-                    .font(.system(size: 12.5, design: .monospaced))
+                    .font(Typo.font(.body, design: .monospaced))
                     .foregroundColor(Theme.text)
                     .textSelection(.enabled)
                 Button { model.copy(brewCommand) } label: { Image(systemName: "doc.on.doc") }
@@ -407,7 +413,7 @@ struct NodeMissingView: View {
                     .accessibilityLabel(L("common.copy"))
             }
             .padding(.horizontal, 12).padding(.vertical, 8)
-            .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.panel))
+            .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(Theme.panel))
             HStack(spacing: 10) {
                 Button(L("node.missing.download")) {
                     if let u = URL(string: "https://nodejs.org/en/download") { NSWorkspace.shared.open(u) }
@@ -432,12 +438,12 @@ struct AppGlyph: View {
             RoundedRectangle(cornerRadius: size * 0.28, style: .continuous)
                 .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
             Image(systemName: "paperplane.fill")
-                .font(.system(size: size * 0.44, weight: .semibold))
+                .font(Typo.icon(size: size * 0.44, weight: .semibold))
                 .foregroundColor(.white)
                 .rotationEffect(.degrees(-8))
                 .offset(x: -size * 0.02, y: size * 0.02)
         }
         .frame(width: size, height: size)
-        .shadow(color: Theme.accent.opacity(0.3), radius: size * 0.2)
+        .elevation(.popover)
     }
 }

@@ -3,51 +3,6 @@ import SwiftUI
 
 // MARK: - Shared sheet chrome
 
-struct SheetScaffold<Content: View, Actions: View>: View {
-    let icon: String
-    var iconTint: Color = Theme.accent
-    let title: String
-    var subtitle: String? = nil
-    var width: CGFloat = 520
-    @ViewBuilder var content: Content
-    @ViewBuilder var actions: Actions
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 12) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 11, style: .continuous).fill(iconTint.opacity(0.14))
-                    RoundedRectangle(cornerRadius: 11, style: .continuous).strokeBorder(iconTint.opacity(0.22), lineWidth: 1)
-                    Image(systemName: icon).font(.system(size: 16, weight: .semibold)).foregroundColor(iconTint)
-                }
-                .frame(width: 38, height: 38)
-                .shadow(color: iconTint.opacity(0.25), radius: 8, y: 2)
-                .accessibilityHidden(true)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title).font(.system(size: 17, weight: .bold)).foregroundColor(Theme.text)
-                    if let subtitle { Text(subtitle).font(.system(size: 12)).foregroundColor(Theme.secondary) }
-                }
-                Spacer()
-            }
-            .padding(22)
-
-            content
-                .padding(.horizontal, 22)
-                .padding(.bottom, 18)
-
-            Rectangle().fill(Theme.hairline).frame(height: 1)
-            HStack(spacing: 10) {
-                Spacer()
-                actions
-            }
-            .padding(.horizontal, 22)
-            .padding(.vertical, 14)
-        }
-        .frame(width: width)
-        .background(ZStack { Theme.panel; Theme.sheen })
-    }
-}
-
 // MARK: - Production
 
 struct InfoRow: View {
@@ -56,9 +11,9 @@ struct InfoRow: View {
     var tint: Color = Theme.text
     var body: some View {
         HStack {
-            Text(label).font(.system(size: 12)).foregroundColor(Theme.tertiary)
+            Text(label).font(Typo.font(.callout)).foregroundColor(Theme.tertiary)
             Spacer()
-            Text(value).font(.system(size: 12.5, weight: .medium)).foregroundColor(tint).lineLimit(1).truncationMode(.middle)
+            Text(value).font(Typo.font(.body, weight: .medium)).foregroundColor(tint).lineLimit(1).truncationMode(.middle)
         }
     }
 }
@@ -109,11 +64,11 @@ struct NetlifySetupSheet: View {
                         HStack(spacing: 8) {
                             Spinner(size: 14)
                             Text(L("netlifySetup.loading"))
-                                .font(.system(size: 12)).foregroundColor(Theme.secondary)
+                                .font(Typo.font(.callout)).foregroundColor(Theme.secondary)
                         }
                         .frame(maxWidth: .infinity, minHeight: 120)
                     } else if let error {
-                        Text(error).foregroundColor(Theme.blocked).font(.system(size: 12.5))
+                        Text(error).foregroundColor(Theme.blocked).font(Typo.font(.body))
                         Button(L("common.retry")) { Task { await load() } }.bidButton(.secondary, compact: true)
                     } else if mode == .link {
                         BIDTextField(placeholder: L("netlifySetup.searchSite"), text: $query)
@@ -124,21 +79,21 @@ struct NetlifySetupSheet: View {
                                         .tapAction { chosenSite = site.id }
                                 }
                                 if filtered.isEmpty {
-                                    Text(L("netlifySetup.noSites")).foregroundColor(Theme.tertiary).font(.system(size: 12)).padding(20)
+                                    Text(L("netlifySetup.noSites")).foregroundColor(Theme.tertiary).font(Typo.font(.callout)).padding(20)
                                 }
                             }
                         }
                         .frame(height: 240)
-                        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.bg))
+                        .background(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).fill(Theme.bg))
                     } else {
                         VStack(alignment: .leading, spacing: 6) {
-                            Text(L("netlifySetup.siteName")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                            Text(L("netlifySetup.siteName")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
                             BIDTextField(placeholder: "moyat-sait", text: $newName, mono: true)
-                            Text("\(slug.isEmpty ? L("netlifySetup.namePlaceholder") : slug).netlify.app").font(.system(size: 11.5, design: .monospaced)).foregroundColor(Theme.tertiary)
+                            Text("\(slug.isEmpty ? L("netlifySetup.namePlaceholder") : slug).netlify.app").font(Typo.font(.callout, design: .monospaced)).foregroundColor(Theme.tertiary)
                         }
                         if teams.count > 1 {
                             VStack(alignment: .leading, spacing: 6) {
-                                Text(L("netlifySetup.team")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                                Text(L("netlifySetup.team")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
                                 Menu {
                                     ForEach(teams) { t in Button(t.name ?? t.slug) { team = t.slug } }
                                 } label: {
@@ -147,7 +102,7 @@ struct NetlifySetupSheet: View {
                                 }
                                 .menuStyle(.borderlessButton)
                                 .padding(.horizontal, 12).padding(.vertical, 8)
-                                .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.bg))
+                                .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(Theme.bg))
                             }
                         }
                     }
@@ -217,39 +172,14 @@ struct SiteRow: View {
             Image(systemName: selected ? "largecircle.fill.circle" : "circle")
                 .foregroundColor(selected ? Theme.accent : Theme.tertiary)
             VStack(alignment: .leading, spacing: 1) {
-                Text(site.name).font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.text)
-                Text(site.url ?? "").font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                Text(site.name).font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.text)
+                Text(site.url ?? "").font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
             }
             Spacer()
         }
         .padding(.horizontal, 12).padding(.vertical, 8)
-        .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(selected ? Theme.elevated : .clear))
+        .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(selected ? Theme.elevated : .clear))
         .contentShape(Rectangle())
-    }
-}
-
-struct SegmentedControl<T: Hashable>: View {
-    let options: [(String, T)]
-    @Binding var selection: T
-    var body: some View {
-        HStack(spacing: 4) {
-            ForEach(options.indices, id: \.self) { i in
-                let opt = options[i]
-                Button {
-                    withAnimation(.easeOut(duration: 0.15)) { selection = opt.1 }
-                } label: {
-                    Text(opt.0)
-                        .font(.system(size: 12.5, weight: .semibold))
-                        .foregroundColor(selection == opt.1 ? Theme.text : Theme.secondary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 7)
-                        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(selection == opt.1 ? Theme.hover : .clear))
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(4)
-        .background(RoundedRectangle(cornerRadius: 11, style: .continuous).fill(Theme.bg))
     }
 }
 
@@ -270,7 +200,7 @@ struct CommitSheet: View {
                       width: 600) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text(L("commit.filesCount", included.count, files.count)).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                    Text(L("commit.filesCount", included.count, files.count)).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
                     Spacer()
                     Button(excluded.isEmpty ? L("commit.deselectAll") : L("commit.selectAll")) {
                         excluded = excluded.isEmpty ? Set(files.map(\.path)) : []
@@ -284,8 +214,8 @@ struct CommitSheet: View {
                             HStack(spacing: 10) {
                                 Image(systemName: on ? "checkmark.square.fill" : "square")
                                     .foregroundColor(on ? Theme.accent : Theme.tertiary)
-                                Text(f.code).font(.system(size: 10.5, weight: .bold, design: .monospaced)).foregroundColor(Theme.warn).frame(width: 20, alignment: .leading)
-                                Text(f.path).font(.system(size: 12, design: .monospaced)).foregroundColor(on ? Theme.text : Theme.tertiary)
+                                Text(f.code).font(Typo.font(.caption, weight: .bold, design: .monospaced)).foregroundColor(Theme.warn).frame(width: 20, alignment: .leading)
+                                Text(f.path).font(Typo.font(.callout, design: .monospaced)).foregroundColor(on ? Theme.text : Theme.tertiary)
                                     .lineLimit(1).truncationMode(.middle)
                                 Spacer()
                             }
@@ -298,15 +228,15 @@ struct CommitSheet: View {
                     .padding(6)
                 }
                 .frame(height: 220)
-                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.bg))
+                .background(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).fill(Theme.bg))
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(L("commit.message")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                    Text(L("commit.message")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
                     BIDTextField(placeholder: L("commit.placeholder"), text: $message)
                 }
                 if model.status?.git.remote == nil {
                     Label(L("commit.noRemote"), systemImage: "info.circle")
-                        .font(.system(size: 12)).foregroundColor(Theme.secondary)
+                        .font(Typo.font(.callout)).foregroundColor(Theme.secondary)
                 }
             }
         } actions: {
@@ -349,7 +279,7 @@ struct RemoteSheet: View {
         SheetScaffold(icon: "link", title: L("remote.sheetTitle"), subtitle: L("remote.title")) {
             VStack(alignment: .leading, spacing: 10) {
                 Text(L("remote.steps"))
-                    .font(.system(size: 12.5)).foregroundColor(Theme.secondary)
+                    .font(Typo.font(.body)).foregroundColor(Theme.secondary)
                 Button { model.open("https://github.com/new") } label: { Label(L("remote.openNew"), systemImage: "arrow.up.right") }
                     .bidButton(.ghost, compact: true)
                 BIDTextField(placeholder: "https://github.com/user/repo.git", text: $url, mono: true)
@@ -379,15 +309,15 @@ struct FixConfirmSheet: View {
                       title: fix.title, subtitle: model.status?.project.name) {
             VStack(alignment: .leading, spacing: 12) {
                 Text(fix.description)
-                    .font(.system(size: 13)).foregroundColor(Theme.secondary)
+                    .font(Typo.font(.body)).foregroundColor(Theme.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                 if let p = fix.preview, !p.isEmpty {
                     Text(p)
-                        .font(.system(size: 12, design: .monospaced))
+                        .font(Typo.font(.callout, design: .monospaced))
                         .foregroundColor(Theme.text)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(12)
-                        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.bg))
+                        .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(Theme.bg))
                 }
             }
         } actions: {
@@ -446,6 +376,7 @@ struct HistorySheet: View {
 struct SettingsSheet: View {
     @EnvironmentObject var model: AppModel
     @Environment(\.dismiss) private var dismiss
+    @AppStorage(Appearance.storageKey) private var appearance = "system"
     @AppStorage("autoOpenPreview") private var autoOpenPreview = true
     @AppStorage("checkOnSelect") private var checkOnSelect = false
     @AppStorage("notificationsEnabled") private var notificationsEnabled = true
@@ -457,6 +388,10 @@ struct SettingsSheet: View {
                 VStack(alignment: .leading, spacing: 10) {
                     SectionLabel(text: L("settings.languageSection"))
                     LanguageRow()
+                    Picker(L("appearance.title"), selection: $appearance) {
+                        ForEach(Appearance.allCases, id: \.rawValue) { Text($0.label).tag($0.rawValue) }
+                    }.pickerStyle(.segmented)
+                    .onChange(of: appearance) { (Appearance(rawValue: $0) ?? .system).apply() }
                 }
                 VStack(alignment: .leading, spacing: 10) {
                     SectionLabel(text: L("settings.behavior"))
@@ -481,7 +416,7 @@ struct SettingsSheet: View {
                             Button(L("settings.logs")) { model.openFile(d.cacheDir) }.bidButton(.ghost, compact: true)
                         }
                     } else {
-                        HStack { Spinner(size: 12); Text(L("settings.checking")).foregroundColor(Theme.secondary).font(.system(size: 12)) }
+                        HStack { Spinner(size: 12); Text(L("settings.checking")).foregroundColor(Theme.secondary).font(Typo.font(.callout)) }
                     }
                 }
                 VStack(alignment: .leading, spacing: 8) {
@@ -497,15 +432,15 @@ struct SettingsSheet: View {
                     // its own row: three buttons side by side were cut off in Bulgarian
                     Button { model.prepareFeedback() } label: { Label(L("feedback.send"), systemImage: "envelope") }
                         .bidButton(.secondary, compact: true).disabled(model.busy.contains("report"))
-                    Text(L("report.hint")).font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                    Text(L("report.hint")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
                     if let r = model.feedbackReport {
                         // what the report holds, before the user decides to send it (WP08, audit D6)
                         VStack(alignment: .leading, spacing: 6) {
-                            Text(L("feedback.contains")).font(.system(size: 11.5, weight: .semibold)).foregroundColor(Theme.text)
+                            Text(L("feedback.contains")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
                             ForEach(r.files, id: \.self) { f in
-                                Label(f, systemImage: "doc.text").font(.system(size: 11, design: .monospaced)).foregroundColor(Theme.secondary)
+                                Label(f, systemImage: "doc.text").font(Typo.font(.caption, design: .monospaced)).foregroundColor(Theme.secondary)
                             }
-                            Text(L("feedback.redacted")).font(.system(size: 11)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
+                            Text(L("feedback.redacted")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
                             HStack {
                                 Button(L("feedback.writeMail")) { model.writeFeedbackMail(r) }.bidButton(.primary, compact: true)
                                 Button(L("common.cancel")) { model.feedbackReport = nil }.bidButton(.ghost, compact: true)
@@ -523,7 +458,7 @@ struct SettingsSheet: View {
                             Button(L("account.export")) { model.exportAccountData() }.bidButton(.secondary, compact: true)
                             Button(L("account.deleteButton")) { model.sheet = .deleteAccount }.bidButton(.danger, compact: true)
                         }
-                        Text(L("account.exportHint")).font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                        Text(L("account.exportHint")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
                     }
                 }
             }
@@ -555,7 +490,7 @@ struct LegalLinks: View {
                 ForEach(shown) { item in
                     Button(item.id) { NSWorkspace.shared.open(item.url) }
                         .buttonStyle(.plain)
-                        .font(.system(size: 11.5, weight: .medium))
+                        .font(Typo.font(.callout, weight: .medium))
                         .foregroundColor(Theme.accent)
                 }
             }
@@ -579,36 +514,36 @@ struct NewSiteSheet: View {
         SheetScaffold(icon: "plus.square.on.square", iconTint: Theme.accent, title: L("newsite.title"), subtitle: L("newsite.subtitle"), width: 780) {
             VStack(alignment: .leading, spacing: 14) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(L("newsite.name")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                    Text(L("newsite.name")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
                     BIDTextField(placeholder: L("newsite.namePlaceholder"), text: $name)
                 }
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Text(L("newsite.template")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                        Text(L("newsite.template")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
                         Spacer()
-                        if !model.templates.isEmpty { Text(L("newsite.count", model.templates.count)).font(.system(size: 11)).foregroundColor(Theme.tertiary) }
+                        if !model.templates.isEmpty { Text(L("newsite.count", model.templates.count)).font(Typo.font(.caption)).foregroundColor(Theme.tertiary) }
                     }
                     if model.templates.isEmpty {
-                        HStack(spacing: 8) { Spinner(size: 12); Text(L("newsite.loading")).font(.system(size: 12)).foregroundColor(Theme.tertiary) }
+                        HStack(spacing: 8) { Spinner(size: 12); Text(L("newsite.loading")).font(Typo.font(.callout)).foregroundColor(Theme.tertiary) }
                     } else {
                         TemplateGallery(templates: model.templates, selection: $template)
                     }
                 }
                 HStack(spacing: 14) {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text(L("newsite.language")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                        Text(L("newsite.language")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
                         SegmentedControl(options: [(Localization.nativeName("bg"), "bg"), (Localization.nativeName("en"), "en")], selection: $lang)
                     }
                     VStack(alignment: .leading, spacing: 6) {
-                        Text(L("newsite.folder")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                        Text(L("newsite.folder")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
                         HStack(spacing: 8) {
-                            Text((dir as NSString).abbreviatingWithTildeInPath).font(.system(size: 12, design: .monospaced)).foregroundColor(Theme.secondary).lineLimit(1).truncationMode(.middle)
+                            Text((dir as NSString).abbreviatingWithTildeInPath).font(Typo.font(.callout, design: .monospaced)).foregroundColor(Theme.secondary).lineLimit(1).truncationMode(.middle)
                             Button(L("newsite.chooseFolder")) { pickFolder() }.bidButton(.secondary, compact: true)
                         }
                     }
                 }
-                Text(L("newsite.whatYouGet")).font(.system(size: 11.5)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
-                if let error { Label(error, systemImage: "exclamationmark.circle.fill").font(.system(size: 12.5)).foregroundColor(Theme.blocked).fixedSize(horizontal: false, vertical: true) }
+                Text(L("newsite.whatYouGet")).font(Typo.font(.callout)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
+                if let error { Label(error, systemImage: "exclamationmark.circle.fill").font(Typo.font(.body)).foregroundColor(Theme.blocked).fixedSize(horizontal: false, vertical: true) }
             }
         } actions: {
             Button(L("common.cancel")) { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
@@ -668,7 +603,7 @@ struct TemplateGallery: View {
                 ForEach(categories, id: \.id) { c in
                     let on = category == c.id
                     Text(c.title)
-                        .font(.system(size: 11.5, weight: on ? .semibold : .regular))
+                        .font(Typo.font(.callout, weight: on ? .semibold : .regular))
                         .foregroundColor(on ? .white : Theme.secondary)
                         .padding(.horizontal, 11).padding(.vertical, 5)
                         .background(Capsule().fill(on ? Theme.accent : Theme.elevated))
@@ -702,18 +637,18 @@ private struct TemplateCard: View {
         Button(action: action) {
             VStack(alignment: .leading, spacing: 8) {
                 ZStack(alignment: .topTrailing) {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    RoundedRectangle(cornerRadius: Radius.s, style: .continuous)
                         .fill(LinearGradient(colors: [tint, tint.opacity(0.55)], startPoint: .topLeading, endPoint: .bottomTrailing))
                         .frame(height: 58)
-                        .overlay(Image(systemName: template.icon ?? "doc.richtext").font(.system(size: 22, weight: .semibold)).foregroundColor(.white))
+                        .overlay(Image(systemName: template.icon ?? "doc.richtext").font(Typo.font(.title, weight: .semibold)).foregroundColor(.white))
                     if selected {
-                        Image(systemName: "checkmark.circle.fill").font(.system(size: 15)).foregroundStyle(.white, tint).padding(6)
+                        Image(systemName: "checkmark.circle.fill").font(Typo.font(.subhead)).foregroundStyle(.white, tint).padding(6)
                     }
                 }
-                Text(template.title).font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.text).lineLimit(1)
-                Text(template.description).font(.system(size: 11)).foregroundColor(Theme.secondary).lineLimit(3).fixedSize(horizontal: false, vertical: true)
+                Text(template.title).font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.text).lineLimit(1)
+                Text(template.description).font(Typo.font(.caption)).foregroundColor(Theme.secondary).lineLimit(3).fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
-                Text(L("newsite.pages", template.pages)).font(.system(size: 10.5)).foregroundColor(Theme.tertiary)
+                Text(L("newsite.pages", template.pages)).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
             }
             .padding(10)
             .frame(maxWidth: .infinity, minHeight: 176, alignment: .topLeading)
@@ -751,12 +686,12 @@ struct AIKeysSheet: View {
                 if model.account?.features?.billingPlans == true, model.account?.loggedIn == true {
                     HStack(spacing: 8) {
                         Image(systemName: "creditcard").foregroundColor(Theme.secondary)
-                        Text(L("aikeys.orPlan")).font(.system(size: 12)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
+                        Text(L("aikeys.orPlan")).font(Typo.font(.callout)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
                         Spacer()
                         Button(L("aikeys.seePlans")) { dismiss(); model.sheet = .plans }.bidButton(.ghost, compact: true)
                     }
                 }
-                Text(L("aikeys.privacy")).font(.system(size: 11.5)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
+                Text(L("aikeys.privacy")).font(Typo.font(.callout)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
             }
         } actions: {
             Button(L("common.done")) { dismiss() }.bidButton(.primary).keyboardShortcut(.defaultAction)
@@ -789,17 +724,17 @@ struct PushoverSheet: View {
                     Button { model.open("https://pushover.net/apps/build") } label: { Label(L("pushover.openBuild"), systemImage: "plus.app") }.bidButton(.ghost, compact: true)
                 }
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(L("pushover.userKey")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                    Text(L("pushover.userKey")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
                     BIDTextField(placeholder: "uQiRzpo4DXghDmr9QzzfQu27cmVRsG", text: $user, mono: true)
-                    Text(L("pushover.token")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                    Text(L("pushover.token")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
                     SecureField("azGDORePK8gMaC0QOYAMyEEuzJnyUi", text: $token)
                         .textFieldStyle(.plain)
-                        .font(.system(size: 13, design: .monospaced))
+                        .font(Typo.font(.body, design: .monospaced))
                         .padding(.horizontal, 12).padding(.vertical, 9)
                         .background(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).fill(Theme.bg))
                         .overlay(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
                 }
-                Text(L("pushover.keyNote")).font(.system(size: 11.5)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
+                Text(L("pushover.keyNote")).font(Typo.font(.callout)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
             }
         } actions: {
             Button(L("common.cancel")) { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
@@ -830,8 +765,8 @@ struct DeleteAccountSheet: View {
     var body: some View {
         SheetScaffold(icon: "person.crop.circle.badge.xmark", iconTint: Theme.blocked, title: L("deleteAccount.title"), subtitle: model.account?.email ?? "", width: 520) {
             VStack(alignment: .leading, spacing: 12) {
-                Text(L("deleteAccount.explain")).font(.system(size: 12.5)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
-                Text(L("deleteAccount.typeDelete")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                Text(L("deleteAccount.explain")).font(Typo.font(.body)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
+                Text(L("deleteAccount.typeDelete")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
                 BIDTextField(placeholder: "DELETE", text: $confirm, mono: true)
             }
         } actions: {
@@ -856,12 +791,12 @@ struct ToggleRow: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.system(size: 13, weight: .medium)).foregroundColor(Theme.text)
-                Text(subtitle).font(.system(size: 11.5)).foregroundColor(Theme.tertiary)
+                Text(title).font(Typo.font(.body, weight: .medium)).foregroundColor(Theme.text)
+                Text(subtitle).font(Typo.font(.callout)).foregroundColor(Theme.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 16)
-            Toggle("", isOn: $isOn)
+            Toggle(title, isOn: $isOn)
                 .toggleStyle(.switch)
                 .labelsHidden()
                 .tint(Theme.accent)

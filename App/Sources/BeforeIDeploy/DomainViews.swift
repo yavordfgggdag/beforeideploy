@@ -37,7 +37,7 @@ struct DomainsView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             SectionLabel(text: L("domains.yours"), icon: "list.bullet").padding(.bottom, 8)
                             if s.domains.isEmpty {
-                                Text(L("domains.none")).foregroundColor(Theme.tertiary).font(.system(size: 12.5))
+                                Text(L("domains.none")).foregroundColor(Theme.tertiary).font(Typo.font(.body))
                             }
                             ForEach(s.domains) { d in
                                 DomainRow(domain: d, selected: selectedDomain == d.name)
@@ -50,7 +50,7 @@ struct DomainsView: View {
                         VStack(alignment: .leading, spacing: 12) {
                             if let dom = selectedDomain {
                                 HStack {
-                                    Text(dom).font(.system(size: 17, weight: .bold)).foregroundColor(Theme.text)
+                                    Text(dom).font(Typo.font(.headline, weight: .bold)).foregroundColor(Theme.text)
                                     Spacer()
                                     Button { model.open(s.domains.first { $0.name == dom }?.dashboard) } label: { Label("Spaceship", systemImage: "arrow.up.right") }
                                         .bidButton(.ghost, compact: true)
@@ -64,20 +64,20 @@ struct DomainsView: View {
                                 }
                                 SectionLabel(text: L("domains.dnsRecords"), icon: "list.dash")
                                 if loadingDNS {
-                                    HStack { Spinner(size: 13); Text(L("domains.loadingDns")).foregroundColor(Theme.secondary).font(.system(size: 12)) }
+                                    HStack { Spinner(size: 13); Text(L("domains.loadingDns")).foregroundColor(Theme.secondary).font(Typo.font(.callout)) }
                                 } else if records.isEmpty {
-                                    Text(L("domains.noRecords")).foregroundColor(Theme.tertiary).font(.system(size: 12))
+                                    Text(L("domains.noRecords")).foregroundColor(Theme.tertiary).font(Typo.font(.callout))
                                 } else {
                                     VStack(spacing: 0) {
                                         ForEach(records) { r in
                                             HStack(spacing: 12) {
-                                                Text(r.type).font(.system(size: 11, weight: .bold, design: .monospaced))
+                                                Text(r.type).font(Typo.font(.caption, weight: .bold, design: .monospaced))
                                                     .foregroundColor(Theme.accent).frame(width: 52, alignment: .leading)
-                                                Text(r.name).font(.system(size: 12, design: .monospaced)).foregroundColor(Theme.text).frame(width: 90, alignment: .leading)
-                                                Text(r.value).font(.system(size: 12, design: .monospaced)).foregroundColor(Theme.secondary)
+                                                Text(r.name).font(Typo.font(.callout, design: .monospaced)).foregroundColor(Theme.text).frame(width: 90, alignment: .leading)
+                                                Text(r.value).font(Typo.font(.callout, design: .monospaced)).foregroundColor(Theme.secondary)
                                                     .lineLimit(1).truncationMode(.middle).textSelection(.enabled)
                                                 Spacer()
-                                                if let t = r.ttl { Text("\(t)s").font(.system(size: 11)).foregroundColor(Theme.tertiary) }
+                                                if let t = r.ttl { Text("\(t)s").font(Typo.font(.caption)).foregroundColor(Theme.tertiary) }
                                             }
                                             .padding(.vertical, 7)
                                             Rectangle().fill(Theme.hairline).frame(height: 1)
@@ -86,9 +86,9 @@ struct DomainsView: View {
                                 }
                             } else {
                                 VStack(spacing: 10) {
-                                    Image(systemName: "hand.point.left").font(.system(size: 26)).foregroundColor(Theme.tertiary)
+                                    Image(systemName: "hand.point.left").font(Typo.font(.display)).foregroundColor(Theme.tertiary)
                                     Text(L("domains.pickDomainHint"))
-                                        .font(.system(size: 12.5)).foregroundColor(Theme.secondary).multilineTextAlignment(.center)
+                                        .font(Typo.font(.body)).foregroundColor(Theme.secondary).multilineTextAlignment(.center)
                                 }
                                 .frame(maxWidth: .infinity, minHeight: 200)
                             }
@@ -98,7 +98,7 @@ struct DomainsView: View {
                     }
 
                     HStack {
-                        Text(L("domains.keyInKeychain")).font(.system(size: 11.5)).foregroundColor(Theme.tertiary)
+                        Text(L("domains.keyInKeychain")).font(Typo.font(.callout)).foregroundColor(Theme.tertiary)
                         Spacer()
                         Button(L("domains.disconnect")) { model.disconnectSpaceship() }.bidButton(.ghost, compact: true)
                     }
@@ -135,14 +135,14 @@ struct DomainRow: View {
         HStack(spacing: 10) {
             Image(systemName: "globe").foregroundColor(selected ? .white : Theme.accent).frame(width: 18)
             VStack(alignment: .leading, spacing: 2) {
-                Text(domain.unicodeName ?? domain.name).font(.system(size: 13, weight: .semibold))
+                Text(domain.unicodeName ?? domain.name).font(Typo.font(.body, weight: .semibold))
                     .foregroundColor(selected ? .white : Theme.text).lineLimit(1)
                 HStack(spacing: 6) {
                     Text(domain.daysLeft.map { L("domains.expiresIn", count: $0) } ?? "—")
                     Text("·")
                     Text(domain.autoRenew ? "auto-renew" : L("domains.noAutoRenew"))
                 }
-                .font(.system(size: 11))
+                .font(Typo.font(.caption))
                 .foregroundColor(selected ? Color.white.opacity(0.8) : (days < 30 ? Theme.warn : Theme.tertiary))
             }
             Spacer()
@@ -152,7 +152,7 @@ struct DomainRow: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
-        .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(selected ? Theme.accent : (hover ? Theme.elevated : .clear)))
+        .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(selected ? Theme.accent : (hover ? Theme.elevated : .clear)))
         .contentShape(Rectangle())
         .onHover { hover = $0 }
     }
@@ -169,12 +169,12 @@ struct SpaceshipConnectCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 12) {
-                Image(systemName: "network").font(.system(size: 22, weight: .semibold)).foregroundColor(Theme.accent)
+                Image(systemName: "network").font(Typo.font(.title, weight: .semibold)).foregroundColor(Theme.accent)
                     .breath(Theme.accent)
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(L("spaceship.connect")).font(.system(size: 17, weight: .bold)).foregroundColor(Theme.text)
+                    Text(L("spaceship.connect")).font(Typo.font(.headline, weight: .bold)).foregroundColor(Theme.text)
                     Text(L("spaceship.connectIntro"))
-                        .font(.system(size: 12.5)).foregroundColor(Theme.secondary)
+                        .font(Typo.font(.body)).foregroundColor(Theme.secondary)
                 }
             }
             VStack(alignment: .leading, spacing: 8) {
@@ -188,7 +188,7 @@ struct SpaceshipConnectCard: View {
                 BIDTextField(placeholder: "API Key", text: $key, mono: true)
                 SecureField("API Secret", text: $secret)
                     .textFieldStyle(.plain)
-                    .font(.system(size: 13, design: .monospaced))
+                    .font(Typo.font(.body, design: .monospaced))
                     .padding(.horizontal, 12).padding(.vertical, 9)
                     .background(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).fill(Theme.bg))
                     .overlay(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
@@ -205,7 +205,7 @@ struct SpaceshipConnectCard: View {
                 .disabled(key.isEmpty || secret.isEmpty || busy)
             }
             Text(L("spaceship.keyNote"))
-                .font(.system(size: 11.5)).foregroundColor(Theme.tertiary)
+                .font(Typo.font(.callout)).foregroundColor(Theme.tertiary)
         }
         .card(padding: 22)
         .glowBorder(Theme.accent, strength: 0.8)
@@ -218,9 +218,9 @@ struct StepLine: View {
     let text: String
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
-            Text("\(n)").font(.system(size: 11, weight: .bold)).foregroundColor(.white)
+            Text("\(n)").font(Typo.font(.caption, weight: .bold)).foregroundColor(.white)
                 .frame(width: 20, height: 20).background(Circle().fill(Theme.accent))
-            Text(text).font(.system(size: 12.5)).foregroundColor(Theme.text).fixedSize(horizontal: false, vertical: true)
+            Text(text).font(Typo.font(.body)).foregroundColor(Theme.text).fixedSize(horizontal: false, vertical: true)
         }
     }
 }
@@ -260,15 +260,15 @@ struct DomainProjectCard: View {
             if model.spaceship?.connected != true {
                 HStack {
                     Text(L("domains.connectSpaceshipHint"))
-                        .font(.system(size: 12.5)).foregroundColor(Theme.secondary)
+                        .font(Typo.font(.body)).foregroundColor(Theme.secondary)
                     Spacer()
                     Button(L("spaceship.connect")) { model.sheet = .spaceshipConnect }.bidButton(.primary, compact: true)
                 }
             } else if status.detect.netlifyLinked != true {
-                Text(L("domains.linkNetlifyFirst")).font(.system(size: 12.5)).foregroundColor(Theme.secondary)
+                Text(L("domains.linkNetlifyFirst")).font(Typo.font(.body)).foregroundColor(Theme.secondary)
             } else {
                 Text(L("domains.pickDomainPlan"))
-                    .font(.system(size: 12.5)).foregroundColor(Theme.secondary)
+                    .font(Typo.font(.body)).foregroundColor(Theme.secondary)
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 220), spacing: 8)], spacing: 8) {
                     ForEach(model.spaceship?.domains ?? []) { d in
                         Button {
@@ -306,9 +306,9 @@ struct ConnectDomainSheet: View {
         SheetScaffold(icon: "link", title: L("domains.connectDomainTitle", domain), subtitle: L("domains.withProjectOnNetlify", model.selected?.name ?? L("domains.theProject")), width: 600) {
             VStack(alignment: .leading, spacing: 12) {
                 if let error {
-                    Text(error).foregroundColor(Theme.blocked).font(.system(size: 12.5))
+                    Text(error).foregroundColor(Theme.blocked).font(Typo.font(.body))
                 } else if let plan {
-                    Text(L("domains.whatIWillDo")).font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.text)
+                    Text(L("domains.whatIWillDo")).font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.text)
                     VStack(alignment: .leading, spacing: 6) {
                         ForEach(plan.add, id: \.self) { r in
                             planRow(symbol: "plus.circle.fill", tint: Theme.ready, r: r)
@@ -319,18 +319,18 @@ struct ConnectDomainSheet: View {
                         HStack(spacing: 8) {
                             Image(systemName: "globe").foregroundColor(Theme.accent)
                             Text("Netlify: custom domain \(plan.domain) + www.\(plan.domain)")
-                                .font(.system(size: 12, design: .monospaced)).foregroundColor(Theme.text)
+                                .font(Typo.font(.callout, design: .monospaced)).foregroundColor(Theme.text)
                         }
                     }
                     .padding(12)
-                    .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.bg))
+                    .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(Theme.bg))
                     if !plan.replace.isEmpty {
                         Label(L("domains.redRecordsWarning"), systemImage: "exclamationmark.triangle.fill")
-                            .font(.system(size: 12)).foregroundColor(Theme.warn)
+                            .font(Typo.font(.callout)).foregroundColor(Theme.warn)
                     }
-                    if let n = plan.note { Text(n).font(.system(size: 11.5)).foregroundColor(Theme.tertiary) }
+                    if let n = plan.note { Text(n).font(Typo.font(.callout)).foregroundColor(Theme.tertiary) }
                 } else {
-                    HStack { Spinner(size: 13); Text(L("domains.checkingDns")).foregroundColor(Theme.secondary).font(.system(size: 12.5)) }
+                    HStack { Spinner(size: 13); Text(L("domains.checkingDns")).foregroundColor(Theme.secondary).font(Typo.font(.body)) }
                 }
             }
         } actions: {
@@ -350,7 +350,7 @@ struct ConnectDomainSheet: View {
     func planRow(symbol: String, tint: Color, r: PlanRecord) -> some View {
         HStack(spacing: 8) {
             Image(systemName: symbol).foregroundColor(tint)
-            Text("\(r.type)  \(r.name)  →  \(r.value)").font(.system(size: 12, design: .monospaced)).foregroundColor(Theme.text)
+            Text("\(r.type)  \(r.name)  →  \(r.value)").font(Typo.font(.callout, design: .monospaced)).foregroundColor(Theme.text)
         }
     }
 }
@@ -362,17 +362,17 @@ struct DeviceCodeCard: View {
     var body: some View {
         if session.deviceURL != nil, !session.finished {
             VStack(spacing: 10) {
-                Text(L("devicecode.title", session.deviceService ?? "GitHub")).font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.secondary)
+                Text(L("devicecode.title", session.deviceService ?? "GitHub")).font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.secondary)
                 if let code = session.deviceCode {
                 Text(code)
-                    .font(.system(size: 34, weight: .bold, design: .monospaced))
+                    .font(Typo.font(.display, weight: .bold, design: .monospaced))
                     .tracking(4)
                     .foregroundColor(Theme.text)
                     .textSelection(.enabled)
                 }
                 if let expiry = session.deviceExpiresAt { Text(expiry, style: .timer).monospacedDigit() }
                 Text(session.deviceCode == nil ? L("devicecode.browserHint") : L("devicecode.hint"))
-                    .font(.system(size: 12)).foregroundColor(Theme.tertiary)
+                    .font(Typo.font(.callout)).foregroundColor(Theme.tertiary)
                 if let u = session.deviceURL, let url = URL(string: u) {
                     Button { NSWorkspace.shared.open(url) } label: { Label(L("devicecode.reopen"), systemImage: "safari") }
                         .bidButton(.secondary, compact: true)
@@ -380,7 +380,7 @@ struct DeviceCodeCard: View {
             }
             .frame(maxWidth: .infinity)
             .padding(18)
-            .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Theme.accentSoft))
+            .background(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).fill(Theme.accentSoft))
             .padding(.horizontal, 16)
             .padding(.bottom, 12)
         }

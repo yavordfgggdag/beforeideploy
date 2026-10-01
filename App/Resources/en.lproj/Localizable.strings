@@ -1206,3 +1206,12 @@
 "setup.retryFailed" = "Retry unfinished steps";
 "autocheck.untrusted" = "Automatic checks start after your first manual check (⌘R).";
 "autocheck.paused" = "Automatic checks are paused. Start a manual check to retry.";
+
+// V12 appearance
+"appearance.title" = "Appearance";
+"appearance.system" = "System";
+"appearance.light" = "Light";
+"appearance.dark" = "Dark";
+"common.loading" = "Loading…";
+"common.ready" = "Ready";
+"common.blocked" = "Blocked";

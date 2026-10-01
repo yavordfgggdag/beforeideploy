@@ -42,7 +42,8 @@ final class AppModel: ObservableObject, Feedback {
 
     @Published var sheet: SheetKind?
     @Published var pendingFix: PendingFix?
-    @Published var toast: Toast?
+    let toastCenter = ToastCenter()
+    var toast: Toast? { toastCenter.current }
     @Published var engineMissing = false
     @Published var nodeMissing = false
     @Published var lastError: String?
@@ -146,6 +147,7 @@ final class AppModel: ObservableObject, Feedback {
         }
         storeObservers = [
             forward(projectStore.objectWillChange),
+            forward(toastCenter.objectWillChange),
             forward(accountStore.objectWillChange),
             forward(hostingStore.objectWillChange),
             forward(runController.objectWillChange),
@@ -1061,17 +1063,9 @@ final class AppModel: ObservableObject, Feedback {
         present(t, seconds: 6)
     }
 
-    func dismissToast() {
-        withAnimation(.easeOut(duration: 0.2)) { toast = nil }
-    }
+    func dismissToast() { toastCenter.dismiss() }
 
-    private func present(_ t: Toast, seconds: Double) {
-        withAnimation(.spring(response: 0.35)) { toast = t }
-        Task {
-            try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
-            if toast == t { withAnimation(.easeOut(duration: 0.25)) { toast = nil } }
-        }
-    }
+    private func present(_ t: Toast, seconds: Double) { toastCenter.enqueue(t) }
 
     // MARK: - Automatic check (V10)
 

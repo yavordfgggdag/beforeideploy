@@ -4,7 +4,7 @@ import SwiftUI
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillFinishLaunching(_ notification: Notification) {
         CrashReporter.install()
-        NSApp.appearance = NSAppearance(named: .darkAqua)
+        (Appearance(rawValue: UserDefaults.standard.string(forKey: Appearance.storageKey) ?? "system") ?? .system).apply()
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -30,6 +30,7 @@ struct BeforeIDeployApp: App {
     @StateObject private var model = AppModel.shared
     /// Changing the language rebuilds the window content, so every L() text is read again.
     @AppStorage(Localization.storageKey) private var locale = ""
+    @AppStorage(Appearance.storageKey) private var appearance = "system"
     @AppStorage(Onboarding.tourSeenKey) private var tourSeen = false
 
     /// Project commands only while the main screen is showing — never behind the sign-in or the tour (audit A8).
@@ -42,10 +43,11 @@ struct BeforeIDeployApp: App {
                 .environment(\.locale, Localization.locale)
                 .environmentObject(model)
                 .frame(minWidth: 1080, minHeight: 700)
-                .preferredColorScheme(.dark)
+
                 .tint(Theme.accent)
                 .accentColor(Theme.accent)
                 .task { await model.start() }
+                .onChange(of: appearance) { (Appearance(rawValue: $0) ?? .system).apply() }
         }
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 1280, height: 820)
@@ -55,7 +57,7 @@ struct BeforeIDeployApp: App {
             MenuBarView()
                 .environment(\.locale, Localization.locale)
                 .environmentObject(model)
-                .preferredColorScheme(.dark)
+
         } label: {
             Image(systemName: model.menuBarSymbol)
                 .accessibilityLabel("Before I Deploy")

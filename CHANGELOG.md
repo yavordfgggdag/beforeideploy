@@ -2,15 +2,17 @@
 
 All notable changes, newest first. Versions come from `engine/VERSION`. Each entry has an English and a Bulgarian part; the in-app update banner shows the notes from `latest.json`, which are generated from this file at release time (WP8).
 
-## Unreleased — V12 setup foundation (2026-10-01)
+## Unreleased — V12 setup and design foundation (2026-10-01)
 
 ### English
+- Adds System/Light/Dark appearance, semantic colours and a shared type scale. Shared badges, meters, fields and adaptive modal panels replace duplicate chrome; settings scroll, errors remain until dismissed, and decorative background animation is static. Screenshots cover both appearances and minimum review size.
 - Finder launches now resolve managed tools and the bundled Node before starting the engine. The runtime includes npm/npx; hosting tools install into verified, atomically published user-owned directories, with no global npm prefix or sudo.
 - Setup validates executable tools, scopes requirements to the selected providers, avoids the Git/CLT shim on refresh, offers an in-app Git identity form and reports failed/blocked steps honestly. Adds preflight, exclusive locking, heartbeat, retry, bounded browser sign-in and engine stdout draining.
 - Automatic checks distinguish initial trust from changed scripts and visibly pause on engine failure. Local Preview relays isolated project output through pipes, fixing macOS Node startup without granting project access to the protected cache.
 - Removes an accidentally committed machine-specific node_modules symlink from the SQL test harness; install its declared development dependencies normally.
 
 ### Български
+- Добавени са системен, светъл и тъмен изглед, общи цветове и размери на текста. Уеднаквени са индикаторите, полетата и прозорците; настройките се превъртат, грешките остават до затваряне, а фонът е статичен. Визуалните проверки включват двете теми и малък прозорец.
 - Стартирането от Finder вече намира инструментите и вградения Node. Пакетът включва npm/npx; инструментите се инсталират в собствена папка на потребителя след проверка, без глобален npm prefix и без sudo.
 - Настройката проверява дали инструментите действително работят, изисква само нужните за избрания хостинг и не отваря CLT прозорец при обновяване. Името и имейлът за Git се въвеждат в приложението. Неуспешните и блокираните стъпки вече не се показват като успех; има предварителна проверка, заключване, прогрес и повторен опит.
 - Автоматичната проверка показва защо е спряна. Поправен е стартът на Local Preview в macOS sandbox чрез междинен процес за лога, без отслабване на защитата.

@@ -12,15 +12,7 @@ import SwiftUI
 struct AuroraBackground: View {
     var tint: Color = Theme.accent
 
-    var body: some View {
-        if Motion.reduced {
-            AuroraFrame(tint: tint, t: 0)
-        } else {
-            TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { ctx in
-                AuroraFrame(tint: tint, t: ctx.date.timeIntervalSinceReferenceDate)
-            }
-        }
-    }
+    var body: some View { AuroraFrame(tint: tint, t: 0) }
 }
 
 private struct AuroraFrame: View {
@@ -33,9 +25,9 @@ private struct AuroraFrame: View {
             let h = geo.size.height
             ZStack {
                 Theme.bg
-                blob(color: tint, size: max(w, h) * 0.9, x: w * (0.82 + 0.06 * sin(t * 0.21)), y: h * (0.10 + 0.08 * cos(t * 0.17)), opacity: 0.26)
-                blob(color: Color(hex: 0x7A3FD6), size: max(w, h) * 0.8, x: w * (0.12 + 0.07 * cos(t * 0.13)), y: h * (0.92 + 0.05 * sin(t * 0.19)), opacity: 0.20)
-                blob(color: Color(hex: 0x1FA36A), size: max(w, h) * 0.55, x: w * (0.55 + 0.10 * sin(t * 0.11)), y: h * (0.55 + 0.10 * cos(t * 0.09)), opacity: 0.09)
+                blob(color: tint, size: max(w, h) * 0.9, x: w * (0.82 + 0.06 * sin(t * 0.21)), y: h * (0.10 + 0.08 * cos(t * 0.17)), opacity: 0.06)
+                blob(color: Color(hex: 0x7A3FD6), size: max(w, h) * 0.8, x: w * (0.12 + 0.07 * cos(t * 0.13)), y: h * (0.92 + 0.05 * sin(t * 0.19)), opacity: 0.04)
+                blob(color: Color(hex: 0x1FA36A), size: max(w, h) * 0.55, x: w * (0.55 + 0.10 * sin(t * 0.11)), y: h * (0.55 + 0.10 * cos(t * 0.09)), opacity: 0.025)
                 // fine grain so the gradients never band
                 Rectangle().fill(Color.white.opacity(0.012)).blendMode(.plusLighter)
             }
@@ -62,24 +54,8 @@ struct GlowBorder: ViewModifier {
     var strength: Double = 1
 
     func body(content: Content) -> some View {
-        content.overlay(
-            Group {
-                if Motion.reduced {
-                    RoundedRectangle(cornerRadius: radius, style: .continuous)
-                        .strokeBorder(tint.opacity(0.35 * strength), lineWidth: 1)
-                } else {
-                    TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { ctx in
-                        let angle = Angle(degrees: (ctx.date.timeIntervalSinceReferenceDate * 40).truncatingRemainder(dividingBy: 360))
-                        RoundedRectangle(cornerRadius: radius, style: .continuous)
-                            .strokeBorder(
-                                AngularGradient(colors: [tint.opacity(0.0), tint.opacity(0.9 * strength), tint.opacity(0.0), tint.opacity(0.35 * strength), tint.opacity(0.0)], center: .center, angle: angle),
-                                lineWidth: 1.2
-                            )
-                    }
-                }
-            }
-            .allowsHitTesting(false)
-        )
+        content.overlay(RoundedRectangle(cornerRadius: radius, style: .continuous)
+            .strokeBorder(tint.opacity(0.25 * strength), lineWidth: 1).allowsHitTesting(false))
     }
 }
 
@@ -99,7 +75,7 @@ struct Lift: ViewModifier {
                     .strokeBorder(tint.opacity(hover ? 0.45 : 0), lineWidth: 1)
                     .allowsHitTesting(false)
             )
-            .shadow(color: tint.opacity(hover ? 0.18 : 0), radius: hover ? 22 : 0, y: hover ? 10 : 0)
+
             .scaleEffect(hover && !Motion.reduced ? amount : 1)
             .onHover { hover = $0 }
             .animation(Motion.spring, value: hover)
@@ -114,17 +90,8 @@ struct Entrance: ViewModifier {
     var offset: CGFloat = 14
     @Local private var shown = false
 
-    func body(content: Content) -> some View {
-        content
-            .opacity(shown || Motion.reduced ? 1 : 0)
-            .offset(y: shown || Motion.reduced ? 0 : offset)
-            .scaleEffect(shown || Motion.reduced ? 1 : 0.985)
-            .onAppear {
-                guard !shown else { return }
-                let delay = min(0.6, Double(index) * 0.045)
-                withAnimation(.spring(response: 0.5, dampingFraction: 0.85).delay(delay)) { shown = true }
-            }
-    }
+    // Screen changes are immediate; transitions are reserved for user actions.
+    func body(content: Content) -> some View { content }
 }
 
 // MARK: - Counting numbers
@@ -203,14 +170,7 @@ struct Breath: ViewModifier {
     var strong = false
     @Local private var up = false
 
-    func body(content: Content) -> some View {
-        content
-            .shadow(color: color.opacity(up ? (strong ? 0.85 : 0.55) : 0.2), radius: up ? (strong ? 22 : 14) : 6)
-            .onAppear {
-                guard !Motion.reduced else { return }
-                withAnimation(.easeInOut(duration: strong ? 0.9 : 2.2).repeatForever(autoreverses: true)) { up = true }
-            }
-    }
+    func body(content: Content) -> some View { content }
 }
 
 // MARK: - Shimmer
@@ -247,24 +207,7 @@ struct Orbit: View {
     var color: Color = Theme.accent
     @Local private var spin = false
 
-    var body: some View {
-        ZStack {
-            ForEach(0..<3, id: \.self) { i in
-                Circle()
-                    .fill(color.opacity(1 - Double(i) * 0.3))
-                    .frame(width: size * 0.28, height: size * 0.28)
-                    .offset(y: -size / 2)
-                    .rotationEffect(.degrees(Double(i) * 120))
-            }
-        }
-        .frame(width: size, height: size)
-        .rotationEffect(.degrees(spin ? 360 : 0))
-        .onAppear {
-            guard !Motion.reduced else { return }
-            withAnimation(.linear(duration: 1.1).repeatForever(autoreverses: false)) { spin = true }
-        }
-        .accessibilityHidden(true)
-    }
+    var body: some View { Spinner(size: size, color: color) }
 }
 
 /// "typing" dots for the assistant while the answer streams.
@@ -290,7 +233,7 @@ struct TypingDots: View {
 struct GradientText: View {
     let text: String
     var font: Font = .system(size: 26, weight: .bold)
-    var colors: [Color] = [Color(hex: 0xF5F5F7), Color(hex: 0xBFD6FF)]
+    var colors: [Color] = [Theme.text, Theme.text]
     var body: some View {
         Text(text)
             .font(font)
@@ -365,20 +308,7 @@ struct SweepBar: View {
     var tint: Color = Theme.accent
     var height: CGFloat = 6
 
-    var body: some View {
-        GeometryReader { geo in
-            ZStack(alignment: .leading) {
-                Capsule().fill(Theme.elevated)
-                Capsule()
-                    .fill(LinearGradient(colors: [tint.opacity(0.7), tint], startPoint: .leading, endPoint: .trailing))
-                    .frame(width: max(height, geo.size.width * CGFloat(min(1, max(0, fraction)))))
-                    .shadow(color: tint.opacity(0.7), radius: 6)
-                    .modifier(Shimmer(active: fraction > 0 && fraction < 1))
-                    .animation(Motion.gentle, value: fraction)
-            }
-        }
-        .frame(height: height)
-    }
+    var body: some View { Meter(value: fraction, size: height, tint: tint) }
 }
 
 // MARK: - View helpers
@@ -459,16 +389,10 @@ struct ProgressRing: View {
     @Local private var shown: Double = 0
 
     var body: some View {
-        ZStack {
-            Circle().stroke(Theme.elevated, lineWidth: lineWidth)
-            Circle()
-                .trim(from: 0, to: CGFloat(shown))
-                .stroke(tint, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
-                .rotationEffect(.degrees(-90))
-                .shadow(color: Theme.accent.opacity(0.45), radius: 6)
+        GeometryReader { geo in
+            Meter(value: fraction, style: .ring, size: min(geo.size.width, geo.size.height))
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .onAppear { withAnimation(Motion.reduced ? nil : .spring(response: 1.1, dampingFraction: 0.85).delay(0.15)) { shown = fraction } }
-        .onChange(of: fraction) { f in withAnimation(Motion.reduced ? nil : .spring(response: 0.8, dampingFraction: 0.85)) { shown = f } }
     }
 }
 
@@ -488,7 +412,7 @@ extension View {
     func shimmer(active: Bool = true) -> some View {
         modifier(Shimmer(active: active))
     }
-    /// Screen-level transition: content slides up and fades in when the screen changes.
+    /// Optional bounded movement for onboarding illustrations.
     func floating(amplitude: CGFloat = 4, period: Double = 3.2) -> some View {
         modifier(Floating(amplitude: amplitude, period: period))
     }

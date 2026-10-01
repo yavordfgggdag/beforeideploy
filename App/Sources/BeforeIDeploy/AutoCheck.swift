@@ -68,18 +68,18 @@ struct MenuBarView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
                 AppGlyph(size: 22)
-                Text("Before I Deploy").font(.system(size: 13, weight: .bold)).foregroundColor(Theme.text)
+                Text("Before I Deploy").font(Typo.font(.body, weight: .bold)).foregroundColor(Theme.text)
                 Spacer()
                 if model.autoChecking { Spinner(size: 11) }
             }
             if model.engineMissing || model.nodeMissing {
                 // the menu must say why nothing is listed, not look empty (WP02, audit A11)
                 Label(model.nodeMissing ? L("node.missing.title") : L("root.engineMissing"), systemImage: "exclamationmark.triangle.fill")
-                    .font(.system(size: 11.5, weight: .semibold)).foregroundColor(Theme.warn)
+                    .font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.warn)
                     .fixedSize(horizontal: false, vertical: true)
                 Button(L("common.retry")) { Task { await model.start() } }.bidButton(.secondary, compact: true)
             } else if model.projects.isEmpty {
-                Text(L("root.emptyHint")).font(.system(size: 11.5)).foregroundColor(Theme.secondary)
+                Text(L("root.emptyHint")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             } else {
                 VStack(spacing: 2) {
@@ -90,9 +90,9 @@ struct MenuBarView: View {
                         } label: {
                             HStack(spacing: 9) {
                                 ProjectAvatar(name: p.name, size: 22, dimmed: p.exists == false)
-                                Text(p.name).font(.system(size: 12.5, weight: .medium)).foregroundColor(Theme.text).lineLimit(1)
+                                Text(p.name).font(Typo.font(.body, weight: .medium)).foregroundColor(Theme.text).lineLimit(1)
                                 Spacer()
-                                Text(Self.statusText(p.lastStatus)).font(.system(size: 10, weight: .heavy)).tracking(0.5)
+                                Text(Self.statusText(p.lastStatus)).font(Typo.font(.micro, weight: .heavy)).tracking(0.5)
                                     .foregroundColor(Theme.color(for: p.lastStatus))
                                 StatusDot(status: p.lastStatus, size: 7)
                             }
@@ -117,7 +117,7 @@ struct MenuBarView: View {
             }
             Toggle(L("settings.autoCheck"), isOn: Binding(get: { model.autoCheck }, set: { model.autoCheck = $0 }))
                 .toggleStyle(.switch).controlSize(.small).tint(Theme.accent)
-                .font(.system(size: 11.5))
+                .font(Typo.font(.callout))
         }
         .padding(14)
         .frame(width: 300)
@@ -147,22 +147,8 @@ struct SkeletonBlock: View {
     @Local private var phase: CGFloat = -1
 
     var body: some View {
-        RoundedRectangle(cornerRadius: radius, style: .continuous)
-            .fill(Theme.elevated)
-            .overlay(
-                GeometryReader { geo in
-                    LinearGradient(colors: [.clear, Color.white.opacity(0.06), .clear], startPoint: .leading, endPoint: .trailing)
-                        .frame(width: geo.size.width * 0.6)
-                        .offset(x: phase * geo.size.width)
-                }
-                .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
-            )
-            .frame(width: width, height: height)
-            .onAppear {
-                guard !Motion.reduced else { return }
-                withAnimation(.linear(duration: 1.4).repeatForever(autoreverses: false)) { phase = 1.4 }
-            }
-            .accessibilityHidden(true)
+        RoundedRectangle(cornerRadius: radius, style: .continuous).fill(Theme.elevated)
+            .shimmer().frame(width: width, height: height).accessibilityHidden(true)
     }
 }
 

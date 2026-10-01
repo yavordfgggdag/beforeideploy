@@ -1206,3 +1206,12 @@
 "setup.retryFailed" = "Опитай пак незавършените стъпки";
 "autocheck.untrusted" = "Автоматичните проверки започват след първата ти ръчна проверка (⌘R).";
 "autocheck.paused" = "Автоматичните проверки са спрени. Пусни ръчна проверка, за да опиташ отново.";
+
+// V12 appearance
+"appearance.title" = "Изглед";
+"appearance.system" = "Според системата";
+"appearance.light" = "Светъл";
+"appearance.dark" = "Тъмен";
+"common.loading" = "Зареждане…";
+"common.ready" = "Готово";
+"common.blocked" = "Блокирано";

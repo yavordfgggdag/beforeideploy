@@ -16,7 +16,7 @@ struct PlansSheet: View {
                     if store.waitingForPayment { WaitingBanner { store.stopWaiting() } }
                     if let why = store.billingUnavailable {
                         Label(L("billing.notReady"), systemImage: "info.circle")
-                            .font(.system(size: 12.5)).foregroundColor(Theme.secondary)
+                            .font(Typo.font(.body)).foregroundColor(Theme.secondary)
                             .fixedSize(horizontal: false, vertical: true)
                             .help(why)
                     }
@@ -48,7 +48,7 @@ struct PlansSheet: View {
                             }
                         }
                         Text(L("billing.legal"))
-                            .font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                            .font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
                             .fixedSize(horizontal: false, vertical: true)
                         LegalLinks()
                     } else if store.loading {
@@ -113,8 +113,8 @@ private struct WaitingBanner: View {
         HStack(spacing: 12) {
             Spinner(size: 14)
             VStack(alignment: .leading, spacing: 2) {
-                Text(L("billing.waiting")).font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.text)
-                Text(L("billing.waitingHint")).font(.system(size: 11.5)).foregroundColor(Theme.secondary)
+                Text(L("billing.waiting")).font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.text)
+                Text(L("billing.waitingHint")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
             }
             Spacer()
             Button(L("common.cancel"), action: stop).bidButton(.ghost, compact: true)
@@ -132,17 +132,17 @@ struct BalanceCard: View {
         HStack(alignment: .center, spacing: 22) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(Fmt.tokens(b.total))
-                    .font(.system(size: 34, weight: .bold, design: .rounded))
+                    .font(Typo.font(.display, weight: .bold, design: .rounded))
                     .foregroundColor(Theme.text)
                     .monospacedDigit()
-                Text(L("billing.tokensLeft")).font(.system(size: 12)).foregroundColor(Theme.secondary)
+                Text(L("billing.tokensLeft")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
             }
             VStack(alignment: .leading, spacing: 8) {
                 GeometryReader { geo in
                     HStack(spacing: 2) {
                         Capsule().fill(Theme.accentGradient)
                             .frame(width: max(b.plan > 0 ? 6 : 0, geo.size.width * CGFloat(b.plan) / CGFloat(total)))
-                        Capsule().fill(LinearGradient(colors: [Color(hex: 0xB57BFF), Color(hex: 0x7A3FD6)], startPoint: .leading, endPoint: .trailing))
+                        Capsule().fill(LinearGradient(colors: [Theme.brandViolet, Theme.brandViolet], startPoint: .leading, endPoint: .trailing))
                             .frame(width: max(b.topup > 0 ? 6 : 0, geo.size.width * CGFloat(b.topup) / CGFloat(total)))
                         if b.total == 0 { Capsule().fill(Theme.elevated) }
                     }
@@ -150,9 +150,9 @@ struct BalanceCard: View {
                 .frame(height: 8)
                 HStack(spacing: 14) {
                     Legend(color: Theme.accent, text: L("billing.fromPlan", Fmt.tokens(b.plan)))
-                    Legend(color: Color(hex: 0xB57BFF), text: L("billing.fromPacks", Fmt.tokens(b.topup)))
+                    Legend(color: Theme.brandViolet, text: L("billing.fromPacks", Fmt.tokens(b.topup)))
                 }
-                Text(subscriptionLine).font(.system(size: 12)).foregroundColor(Theme.secondary)
+                Text(subscriptionLine).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
             }
         }
         .card(padding: 20, tint: status.plan == "free" ? nil : Theme.accent)
@@ -175,7 +175,7 @@ struct Legend: View {
     var body: some View {
         HStack(spacing: 6) {
             Circle().fill(color).frame(width: 7, height: 7)
-            Text(text).font(.system(size: 11.5)).foregroundColor(Theme.secondary)
+            Text(text).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
         }
     }
 }
@@ -187,21 +187,21 @@ private struct TrialCard: View {
     var body: some View {
         HStack(spacing: 14) {
             Image(systemName: "gift.fill")
-                .font(.system(size: 18, weight: .semibold)).foregroundColor(.white)
+                .font(Typo.font(.headline, weight: .semibold)).foregroundColor(.white)
                 .frame(width: 42, height: 42)
-                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.accentGradient))
+                .background(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).fill(Theme.accentGradient))
             VStack(alignment: .leading, spacing: 3) {
                 Text(L("billing.trialTitle", BillingFormat.planName(trial.plan), trial.days))
-                    .font(.system(size: 14, weight: .bold)).foregroundColor(Theme.text)
+                    .font(Typo.font(.subhead, weight: .bold)).foregroundColor(Theme.text)
                 Text(L("billing.trialDetail", Fmt.tokens(trial.tokens)))
-                    .font(.system(size: 12)).foregroundColor(Theme.secondary)
+                    .font(Typo.font(.callout)).foregroundColor(Theme.secondary)
             }
             Spacer()
             Button(busy ? L("billing.starting") : L("billing.startTrial"), action: start)
                 .bidButton(.primary)
                 .disabled(busy)
         }
-        .card(padding: 16, tint: Color(hex: 0x7A3FD6))
+        .card(padding: 16, tint: Theme.brandViolet)
     }
 }
 
@@ -228,11 +228,11 @@ private struct PlanCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text(BillingFormat.planName(plan.id)).font(.system(size: 16, weight: .bold)).foregroundColor(Theme.text)
+                Text(BillingFormat.planName(plan.id)).font(Typo.font(.headline, weight: .bold)).foregroundColor(Theme.text)
                 Spacer()
                 if recommended {
                     Text(L("billing.recommended"))
-                        .font(.system(size: 9.5, weight: .heavy)).tracking(0.6)
+                        .font(Typo.font(.micro, weight: .heavy)).tracking(0.6)
                         .foregroundColor(.white)
                         .padding(.horizontal, 7).padding(.vertical, 3)
                         .background(Capsule().fill(Theme.accentGradient))
@@ -240,20 +240,20 @@ private struct PlanCard: View {
             }
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(BillingFormat.money(price, currency: currency))
-                    .font(.system(size: 26, weight: .bold, design: .rounded)).foregroundColor(Theme.text)
-                Text(yearly ? L("billing.perYear") : L("billing.perMonth")).font(.system(size: 12)).foregroundColor(Theme.tertiary)
+                    .font(Typo.font(.display, weight: .bold, design: .rounded)).foregroundColor(Theme.text)
+                Text(yearly ? L("billing.perYear") : L("billing.perMonth")).font(Typo.font(.callout)).foregroundColor(Theme.tertiary)
             }
             if yearly, let y = plan.yearlyPrice, let m = plan.price, m > 0 {
                 Text(L("billing.yearlySaving", BillingFormat.money(y / 12, currency: currency)))
-                    .font(.system(size: 11, weight: .semibold)).foregroundColor(Theme.ready)
+                    .font(Typo.font(.caption, weight: .semibold)).foregroundColor(Theme.ready)
             }
             Text(L("billing.tokensPerMonth", Fmt.tokens(plan.tokens)))
-                .font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.accent)
+                .font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.accent)
             VStack(alignment: .leading, spacing: 7) {
                 ForEach(bullets, id: \.self) { b in
                     HStack(alignment: .top, spacing: 8) {
-                        Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundColor(Theme.ready).padding(.top, 2)
-                        Text(b).font(.system(size: 12)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
+                        Image(systemName: "checkmark").font(Typo.font(.micro, weight: .bold)).foregroundColor(Theme.ready).padding(.top, 2)
+                        Text(b).font(Typo.font(.callout)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
                     }
                 }
             }
@@ -289,12 +289,12 @@ private struct PackCard: View {
     let buy: () -> Void
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: "bolt.fill").foregroundColor(Color(hex: 0xB57BFF))
+            Image(systemName: "bolt.fill").foregroundColor(Theme.brandViolet)
                 .frame(width: 30, height: 30)
-                .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Color(hex: 0xB57BFF).opacity(0.14)))
+                .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(Theme.brandViolet.opacity(0.14)))
             VStack(alignment: .leading, spacing: 2) {
-                Text(L("billing.packTokens", Fmt.tokens(pack.tokens))).font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.text)
-                Text(L("billing.packHint")).font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                Text(L("billing.packTokens", Fmt.tokens(pack.tokens))).font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.text)
+                Text(L("billing.packHint")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
             }
             Spacer()
             Button(pack.available ? BillingFormat.money(pack.price, currency: currency) : L("billing.soon"), action: buy)
@@ -313,11 +313,11 @@ struct UsageList: View {
             SectionLabel(text: L("billing.recentUsage"), icon: "clock")
             ForEach(usage) { u in
                 HStack(spacing: 10) {
-                    Text(Fmt.relative(u.at)).font(.system(size: 11.5)).foregroundColor(Theme.tertiary).frame(width: 110, alignment: .leading)
-                    Text(u.step ?? "—").font(.system(size: 12, weight: .medium)).foregroundColor(Theme.text)
-                    Text(u.model ?? "").font(.system(size: 11, design: .monospaced)).foregroundColor(Theme.tertiary)
+                    Text(Fmt.relative(u.at)).font(Typo.font(.callout)).foregroundColor(Theme.tertiary).frame(width: 110, alignment: .leading)
+                    Text(u.step ?? "—").font(Typo.font(.callout, weight: .medium)).foregroundColor(Theme.text)
+                    Text(u.model ?? "").font(Typo.font(.caption, design: .monospaced)).foregroundColor(Theme.tertiary)
                     Spacer()
-                    Text(L("ai.tokensCount", Fmt.tokens(u.tokens))).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.secondary).monospacedDigit()
+                    Text(L("ai.tokensCount", Fmt.tokens(u.tokens))).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.secondary).monospacedDigit()
                 }
             }
         }

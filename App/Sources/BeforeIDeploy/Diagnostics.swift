@@ -123,7 +123,14 @@ enum Snapshot {
         guard argument("BIDSnapshot"), let path = UserDefaults.standard.string(forKey: "BIDSnapshot"), !path.isEmpty else { return }
         let delay = UserDefaults.standard.double(forKey: "BIDSnapshotDelay")
         Task { @MainActor in
-            try? await Task.sleep(nanoseconds: UInt64((delay > 0 ? delay : 6) * 1_000_000_000))
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
+            if argument("BIDWindowSize"), let value = UserDefaults.standard.string(forKey: "BIDWindowSize") {
+                let dimensions = value.split(separator: "x").compactMap { Double($0) }
+                if dimensions.count == 2, let window = NSApp.windows.first(where: { $0.isVisible && $0.sheetParent == nil }) {
+                    window.setContentSize(NSSize(width: max(900, dimensions[0]), height: max(640, dimensions[1])))
+                }
+            }
+            try? await Task.sleep(nanoseconds: UInt64(max(1, (delay > 0 ? delay : 6) - 1) * 1_000_000_000))
             write(to: URL(fileURLWithPath: path))
             NSApp.terminate(nil)
         }

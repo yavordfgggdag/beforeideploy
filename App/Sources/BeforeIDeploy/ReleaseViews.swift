@@ -46,7 +46,7 @@ struct ReleaseSheet: View {
 
     private var start: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(L("release.startHint")).font(.system(size: 12.5)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
+            Text(L("release.startHint")).font(Typo.font(.body)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
             StageList(stages: ["check", "preview", "smoke", "promote", "verify"].map { ReleaseStage(id: $0, status: "pending") })
         }
     }
@@ -58,7 +58,7 @@ struct ReleaseSheet: View {
             if let url = op.preview?.url {
                 HStack(spacing: 8) {
                     Button { model.open(url) } label: { Label(L("release.openPreview"), systemImage: "safari") }.bidButton(.secondary, compact: true)
-                    Text(Fmt.host(url)).font(.system(size: 12, design: .monospaced)).foregroundColor(Theme.secondary).textSelection(.enabled)
+                    Text(Fmt.host(url)).font(Typo.font(.callout, design: .monospaced)).foregroundColor(Theme.secondary).textSelection(.enabled)
                     Spacer()
                 }
             }
@@ -67,17 +67,17 @@ struct ReleaseSheet: View {
                 SmokeList(result: smoke)
             }
             VStack(alignment: .leading, spacing: 6) {
-                if let id = op.preview?.deployId { Text(L("release.publishes", id)).font(.system(size: 11.5, design: .monospaced)).foregroundColor(Theme.tertiary) }
-                Text(L("release.willPublish")).font(.system(size: 12)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
-                Text(L("release.confirmHint")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text).fixedSize(horizontal: false, vertical: true)
+                if let id = op.preview?.deployId { Text(L("release.publishes", id)).font(Typo.font(.callout, design: .monospaced)).foregroundColor(Theme.tertiary) }
+                Text(L("release.willPublish")).font(Typo.font(.callout)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
+                Text(L("release.confirmHint")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text).fixedSize(horizontal: false, vertical: true)
                 TextField("DEPLOY", text: $typed)
                     .textFieldStyle(.roundedBorder)
-                    .font(.system(size: 14, weight: .bold, design: .monospaced))
+                    .font(Typo.font(.subhead, weight: .bold, design: .monospaced))
                     .frame(width: 160)
                     .accessibilityLabel(L("release.promote"))
             }
             .padding(12)
-            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.blocked.opacity(0.08)))
+            .background(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).fill(Theme.blocked.opacity(0.08)))
         }
     }
 
@@ -92,13 +92,13 @@ struct ReleaseSheet: View {
         VStack(alignment: .leading, spacing: 8) {
             SectionLabel(text: L("release.lastOps"))
             StateLine(op: op)
-            if let f = op.failure, op.state == "failed" { Text(L("release.failure", f)).font(.system(size: 11.5)).foregroundColor(Theme.blocked) }
-            if op.state == "stale" { Text(L("release.staleHint")).font(.system(size: 11.5)).foregroundColor(Theme.warn) }
+            if let f = op.failure, op.state == "failed" { Text(L("release.failure", f)).font(Typo.font(.callout)).foregroundColor(Theme.blocked) }
+            if op.state == "stale" { Text(L("release.staleHint")).font(Typo.font(.callout)).foregroundColor(Theme.warn) }
             if let v = op.verify, op.state == "verify_failed" { SmokeList(result: v) }
             RollbackLine(rollback: op.rollback ?? rel?.rollback)
         }
         .padding(12)
-        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.bg))
+        .background(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).fill(Theme.bg))
     }
 }
 
@@ -115,12 +115,12 @@ struct StateLine: View {
     var body: some View {
         HStack(spacing: 8) {
             Circle().fill(tint).frame(width: 8, height: 8)
-            Text(K.releaseState(op.state)).font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.text)
+            Text(K.releaseState(op.state)).font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.text)
             Spacer()
             if let c = op.confirmation, let by = c.by {
-                Text(L("release.byActor", K.actor(by), Fmt.relative(c.at))).font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                Text(L("release.byActor", K.actor(by), Fmt.relative(c.at))).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
             } else {
-                Text(Fmt.relative(op.updatedAt ?? op.createdAt)).font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                Text(Fmt.relative(op.updatedAt ?? op.createdAt)).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
             }
         }
     }
@@ -134,12 +134,12 @@ struct StageList: View {
             ForEach(stages) { s in
                 HStack(spacing: 10) {
                     Image(systemName: Theme.symbol(for: s.status)).foregroundColor(Theme.color(for: s.status)).frame(width: 16)
-                    Text(K.releaseStage(s.id)).font(.system(size: 12.5, weight: .medium)).foregroundColor(s.status == "pending" ? Theme.tertiary : Theme.text)
-                    if let sum = s.summary { Text(sum).font(.system(size: 11.5)).foregroundColor(Theme.secondary).lineLimit(1) }
+                    Text(K.releaseStage(s.id)).font(Typo.font(.body, weight: .medium)).foregroundColor(s.status == "pending" ? Theme.tertiary : Theme.text)
+                    if let sum = s.summary { Text(sum).font(Typo.font(.callout)).foregroundColor(Theme.secondary).lineLimit(1) }
                     Spacer()
                     if let log = s.log { Button(L("release.viewLog")) { model.openFile(log) }.bidButton(.ghost, compact: true) }
                     if let f = s.finishedAt, let st = s.startedAt, let a = Fmt.date(st), let b = Fmt.date(f) {
-                        Text(Fmt.duration(b.timeIntervalSince(a))).font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                        Text(Fmt.duration(b.timeIntervalSince(a))).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
                     }
                 }
                 .padding(.vertical, 3)
@@ -156,16 +156,16 @@ struct SmokeList: View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {
                 Image(systemName: result.ok ? "checkmark.seal.fill" : "xmark.octagon.fill").foregroundColor(result.ok ? Theme.ready : Theme.blocked)
-                Text(result.ok ? L("release.pagesOk", checks.count) : L("release.pagesFailed", failed.count)).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                Text(result.ok ? L("release.pagesOk", checks.count) : L("release.pagesFailed", failed.count)).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
             }
             ForEach(checks.prefix(8)) { c in
                 HStack(spacing: 8) {
-                    Text(c.ok ? "✓" : "✗").foregroundColor(c.ok ? Theme.ready : Theme.blocked).font(.system(size: 11, weight: .bold))
-                    Text("\(c.status ?? 0)").font(.system(size: 11, design: .monospaced)).foregroundColor(Theme.secondary).frame(width: 30, alignment: .trailing)
-                    Text(c.url).font(.system(size: 11, design: .monospaced)).foregroundColor(Theme.text).lineLimit(1).truncationMode(.middle)
-                    if let r = c.reason { Text(r).font(.system(size: 11)).foregroundColor(Theme.blocked) }
+                    Text(c.ok ? "✓" : "✗").foregroundColor(c.ok ? Theme.ready : Theme.blocked).font(Typo.font(.caption, weight: .bold))
+                    Text("\(c.status ?? 0)").font(Typo.font(.caption, design: .monospaced)).foregroundColor(Theme.secondary).frame(width: 30, alignment: .trailing)
+                    Text(c.url).font(Typo.font(.caption, design: .monospaced)).foregroundColor(Theme.text).lineLimit(1).truncationMode(.middle)
+                    if let r = c.reason { Text(r).font(Typo.font(.caption)).foregroundColor(Theme.blocked) }
                     Spacer()
-                    if let ms = c.ms { Text("\(ms) ms").font(.system(size: 11)).foregroundColor(Theme.tertiary) }
+                    if let ms = c.ms { Text("\(ms) ms").font(Typo.font(.caption)).foregroundColor(Theme.tertiary) }
                 }
             }
         }
@@ -179,11 +179,11 @@ struct RollbackLine: View {
         HStack(spacing: 8) {
             Image(systemName: "arrow.uturn.backward.circle").foregroundColor(rollback?.available == true ? Theme.accent : Theme.tertiary)
             if let rb = rollback, rb.available, let id = rb.deployId {
-                Text(L("release.rollbackAvailable", id)).font(.system(size: 12)).foregroundColor(Theme.text)
+                Text(L("release.rollbackAvailable", id)).font(Typo.font(.callout)).foregroundColor(Theme.text)
                 Spacer()
                 Button(L("release.rollbackTitle")) { model.sheet = .rollback }.bidButton(.secondary, compact: true).disabled(model.run != nil)
             } else {
-                Text(L("release.rollbackUnavailable", K.rollbackReason(rollback?.reason))).font(.system(size: 12)).foregroundColor(Theme.secondary)
+                Text(L("release.rollbackUnavailable", K.rollbackReason(rollback?.reason))).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
                 Spacer()
             }
         }
@@ -195,11 +195,11 @@ struct CapabilityRow: View {
     var body: some View {
         let items: [(String, Bool)] = [("preview", caps.preview), ("production", caps.production), ("status", caps.status), ("rollback", caps.rollback), ("publishArtifact", caps.publishArtifact)]
         HStack(spacing: 6) {
-            Text(L("release.capabilities")).font(.system(size: 10.5, weight: .bold)).tracking(0.6).foregroundColor(Theme.tertiary)
+            Text(L("release.capabilities")).font(Typo.font(.caption, weight: .bold)).tracking(0.6).foregroundColor(Theme.tertiary)
             ForEach(items, id: \.0) { item in
                 HStack(spacing: 3) {
-                    Image(systemName: item.1 ? "checkmark" : "xmark").font(.system(size: 9, weight: .bold))
-                    Text(K.capability(item.0)).font(.system(size: 10.5, weight: .medium))
+                    Image(systemName: item.1 ? "checkmark" : "xmark").font(Typo.font(.micro, weight: .bold))
+                    Text(K.capability(item.0)).font(Typo.font(.caption, weight: .medium))
                 }
                 .foregroundColor(item.1 ? Theme.ready : Theme.tertiary)
                 .padding(.horizontal, 7).padding(.vertical, 3)
@@ -224,9 +224,9 @@ struct RollbackSheet: View {
                 if let rb, rb.available {
                     InfoRow(label: L("release.deployments"), value: rb.deployId ?? "—")
                     if let at = rb.createdAt { InfoRow(label: L("common.history"), value: Fmt.relative(at)) }
-                    if let note = rb.note { Text(note).font(.system(size: 12)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true) }
-                    Text(L("release.rollbackHint", model.status?.project.name ?? "")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text).fixedSize(horizontal: false, vertical: true)
-                    TextField("ROLLBACK", text: $typed).textFieldStyle(.roundedBorder).font(.system(size: 14, weight: .bold, design: .monospaced)).frame(width: 180)
+                    if let note = rb.note { Text(note).font(Typo.font(.callout)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true) }
+                    Text(L("release.rollbackHint", model.status?.project.name ?? "")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text).fixedSize(horizontal: false, vertical: true)
+                    TextField("ROLLBACK", text: $typed).textFieldStyle(.roundedBorder).font(Typo.font(.subhead, weight: .bold, design: .monospaced)).frame(width: 180)
                 } else {
                     EmptyLine(icon: "xmark.circle", text: L("release.rollbackUnavailable", K.rollbackReason(rb?.reason)))
                 }
@@ -250,16 +250,16 @@ struct DeploymentsCard: View {
             PanelHeader(title: L("release.deployments"), icon: "shippingbox.fill", trailing: rel?.site?.publishedDeployId.map { "\(L("release.published")): \($0)" })
             if let caps = rel?.capabilities ?? status.release?.capabilities { CapabilityRow(caps: caps) }
             if model.loadingRelease && rel == nil {
-                HStack { Spinner(size: 12); Text(L("settings.checking")).foregroundColor(Theme.secondary).font(.system(size: 12)) }
+                HStack { Spinner(size: 12); Text(L("settings.checking")).foregroundColor(Theme.secondary).font(Typo.font(.callout)) }
             } else if let deploys = rel?.deploys, !deploys.isEmpty {
                 VStack(spacing: 4) {
                     ForEach(deploys.prefix(6)) { d in
                         HStack(spacing: 10) {
                             Image(systemName: d.id == rel?.site?.publishedDeployId ? "checkmark.circle.fill" : "circle").foregroundColor(d.id == rel?.site?.publishedDeployId ? Theme.ready : Theme.tertiary)
-                            Text(d.id).font(.system(size: 11.5, design: .monospaced)).foregroundColor(Theme.text)
-                            Text(K.deployContext(d.context)).font(.system(size: 11)).foregroundColor(Theme.secondary)
+                            Text(d.id).font(Typo.font(.callout, design: .monospaced)).foregroundColor(Theme.text)
+                            Text(K.deployContext(d.context)).font(Typo.font(.caption)).foregroundColor(Theme.secondary)
                             Spacer()
-                            Text(Fmt.relative(d.publishedAt ?? d.createdAt)).font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                            Text(Fmt.relative(d.publishedAt ?? d.createdAt)).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
                             if let u = d.url { Button { model.open(u) } label: { Image(systemName: "safari") }.buttonStyle(.plain).foregroundColor(Theme.secondary).help(u) }
                         }
                         .padding(.vertical, 2)

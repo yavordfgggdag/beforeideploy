@@ -12,13 +12,7 @@ struct RunOverlay: View {
     }
 
     var body: some View {
-        ZStack {
-            // frosted scrim: the app stays visible, blurred, behind the run
-            Rectangle().fill(.ultraThinMaterial)
-                .overlay(Color.black.opacity(0.38))
-                .ignoresSafeArea()
-                .onTapGesture { if session.finished { close() } }
-
+        ModalShell(size: .xl, height: 600, dismiss: { if session.finished { close() } }) {
             VStack(spacing: 0) {
                 header
                 Rectangle().fill(Theme.hairline).frame(height: 1)
@@ -31,24 +25,6 @@ struct RunOverlay: View {
                 Rectangle().fill(Theme.hairline).frame(height: 1)
                 footer
             }
-            .frame(width: 900, height: 600)
-            .background(
-                ZStack {
-                    RoundedRectangle(cornerRadius: 20, style: .continuous).fill(Theme.panel)
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .fill(LinearGradient(colors: [headerTint.opacity(0.10), .clear], startPoint: .top, endPoint: .center))
-                        .animation(Motion.gentle, value: session.finished)
-                }
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(Theme.edgeHighlight, lineWidth: 1)
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .overlay { if session.finished && session.success { Celebration().frame(width: 900, height: 600).clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous)) } }
-            .glowBorder(headerTint, radius: 20, strength: session.finished ? 0.9 : 0.5)
-            .shadow(color: .black.opacity(0.25), radius: 2, y: 1)
-            .shadow(color: .black.opacity(0.5), radius: 44, y: 18)
-            .shadow(color: headerTint.opacity(0.25), radius: 60, y: 10)
         }
         .onExitCommand { if session.finished { close() } }
     }
@@ -63,10 +39,10 @@ struct RunOverlay: View {
         HStack(spacing: 14) {
             ZStack {
                 Circle().fill(headerTint.opacity(0.14)).frame(width: 40, height: 40)
-                    .shadow(color: headerTint.opacity(session.finished ? 0.45 : 0), radius: 10)
+                    .elevation(.popover)
                 if session.finished {
                     Image(systemName: !session.success ? "xmark" : (headerTint == Theme.warn ? "exclamationmark" : "checkmark"))
-                        .font(.system(size: 16, weight: .bold))
+                        .font(Typo.font(.headline, weight: .bold))
                         .foregroundColor(headerTint)
                 } else {
                     Orbit(size: 20)
@@ -75,10 +51,10 @@ struct RunOverlay: View {
             .breath(headerTint, strong: !session.finished)
             VStack(alignment: .leading, spacing: 3) {
                 Text(session.finished ? (session.outcomeTitle ?? session.title) : session.title)
-                    .font(.system(size: 17, weight: .bold))
+                    .font(Typo.font(.headline, weight: .bold))
                     .foregroundColor(Theme.text)
                 Text(session.subtitle)
-                    .font(.system(size: 12))
+                    .font(Typo.font(.callout))
                     .foregroundColor(Theme.secondary)
                     .lineLimit(1)
             }
@@ -86,7 +62,7 @@ struct RunOverlay: View {
             TimelineView(.periodic(from: .now, by: 1)) { ctx in
                 let end = session.finishedAt ?? ctx.date
                 Text(Fmt.duration(end.timeIntervalSince(session.startedAt)))
-                    .font(.system(size: 12, design: .monospaced))
+                    .font(Typo.font(.callout, design: .monospaced))
                     .foregroundColor(Theme.tertiary)
             }
         }
@@ -97,7 +73,7 @@ struct RunOverlay: View {
                 Capsule()
                     .fill(LinearGradient(colors: [headerTint.opacity(0.6), headerTint], startPoint: .leading, endPoint: .trailing))
                     .frame(width: geo.size.width * session.progress, height: 2)
-                    .shadow(color: headerTint.opacity(0.8), radius: 3)
+                    .elevation(.popover)
                     .shimmer(active: !session.finished)
                     .animation(Motion.gentle, value: session.progress)
             }
@@ -120,13 +96,13 @@ struct RunOverlay: View {
                     HStack(spacing: 8) {
                         if session.finished && session.success {
                             Image(systemName: "checkmark.circle.fill").foregroundColor(Theme.ready)
-                            Text(L("overlay.nothingToDo")).font(.system(size: 12)).foregroundColor(Theme.secondary)
+                            Text(L("overlay.nothingToDo")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
                         } else if session.finished {
                             Image(systemName: "xmark.circle.fill").foregroundColor(Theme.blocked)
-                            Text(L("overlay.failedBeforeStart")).font(.system(size: 12)).foregroundColor(Theme.secondary)
+                            Text(L("overlay.failedBeforeStart")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
                         } else {
                             Spinner(size: 12)
-                            Text(L("overlay.starting")).font(.system(size: 12)).foregroundColor(Theme.secondary)
+                            Text(L("overlay.starting")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
                         }
                     }
                     .padding(.top, 16)
@@ -150,9 +126,9 @@ struct RunOverlay: View {
             if let s = selected {
                 HStack(spacing: 8) {
                     Image(systemName: Theme.symbol(for: s.status)).foregroundColor(Theme.color(for: s.status))
-                    Text(s.label).font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.text)
+                    Text(s.label).font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.text)
                     if let sum = s.summary {
-                        Text(sum).font(.system(size: 12)).foregroundColor(Theme.secondary).lineLimit(1)
+                        Text(sum).font(Typo.font(.callout)).foregroundColor(Theme.secondary).lineLimit(1)
                     }
                     Spacer()
                     if let log = s.log {
@@ -184,7 +160,7 @@ struct RunOverlay: View {
                             }
                             Color.clear.frame(height: 1).id("bottom")
                         }
-                        .font(.system(size: 11.5, design: .monospaced))
+                        .font(Typo.font(.callout, design: .monospaced))
                         .textSelection(.enabled)
                         .padding(.horizontal, 16)
                         .padding(.bottom, 12)
@@ -197,7 +173,7 @@ struct RunOverlay: View {
                     }
                 }
                 .background(Theme.bg)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: Radius.m, style: .continuous))
                 .padding(.horizontal, 12)
                 .padding(.bottom, 12)
 
@@ -209,7 +185,7 @@ struct RunOverlay: View {
 
                 if session.finished, !s.fixes.isEmpty {
                     HStack {
-                        Text(L("overlay.safeFix")).font(.system(size: 12)).foregroundColor(Theme.secondary)
+                        Text(L("overlay.safeFix")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
                         Spacer()
                         ForEach(s.fixes, id: \.self) { f in
                             Button(L("common.fix")) {
@@ -244,7 +220,7 @@ struct RunOverlay: View {
             if session.finished {
                 if let m = session.outcomeMessage {
                     Text(m)
-                        .font(.system(size: 12.5))
+                        .font(Typo.font(.body))
                         .foregroundColor(session.success ? Theme.secondary : Theme.blocked)
                         .lineLimit(2)
                         .textSelection(.enabled)
@@ -271,7 +247,7 @@ struct RunOverlay: View {
                     .keyboardShortcut(.defaultAction)
             } else {
                 Text(session.runningStep.map { "\($0.label)…" } ?? L("overlay.working"))
-                    .font(.system(size: 12.5))
+                    .font(Typo.font(.body))
                     .foregroundColor(Theme.secondary)
                 Spacer()
                 Button(L("overlay.cancel")) { session.handle.cancel() }
@@ -296,36 +272,36 @@ struct RunStepRow: View {
                     Orbit(size: 14)
                 } else {
                     Image(systemName: Theme.symbol(for: step.status))
-                        .font(.system(size: 13))
+                        .font(Typo.font(.body))
                         .foregroundColor(Theme.color(for: step.status))
                 }
             }
             .frame(width: 18)
             VStack(alignment: .leading, spacing: 2) {
                 Text(step.label)
-                    .font(.system(size: 12.5, weight: .semibold))
+                    .font(Typo.font(.body, weight: .semibold))
                     .foregroundColor(step.status == "pending" || step.status == "skipped" ? Theme.tertiary : Theme.text)
                 if let s = step.summary {
                     Text(s)
-                        .font(.system(size: 11))
+                        .font(Typo.font(.caption))
                         .foregroundColor(Theme.tertiary)
                         .lineLimit(1)
                 }
             }
             Spacer()
             if step.cached {
-                Text(L("overlay.cached")).font(.system(size: 10, weight: .semibold)).foregroundColor(Theme.tertiary)
+                Text(L("overlay.cached")).font(Typo.font(.micro, weight: .semibold)).foregroundColor(Theme.tertiary)
                     .padding(.horizontal, 6).padding(.vertical, 1)
                     .background(Capsule().fill(Theme.elevated))
             }
             if let d = step.duration, d >= 1 {
-                Text(Fmt.duration(d)).font(.system(size: 10.5, design: .monospaced)).foregroundColor(Theme.tertiary)
+                Text(Fmt.duration(d)).font(Typo.font(.caption, design: .monospaced)).foregroundColor(Theme.tertiary)
             }
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
         .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
+            RoundedRectangle(cornerRadius: Radius.s, style: .continuous)
                 .fill(selected ? Theme.elevated : .clear)
         )
         .contentShape(Rectangle())

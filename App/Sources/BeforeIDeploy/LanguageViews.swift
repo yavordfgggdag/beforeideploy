@@ -15,18 +15,18 @@ struct WelcomeLanguageView: View {
             VStack(spacing: 24) {
                 HStack(spacing: 12) {
                     ZStack {
-                        RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.white.opacity(0.18))
-                        Image(systemName: "paperplane.fill").font(.system(size: 22, weight: .bold)).foregroundColor(.white).rotationEffect(.degrees(-8))
+                        RoundedRectangle(cornerRadius: Radius.m, style: .continuous).fill(Color.white.opacity(0.18))
+                        Image(systemName: "paperplane.fill").font(Typo.font(.title, weight: .bold)).foregroundColor(.white).rotationEffect(.degrees(-8))
                     }
                     .frame(width: 50, height: 50)
                     .floating()
-                    Text("Before I Deploy").font(.system(size: 24, weight: .bold)).foregroundColor(.white)
+                    Text("Before I Deploy").font(Typo.font(.title, weight: .bold)).foregroundColor(.white)
                 }
                 .entrance(0)
 
                 VStack(spacing: 6) {
-                    Text(text("language.title")).font(.system(size: 26, weight: .heavy)).foregroundColor(.white)
-                    Text(text("language.subtitle")).font(.system(size: 13)).foregroundColor(.white.opacity(0.8))
+                    Text(text("language.title")).font(Typo.font(.display, weight: .heavy)).foregroundColor(.white)
+                    Text(text("language.subtitle")).font(Typo.font(.body)).foregroundColor(.white.opacity(0.8))
                         .multilineTextAlignment(.center)
                 }
                 .entrance(1)
@@ -74,8 +74,8 @@ struct LanguageTile: View {
                 Image(systemName: selected ? "checkmark.circle.fill" : "circle")
                     .foregroundColor(selected ? Theme.accent : Theme.tertiary)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(Localization.nativeName(code)).font(.system(size: 13.5, weight: .semibold)).foregroundColor(Theme.text)
-                    Text(code).font(.system(size: 11, design: .monospaced)).foregroundColor(Theme.tertiary)
+                    Text(Localization.nativeName(code)).font(Typo.font(.subhead, weight: .semibold)).foregroundColor(Theme.text)
+                    Text(code).font(Typo.font(.caption, design: .monospaced)).foregroundColor(Theme.tertiary)
                 }
                 Spacer(minLength: 0)
                 if !Localization.isReviewed(code) { BetaBadge() }
@@ -101,8 +101,8 @@ struct LanguageRow: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text(L("settings.language")).font(.system(size: 13, weight: .medium)).foregroundColor(Theme.text)
-                Text(L("settings.languageHint")).font(.system(size: 11.5)).foregroundColor(Theme.tertiary)
+                Text(L("settings.language")).font(Typo.font(.body, weight: .medium)).foregroundColor(Theme.text)
+                Text(L("settings.languageHint")).font(Typo.font(.callout)).foregroundColor(Theme.tertiary)
             }
             Spacer()
             Picker("", selection: Binding(get: { Localization.current }, set: { model.setLanguage($0) })) {
@@ -119,13 +119,5 @@ struct LanguageRow: View {
 
 /// "Beta" chip for languages whose texts were machine translated and not reviewed yet.
 struct BetaBadge: View {
-    var body: some View {
-        Text(L("language.beta"))
-            .font(.system(size: 9.5, weight: .heavy))
-            .tracking(0.6)
-            .foregroundColor(Theme.warn)
-            .padding(.horizontal, 6).padding(.vertical, 2)
-            .background(Capsule().fill(Theme.warn.opacity(0.14)))
-            .help(L("language.betaHelp"))
-    }
+    var body: some View { Badge(text: L("language.beta"), tone: .warning, size: .sm).help(L("language.betaHelp")) }
 }

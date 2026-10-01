@@ -2,31 +2,6 @@ import SwiftUI
 
 // MARK: - Page header
 
-struct PageHeader<Trailing: View>: View {
-    let title: String
-    let subtitle: String
-    let icon: String
-    @ViewBuilder var trailing: Trailing
-
-    var body: some View {
-        HStack(alignment: .center, spacing: 14) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 13, style: .continuous).fill(Theme.accentGradient)
-                Image(systemName: icon).font(.system(size: 18, weight: .bold)).foregroundColor(.white)
-            }
-            .frame(width: 44, height: 44)
-            .shadow(color: Theme.accent.opacity(0.35), radius: 12, y: 4)
-            .breath(Theme.accent)
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title).font(.system(size: 26, weight: .bold)).foregroundColor(Theme.text)
-                Text(subtitle).font(.system(size: 12.5)).foregroundColor(Theme.secondary)
-            }
-            Spacer()
-            trailing
-        }
-    }
-}
-
 struct KPITile: View {
     let value: String
     let label: String
@@ -37,19 +12,19 @@ struct KPITile: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Image(systemName: icon)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(Typo.font(.callout, weight: .semibold))
                     .foregroundColor(tint == Theme.text ? Theme.accent : tint)
                     .frame(width: 26, height: 26)
-                    .background(RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous)
                         .fill((tint == Theme.text ? Theme.accent : tint).opacity(0.14)))
                 Spacer()
             }
             if let n = Int(value) {
-                CountUp(target: n, format: { String($0) }, font: .system(size: 28, weight: .bold, design: .rounded), color: tint)
+                CountUp(target: n, format: { String($0) }, font: Typo.font(.display, weight: .bold, design: .rounded), color: tint)
             } else {
-                Text(value).font(.system(size: 28, weight: .bold, design: .rounded)).foregroundColor(tint).monospacedDigit()
+                Text(value).font(Typo.font(.display, weight: .bold, design: .rounded)).foregroundColor(tint).monospacedDigit()
             }
-            Text(label).font(.system(size: 11.5)).foregroundColor(Theme.tertiary)
+            Text(label).font(Typo.font(.callout)).foregroundColor(Theme.tertiary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .card(padding: 16)
@@ -71,7 +46,7 @@ struct AIFixBar: View {
                 HStack(spacing: 6) {
                     Image(systemName: "sparkles").foregroundColor(Theme.accent)
                     Text(L("aifix.help"))
-                        .font(.system(size: 11.5)).foregroundColor(Theme.secondary)
+                        .font(Typo.font(.callout)).foregroundColor(Theme.secondary)
                 }
             }
             let builtin = model.account?.features?.aiBuiltin == true
@@ -181,7 +156,7 @@ struct MissionControlView: View {
                                     } label: {
                                         HStack(spacing: 10) {
                                             Image(systemName: Theme.symbol(for: a.level)).foregroundColor(Theme.color(for: a.level))
-                                            Text(a.text).font(.system(size: 12.5)).foregroundColor(Theme.text)
+                                            Text(a.text).font(Typo.font(.body)).foregroundColor(Theme.text)
                                             Spacer()
                                         }
                                         .padding(.vertical, 5)
@@ -191,7 +166,7 @@ struct MissionControlView: View {
                                     Button { model.openAssistant(projectKey: a.key) } label: { Label(L("ai.askAssistant"), systemImage: "sparkles") }
                                         .bidButton(.ghost, compact: true)
                                         .help(L("ai.askAssistantHelp"))
-                                    Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundColor(Theme.tertiary)
+                                    Image(systemName: "chevron.right").font(Typo.font(.micro, weight: .bold)).foregroundColor(Theme.tertiary)
                                 }
                             }
                         }
@@ -251,10 +226,10 @@ struct MissionControlView: View {
             Spacer()
             HStack(spacing: 6) {
                 Image(systemName: "magnifyingglass").foregroundColor(Theme.tertiary)
-                TextField(L("portfolio.search"), text: $query).textFieldStyle(.plain).font(.system(size: 12.5)).frame(width: 200)
+                TextField(L("portfolio.search"), text: $query).textFieldStyle(.plain).font(Typo.font(.body)).frame(width: 200)
             }
             .padding(.horizontal, 8).padding(.vertical, 5)
-            .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.panel))
+            .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(Theme.panel))
             if !clients.isEmpty {
                 Picker("", selection: $client) {
                     Text(L("portfolio.allClients")).tag("")
@@ -269,8 +244,8 @@ struct MissionControlView: View {
                 }
                 .labelsHidden().frame(width: 130)
             }
-            Toggle(L("portfolio.needsAction"), isOn: $onlyAction).toggleStyle(.checkbox).font(.system(size: 12))
-            Toggle(L("portfolio.problems"), isOn: $onlyProblems).toggleStyle(.checkbox).font(.system(size: 12))
+            Toggle(L("portfolio.needsAction"), isOn: $onlyAction).toggleStyle(.checkbox).font(Typo.font(.callout))
+            Toggle(L("portfolio.problems"), isOn: $onlyProblems).toggleStyle(.checkbox).font(Typo.font(.callout))
         }
     }
 
@@ -295,10 +270,10 @@ struct SetupBanner: View {
     let missing: Int
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: "wand.and.stars").font(.system(size: 16, weight: .bold)).foregroundColor(Theme.accent)
+            Image(systemName: "wand.and.stars").font(Typo.font(.headline, weight: .bold)).foregroundColor(Theme.accent)
             VStack(alignment: .leading, spacing: 2) {
-                Text(L("overview.missingSetup", count: missing)).font(.system(size: 13.5, weight: .semibold)).foregroundColor(Theme.text)
-                Text(L("overview.missingSetupHint")).font(.system(size: 12)).foregroundColor(Theme.secondary)
+                Text(L("overview.missingSetup", count: missing)).font(Typo.font(.subhead, weight: .semibold)).foregroundColor(Theme.text)
+                Text(L("overview.missingSetupHint")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
             }
             Spacer()
             Button(L("overview.view")) { model.screen = .setup }.bidButton(.secondary, compact: true)
@@ -327,13 +302,13 @@ struct ProjectOverviewCard: View {
             HStack(spacing: 10) {
                 ProjectAvatar(name: card.name, size: 32)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(card.name).font(.system(size: 14.5, weight: .bold)).foregroundColor(Theme.text).lineLimit(1)
+                    Text(card.name).font(Typo.font(.subhead, weight: .bold)).foregroundColor(Theme.text).lineLimit(1)
                     Text([card.client ?? L("portfolio.noClient"), card.framework.map { $0 == "unknown" ? L("framework.unknown") : $0 }, card.branch].compactMap { $0 }.joined(separator: " · "))
-                        .font(.system(size: 11)).foregroundColor(Theme.tertiary).lineLimit(1)
+                        .font(Typo.font(.caption)).foregroundColor(Theme.tertiary).lineLimit(1)
                 }
                 Spacer()
                 Text(statusText)
-                    .font(.system(size: 10, weight: .heavy)).tracking(0.8)
+                    .font(Typo.font(.micro, weight: .heavy)).tracking(0.8)
                     .lineLimit(1).fixedSize() // "ПРЕДУПРЕЖДЕНИЯ" must never break onto two lines
                     .foregroundColor(Theme.color(for: card.status ?? "idle"))
                     .padding(.horizontal, 8).padding(.vertical, 4)
@@ -345,18 +320,18 @@ struct ProjectOverviewCard: View {
                 if let live = card.liveUrl {
                     HStack(spacing: 7) {
                         StatusDot(status: card.uptime == nil ? nil : (card.uptime?.ok == true ? "pass" : "fail"), size: 7)
-                        Text(Fmt.host(live)).font(.system(size: 12, design: .monospaced)).foregroundColor(Theme.secondary).lineLimit(1)
+                        Text(Fmt.host(live)).font(Typo.font(.callout, design: .monospaced)).foregroundColor(Theme.secondary).lineLimit(1)
                         Spacer()
                         if let ms = card.uptime?.ms, card.uptime?.ok == true {
-                            Text("\(ms) ms").font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                            Text("\(ms) ms").font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
                         }
                         if let d = card.sslDays {
                             Label(L("overview.daysShort", d), systemImage: "lock.fill")
-                                .font(.system(size: 11)).foregroundColor(d < 14 ? Theme.warn : Theme.tertiary)
+                                .font(Typo.font(.caption)).foregroundColor(d < 14 ? Theme.warn : Theme.tertiary)
                         }
                     }
                 } else {
-                    Text(L("overview.noLiveSite")).font(.system(size: 12)).foregroundColor(Theme.tertiary)
+                    Text(L("overview.noLiveSite")).font(Typo.font(.callout)).foregroundColor(Theme.tertiary)
                 }
                 HStack(spacing: 14) {
                     Label("\(card.changed)", systemImage: "pencil.line").foregroundColor(card.changed > 0 ? Theme.warn : Theme.tertiary)
@@ -366,10 +341,10 @@ struct ProjectOverviewCard: View {
                     Text(card.lastProd != nil ? L("overview.liveAgo", Fmt.relative(card.lastProd)) : L("overview.noProduction"))
                         .foregroundColor(Theme.tertiary)
                 }
-                .font(.system(size: 11.5))
+                .font(Typo.font(.callout))
                 if !card.failing.isEmpty {
                     Text(L("overview.failing", card.failing.joined(separator: ", ")))
-                        .font(.system(size: 11.5, weight: .medium)).foregroundColor(Theme.blocked)
+                        .font(Typo.font(.callout, weight: .medium)).foregroundColor(Theme.blocked)
                 }
                 if let sig = card.signals {
                     // wraps onto a second row instead of squeezing five pills into one (text broke letter by letter)
@@ -384,7 +359,7 @@ struct ProjectOverviewCard: View {
                 if let next = card.nextAction, next.id != "none" {
                     HStack(spacing: 6) {
                         Image(systemName: "arrow.right.circle.fill").foregroundColor(Theme.accent)
-                        Text(next.label).font(.system(size: 11.5, weight: .semibold)).foregroundColor(Theme.text)
+                        Text(next.label).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
                     }
                 }
             }
@@ -430,7 +405,7 @@ struct CostsView: View {
 
                     SectionLabel(text: L("costs.thisMonth", c.month), icon: "calendar")
                     if c.totals.isEmpty {
-                        Text(L("costs.noPaidOps")).font(.system(size: 12.5)).foregroundColor(Theme.tertiary)
+                        Text(L("costs.noPaidOps")).font(Typo.font(.body)).foregroundColor(Theme.tertiary)
                     } else {
                         HStack(spacing: 12) {
                             ForEach(c.totals, id: \.self) { t in
@@ -448,10 +423,10 @@ struct CostsView: View {
                             }
                             ForEach(c.byProject) { p in
                                 HStack {
-                                    Text(p.name).font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.text)
+                                    Text(p.name).font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.text)
                                     Spacer()
                                     Text(p.items.map { "\(Self.amount($0.amount)) \(Self.unitName($0.unit))" }.joined(separator: " · "))
-                                        .font(.system(size: 12)).foregroundColor(Theme.secondary)
+                                        .font(Typo.font(.callout)).foregroundColor(Theme.secondary)
                                 }
                             }
                         }
@@ -461,11 +436,11 @@ struct CostsView: View {
                         VStack(alignment: .leading, spacing: 10) {
                             SectionLabel(text: L("costs.budget"), icon: "shield.lefthalf.filled")
                             Text(L("costs.budgetHint"))
-                                .font(.system(size: 12)).foregroundColor(Theme.secondary)
+                                .font(Typo.font(.callout)).foregroundColor(Theme.secondary)
                             HStack {
                                 BIDTextField(placeholder: "\(Int(c.budgets.netlifyMinCredits ?? 50))", text: $minCredits, mono: true)
                                     .frame(width: 110)
-                                Text(L("common.creditsUnit")).foregroundColor(Theme.secondary).font(.system(size: 12))
+                                Text(L("common.creditsUnit")).foregroundColor(Theme.secondary).font(Typo.font(.callout))
                                 Spacer()
                                 Button(L("common.save")) {
                                     if let v = Double(minCredits) { model.setBudget(netlifyMin: v) }
@@ -487,10 +462,10 @@ struct CostsView: View {
                         ForEach(c.prices.items.keys.sorted(), id: \.self) { key in
                             let item = c.prices.items[key] ?? PriceItem(unit: "free", amount: 0, label: key)
                             HStack {
-                                Text(item.label).font(.system(size: 12.5)).foregroundColor(Theme.text)
+                                Text(item.label).font(Typo.font(.body)).foregroundColor(Theme.text)
                                 Spacer()
                                 Text(item.unit == "free" ? L("common.free") : "~\(Self.amount(item.amount)) \(Self.unitName(item.unit))")
-                                    .font(.system(size: 12.5, weight: .semibold))
+                                    .font(Typo.font(.body, weight: .semibold))
                                     .foregroundColor(item.unit == "free" || item.amount == 0 ? Theme.ready : Theme.text)
                             }
                         }
@@ -501,17 +476,17 @@ struct CostsView: View {
                         SectionLabel(text: L("costs.allOperations"), icon: "list.bullet.rectangle")
                             .padding(.bottom, 6)
                         if c.ledger.isEmpty {
-                            Text(L("costs.noEntries")).foregroundColor(Theme.tertiary).font(.system(size: 12))
+                            Text(L("costs.noEntries")).foregroundColor(Theme.tertiary).font(Typo.font(.callout))
                         }
                         ForEach(c.ledger) { e in
                             HStack(spacing: 12) {
-                                Text(Fmt.time(e.ts)).font(.system(size: 11.5, design: .monospaced)).foregroundColor(Theme.tertiary).frame(width: 82, alignment: .leading)
+                                Text(Fmt.time(e.ts)).font(Typo.font(.callout, design: .monospaced)).foregroundColor(Theme.tertiary).frame(width: 82, alignment: .leading)
                                 Image(systemName: Self.icon(e.service)).foregroundColor(Theme.secondary).frame(width: 16)
-                                Text(Self.opName(e.op)).font(.system(size: 12.5, weight: .medium)).foregroundColor(Theme.text)
-                                Text(e.projectName ?? "").font(.system(size: 12)).foregroundColor(Theme.tertiary)
+                                Text(Self.opName(e.op)).font(Typo.font(.body, weight: .medium)).foregroundColor(Theme.text)
+                                Text(e.projectName ?? "").font(Typo.font(.callout)).foregroundColor(Theme.tertiary)
                                 Spacer()
                                 Text(e.unit == "free" || e.amount == 0 ? "0" : "\(e.estimated == true ? "~" : "")\(Self.amount(e.amount)) \(Self.unitName(e.unit))")
-                                    .font(.system(size: 12.5, weight: .semibold))
+                                    .font(Typo.font(.body, weight: .semibold))
                                     .foregroundColor(e.amount > 0 && e.unit == "credits" ? Theme.accent : Theme.secondary)
                             }
                             .padding(.vertical, 5)
@@ -586,7 +561,7 @@ struct ProviderCard: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: CostsView.icon(provider.service)).foregroundColor(Theme.accent)
-                Text(title).font(.system(size: 14, weight: .bold)).foregroundColor(Theme.text)
+                Text(title).font(Typo.font(.subhead, weight: .bold)).foregroundColor(Theme.text)
                 Spacer()
                 if provider.connected == true {
                     Chip(text: L("common.connectedLower"), tint: Theme.ready)
@@ -600,7 +575,7 @@ struct ProviderCard: View {
                 ForEach(accounts, id: \.self) { a in
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            Text(a.name ?? a.slug ?? L("common.account")).font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.text)
+                            Text(a.name ?? a.slug ?? L("common.account")).font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.text)
                             if let plan = a.plan { Chip(text: plan) }
                             Spacer()
                             if let d = a.dashboard {
@@ -611,13 +586,13 @@ struct ProviderCard: View {
                         let quotas = (a.credits ?? []) + (a.quotas ?? [])
                         if quotas.isEmpty {
                             Text(L("costs.noLimits"))
-                                .font(.system(size: 11.5)).foregroundColor(Theme.tertiary)
+                                .font(Typo.font(.callout)).foregroundColor(Theme.tertiary)
                         }
                         ForEach(quotas.prefix(6), id: \.self) { q in QuotaRow(quota: q) }
                     }
                 }
             } else {
-                Text(provider.note ?? provider.error ?? "—").font(.system(size: 12)).foregroundColor(Theme.secondary)
+                Text(provider.note ?? provider.error ?? "—").font(Typo.font(.callout)).foregroundColor(Theme.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             if let d = provider.dashboard, provider.accounts == nil {
@@ -634,13 +609,13 @@ struct QuotaRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
-                Text(quota.label ?? quota.name.replacingOccurrences(of: "_", with: " ")).font(.system(size: 11.5)).foregroundColor(Theme.secondary)
+                Text(quota.label ?? quota.name.replacingOccurrences(of: "_", with: " ")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
                 Spacer()
                 if let inc = quota.included, let used = quota.used {
                     Text(L("costs.remainingOf", CostsView.amount(max(0, inc - used)), CostsView.amount(inc)))
-                        .font(.system(size: 11.5, weight: .semibold)).foregroundColor(Theme.text)
+                        .font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
                 } else if let v = quota.value {
-                    Text(CostsView.amount(v)).font(.system(size: 11.5, weight: .semibold)).foregroundColor(Theme.text)
+                    Text(CostsView.amount(v)).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
                 }
             }
             if let inc = quota.included, let used = quota.used, inc > 0 {
@@ -679,14 +654,14 @@ struct SetupView: View {
                     HStack(spacing: 18) {
                         ZStack {
                             ProgressRing(fraction: required.isEmpty ? 1 : Double(done) / Double(required.count))
-                            Text("\(done)/\(required.count)").font(.system(size: 14, weight: .bold)).foregroundColor(Theme.text)
+                            Text("\(done)/\(required.count)").font(Typo.font(.subhead, weight: .bold)).foregroundColor(Theme.text)
                         }
                         .frame(width: 64, height: 64)
                         VStack(alignment: .leading, spacing: 4) {
                             Text(s.ready ? L("setup.allRequiredSet") : L("setup.missingRequired", count: s.missingRequired))
-                                .font(.system(size: 17, weight: .bold)).foregroundColor(Theme.text)
+                                .font(Typo.font(.headline, weight: .bold)).foregroundColor(Theme.text)
                             Text(L("setup.missingOptional", count: s.missingOptional))
-                                .font(.system(size: 12.5)).foregroundColor(Theme.secondary)
+                                .font(Typo.font(.body)).foregroundColor(Theme.secondary)
                         }
                         Spacer()
                         Button { model.setupAuto() } label: { Label(L("setup.autoAll"), systemImage: "bolt.fill") }
@@ -750,24 +725,24 @@ struct SetupRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: item.ok ? "checkmark.circle.fill" : (item.optional ? "circle.dashed" : "exclamationmark.circle.fill"))
-                .font(.system(size: 15))
+                .font(Typo.font(.subhead))
                 .foregroundColor(item.ok ? Theme.ready : (item.optional ? Theme.tertiary : Theme.accent))
                 .frame(width: 20)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
-                    Text(item.title).font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.text)
+                    Text(item.title).font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.text)
                     if item.optional && !item.ok {
-                        Text(L("setup.optional")).font(.system(size: 10, weight: .semibold)).foregroundColor(Theme.tertiary)
+                        Text(L("setup.optional")).font(Typo.font(.micro, weight: .semibold)).foregroundColor(Theme.tertiary)
                             .padding(.horizontal, 6).padding(.vertical, 1)
                             .background(Capsule().fill(Theme.elevated))
                     }
                 }
-                Text(item.detail ?? "").font(.system(size: 11.5)).foregroundColor(Theme.tertiary).lineLimit(1)
+                Text(item.detail ?? "").font(Typo.font(.callout)).foregroundColor(Theme.tertiary).lineLimit(1)
             }
             Spacer()
             if let a = item.action {
                 if let d = a.display {
-                    Text(d).font(.system(size: 11, design: .monospaced)).foregroundColor(Theme.tertiary).lineLimit(1)
+                    Text(d).font(Typo.font(.caption, design: .monospaced)).foregroundColor(Theme.tertiary).lineLimit(1)
                 }
                 Button(a.label) { model.setupAction(item) }
                     .bidButton(item.optional ? .secondary : .primary, compact: true)

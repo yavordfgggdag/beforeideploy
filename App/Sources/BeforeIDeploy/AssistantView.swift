@@ -13,8 +13,8 @@ struct AssistantView: View {
         Group {
             if model.status == nil {
                 VStack(spacing: 12) {
-                    Image(systemName: "sparkles").font(.system(size: 28)).foregroundColor(Theme.tertiary)
-                    Text(L("assistant.noProject")).font(.system(size: 13)).foregroundColor(Theme.secondary)
+                    Image(systemName: "sparkles").font(Typo.font(.display)).foregroundColor(Theme.tertiary)
+                    Text(L("assistant.noProject")).font(Typo.font(.body)).foregroundColor(Theme.secondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
@@ -36,8 +36,8 @@ struct AssistantView: View {
             HStack(spacing: 10) {
                 Image(systemName: "sparkles").foregroundColor(Theme.accent).breath(Theme.accent)
                 VStack(alignment: .leading, spacing: 1) {
-                    GradientText(text: L("assistant.title"), font: .system(size: 15, weight: .bold))
-                    Text(model.status?.project.name ?? "").font(.system(size: 11.5)).foregroundColor(Theme.secondary)
+                    GradientText(text: L("assistant.title"), font: Typo.font(.subhead, weight: .bold))
+                    Text(model.status?.project.name ?? "").font(Typo.font(.callout)).foregroundColor(Theme.secondary)
                 }
                 Spacer()
                 UsagePill()
@@ -67,12 +67,12 @@ struct AssistantView: View {
 
     private var emptyState: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(L("assistant.emptyTitle")).font(.system(size: 14, weight: .semibold)).foregroundColor(Theme.text)
-            Text(L("assistant.emptyBody")).font(.system(size: 12.5)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
-            Text(L("assistant.dataNote")).font(.system(size: 11.5)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
+            Text(L("assistant.emptyTitle")).font(Typo.font(.subhead, weight: .semibold)).foregroundColor(Theme.text)
+            Text(L("assistant.emptyBody")).font(Typo.font(.body)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
+            Text(L("assistant.dataNote")).font(Typo.font(.callout)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
         }
         .padding(16)
-        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.bg))
+        .background(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).fill(Theme.bg))
     }
 
     private var composer: some View {
@@ -128,17 +128,17 @@ struct AssistantView: View {
     private var scopeCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             SectionLabel(text: L("assistant.scope"), icon: "scope")
-            Text(L("assistant.activeSite", model.status?.project.name ?? "")).font(.system(size: 12)).foregroundColor(Theme.text)
+            Text(L("assistant.activeSite", model.status?.project.name ?? "")).font(Typo.font(.callout)).foregroundColor(Theme.text)
             let issues = model.status?.issues?.issues ?? []
             Picker(L("assistant.issue"), selection: Binding(get: { store.selectedIssue ?? "" }, set: { store.selectedIssue = $0.isEmpty ? nil : $0 })) {
                 Text(L("assistant.noIssue")).tag("")
                 ForEach(issues) { i in Text("\(K.severity(i.severity)) · \(i.title)").tag(i.id) }
             }
-            .pickerStyle(.menu).font(.system(size: 12))
+            .pickerStyle(.menu).font(Typo.font(.callout))
             .disabled(issues.isEmpty)
-            if issues.isEmpty { Text(L("assistant.noIssues")).font(.system(size: 11)).foregroundColor(Theme.tertiary) }
-            TextField(L("assistant.files"), text: Binding(get: { store.files }, set: { store.files = $0 })).textFieldStyle(.roundedBorder).font(.system(size: 11.5, design: .monospaced))
-            Text(L("assistant.filesHint")).font(.system(size: 10.5)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
+            if issues.isEmpty { Text(L("assistant.noIssues")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary) }
+            TextField(L("assistant.files"), text: Binding(get: { store.files }, set: { store.files = $0 })).textFieldStyle(.roundedBorder).font(Typo.font(.callout, design: .monospaced))
+            Text(L("assistant.filesHint")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
         }
         .card(padding: 14)
     }
@@ -147,21 +147,21 @@ struct AssistantView: View {
         VStack(alignment: .leading, spacing: 6) {
             SectionLabel(text: L("assistant.contextTitle"), icon: "doc.on.doc")
             if store.context.isEmpty {
-                HStack(spacing: 8) { Spinner(size: 12); Text(L("assistant.preparing")).font(.system(size: 11.5)).foregroundColor(Theme.secondary) }
+                HStack(spacing: 8) { Spinner(size: 12); Text(L("assistant.preparing")).font(Typo.font(.callout)).foregroundColor(Theme.secondary) }
             }
             ForEach(store.context) { e in
                 HStack(spacing: 6) {
-                    Text(e.id).font(.system(size: 10, design: .monospaced)).foregroundColor(Theme.tertiary).frame(width: 26, alignment: .leading)
-                    Text(K.evidenceKind(e.kind)).font(.system(size: 11)).foregroundColor(Theme.secondary)
-                    Text(e.label).font(.system(size: 11)).foregroundColor(Theme.text).lineLimit(1).truncationMode(.middle)
+                    Text(e.id).font(Typo.font(.micro, design: .monospaced)).foregroundColor(Theme.tertiary).frame(width: 26, alignment: .leading)
+                    Text(K.evidenceKind(e.kind)).font(Typo.font(.caption)).foregroundColor(Theme.secondary)
+                    Text(e.label).font(Typo.font(.caption)).foregroundColor(Theme.text).lineLimit(1).truncationMode(.middle)
                     Spacer()
-                    Text(L("assistant.chars", e.chars)).font(.system(size: 10)).foregroundColor(Theme.tertiary)
-                    if e.redactions > 0 { Label("\(e.redactions)", systemImage: "eye.slash").font(.system(size: 10)).foregroundColor(Theme.warn).help(L("assistant.redactedHelp")) }
+                    Text(L("assistant.chars", e.chars)).font(Typo.font(.micro)).foregroundColor(Theme.tertiary)
+                    if e.redactions > 0 { Label("\(e.redactions)", systemImage: "eye.slash").font(Typo.font(.micro)).foregroundColor(Theme.warn).help(L("assistant.redactedHelp")) }
                 }
                 .accessibilityElement(children: .combine)
             }
             if let est = store.estimateTokens {
-                Text(L("assistant.estimate", Fmt.tokens(est))).font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                Text(L("assistant.estimate", Fmt.tokens(est))).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
             }
         }
         .card(padding: 14)
@@ -179,9 +179,9 @@ struct AssistantView: View {
                         }
                     }.frame(width: 14)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(s.label).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
-                        if let sum = s.summary { Text(sum).font(.system(size: 11)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true) }
-                        ForEach(s.details.prefix(6), id: \.self) { d in Text(d).font(.system(size: 10.5, design: .monospaced)).foregroundColor(Theme.tertiary) }
+                        Text(s.label).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
+                        if let sum = s.summary { Text(sum).font(Typo.font(.caption)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true) }
+                        ForEach(s.details.prefix(6), id: \.self) { d in Text(d).font(Typo.font(.caption, design: .monospaced)).foregroundColor(Theme.tertiary) }
                     }
                 }
                 .accessibilityElement(children: .combine)
@@ -195,10 +195,10 @@ struct AssistantView: View {
         VStack(alignment: .leading, spacing: 6) {
             SectionLabel(text: L("assistant.budget"), icon: "gauge.with.dots.needle.33percent")
             UsageBar(used: b.used, reserved: 0, total: b.limit)
-            Text(L("assistant.budgetUsed", Fmt.tokens(b.used), Fmt.tokens(b.limit))).font(.system(size: 11)).foregroundColor(Theme.tertiary)
+            Text(L("assistant.budgetUsed", Fmt.tokens(b.used), Fmt.tokens(b.limit))).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
             if let last = store.turns.last?.result?.usage {
                 Text(L("assistant.lastCost", Fmt.tokens((last.charged ?? ((last.input ?? 0) + (last.output ?? 0))))) + (last.balance.map { " · " + L("ai.creditsLeft", Fmt.tokens($0)) } ?? ""))
-                    .font(.system(size: 11)).foregroundColor(Theme.secondary)
+                    .font(Typo.font(.caption)).foregroundColor(Theme.secondary)
             }
         }
         .card(padding: 14)
@@ -216,20 +216,20 @@ struct TurnView: View {
             HStack {
                 Spacer(minLength: 80)
                 VStack(alignment: .trailing, spacing: 3) {
-                    Text(K.assistantAction(turn.action)).font(.system(size: 10, weight: .semibold)).foregroundColor(Theme.tertiary)
-                    Text(turn.text).font(.system(size: 13)).foregroundColor(Theme.text).textSelection(.enabled)
+                    Text(K.assistantAction(turn.action)).font(Typo.font(.micro, weight: .semibold)).foregroundColor(Theme.tertiary)
+                    Text(turn.text).font(Typo.font(.body)).foregroundColor(Theme.text).textSelection(.enabled)
                         .padding(.horizontal, 12).padding(.vertical, 8)
-                        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.accent.opacity(0.14)))
+                        .background(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).fill(Theme.accent.opacity(0.14)))
                 }
             }
         } else {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 6) {
-                    Image(systemName: "sparkles").font(.system(size: 11)).foregroundColor(Theme.accent)
-                    Text(K.assistantAction(turn.action)).font(.system(size: 10, weight: .semibold)).foregroundColor(Theme.tertiary)
-                    if let t = turn.result?.template { Text(t).font(.system(size: 10, design: .monospaced)).foregroundColor(Theme.tertiary) }
+                    Image(systemName: "sparkles").font(Typo.font(.caption)).foregroundColor(Theme.accent)
+                    Text(K.assistantAction(turn.action)).font(Typo.font(.micro, weight: .semibold)).foregroundColor(Theme.tertiary)
+                    if let t = turn.result?.template { Text(t).font(Typo.font(.micro, design: .monospaced)).foregroundColor(Theme.tertiary) }
                     Spacer()
-                    Text(Fmt.time(ISO8601DateFormatter().string(from: turn.at))).font(.system(size: 10)).foregroundColor(Theme.tertiary)
+                    Text(Fmt.time(ISO8601DateFormatter().string(from: turn.at))).font(Typo.font(.micro)).foregroundColor(Theme.tertiary)
                 }
                 if let e = turn.error {
                     EmptyLine(icon: "xmark.octagon.fill", text: e, tint: Theme.blocked)
@@ -237,24 +237,24 @@ struct TurnView: View {
                     ResultView(result: r)
                     if !turn.text.isEmpty && r.output == nil && r.valid == false {
                         DisclosureGroup(L("assistant.rawAnswer"), isExpanded: $showRaw) {
-                            Text(turn.text).font(.system(size: 11, design: .monospaced)).foregroundColor(Theme.tertiary).textSelection(.enabled)
-                        }.font(.system(size: 11)).foregroundColor(Theme.secondary)
+                            Text(turn.text).font(Typo.font(.caption, design: .monospaced)).foregroundColor(Theme.tertiary).textSelection(.enabled)
+                        }.font(Typo.font(.caption)).foregroundColor(Theme.secondary)
                     }
                 } else if turn.text.isEmpty {
                     HStack(spacing: 8) {
                         Orbit(size: 14)
-                        Text(L("assistant.thinking")).font(.system(size: 12.5)).foregroundColor(Theme.secondary)
+                        Text(L("assistant.thinking")).font(Typo.font(.body)).foregroundColor(Theme.secondary)
                         TypingDots()
                     }
                 } else {
-                    Text(turn.text).font(.system(size: 12.5, design: .monospaced)).foregroundColor(Theme.secondary).textSelection(.enabled)
+                    Text(turn.text).font(Typo.font(.body, design: .monospaced)).foregroundColor(Theme.secondary).textSelection(.enabled)
                     TypingDots().padding(.top, 2)
                 }
             }
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.bg))
-            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
+            .background(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).fill(Theme.bg))
+            .overlay(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
         }
     }
 }
@@ -272,8 +272,8 @@ struct ResultView: View {
             }
             if !result.valid, let errs = result.errors, !errs.isEmpty {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(L("assistant.invalidTitle")).font(.system(size: 11.5, weight: .semibold)).foregroundColor(Theme.blocked)
-                    ForEach(errs.prefix(6), id: \.self) { e in Text("• \(e)").font(.system(size: 11, design: .monospaced)).foregroundColor(Theme.tertiary) }
+                    Text(L("assistant.invalidTitle")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.blocked)
+                    ForEach(errs.prefix(6), id: \.self) { e in Text("• \(e)").font(Typo.font(.caption, design: .monospaced)).foregroundColor(Theme.tertiary) }
                 }
             }
             if let o = result.output { OutputFields(output: o) }
@@ -287,10 +287,10 @@ struct ResultView: View {
             if result.undone == true { EmptyLine(icon: "arrow.uturn.backward.circle.fill", text: L("assistant.undoneLine"), tint: Theme.warn) }
             HStack(spacing: 10) {
                 if let u = result.usage {
-                    Text(L("assistant.costLine", Fmt.tokens(u.charged ?? ((u.input ?? 0) + (u.output ?? 0))), u.model ?? result.model ?? "")).font(.system(size: 10.5)).foregroundColor(Theme.tertiary)
+                    Text(L("assistant.costLine", Fmt.tokens(u.charged ?? ((u.input ?? 0) + (u.output ?? 0))), u.model ?? result.model ?? "")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
                 }
-                if let r = result.repairs, r > 0 { Text(L("assistant.repairsLine", r)).font(.system(size: 10.5)).foregroundColor(Theme.tertiary) }
-                if let i = result.iterations, i > 1 { Text(L("assistant.iterationsLine", i)).font(.system(size: 10.5)).foregroundColor(Theme.tertiary) }
+                if let r = result.repairs, r > 0 { Text(L("assistant.repairsLine", r)).font(Typo.font(.caption)).foregroundColor(Theme.tertiary) }
+                if let i = result.iterations, i > 1 { Text(L("assistant.iterationsLine", i)).font(Typo.font(.caption)).foregroundColor(Theme.tertiary) }
             }
         }
     }
@@ -298,38 +298,38 @@ struct ResultView: View {
     private func patchSection(_ files: [AIPatchFile]) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
-                Text(L("assistant.proposalTitle")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
-                if let risk = result.risk { Text(L("issue.fixRisk", K.risk(risk))).font(.system(size: 11)).foregroundColor(risk == "high" ? Theme.blocked : Theme.secondary) }
+                Text(L("assistant.proposalTitle")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
+                if let risk = result.risk { Text(L("issue.fixRisk", K.risk(risk))).font(Typo.font(.caption)).foregroundColor(risk == "high" ? Theme.blocked : Theme.secondary) }
                 Spacer()
             }
             ForEach(files) { f in
                 DisclosureGroup {
-                    ScrollView(.horizontal) { DiffText(diff: f.diff).font(.system(size: 11, design: .monospaced)) }.frame(maxHeight: 220)
+                    ScrollView(.horizontal) { DiffText(diff: f.diff).font(Typo.font(.caption, design: .monospaced)) }.frame(maxHeight: 220)
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: f.applicable ? "doc.text" : "doc.text.fill").foregroundColor(f.applicable ? Theme.accent : Theme.blocked)
-                        Text(f.path).font(.system(size: 11.5, design: .monospaced)).foregroundColor(Theme.text)
-                        Text("+\(f.additions) −\(f.deletions)").font(.system(size: 10.5)).foregroundColor(Theme.tertiary)
-                        if let e = f.error { Text(e).font(.system(size: 10.5)).foregroundColor(Theme.blocked) }
+                        Text(f.path).font(Typo.font(.callout, design: .monospaced)).foregroundColor(Theme.text)
+                        Text("+\(f.additions) −\(f.deletions)").font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
+                        if let e = f.error { Text(e).font(Typo.font(.caption)).foregroundColor(Theme.blocked) }
                     }
                 }
-                .font(.system(size: 11))
+                .font(Typo.font(.caption))
             }
             if let plan = result.verificationPlan, !plan.isEmpty {
-                Text(L("assistant.verificationPlan", plan.joined(separator: " · "))).font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                Text(L("assistant.verificationPlan", plan.joined(separator: " · "))).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
             }
-            if let notes = result.rollbackNotes, !notes.isEmpty { Text(L("assistant.rollbackNotes", notes)).font(.system(size: 11)).foregroundColor(Theme.tertiary) }
+            if let notes = result.rollbackNotes, !notes.isEmpty { Text(L("assistant.rollbackNotes", notes)).font(Typo.font(.caption)).foregroundColor(Theme.tertiary) }
             if result.applied == nil, result.patchFile != nil {
                 HStack(spacing: 8) {
                     Button(L("assistant.applyVerify")) { store.apply(result) }.bidButton(.primary, compact: true).disabled(store.applying || store.running)
-                    Text(L("assistant.applyHint")).font(.system(size: 10.5)).foregroundColor(Theme.tertiary)
+                    Text(L("assistant.applyHint")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
                 }
             } else if result.applied != nil {
                 Button(L("ai.undo")) { store.undo() }.bidButton(.secondary, compact: true).disabled(store.applying)
             }
         }
         .padding(10)
-        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.panel))
+        .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(Theme.panel))
     }
 }
 
@@ -353,27 +353,27 @@ struct OutputFields: View {
     @ViewBuilder private func field(_ key: String, _ v: JSONValue) -> some View {
         switch v {
         case .string(let s) where key == "summary" || key == "answer":
-            Text(s).font(.system(size: 13)).foregroundColor(Theme.text).fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
+            Text(s).font(Typo.font(.body)).foregroundColor(Theme.text).fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
         case .string(let s):
-            if !s.isEmpty { labeled(key) { Text(s).font(.system(size: 12)).foregroundColor(Theme.text).fixedSize(horizontal: false, vertical: true).textSelection(.enabled) } }
+            if !s.isEmpty { labeled(key) { Text(s).font(Typo.font(.callout)).foregroundColor(Theme.text).fixedSize(horizontal: false, vertical: true).textSelection(.enabled) } }
         case .array(let a):
             if !a.isEmpty {
                 labeled(key) {
                     VStack(alignment: .leading, spacing: 2) {
                         ForEach(Array(a.enumerated()), id: \.offset) { _, item in
-                            Text("• " + item.text).font(.system(size: 12)).foregroundColor(Theme.text).fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
+                            Text("• " + item.text).font(Typo.font(.callout)).foregroundColor(Theme.text).fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
                         }
                     }
                 }
             }
         default:
-            labeled(key) { Text(v.text).font(.system(size: 12)).foregroundColor(Theme.text) }
+            labeled(key) { Text(v.text).font(Typo.font(.callout)).foregroundColor(Theme.text) }
         }
     }
 
     private func labeled<C: View>(_ key: String, @ViewBuilder _ content: () -> C) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(K.outputField(key)).font(.system(size: 10.5, weight: .bold)).tracking(0.4).foregroundColor(Theme.tertiary)
+            Text(K.outputField(key)).font(Typo.font(.caption, weight: .bold)).tracking(0.4).foregroundColor(Theme.tertiary)
             content()
         }
     }
@@ -391,10 +391,10 @@ struct AssistantSettingsSheet: View {
         SheetScaffold(icon: "slider.horizontal.3", title: L("assistant.settings"), width: 460) {
             VStack(alignment: .leading, spacing: 12) {
                 Toggle(L("assistant.autoApply"), isOn: $auto).toggleStyle(.switch)
-                Text(L("assistant.autoApplyHint")).font(.system(size: 11.5)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
+                Text(L("assistant.autoApplyHint")).font(Typo.font(.callout)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
                 Stepper(L("assistant.maxIterations", iterations), value: $iterations, in: 1...5)
                 Stepper(L("assistant.maxBudget", Fmt.tokens(budget)), value: $budget, in: 4000...400000, step: 10000)
-                Text(L("assistant.neverList")).font(.system(size: 11)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
+                Text(L("assistant.neverList")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
             }
             .onAppear {
                 if let s = model.assistantStore.settings { auto = s.autoApplyLowRisk; iterations = s.maxIterations; budget = s.maxTokensPerOperation }

@@ -21,11 +21,11 @@ struct AuthView: View {
                 Spacer()
                 VStack(alignment: .leading, spacing: 6) {
                     Text(mode == 1 ? L("auth.createAccount") : mode == 2 ? L("auth.newPassword") : L("auth.welcomeBack"))
-                        .font(.system(size: 28, weight: .bold)).foregroundColor(Theme.text)
+                        .font(Typo.font(.display, weight: .bold)).foregroundColor(Theme.text)
                     Text(mode == 1 ? L("auth.signupSubtitle")
                          : mode == 2 ? L("auth.recoverSubtitle")
                          : L("auth.loginSubtitle"))
-                        .font(.system(size: 13.5)).foregroundColor(Theme.secondary)
+                        .font(Typo.font(.subhead)).foregroundColor(Theme.secondary)
                 }
 
                 if mode != 2 {
@@ -44,21 +44,21 @@ struct AuthView: View {
 
                 if let error {
                     Label(error, systemImage: "exclamationmark.circle.fill")
-                        .font(.system(size: 12.5)).foregroundColor(Theme.blocked)
+                        .font(Typo.font(.body)).foregroundColor(Theme.blocked)
                         .fixedSize(horizontal: false, vertical: true)
                     if model.lastAuthCode == "email_not_confirmed" {
                         HStack(spacing: 10) {
                             Button { resend() } label: { Label(L("auth.resend"), systemImage: "envelope.arrow.triangle.branch") }
                                 .bidButton(.secondary, compact: true)
                                 .disabled(busy || email.isEmpty)
-                            Text(L("auth.resendHint")).font(.system(size: 11.5)).foregroundColor(Theme.tertiary)
+                            Text(L("auth.resendHint")).font(Typo.font(.callout)).foregroundColor(Theme.tertiary)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                     }
                 }
                 if let info {
                     Label(info, systemImage: "checkmark.circle.fill")
-                        .font(.system(size: 12.5)).foregroundColor(Theme.ready)
+                        .font(Typo.font(.body)).foregroundColor(Theme.ready)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
@@ -77,7 +77,7 @@ struct AuthView: View {
                 if mode != 2 && !providers.isEmpty {
                     HStack(spacing: 10) {
                         Rectangle().fill(Theme.hairline).frame(height: 1)
-                        Text(L("auth.or")).font(.system(size: 11.5)).foregroundColor(Theme.tertiary)
+                        Text(L("auth.or")).font(Typo.font(.callout)).foregroundColor(Theme.tertiary)
                         Rectangle().fill(Theme.hairline).frame(height: 1)
                     }
                     if providers.contains("github") {
@@ -99,19 +99,19 @@ struct AuthView: View {
                 HStack {
                     if mode == 0 {
                         Button(L("auth.forgot")) { withAnimation { mode = 2; error = nil; info = nil } }
-                            .buttonStyle(.plain).foregroundColor(Theme.accent).font(.system(size: 12.5))
+                            .buttonStyle(.plain).foregroundColor(Theme.accent).font(Typo.font(.body))
                     } else if mode == 2 {
                         Button(L("auth.backToLogin")) { withAnimation { mode = 0; error = nil; info = nil } }
-                            .buttonStyle(.plain).foregroundColor(Theme.accent).font(.system(size: 12.5))
+                            .buttonStyle(.plain).foregroundColor(Theme.accent).font(Typo.font(.body))
                     }
                     Spacer()
                     Button(L("auth.continueOffline")) { model.continueOffline() }
-                        .buttonStyle(.plain).foregroundColor(Theme.tertiary).font(.system(size: 12))
+                        .buttonStyle(.plain).foregroundColor(Theme.tertiary).font(Typo.font(.callout))
                 }
                 CloudCheckLine()
                 Spacer()
                 Text(L("auth.privacyNote"))
-                    .font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                    .font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
                 LegalLinks()
             }
@@ -181,13 +181,13 @@ struct AuthField: View {
                 }
             }
             .textFieldStyle(.plain)
-            .font(.system(size: 14))
+            .font(Typo.font(.subhead))
             .foregroundColor(Theme.text)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.panel))
-        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
+        .background(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).fill(Theme.panel))
+        .overlay(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
     }
 }
 
@@ -208,29 +208,29 @@ struct BrandPanel: View {
             VStack(alignment: .leading, spacing: 28) {
                 HStack(spacing: 12) {
                     ZStack {
-                        RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.white.opacity(0.18))
-                        Image(systemName: "paperplane.fill").font(.system(size: 22, weight: .bold)).foregroundColor(.white).rotationEffect(.degrees(-8))
+                        RoundedRectangle(cornerRadius: Radius.m, style: .continuous).fill(Color.white.opacity(0.18))
+                        Image(systemName: "paperplane.fill").font(Typo.font(.title, weight: .bold)).foregroundColor(.white).rotationEffect(.degrees(-8))
                     }
                     .frame(width: 50, height: 50)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Before I Deploy").font(.system(size: 22, weight: .bold)).foregroundColor(.white)
-                        Text(L("welcome.tagline")).font(.system(size: 13)).foregroundColor(.white.opacity(0.75))
+                        Text("Before I Deploy").font(Typo.font(.title, weight: .bold)).foregroundColor(.white)
+                        Text(L("welcome.tagline")).font(Typo.font(.body)).foregroundColor(.white.opacity(0.75))
                     }
                 }
                 Text(L("welcome.headline"))
-                    .font(.system(size: 34, weight: .heavy))
+                    .font(Typo.font(.display, weight: .heavy))
                     .foregroundColor(.white)
                     .fixedSize(horizontal: false, vertical: true)
                 VStack(alignment: .leading, spacing: 16) {
                     ForEach(features.indices, id: \.self) { i in
                         let f = features[i]
                         HStack(alignment: .top, spacing: 12) {
-                            Image(systemName: f.0).font(.system(size: 15, weight: .semibold)).foregroundColor(.white)
+                            Image(systemName: f.0).font(Typo.font(.subhead, weight: .semibold)).foregroundColor(.white)
                                 .frame(width: 32, height: 32)
-                                .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Color.white.opacity(0.15)))
+                                .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(Color.white.opacity(0.15)))
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(f.1).font(.system(size: 14, weight: .semibold)).foregroundColor(.white)
-                                Text(f.2).font(.system(size: 12.5)).foregroundColor(.white.opacity(0.75))
+                                Text(f.1).font(Typo.font(.subhead, weight: .semibold)).foregroundColor(.white)
+                                Text(f.2).font(Typo.font(.body)).foregroundColor(.white.opacity(0.75))
                             }
                         }
                     }
@@ -257,9 +257,9 @@ struct CloudSetupView: View {
             BrandPanel().frame(maxWidth: .infinity, maxHeight: .infinity)
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Text(L("cloud.title")).font(.system(size: 24, weight: .bold)).foregroundColor(Theme.text)
+                    Text(L("cloud.title")).font(Typo.font(.title, weight: .bold)).foregroundColor(Theme.text)
                     Text(L("cloud.subtitle"))
-                        .font(.system(size: 13)).foregroundColor(Theme.secondary)
+                        .font(Typo.font(.body)).foregroundColor(Theme.secondary)
                     VStack(alignment: .leading, spacing: 10) {
                         StepLine(n: 1, text: L("cloud.step1"))
                         StepLine(n: 2, text: L("cloud.step2"))
@@ -274,7 +274,7 @@ struct CloudSetupView: View {
                     }
                     BIDTextField(placeholder: "https://xxxx.supabase.co", text: $url, mono: true)
                     BIDTextField(placeholder: L("cloud.anonKeyPlaceholder"), text: $key, mono: true)
-                    if let error { Text(error).foregroundColor(Theme.blocked).font(.system(size: 12.5)) }
+                    if let error { Text(error).foregroundColor(Theme.blocked).font(Typo.font(.body)) }
                     Button {
                         busy = true
                         Task {
@@ -292,7 +292,7 @@ struct CloudSetupView: View {
                         .bidButton(.primary)
                         .disabled(url.isEmpty || key.isEmpty || busy)
                     Button(L("cloud.continueOffline")) { model.continueOffline() }
-                        .buttonStyle(.plain).foregroundColor(Theme.tertiary).font(.system(size: 12))
+                        .buttonStyle(.plain).foregroundColor(Theme.tertiary).font(Typo.font(.callout))
                 }
                 .padding(48)
             }
@@ -316,7 +316,7 @@ struct CloudCheckLine: View {
                     Text(L("auth.checkCloud"))
                 }
             }
-            .buttonStyle(.plain).foregroundColor(Theme.accent).font(.system(size: 12.5))
+            .buttonStyle(.plain).foregroundColor(Theme.accent).font(Typo.font(.body))
             .disabled(model.cloudChecking)
             if let d = model.cloudDoctor {
                 VStack(alignment: .leading, spacing: 5) {
@@ -329,7 +329,7 @@ struct CloudCheckLine: View {
                             line(a.emailConfirmRequired != true, a.emailConfirmRequired != true ? L("cloud.doctor.confirmOff") : L("cloud.doctor.confirmOn"))
                         }
                         if d.schemaApplied != true || !(d.functionsMissing ?? []).isEmpty || d.auth?.emailConfirmRequired == true {
-                            Text(L("cloud.doctor.ownerHint")).font(.system(size: 11.5)).foregroundColor(Theme.secondary)
+                            Text(L("cloud.doctor.ownerHint")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
                                 .fixedSize(horizontal: false, vertical: true)
                             HStack(spacing: 8) {
                                 if let u = d.dashboard?.project {
@@ -353,8 +353,8 @@ struct CloudCheckLine: View {
     private func line(_ ok: Bool, _ text: String) -> some View {
         HStack(alignment: .top, spacing: 7) {
             Image(systemName: ok ? "checkmark.circle.fill" : "xmark.circle.fill")
-                .font(.system(size: 12)).foregroundColor(ok ? Theme.ready : Theme.blocked)
-            Text(text).font(.system(size: 12)).foregroundColor(Theme.text).fixedSize(horizontal: false, vertical: true)
+                .font(Typo.font(.callout)).foregroundColor(ok ? Theme.ready : Theme.blocked)
+            Text(text).font(Typo.font(.callout)).foregroundColor(Theme.text).fixedSize(horizontal: false, vertical: true)
         }
     }
 }
@@ -373,7 +373,7 @@ struct AccountBadge: View {
                 ZStack {
                     Circle().fill(Theme.avatarGradient(for: a?.email ?? "?")).frame(width: 26, height: 26)
                     Text(String((a?.name ?? a?.email ?? "?").prefix(1)).uppercased())
-                        .font(.system(size: 12, weight: .bold)).foregroundColor(.white)
+                        .font(Typo.font(.callout, weight: .bold)).foregroundColor(.white)
                     // credits ring: what is left of this month's plan tokens
                     if let f = a?.credits?.fraction {
                         Circle().stroke(Theme.elevated, lineWidth: 2.5).frame(width: 32, height: 32)
@@ -386,16 +386,16 @@ struct AccountBadge: View {
                 .frame(width: 32, height: 32)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(a?.loggedIn == true ? (a?.name ?? L("common.account")) : L("account.offline"))
-                        .font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text).lineLimit(1)
+                        .font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text).lineLimit(1)
                     Text(a?.loggedIn == true ? (a?.email ?? "") : L("account.signInToSync"))
-                        .font(.system(size: 10.5)).foregroundColor(Theme.tertiary).lineLimit(1)
+                        .font(Typo.font(.caption)).foregroundColor(Theme.tertiary).lineLimit(1)
                 }
                 Spacer(minLength: 0)
-                Image(systemName: "chevron.up.chevron.down").font(.system(size: 9, weight: .bold)).foregroundColor(Theme.tertiary)
+                Image(systemName: "chevron.up.chevron.down").font(Typo.font(.micro, weight: .bold)).foregroundColor(Theme.tertiary)
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 6)
-            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(hover ? Theme.elevated : Theme.panel))
+            .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(hover ? Theme.elevated : Theme.panel))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -417,10 +417,10 @@ struct AccountMenu: View {
         let a = model.account
         VStack(alignment: .leading, spacing: 4) {
             if a?.loggedIn == true {
-                Text(a?.email ?? "").font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.text)
+                Text(a?.email ?? "").font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.text)
                 if let role = a?.role, let plan = a?.plan {
                     Text(L("account.rolePlan", role, plan, Fmt.tokens(a?.credits?.balance ?? 0)))
-                        .font(.system(size: 11.5)).foregroundColor(Theme.secondary)
+                        .font(Typo.font(.callout)).foregroundColor(Theme.secondary)
                 }
                 Divider().padding(.vertical, 4)
                 item(L("account.open"), "person.crop.circle") { model.screen = .account }
@@ -431,7 +431,7 @@ struct AccountMenu: View {
                 Divider().padding(.vertical, 4)
                 item(L("account.signOut"), "rectangle.portrait.and.arrow.right") { model.logout() }
             } else {
-                Text(L("account.signInToSync")).font(.system(size: 12)).foregroundColor(Theme.secondary)
+                Text(L("account.signInToSync")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
                 Divider().padding(.vertical, 4)
                 item(L("account.signInOrUp"), "person.crop.circle.badge.plus") { model.offlineMode = false }
             }
@@ -443,7 +443,7 @@ struct AccountMenu: View {
     private func item(_ title: String, _ symbol: String, _ action: @escaping () -> Void) -> some View {
         Button { close(); action() } label: {
             Label(title, systemImage: symbol)
-                .font(.system(size: 12.5))
+                .font(Typo.font(.body))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.vertical, 5)
                 .contentShape(Rectangle())
@@ -466,9 +466,9 @@ struct HostingChooserCard: View {
                     ForEach(a.providers) { p in HostingOptionTile(option: p) }
                 }
                 Text(L("hosting.pricesNote"))
-                    .font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                    .font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
             } else {
-                HStack { Spinner(size: 13); Text(L("hosting.analyzing")).font(.system(size: 12)).foregroundColor(Theme.secondary) }
+                HStack { Spinner(size: 13); Text(L("hosting.analyzing")).font(Typo.font(.callout)).foregroundColor(Theme.secondary) }
             }
         }
         .card()
@@ -483,7 +483,7 @@ struct HostingOptionTile: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
-                Text(option.name).font(.system(size: 14, weight: .bold)).foregroundColor(option.compatible ? Theme.text : Theme.tertiary)
+                Text(option.name).font(Typo.font(.subhead, weight: .bold)).foregroundColor(option.compatible ? Theme.text : Theme.tertiary)
                 Spacer()
                 if option.current {
                     Tag(text: L("hosting.selectedBadge"), tint: Theme.accent)
@@ -491,10 +491,10 @@ struct HostingOptionTile: View {
                     Tag(text: L("hosting.recommendedBadge"), tint: Theme.ready)
                 }
             }
-            Text(option.free).font(.system(size: 11.5)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
+            Text(option.free).font(Typo.font(.callout)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
             ForEach(option.reasons, id: \.self) { r in
                 Label(r, systemImage: option.compatible ? "exclamationmark.triangle" : "xmark.circle")
-                    .font(.system(size: 11)).foregroundColor(option.compatible ? Theme.warn : Theme.blocked)
+                    .font(Typo.font(.caption)).foregroundColor(option.compatible ? Theme.warn : Theme.blocked)
                     .fixedSize(horizontal: false, vertical: true)
             }
             HStack(spacing: 6) {
@@ -514,8 +514,8 @@ struct HostingOptionTile: View {
             }
         }
         .padding(14)
-        .background(RoundedRectangle(cornerRadius: 13, style: .continuous).fill(option.current ? Theme.accentSoft : Theme.elevated))
-        .overlay(RoundedRectangle(cornerRadius: 13, style: .continuous).strokeBorder(option.current ? Theme.accent.opacity(0.6) : Theme.hairline, lineWidth: 1))
+        .background(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).fill(option.current ? Theme.accentSoft : Theme.elevated))
+        .overlay(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).strokeBorder(option.current ? Theme.accent.opacity(0.6) : Theme.hairline, lineWidth: 1))
         .opacity(option.compatible ? 1 : 0.6)
     }
 }
@@ -523,25 +523,13 @@ struct HostingOptionTile: View {
 struct Tag: View {
     let text: String
     let tint: Color
-    var body: some View {
-        Text(text).font(.system(size: 9.5, weight: .heavy)).tracking(0.7).foregroundColor(tint)
-            .padding(.horizontal, 7).padding(.vertical, 3)
-            .background(Capsule().fill(tint.opacity(0.15)))
-    }
+    var body: some View { Badge(text: text, size: .sm, tint: tint) }
 }
 
 struct StatusPill: View {
     let ok: Bool
     let text: String
-    var body: some View {
-        HStack(spacing: 4) {
-            Image(systemName: ok ? "checkmark" : "xmark").font(.system(size: 8, weight: .black))
-            Text(text).font(.system(size: 10.5, weight: .semibold))
-        }
-        .foregroundColor(ok ? Theme.ready : Theme.tertiary)
-        .padding(.horizontal, 7).padding(.vertical, 3)
-        .background(Capsule().fill(Theme.bg))
-    }
+    var body: some View { Badge(text: text, icon: ok ? "checkmark" : "xmark", tone: ok ? .success : .neutral, size: .sm) }
 }
 
 /// Deploy card for non-Netlify providers.
@@ -558,7 +546,7 @@ struct GenericHostingCard: View {
             if h?.installed != true || h?.loggedIn != true {
                 HStack {
                     Text(h?.installed != true ? L("hosting.cliMissing", h?.name ?? "") : L("hosting.signInHint", h?.name ?? ""))
-                        .font(.system(size: 12.5)).foregroundColor(Theme.secondary)
+                        .font(Typo.font(.body)).foregroundColor(Theme.secondary)
                     Spacer()
                     Button(L("hosting.setUp")) { model.screen = .setup; Task { await model.loadSetup() } }
                         .bidButton(.primary, compact: true)
@@ -566,9 +554,9 @@ struct GenericHostingCard: View {
             } else {
                 HStack(alignment: .top, spacing: 24) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(L("hosting.liveLabel")).font(.system(size: 10, weight: .bold)).tracking(1).foregroundColor(Theme.tertiary)
+                        Text(L("hosting.liveLabel")).font(Typo.font(.micro, weight: .bold)).tracking(1).foregroundColor(Theme.tertiary)
                         Text(live.map { Fmt.host($0) } ?? L("hosting.noProductionYet"))
-                            .font(.system(size: 15, weight: .semibold)).foregroundColor(live == nil ? Theme.tertiary : Theme.text)
+                            .font(Typo.font(.subhead, weight: .semibold)).foregroundColor(live == nil ? Theme.tertiary : Theme.text)
                     }
                     DeployStat(title: L("hosting.lastProduction"), record: status.lastProd, fallback: nil)
                     DeployStat(title: L("hosting.lastPreview"), record: status.lastDraft, fallback: nil)
@@ -662,20 +650,20 @@ struct CommandPalette: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            Color.black.opacity(0.45).ignoresSafeArea().onTapGesture { model.showPalette = false }
+            Theme.scrim.ignoresSafeArea().onTapGesture { model.showPalette = false }
             VStack(spacing: 0) {
                 HStack(spacing: 10) {
                     Image(systemName: "magnifyingglass").foregroundColor(Theme.tertiary)
                     TextField(L("palette.placeholder"), text: $query)
                         .textFieldStyle(.plain)
-                        .font(.system(size: 16))
+                        .font(Typo.font(.headline))
                         .foregroundColor(Theme.text)
                         .focused($searchFocused)
                         .onSubmit { run(visible.indices.contains(selection) ? visible[selection] : nil) }
                         .onChange(of: query) { _ in selection = 0 }
-                    Text("esc").font(.system(size: 10.5, weight: .semibold)).foregroundColor(Theme.tertiary)
+                    Text("⎋").font(Typo.font(.caption, weight: .semibold)).foregroundColor(Theme.tertiary)
                         .padding(.horizontal, 6).padding(.vertical, 2)
-                        .background(RoundedRectangle(cornerRadius: 5).fill(Theme.elevated))
+                        .background(RoundedRectangle(cornerRadius: Radius.xs).fill(Theme.elevated))
                 }
                 .padding(16)
                 Rectangle().fill(Theme.hairline).frame(height: 1)
@@ -686,14 +674,14 @@ struct CommandPalette: View {
                                 HStack(spacing: 12) {
                                     Image(systemName: cmd.icon).foregroundColor(index == selection ? .white : Theme.accent).frame(width: 22)
                                     VStack(alignment: .leading, spacing: 1) {
-                                        Text(cmd.title).font(.system(size: 13.5, weight: .semibold)).foregroundColor(index == selection ? .white : Theme.text)
-                                        Text(cmd.subtitle).font(.system(size: 11.5)).foregroundColor(index == selection ? .white.opacity(0.75) : Theme.tertiary)
+                                        Text(cmd.title).font(Typo.font(.subhead, weight: .semibold)).foregroundColor(index == selection ? .white : Theme.text)
+                                        Text(cmd.subtitle).font(Typo.font(.callout)).foregroundColor(index == selection ? .white.opacity(0.75) : Theme.tertiary)
                                     }
                                     Spacer()
                                     if index == selection { Image(systemName: "return").foregroundColor(.white.opacity(0.8)) }
                                 }
                                 .padding(.horizontal, 12).padding(.vertical, 9)
-                                .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(index == selection ? Theme.accent : Color.clear))
+                                .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(index == selection ? Theme.accentFill : Color.clear))
                                 .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)
@@ -708,10 +696,10 @@ struct CommandPalette: View {
                 .frame(maxHeight: 380)
             }
             .frame(width: 620)
-            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Theme.panel))
-            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
+            .background(RoundedRectangle(cornerRadius: Radius.l, style: .continuous).fill(Theme.panel))
+            .overlay(RoundedRectangle(cornerRadius: Radius.l, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
             .glowBorder(Theme.accent, radius: 16, strength: 0.8)
-            .shadow(color: .black.opacity(0.5), radius: 30, y: 14)
+            .elevation(.popover)
             .padding(.top, 110)
             .scaleEffect(appeared || Motion.reduced ? 1 : 0.94, anchor: .top)
             .opacity(appeared || Motion.reduced ? 1 : 0)
@@ -725,6 +713,7 @@ struct CommandPalette: View {
             .frame(width: 0, height: 0)
             .accessibilityHidden(true)
         }
+        .accessibilityAddTraits(.isModal)
         .onExitCommand { model.showPalette = false }
         .onAppear { DispatchQueue.main.async { searchFocused = true } }
     }

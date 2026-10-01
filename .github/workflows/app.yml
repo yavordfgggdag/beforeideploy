@@ -9,11 +9,13 @@ on:
       - 'engine/bid'
       - 'scripts/build.sh'
       - '.github/workflows/app.yml'
+      - 'scripts/design-check.mjs'
   pull_request:
     paths:
       - 'App/**'
       - 'scripts/build.sh'
       - '.github/workflows/app.yml'
+      - 'scripts/design-check.mjs'
   workflow_dispatch:
 
 jobs:
@@ -35,6 +37,8 @@ jobs:
         working-directory: App
         run: |
           if [ -d Tests ]; then swift test 2>&1 | tee ../test.log; else echo "no Swift tests yet (WP6.7)"; fi
+      - name: Design System conventions
+        run: node scripts/design-check.mjs
       - name: Localizations are complete
         run: node scripts/i18n-check.mjs
       - name: The .app carries a working engine (audit B1)

@@ -23,10 +23,10 @@ struct SidebarView: View {
                 AppGlyph(size: 26).breath(Theme.accent)
                 VStack(alignment: .leading, spacing: 1) {
                     Text("Before I Deploy")
-                        .font(.system(size: 13.5, weight: .bold))
+                        .font(Typo.font(.subhead, weight: .bold))
                         .foregroundColor(Theme.text)
                     Text(L("sidebar.tagline"))
-                        .font(.system(size: 10.5))
+                        .font(Typo.font(.caption))
                         .foregroundColor(Theme.tertiary)
                 }
             }
@@ -81,7 +81,7 @@ struct SidebarView: View {
                 SectionLabel(text: L("common.projects"))
                 Spacer()
                 Text("\(model.projects.count)")
-                    .font(.system(size: 10.5, weight: .semibold))
+                    .font(Typo.font(.caption, weight: .semibold))
                     .foregroundColor(Theme.tertiary)
             }
             .padding(.horizontal, 18)
@@ -116,7 +116,7 @@ struct SidebarView: View {
                         Image(systemName: "plus")
                         Text(L("common.addProject"))
                         Spacer()
-                        Text("⌘O").foregroundColor(Theme.tertiary).font(.system(size: 11))
+                        Text("⌘O").foregroundColor(Theme.tertiary).font(Typo.font(.caption))
                     }
                     .frame(maxWidth: .infinity)
                 }
@@ -138,12 +138,12 @@ struct SidebarView: View {
                         Image(systemName: "magnifyingglass")
                         Text(L("sidebar.search"))
                         Spacer()
-                        Text("⌘K").foregroundColor(Theme.tertiary).font(.system(size: 11))
+                        Text("⌘K").foregroundColor(Theme.tertiary).font(Typo.font(.caption))
                     }
-                    .font(.system(size: 12.5))
+                    .font(Typo.font(.body))
                     .foregroundColor(Theme.secondary)
                     .padding(.horizontal, 10).padding(.vertical, 7)
-                    .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Theme.panel))
+                    .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(Theme.panel))
                 }
                 .buttonStyle(.plain)
                 if let u = model.update, u.available {
@@ -171,9 +171,9 @@ struct UpdateBanner: View {
         HStack(spacing: 8) {
             Image(systemName: "arrow.down.circle.fill").foregroundColor(Theme.accent)
             VStack(alignment: .leading, spacing: 1) {
-                Text(L("update.available", info.latest ?? "")).font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                Text(L("update.available", info.latest ?? "")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
                 if let n = info.notes?[Localization.current] ?? info.notes?["en"] {
-                    Text(n).font(.system(size: 10.5)).foregroundColor(Theme.tertiary).lineLimit(2)
+                    Text(n).font(Typo.font(.caption)).foregroundColor(Theme.tertiary).lineLimit(2)
                 }
             }
             Spacer()
@@ -182,7 +182,7 @@ struct UpdateBanner: View {
                 .disabled(model.busy.contains("update"))
         }
         .padding(10)
-        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.accentSoft))
+        .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(Theme.accentSoft))
     }
 }
 
@@ -197,11 +197,11 @@ struct SidebarFooterButton: View {
                 Image(systemName: symbol)
                 Text(title)
             }
-            .font(.system(size: 12, weight: .medium))
+            .font(Typo.font(.callout, weight: .medium))
             .foregroundColor(hover ? Theme.text : Theme.secondary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 7)
-            .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(hover ? Theme.elevated : .clear))
+            .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(hover ? Theme.elevated : .clear))
         }
         .buttonStyle(.plain)
         .onHover { hover = $0 }
@@ -223,11 +223,11 @@ struct ProjectRow: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(project.name)
-                    .font(.system(size: 13, weight: selected ? .semibold : .medium))
+                    .font(Typo.font(.body, weight: selected ? .semibold : .medium))
                     .foregroundColor(project.exists == false ? Theme.tertiary : Theme.text)
                     .lineLimit(1)
                 Text(project.exists == false ? L("sidebar.folderMissing") : (subtitle.isEmpty ? "—" : subtitle))
-                    .font(.system(size: 10.5))
+                    .font(Typo.font(.caption))
                     .foregroundColor(Theme.tertiary)
                     .lineLimit(1)
             }
@@ -241,17 +241,17 @@ struct ProjectRow: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 7)
         .background(
-            RoundedRectangle(cornerRadius: 11, style: .continuous)
+            RoundedRectangle(cornerRadius: Radius.m, style: .continuous)
                 .fill(selected ? Theme.elevated : (hover ? Theme.panel : .clear))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 11, style: .continuous)
+            RoundedRectangle(cornerRadius: Radius.m, style: .continuous)
                 .strokeBorder(selected ? Theme.edgeHighlight : LinearGradient(colors: [.clear], startPoint: .top, endPoint: .bottom), lineWidth: 1)
         )
         .overlay(alignment: .leading) {
             if selected {
                 Capsule().fill(Theme.accentGradient).frame(width: 3, height: 18).offset(x: -6)
-                    .shadow(color: Theme.accent.opacity(0.7), radius: 4)
+                    .elevation(.popover)
             }
         }
         .contentShape(Rectangle())
@@ -277,18 +277,18 @@ struct NavRow: View {
         Button(action: action) {
             HStack(spacing: 10) {
                 Image(systemName: symbol)
-                    .font(.system(size: 12.5, weight: .semibold))
+                    .font(Typo.font(.body, weight: .semibold))
                     .foregroundColor(selected ? Theme.accent : Theme.secondary)
                     .frame(width: 20)
                     .scaleEffect(hover && !Motion.reduced ? 1.12 : 1)
                     .rotationEffect(.degrees(hover && !Motion.reduced ? -6 : 0))
                 Text(title)
-                    .font(.system(size: 13, weight: selected ? .semibold : .medium))
+                    .font(Typo.font(.body, weight: selected ? .semibold : .medium))
                     .foregroundColor(selected ? Theme.text : Theme.secondary)
                 Spacer()
                 if let badge {
                     Text(badge)
-                        .font(.system(size: 10.5, weight: .bold))
+                        .font(Typo.font(.caption, weight: .bold))
                         .foregroundColor(.white)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
@@ -299,13 +299,13 @@ struct NavRow: View {
             .padding(.vertical, 8)
             .background {
                 if selected {
-                    let pill = RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    let pill = RoundedRectangle(cornerRadius: Radius.s, style: .continuous)
                         .fill(LinearGradient(colors: [Theme.accent.opacity(0.28), Theme.accent.opacity(0.10)], startPoint: .leading, endPoint: .trailing))
-                        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Theme.accent.opacity(0.32), lineWidth: 1))
-                        .shadow(color: Theme.accent.opacity(0.25), radius: 10, y: 3)
+                        .overlay(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).strokeBorder(Theme.accent.opacity(0.32), lineWidth: 1))
+                        .elevation(.popover)
                     if let ns { pill.matchedGeometryEffect(id: "nav-pill", in: ns) } else { pill }
                 } else {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous).fill(hover ? Theme.panel : .clear)
+                    RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(hover ? Theme.panel : .clear)
                 }
             }
             .contentShape(Rectangle())
