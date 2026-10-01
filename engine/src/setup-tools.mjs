@@ -108,6 +108,33 @@ export function setupLock() {
   throw new EngineError(msg('setup.busy'), 'setup_busy');
 }
 
+const UUID_RE = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
+
+/** The `pkgs/<id>-<uuid>` folder a `bin/<bin>` link points into, or null. */
+function linkedPackage(link) {
+  let target;
+  try { target = fs.readlinkSync(link); } catch { return null; }
+  const rel = path.relative(path.join(TOOLS_DIR, 'pkgs'), path.resolve(path.dirname(link), target));
+  return rel && !rel.startsWith('..') && !path.isAbsolute(rel) ? rel.split(path.sep)[0] : null;
+}
+
+/**
+ * Audit B2: after a successful switch keep the active install and the one before it (a quick way back),
+ * delete every other `pkgs/<id>-<uuid>`. Only names of exactly this id match, never `<id>-other-<uuid>`.
+ */
+export function prunePackages(id, keep = []) {
+  const dir = path.join(TOOLS_DIR, 'pkgs');
+  const re = new RegExp(`^${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-${UUID_RE}$`);
+  const removed = [];
+  let names = [];
+  try { names = fs.readdirSync(dir); } catch { return removed; }
+  for (const name of names) {
+    if (!re.test(name) || keep.includes(name)) continue;
+    try { fs.rmSync(path.join(dir, name), { recursive: true, force: true }); removed.push(name); } catch {}
+  }
+  return removed;
+}
+
 export async function setupPreflight({ urls, disk = () => fs.statfsSync(ensureDir(TOOLS_DIR)), probe = fetchT } = {}) {
   const stat = disk();
   const free = Number(stat.bavail) * Number(stat.bsize);
@@ -145,6 +172,7 @@ export async function installManaged(id, { logFile, run = runStream } = {}) {
   const destination = path.join(TOOLS_DIR, 'pkgs', `${id}-${uuid}`);
   const link = path.join(TOOLS_DIR, 'bin', tool.bin);
   const temporaryLink = `${link}.${uuid}`;
+  const previous = linkedPackage(link);
   ensureDir(staging);
   let published = false;
   const cleanup = () => { fs.rmSync(staging, { recursive: true, force: true }); if (!published) fs.rmSync(destination, { recursive: true, force: true }); };
@@ -153,16 +181,20 @@ export async function installManaged(id, { logFile, run = runStream } = {}) {
     const result = await run(npm.cmd, [...npm.args, 'install', '--prefix', staging, '--no-audit', '--no-fund',
       '--loglevel=http', '--progress=false', '--fetch-timeout=60000', '--fetch-retries=2', tool.pkg], {
       cwd: staging, step: id, logFile, timeout: 360000,
-      env: { ...cliEnv(), npm_config_cache: path.join(TOOLS_DIR, 'npm-cache'), npm_config_update_notifier: 'false' },
+      // a per-install cache inside staging: it is deleted with the staging folder, so it can never grow unbounded
+      env: { ...cliEnv(), npm_config_cache: path.join(staging, '.npm-cache'), npm_config_update_notifier: 'false' },
     });
     if (result.code !== 0) throw new EngineError(installError(result), 'install_failed');
     const candidate = path.join(staging, 'node_modules', '.bin', tool.bin);
     const check = await run(candidate, ['--version'], { cwd: staging, step: id, timeout: 15000, quiet: true });
     if (check.code !== 0) throw new EngineError(msg('setup.toolFailed'), 'install_failed');
+    fs.rmSync(path.join(staging, '.npm-cache'), { recursive: true, force: true });
     fs.renameSync(staging, destination);
     fs.symlinkSync(path.join(destination, 'node_modules', '.bin', tool.bin), temporaryLink);
     fs.renameSync(temporaryLink, link); // Atomic switch; keep the old installation usable until this point.
     published = true;
+    prunePackages(id, [path.basename(destination), previous].filter(Boolean));
+    fs.rmSync(path.join(TOOLS_DIR, 'npm-cache'), { recursive: true, force: true }); // the old shared cache (V12)
     return { id, path: link };
   } finally {
     process.removeListener('exit', cleanup);
@@ -182,6 +214,7 @@ export async function installGitHub({ logFile } = {}) {
   const staging = ensureDir(path.join(TOOLS_DIR, `.staging-gh-${uuid}`));
   const destination = path.join(TOOLS_DIR, 'pkgs', `gh-${uuid}`);
   const link = path.join(TOOLS_DIR, 'bin', 'gh');
+  const previous = linkedPackage(link);
   let published = false;
   const cleanup = () => { fs.rmSync(staging, { recursive: true, force: true }); if (!published) fs.rmSync(destination, { recursive: true, force: true }); };
   process.once('exit', cleanup);
@@ -214,6 +247,7 @@ export async function installGitHub({ logFile } = {}) {
     fs.symlinkSync(path.join(destination, binary), `${link}.${uuid}`);
     fs.renameSync(`${link}.${uuid}`, link);
     published = true;
+    prunePackages('gh', [path.basename(destination), previous].filter(Boolean));
   } finally {
     process.removeListener('exit', cleanup);
     fs.rmSync(staging, { recursive: true, force: true });

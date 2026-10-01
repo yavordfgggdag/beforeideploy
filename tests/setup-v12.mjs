@@ -153,3 +153,28 @@ test('B1: lock recovery stops a dead owner\'s orphaned children and sweeps stale
     assert.equal(fs.existsSync(stale), false); assert.equal(fs.existsSync(tempLink), false);
   } finally { release(); }
 });
+
+test('B2: reinstalls keep only the active and the previous package folder', async () => {
+  const fakeRun = async (cmd, args) => {
+    if (args[0] === 'install') {
+      const prefix = args[args.indexOf('--prefix') + 1];
+      fs.mkdirSync(path.join(prefix, 'node_modules/.bin'), { recursive: true });
+      fs.writeFileSync(path.join(prefix, 'node_modules/.bin/wrangler'), '#!/bin/sh\necho 4', { mode: 0o755 });
+      fs.mkdirSync(path.join(prefix, '.npm-cache'), { recursive: true });
+    }
+    return { code: 0, tail: ['4'] };
+  };
+  const pkgs = path.join(TOOLS_DIR, 'pkgs');
+  const other = path.join(pkgs, 'vercel-11111111-2222-4333-8444-555555555555'); fs.mkdirSync(other, { recursive: true });
+  const ofId = () => fs.readdirSync(pkgs).filter(n => n.startsWith('wrangler-')).sort();
+  for (let i = 0; i < 4; i++) await installManaged('wrangler', { run: fakeRun });
+  const link = path.join(TOOLS_DIR, 'bin', 'wrangler');
+  const active = path.relative(pkgs, fs.readlinkSync(link)).split(path.sep)[0];
+  assert.equal(ofId().length, 2, ofId().join(','));
+  assert.ok(ofId().includes(active));
+  assert.equal(fs.existsSync(other), true, 'another tool is never pruned');
+  assert.equal(fs.existsSync(path.join(pkgs, active, '.npm-cache')), false, 'per-install npm cache is not kept');
+  // a failed install never prunes
+  await assert.rejects(() => installManaged('wrangler', { run: async () => ({ code: 1, tail: ['x'] }) }));
+  assert.equal(ofId().length, 2);
+});
