@@ -1,7 +1,7 @@
 // Setup Center — detects every tool/account the workflow needs and fixes what is missing
 import fs from 'node:fs';
 import path from 'node:path';
-import { HOME, ENGINE_DIR, CACHE_DIR, APP_DIR, EngineError, ev, emit, sh, which, runStream, ensureDir, exists, readJSON } from './util.mjs';
+import { HOME, ENGINE_DIR, CACHE_DIR, APP_DIR, EngineError, ev, emit, sh, which, runStream, ensureDir, exists, readJSON, pruneFiles } from './util.mjs';
 import { netlifyAuth, netlifyLogin } from './netlify.mjs';
 import { spaceshipConnected } from './spaceship.mjs';
 import { providerStatus } from './hosting.mjs';
@@ -187,6 +187,14 @@ function setupDir() {
   return ensureDir(path.join(CACHE_DIR, 'setup'));
 }
 
+function setupLog(id) {
+  const dir = setupDir();
+  pruneFiles(dir, new RegExp(`^${id}-[0-9]+\\.log$`), { keep: 4 });
+  const file = path.join(dir, `${id}-${Date.now()}.log`);
+  fs.writeFileSync(file, `# ${id} ${new Date().toISOString()}\n`, { mode: 0o600 });
+  return file;
+}
+
 function writeCommand(name, body) {
   const file = path.join(setupDir(), `${name}.command`);
   const envFile = path.join(ENGINE_DIR, 'env.zsh');
@@ -224,7 +232,7 @@ async function runItem(id, known) {
   if (!item) throw new EngineError(msg('setup.unknownStep', { id }), 'usage', 2);
   if (item.ok) { ev.step(id, { label: item.title, status: 'skipped' }); return { id, ok: true, skipped: true }; }
   if (item.action?.type !== 'run') throw new EngineError(msg('setup.notRunnable'), 'not_runnable');
-  const log = path.join(setupDir(), `${id}.log`);
+  const log = setupLog(id);
   const started = Date.now();
   ev.step(id, { label: item.title, status: 'running', summary: item.action.display, log });
   const heartbeat = setInterval(() => ev.step(id, { elapsed: Math.floor((Date.now() - started) / 1000) }), 5000);
@@ -232,9 +240,9 @@ async function runItem(id, known) {
     if (TOOL_PACKAGES[id]) await installManaged(id, { logFile: log });
     else if (id === 'gh') await installGitHub({ logFile: log });
     else if (id === 'git') await installCLT(id, log);
-    else if (id === 'gh-auth') await ghDeviceLogin();
+    else if (id === 'gh-auth') await ghDeviceLogin({ logFile: log });
     else if (id === 'git-identity') await gitIdentityFromGitHub();
-    else if (id === 'netlify-login') await netlifyLogin({ stepId: id, manageSteps: false });
+    else if (id === 'netlify-login') await netlifyLogin({ stepId: id, manageSteps: false, logFile: log });
     else {
       const r = await runStream(item.action.cmd, item.action.args, { step: id, cwd: HOME, logFile: log, timeout: 360000 });
       if (r.code !== 0) throw new EngineError(msg('setup.installFailed', { title: item.title }), 'install_failed');
@@ -296,11 +304,11 @@ export async function setupAuto({ yes = false, includeOptional = false, prefligh
 
 // ---------------------------------------------------------------- GitHub device login (browser, no typing)
 
-export async function ghDeviceLogin() {
+export async function ghDeviceLogin({ logFile = setupLog('gh-auth') } = {}) {
   if (!which('gh')) throw new EngineError(msg('setup.gh.installFirst'), 'missing_cli');
   let announced = false, received = '';
   const r = await runStream('gh', ['auth', 'login', '--web', '--hostname', 'github.com', '--git-protocol', 'https'], {
-    step: 'gh-auth', logFile: path.join(setupDir(), 'gh-auth.log'), input: true, timeout: 300000,
+    step: 'gh-auth', logFile, input: true, timeout: 300000,
     env: { ...cliEnv(), GH_PROMPT_DISABLED: '1', NO_COLOR: '1', BROWSER: 'echo' },
     onChunk(text, stdin) {
       received = (received + text).slice(-8192);

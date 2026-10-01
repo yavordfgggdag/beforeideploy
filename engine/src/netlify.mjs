@@ -59,10 +59,10 @@ export function netlifyAuth() {
   return { loggedIn: false, email: null, cli: cli?.label || null };
 }
 
-export async function netlifyLogin({ stepId = 'login', manageSteps = true } = {}) {
+export async function netlifyLogin({ stepId = 'login', manageSteps = true, logFile } = {}) {
   if (manageSteps) ev.step(stepId, { label: t('netlify.login.label'), status: 'running', summary: t('netlify.login.opening') });
   let announced = false;
-  const r = await nl(null, ['login'], { step: stepId, timeout: 5 * 60 * 1000, env: { BROWSER: 'echo' },
+  const r = await nl(null, ['login'], { step: stepId, logFile, timeout: 5 * 60 * 1000, env: { BROWSER: 'echo' },
     onLine(line) {
       const match = line.match(/https:\/\/app\.netlify\.com\/[^\s]+/);
       if (match && !announced) {
