@@ -77,11 +77,16 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 10) {
                     SectionLabel(text: L("settings.languageSection"))
                     LanguageRow()
-                    Text(L("appearance.title")).font(Typo.font(.body))
-                    Segmented(options: Appearance.allCases.map { ($0.label, $0.rawValue) }, selection: $appearance)
-                    .accessibilityElement(children: .contain)
-                    .accessibilityLabel(L("appearance.title"))
-                    .onChange(of: appearance) { (Appearance(rawValue: $0) ?? .system).apply() }
+                    // label and control on one row, like the language row above, not a full-width strip
+                    HStack {
+                        Text(L("appearance.title")).font(Typo.font(.body, weight: .semibold))
+                        Spacer()
+                        Segmented(options: Appearance.allCases.map { ($0.label, $0.rawValue) }, selection: $appearance)
+                            .frame(width: 280)
+                            .accessibilityElement(children: .contain)
+                            .accessibilityLabel(L("appearance.title"))
+                            .onChange(of: appearance) { (Appearance(rawValue: $0) ?? .system).apply() }
+                    }
                 }
     }
     private var behavior: some View {

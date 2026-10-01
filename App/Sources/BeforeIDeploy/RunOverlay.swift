@@ -141,6 +141,14 @@ struct RunOverlay: View {
                         LazyVStack(alignment: .leading, spacing: 1) {
                             let lines = s.lines.isEmpty ? s.details : s.lines
                             if lines.isEmpty {
+                                // no log lines: show the step's own finding in full (the header cuts it to one line)
+                                if s.status != "running", let sum = s.summary, !sum.isEmpty {
+                                    Text(sum)
+                                        .font(Typo.font(.body))
+                                        .foregroundColor(Theme.text)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                        .padding(.vertical, 4)
+                                }
                                 Text(s.status == "running" ? L("overlay.waitingOutput") : L("overlay.noOutput"))
                                     .foregroundColor(Theme.tertiary)
                             }

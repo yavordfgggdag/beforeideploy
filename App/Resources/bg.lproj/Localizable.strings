@@ -1315,6 +1315,7 @@
 "usage.auditReview" = "За преглед";
 "usage.cloudPrices" = "Цени в кредити на приложението";
 "usage.cloudPricesDetail" = "Тези разходи са отделни от таксите на вашия хостинг доставчик. Локалните проверки са безплатни; AI се отчита по измереното използване на модела.";
+"usage.priceIncluded" = "Включено";
 "usage.actualAIPrice" = "Измерено използване";
 "usage.actionPreview" = "Публикуване за преглед";
 "usage.actionRollback" = "Връщане на предишно публикуване";

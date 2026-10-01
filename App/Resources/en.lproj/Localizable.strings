@@ -1315,6 +1315,7 @@
 "usage.auditReview" = "Needs review";
 "usage.cloudPrices" = "Application credit prices";
 "usage.cloudPricesDetail" = "These charges are separate from your hosting provider’s own fees. Local checks are free; AI uses measured model usage.";
+"usage.priceIncluded" = "Included";
 "usage.actualAIPrice" = "Measured usage";
 "usage.actionPreview" = "Preview publishing";
 "usage.actionRollback" = "Restore previous release";
