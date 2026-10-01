@@ -38,7 +38,8 @@ struct KPITile: View {
         }
         .padding(.horizontal, Space.m)
         .padding(.vertical, Space.s)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        // same height whether the label takes one line or two, so a row of tiles stays even
+        .frame(maxWidth: .infinity, minHeight: 58, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).fill(Theme.panel))
         .overlay(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
         .help(label)
