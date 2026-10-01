@@ -360,4 +360,18 @@ export async function testCredits({db,t,assert,rejects,as}) {
    assert(!p.client && !p.anon && p.service,`${f.proname} service only`);
   }
  });
+ await t('B1 downgrade: Knight→Flash renewal keeps prepaid Knight credits; the cap limits only the new grant',async()=>{
+  const id=await user('knight'); await grant(id,1000000,'knight-paid','knight');
+  await db.query("update profiles set plan='flash' where user_id=$1",[id]);
+  await db.query("update subscriptions set tier='flash' where user_id=$1",[id]);
+  await grant(id,100000,'flash-renewal','flash',later(31));
+  const lots=(await db.query('select ref,left_credits from credit_grants where user_id=$1',[id])).rows;
+  assert(Number(lots.find(l=>l.ref==='knight-paid').left_credits)===1000000,'paid Knight lot untouched until its own expiry');
+  assert(Number(lots.find(l=>l.ref==='flash-renewal').left_credits)===100000,'new Flash grant counted against Flash lots only');
+  assert(await balance(id)===1100000,'no paid credits vanish on downgrade');
+  assert((await db.query("select count(*)::int n from credit_ledger where user_id=$1 and reason='grant_cap'",[id])).rows[0].n===0,'no cap trim');
+  await grant(id,100000,'flash-renewal-2','flash',later(31));
+  assert(await balance(id)===1100000,'second Flash lot above the Flash cap is limited (new grant only)');
+  assert(Number((await db.query("select left_credits from credit_grants where user_id=$1 and ref='knight-paid'",[id])).rows[0].left_credits)===1000000,'cap never trims the older paid lot');
+ });
 }

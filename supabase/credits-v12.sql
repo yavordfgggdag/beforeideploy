@@ -207,19 +207,17 @@ begin
   -- Debt was already charged to the compatibility ledger. Grant pays it without charging twice.
   update credit_accounts set debt=debt-debt_paid,debt_since=case when debt=debt_paid then null else debt_since end where user_id=p_user;
  end if;
+ -- D2 accumulation cap (B1): it limits only the NEW grant. Lots already paid stay until their own expiry,
+ -- and lots bought under another tier (e.g. Knight before a downgrade) never count against the new tier's cap.
  if bucket_name='plan' and p_source<>'trial_grant' then
   cap:=coalesce((conf->>'tokens')::bigint,p_credits)*months;
-  select greatest(0,coalesce(sum(left_credits),0)-cap) into excess from credit_grants where user_id=p_user and bucket='plan';
-  for r in select * from credit_grants where user_id=p_user and bucket='plan' and left_credits>0 order by expires_at,granted_at,id loop
-   exit when excess<=0;
-   select coalesce(sum(credits),0) into held from credit_allocations where grant_id=r.id;
-   take:=least(excess,greatest(0,r.left_credits-held));
-   if take>0 then
-    update credit_grants set left_credits=left_credits-take where id=r.id;
-    insert into credit_ledger(user_id,delta,bucket,reason,ref) values(p_user,-take,'plan','grant_cap',g.id::text||':'||r.id::text);
-    excess:=excess-take;
-   end if;
-  end loop;
+  select greatest(0,coalesce(sum(left_credits),0)-cap) into excess from credit_grants
+   where user_id=p_user and bucket='plan' and source<>'trial_grant' and tier is not distinct from p_tier;
+  take:=least(excess,(select left_credits from credit_grants where id=g.id));
+  if take>0 then
+   update credit_grants set left_credits=left_credits-take where id=g.id;
+   insert into credit_ledger(user_id,delta,bucket,reason,ref) values(p_user,-take,'plan','grant_cap',g.id::text||':'||g.id::text);
+  end if;
  end if;
  perform bid_v12_refresh(p_user,p_now);
  return jsonb_build_object('ok',true,'granted',p_credits,'id',g.id,'expiresAt',g.expires_at,'debtPaid',debt_paid);
