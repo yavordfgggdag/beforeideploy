@@ -551,6 +551,8 @@ begin
  update sites set last_burn_attempt_at=p_now where id=p_site;
  op:='site:'||p_site::text||':'||p_day::text;
  if exists(select 1 from usage_events where user_id=p_user and operation_id=op) then return jsonb_build_object('ok',true,'duplicate',true); end if;
+ -- B4: the 14-day migration grace is free. The user did not choose these sites in V12 yet.
+ if s.migration_grace_until>p_now then return jsonb_build_object('ok',true,'grace',true,'charged',0); end if;
  select value into conf from settings where key='pricing.actions';
  price:=coalesce((conf#>>'{site.day,credits}')::bigint,1000);
  select coalesce(value#>>'{}','2026-10') into version from settings where key='pricing.version';
@@ -590,6 +592,7 @@ declare s record; n integer:=0; r jsonb;
 begin
  if p_day>(p_now at time zone 'UTC')::date or p_day<(p_now at time zone 'UTC')::date-1 then raise exception 'invalid burn day'; end if;
  for s in select * from sites where state='active' and activated_at<(p_day+1)::timestamp at time zone 'UTC'
+  and (migration_grace_until is null or migration_grace_until<=p_now)
   and not exists(select 1 from usage_events e where e.user_id=sites.user_id and e.operation_id='site:'||sites.id||':'||p_day)
   order by last_burn_attempt_at nulls first,user_id,id limit greatest(1,least(p_batch,1000)) loop
   perform bid_enforce_sites(s.user_id,p_now);
@@ -626,7 +629,7 @@ begin
  select coalesce((value#>>'{site.day,credits}')::bigint,1000) into price from settings where key='pricing.actions';
  if available<0 or (available<price and not exists(select 1 from usage_events where user_id=p_user and operation_id='site:'||s.id||':'||(p_now at time zone 'UTC')::date)) then return jsonb_build_object('ok',false,'code','quota_exhausted','required',price); end if;
  insert into sites(user_id,project_key,state,hosting_owner,activated_at) values(p_user,p_project,'active',p_hosting,p_now)
- on conflict(user_id,project_key) do update set state='active',hosting_owner=excluded.hosting_owner,activated_at=p_now,paused_at=null,paused_reason=null returning * into s;
+ on conflict(user_id,project_key) do update set state='active',hosting_owner=excluded.hosting_owner,activated_at=p_now,paused_at=null,paused_reason=null,migration_grace_until=null returning * into s;
  r:=bid_v12_burn_one(p_user,s.id,(p_now at time zone 'UTC')::date,p_now);
  return r||jsonb_build_object('siteId',s.id,'state','active');
 end $$;
@@ -704,16 +707,41 @@ language sql security definer set search_path=public,pg_temp as $$
  where exists(select 1 from usage_events e where e.user_id=d.user_id and e.operation_id=d.operation_id and e.created_at>=p_since);
 $$;
 
--- Existing projects enter a 14-day, visible migration grace. No sites are deleted or paused by migration.
+-- Existing projects enter a 14-day, visible migration grace. No sites are deleted by migration.
+-- B4: at most the plan's site limit is activated (most recently monitored first); the rest start paused
+-- with reason plan_limit, and nothing is billed while the grace lasts (bid_v12_burn_one).
+create or replace function public.bid_v12_migrate_sites(p_now timestamptz default now()) returns jsonb
+language plpgsql security definer set search_path=public,pg_temp as $$
+declare r record; cur uuid; lim integer; active_n integer; n integer:=0;
+begin
+ for r in select c.user_id,c.project_key,c.enabled from (
+   select p.user_id,p.key as project_key,coalesce(m.enabled,false) as enabled,coalesce(m.updated_at,p.updated_at) as at
+    from bid_projects p join profiles pr on pr.user_id=p.user_id left join monitor_targets m on m.user_id=p.user_id and m.project_key=p.key
+   union all
+   select m.user_id,m.project_key,m.enabled,m.updated_at from monitor_targets m
+    where not exists(select 1 from bid_projects p where p.user_id=m.user_id and p.key=m.project_key)
+  ) c where not exists(select 1 from sites s where s.user_id=c.user_id and s.project_key=c.project_key)
+  order by c.user_id,c.enabled desc,c.at desc,c.project_key loop
+  if cur is distinct from r.user_id then
+   cur:=r.user_id;
+   lim:=coalesce((bid_v12_entitlement(cur,p_now)->>'siteLimit')::integer,0);
+   select count(*) into active_n from sites where user_id=cur and state='active';
+  end if;
+  if r.enabled and active_n<lim then
+   insert into sites(user_id,project_key,state,activated_at,migration_grace_until) values(r.user_id,r.project_key,'active',p_now,p_now+interval '14 days');
+   active_n:=active_n+1;
+  else
+   insert into sites(user_id,project_key,state,paused_at,paused_reason,migration_grace_until)
+   values(r.user_id,r.project_key,'paused',case when r.enabled then p_now end,case when r.enabled then 'plan_limit' end,p_now+interval '14 days');
+  end if;
+  n:=n+1;
+ end loop;
+ update monitor_targets m set site_id=s.id from sites s where s.user_id=m.user_id and s.project_key=m.project_key and m.site_id is null;
+ return jsonb_build_object('ok',true,'sites',n);
+end $$;
 do $$ begin
  if not exists(select 1 from settings where key='credits.sitesMigrated') then
-  insert into sites(user_id,project_key,state,activated_at,migration_grace_until)
-   select p.user_id,p.key,case when coalesce(m.enabled,false) then 'active' else 'paused' end,
-    case when coalesce(m.enabled,false) then now() end,now()+interval '14 days'
-   from bid_projects p left join monitor_targets m on m.user_id=p.user_id and m.project_key=p.key on conflict(user_id,project_key) do nothing;
-  insert into sites(user_id,project_key,state,activated_at,migration_grace_until)
-   select user_id,project_key,case when enabled then 'active' else 'paused' end,case when enabled then now() end,now()+interval '14 days' from monitor_targets on conflict(user_id,project_key) do nothing;
-  update monitor_targets m set site_id=s.id from sites s where s.user_id=m.user_id and s.project_key=m.project_key;
+  perform bid_v12_migrate_sites(now());
   insert into settings(key,value) values('credits.sitesMigrated',to_jsonb(now()));
  end if;
 end $$;

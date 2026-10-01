@@ -388,4 +388,28 @@ export async function testCredits({db,t,assert,rejects,as}) {
   const exp=(await db.query("select extract(epoch from expires_at-created_at)::int as ttl from credit_holds where user_id=$1 and operation_id='b3-ai-hold'",[id])).rows[0].ttl;
   assert(ai.ok && exp===900,'AI keeps the 15-minute TTL');
  });
+ await t('B4 migration: grace sites are not billed, and migration never activates sites above the plan limit',async()=>{
+  const id=await user('flash'); await grant(id,100000,'b4-lot','flash');
+  for(const k of ['b4-one','b4-two']) {
+   await db.query("insert into bid_projects(user_id,key,name) values($1,$2,$2)",[id,k]);
+   await db.query("insert into sites(user_id,project_key,state,activated_at,migration_grace_until) values($1,$2,'active',$3,$4)",[id,k,now,later(14)]);
+  }
+  await rpc('bid_site_burn',{p_day:later(1).slice(0,10),p_now:later(1,1)});
+  assert(await balance(id)===100000,'no site.day charge during the 14-day grace');
+  await rpc('bid_site_burn',{p_day:later(15).slice(0,10),p_now:later(15,1)});
+  const s=await summary(id,later(15,2));
+  assert(s.sites.active===1 && await balance(id)===99000,'after grace: limit enforced, only the kept site billed');
+  // the migration itself: Flash (1 site) with three monitored projects activates only one
+  const m=await user('flash'); await grant(m,100000,'b4-m','flash');
+  for(const [i,k] of ['m-a','m-b','m-c'].entries()) {
+   await db.query("insert into bid_projects(user_id,key,name) values($1,$2,$2)",[m,k]);
+   await db.query("insert into monitor_targets(user_id,project_key,url,enabled,updated_at) values($1,$2,'https://example.test',true,$3)",[m,k,later(0,i)]);
+  }
+  await rpc('bid_v12_migrate_sites',{p_now:now});
+  const rows=(await db.query("select project_key,state,paused_reason,migration_grace_until from sites where user_id=$1 order by project_key",[m])).rows;
+  assert(rows.length===3 && rows.filter(r=>r.state==='active').length===1,'only the plan limit is activated');
+  assert(rows.find(r=>r.state==='active').project_key==='m-c','most recently monitored project stays active');
+  assert(rows.filter(r=>r.state==='paused').every(r=>r.paused_reason==='plan_limit'),'others paused with a visible reason');
+  assert(Number((await db.query("select count(*)::int n from monitor_targets where user_id=$1 and site_id is not null",[m])).rows[0].n)===3,'targets linked');
+ });
 }
