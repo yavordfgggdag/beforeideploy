@@ -324,6 +324,7 @@
   "setup.codexAuth.title": "Codex sign-in",
   "setup.command.done": "You can close this window and press “Refresh” in Before I Deploy.",
   "setup.command.pause": "Press Enter to close this window.",
+  "secrets.unavailable": "There is no secure place for keys and sign-ins on this computer: no Secret Service (GNOME Keyring, KWallet) and no passphrase for the encrypted file. Start a keyring, or set BID_SECRETS_PASSPHRASE. Nothing is stored in plain text.",
   "setup.command.title": "Setup",
   "setup.connected": "Connected",
   "setup.display.fromProfile": "from the GitHub profile",

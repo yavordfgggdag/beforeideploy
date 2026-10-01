@@ -12,6 +12,7 @@ import { runChecks } from './checks.mjs';
 import { deriveIssues } from './issues.mjs';
 import { pushoverConnect, pushoverDisconnect, pushoverStatus } from './pushover.mjs';
 import { endpoints, isProductionBundle, isolationLevel } from './isolation.mjs';
+import { secretsBackend } from './secrets.mjs';
 import { monitorOnce, monitorStatus, monitorStatusMerged, listIncidents, setMonitorSettings, agentInstall, agentRemove, maintenanceCommand, notifyTest } from './monitor.mjs';
 import { monitorCloudStatus, monitorCloudEnable, monitorCloudDisable, monitorCloudTest } from './monitor-cloud.mjs';
 import { assistantChat, assistantHistory, assistantReset, assistantSettings, setAssistantSettings, listPrompts } from './ai/assistant.mjs';
@@ -162,6 +163,7 @@ function doctor() {
     endpoints: endpoints(),
     production: isProductionBundle(),
     isolation: isolationLevel(),
+    secrets: secretsBackend(),
   };
 }
 

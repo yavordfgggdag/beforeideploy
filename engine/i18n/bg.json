@@ -324,6 +324,7 @@
   "setup.codexAuth.title": "Codex вход",
   "setup.command.done": "Можеш да затвориш прозореца и да натиснеш „Обнови“ в Before I Deploy.",
   "setup.command.pause": "Натисни Enter, за да затвориш прозореца.",
+  "secrets.unavailable": "На този компютър няма защитено място за ключове и входове: няма Secret Service (GNOME Keyring, KWallet) и няма парола за криптирания файл. Стартирай хранилище за ключове или задай BID_SECRETS_PASSPHRASE. Нищо не се пази като обикновен текст.",
   "setup.command.title": "Настройка",
   "setup.connected": "Свързан",
   "setup.display.fromProfile": "от GitHub профила",

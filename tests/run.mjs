@@ -21,6 +21,7 @@ const ENV = {
   HOME: path.join(TMP, 'home'), // isolates Netlify auth lookup
   XDG_CONFIG_HOME: path.join(TMP, 'home', '.config'), // Linux: never the real systemd --user units or CLI configs
   BID_NO_KEYCHAIN: '1', // never touch the real Keychain in tests
+  BID_SECRETS_PASSPHRASE: 'test-passphrase', // Linux/Windows: the encrypted secrets file (no plaintext there)
   BID_EVAL_DIR: path.join(ROOT, 'tests', 'ai-evals'), // canned assistant answers for the fake model (mock-spaceship.cjs)
   BID_LAST_AI_REQ: path.join(TMP, 'last-ai-request.json'),
   BID_NO_BUNDLED_CLOUD: '1', // never talk to the real Supabase in tests
@@ -1836,7 +1837,8 @@ t('V13 AI история: app/cache папки под HOME — patch/undo път
   const homeEnv = { BID_APP_DIR: path.join(ENV.HOME, 'Library', 'Application Support', 'BeforeIDeploy'), BID_CACHE_DIR: path.join(ENV.HOME, 'Library', 'Caches', 'BeforeIDeploy') };
   const run = (...args) => bidEnv(homeEnv, ...args);
   // the same signed-in account as the rest of the suite (session, cloud config, cached profile)
-  for (const f of ['cloud.json', 'profile.json', path.join('secrets', 'session.json')]) {
+  // the session file: plain on macOS test runs, encrypted (session.enc) on Linux/Windows
+  for (const f of ['cloud.json', 'profile.json', path.join('secrets', 'session.json'), path.join('secrets', 'session.enc')]) {
     const src = path.join(ENV.BID_APP_DIR, f);
     if (!fs.existsSync(src)) continue;
     fs.mkdirSync(path.dirname(path.join(homeEnv.BID_APP_DIR, f)), { recursive: true });

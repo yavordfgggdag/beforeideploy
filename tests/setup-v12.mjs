@@ -8,7 +8,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'bid-setup-v12-'));
-Object.assign(process.env, { BID_APP_DIR: path.join(tmp, 'app'), BID_CACHE_DIR: path.join(tmp, 'cache'), HOME: path.join(tmp, 'home'), BID_NO_KEYCHAIN: '1', BID_NO_BUNDLED_CLOUD: '1', BID_LANG: 'en' });
+Object.assign(process.env, { BID_APP_DIR: path.join(tmp, 'app'), BID_CACHE_DIR: path.join(tmp, 'cache'), HOME: path.join(tmp, 'home'), BID_NO_KEYCHAIN: '1', BID_SECRETS_PASSPHRASE: 'test-passphrase', BID_NO_BUNDLED_CLOUD: '1', BID_LANG: 'en' });
 for (const name of ['home','bin']) fs.mkdirSync(path.join(tmp,name));
 const originalPath = process.env.PATH;
 const bin = path.join(tmp,'bin');
@@ -115,7 +115,7 @@ const sleepMs = ms => new Promise(r => setTimeout(r, ms));
 const alive = pid => { try { process.kill(pid, 0); return true; } catch (e) { return e.code === 'EPERM'; } };
 async function waitFor(fn, ms = 10000) { const end = Date.now() + ms; while (Date.now() < end) { if (fn()) return true; await sleepMs(50); } return false; }
 const engineEnv = (dir, fake) => {
-  const env = { PATH: `${fake}:/usr/bin:/bin`, HOME: path.join(dir, 'home'), BID_APP_DIR: path.join(dir, 'app'), BID_CACHE_DIR: path.join(dir, 'cache'), BID_NO_KEYCHAIN: '1', BID_NO_BUNDLED_CLOUD: '1', BID_LANG: 'en' };
+  const env = { PATH: `${fake}:/usr/bin:/bin`, HOME: path.join(dir, 'home'), BID_APP_DIR: path.join(dir, 'app'), BID_CACHE_DIR: path.join(dir, 'cache'), BID_NO_KEYCHAIN: '1', BID_SECRETS_PASSPHRASE: 'test-passphrase', BID_NO_BUNDLED_CLOUD: '1', BID_LANG: 'en' };
   fs.mkdirSync(env.HOME, { recursive: true });
   return env;
 };
