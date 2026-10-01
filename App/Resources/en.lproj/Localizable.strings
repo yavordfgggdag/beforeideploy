@@ -176,7 +176,7 @@
 "assistant.contextTitle" = "What will be sent";
 "assistant.costLine" = "%@ credits · %@";
 "assistant.dataNote" = "The panel lists the issue, logs, selected files and Git summary sent to the model, with private values masked. App credit charges appear after each reply. With your own key, the provider bills you separately.";
-"assistant.emptyBody" = "Explain the problem, propose a fix, apply and verify it, review release readiness or investigate an incident. Every answer is validated by the engine before you see it; nothing is published, restored or bought from here.";
+"assistant.emptyBody" = "Explain a problem, propose and verify a fix, review release readiness or investigate an incident. Answers appear progressively. Change proposals are validated before you can apply them. Publishing and purchases require separate actions.";
 "assistant.estimate" = "Estimated context size: %@ text units";
 "assistant.evidence.diff" = "diff";
 "assistant.evidence.file" = "file";
@@ -507,7 +507,7 @@
 "engine.noResponse" = "The engine did not respond (exit code %@)";
 "engine.noResult" = "No result";
 "engine.nodeBundled" = "%@ (bundled with the app)";
-"engine.timedOut" = "The engine did not answer within %@ s and was stopped. Nothing else was changed.";
+"engine.timedOut" = "The engine did not respond within %@ s and was stopped. Check the outcome of the action you started.";
 "engine.unknownError" = "Unknown error";
 
 "feedback.contains" = "The report contains:";

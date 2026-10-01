@@ -167,7 +167,9 @@ enum Snapshot {
     @MainActor
     static func write(to url: URL) {
         let windows = NSApp.windows
-        let preferred = UserDefaults.standard.string(forKey: "BIDScreen") == "settings" ? windows.first(where: { $0.isKeyWindow }) : nil
+        let isSettings = UserDefaults.standard.string(forKey: "BIDScreen") == "settings"
+        let preferred = isSettings ? windows.first(where: { $0.isVisible && $0.identifier?.rawValue == "com_apple_SwiftUI_Settings_window" }) : nil
+        guard !isSettings || preferred != nil else { AppLog.ui.error("snapshot: settings window did not open"); return }
         guard let main = preferred ?? windows.first(where: { $0.isVisible && $0.contentView != nil && $0.sheetParent == nil }),
               let window = Optional(main.attachedSheet ?? main),
               let view = window.contentView?.superview ?? window.contentView,

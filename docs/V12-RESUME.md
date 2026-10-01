@@ -22,9 +22,10 @@ The owner resumed work: “вече сме в нас искам да продъ�
 ## Validation evidence and next step
 
 - Phase 5 source `ca8e896`: engine, engine-macos, app, functions and screenshots CI all passed.
-- Local phase 6: 114 engine tests, 35 SQL/RLS tests and 112 Deno tests passed before the final glossary/history refinements. Latest Swift build (`../v12-phase6-app11.log`) passed; final engine rerun (`../v12-phase6-engine3.log`) passed all 114 tests. Localization (814 engine / 1280 app keys), design and documented-error checks passed.
+- Local phase 6: 114 engine tests, 35 SQL/RLS tests and 112 Deno tests passed before the final glossary/history refinements. Latest Swift build (`../v12-phase6-app12.log`) passed; final engine rerun (`../v12-phase6-engine3.log`) passed all 114 tests. Localization (814 engine / 1280 app keys), design and documented-error checks passed.
 - CI against the candidate commit supersedes intermediate local results. Run all six workflows on the same source: engine, engine-macos, app, functions, screenshots and release-dryrun. Functions and release-dryrun require manual dispatch. Record actual source SHA/run URLs alongside the downloaded package; do not infer success from dispatch.
 - Isolated preview: `../v12-billing-preview/BeforeIDeployBillingPreview.app`, different bundle ID and private data/cache; no Keychain/cloud config. Generated demo site `../v12-billing-preview/sites/v12-owner-demo` passes its local check. Reviewed true-project and corrected Usage captures at 900×640. Final CI screenshots cover light/dark, long names, assistant states, plans and usage.
+- Native interaction check: collapsing the sidebar, Command-3 and Command-comma passed. VoiceOver exposes separate System/Light/Dark options; Settings capture targets its actual native window.
 - Owner walkthrough: `V12-OWNER-TEST-BG.md`. After successful final CI, download the universal unsigned DMG from release-dryrun, verify contents/version/architectures and provide the package with the guide. Do not replace the installed app automatically.
 - Remaining external acceptance: clean Mac, chosen real AI model, deployed test Supabase and Paddle sandbox scenarios, test hosting, then Apple Developer ID signing/notarization before public distribution. No production launch before owner testing.
 
