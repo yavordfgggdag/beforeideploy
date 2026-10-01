@@ -72,7 +72,7 @@ jobs:
             local name="$1"; shift
             open -n -W "$APP" --args -BIDSnapshot "$OUT/$name.png" -BIDSnapshotDelay 14 -BIDNoKeychain 1 "$@" &
             local pid=$!
-            for i in $(seq 1 50); do [ -f "$OUT/$name.png" ] && break; sleep 1; done
+            for i in $(seq 1 85); do [ -f "$OUT/$name.png" ] && break; sleep 1; done
             sleep 1
             pkill -f "Before I Deploy.app/Contents/MacOS/BeforeIDeploy" || true
             wait $pid 2>/dev/null || true
@@ -112,6 +112,12 @@ jobs:
             defaults write "$APP_ID" appearance -string "$appearance"
             for screen in overview project setup settings; do
               shoot "v12-$appearance-$screen-small" -BIDScreen "$screen" -BIDWindowSize 1080x700
+            done
+          done
+          for appearance in light dark; do
+            defaults write "$APP_ID" appearance -string "$appearance"
+            for state in empty code proposal quota; do
+              shoot "v12-$appearance-assistant-$state" -BIDScreen assistant -BIDAssistantDemo "$state" -BIDWindowSize 1080x700
             done
           done
           ls -la "$OUT"

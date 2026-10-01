@@ -123,6 +123,7 @@ final class AppModel: ObservableObject, Feedback {
         adminStore.feedback = self
         aiStore.feedback = self
         assistantStore.feedback = self
+        assistantStore.onSpend = { [weak self] in await self?.billingStore.loadUsage(); await self?.loadAccount() }
         billingStore.feedback = self
         billingStore.onChanged = { [weak self] in await self?.accountStore.loadAccount() }
         aiStore.onApplied = { [weak self] in
@@ -154,7 +155,6 @@ final class AppModel: ObservableObject, Feedback {
             forward(adminStore.objectWillChange),
             forward(aiStore.objectWillChange),
             forward(billingStore.objectWillChange),
-            forward(assistantStore.objectWillChange),
         ]
     }
 
@@ -517,14 +517,11 @@ final class AppModel: ObservableObject, Feedback {
     }
 
     /// Opens the AI assistant for the selected project, with an issue preselected when given. Without a
-    /// key or plan it opens the key sheet instead, so the first click never ends in a dead button.
+    /// key or plan the workspace explains how to connect AI while preserving the selected scope.
     func openAssistant(issue: String? = nil, projectKey: String? = nil) {
         Task {
             if let k = projectKey, projectStore.selected?.key != k { await select(k, show: false) }
-            guard aiReady else {
-                aiUnavailableAction()
-                return
-            }
+            if let key = projectStore.selected?.key { assistantStore.activate(key) }
             if let issue { assistantStore.selectedIssue = issue }
             screen = .assistant
         }
@@ -1156,7 +1153,12 @@ final class AppModel: ObservableObject, Feedback {
         case "costs": screen = .costs
         case "setup": screen = .setup
         case "account": screen = .account
-        case "assistant": screen = .assistant
+        case "assistant":
+            if let first = projects.first { await select(first.key, show: false) }
+            if Snapshot.argument("BIDSnapshot"), Snapshot.argument("BIDAssistantDemo"), let mode = UserDefaults.standard.string(forKey: "BIDAssistantDemo") {
+                Snapshot.prepareAssistant(model: self, mode: mode)
+            }
+            screen = .assistant
         case "usage": screen = .usage
         case "admin": screen = .admin
         case "plans": sheet = .plans

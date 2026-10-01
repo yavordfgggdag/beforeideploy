@@ -797,5 +797,6 @@
   "check.scriptsUntrusted": "Start a manual check before enabling automatic checks.",
   "setup.cltWaiting": "Complete the Command Line Tools installation in the macOS dialog.",
   "setup.identity.enter": "Enter name and email",
-  "setup.identity.invalid": "Enter a name and a valid email address."
+  "setup.identity.invalid": "Enter a name and a valid email address.",
+  "ai.undo.stale": "A newer change exists. Refresh the conversation before undoing."
 }

@@ -243,3 +243,23 @@ enum K {
         }
     }
 }
+
+
+extension K {
+    static func assistantStatus(_ value: String) -> String {
+        switch value {
+        case "confirmed": return L("assistant.status.confirmed")
+        case "likely": return L("assistant.status.likely")
+        case "unverified": return L("assistant.status.unverified")
+        default: return value
+        }
+    }
+    static func aiSkipReason(_ value: String) -> String {
+        switch value {
+        case "changed_since": return L("assistant.skip.changed")
+        case "config_approval", "needs_approval": return L("assistant.skip.config")
+        case "not_applicable": return L("assistant.skip.invalid")
+        default: return L("assistant.skip.other", value)
+        }
+    }
+}

@@ -30,7 +30,8 @@ export function ensureDir(d) {
 export async function fetchT(url, opts = {}, timeoutMs = Number(process.env.BID_FETCH_TIMEOUT_MS) || 20000) {
   const ctl = new AbortController();
   const outer = opts.signal;
-  if (outer) outer.addEventListener('abort', () => ctl.abort(), { once: true });
+  if (outer?.aborted) ctl.abort();
+  else if (outer) outer.addEventListener('abort', () => ctl.abort(), { once: true });
   const timer = setTimeout(() => ctl.abort(), timeoutMs);
   try {
     const res = await fetch(url, { ...opts, signal: ctl.signal });

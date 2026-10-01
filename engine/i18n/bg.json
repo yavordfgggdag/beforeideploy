@@ -797,5 +797,6 @@
   "check.scriptsUntrusted": "Пусни ръчна проверка, преди да включиш автоматичните проверки.",
   "setup.cltWaiting": "Завърши инсталирането на Command Line Tools в прозореца на macOS.",
   "setup.identity.enter": "Въведи име и имейл",
-  "setup.identity.invalid": "Въведи име и валиден имейл адрес."
+  "setup.identity.invalid": "Въведи име и валиден имейл адрес.",
+  "ai.undo.stale": "Има по-нова промяна. Обнови разговора, преди да върнеш промяната."
 }

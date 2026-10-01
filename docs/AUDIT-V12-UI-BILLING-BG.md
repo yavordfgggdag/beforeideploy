@@ -156,6 +156,9 @@ node scripts/i18n-check.mjs && node scripts/error-codes.mjs
 | UI-1–4, 33–37, 40 | implemented foundation | динамични цветове, избор на изглед, type/radius/elevation tokens, спокойни фонове, модални панели, опашка за известия; визуално приемане предстои |
 | UI-5, 7–14, 28–29 | in progress | общи Badge/Meter/Field/SheetScaffold/ModalShell; съвместими wrappers, последваща миграция на специализираните екрани |
 | UI-48 | implemented CI coverage | light/dark 1080×700 + дълго име; чака визуален преглед на резултатите |
-| Фази 3–6 | pending | отделни следващи промени |
+| AI chat foundation | implemented / validation in progress | decoded stream, Markdown/code, proposal selection and guarded Undo, batched rendering, per-project sessions, durable history/retry; screenshot and Swift CI pending |
+| AI-22 | partial | selected issue chip; selection remains a native Picker |
+| AI quota / balance | partial | error-specific actions; v2 balance, windows and packs follow in phases 4-5 |
+| Phases 4-6 | pending | separate changes |
 
 Проверки: engine 112/112 (включва 7 setup regression scenarios); Deno 87/87; SQL/RLS 10/10; локален `swift build` успешен. `swift test` е блокиран локално от липсващ XCTest в CLT; нужен е macOS CI. Fresh-Mac acceptance и real-provider login не са изпълнени. Числата са за този checkpoint и се обновяват при следващите промени.

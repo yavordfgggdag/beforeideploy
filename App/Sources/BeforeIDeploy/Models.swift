@@ -911,6 +911,8 @@ struct AccountState: Codable {
     /// Privacy / Terms / Refund pages and the support address (engine `publicLinks`).
     var links: Links?
 
+    var settings: [String: JSONValue]?
+
     struct Links: Codable, Hashable {
         var privacy: String?
         var terms: String?
@@ -1327,6 +1329,8 @@ struct AssistantResult: Codable, Hashable {
     var undone: Bool?
     var evidence: [AssistantEvidence]?
     var engineStatus: String?
+    var historyId: String?
+    var discarded: Bool?
 }
 
 struct AssistantHistoryEntry: Codable, Identifiable, Hashable {
@@ -1340,13 +1344,22 @@ struct AssistantHistoryEntry: Codable, Identifiable, Hashable {
     var summary: String?
     var patchFile: String?
     var duration: Double?
-    var id: String { at + action }
+    var historyId: String?
+    var id: String { historyId ?? (at + action) }
+    var result: AssistantResult?
+    var request: AssistantStore.Request?
+    var usage: AIUsage?
+    var provider: String?
+    var error: String?
+    var code: String?
+
 }
 
 struct AssistantHistory: Codable {
     var project: String
     var conversation: String?
     var entries: [AssistantHistoryEntry]
+    var hasMore: Bool?
 }
 
 struct AssistantSettings: Codable, Hashable {

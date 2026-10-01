@@ -135,3 +135,9 @@ Returned as `code` in the JSON body; the engine maps them to the codes above (`q
 | `setup_incomplete` | Required setup steps remain incomplete | Review failed/blocked steps and retry |
 | `offline` | A required setup service is unreachable | Check connectivity and retry |
 | `scripts_untrusted` | Automatic check has no approved script snapshot | Start a manual check |
+
+## V12 assistant
+
+| Code | Meaning | Recovery |
+|---|---|---|
+| `stale_undo` | The requested proposal is no longer the latest undoable change | Review the latest change before undoing it |

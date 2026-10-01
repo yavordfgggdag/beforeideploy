@@ -56,10 +56,10 @@ export async function* sseEvents(body, { abort = null, idleMs = Number(process.e
   if (last) yield last;
 }
 
-async function post(url, headers, body) {
+async function post(url, headers, body, signal) {
   try {
     // the deadline covers the connection and the response headers; the body has its own idle timeout
-    return await fetchT(url, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream', ...headers }, body: JSON.stringify(body) }, Number(process.env.BID_AI_CONNECT_MS) || 60000);
+    return await fetchT(url, { signal, method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream', ...headers }, body: JSON.stringify(body) }, Number(process.env.BID_AI_CONNECT_MS) || 60000);
   } catch (e) {
     if (e.code === 'ETIMEDOUT') throw new EngineError(msg('ai.streamIdle', { seconds: Math.round((Number(process.env.BID_AI_CONNECT_MS) || 60000) / 1000) }), 'ai_timeout');
     throw new EngineError(msg('ai.network', { error: e.message }), 'network');
@@ -88,22 +88,22 @@ const parseJSON = (s) => {
 
 // ---------------------------------------------------------------- Anthropic (own key)
 
-async function* anthropic({ key, model, system, messages, maxTokens = 8000, effort = 'medium' }) {
+async function* anthropic({ key, model, system, messages, maxTokens = 8000, effort = 'medium', signal, idleMs }) {
   const body = { model, max_tokens: maxTokens, system, messages, stream: true };
   // effort is not accepted by the Haiku 4.5 family; the other current models take it in output_config and run
   // adaptive thinking on their own (Opus 5.5 cannot switch it off — effort is the only depth control)
   if (effort && !/haiku/i.test(model)) body.output_config = { effort };
   const base = { 'x-api-key': key, 'anthropic-version': '2023-06-01' };
   // A declined request is re-run server-side on Anthropic's recommended fallback model (beta).
-  let res = await post(`${ANTHROPIC_API()}/v1/messages`, { ...base, 'anthropic-beta': 'server-side-fallback-2026-07-01' }, { ...body, fallbacks: 'default' });
+  let res = await post(`${ANTHROPIC_API()}/v1/messages`, { ...base, 'anthropic-beta': 'server-side-fallback-2026-07-01' }, { ...body, fallbacks: 'default' }, signal);
   if (res.status === 400) {
     const text = await res.text().catch(() => '');
-    if (/fallback/i.test(text)) res = await post(`${ANTHROPIC_API()}/v1/messages`, base, body); // account without the beta
+    if (/fallback/i.test(text)) res = await post(`${ANTHROPIC_API()}/v1/messages`, base, body, signal); // account without the beta
     else throw await apiError('Anthropic', new Response(text, { status: 400 }));
   }
   if (!res.ok) throw await apiError('Anthropic', res);
   let gotText = false;
-  for await (const { data } of sseEvents(res.body, { abort: res.abortController })) {
+  for await (const { data } of sseEvents(res.body, { abort: res.abortController, ...(idleMs ? { idleMs } : {}) })) {
     const j = parseJSON(data);
     if (!j) continue;
     switch (j.type) {
@@ -134,14 +134,14 @@ async function* anthropic({ key, model, system, messages, maxTokens = 8000, effo
 
 // ---------------------------------------------------------------- OpenAI (own key)
 
-async function* openai({ key, model, system, messages, maxTokens = 8000 }) {
+async function* openai({ key, model, system, messages, maxTokens = 8000, signal, idleMs }) {
   const res = await post(
     `${OPENAI_API()}/v1/chat/completions`,
     { Authorization: `Bearer ${key}` },
-    { model, stream: true, stream_options: { include_usage: true }, max_completion_tokens: maxTokens, messages: [{ role: 'system', content: system }, ...messages] }
+    { model, stream: true, stream_options: { include_usage: true }, max_completion_tokens: maxTokens, messages: [{ role: 'system', content: system }, ...messages] }, signal
   );
   if (!res.ok) throw await apiError('OpenAI', res);
-  for await (const { data } of sseEvents(res.body, { abort: res.abortController })) {
+  for await (const { data } of sseEvents(res.body, { abort: res.abortController, ...(idleMs ? { idleMs } : {}) })) {
     if (data === '[DONE]') break;
     const j = parseJSON(data);
     if (!j) continue;
@@ -155,7 +155,7 @@ async function* openai({ key, model, system, messages, maxTokens = 8000 }) {
 
 // ---------------------------------------------------------------- cloud (metered Edge Function)
 
-async function* cloud({ prompt, system, step, project, locale, deep, model }) {
+async function* cloud({ prompt, system, step, project, locale, deep, model, signal, idleMs }) {
   const c = cloudConfig();
   if (!c) throw new EngineError(msg('account.cloud.notConfigured'), 'not_configured', 7);
   const s = await currentSession();
@@ -163,7 +163,7 @@ async function* cloud({ prompt, system, step, project, locale, deep, model }) {
   let res;
   try {
     res = await fetchT(`${c.url}/functions/v1/ai-fix`, {
-      method: 'POST',
+      signal, method: 'POST',
       headers: { apikey: c.anonKey, Authorization: `Bearer ${s.accessToken}`, 'Content-Type': 'application/json', Accept: 'text/event-stream' },
       body: JSON.stringify({ prompt, system, step, project, locale, deep: !!deep, model: model || undefined }),
     }, Number(process.env.BID_AI_CONNECT_MS) || 60000);
@@ -181,7 +181,7 @@ async function* cloud({ prompt, system, step, project, locale, deep, model }) {
     if (res.status === 401) throw new EngineError(msg('account.notLoggedIn'), 'not_logged_in', 5);
     throw new EngineError(msg('ai.providerHttp', { name: 'ai-fix', status: res.status, detail: j.error || '' }), 'ai_failed');
   }
-  for await (const { data } of sseEvents(res.body, { abort: res.abortController })) {
+  for await (const { data } of sseEvents(res.body, { abort: res.abortController, ...(idleMs ? { idleMs } : {}) })) {
     const j = parseJSON(data);
     if (!j) continue;
     if (j.type === 'error') throw new EngineError(msg('ai.providerError', { name: 'ai-fix', error: j.error || 'error' }), 'ai_failed');

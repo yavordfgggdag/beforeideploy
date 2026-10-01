@@ -2,9 +2,10 @@
 
 All notable changes, newest first. Versions come from `engine/VERSION`. Each entry has an English and a Bulgarian part; the in-app update banner shows the notes from `latest.json`, which are generated from this file at release time (WP8).
 
-## Unreleased — V12 setup and design foundation (2026-10-01)
+## Unreleased — V12 setup, design and AI assistant (2026-10-01)
 
 ### English
+- Rebuilds the AI workspace with Markdown/code answers, a multiline composer, scoped project sessions, context attachments, provider choices and a collapsible inspector. Streams decoded answer text; saves bounded, redacted full conversations and retry scope. Proposals expose file selection, config consent, review, apply, verification and guarded Undo; cancellation preserves already-applied changes. Adds versioned grounded prompts and screenshot fixtures without paid calls.
 - Adds System/Light/Dark appearance, semantic colours and a shared type scale. Shared badges, meters, fields and adaptive modal panels replace duplicate chrome; settings scroll, errors remain until dismissed, and decorative background animation is static. Screenshots cover both appearances and minimum review size.
 - Finder launches now resolve managed tools and the bundled Node before starting the engine. The runtime includes npm/npx; hosting tools install into verified, atomically published user-owned directories, with no global npm prefix or sudo.
 - Setup validates executable tools, scopes requirements to the selected providers, avoids the Git/CLT shim on refresh, offers an in-app Git identity form and reports failed/blocked steps honestly. Adds preflight, exclusive locking, heartbeat, retry, bounded browser sign-in and engine stdout draining.
@@ -12,6 +13,7 @@ All notable changes, newest first. Versions come from `engine/VERSION`. Each ent
 - Removes an accidentally committed machine-specific node_modules symlink from the SQL test harness; install its declared development dependencies normally.
 
 ### Български
+- AI асистентът получава четими отговори и код, многострочно писане, отделни сесии по сайтове, прикачен контекст и прибиращ се панел. Отговорите се показват постепенно без суров JSON. Историята запазва съдържанието и обхвата за повторен опит, като скрива тайните. Предложенията имат избор на файлове, отделно съгласие за настройки, преглед, прилагане, проверка и защитено връщане назад.
 - Добавени са системен, светъл и тъмен изглед, общи цветове и размери на текста. Уеднаквени са индикаторите, полетата и прозорците; настройките се превъртат, грешките остават до затваряне, а фонът е статичен. Визуалните проверки включват двете теми и малък прозорец.
 - Стартирането от Finder вече намира инструментите и вградения Node. Пакетът включва npm/npx; инструментите се инсталират в собствена папка на потребителя след проверка, без глобален npm prefix и без sudo.
 - Настройката проверява дали инструментите действително работят, изисква само нужните за избрания хостинг и не отваря CLT прозорец при обновяване. Името и имейлът за Git се въвеждат в приложението. Неуспешните и блокираните стъпки вече не се показват като успех; има предварителна проверка, заключване, прогрес и повторен опит.

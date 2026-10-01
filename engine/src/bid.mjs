@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { discardConversationPatch } from './ai/conversation.mjs';
 import { gitAvailable } from './setup-tools.mjs';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -329,10 +330,11 @@ async function main() {
       if (sub === 'fix') return ok(await aiFix(p, { step: flags.step, model: flags.model, deep: !!flags.deep, provider: flags.provider }));
       if (sub === 'explain') return ok(await aiFix(p, { step: flags.step, model: flags.model, provider: flags.provider, mode: 'explain' }));
       if (sub === 'apply') return ok(await aiApply(p, { patchFile: flags['patch-file'], files: flags.files, yes: !!flags.yes, commit: !!flags.commit, recheck: !!flags.recheck, allowConfig: !!flags['allow-config'] }));
-      if (sub === 'undo') return ok(await aiUndo(p, { yes: !!flags.yes }));
+      if (sub === 'undo') return ok(await aiUndo(p, { yes: !!flags.yes, expectedUndoFile: flags['expected-undo-file'] }));
       if (sub === 'chat') return ok(await assistantChat(p, { action: flags.action, message: flags.message, issue: flags.issue, files: flags.files, patchFile: flags['patch-file'], budget: flags.budget, yes: !!flags.yes, newConversation: !!flags.new, provider: flags.provider, model: flags.model }));
       if (sub === 'history') return ok(assistantHistory(p, { limit: flags.limit ? Number(flags.limit) : 50 }));
       if (sub === 'reset') return ok(assistantReset(p));
+      if (sub === 'discard') return ok(discardConversationPatch(p, flags['patch-file']));
       throw new EngineError(msg('cli.unknownCommand', { command: `ai ${sub}` }), 'usage', 2);
     }
 

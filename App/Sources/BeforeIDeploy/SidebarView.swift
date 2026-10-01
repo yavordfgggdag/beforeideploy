@@ -46,7 +46,6 @@ struct SidebarView: View {
                 }
                 NavRow(symbol: "sparkles", title: L("assistant.nav"), selected: model.screen == .assistant) {
                     model.screen = .assistant
-                    Task { await model.assistantStore.load() }
                 }
                 NavRow(symbol: "creditcard.fill", title: L("common.costs"), selected: model.screen == .costs) {
                     model.screen = .costs

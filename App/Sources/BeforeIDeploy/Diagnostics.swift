@@ -131,6 +131,17 @@ enum Snapshot {
                 }
             }
             try? await Task.sleep(nanoseconds: UInt64(max(1, (delay > 0 ? delay : 6) - 1) * 1_000_000_000))
+            if argument("BIDAssistantDemo") {
+                let deadline = Date().addingTimeInterval(60)
+                while !AppModel.shared.assistantStore.isSnapshotDemo && Date() < deadline {
+                    try? await Task.sleep(nanoseconds: 250_000_000)
+                }
+                guard AppModel.shared.assistantStore.isSnapshotDemo else {
+                    AppLog.ui.error("snapshot: assistant fixture did not become ready")
+                    NSApp.terminate(nil); return
+                }
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+            }
             write(to: URL(fileURLWithPath: path))
             NSApp.terminate(nil)
         }
@@ -150,5 +161,33 @@ enum Snapshot {
             try? png.write(to: url)
             AppLog.ui.notice("snapshot written")
         }
+    }
+}
+
+
+extension Snapshot {
+    /// Explicit screenshot-only fixtures, never a paid account or executable proposal.
+    @MainActor
+    static func prepareAssistant(model: AppModel, mode: String) {
+        guard argument("BIDSnapshot"), let project = model.status?.project else { return }
+        let store = model.assistantStore
+        store.activate(project.key); store.isSnapshotDemo = true; store.session.historyLoaded = true
+        var account = model.account ?? AccountState(loggedIn: false)
+        account.features = AccountState.Features(aiCloud: true, aiBuiltin: true)
+        model.account = account
+        let request = AssistantStore.Request(action: "ask", message: L("assistant.demo.question"))
+        let answer = L("assistant.demo.answer") + "\n\n```js\nconst total = (items ?? []).reduce(\n  (sum, item) => sum + item.price, 0\n);\n```\n\n" + L("assistant.demo.next")
+        var result = AssistantResult(conversation: "snapshot", action: "ask", provider: "cloud", output: .object(["answer": .string(answer)]), valid: true,
+                                     usage: AIUsage(charged: 240, balance: 299760))
+        if mode == "empty" { store.session.turns = []; return }
+        if mode == "proposal" {
+            result.action = "propose"; result.output = .object(["summary": .string(L("assistant.demo.proposal"))])
+            result.files = [AIPatchFile(path: "src/cart.js", action: "edit", additions: 1, deletions: 1,
+                diff: "--- a/src/cart.js\n+++ b/src/cart.js\n@@ -12,2 +12,2 @@\n-const total = items.reduce(sum, 0);\n+const total = (items ?? []).reduce(sum, 0);\n renderTotal(total);", applicable: true)]
+            result.risk = "low"; result.patchFile = "snapshot-only"; result.verificationPlan = [L("assistant.demo.check")]
+        }
+        store.session.turns = [AssistantStore.Turn(at: Date(), role: "user", action: "ask", text: request.message, request: request),
+                               AssistantStore.Turn(at: Date(), role: "assistant", action: result.action, text: answer, result: mode == "quota" ? nil : result,
+                                    error: mode == "quota" ? L("assistant.demo.quota") : nil, errorCode: mode == "quota" ? "quota_exhausted" : nil, request: request)]
     }
 }

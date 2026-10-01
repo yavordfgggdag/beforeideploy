@@ -13,6 +13,7 @@ import { buildPrompt } from '../aifix.mjs';
 import { chooseProvider, stream } from './providers.mjs';
 import { parseAnswer, plan as planPatch, apply as applyPatch, reasonKey } from './patch.mjs';
 import { resolveInProject, writeNoFollow, removeNoFollow } from '../pathpolicy.mjs';
+import { updateConversationPatch, updateConversationUndo } from './conversation.mjs';
 
 /** Fallbacks when the cloud `settings` table has no `ai.models` (Admin panel edits it without a release). */
 export const DEFAULT_MODELS = { fast: 'claude-haiku-4-5', standard: 'claude-opus-5-5', deep: 'claude-opus-5-5', openai: 'gpt-5' };
@@ -159,7 +160,9 @@ export async function aiApply(project, { patchFile, files, yes = false, commit =
     } catch {}
   }
   const out = { applied, skipped, committed, changedSince: fresh.filter((p) => p.changedSince).map((p) => p.path), needsApproval: allowConfig ? [] : fresh.filter((p) => p.needsApproval).map((p) => p.path), undoFile };
+  updateConversationPatch(project.key, abs, { applied: { applied, skipped, undoFile }, verified: false, stopped: null });
   if (recheck && applied.length) out.recheck = await verifyAfterFix(project, patch.step);
+  updateConversationPatch(project.key, abs, { recheck: out.recheck || null, verified: out.recheck?.verified || false });
   return out;
 }
 
@@ -222,9 +225,10 @@ async function verifyAfterFix(project, step) {
 }
 
 /** Restores the files of the last `ai apply` (V11). A file the user edited since is left alone and reported. */
-export async function aiUndo(project, { yes = false } = {}) {
+export async function aiUndo(project, { yes = false, expectedUndoFile = null } = {}) {
   if (!yes) throw new EngineError(msg('ai.undo.confirmRequired'), 'confirm_required', 2);
   const st = getState(project.key);
+  if (expectedUndoFile && expectedUndoFile !== st.aiUndo?.file) throw new EngineError(msg('ai.undo.stale'), 'stale_undo');
   const rec = st.aiUndo?.file ? readJSON(st.aiUndo.file, null) : null;
   if (!rec || rec.project !== project.key) throw new EngineError(msg('ai.undo.nothing'), 'nothing');
   const restored = [];
@@ -259,6 +263,7 @@ export async function aiUndo(project, { yes = false } = {}) {
     } catch {}
     setState(project.key, { aiUndo: undefined });
   }
+  updateConversationUndo(project.key, st.aiUndo?.file, restored, skipped);
   ev.step('ai-undo', { label: t('ai.undo.label'), category: 'AI', status: restored.length ? 'pass' : 'fail', summary: t('ai.undo.done', { count: restored.length }), details: skipped.map((s) => `✗ ${s.path} — ${s.reason}`) });
   addHistory({ project: project.key, projectName: project.name, kind: 'ai-undo', status: restored.length ? 'ok' : 'fail', message: restored.join(', ') || t('ai.undo.nothingShort') });
   return { restored, skipped };

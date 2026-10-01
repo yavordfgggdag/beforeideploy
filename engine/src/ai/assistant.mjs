@@ -34,6 +34,9 @@ import { aiApply, aiUndo } from './index.mjs';
 import { listOps, capabilities } from '../release.mjs';
 import { listIncidents } from '../monitor.mjs';
 import { recordCost } from '../costs.mjs';
+import { AnswerStream } from './answer-stream.mjs';
+import { assistantHistory, assistantReset, appendHistory, conversationMessages, historyResult } from './conversation.mjs';
+export { assistantHistory, assistantReset } from './conversation.mjs';
 
 /** Stage labels as literal keys (scripts/i18n-check.mjs proves both languages have them). */
 const STAGE_LABELS = () => ({ analyze: t('assistant.stage.analyze'), propose: t('assistant.stage.propose'), apply: t('assistant.stage.apply'), verify: t('assistant.stage.verify') });
@@ -67,39 +70,6 @@ export function setAssistantSettings(patch) {
   if (patch.maxContextChars !== undefined) next.maxContextChars = Math.min(200000, Math.max(4000, Math.round(Number(patch.maxContextChars) || 4000)));
   writeJSON(SETTINGS_FILE(), next);
   return next;
-}
-
-// ---------------------------------------------------------------- conversation history (per project, owner-only)
-
-const CHAT_DIR = () => path.join(APP_DIR, 'chats');
-const chatFile = (key) => path.join(CHAT_DIR(), `${key}.jsonl`);
-
-function appendHistory(key, entry) {
-  fs.mkdirSync(CHAT_DIR(), { recursive: true, mode: 0o700 });
-  appendBounded(chatFile(key), JSON.stringify(entry), { maxBytes: 512 * 1024, keepLines: 1000, mode: 0o600 });
-}
-
-export function assistantHistory(project, { limit = 50 } = {}) {
-  let lines = [];
-  try {
-    lines = fs.readFileSync(chatFile(project.key), 'utf8').split('\n').filter(Boolean);
-  } catch {}
-  const entries = lines.slice(-limit).map((l) => {
-    try {
-      return JSON.parse(l);
-    } catch {
-      return null;
-    }
-  }).filter(Boolean);
-  const conv = entries.length ? entries[entries.length - 1].conversation : null;
-  return { project: project.key, conversation: conv, entries };
-}
-
-export function assistantReset(project) {
-  try {
-    fs.rmSync(chatFile(project.key), { force: true });
-  } catch {}
-  return { project: project.key, cleared: true };
 }
 
 // ---------------------------------------------------------------- evidence
@@ -173,7 +143,7 @@ function checkSummary(project) {
 }
 
 function evidenceText(list) {
-  return list.map((e) => `[${e.id}] ${e.kind}: ${e.label}\n${e.text}`).join('\n\n');
+  return list.map((e) => `[${e.id}] ${e.kind}: ${e.label}\n${e.text}`).join('\n\n') || 'No evidence blocks were selected. Only the supplied project metadata and check results are available.';
 }
 
 /** Files the issue points at (its evidence file + files mentioned in the failing step log). */
@@ -189,59 +159,67 @@ function issueFiles(project, issue) {
 
 // ---------------------------------------------------------------- the model call
 
-async function callModel({ provider, model, system, prompt, action, project, settings, budget }) {
-  const estimate = Math.ceil((system.length + prompt.length) / 4);
+async function callModel({ provider, model, system, prompt, action, project, settings, budget, conversation = [], field = 'answer', calls }) {
+  const estimate = Math.ceil((system.length + prompt.length + conversation.reduce((n, m) => n + m.content.length, 0)) / 4);
   if (budget.used + estimate > budget.limit) throw new EngineError(msg('assistant.budgetExceeded', { need: estimate, left: Math.max(0, budget.limit - budget.used) }), 'budget_exceeded');
   const d = detect(project.path);
-  const params =
-    provider === 'cloud'
-      ? { prompt, system, step: `assistant:${action}`, project: { framework: d.framework, pm: d.packageManager }, locale: currentLang(), deep: false, model: model || undefined, mode: 'assistant' }
-      : { model, system, messages: [{ role: 'user', content: prompt }], maxTokens: 6000, effort: 'medium' };
-  let text = '';
+  const controller = new AbortController();
+  const params = provider === 'cloud'
+    ? { prompt, system, step: `assistant:${action}`, project: { framework: d.framework, pm: d.packageManager }, locale: currentLang(), deep: false, model: model || undefined, mode: 'assistant' }
+    : { model, system, messages: [...conversation, { role: 'user', content: prompt }], maxTokens: Math.max(1, Math.min(6000, budget.limit - budget.used - estimate)), effort: 'medium' };
+  params.signal = controller.signal;
+  params.idleMs = Math.min(settings.callTimeoutMs, Number(process.env.BID_AI_IDLE_MS) || Infinity);
+  let text = '', expired = 0;
+  let idleTimer;
+  const armIdle = () => { clearTimeout(idleTimer); idleTimer = setTimeout(() => { expired = params.idleMs / 1000; controller.abort(); }, params.idleMs); };
+  armIdle();
   const usage = { input: 0, output: 0, model };
-  const run = (async () => {
+  const answer = new AnswerStream(field);
+  const timer = setTimeout(() => { expired = 300; controller.abort(); }, 300000);
+  budget.calls++;
+  try {
     for await (const e of stream(provider, params)) {
+      armIdle();
       if (e.type === 'delta') {
         text += e.text;
-        emit({ type: 'ai', delta: e.text });
+        if (text.length > 256000) { controller.abort(); throw new EngineError(msg('assistant.invalidOutput', { count: 1 }), 'ai_failed'); }
+        const delta = answer.push(e.text);
+        if (delta) emit({ type: 'ai', field: 'answer', delta });
       } else if (e.type === 'usage') {
-        if (e.input != null) usage.input = e.input;
-        if (e.output != null) usage.output = e.output;
-        if (e.model) usage.model = e.model;
-        if (e.charged != null) usage.charged = e.charged;
-        if (e.balance != null) usage.balance = e.balance;
+        for (const key of ['input', 'output', 'model', 'charged', 'balance']) if (e[key] != null) usage[key] = e[key];
       }
     }
-  })();
-  let timer;
-  const timeout = new Promise((_, reject) => {
-    timer = setTimeout(() => reject(new EngineError(msg('assistant.timeout', { seconds: Math.round(settings.callTimeoutMs / 1000) }), 'ai_timeout')), settings.callTimeoutMs);
-  });
-  try {
-    await Promise.race([run, timeout]);
+    if (!usage.input) usage.input = estimate;
+    if (!usage.output) usage.output = Math.ceil(text.length / 4);
+    return { text, usage };
+  } catch (error) {
+    if (expired) throw new EngineError(msg('assistant.timeout', { seconds: Math.round(expired) }), 'ai_timeout');
+    throw error;
   } finally {
     clearTimeout(timer);
+    clearTimeout(idleTimer);
+    controller.abort();
+    budget.used += usage.charged ?? usage.input + usage.output;
+    calls.push({ ...usage });
   }
-  if (!usage.input) usage.input = estimate;
-  if (!usage.output) usage.output = Math.ceil(text.length / 4);
-  budget.used += usage.charged ?? usage.input + usage.output;
-  budget.calls++;
-  return { text, usage };
 }
 
 /** Parse + validate, with one bounded repair round on an invalid answer. */
 async function structured(ctx, prompt, refs, vars) {
-  const rendered = renderPrompt(prompt, vars);
+  const rendered = renderPrompt(prompt, { ...vars, conversation: ctx.provider === 'cloud' ? JSON.stringify(ctx.conversation) : '' });
+  ctx = { ...ctx, field: ['answer', 'summary', 'observed_impact'].find(k => prompt.output?.properties?.[k]?.type === 'string') || '__none__' };
+  emit({ type: 'ai', reset: true });
   let { text, usage } = await callModel({ ...ctx, prompt: rendered });
   let output = extractJSON(text);
   let v = output ? validateOutput(prompt, output, refs) : { ok: false, errors: ['no JSON object in the answer'] };
   let repairs = 0;
   if (!v.ok && ctx.budget.used < ctx.budget.limit) {
     repairs = 1;
-    ev.step(`assistant-${ctx.action}`, { label: t('assistant.stage.analyze'), category: 'AI', status: 'running', summary: t('assistant.repairing', { count: v.errors.length }) });
+    ev.step(`assistant-${ctx.stageId || 'analyze'}`, { label: STAGE_LABELS()[ctx.stageId || 'analyze'], category: 'AI', status: 'running', summary: t('assistant.repairing', { count: v.errors.length }) });
+    emit({ type: 'ai', reset: true });
     const fix = `${rendered}\n\nYour previous answer was rejected by the application:\n- ${v.errors.slice(0, 12).join('\n- ')}\n\nReturn only the corrected JSON object with exactly the required fields.`;
     const second = await callModel({ ...ctx, prompt: fix });
-    usage = { input: usage.input + second.usage.input, output: usage.output + second.usage.output, model: second.usage.model || usage.model, charged: (usage.charged || 0) + (second.usage.charged || 0), balance: second.usage.balance ?? usage.balance };
+    usage = mergeUsage(usage, second.usage);
     text = second.text;
     output = extractJSON(text);
     v = output ? validateOutput(prompt, output, refs) : { ok: false, errors: ['no JSON object in the answer'] };
@@ -255,34 +233,52 @@ export async function assistantChat(project, opts = {}) {
   const action = opts.action || 'ask';
   if (!ACTIONS.includes(action)) throw new EngineError(msg('assistant.unknownAction', { action }), 'usage', 2);
   const settings = assistantSettings();
-  const status = await accountStatus();
-  const provider = chooseProvider({ features: status.features || null, requested: opts.provider });
-  const model = provider === 'cloud' ? null : opts.model && opts.model !== true ? opts.model : provider === 'openai' ? (status.settings?.['ai.models']?.openai || 'gpt-5') : (status.settings?.['ai.models']?.standard || 'claude-opus-5-5');
-  const budget = { limit: Math.min(settings.maxTokensPerOperation, Number(opts.budget) || settings.maxTokensPerOperation), used: 0, calls: 0 };
-  const history = assistantHistory(project, { limit: 1 });
+  const history = assistantHistory(project, { limit: 200 });
   const conversation = opts.newConversation || !history.conversation ? crypto.randomBytes(6).toString('hex') : history.conversation;
-  const system = renderPrompt(loadPrompt('system'), { locale: currentLang(), project_name: project.name, tools: TOOLS.map((x) => `- ${x}`).join('\n') });
-  const ctx = { provider, model, system, action, project, settings, budget };
   const message = opts.message && opts.message !== true ? String(opts.message) : '';
   const started = Date.now();
+  const entry = { historyId: crypto.randomUUID(), at: nowISO(), conversation, action, message,
+    request: { action, message, issue: typeof opts.issue === 'string' ? opts.issue : null, files: typeof opts.files === 'string' ? opts.files : null,
+      provider: typeof opts.provider === 'string' ? opts.provider : null, model: typeof opts.model === 'string' ? opts.model : null, patchFile: typeof opts.patchFile === 'string' ? opts.patchFile : null } };
+  let status, provider, model;
+  try {
+    status = await accountStatus();
+    provider = chooseProvider({ features: status.features || null, requested: opts.provider });
+    model = provider === 'cloud' ? null : opts.model && opts.model !== true ? opts.model : provider === 'openai' ? (status.settings?.['ai.models']?.openai || 'gpt-5') : (status.settings?.['ai.models']?.standard || 'claude-opus-5-5');
+    entry.provider = provider;
+  } catch (error) {
+    appendHistory(project.key, { ...entry, valid: false, error: error.message, code: error.code, duration: (Date.now() - started) / 1000 });
+    throw error;
+  }
+  const budget = { limit: Math.min(settings.maxTokensPerOperation, Number(opts.budget) || settings.maxTokensPerOperation), used: 0, calls: 0 };
+  const system = renderPrompt(loadPrompt('system'), { locale: currentLang() === 'bg' ? 'Bulgarian (bg)' : 'English (en)', project_name: 'selected website', tools: TOOLS.map((x) => `- ${x}`).join('\n') });
+  const ctx = { provider, model, system, action, project, settings, budget, calls: [], conversation: conversationMessages(history.entries, conversation) };
   let stopped = null;
-  const entry = { at: nowISO(), conversation, action, message, provider };
-  process.on('exit', (code) => {
-    if (code === 130 && !entry.done) appendHistory(project.key, { ...entry, stopped: 'cancelled', done: true, usage: { tokens: budget.used } });
-  });
-
   const evidence = [];
   const refs = { evidence: new Set() };
-  const stage = (id, fields) => ev.step(`assistant-${id}`, { category: 'AI', label: STAGE_LABELS()[id], ...fields });
+  const stages = new Map();
+  const stage = (id, fields) => { ctx.stageId = id; stages.set(id, fields.status); ev.step(`assistant-${id}`, { category: 'AI', label: STAGE_LABELS()[id], ...fields }); };
+  const cancel = () => {
+    if (entry.done) return;
+    entry.done = true;
+    for (const [id, state] of stages) if (state === 'running') stage(id, { status: 'skipped', summary: t('run.cancelled') });
+    try { appendHistory(project.key, { ...entry, valid: false, stopped: 'cancelled', code: 'cancelled', done: true, usage: { input: budget.used, output: 0 } }); } catch {}
+  };
+  // Run before util's signal handler emits the single final result and exits.
+  for (const signal of ['SIGTERM', 'SIGINT', 'SIGHUP']) process.prependOnceListener(signal, cancel);
+
   const finish = (result) => {
     entry.done = true;
     const summary = result.output ? summarize(action, result.output) : null;
-    appendHistory(project.key, { ...entry, template: result.template, valid: result.valid, stopped: result.stopped, summary, usage: result.usage, duration: (Date.now() - started) / 1000, patchFile: result.patchFile || null });
+    const full = { historyId: entry.historyId, conversation, action, provider, model: result.usage?.model || model, ...result,
+      evidence: evidence.map(({ text: _t, ...e }) => e), budget: { ...budget }, duration: (Date.now() - started) / 1000 };
+    appendHistory(project.key, { ...entry, template: result.template, valid: result.valid, stopped: result.stopped,
+      summary, usage: result.usage, duration: full.duration, patchFile: result.patchFile || null, result: historyResult(full) });
     addHistory({ project: project.key, projectName: project.name, kind: 'assistant', status: result.valid && !result.stopped ? 'ok' : 'fail', message: `${action}${summary ? `: ${summary.slice(0, 120)}` : ''}${result.stopped ? ` (${result.stopped})` : ''}`, duration: (Date.now() - started) / 1000 });
     if (result.usage?.input || result.usage?.output) {
       recordCost({ project: project.key, projectName: project.name, service: provider === 'cloud' ? 'ai-cloud' : `ai-${provider}`, op: `assistant:${action}`, amount: result.usage.charged ?? result.usage.input + result.usage.output, unit: 'tokens', estimated: false, ref: result.usage.model || null });
     }
-    return { conversation, action, provider, model: result.usage?.model || model, ...result, budget: { ...budget }, duration: (Date.now() - started) / 1000 };
+    return full;
   };
   const announce = (extra = {}) => {
     const estimate = Math.ceil((system.length + evidence.reduce((n, e) => n + e.chars, 0)) / 4);
@@ -298,6 +294,7 @@ export async function assistantChat(project, opts = {}) {
     }
   };
 
+  try {
   const meta = metadata(project);
   const checks = checkSummary(project);
   const { issue, issues } = issueById(project, opts.issue && opts.issue !== true ? String(opts.issue) : null);
@@ -505,11 +502,23 @@ export async function assistantChat(project, opts = {}) {
     return finish({ template: `${prompt.id}.v${prompt.version}`, output: r.output, valid: r.valid, errors: r.errors, repairs: r.repairs, usage: r.usage, stopped: r.valid ? null : 'invalid_output' });
   }
   throw new EngineError(msg('assistant.unknownAction', { action }), 'usage', 2);
+  } catch (error) {
+    for (const [id, status] of stages) if (status === 'running') stage(id, { status: 'fail', summary: error.message });
+    const usage = ctx.calls.reduce(mergeUsage, null);
+    if (!entry.done) {
+      entry.done = true;
+      appendHistory(project.key, { ...entry, valid: false, error: error.message, code: error.code, usage, duration: (Date.now() - started) / 1000 });
+      if (usage && (usage.input || usage.output || usage.charged)) recordCost({ project: project.key, projectName: project.name,
+        service: provider === 'cloud' ? 'ai-cloud' : `ai-${provider}`, op: `assistant:${action}`, amount: usage.charged ?? usage.input + usage.output,
+        unit: 'tokens', estimated: false, ref: usage.model || null });
+    }
+    throw error;
+  }
 }
 
 function mergeUsage(a, b) {
   if (!a) return b;
-  return { input: (a.input || 0) + (b.input || 0), output: (a.output || 0) + (b.output || 0), model: b.model || a.model, charged: (a.charged || 0) + (b.charged || 0) || undefined, balance: b.balance ?? a.balance };
+  return { input: (a.input || 0) + (b.input || 0), output: (a.output || 0) + (b.output || 0), model: b.model || a.model, charged: a.charged == null && b.charged == null ? undefined : (a.charged || 0) + (b.charged || 0), balance: b.balance ?? a.balance };
 }
 
 function summarize(action, out) {
