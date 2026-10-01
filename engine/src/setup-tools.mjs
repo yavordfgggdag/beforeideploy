@@ -122,20 +122,47 @@ export function prunePackages(id, keep = []) {
   return removed;
 }
 
-export async function setupPreflight({ urls, disk = () => fs.statfsSync(ensureDir(TOOLS_DIR)), probe = fetchT } = {}) {
-  const stat = disk();
-  const free = Number(stat.bavail) * Number(stat.bsize);
-  if (free < 1.5 * 1024 ** 3) throw new EngineError(msg('setup.diskFull'), 'setup_disk_space');
-  const endpoints = urls || ['https://registry.npmjs.org/-/ping', 'https://github.com', 'https://api.netlify.com'];
+const HOSTS = Object.freeze({
+  npm: 'https://registry.npmjs.org/-/ping',
+  github: 'https://github.com',
+  netlify: 'https://api.netlify.com',
+  vercel: 'https://api.vercel.com',
+  cloudflare: 'https://api.cloudflare.com/client/v4',
+});
+const STEP_HOSTS = Object.freeze({ gh: ['github'], 'gh-auth': ['github'], 'git-identity': ['github'], 'netlify-login': ['netlify'], 'vercel-auth': ['vercel'], 'wrangler-auth': ['cloudflare'] });
+
+/** What a run needs (audit B8): hosts only for the queued steps, disk only when something is installed. */
+export function preflightPlan(ids) {
+  const keys = new Set();
+  let install = false;
+  for (const id of ids) {
+    if (TOOL_PACKAGES[id]) { keys.add('npm'); install = true; }
+    if (id === 'gh') install = true;
+    for (const k of STEP_HOSTS[id] || []) keys.add(k);
+  }
+  return { urls: [...keys].map(k => HOSTS[k]), disk: install };
+}
+
+/** `ids`: the steps this run will start. Without ids (older callers) every host and the disk are checked. */
+export async function setupPreflight({ ids, urls, disk = () => fs.statfsSync(ensureDir(TOOLS_DIR)), probe = fetchT } = {}) {
+  const plan = ids ? preflightPlan(ids) : { urls: [HOSTS.npm, HOSTS.github, HOSTS.netlify], disk: true };
+  let free = null;
+  if (plan.disk) {
+    const stat = disk();
+    free = Number(stat.bavail) * Number(stat.bsize);
+    if (free < 1.5 * 1024 ** 3) throw new EngineError(msg('setup.diskFull'), 'setup_disk_space');
+  }
+  const endpoints = urls || plan.urls;
   const checks = await Promise.all(endpoints.map(async url => {
     try {
-      const r = await probe(url, { method: 'HEAD', redirect: 'error' }, 4000);
+      // any answer below 500 (including a redirect to a login page) proves the host is reachable
+      const r = await probe(url, { method: 'HEAD', redirect: 'manual' }, 4000);
       await r.body?.cancel();
       return r.status < 500;
     } catch { return false; }
   }));
   if (checks.some(ok => !ok)) throw new EngineError(msg('setup.offline'), 'offline');
-  return { freeGB: Math.floor(free / 1024 ** 3) };
+  return { freeGB: free === null ? null : Math.floor(free / 1024 ** 3), hosts: endpoints };
 }
 
 export function installError(result) {

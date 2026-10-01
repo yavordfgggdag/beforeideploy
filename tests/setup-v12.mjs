@@ -344,3 +344,21 @@ test('B7: netlify login runs with BROWSER=none and still announces the authorize
   const code = lines.join('').split('\n').filter(Boolean).map(l => { try { return JSON.parse(l); } catch { return null; } }).find(e => e?.type === 'devicecode');
   assert.equal(code?.url, 'https://app.netlify.com/authorize?response_type=ticket&ticket=abc');
 });
+
+test('B8: preflight probes only the hosts the queued steps need; disk only for installs', async () => {
+  const { preflightPlan } = await import('../engine/src/setup-tools.mjs');
+  const seen = [];
+  const probe = async url => { seen.push(url); return { status: url.includes('github') ? 599 : 200 }; };
+  const noDisk = () => { throw new Error('disk checked for a login-only run'); };
+  // Netlify login only, with GitHub blocked: not "offline", and no 1.5 GB requirement
+  await setupPreflight({ ids: ['netlify-login'], disk: noDisk, probe });
+  assert.deepEqual(seen, ['https://api.netlify.com']);
+  seen.length = 0;
+  await assert.rejects(() => setupPreflight({ ids: ['gh-auth'], disk: noDisk, probe }), e => e.code === 'offline');
+  assert.deepEqual(seen, ['https://github.com']);
+  let diskCalls = 0;
+  await setupPreflight({ ids: ['netlify-cli', 'netlify-login'], disk: () => { diskCalls++; return { bavail: 2 * 1024 ** 3, bsize: 1 }; }, probe: async () => ({ status: 200 }) });
+  assert.equal(diskCalls, 1);
+  assert.deepEqual(preflightPlan(['vercel', 'vercel-auth']).urls, ['https://registry.npmjs.org/-/ping', 'https://api.vercel.com']);
+  assert.deepEqual(preflightPlan(['git']), { urls: [], disk: false });
+});

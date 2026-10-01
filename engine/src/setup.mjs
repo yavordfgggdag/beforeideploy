@@ -270,10 +270,13 @@ export async function setupAuto({ yes = false, includeOptional = false, prefligh
     const todo = st.items.filter(i => !i.ok && (includeOptional || !i.optional)).sort((a,b) => rank(a.id)-rank(b.id));
     const steps = [], installed = [], failed = [], blocked = [];
     for (const i of todo) ev.step(i.id, { label: i.title, status: 'pending', summary: i.action?.display });
+    // the steps that will reach the network: the identity only when it can come from GitHub in this run
+    const ghReady = st.items.find(i => i.id === 'gh-auth')?.ok || todo.some(i => i.id === 'gh-auth');
+    const runnable = todo.filter(i => i.id === 'git-identity' ? ghReady : i.action?.type === 'run').map(i => i.id);
     if (todo.some(i => i.action?.type === 'run')) {
       ev.step('preflight', { label: t('setup.preflight'), status: 'running' });
       try {
-        await preflight();
+        await preflight({ ids: runnable });
         ev.step('preflight', { status: 'pass' });
       } catch (e) {
         ev.step('preflight', { status: 'fail', summary: e.message });
