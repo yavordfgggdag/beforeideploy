@@ -79,12 +79,15 @@ export async function testCredits({db,t,assert,rejects,as}) {
   const s=await summary(id); assert(s.period.debt===0 && s.remaining.available===200 && s.remaining.purchased===200,'no extra charge during repayment');
   assert((await rpc('bid_reconcile_usage',{})).drift.length===0,'events equal ledger charges');
  });
- await t('V12 refunds: only the original lot remainder, unique adjustment, no later purchase clawback',async()=>{
+ await t('V12 refunds: original lot remainder, spent part is owed (PLAN §10) and paid from the remaining balance, unique adjustment',async()=>{
   const id=await user(); await grant(id,10000,'txn-old'); await charge(id,9000,'spend-original'); await grant(id,300000,'txn-new');
   const args={p_user:id,p_ref:'txn-old',p_adjustment:'adj-1',p_share:1,p_now:now};
-  assert((await rpc('bid_refund',args)).taken===1000,'only original unspent 1000');
+  const first=await rpc('bid_refund',args);
+  assert(first.taken===1000 && first.debt===9000,'original unspent 1000 taken, spent 9000 recorded as debt');
   assert((await rpc('bid_refund',args)).taken===0,'refund duplicate');
-  assert(await balance(id)===300000,'new payment intact');
+  assert(Number((await db.query("select left_credits from credit_grants where user_id=$1 and ref='txn-new'",[id])).rows[0].left_credits)===291000,'owed 9000 paid from the available balance');
+  assert(Number((await db.query('select debt from credit_accounts where user_id=$1',[id])).rows[0].debt)===0,'no debt left while credits remain');
+  assert(await balance(id)===291000,'balance reflects the refund');
  });
  await t('V12 sites: server limits, daily idempotency, pause preserves site and cancellation retains one',async()=>{
   const id=await user('high'); await grant(id);
@@ -427,5 +430,41 @@ export async function testCredits({db,t,assert,rejects,as}) {
   assert(await balance(id)===300000,'paid credits are not touched');
   await db.query("update subscriptions set status='active',event_at=$2 where user_id=$1",[id,later(9)]);
   assert((await db.query('select past_due_since from subscriptions where user_id=$1',[id])).rows[0].past_due_since===null,'recovered payment clears the failure');
+ });
+ await t('B2 refunds: per Paddle line item (pack-only refund leaves the plan lot), spent credits become debt',async()=>{
+  const debtOf=async id=>Number((await db.query('select debt from credit_accounts where user_id=$1',[id])).rows[0].debt);
+  const left=async(id,ref)=>Number((await db.query('select left_credits from credit_grants where user_id=$1 and ref=$2',[id,ref])).rows[0].left_credits);
+  const paid=async(id,txn)=>{
+   await grant(id,300000,txn,'high');
+   await rpc('bid_grant',{p_user:id,p_credits:100000,p_source:'topup',p_ref:txn+':pri_b2_pack',p_granted_at:now,p_now:now});
+   await db.query("insert into billing_events(id,type,user_id,ref,payload) values($1,'transaction.completed',$2,$3,$4)",['evt-'+txn,id,txn,JSON.stringify({data:{id:txn,details:{totals:{total:'3498'},line_items:[
+    {id:'txnitm_plan_'+txn,price_id:'pri_b2_high',quantity:1,totals:{total:'2999'}},{id:'txnitm_pack_'+txn,price_id:'pri_b2_pack',quantity:1,totals:{total:'499'}}]}}})]);
+  };
+  const adj=(id,txn,items,total)=>({id,transaction_id:txn,action:'refund',status:'approved',totals:{total},items});
+  const id=await user('high'); await paid(id,'b2-txn');
+  const r=await rpc('bid_v12_apply_adjustment',{p_user:id,p_adjustment:adj('b2-adj-pack','b2-txn',[{item_id:'txnitm_pack_b2-txn',type:'full',amount:'499'}],'499'),p_now:now});
+  assert(r.ok && r.taken===100000,'the whole pack lot is refunded');
+  assert(await left(id,'b2-txn')===300000,'plan lot untouched by a pack-only refund');
+  assert(await left(id,'b2-txn:pri_b2_pack')===0,'pack lot refunded');
+  await rpc('bid_v12_apply_adjustment',{p_user:id,p_adjustment:adj('b2-adj-pack','b2-txn',[{item_id:'txnitm_pack_b2-txn',type:'full',amount:'499'}],'499'),p_now:now});
+  await rpc('bid_v12_payment_refunds',{p_user:id,p_ref:'b2-txn',p_now:now});
+  assert(await balance(id)===300000,'replays change nothing');
+  // spent plan credits: a plan-line refund records debt instead of silently keeping them
+  const u=await user('high'); await paid(u,'b2-spent');
+  assert((await charge(u,350000,'b2-spend-op',now,false)).ok,'spend plan lot and half the pack');
+  const p=await rpc('bid_v12_apply_adjustment',{p_user:u,p_adjustment:adj('b2-adj-plan','b2-spent',[{item_id:'txnitm_plan_b2-spent',type:'full',amount:'2999'}],'2999'),p_now:now});
+  assert(p.taken===0 && p.debt===300000,'spent plan credits become debt');
+  assert(await left(u,'b2-spent:pri_b2_pack')===0 && await debtOf(u)===250000,'remaining pack credits pay what they can, the rest is debt');
+  assert(await balance(u)===-250000,'ledger balance shows the debt');
+  // expired credits are not spent: refunding an expired lot creates no debt
+  const e=await user('high'); await grant(e,300000,'b2-expired','high',now,later(1));
+  const x=await rpc('bid_refund',{p_user:e,p_ref:'b2-expired',p_adjustment:'b2-adj-exp',p_share:1,p_now:later(2)});
+  assert(x.taken===0 && await debtOf(e)===0,'expired credits are not owed back');
+ });
+ await t('B7 refunds: zero-value markers are unique (replays do not duplicate them)',async()=>{
+  const id=await user('high'); await grant(id,300000,'b7-txn','high');
+  for(let i=0;i<3;i++) await rpc('bid_refund',{p_user:id,p_ref:'b7-txn',p_adjustment:'b7-adj',p_share:0.5,p_now:now});
+  assert((await db.query("select count(*)::int n from credit_ledger where user_id=$1 and reason='payment_refund'",[id])).rows[0].n===1,'one payment_refund marker');
+  assert(await balance(id)===150000,'refunded once');
  });
 }

@@ -484,6 +484,10 @@ create table if not exists public.credit_grants (
   unique(user_id,ref,source), unique(user_id,id)
 );
 alter table public.credit_grants add column if not exists refund_base bigint check(refund_base>=credits);
+-- Credits that left a lot without being spent (expiry, cap trim, refund) and the refund debt already
+-- recorded against it. Spent = credits - left_credits - removed_credits; only spent credits become refund debt.
+alter table public.credit_grants add column if not exists removed_credits bigint not null default 0 check(removed_credits>=0);
+alter table public.credit_grants add column if not exists refund_debt bigint not null default 0 check(refund_debt>=0);
 create index if not exists credit_grants_fifo on public.credit_grants(user_id,expires_at,granted_at,id) where left_credits>0;
 create table if not exists public.sites (
   id uuid primary key default gen_random_uuid(), user_id uuid not null references public.profiles(user_id) on delete cascade,
@@ -655,7 +659,7 @@ begin
   select coalesce(sum(credits),0) into held from credit_allocations where grant_id=r.id;
   take:=greatest(0,r.left_credits-held);
   if take>0 then
-   update credit_grants set left_credits=left_credits-take where id=r.id;
+   update credit_grants set left_credits=left_credits-take,removed_credits=removed_credits+take where id=r.id;
    insert into credit_ledger(user_id,delta,bucket,reason,ref) values(p_user,-take,r.bucket,'grant_expiry',r.id::text);
   end if;
  end loop;
@@ -689,7 +693,7 @@ begin
    where user_id=p_user and bucket='plan' and source<>'trial_grant' and tier is not distinct from p_tier;
   take:=least(excess,(select left_credits from credit_grants where id=g.id));
   if take>0 then
-   update credit_grants set left_credits=left_credits-take where id=g.id;
+   update credit_grants set left_credits=left_credits-take,removed_credits=removed_credits+take where id=g.id;
    insert into credit_ledger(user_id,delta,bucket,reason,ref) values(p_user,-take,'plan','grant_cap',g.id::text||':'||g.id::text);
   end if;
  end if;
@@ -928,31 +932,64 @@ create table if not exists public.credit_refunds (
  payment_ref text not null, adjustment_ref text not null, share numeric not null check(share>0 and share<=1),
  created_at timestamptz not null default now(), primary key(user_id,payment_ref,adjustment_ref)
 );
+alter table credit_refunds add column if not exists scope text not null default 'all';
 alter table credit_refunds enable row level security;
 drop policy if exists own_read on credit_refunds;
 create policy own_read on credit_refunds for select to authenticated using(auth.uid()=user_id);
 
-create or replace function public.bid_refund(p_user uuid,p_ref text,p_adjustment text,p_share numeric,p_now timestamptz default now()) returns jsonb
+-- B7: zero-value refund markers are written once per (user, ref, reason); replays used to duplicate them.
+delete from credit_ledger a using credit_ledger b where a.user_id=b.user_id and a.reason=b.reason and a.ref=b.ref
+ and a.reason in ('payment_refund','grant_refund') and a.delta=0 and a.id>b.id;
+create unique index if not exists credit_ledger_refund_markers_once on public.credit_ledger(user_id,ref,reason)
+ where reason in ('payment_refund','grant_refund') and ref is not null;
+
+-- p_scope (B2): 'all' (whole transaction, no line items known), 'plan' (the plan line: plan, annual slices,
+-- upgrade lots) or 'price:<paddle price id>' (that pack line only). The refunded amount is taken from what
+-- is left of each lot; credits already SPENT from it become debt (expired or trimmed credits do not).
+drop function if exists public.bid_refund(uuid,text,text,numeric,timestamptz);
+create or replace function public.bid_refund(p_user uuid,p_ref text,p_adjustment text,p_share numeric,p_now timestamptz default now(),p_scope text default null) returns jsonb
 language plpgsql security definer set search_path=public,pg_temp as $$
-declare r record; held bigint; take bigint; taken bigint:=0; prior numeric;
+declare r record; held bigint; take bigint; owed bigint; target bigint; taken bigint:=0; debt_added bigint:=0; prior numeric; v_scope text:=coalesce(p_scope,'all'); v_price text;
 begin
  perform bid_v12_refresh(p_user,p_now);
  if p_share<=0 or p_share>1 then raise exception 'invalid refund share'; end if;
+ if v_scope not in ('all','plan') and not starts_with(v_scope,'price:') then raise exception 'invalid refund scope'; end if;
+ v_price:=case when starts_with(v_scope,'price:') then substr(v_scope,7) end;
  select share into prior from credit_refunds where user_id=p_user and payment_ref=p_ref and adjustment_ref=p_adjustment;
  if prior is not null and prior<>p_share then raise exception 'refund adjustment changed'; end if;
- insert into credit_refunds(user_id,payment_ref,adjustment_ref,share,created_at) values(p_user,p_ref,p_adjustment,p_share,p_now) on conflict do nothing;
- for r in select * from credit_grants where user_id=p_user and (ref=p_ref or payment_ref=p_ref or starts_with(ref,p_ref||':')) loop
+ insert into credit_refunds(user_id,payment_ref,adjustment_ref,share,created_at,scope) values(p_user,p_ref,p_adjustment,p_share,p_now,v_scope) on conflict do nothing;
+ for r in select * from credit_grants where user_id=p_user and (ref=p_ref or payment_ref=p_ref or starts_with(ref,p_ref||':'))
+  and (v_scope='all' or (v_scope='plan' and bucket='plan') or (v_price is not null and ref=p_ref||':'||v_price)) order by expires_at,granted_at,id loop
   if exists(select 1 from credit_ledger where user_id=p_user and reason='grant_refund' and ref=p_adjustment||':'||r.id) then continue; end if;
   select coalesce(sum(credits),0) into held from credit_allocations where grant_id=r.id;
   if held>0 then raise exception 'refund waits for reserved work' using errcode='55P03'; end if;
-  take:=least(round(coalesce(r.refund_base,r.credits)*p_share)::bigint,r.left_credits);
-  update credit_grants set left_credits=left_credits-take where id=r.id;
-  insert into credit_ledger(user_id,delta,bucket,reason,ref,created_at) values(p_user,-take,r.bucket,'grant_refund',p_adjustment||':'||r.id,p_now);
-  taken:=taken+take;
+  target:=round(coalesce(r.refund_base,r.credits)*p_share)::bigint;
+  take:=least(target,r.left_credits);
+  owed:=least(target-take,greatest(0,r.credits-r.left_credits-r.removed_credits-r.refund_debt));
+  update credit_grants set left_credits=left_credits-take,removed_credits=removed_credits+take,refund_debt=refund_debt+owed where id=r.id;
+  if owed>0 then update credit_accounts set debt=debt+owed,debt_since=coalesce(debt_since,p_now) where user_id=p_user; end if;
+  insert into credit_ledger(user_id,delta,bucket,reason,ref,created_at) values(p_user,-(take+owed),r.bucket,'grant_refund',p_adjustment||':'||r.id,p_now);
+  taken:=taken+take; debt_added:=debt_added+owed;
  end loop;
- update credit_periods set refund_share=greatest(refund_share,least(1,(select sum(share) from credit_refunds where user_id=p_user and payment_ref=p_ref))) where transaction_ref=p_ref and user_id=p_user;
+ -- Refunded-but-spent credits are owed like an action charge: other available lots pay them first (FIFO),
+ -- only a shortfall stays as debt (repaid by the next grant).
+ if debt_added>0 then
+  for r in select * from credit_grants where user_id=p_user and left_credits>0 and expires_at>p_now order by expires_at,granted_at,id loop
+   select debt into owed from credit_accounts where user_id=p_user;
+   exit when owed<=0;
+   select coalesce(sum(credits),0) into held from credit_allocations where grant_id=r.id;
+   take:=least(owed,greatest(0,r.left_credits-held));
+   if take>0 then
+    update credit_grants set left_credits=left_credits-take where id=r.id;
+    update credit_accounts set debt=debt-take,debt_since=case when debt=take then null else debt_since end where user_id=p_user;
+   end if;
+  end loop;
+ end if;
+ if v_scope in ('all','plan') then
+  update credit_periods set refund_share=greatest(refund_share,least(1,(select sum(share) from credit_refunds where user_id=p_user and payment_ref=p_ref and scope in ('all','plan')))) where transaction_ref=p_ref and user_id=p_user;
+ end if;
  insert into credit_ledger(user_id,delta,bucket,reason,ref,created_at) values(p_user,0,'plan','payment_refund',p_adjustment||':'||p_ref,p_now) on conflict do nothing;
- return jsonb_build_object('ok',true,'taken',taken);
+ return jsonb_build_object('ok',true,'taken',taken,'debt',debt_added);
 end $$;
 
 create or replace function public.bid_v12_replay_refunds(p_user uuid,p_ref text,p_now timestamptz default now()) returns void
@@ -961,23 +998,68 @@ declare r record;
 begin
  perform bid_v12_lock(p_user);
  for r in select * from credit_refunds where user_id=p_user and payment_ref=p_ref order by created_at,adjustment_ref loop
-  perform bid_refund(p_user,p_ref,r.adjustment_ref,r.share,p_now);
+  perform bid_refund(p_user,p_ref,r.adjustment_ref,r.share,p_now,r.scope);
  end loop;
+end $$;
+
+-- B2: one Paddle adjustment → one bid_refund per line item (adjustment.items[].item_id → the transaction's
+-- details.line_items[].price_id → plan or pack lot). Without line items the whole-transaction share applies.
+-- Once applied, an adjustment always replays with its recorded lines, so retries are deterministic.
+create or replace function public.bid_v12_apply_adjustment(p_user uuid,p_adjustment jsonb,p_now timestamptz default now()) returns jsonb
+language plpgsql security definer set search_path=public,pg_temp as $$
+declare txn text:=p_adjustment->>'transaction_id'; adj text:=p_adjustment->>'id'; paid jsonb; item jsonb; line jsonb; v_price text; v_scope text;
+ line_total numeric; amount numeric; total numeric; v_share numeric; r jsonb; stored record; taken bigint:=0; owed bigint:=0; lines jsonb:='[]'::jsonb;
+begin
+ perform bid_v12_lock(p_user);
+ if txn is null or adj is null then raise exception 'invalid adjustment'; end if;
+ if p_adjustment->>'action' is distinct from 'refund' or p_adjustment->>'status' is distinct from 'approved' then return jsonb_build_object('ok',true,'ignored',true); end if;
+ if exists(select 1 from credit_refunds where user_id=p_user and payment_ref=txn and (adjustment_ref=adj or starts_with(adjustment_ref,adj||'#'))) then
+  for stored in select * from credit_refunds where user_id=p_user and payment_ref=txn and (adjustment_ref=adj or starts_with(adjustment_ref,adj||'#')) order by adjustment_ref loop
+   r:=bid_refund(p_user,txn,stored.adjustment_ref,stored.share,p_now,stored.scope);
+   taken:=taken+(r->>'taken')::bigint; owed:=owed+(r->>'debt')::bigint;
+   lines:=lines||jsonb_build_object('scope',stored.scope,'share',stored.share,'taken',r->'taken','debt',r->'debt');
+  end loop;
+  return jsonb_build_object('ok',true,'taken',taken,'debt',owed,'lines',lines,'share',case when jsonb_array_length(lines)=1 then lines#>'{0,share}' end);
+ end if;
+ select payload->'data' into paid from billing_events where user_id=p_user and type='transaction.completed' and ref=txn order by processed_at desc limit 1;
+ total:=coalesce((paid#>>'{details,totals,total}')::numeric,(paid#>>'{totals,total}')::numeric,0);
+ if jsonb_typeof(p_adjustment->'items')='array' and jsonb_array_length(p_adjustment->'items')>0 and jsonb_typeof(paid#>'{details,line_items}')='array' then
+  for item in select value from jsonb_array_elements(p_adjustment->'items') loop
+   continue when item->>'type'='tax'; -- a tax-only correction does not change what was bought
+   line:=null;
+   select value into line from jsonb_array_elements(paid#>'{details,line_items}') where value->>'id'=item->>'item_id' limit 1;
+   amount:=coalesce((item->>'amount')::numeric,(item#>>'{totals,total}')::numeric);
+   if line is null then
+    v_scope:='all'; line_total:=nullif(total,0);
+   else
+    v_price:=line->>'price_id'; line_total:=nullif((line#>>'{totals,total}')::numeric,0);
+    v_scope:=case when exists(select 1 from settings st,jsonb_array_elements(case when jsonb_typeof(st.value->'packs')='array' then st.value->'packs' else '[]'::jsonb end) pk where st.key='billing.catalog' and pk->>'paddlePriceId'=v_price)
+      or exists(select 1 from credit_grants where user_id=p_user and ref=txn||':'||v_price and bucket='topup') then 'price:'||v_price else 'plan' end;
+   end if;
+   v_share:=case when item->>'type'='full' or line_total is null or amount is null then 1 else least(1,amount/line_total) end;
+   continue when v_share<=0;
+   r:=bid_refund(p_user,txn,adj||'#'||coalesce(item->>'item_id','item'),v_share,p_now,v_scope);
+   taken:=taken+(r->>'taken')::bigint; owed:=owed+(r->>'debt')::bigint;
+   lines:=lines||jsonb_build_object('scope',v_scope,'share',v_share,'taken',r->'taken','debt',r->'debt');
+  end loop;
+  return jsonb_build_object('ok',true,'taken',taken,'debt',owed,'lines',lines,'share',case when jsonb_array_length(lines)=1 then lines#>'{0,share}' end);
+ end if;
+ amount:=coalesce((p_adjustment#>>'{totals,total}')::numeric,0);
+ v_share:=case when total>0 and amount>0 then least(1,amount/total) else 1 end;
+ r:=bid_refund(p_user,txn,adj,v_share,p_now,null);
+ return jsonb_build_object('ok',true,'taken',r->'taken','debt',r->'debt','share',v_share,'lines',jsonb_build_array(jsonb_build_object('scope','all','share',v_share,'taken',r->'taken','debt',r->'debt')));
 end $$;
 
 -- Verified webhook payloads may arrive out of order; recover adjustments once the owner is known.
 create or replace function public.bid_v12_payment_refunds(p_user uuid,p_ref text,p_now timestamptz default now()) returns jsonb
 language plpgsql security definer set search_path=public,pg_temp as $$
-declare r record; total numeric; share numeric;
+declare r record;
 begin
  perform bid_v12_lock(p_user);
- select coalesce((payload#>>'{data,details,totals,total}')::numeric,(payload#>>'{data,totals,total}')::numeric,0) into total
- from billing_events where user_id=p_user and type='transaction.completed' and ref=p_ref order by processed_at desc limit 1;
- if found then
+ if exists(select 1 from billing_events where user_id=p_user and type='transaction.completed' and ref=p_ref) then
   for r in select distinct on (payload#>>'{data,id}') payload from billing_events where type in ('adjustment.created','adjustment.updated')
    and payload#>>'{data,transaction_id}'=p_ref and payload#>>'{data,action}'='refund' and payload#>>'{data,status}'='approved' order by payload#>>'{data,id}',processed_at desc loop
-   share:=case when total>0 and coalesce((r.payload#>>'{data,totals,total}')::numeric,0)>0 then least(1,(r.payload#>>'{data,totals,total}')::numeric/total) else 1 end;
-   perform bid_refund(p_user,p_ref,r.payload#>>'{data,id}',share,p_now);
+   perform bid_v12_apply_adjustment(p_user,r.payload->'data',p_now);
   end loop;
  end if;
  perform bid_v12_replay_refunds(p_user,p_ref,p_now);
@@ -1456,7 +1538,7 @@ begin
    receipt:=bid_grant(p_user,amount,'plan_grant',ref,period.tier,at,at+make_interval(months=>period.validity_months),p_now);
    update credit_grants set refund_base=period.monthly_credits,payment_ref=period.transaction_ref where id=(receipt->>'id')::uuid;
    -- This slice was already reduced by these adjustments; retries must not refund it again.
-   insert into credit_ledger(user_id,delta,bucket,reason,ref,created_at) select p_user,0,'plan','grant_refund',adjustment_ref||':'||(receipt->>'id'),p_now from credit_refunds where user_id=p_user and payment_ref=period.transaction_ref on conflict do nothing;
+   insert into credit_ledger(user_id,delta,bucket,reason,ref,created_at) select p_user,0,'plan','grant_refund',adjustment_ref||':'||(receipt->>'id'),p_now from credit_refunds where user_id=p_user and payment_ref=period.transaction_ref and scope in ('all','plan') on conflict do nothing;
    given:=given+amount;
   end loop;
   update credit_periods set granted_through=greatest(granted_through,k) where transaction_ref=period.transaction_ref;

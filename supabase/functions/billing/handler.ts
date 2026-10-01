@@ -242,33 +242,37 @@ async function handleWebhook(req: Request, deps: BillingDeps): Promise<Response>
         result = duplicate && !granted.length ? { duplicateTransaction: txn } : { transaction: txn, granted };
       }
     } else if ((type === "adjustment.created" || type === "adjustment.updated") && d.action === "refund" && d.status === "approved") {
-      // a refund takes back what is left of the tokens that transaction granted (spent tokens stay spent),
-      // in proportion when only part of the payment is refunded (audit C12)
+      // A refund is applied per Paddle line item (plan vs pack) by bid_v12_apply_adjustment (B2): it takes
+      // what is left of the matching lots and records spent credits as debt. Without line items the
+      // refunded share of the whole transaction applies (audit C12).
       const txn = String(d.transaction_id ?? "");
-      const { data: paid } = await db.from("billing_events").select("user_id,payload").eq("type", "transaction.completed").eq("ref", txn).limit(1);
-      const originalEvent = (paid ?? [])[0] as Row | undefined;
-      const original = originalEvent?.payload?.data as Row | undefined;
-      // every ref this transaction can have granted under: the plan (txn) and each pack (txn:price)
-      const refs = [txn, ...catalog.packs.filter((p) => p.paddlePriceId).map((p) => `${txn}:${p.paddlePriceId}`)];
-      const { data: rows } = await db.from("credit_ledger").select("user_id,delta,bucket,reason,ref").in("ref", refs);
-      const granted = (rows ?? []).filter((g: Row) => g.reason === "plan_grant" || g.reason === "topup");
-      const refunded = Number(d.totals?.total ?? 0);
-      const total = Number(original?.details?.totals?.total ?? original?.totals?.total ?? 0);
-      const share = refunded > 0 && total > 0 ? Math.min(1, refunded / total) : 1;
+      const users = await adjustmentOwners(db, catalog, txn);
       const taken: Row[] = [];
-      const users = [...new Set(granted.map((g:Row)=>String(g.user_id)))];
-      if(!users.length && originalEvent?.user_id) users.push(originalEvent.user_id);
+      let share: unknown = null, debt = 0;
       for (const owner of users) {
-        const receipt=await creditRpc(db,"bid_refund",{p_user:owner,p_ref:txn,p_adjustment:String(d.id ?? txn),p_share:share,p_now:now.toISOString()});
-        if(receipt.taken>0) taken.push({tokens:receipt.taken});
+        const receipt=await creditRpc(db,"bid_v12_apply_adjustment",{p_user:owner,p_adjustment:{...d,id:String(d.id ?? txn)},p_now:now.toISOString()});
+        if(Number(receipt.taken)>0) taken.push({tokens:Number(receipt.taken)});
+        debt += Number(receipt.debt ?? 0); share = receipt.share ?? share;
       }
-      result = { refund: txn, taken, share };
+      result = { refund: txn, taken, share, debt };
     }
     return json(200, { ok: true, ...result });
   } catch (e) {
     await db.from("billing_events").delete().eq("id", eventId); // let Paddle's retry process it again
     return internalError("billing webhook", e);
   }
+}
+
+/** Accounts a Paddle transaction granted credits to: the lots it created, else the stored payment's owner. */
+async function adjustmentOwners(db: DbClient, catalog: Catalog, txn: string): Promise<string[]> {
+  const { data: paid } = await db.from("billing_events").select("user_id").eq("type", "transaction.completed").eq("ref", txn).limit(1);
+  // every ref this transaction can have granted under: the plan (txn) and each pack (txn:price)
+  const refs = [txn, ...catalog.packs.filter((p) => p.paddlePriceId).map((p) => `${txn}:${p.paddlePriceId}`)];
+  const { data: rows } = await db.from("credit_ledger").select("user_id,reason,ref").in("ref", refs);
+  const users = [...new Set((rows ?? []).filter((g: Row) => g.reason === "plan_grant" || g.reason === "topup").map((g: Row) => String(g.user_id)))];
+  const owner = (paid ?? [])[0]?.user_id;
+  if (!users.length && owner) users.push(String(owner));
+  return users;
 }
 
 // ---------------------------------------------------------------- Paddle API

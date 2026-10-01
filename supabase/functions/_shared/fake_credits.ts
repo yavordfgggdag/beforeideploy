@@ -6,7 +6,7 @@ import catalog from "./plans-catalog.json" with { type: "json" };
 import { addMonths } from "./billing-period.ts";
 
 export function fakeCreditRpc(db: FakeDb, fn: string, a: Row): Row | null {
-  if(!["bid_v12_payment_refunds","bid_record_payment","bid_accrue_periods","bid_scheduler_credits","bid_site_burn","bid_monitor_register","bid_start_trial","bid_upgrade_grant","bid_grant","bid_refund","bid_credit_status","bid_enforce_sites","bid_hold","bid_settle","bid_release"].includes(fn)) return null;
+  if(!["bid_v12_apply_adjustment","bid_v12_payment_refunds","bid_record_payment","bid_accrue_periods","bid_scheduler_credits","bid_site_burn","bid_monitor_register","bid_start_trial","bid_upgrade_grant","bid_grant","bid_refund","bid_credit_status","bid_enforce_sites","bid_hold","bid_settle","bid_release"].includes(fn)) return null;
   const t=db.tables, user=a.p_user, now=new Date(a.p_now ?? db.clock()), iso=now.toISOString();
   const rows=(name:string)=>t[name]??=[];
   const mine=(name:string)=>rows(name).filter(r=>r.user_id===user);
@@ -107,6 +107,13 @@ export function fakeCreditRpc(db: FakeDb, fn: string, a: Row): Row | null {
     rows("credit_grants").push({id:crypto.randomUUID(),user_id:user,ref:a.p_ref,source:a.p_source,bucket,credits:a.p_credits,left_credits:a.p_credits,granted_at:at.toISOString(),expires_at:expires});
     ledger(a.p_credits,bucket,a.p_source,a.p_ref,{expires_at:expires,created_at:at.toISOString()});refresh();
     return {ok:true,granted:a.p_credits,expiresAt:expires};
+  }
+  if(fn==="bid_v12_apply_adjustment") { // whole-transaction share only; line items are proved against SQL
+    const d=a.p_adjustment, paid=rows("billing_events").find(e=>e.type==="transaction.completed"&&e.ref===d.transaction_id)?.payload?.data;
+    const total=Number(paid?.details?.totals?.total ?? paid?.totals?.total ?? 0), refunded=Number(d.totals?.total ?? 0);
+    const share=refunded>0&&total>0?Math.min(1,refunded/total):1;
+    const r=fakeCreditRpc(db,"bid_refund",{...a,p_ref:d.transaction_id,p_adjustment:d.id,p_share:share}) as Row;
+    return {ok:true,taken:r.taken,debt:0,share};
   }
   if(fn==="bid_refund") {
     if(mine("credit_ledger").some(l=>l.reason==="payment_refund"&&l.ref===a.p_adjustment))return {ok:true,taken:0,duplicate:true};
