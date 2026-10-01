@@ -338,7 +338,7 @@
   "setup.group.ai": "AI помощници",
   "setup.group.base": "Основа",
   "setup.group.hosting": "Хостинг и GitHub",
-  "setup.identity.detail": "Ще ги взема автоматично от GitHub акаунта ти",
+  "setup.identity.detail": "Името на автора в къмитите ти. Въведи име и имейл тук или влез в GitHub и ги вземи от профила си.",
   "setup.identity.failed": "Не успях да прочета GitHub профила.",
   "setup.identity.label": "Git име и имейл",
   "setup.identity.needsLogin": "Нужен е GitHub вход първо",
@@ -816,5 +816,7 @@
   "billing.invalidDomain": "Въведете валидно име на домейн без адрес на страница или път.",
   "billing.hostingNotReady": "Управляваният хостинг за този сайт още не е настроен.",
   "billing.receiptPending": "Публикуването е изпратено. Отчетът за кредитите ще се синхронизира при следващото облачно действие.",
-  "billing.intervalChange": "Смяната между месечно и годишно плащане още не е достъпна. За да смените плана, запазете текущия период на плащане."
+  "billing.intervalChange": "Смяната между месечно и годишно плащане още не е достъпна. За да смените плана, запазете текущия период на плащане.",
+  "setup.identity.detailGitHub": "Мога да ги взема от GitHub профила ти",
+  "setup.identity.useForm": "Въведи име и имейл в Настройка (не е нужен GitHub вход)."
 }

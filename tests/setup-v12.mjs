@@ -122,7 +122,7 @@ test('B1: cancel kills the npm tree at once, cleans staging and reports cancelle
   const took = Date.now() - t0;
   if (code === 'timeout') child.kill('SIGKILL');
   try { process.kill(-npmPid, 'SIGKILL'); } catch {}
-  assert.equal(code, 130); assert.ok(took < 2600, `engine exited after ${took} ms (app SIGKILLs at 8 s)`);
+  assert.equal(code, 130); assert.ok(took < 4500, `engine exited after ${took} ms (grace 1.5 s; the old 5 s grace lost to the app SIGKILL)`);
   assert.ok(/"code":"cancelled"/.test(out), 'cancelled result line');
   assert.equal(fs.readdirSync(tools).some(n => n.startsWith('.staging-')), false, 'staging removed');
   assert.equal(fs.existsSync(path.join(env.BID_APP_DIR, 'setup.lock')), false, 'lock released');
@@ -177,4 +177,56 @@ test('B2: reinstalls keep only the active and the previous package folder', asyn
   // a failed install never prunes
   await assert.rejects(() => installManaged('wrangler', { run: async () => ({ code: 1, tail: ['x'] }) }));
   assert.equal(ofId().length, 2);
+});
+
+// B3 runs last: it adds a project, a working Netlify CLI, Git and a fake gh to the shared fixture.
+test('B3: Netlify-only project with .git and no GitHub is not blocked by the Git identity', async () => {
+  const realGit = spawnSync('/bin/sh', ['-c', 'command -v git'], { env: { PATH: originalPath }, encoding: 'utf8' }).stdout.trim();
+  assert.ok(realGit, 'git is needed for this test');
+  fs.symlinkSync(realGit, path.join(bin, 'git'));
+  script('netlify', 'echo "netlify-cli/23.0.0"');
+  const cfg = path.join(process.env.HOME, '.config', 'netlify'); fs.mkdirSync(cfg, { recursive: true });
+  fs.writeFileSync(path.join(cfg, 'config.json'), JSON.stringify({ userId: 'u', users: { u: { email: 'a@b.c', auth: { token: 't' } } } }));
+  const proj = path.join(tmp, 'site'); fs.mkdirSync(proj);
+  fs.writeFileSync(path.join(proj, 'index.html'), '<h1>x</h1>');
+  assert.equal(spawnSync('git', ['init', '-q'], { cwd: proj }).status, 0);
+  const { upsertProject } = await import('../engine/src/store.mjs');
+  upsertProject(proj);
+  const s = await setupStatus();
+  const identity = s.items.find(i => i.id === 'git-identity');
+  assert.equal(s.items.find(i => i.id === 'git').required, true, 'the project has .git');
+  assert.equal(identity.ok, false); assert.equal(identity.required, false, 'no GitHub: identity is a recommendation');
+  assert.equal(identity.action?.type, 'app', 'the in-app form is offered');
+  const r = await setupAuto({ yes: true, preflight: async () => ({}) });
+  assert.equal(r.ok, true, JSON.stringify(r.steps));
+  // with --optional the identity step ends as a user step (the form), never as blocked on gh-auth
+  const o = await setupAuto({ yes: true, includeOptional: true, preflight: async () => ({}) });
+  const step = o.steps.find(x => x.id === 'git-identity');
+  assert.equal(step.status, 'skipped'); assert.equal(step.reason, 'user_action');
+  assert.equal(o.blocked.includes('git-identity'), false);
+});
+
+test('B3: a GitHub sign-in earlier in the same auto run lets Git identity come from GitHub', async () => {
+  script('gh', [
+    'M="$HOME/.gh-ok"',
+    'case "$1 $2" in',
+    '  "--version "*) echo "gh version 2.101.0"; exit 0;;',
+    '  "auth token") [ -f "$M" ] && { echo tok; exit 0; }; exit 1;;',
+    '  "auth login") : > "$M"; exit 0;;',
+    '  "auth setup-git") exit 0;;',
+    '  "api user") echo \'{"login":"octo","id":42,"name":"Octo Cat","email":null}\'; exit 0;;',
+    'esac',
+    'exit 1',
+  ].join('\n'));
+  const { listProjects, updateProject } = await import('../engine/src/store.mjs');
+  updateProject(listProjects()[0].key, { hosting: 'ghpages' });
+  const before = await setupStatus();
+  assert.equal(before.items.find(i => i.id === 'gh-auth').ok, false);
+  assert.equal(before.items.find(i => i.id === 'git-identity').required, true, 'GitHub Pages needs the identity');
+  const r = await setupAuto({ yes: true, preflight: async () => ({}) });
+  const st = id => r.steps.find(x => x.id === id)?.status;
+  assert.equal(st('gh-auth'), 'pass'); assert.equal(st('git-identity'), 'pass', JSON.stringify(r.steps));
+  assert.equal(r.ok, true, JSON.stringify(r));
+  const name = spawnSync('git', ['config', '--global', 'user.name'], { encoding: 'utf8', env: process.env }).stdout.trim();
+  assert.equal(name, 'Octo Cat');
 });
