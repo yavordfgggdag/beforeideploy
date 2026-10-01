@@ -1830,6 +1830,42 @@ const v13Fixture = {
   'index.html': HTML,
 };
 
+t('V13 AI история: app/cache папки под HOME — patch/undo пътищата остават абсолютни; review, apply и undo след рестарт работят', () => {
+  // the macOS default: ~/Library/Application Support and ~/Library/Caches — redaction used to turn them into `~/…`
+  const homeEnv = { BID_APP_DIR: path.join(ENV.HOME, 'Library', 'Application Support', 'BeforeIDeploy'), BID_CACHE_DIR: path.join(ENV.HOME, 'Library', 'Caches', 'BeforeIDeploy') };
+  const run = (...args) => bidEnv(homeEnv, ...args);
+  // the same signed-in account as the rest of the suite (session, cloud config, cached profile)
+  for (const f of ['cloud.json', 'profile.json', path.join('secrets', 'session.json')]) {
+    const src = path.join(ENV.BID_APP_DIR, f);
+    if (!fs.existsSync(src)) continue;
+    fs.mkdirSync(path.dirname(path.join(homeEnv.BID_APP_DIR, f)), { recursive: true });
+    fs.copyFileSync(src, path.join(homeEnv.BID_APP_DIR, f));
+  }
+  setKey(homeEnv);
+  const app = mk('v13-home-app', aiFixture);
+  run('project', 'add', '--path', app);
+  run('check', '--project', app);
+  const issue = run('issues', '--project', app).data.issues.find((i) => i.step === 'build');
+  assert(issue, 'build issue');
+  const p = run('ai', 'chat', '--project', app, '--action', 'propose', '--issue', issue.id, '--files', 'src/app.js', '--message', '[[eval:propose-ok]]');
+  assert(p.result.ok && p.data.patchFile && p.data.patchFile.startsWith(ENV.HOME), JSON.stringify(p.result));
+  // "restart": the app reloads the turn from history and acts on what it finds there
+  const saved = () => run('ai', 'history', '--project', app).data.entries.find((e) => e.historyId === p.data.historyId);
+  const turn = saved();
+  assert(turn.patchFile === p.data.patchFile && turn.result.patchFile === p.data.patchFile, 'the saved patch path is the real one: ' + turn.patchFile);
+  const rev = run('ai', 'chat', '--project', app, '--action', 'review', '--patch-file', turn.patchFile, '--message', '[[eval:review-ok]]');
+  assert(rev.result.ok && rev.data.valid, 'review from history: ' + JSON.stringify(rev.result));
+  const ap = run('ai', 'apply', '--project', app, '--patch-file', turn.patchFile, '--yes');
+  assert(ap.result.ok && ap.data.applied.join() === 'src/app.js', 'apply from history: ' + JSON.stringify(ap.result));
+  const applied = saved().result.applied;
+  assert(applied && applied.undoFile === ap.data.undoFile && applied.undoFile.startsWith(ENV.HOME), 'apply state reached the saved turn: ' + JSON.stringify(applied));
+  const u = run('ai', 'undo', '--project', app, '--expected-undo-file', applied.undoFile, '--yes');
+  assert(u.result.ok && u.data.restored.join() === 'src/app.js', 'undo from history: ' + JSON.stringify(u.result));
+  assert(saved().result.undone === true, 'undo state reached the saved turn');
+  assert(fs.readFileSync(path.join(app, 'src/app.js'), 'utf8') === aiFixture['src/app.js'], 'the file is back');
+  run('account', 'keys', 'delete', '--provider', 'anthropic');
+});
+
 t('V13 AI обхват: replace без съдържание, съседен/нов файл, placeholders и редактирани файлове се отказват; нов файл само с --allow-create', () => {
   setKey();
   const app = mk('v13-scope-app', v13Fixture);
