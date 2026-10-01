@@ -24,17 +24,33 @@ const writeLock = (prefix, id, patch = {}) => { const t = TOOL_PACKAGES[id];
 after(() => { process.env.PATH = originalPath; fs.rmSync(tmp,{recursive:true,force:true}); });
 
 test('Finder PATH: bundled engine exposes Node, npm and managed tools', () => {
+  // engine/bid only finds Node; the PATH comes from the engine itself (platform/boot.mjs), on every OS
   const engine=path.join(tmp,'engine'); fs.mkdirSync(engine);
   fs.copyFileSync(path.join(root,'engine/bid'),path.join(engine,'bid'));
   fs.mkdirSync(path.join(engine,'src'));
-  fs.writeFileSync(path.join(engine,'src/bid.mjs'), 'console.log(JSON.stringify({runtime:process.env.BID_NODE_RUNTIME,path:process.env.PATH,version:process.version}))');
-  const arch=spawnSync('/usr/bin/uname',['-m'],{encoding:'utf8'}).stdout.trim();
-  const runtime=path.join(engine,'runtime',arch,'bin'); fs.mkdirSync(runtime,{recursive:true});
+  fs.cpSync(path.join(root,'engine/src/platform'),path.join(engine,'src/platform'),{recursive:true});
+  fs.writeFileSync(path.join(engine,'src/bid.mjs'), "import './platform/boot.mjs'; console.log(JSON.stringify({runtime:process.env.BID_NODE_RUNTIME,path:process.env.PATH,version:process.version}))");
+  // runtime/<platform>-<arch>: Node's names, arm64 even where uname says aarch64
+  const runtime=path.join(engine,'runtime',`${process.platform}-${process.arch}`,'bin'); fs.mkdirSync(runtime,{recursive:true});
   fs.symlinkSync(process.execPath,path.join(runtime,'node'));
-  const r=spawnSync('/bin/zsh',['-f',path.join(engine,'bid')],{env:{HOME:process.env.HOME,PATH:'/usr/bin:/bin',BID_APP_DIR:process.env.BID_APP_DIR},encoding:'utf8'});
-  assert.equal(r.status,0,r.stderr); const data=JSON.parse(r.stdout);
-  assert.equal(data.runtime,'bundled'); assert.equal(data.path.split(':')[0],path.join(TOOLS_DIR,'bin'));
-  assert.equal(data.path.split(':').at(-1),fs.realpathSync(runtime));
+  const env={HOME:process.env.HOME,PATH:'/usr/bin:/bin',BID_APP_DIR:process.env.BID_APP_DIR};
+  // /bin/sh everywhere; `zsh -f` as the macOS app and the launchd agent start it
+  for (const shell of [['/bin/sh'], ...(fs.existsSync('/bin/zsh') ? [['/bin/zsh','-f']] : [])]) {
+    const r=spawnSync(shell[0],[...shell.slice(1),path.join(engine,'bid')],{env,encoding:'utf8'});
+    assert.equal(r.status,0,shell.join(' ')+': '+r.stderr); const data=JSON.parse(r.stdout);
+    assert.equal(data.runtime,'bundled'); assert.equal(data.path.split(':')[0],path.join(TOOLS_DIR,'bin'));
+    assert.equal(data.path.split(':').at(-1),fs.realpathSync(runtime));
+    assert.ok(data.path.split(':').includes('/usr/bin'),'the user PATH stays');
+  }
+  if (process.platform === 'darwin') {
+    // the folders scripts/bundle-node.sh still writes (runtime/arm64, runtime/x86_64) keep working
+    fs.rmSync(path.join(engine,'runtime'),{recursive:true});
+    const legacy=path.join(engine,'runtime',spawnSync('/usr/bin/uname',['-m'],{encoding:'utf8'}).stdout.trim(),'bin'); fs.mkdirSync(legacy,{recursive:true});
+    fs.symlinkSync(process.execPath,path.join(legacy,'node'));
+    const r=spawnSync('/bin/zsh',['-f',path.join(engine,'bid')],{env,encoding:'utf8'});
+    assert.equal(r.status,0,r.stderr); const data=JSON.parse(r.stdout);
+    assert.equal(data.runtime,'bundled'); assert.equal(data.path.split(':').at(-1),fs.realpathSync(legacy));
+  }
 });
 
 test('status uses executing Node; broken CLI is not installed; Netlify alone does not require Git', async () => {
@@ -337,8 +353,9 @@ test('B7: netlify login runs with BROWSER=none and still announces the authorize
   script('netlify', `printf '%s' "$BROWSER" > ${JSON.stringify(seen)}\necho "Opening https://app.netlify.com/authorize?response_type=ticket&ticket=abc"`);
   const cfg = path.join(process.env.HOME, '.config', 'netlify'); fs.mkdirSync(cfg, { recursive: true });
   fs.writeFileSync(path.join(cfg, 'config.json'), JSON.stringify({ userId: 'u', users: { u: { email: 'a@b.c', auth: { token: 't' } } } }));
-  // a separate engine process: its NDJSON stdout is the contract (and this runner's stdout carries TAP)
-  const r = spawnSync(process.execPath, [path.join(root, 'engine/src/bid.mjs'), 'netlify', 'login'], { env: { ...process.env, PATH: `${bin}:/usr/bin:/bin` }, encoding: 'utf8', timeout: 30000 });
+  // a separate engine process: its NDJSON stdout is the contract (and this runner's stdout carries TAP).
+  // Its own app folder: the engine puts managed tools/bin first on PATH, and earlier tests installed a netlify there.
+  const r = spawnSync(process.execPath, [path.join(root, 'engine/src/bid.mjs'), 'netlify', 'login'], { env: { ...process.env, BID_APP_DIR: path.join(tmp, 'app-b7'), PATH: `${bin}:/usr/bin:/bin` }, encoding: 'utf8', timeout: 30000 });
   const lines = [r.stdout];
   assert.equal(fs.readFileSync(seen, 'utf8'), 'none');
   const code = lines.join('').split('\n').filter(Boolean).map(l => { try { return JSON.parse(l); } catch { return null; } }).find(e => e?.type === 'devicecode');

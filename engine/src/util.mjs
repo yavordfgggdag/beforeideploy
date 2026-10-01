@@ -8,10 +8,14 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { spawn, spawnSync } from 'node:child_process';
 import { t, msg, isMsg } from './i18n.mjs';
+import * as platform from './platform/index.mjs';
 
 export const HOME = os.homedir();
-export const APP_DIR = process.env.BID_APP_DIR || path.join(HOME, 'Library', 'Application Support', 'BeforeIDeploy');
-export const CACHE_DIR = process.env.BID_CACHE_DIR || path.join(HOME, 'Library', 'Caches', 'BeforeIDeploy');
+// per OS (platform/index.mjs dirs): macOS ~/Library/…/BeforeIDeploy, Linux XDG …/before-i-deploy,
+// Windows %APPDATA% / %LOCALAPPDATA%\BeforeIDeploy; BID_APP_DIR / BID_CACHE_DIR override everywhere
+const DIRS = platform.dirs();
+export const APP_DIR = DIRS.appDir;
+export const CACHE_DIR = DIRS.cacheDir;
 // fileURLToPath decodes %20 etc. — the installed engine lives under "Application Support"
 export const ENGINE_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -220,13 +224,16 @@ export function parseArgs(argv) {
 
 // ---------------------------------------------------------------- processes
 
+/** Path of a program on PATH, or null — a pure-Node PATH walk (PATHEXT on Windows), no shell. */
 export function which(cmd) {
-  const r = spawnSync('/bin/sh', ['-c', `command -v "${cmd}"`], { encoding: 'utf8' });
-  return r.status === 0 ? r.stdout.trim() : null;
+  return platform.which(cmd);
 }
 
 export function sh(cmd, args, opts = {}) {
-  const r = spawnSync(cmd, args, {
+  // Windows: `.cmd` shims run through cmd.exe with strict quoting (platform.spawnSpec); POSIX: unchanged
+  const spec = platform.spawnSpec(cmd, args, { env: opts.env || process.env });
+  const r = spawnSync(spec.command, spec.args, {
+    ...spec.options,
     encoding: 'utf8',
     cwd: opts.cwd,
     env: opts.env || process.env,
@@ -251,18 +258,14 @@ export function onChildSpawn(fn) {
   return () => spawnListeners.delete(fn);
 }
 
-/** Kills a process group by leader pid (an orphan left by a killed engine). */
+/** Kills a process group by leader pid (an orphan left by a killed engine); Windows: taskkill /T. */
 export function killGroup(pid, signal = 'SIGKILL') {
-  if (!pid) return false;
-  try { process.kill(-pid, signal); return true; } catch {}
-  try { process.kill(pid, signal); return true; } catch { return false; }
+  return platform.killTree(pid, signal);
 }
 
 function killTree(child, signal = 'SIGTERM') {
   if (!child?.pid) return;
-  try {
-    process.kill(-child.pid, signal);
-  } catch {
+  if (!platform.killTree(child.pid, signal)) {
     try {
       child.kill(signal);
     } catch {}
@@ -308,11 +311,16 @@ export function runStream(cmd, args, { cwd, env, logFile, step, captureStdout = 
     }
     let child;
     try {
-      child = spawn(cmd, args, {
+      const fullEnv = { FORCE_COLOR: '0', NO_COLOR: '1', ...(env || process.env) };
+      // the child's own PATH finds the program (Windows resolves `.cmd` shims through it)
+      const spec = platform.spawnSpec(cmd, args, { env: fullEnv });
+      child = spawn(spec.command, spec.args, {
+        ...spec.options,
         cwd,
-        env: { FORCE_COLOR: '0', NO_COLOR: '1', ...(env || process.env) },
+        env: fullEnv,
         stdio: [input ? 'pipe' : 'ignore', 'pipe', 'pipe'],
-        detached: true,
+        // a process group on POSIX (cancel stops the whole tree); Windows: taskkill /T, no new console
+        ...platform.groupOptions(),
       });
     } catch (e) {
       if (logStream) logStream.end(String(e));
@@ -435,7 +443,7 @@ export function pidAlive(pid) {
 // absolute path: the caller's PATH can be minimal (Finder, tests), and lock identity must not depend on it
 const PS = ['/bin/ps', '/usr/bin/ps'].find(f => fs.existsSync(f)) || 'ps';
 export function pidStartTime(pid) {
-  if (!pid) return null;
+  if (!pid || platform.isWindows()) return null; // Windows: no ps — locks fall back to pid + liveness
   const r = spawnSync(PS, ['-p', String(pid), '-o', 'lstart='], { encoding: 'utf8', timeout: 5000 });
   const text = (r.stdout || '').trim();
   if (r.status !== 0 || !text) return null;

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import './platform/boot.mjs'; // first: PATH and locale for every OS (platform/index.mjs)
 import { discardConversationPatch } from './ai/conversation.mjs';
 import { gitAvailable } from './setup-tools.mjs';
 import { readFileSync, existsSync } from 'node:fs';
