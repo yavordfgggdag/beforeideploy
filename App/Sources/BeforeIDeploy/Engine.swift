@@ -77,14 +77,15 @@ enum EngineError: LocalizedError {
 
 /// Handle for a running engine process (used to cancel long runs).
 /// Cancel is real (WP02, audit A3): SIGTERM first — the engine stops its own child process groups — and
-/// SIGKILL five seconds later if the engine is still there.
+/// SIGKILL eight seconds later if the engine is still there. The engine kills its children at once and
+/// exits within ~2 s (util.mjs CANCEL_GRACE_MS), so its cleanup and `cancelled` result always win this race.
 final class EngineHandle {
     fileprivate var process: Process?
     func cancel() {
         guard let p = process, p.isRunning else { return }
         p.terminate()
         let pid = p.processIdentifier
-        DispatchQueue.global().asyncAfter(deadline: .now() + 5) {
+        DispatchQueue.global().asyncAfter(deadline: .now() + 8) {
             if p.isRunning { kill(pid, SIGKILL) }
         }
     }

@@ -7,6 +7,7 @@ import { ENGINE_DIR, EngineError, sh, which, exists, isDir } from './util.mjs';
 import { upsertProject } from './store.mjs';
 import { repoSlug } from './fixes.mjs';
 import { t, msg } from './i18n.mjs';
+import { gitBin, gitSh } from './gitbin.mjs';
 
 const TEMPLATES_DIR = () => path.join(ENGINE_DIR, 'templates');
 export const LANGS = ['bg', 'en'];
@@ -151,12 +152,12 @@ export function createSite({ template = 'landing', name, dir, lang = 'bg', descr
   // the language-specific files: keep the one for this language, drop the others
   keepLanguage(target, language);
   let git = false;
-  if (which('git')) {
-    let r = sh('git', ['init', '-q', '-b', 'main'], { cwd: target });
-    if (r.code !== 0) r = sh('git', ['init', '-q'], { cwd: target });
+  if (gitBin()) {
+    let r = gitSh(['init', '-q', '-b', 'main'], { cwd: target });
+    if (r.code !== 0) r = gitSh(['init', '-q'], { cwd: target });
     if (r.code === 0) {
-      sh('git', ['add', '-A'], { cwd: target });
-      const c = sh('git', ['-c', 'user.email=beforeideploy@local', '-c', 'user.name=Before I Deploy', 'commit', '-qm', `New site: ${siteName} (${template})`], { cwd: target });
+      gitSh(['add', '-A'], { cwd: target });
+      const c = gitSh(['-c', 'user.email=beforeideploy@local', '-c', 'user.name=Before I Deploy', 'commit', '-qm', `New site: ${siteName} (${template})`], { cwd: target });
       git = c.code === 0;
     }
   }

@@ -244,6 +244,19 @@ export function sh(cmd, args, opts = {}) {
 
 // every running child: lint and typecheck run in parallel, a cancel must stop all of them (audit E5)
 const children = new Set();
+// Spawn listeners (the setup lock records its children so a later run can stop orphans of a killed engine).
+const spawnListeners = new Set();
+export function onChildSpawn(fn) {
+  spawnListeners.add(fn);
+  return () => spawnListeners.delete(fn);
+}
+
+/** Kills a process group by leader pid (an orphan left by a killed engine). */
+export function killGroup(pid, signal = 'SIGKILL') {
+  if (!pid) return false;
+  try { process.kill(-pid, signal); return true; } catch {}
+  try { process.kill(pid, signal); return true; } catch { return false; }
+}
 
 function killTree(child, signal = 'SIGTERM') {
   if (!child?.pid) return;
@@ -256,16 +269,23 @@ function killTree(child, signal = 'SIGTERM') {
   }
 }
 
+// Cancel (audit B1): every child process group gets SIGTERM at once and SIGKILL after CANCEL_GRACE_MS, then
+// the engine reports `cancelled` and exits, so the `exit` handlers (staging cleanup, lock release) run well
+// before the app's own SIGKILL deadline (Engine.swift EngineHandle.cancel, 8 s).
+export const CANCEL_GRACE_MS = 1500;
+let cancelling = false;
 for (const sig of ['SIGTERM', 'SIGINT', 'SIGHUP']) {
   process.on(sig, () => {
+    if (cancelling) return;
+    cancelling = true;
     const running = [...children];
     for (const c of running) killTree(c, 'SIGTERM');
     const finish = () => {
-      for (const c of running) killTree(c, 'SIGKILL');
+      for (const c of new Set([...running, ...children])) killTree(c, 'SIGKILL');
       emit({ type: 'result', ok: false, error: t('run.cancelled'), code: 'cancelled', key: 'run.cancelled' });
       exitAfterFlush(130);
     };
-    if (running.length) setTimeout(finish, 5000); else finish();
+    if (running.length) setTimeout(finish, CANCEL_GRACE_MS); else finish();
   });
 }
 
@@ -281,6 +301,11 @@ export function runStream(cmd, args, { cwd, env, logFile, step, captureStdout = 
     // `display` keeps wrapper arguments (the sandbox profile) and anything sensitive out of the log header
     if (logStream) logStream.write(`$ ${display || `${cmd} ${args.join(' ')}`}\n# ${cwd || process.cwd()}\n# ${new Date().toString()}\n\n`);
 
+    // a cancel in progress: never start new work (the next setup step) in the grace window
+    if (cancelling) {
+      if (logStream) logStream.end(`${t('run.cancelled')}\n`);
+      return resolve({ code: 130, stdout: '', tail: [t('run.cancelled')], duration: 0 });
+    }
     let child;
     try {
       child = spawn(cmd, args, {
@@ -294,6 +319,7 @@ export function runStream(cmd, args, { cwd, env, logFile, step, captureStdout = 
       return resolve({ code: 127, stdout: '', tail: [String(e.message)], duration: 0 });
     }
     children.add(child);
+    for (const fn of spawnListeners) { try { fn(child); } catch {} }
     child.stdin?.on('error', () => {});
 
     const tail = [];
@@ -406,9 +432,11 @@ export function pidAlive(pid) {
  * instance, so a lock left by a dead process whose pid was reused is not mistaken for a live holder.
  * null when ps cannot tell (the caller then falls back to pidAlive alone).
  */
+// absolute path: the caller's PATH can be minimal (Finder, tests), and lock identity must not depend on it
+const PS = ['/bin/ps', '/usr/bin/ps'].find(f => fs.existsSync(f)) || 'ps';
 export function pidStartTime(pid) {
   if (!pid) return null;
-  const r = spawnSync('ps', ['-p', String(pid), '-o', 'lstart='], { encoding: 'utf8', timeout: 5000 });
+  const r = spawnSync(PS, ['-p', String(pid), '-o', 'lstart='], { encoding: 'utf8', timeout: 5000 });
   const text = (r.stdout || '').trim();
   if (r.status !== 0 || !text) return null;
   const ms = Date.parse(text);

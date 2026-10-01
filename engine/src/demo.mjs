@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { sh } from './util.mjs';
 import { upsertProject } from './store.mjs';
+import { gitSh } from './gitbin.mjs';
 
 const FILES = {
   'package.json': JSON.stringify({ name: 'demo-site', private: true, scripts: { build: 'node build.mjs' } }, null, 2) + '\n',
@@ -52,9 +53,9 @@ export function demoCreate({ home = process.env.HOME || '' } = {}) {
       fs.writeFileSync(path.join(dir, rel), content);
     }
     const env = { ...process.env, GIT_AUTHOR_NAME: 'Before I Deploy', GIT_AUTHOR_EMAIL: 'demo@beforeideploy.app', GIT_COMMITTER_NAME: 'Before I Deploy', GIT_COMMITTER_EMAIL: 'demo@beforeideploy.app' };
-    sh('git', ['init', '-q'], { cwd: dir, env });
-    sh('git', ['add', '-A'], { cwd: dir, env });
-    sh('git', ['commit', '-qm', 'Demo site'], { cwd: dir, env });
+    gitSh(['init', '-q'], { cwd: dir, env });
+    gitSh(['add', '-A'], { cwd: dir, env });
+    gitSh(['commit', '-qm', 'Demo site'], { cwd: dir, env });
     // one uncommitted change, so the Git step has something to show
     fs.writeFileSync(path.join(dir, 'src', 'about.html'), '<!doctype html><title>About</title><h1>About</h1>\n');
   }

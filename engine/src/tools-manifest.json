@@ -1,0 +1,43 @@
+{
+  "_comment": "Managed npm tools (audit B5). Exact versions and the registry's sha512 integrity of each package tarball; installManaged refuses any other bytes. Installs run with --ignore-scripts; scripts:true tools run only their own install scripts (npm rebuild) after the integrity check. Bump version and integrity together: npm view <package>@<version> dist.integrity.",
+  "tools": {
+    "netlify-cli": {
+      "package": "netlify-cli",
+      "version": "23.15.1",
+      "integrity": "sha512-89N5qfdvdz0ceelQ2luSBmy83kZ7MXGKWNBIu8LAt8y71uPX6+rK0T2C4vBU4uq2Mz9DZyOVVHHy+OyTRC0o1A==",
+      "bin": "netlify",
+      "scripts": false,
+      "note": "Works without scripts (verified: netlify --version 23.15.1 after --ignore-scripts); its postinstall only prints a welcome and sets up shell completion. Ships npm-shrinkwrap.json, so its dependency tree is pinned too."
+    },
+    "vercel": {
+      "package": "vercel",
+      "version": "48.12.1",
+      "integrity": "sha512-+lMj+qIXI/Iy7UXKu1wpFCwCaeV1lmrUdBbYQWXBM1/9XsX8vUfohHLkPrPSam8tDyVghKmaYu1ZD5uuHgo5uw==",
+      "bin": "vercel",
+      "scripts": false
+    },
+    "wrangler": {
+      "package": "wrangler",
+      "version": "4.145.0",
+      "integrity": "sha512-TdO9l7RNqM2Kb5/AynhlRPF9WPhaI0W4Gcpq2FkyU1iZ+xPW25sfV8Yc48PsI1GsNEFOfdh2RTOIpW8U22AqHw==",
+      "bin": "wrangler",
+      "scripts": false,
+      "note": "esbuild and workerd come as per-platform optional dependencies; their install scripts only re-check those binaries."
+    },
+    "codex": {
+      "package": "@openai/codex",
+      "version": "0.115.0",
+      "integrity": "sha512-uu689DHUzvuPcb39hJ+7fqy++TAvY32w9VggDpcz3HS0Sx0WadWoAPPcMK547P2T6AqfMsAtA8kspkR3tqErOg==",
+      "bin": "codex",
+      "scripts": false
+    },
+    "claude-code": {
+      "package": "@anthropic-ai/claude-code",
+      "version": "2.1.286",
+      "integrity": "sha512-5UNEDKy2znv81PWqNqgPJO4qPqH5NRenh52XTtx2tT5Q6xIxjI1q0RyucY+AUHMABImzDOlh6ztuj4qNiAaRvA==",
+      "bin": "claude",
+      "scripts": true,
+      "note": "Needs its postinstall (install.cjs): it puts the native claude binary in place of the bin/claude.exe stub; without it `claude --version` fails. Only this package's own script runs, after the integrity check."
+    }
+  }
+}

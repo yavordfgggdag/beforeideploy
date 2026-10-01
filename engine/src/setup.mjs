@@ -10,7 +10,8 @@ import { cloudDoctor, cloudSetupItems } from './cloud.mjs';
 import { aiKeysStatus } from './aikeys.mjs';
 import { listProjects } from './store.mjs';
 import { cliEnv } from './isolation.mjs';
-import { gitAvailable, resolveNpm, TOOL_PACKAGES, installManaged, installGitHub, setupLock, setupPreflight } from './setup-tools.mjs';
+import { resolveNpm, TOOL_PACKAGES, installManaged, installGitHub, setupLock, setupPreflight } from './setup-tools.mjs';
+import { gitAvailable, gitSh } from './gitbin.mjs';
 
 /** VIP/admin only (docs/PLANS-AND-CREDITS-BG.md): the last profile seen says which role this Mac has. */
 function ownKeyAllowed() {
@@ -26,10 +27,12 @@ function fileHas(file, re) {
   }
 }
 
+const identityForm = () => ({ type: 'app', label: t('setup.identity.enter'), appAction: 'git-identity' });
+const identityFromGitHub = () => ({ type: 'run', label: t('setup.action.fromGitHub'), display: t('setup.display.fromProfile') });
 const npmInstall = (pkg) => ({ type: 'run', label: t('setup.action.install'), display: t('setup.managedInstall'), package: pkg });
 
 export async function setupStatus() {
-  const git = gitAvailable();
+  const git = gitAvailable({ fresh: true });
   const commands = ['node', 'git', 'brew', 'netlify', 'gh', 'vercel', 'wrangler', 'codex', 'claude'];
   const npm = resolveNpm();
   const [pairs, npmVersion, ghToken, gitName, gitEmail] = await Promise.all([
@@ -49,12 +52,16 @@ export async function setupStatus() {
   const installed = cmd => !!versions[cmd];
   const projects = listProjects();
   const providers = new Set(projects.length ? projects.map(p => p.hosting || 'netlify') : ['netlify']);
-  const gitRequired = providers.has('ghpages') || projects.some(p => exists(path.join(p.path, '.git')) || p.github);
+  const githubUsed = providers.has('ghpages') || projects.some(p => p.github);
+  const gitRequired = githubUsed || projects.some(p => exists(path.join(p.path, '.git')));
   const requiredIds = new Set(['node', 'npm']);
   if (providers.has('netlify')) ['netlify-cli', 'netlify-login'].forEach(id => requiredIds.add(id));
   if (providers.has('vercel')) ['vercel', 'vercel-auth'].forEach(id => requiredIds.add(id));
   if (providers.has('cloudflare')) ['wrangler', 'wrangler-auth'].forEach(id => requiredIds.add(id));
-  if (gitRequired) ['git', 'git-identity'].forEach(id => requiredIds.add(id));
+  if (gitRequired) requiredIds.add('git');
+  // audit B3: a name/email is needed for commits that reach GitHub. A Netlify-only project that merely has a
+  // .git folder can deploy without it, so there it is a recommendation (the in-app form), not a blocker.
+  if (githubUsed) requiredIds.add('git-identity');
   if (providers.has('ghpages')) ['gh', 'gh-auth'].forEach(id => requiredIds.add(id));
   const items = [];
   const add = (group, id, title, ok, detail, action = null) => {
@@ -76,11 +83,7 @@ export async function setupStatus() {
   });
   const name = installed('git') && gitName?.code === 0 ? gitName.stdout.trim() : '';
   const email = installed('git') && gitEmail?.code === 0 ? gitEmail.stdout.trim() : '';
-  add(t('setup.group.base'), 'git-identity', t('setup.identity.label'), !!(name && email), name && email ? `${name} <${email}>` : t('setup.identity.detail'), {
-    type: 'run',
-    label: t('setup.action.fromGitHub'),
-    display: t('setup.display.fromProfile'),
-  });
+  add(t('setup.group.base'), 'git-identity', t('setup.identity.label'), !!(name && email), name && email ? `${name} <${email}>` : t('setup.identity.detail'), identityForm());
   const brew = installed('brew');
   add(t('setup.group.base'), 'brew', 'Homebrew', !!brew, brew ? t('setup.brew.installed') : t('setup.brew.detail'), {
     type: 'open',
@@ -113,7 +116,7 @@ export async function setupStatus() {
     display: 'github.com/login/device',
   });
   const identityItem = items.find(i => i.id === 'git-identity');
-  if (!ghAuth && !identityItem.ok) identityItem.action = { type: 'app', label: t('setup.identity.enter'), appAction: 'git-identity' };
+  if (ghAuth && !identityItem.ok) { identityItem.action = identityFromGitHub(); identityItem.detail = t('setup.identity.detailGitHub'); }
   add(t('setup.group.hosting'), 'spaceship', t('setup.spaceship.title'), spaceshipConnected(), spaceshipConnected() ? t('setup.connected') : t('setup.spaceship.detail'), {
     type: 'app',
     label: t('setup.action.connect'),
@@ -219,7 +222,7 @@ export async function setupTerminal(id) {
   return { commandFile: writeCommand(id, body) };
 }
 
-const DEPENDENCIES = { 'netlify-login': ['netlify-cli'], 'gh-auth': ['gh'], 'git-identity': ['git', 'gh-auth'], 'vercel-auth': ['vercel'], 'wrangler-auth': ['wrangler'] };
+const DEPENDENCIES = { 'netlify-login': ['netlify-cli'], 'gh-auth': ['gh'], 'git-identity': ['git'], 'vercel-auth': ['vercel'], 'wrangler-auth': ['wrangler'] };
 
 export async function setupRun(id, { yes = false } = {}) {
   if (!yes) throw new EngineError(msg('setup.run.confirmRequired'), 'confirm_required', 2);
@@ -267,10 +270,13 @@ export async function setupAuto({ yes = false, includeOptional = false, prefligh
     const todo = st.items.filter(i => !i.ok && (includeOptional || !i.optional)).sort((a,b) => rank(a.id)-rank(b.id));
     const steps = [], installed = [], failed = [], blocked = [];
     for (const i of todo) ev.step(i.id, { label: i.title, status: 'pending', summary: i.action?.display });
+    // the steps that will reach the network: the identity only when it can come from GitHub in this run
+    const ghReady = st.items.find(i => i.id === 'gh-auth')?.ok || todo.some(i => i.id === 'gh-auth');
+    const runnable = todo.filter(i => i.id === 'git-identity' ? ghReady : i.action?.type === 'run').map(i => i.id);
     if (todo.some(i => i.action?.type === 'run')) {
       ev.step('preflight', { label: t('setup.preflight'), status: 'running' });
       try {
-        await preflight();
+        await preflight({ ids: runnable });
         ev.step('preflight', { status: 'pass' });
       } catch (e) {
         ev.step('preflight', { status: 'fail', summary: e.message });
@@ -282,12 +288,25 @@ export async function setupAuto({ yes = false, includeOptional = false, prefligh
       }
     }
     const ready = new Set(st.items.filter(i => i.ok).map(i => i.id));
-    for (const i of todo) {
+    for (const todoItem of todo) {
+      let i = todoItem;
       const missing = (DEPENDENCIES[i.id] || []).filter(id => !ready.has(id));
+      if (i.id === 'git-identity' && !missing.length) {
+        // audit B3: decided now, not at status time — a GitHub login earlier in this run makes "from GitHub" work
+        if (ready.has('gh-auth')) i = { ...i, action: identityFromGitHub() };
+        else {
+          // no GitHub: the name/email form in the app is the remedy; it is a user step, not a failure
+          steps.push({ id: i.id, status: 'skipped', reason: 'user_action' });
+          ev.step(i.id, { status: 'skipped', reason: 'user_action', summary: t('setup.identity.useForm'), action: identityForm() });
+          continue;
+        }
+      }
       if (missing.length || i.action?.type !== 'run') {
         const reason = missing.length ? missing.join(', ') : 'user_action';
         steps.push({ id: i.id, status: 'blocked', reason }); blocked.push(i.id);
-        ev.step(i.id, { status: 'blocked', reason, summary: t('setup.requires', { items: reason }) });
+        // the summary names the steps by their titles; `reason` keeps the ids for the app and the tests
+        const titles = missing.map(id => st.items.find(x => x.id === id)?.title || id).join(', ');
+        ev.step(i.id, { status: 'blocked', reason, summary: missing.length ? t('setup.requires', { items: titles }) : t('setup.notRunnable') });
         continue;
       }
       try {
@@ -342,19 +361,19 @@ export async function gitIdentityFromGitHub() {
   const name = u.name || u.login;
   // GitHub's private noreply address — commits still count for your profile, your real email stays hidden
   const email = u.email || `${u.id}+${u.login}@users.noreply.github.com`;
-  sh('git', ['config', '--global', 'user.name', name]);
-  sh('git', ['config', '--global', 'user.email', email]);
+  gitSh(['config', '--global', 'user.name', name]);
+  gitSh(['config', '--global', 'user.email', email]);
   return { id: 'git-identity', ok: true, name, email };
 }
 
 async function installCLT(id, logFile) {
   if (process.platform !== 'darwin') throw new EngineError(msg('setup.notRunnable'), 'not_runnable');
   const launched = await runStream('/usr/bin/xcode-select', ['--install'], { step: id, logFile, timeout: 10000 });
-  if (launched.code !== 0 && !gitAvailable()) throw new EngineError(msg('setup.toolFailed'), 'install_failed');
+  if (launched.code !== 0 && !gitAvailable({ fresh: true })) throw new EngineError(msg('setup.toolFailed'), 'install_failed');
   ev.step(id, { status: 'waiting_user', summary: t('setup.cltWaiting') });
   const until = Date.now() + 30 * 60 * 1000;
   while (Date.now() < until) {
-    if (gitAvailable()) return;
+    if (gitAvailable({ fresh: true })) return;
     await new Promise(resolve => setTimeout(resolve, 10000));
   }
   throw new EngineError(msg('setup.cltWaiting'), 'setup_incomplete');
@@ -367,7 +386,7 @@ export function setupIdentity({ name, email, yes = false } = {}) {
   const unlock = setupLock();
   try {
     for (const [key, value] of [['user.name', name.trim()], ['user.email', email.trim()]]) {
-      if (sh('git', ['config', '--global', key, value], { timeout: 5000 }).code !== 0) throw new EngineError(msg('setup.identity.failed'), 'github_failed');
+      if (gitSh(['config', '--global', key, value], { timeout: 5000 }).code !== 0) throw new EngineError(msg('setup.identity.failed'), 'github_failed');
     }
     return { ok: true };
   } finally { unlock(); }

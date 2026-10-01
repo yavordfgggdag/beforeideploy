@@ -15,6 +15,7 @@ import { chooseProvider, stream } from './providers.mjs';
 import { parseAnswer, plan as planPatch, apply as applyPatch, reasonKey } from './patch.mjs';
 import { resolveInProject, writeNoFollow, removeNoFollow } from '../pathpolicy.mjs';
 import { updateConversationPatch, updateConversationUndo } from './conversation.mjs';
+import { gitSh } from '../gitbin.mjs';
 
 /** Fallbacks when the cloud `settings` table has no `ai.models` (Admin panel edits it without a release). */
 export const DEFAULT_MODELS = { fast: 'claude-haiku-4-5', standard: 'claude-opus-5-5', deep: 'claude-opus-5-5', openai: 'gpt-5' };
@@ -142,9 +143,9 @@ export async function aiApply(project, { patchFile, files, yes = false, commit =
 
   let committed = null;
   if (commit && applied.length && detect(project.path).git.isRepo) {
-    const add = sh('git', ['add', '--', ...applied], { cwd: project.path });
-    const c = add.code === 0 ? sh('git', ['commit', '-m', `AI fix (${patch.step}): ${applied.join(', ')}`], { cwd: project.path }) : add;
-    committed = c.code === 0 ? sh('git', ['rev-parse', '--short', 'HEAD'], { cwd: project.path }).stdout.trim() : null;
+    const add = gitSh(['add', '--', ...applied], { cwd: project.path });
+    const c = add.code === 0 ? gitSh(['commit', '-m', `AI fix (${patch.step}): ${applied.join(', ')}`], { cwd: project.path }) : add;
+    committed = c.code === 0 ? gitSh(['rev-parse', '--short', 'HEAD'], { cwd: project.path }).stdout.trim() : null;
   }
   const relevantSkips = skipped.filter((s) => s.reason !== 'not_selected');
   ev.step('ai-apply', {

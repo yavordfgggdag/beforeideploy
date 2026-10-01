@@ -9,6 +9,7 @@ import { detect, pmRunArgs } from './detect.mjs';
 import { getState, setState, addHistory, updateProject } from './store.mjs';
 import { t, msg } from './i18n.mjs';
 import { scanSite } from './site.mjs';
+import { gitBin, gitSh } from './gitbin.mjs';
 
 export const STEPS = [
   { id: 'git', label: t('check.step.git'), category: 'Source Control' },
@@ -49,8 +50,8 @@ const SKIP_FILES = new Set(['package-lock.json', 'pnpm-lock.yaml', 'yarn.lock', 
 
 function listCandidateFiles(dir, isRepo) {
   if (isRepo) {
-    const tracked = sh('git', ['ls-files', '-z'], { cwd: dir }).stdout.split('\0');
-    const untracked = sh('git', ['ls-files', '--others', '--exclude-standard', '-z'], { cwd: dir }).stdout.split('\0');
+    const tracked = gitSh(['ls-files', '-z'], { cwd: dir }).stdout.split('\0');
+    const untracked = gitSh(['ls-files', '--others', '--exclude-standard', '-z'], { cwd: dir }).stdout.split('\0');
     return [...new Set([...tracked, ...untracked])].filter(Boolean);
   }
   const out = [];
@@ -131,24 +132,24 @@ function envFilesAtRoot(dir) {
 }
 
 function isIgnored(dir, rel) {
-  return sh('git', ['check-ignore', '-q', rel], { cwd: dir }).code === 0;
+  return gitSh(['check-ignore', '-q', rel], { cwd: dir }).code === 0;
 }
 
 // ---------------------------------------------------------------- steps
 
 async function stepGit(ctx) {
   const { dir, d } = ctx;
-  if (!which('git')) return { status: 'warn', summary: t('check.git.notInstalled') };
+  if (!gitBin()) return { status: 'warn', summary: t('check.git.notInstalled') };
   if (!d.git.isRepo) return { status: 'info', summary: t('git.notRepo'), fixes: ['git.init'] };
   const details = [];
-  const conflicts = sh('git', ['diff', '--name-only', '--diff-filter=U'], { cwd: dir }).stdout.trim();
+  const conflicts = gitSh(['diff', '--name-only', '--diff-filter=U'], { cwd: dir }).stdout.trim();
   if (conflicts) {
     const list = conflicts.split('\n');
     return { status: 'fail', summary: t('check.git.conflicts', { count: list.length }), details: list.slice(0, 20) };
   }
   details.push(`Branch: ${d.git.branch}`);
   details.push(d.git.remote ? `Remote: ${d.git.githubUrl || d.git.remote}` : t('check.git.noRemote'));
-  const changes = sh('git', ['status', '--porcelain'], { cwd: dir }).stdout.split('\n').filter(Boolean);
+  const changes = gitSh(['status', '--porcelain'], { cwd: dir }).stdout.split('\n').filter(Boolean);
   if (changes.length) {
     return {
       status: 'warn',
@@ -168,7 +169,7 @@ async function stepSecrets(ctx) {
   let status = 'pass';
 
   if (d.git.isRepo) {
-    const tracked = sh('git', ['ls-files'], { cwd: dir })
+    const tracked = gitSh(['ls-files'], { cwd: dir })
       .stdout.split('\n')
       .filter((f) => ENV_FILE_RE.test(f) && !ENV_SAFE_RE.test(f));
     if (tracked.length) {
@@ -453,17 +454,17 @@ export function buildConfigHash(dir, d) {
 export function fingerprint(dir, d) {
   const parts = [];
   if (d.git.isRepo) {
-    const head = sh('git', ['rev-parse', '--verify', '-q', 'HEAD'], { cwd: dir });
+    const head = gitSh(['rev-parse', '--verify', '-q', 'HEAD'], { cwd: dir });
     if (head.code === 0) {
       parts.push(head.stdout.trim());
-      parts.push(sh('git', ['diff', 'HEAD', '--no-color', '--no-ext-diff'], { cwd: dir }).stdout);
+      parts.push(gitSh(['diff', 'HEAD', '--no-color', '--no-ext-diff'], { cwd: dir }).stdout);
     } else {
       // a repository without a first commit: the index and every tracked file stand in for HEAD (audit E6)
-      parts.push(sh('git', ['diff', '--cached', '--no-color', '--no-ext-diff'], { cwd: dir }).stdout);
-      const tracked = sh('git', ['ls-files', '-z'], { cwd: dir }).stdout.split('\0').filter(Boolean);
+      parts.push(gitSh(['diff', '--cached', '--no-color', '--no-ext-diff'], { cwd: dir }).stdout);
+      const tracked = gitSh(['ls-files', '-z'], { cwd: dir }).stdout.split('\0').filter(Boolean);
       for (const f of tracked.slice(0, 5000)) parts.push(statSig(dir, f));
     }
-    const untracked = sh('git', ['ls-files', '--others', '--exclude-standard', '-z'], { cwd: dir }).stdout.split('\0').filter(Boolean);
+    const untracked = gitSh(['ls-files', '--others', '--exclude-standard', '-z'], { cwd: dir }).stdout.split('\0').filter(Boolean);
     for (const f of untracked.slice(0, 5000)) parts.push(statSig(dir, f));
   } else {
     for (const f of listCandidateFiles(dir, false)) parts.push(statSig(dir, f));

@@ -282,7 +282,7 @@
   "netlify.login.loggedIn": "Влязъл",
   "netlify.login.notConfirmed": "Входът не беше потвърден",
   "netlify.login.opening": "Отварям браузъра — потвърди входа там",
-  "netlify.noCli": "Не намирам Netlify CLI или npx. Инсталирай Node.js или `npm i -g netlify-cli`.",
+  "netlify.noCli": "Netlify CLI не е инсталиран. Отвори Настройка и го инсталирай оттам (с едно натискане, без Терминал).",
   "netlify.notLinked": "Netlify не е свързан за този проект.",
   "netlify.notLoggedIn": "Не си влязъл в Netlify.",
   "netlify.siteFailed": "Не успях да прочета Netlify сайта.",
@@ -338,7 +338,7 @@
   "setup.group.ai": "AI помощници",
   "setup.group.base": "Основа",
   "setup.group.hosting": "Хостинг и GitHub",
-  "setup.identity.detail": "Ще ги взема автоматично от GitHub акаунта ти",
+  "setup.identity.detail": "Името на автора в къмитите ти. Въведи име и имейл тук или влез в GitHub и ги вземи от профила си.",
   "setup.identity.failed": "Не успях да прочета GitHub профила.",
   "setup.identity.label": "Git име и имейл",
   "setup.identity.needsLogin": "Нужен е GitHub вход първо",
@@ -347,7 +347,7 @@
   "setup.loggedIn": "Влязъл",
   "setup.netlifyAccount.detail": "Нужен за публикуване",
   "setup.netlifyAccount.title": "Netlify акаунт",
-  "setup.netlifyCli.detail": "Без него всяка команда минава през по-бавния npx",
+  "setup.netlifyCli.detail": "Нужен е за публикуване в Netlify. Настройка го инсталира само за приложението (без администраторска парола, нищо глобално).",
   "setup.notRunnable": "Тази стъпка се прави в Terminal или в браузъра.",
   "setup.run.confirmRequired": "Инсталацията изисква потвърждение (--yes).",
   "setup.spaceship.detail": "API ключ от Spaceship → домейни, DNS, изтичане",
@@ -818,5 +818,8 @@
   "billing.invalidDomain": "Въведете валидно име на домейн без адрес на страница или път.",
   "billing.hostingNotReady": "Управляваният хостинг за този сайт още не е настроен.",
   "billing.receiptPending": "Публикуването е изпратено. Отчетът за кредитите ще се синхронизира при следващото облачно действие.",
-  "billing.intervalChange": "Смяната между месечно и годишно плащане още не е достъпна. За да смените плана, запазете текущия период на плащане."
+  "billing.intervalChange": "Смяната между месечно и годишно плащане още не е достъпна. За да смените плана, запазете текущия период на плащане.",
+  "setup.identity.detailGitHub": "Мога да ги взема от GitHub профила ти",
+  "setup.identity.useForm": "Въведи име и имейл в Настройка (не е нужен GitHub вход).",
+  "setup.integrity": "Изтегленият {name} не съвпада със закрепената версия и контролна сума. Нищо не е инсталирано."
 }
