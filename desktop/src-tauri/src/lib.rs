@@ -56,7 +56,7 @@ pub fn engine_dir(resource_dir: Option<PathBuf>) -> Option<PathBuf> {
         resource_dir.map(|r| r.join("engine")),
         Some(Path::new(env!("CARGO_MANIFEST_DIR")).join("../../engine")),
     ];
-    candidates.into_iter().flatten().find(|d| d.join("bid.mjs").is_file())
+    candidates.into_iter().flatten().find(|d| d.join("src").join("bid.mjs").is_file())
 }
 
 /// The Node binary: BID_NODE → the runtime bundled with the engine → `node` on PATH.
@@ -74,7 +74,7 @@ pub fn node_bin(engine: &Path) -> PathBuf {
 pub fn run_engine(engine: &Path, args: &[String], slot: Option<&Arc<Mutex<Option<Arc<Mutex<Child>>>>>>, mut on_event: impl FnMut(Value)) -> Result<Value, String> {
     validate_args(args)?;
     let mut cmd = Command::new(node_bin(engine));
-    cmd.arg(engine.join("bid.mjs")).args(args).stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped());
+    cmd.arg(engine.join("src").join("bid.mjs")).args(args).stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped());
     cmd.env("BID_CLIENT", "desktop");
     let mut child = cmd.spawn().map_err(|e| format!("could not start the engine: {e}"))?;
     let stdout = child.stdout.take().ok_or("no engine output")?;
