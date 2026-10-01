@@ -39,6 +39,8 @@ except the log and files you choose to send to AI Fix (you are asked once).
 
 ## For developers
 
+Team workflow, who owns which platform, branches and pull requests: [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ```zsh
 git clone … && cd beforeideploy
 zsh scripts/install.sh          # checks the tools, installs the engine, runs the tests, builds into /Applications

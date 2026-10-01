@@ -2,6 +2,8 @@ name: desktop
 on:
   push:
     paths: ['desktop/**', 'web/**', 'engine/**', '.github/workflows/desktop.yml']
+  pull_request:
+    paths: ['desktop/**', 'web/**', 'engine/**', '.github/workflows/desktop.yml']
   workflow_dispatch:
 jobs:
   build:
