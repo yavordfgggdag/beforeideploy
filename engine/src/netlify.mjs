@@ -6,6 +6,7 @@ import { detect } from './detect.mjs';
 import { fingerprint } from './checks.mjs';
 import { stageArtifact } from './staging.mjs';
 import { cliEnv } from './isolation.mjs';
+import { configCandidates } from './platform/index.mjs';
 import { getState, setState, updateProject, addHistory } from './store.mjs';
 import { recordCost } from './costs.mjs';
 import { gitHead } from './git.mjs';
@@ -46,11 +47,7 @@ async function nl(project, args, opts = {}) {
 export function netlifyAuth() {
   const cli = netlifyCommand();
   if (process.env.NETLIFY_AUTH_TOKEN) return { loggedIn: true, email: null, cli: cli?.label || null, via: 'env' };
-  const candidates = [
-    path.join(HOME, 'Library', 'Preferences', 'netlify', 'config.json'),
-    path.join(HOME, '.config', 'netlify', 'config.json'),
-    path.join(HOME, '.netlify', 'config.json'),
-  ];
+  const candidates = configCandidates('netlify', { home: HOME }); // per OS (platform/index.mjs)
   for (const f of candidates) {
     const cfg = readJSON(f, null);
     if (!cfg?.users) continue;

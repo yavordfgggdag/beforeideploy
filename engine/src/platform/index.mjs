@@ -250,4 +250,35 @@ export function terminalLauncher(script, { platform = process.platform, env = pr
 export const updateAssetKeys = ({ platform = process.platform, arch = process.arch, format } = {}) => impl(platform).updateAssetKeys(arch, format);
 export const updateFileExt = (key, platform = process.platform) => impl(platform).updateFileExt(key);
 
+// ---------------------------------------------------------------- hosting CLI logins (P21)
+
+/**
+ * Where the hosting CLIs keep their login, in the order the engine looks. The first entries are the ones
+ * the engine always checked (macOS and the plain Linux defaults); XDG overrides and Windows folders follow.
+ */
+export function configCandidates(tool, { platform = process.platform, env = process.env, home = os.homedir() } = {}) {
+  const P = pathFor(platform);
+  const j = (...p) => P.join(...p);
+  const base = {
+    netlify: [j(home, 'Library', 'Preferences', 'netlify', 'config.json'), j(home, '.config', 'netlify', 'config.json'), j(home, '.netlify', 'config.json')],
+    vercel: [j(home, 'Library', 'Application Support', 'com.vercel.cli', 'auth.json'), j(home, '.local', 'share', 'com.vercel.cli', 'auth.json')],
+    wrangler: [j(home, 'Library', 'Preferences', '.wrangler', 'config', 'default.toml'), j(home, '.wrangler', 'config', 'default.toml'), j(home, '.config', '.wrangler', 'config', 'default.toml')],
+  }[tool] || [];
+  const extra = [];
+  const os_ = platformOf(platform);
+  if (os_ === 'linux') {
+    const cfg = env.XDG_CONFIG_HOME && P.isAbsolute(env.XDG_CONFIG_HOME) ? env.XDG_CONFIG_HOME : null;
+    const data = env.XDG_DATA_HOME && P.isAbsolute(env.XDG_DATA_HOME) ? env.XDG_DATA_HOME : null;
+    if (tool === 'netlify' && cfg) extra.push(j(cfg, 'netlify', 'config.json'));
+    if (tool === 'vercel' && data) extra.push(j(data, 'com.vercel.cli', 'auth.json'));
+    if (tool === 'wrangler' && cfg) extra.push(j(cfg, '.wrangler', 'config', 'default.toml'));
+  } else if (os_ === 'win32') {
+    const roaming = env.APPDATA || j(home, 'AppData', 'Roaming');
+    if (tool === 'netlify') extra.push(j(roaming, 'netlify', 'Config', 'config.json'));
+    if (tool === 'vercel') extra.push(j(roaming, 'xdg.data', 'com.vercel.cli', 'auth.json'), j(roaming, 'com.vercel.cli', 'Data', 'auth.json'));
+    if (tool === 'wrangler') extra.push(j(roaming, 'xdg.config', '.wrangler', 'config', 'default.toml'));
+  }
+  return [...base, ...extra.filter((f) => !base.includes(f))];
+}
+
 export { darwin, linux, win32 };

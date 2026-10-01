@@ -5,6 +5,7 @@ import path from 'node:path';
 import { HOME, CACHE_DIR, EngineError, ev, sh, which, runStream, logDir, readJSON, exists, nowISO, publishIncludes } from './util.mjs';
 import { stageArtifact } from './staging.mjs';
 import { cliEnv } from './isolation.mjs';
+import { configCandidates } from './platform/index.mjs';
 import { detect } from './detect.mjs';
 import { getState, setState, updateProject, addHistory, findProject } from './store.mjs';
 import { netlifyAuth, netlifyDeploy, deployGuard } from './netlify.mjs';
@@ -75,19 +76,12 @@ export const PROVIDERS = {
 
 function vercelAuthed() {
   if (process.env.VERCEL_TOKEN) return true;
-  return [
-    path.join(HOME, 'Library', 'Application Support', 'com.vercel.cli', 'auth.json'),
-    path.join(HOME, '.local', 'share', 'com.vercel.cli', 'auth.json'),
-  ].some((f) => fileHas(f, /"token"\s*:\s*"[^"]+"/));
+  return configCandidates('vercel', { home: HOME }).some((f) => fileHas(f, /"token"\s*:\s*"[^"]+"/));
 }
 
 function wranglerAuthed() {
   if (process.env.CLOUDFLARE_API_TOKEN) return true;
-  return [
-    path.join(HOME, 'Library', 'Preferences', '.wrangler', 'config', 'default.toml'),
-    path.join(HOME, '.wrangler', 'config', 'default.toml'),
-    path.join(HOME, '.config', '.wrangler', 'config', 'default.toml'),
-  ].some((f) => fileHas(f, /oauth_token|api_token/));
+  return configCandidates('wrangler', { home: HOME }).some((f) => fileHas(f, /oauth_token|api_token/));
 }
 
 function ghAuthed() {
