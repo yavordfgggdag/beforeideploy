@@ -449,7 +449,7 @@
 "dashboard.smartHelp" = "⌘D — проверка → преглед; спира при първата грешка";
 "dashboard.stale" = "· остаряло";
 "dashboard.stopped" = "спрян";
-"dashboard.tab.hosting" = "Хостинг & домейн";
+"dashboard.tab.hosting" = "Хостинг";
 "dashboard.tab.local" = "Локално";
 "dashboard.tab.overview" = "Преглед";
 
@@ -1335,6 +1335,11 @@
 "k.step.secrets" = "Поверителни данни";
 "k.step.lint" = "Качество на кода";
 "k.step.typecheck" = "Проверка на типовете";
+"k.stepShort.git" = "Промени";
+"k.stepShort.lint" = "Качество";
+"k.stepShort.secrets" = "Тайни";
+"k.stepShort.site" = "Сайт";
+"k.stepShort.typecheck" = "Типове";
 "k.step.build" = "Сглобяване";
 "k.step.hosting" = "Хостинг";
 "k.audit.set_role" = "Променена роля";

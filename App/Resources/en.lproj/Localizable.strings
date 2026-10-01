@@ -449,7 +449,7 @@
 "dashboard.smartHelp" = "⌘D — check → preview, stops at the first error";
 "dashboard.stale" = "· stale";
 "dashboard.stopped" = "stopped";
-"dashboard.tab.hosting" = "Hosting & domain";
+"dashboard.tab.hosting" = "Hosting";
 "dashboard.tab.local" = "Local";
 "dashboard.tab.overview" = "Overview";
 
@@ -1335,6 +1335,11 @@
 "k.step.secrets" = "Private data";
 "k.step.lint" = "Code quality";
 "k.step.typecheck" = "Type checks";
+"k.stepShort.git" = "Changes";
+"k.stepShort.lint" = "Quality";
+"k.stepShort.secrets" = "Secrets";
+"k.stepShort.site" = "Site";
+"k.stepShort.typecheck" = "Types";
 "k.step.build" = "Build";
 "k.step.hosting" = "Hosting";
 "k.audit.set_role" = "Role changed";
