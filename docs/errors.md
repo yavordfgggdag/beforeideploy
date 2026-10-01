@@ -104,6 +104,7 @@ Returned as `code` in the JSON body; the engine maps them to the codes above (`q
 | `forbidden` | 403 | Admin function called by a non-admin. |
 | `session_cap` | 403 | The 5-hour session's AI credit share is used; the body carries `resetsAt`, `cap`, `spent`. |
 | `quota_exhausted` | 402 | No credits left. |
+| `account_suspended` | 402 | The account is suspended after a payment chargeback; no new paid work until it is reversed or repaid. Sites are paused, never deleted. |
 | `bad_secret` | 401 | `monitor` scheduler call without the `x-monitor-secret` that matches `MONITOR_CRON_SECRET` (V11 RC). |
 | `url_rejected` | 400 | `monitor register`: the URL is not a public http(s) hostname (`reason`: scheme, ip_literal, local_host, credentials_in_url, port, hostname, invalid_url). |
 | `project_not_synced` | 404 | `monitor register`: the project has no `bid_projects` row for this user yet — sign in and let the app sync the project first. |
