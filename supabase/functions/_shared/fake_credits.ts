@@ -1,12 +1,13 @@
-// Test-only RPC contract adapter. Economic invariants, locking, RLS, FIFO and expiry are proved by
-// tests/rls/credits-v12.mjs against real PostgreSQL. This adapter lets HTTP/SSE tests inspect receipts.
+// Test-only RPC contract adapter. Economic invariants, locking, RLS, spend order, expiry and the V3 release
+// curve / guards are proved by tests/rls/credits-v12.mjs and credits-v13.mjs against real PostgreSQL. This
+// adapter lets HTTP/SSE tests inspect receipts; it only checks the balance (V3 refusals are set per test).
 import type { Row } from "./db.ts";
 import type { FakeDb } from "./fake_supabase.ts";
 import catalog from "./plans-catalog.json" with { type: "json" };
 import { addMonths } from "./billing-period.ts";
 
 export function fakeCreditRpc(db: FakeDb, fn: string, a: Row): Row | null {
-  if(!["bid_v12_apply_adjustment","bid_v12_payment_refunds","bid_record_payment","bid_accrue_periods","bid_scheduler_credits","bid_site_burn","bid_monitor_register","bid_start_trial","bid_upgrade_grant","bid_grant","bid_refund","bid_credit_status","bid_enforce_sites","bid_hold","bid_settle","bid_release"].includes(fn)) return null;
+  if(!["bid_v13_ready_at","bid_v13_claim_bonus","bid_v12_apply_adjustment","bid_v12_payment_refunds","bid_record_payment","bid_accrue_periods","bid_scheduler_credits","bid_site_burn","bid_monitor_register","bid_start_trial","bid_upgrade_grant","bid_grant","bid_refund","bid_credit_status","bid_enforce_sites","bid_hold","bid_settle","bid_release"].includes(fn)) return null;
   const t=db.tables, user=a.p_user, now=new Date(a.p_now ?? db.clock()), iso=now.toISOString();
   const rows=(name:string)=>t[name]??=[];
   const mine=(name:string)=>rows(name).filter(r=>r.user_id===user);
@@ -96,7 +97,17 @@ export function fakeCreditRpc(db: FakeDb, fn: string, a: Row): Row | null {
     if(!(n>0))return {ok:true,granted:0};
     return fakeCreditRpc(db,"bid_grant",{...a,p_credits:n,p_source:"upgrade_grant",p_ref:`${c.provider_ref}:upg:${c.id}`,p_tier:c.to_tier,p_granted_at:c.effective_at});
   }
-  if(fn==="bid_credit_status") return status();
+  if(fn==="bid_credit_status") return {...status(),availableNow:Math.max(0,balance()),reason:"ok"};
+  if(fn==="bid_v13_ready_at") {
+    const now=Math.max(0,balance());
+    return {need:a.p_need,availableNow:now,readyAt:now>=a.p_need?iso:null,reason:now>=a.p_need?"ok":"exhausted"};
+  }
+  if(fn==="bid_v13_claim_bonus") {
+    if(rows("bonus_claims").some(c=>c.user_id===user||c.email_hash===a.p_email_hash))return {ok:false,code:"bonus_used"};
+    rows("bonus_claims").push({user_id:user,email_hash:a.p_email_hash,claimed_at:iso});
+    const credits=(catalog as Row).starterBonus?.credits??60000;
+    return {...fakeCreditRpc(db,"bid_grant",{p_user:user,p_credits:credits,p_source:"bonus_grant",p_ref:`bonus:${user}`,p_granted_at:iso,p_expires_at:new Date(+now+30*86400000).toISOString(),p_now:iso}),appliesTo:["ai.fix","ai.fix.deep"]};
+  }
   if(fn==="bid_enforce_sites") return {ok:true,paused:0};
   if(fn==="bid_grant") {
     if(mine("credit_ledger").some(l=>l.reason===a.p_source && l.ref===a.p_ref)) return {ok:true,duplicate:true};
@@ -138,15 +149,7 @@ export function fakeCreditRpc(db: FakeDb, fn: string, a: Row): Row | null {
   if(fn==="bid_hold") {
     if(prior) return {ok:true,duplicate:true,settled:true,charged:prior.credits};
     if(hold) return {ok:hold.status==="held",duplicate:true,holdId:hold.id};
-    if(balance()<a.p_credits) return {ok:false,code:"quota_exhausted",balance:balance()};
-    const sub=mine("subscriptions").find(s=>s.provider==="trial"&&s.status==="trial"&&Date.parse(s.period_end)>+now);
-    const plan=profile.plan==="free"?"flash":profile.plan;
-    const monthly=sub?settings["billing.catalog"]?.trial?.tokens??catalog.trial.tokens:settings.plans?.[plan]?.tokens??(catalog.plans as Row)[plan]?.credits??100000;
-    const hours=Number(settings["ai.sessionHours"]??5), cap=monthly*Number(settings["ai.sessionCapPercent"]??20)/100;
-    const recent=mine("ai_usage").filter(u=>Date.parse(u.created_at)>=+now-hours*3600000);
-    const used=recent.reduce((n,u)=>n+Number(u.charged_tokens??0),0);
-    const reserved=mine("credit_holds").filter(h=>h.status==="held").reduce((n,h)=>n+h.credits,0);
-    if(a.p_counts_window!==false && used+reserved+a.p_credits>cap) return {ok:false,code:"window_5h",legacyCode:"session_cap",windowHours:5,cap,spent:used,resetsAt:new Date(Date.parse(recent[0]?.created_at??iso)+hours*3600000).toISOString()};
+    if(balance()<a.p_credits) return {ok:false,code:"quota_exhausted",reason:"exhausted",balance:balance()};
     const h={id:crypto.randomUUID(),user_id:user,operation_id:a.p_operation_id,credits:a.p_credits,action:a.p_action,ai_usage_id:a.p_ai_usage,pricing_version:a.p_pricing_version,status:"held",created_at:iso,expires_at:new Date(+now+60000*Number(settings["credits.holdTtlMinutes"]?.[a.p_action]??(String(a.p_action).startsWith("deploy.")||a.p_action==="backup.snapshot"?25:15))).toISOString()};
     rows("credit_holds").push(h);ledger(-a.p_credits,"hold","hold",h.id,{operation_id:a.p_operation_id});
     return {ok:true,holdId:h.id,reserved:a.p_credits};

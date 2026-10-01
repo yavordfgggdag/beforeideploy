@@ -130,20 +130,22 @@ Deno.test("ai-fix: 429 after 6 requests in a minute", async () => {
   assert.equal((await world({ usage: other }).handle(post("ai-fix", PROMPT))).status, 200);
 });
 
-Deno.test("ai-fix: 403 window_5h at 20% of the monthly credits inside the 5-hour session, with the reset time", async () => {
-  // High = 300 000 credits → 60 000 per session; one request 2 h ago spent them all
-  const twoHoursAgo = new Date(Date.now() - 2 * 3600_000).toISOString();
-  const usage = [{ user_id: USER.id, created_at: twoHoursAgo, charged_tokens: 60000 }];
-  const res = await world({ usage }).handle(post("ai-fix", PROMPT));
-  assert.equal(res.status, 403);
-  const j = await res.json();
-  assert.equal(j.code, "window_5h");
-  assert.equal(j.cap, 60000);
-  assert.equal(j.windowHours, 5);
-  assert.equal(j.resetsAt, new Date(new Date(twoHoursAgo).getTime() + 5 * 3600_000).toISOString());
-  // the same spend six hours ago is outside the session
-  const old = [{ user_id: USER.id, created_at: new Date(Date.now() - 6 * 3600_000).toISOString(), charged_tokens: 60000 }];
-  assert.equal((await world({ usage: old }).handle(post("ai-fix", PROMPT))).status, 200);
+Deno.test("ai-fix: a V3 refusal (release / 24 h guard) is a 403 with the reason and the time the task can start", async () => {
+  // The rules themselves are proved in SQL (tests/rls/credits-v13.mjs); the function relays the receipt untouched
+  // and keeps no model call or usage row behind.
+  for (const [code, reason] of [["credits_release", "release"], ["guard_24h", "guard24h"], ["guard_7d", "guard7d"], ["pack_rate", "packRate"]]) {
+    const w = world();
+    w.db.rpcResponses.bid_hold = { ok: false, code, reason, readyAt: "2026-10-02T14:30:00Z", resetsAt: "2026-10-02T14:30:00Z", availableNow: 120 };
+    const res = await w.handle(post("ai-fix", PROMPT));
+    assert.equal(res.status, 403);
+    const j = await res.json();
+    assert.equal(j.code, code); assert.equal(j.reason, reason); assert.equal(j.readyAt, "2026-10-02T14:30:00Z");
+    assert.equal(w.up.calls.length, 0, "no model call");
+    assert.equal(w.db.rows("ai_usage").length, 0, "the pending usage row is removed");
+  }
+  // the 5 h session window is gone: heavy recent usage alone does not refuse a request
+  const usage = [{ user_id: USER.id, created_at: new Date(Date.now() - 2 * 3600_000).toISOString(), charged_tokens: 60000 }];
+  assert.equal((await world({ usage }).handle(post("ai-fix", PROMPT))).status, 200);
 });
 
 Deno.test("ai-fix: credits follow the model's real price and the shared V2 rate, so the owner's cap holds", () => {
@@ -153,8 +155,9 @@ Deno.test("ai-fix: credits follow the model's real price and the shared V2 rate,
   assert.equal(high.credits, 1767);
   // Flash pays Sonnet 5.5 prices at the shared rate: 0.024 $ → 0.02208 € → 884 credits at 0.000025 €
   assert.equal(creditsFor(DEFAULTS, "flash", "claude-sonnet-5-5", 4500, 1500).credits, 884);
-  // the whole monthly grant can never cost more than the cap: Flash 100 000 × 0.000025 = 2.50 €, High 7.50 €, Knight 25 €
-  for (const [plan, cap] of [["flash", 2.5], ["high", 7.5], ["knight", 25]] as const) {
+  // the whole monthly grant can never cost more than the cap (catalog v13): Free 10 000 × 0.000025 = 0.25 €,
+  // Flash 40 000 = 1.00 €, High 100 000 = 2.50 €, Knight 800 000 = 20 €
+  for (const [plan, cap] of [["free", 0.25], ["flash", 1], ["high", 2.5], ["knight", 20]] as const) {
     assert.ok(Math.abs(DEFAULTS.plans[plan].tokens * Number(DEFAULTS["ai.creditEur"]) - cap) < 1e-6, plan);
   }
   // an answer that produced nothing costs nothing; anything that reached the model costs at least one credit

@@ -1243,6 +1243,9 @@
 "usage.rollingReset" = "Започва да се освобождава в %@ (след %@)";
 "usage.resetCountdown" = "Нулира се в %@ (след %@)";
 "usage.fiveHours" = "5 часа";
+"usage.last24h" = "Последните 24 часа";
+"usage.last7d" = "Последните 7 дни";
+"usage.releasedNow" = "Освободени %@ от %@ кредита — останалите идват постепенно за 14 дни.";
 "usage.week" = "Седмица";
 "usage.windowUnavailable" = "Все още не е достъпно от сървъра";
 "usage.periodDates" = "%@ – %@";

@@ -37,7 +37,7 @@ export const DEFAULTS = {
   "ai.creditEur": 0.000025 as number | Record<string, number>,
   "pricing.version": "2026-10",
   "ai.usdToEur": 0.92,
-  // the rolling session (as in Claude): 20 % of the monthly credits per 5 hours
+  // V12 session window: no longer enforced (credit model V3 — release curve and guards live in SQL, credits-v13.sql)
   "ai.sessionHours": 5,
   "ai.sessionCapPercent": 20,
   "ai.promptMaxChars": 60000,
@@ -45,7 +45,7 @@ export const DEFAULTS = {
   // USD per million tokens (input / output) — used for cost_usd bookkeeping only
   "ai.prices": { "claude-haiku-4-5": [1, 5], "claude-sonnet-5-5": [2, 10], "claude-opus-5-5": [4, 20] } as Record<string, [number, number]>,
   // credits per month per plan (the ledger column is still called tokens)
-  plans: Object.fromEntries(Object.entries(catalogData.plans).map(([id, p]) => [id, { tokens: p.credits }])) as Record<string, { tokens: number }>,
+  plans: Object.fromEntries([["free", catalogData.free], ...Object.entries(catalogData.plans)].map(([id, p]) => [id, { tokens: (p as { credits: number }).credits }])) as Record<string, { tokens: number }>,
 };
 
 export type Settings = typeof DEFAULTS & Record<string, unknown>;

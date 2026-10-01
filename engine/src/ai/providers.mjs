@@ -177,6 +177,12 @@ async function* cloud({ prompt, system, step, project, locale, deep, model, mode
     if (res.status === 402) throw new EngineError(msg('ai.quotaExhausted', { renewsAt: j.renewsAt || '—' }), 'quota_exhausted', 8);
     if (res.status === 403 && ['session_cap','window_5h'].includes(j.code)) throw new EngineError(msg('ai.sessionCap', { at: j.resetsAt ? new Date(j.resetsAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—', hours: j.windowHours || 5 }), 'ai_session_cap');
     if (res.status === 403 && j.code === 'window_week') throw new EngineError(msg('ai.weeklyCap', { at: j.resetsAt ? new Date(j.resetsAt).toLocaleString() : '—' }), 'window_week');
+    // Credit model V3: the reason and the moment the task can start come from the server (readyAt).
+    if (res.status === 403 && ['credits_release', 'guard_24h', 'guard_7d', 'pack_rate'].includes(j.code)) {
+      const at = j.readyAt ? new Date(j.readyAt).toLocaleString() : '—';
+      const key = { credits_release: 'ai.creditsRelease', guard_24h: 'ai.guard24h', guard_7d: 'ai.guard7d', pack_rate: 'ai.packRate' }[j.code];
+      throw Object.assign(new EngineError(msg(key, { at }), j.code === 'guard_24h' ? 'guard_24h' : j.code === 'guard_7d' ? 'guard_7d' : j.code === 'pack_rate' ? 'pack_rate' : 'credits_release'), { readyAt: j.readyAt ?? null, resetsAt: j.readyAt ?? undefined });
+    }
     if (j.code === 'meter_unavailable') throw new EngineError(msg('billing.meterUnavailable'), 'meter_unavailable');
     if (res.status === 403) throw new EngineError(msg('ai.unavailable.noPlan'), 'ai_unavailable');
     if (res.status === 429) throw new EngineError(msg('ai.rateLimited', { name: 'Before I Deploy AI' }), 'ai_rate_limited');

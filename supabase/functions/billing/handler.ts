@@ -21,7 +21,12 @@ import catalogData from "../_shared/plans-catalog.json" with { type: "json" };
 //    checkout → { plan | pack } → Paddle transaction with custom_data.user_id → hosted checkout URL
 //    trial    → once per account: plan from catalog.trial for N days + a token grant
 //    portal   → Paddle customer portal URL (change card, cancel, invoices)
+//    bonus    → claims the one-time starter bonus (catalog.starterBonus; once per account, e-mail, Paddle customer)
+//    usage    → contract v3 for `v: 3` (credit model V3, docs/PLAN-UNIFIED-BG.md §9); v1/v2 stay readable
 //
+// Catalog v13: every paid plan carries two price sets. The top-level price is "connected hosting" (the customer
+// pays Netlify directly); `hostingIncluded` holds the V3 prices with hosting. features.hostingIncluded (catalog
+// or the settings row of the same name) decides which set is sold and shown; webhooks recognise both.
 // Prices and Paddle price ids live in `settings.billing.catalog`, token amounts in `settings.plans`.
 import { callerOf, type DbClient, type Deps, internalError, isDuplicate, json, must, type Row, sha256Hex } from "../_shared/db.ts";
 import { rateLimited } from "../_shared/ratelimit.ts";
@@ -30,17 +35,32 @@ import { creditRpc, creditStatus, bucketBalance, ensureUpgradeGrants, reconcileP
 export type Plan = "free" | "flash" | "high" | "knight";
 const PAID: Plan[] = ["flash", "high", "knight"];
 
+type PriceSet = { price: number; paddlePriceId?: string | null; needsReconciliation?: boolean; yearly?: { price: number; paddlePriceId?: string | null; needsReconciliation?: boolean; domain?: boolean } | null };
+export type CatalogPlan = PriceSet & { hostingIncluded?: PriceSet | null; connected?: PriceSet; credits?: number; activeSites?: number; activeSitesMax?: number; validityMonths?: number; cloudMinutes?: number; hosting?: Row; hostingMode?: "connected" | "included"; extras?: Record<string, boolean> };
 export interface Catalog {
   currency: string;
   version?: string;
   taxInclusive?: boolean;
+  features?: { hostingIncluded?: boolean };
+  release?: { hours: number; guard24hShare: number; guard7dShare: number; packCreditsPerHour: number };
+  starterBonus?: { credits: number; validityDays: number; oncePer?: string; actions?: string[] } | null;
+  free?: Row | null;
   trial?: { days: number; plan: Plan; tokens: number } | null;
-  plans: Record<string, { price: number; paddlePriceId?: string | null; needsReconciliation?: boolean; yearly?: { price: number; paddlePriceId?: string | null; needsReconciliation?: boolean } | null; credits?: number; activeSites?: number; activeSitesMax?: number; validityMonths?: number; window5h?: number; weekly?: number; extras?: Record<string, boolean> }>;
+  plans: Record<string, CatalogPlan>;
   packs: { id: string; tokens: number; price: number; paddlePriceId?: string | null; needsReconciliation?: boolean }[];
 }
 
-export const DEFAULT_CATALOG: Catalog = { ...catalogData, trial: { ...catalogData.trial, plan: "high" } };
-export const DEFAULT_PLAN_TOKENS: Record<string, { tokens: number }> = Object.fromEntries(Object.entries(catalogData.plans).map(([id, p]) => [id, { tokens: p.credits, max_active_sites: p.activeSites, fair_use_sites: p.activeSitesMax, validity_months: p.validityMonths }]));
+export const DEFAULT_CATALOG: Catalog = { ...catalogData, trial: { ...catalogData.trial, plan: "high" } } as Catalog;
+const policyOf = (p: Row) => ({ tokens: p.credits, max_active_sites: p.activeSites, fair_use_sites: p.activeSitesMax, validity_months: p.validityMonths, cloud_minutes: p.cloudMinutes ?? 0 });
+export const DEFAULT_PLAN_TOKENS: Record<string, { tokens: number }> = Object.fromEntries([["free", catalogData.free], ...Object.entries(catalogData.plans)].map(([id, p]) => [id, policyOf(p as Row)]));
+
+/** The price set on sale: connected hosting, or the hosting-included V3 prices when the feature flag is on. */
+export function soldPlan(plan: CatalogPlan, hostingIncluded: boolean): CatalogPlan {
+  if (!hostingIncluded || !plan.hostingIncluded) return { ...plan, hostingMode: "connected" };
+  const inc = plan.hostingIncluded;
+  const connected: PriceSet = { price: plan.price, paddlePriceId: plan.paddlePriceId ?? null, needsReconciliation: plan.needsReconciliation, yearly: plan.yearly ?? null };
+  return { ...plan, connected, price: inc.price, paddlePriceId: inc.paddlePriceId ?? null, needsReconciliation: inc.needsReconciliation, yearly: inc.yearly ?? null, hostingMode: "included" };
+}
 
 export interface BillingDeps extends ReportDeps {
   paddleApiKey: string;
@@ -90,15 +110,36 @@ async function loadCatalog(db: DbClient): Promise<{ catalog: Catalog; planTokens
   const { data } = await db.from("settings").select("key,value");
   const map = Object.fromEntries((data ?? []).map((r: Row) => [r.key, r.value]));
   return {
-    catalog: { ...DEFAULT_CATALOG, ...(map["billing.catalog"] ?? {}), plans: Object.fromEntries(PAID.map(id => { const p={ ...DEFAULT_CATALOG.plans[id], ...(map["billing.catalog"]?.plans?.[id] ?? {}) }; const policy=map.plans?.[id]; return [id,{...p,...(policy ? {credits:policy.tokens,activeSites:policy.max_active_sites ?? p.activeSites,activeSitesMax:policy.fair_use_sites ?? p.activeSitesMax,validityMonths:policy.validity_months ?? p.validityMonths,window5h:Math.floor(policy.tokens*0.2),weekly:Math.floor(policy.tokens*0.4)} : {}),extras:{...p.extras,domain:id==="knight" && map["features.knightDomain"]!==false,netlifyCredits:false}}]; })) } as Catalog,
+    catalog: catalogFrom(map),
     pricing:{version:await pricingVersion(map),actions:{...actionPrices,...map["pricing.actions"]}},
     planTokens: { ...DEFAULT_PLAN_TOKENS, ...(map["plans"] ?? {}) },
   };
 }
 
+/** Stored catalog + policy rows → the catalog in force (price set chosen by features.hostingIncluded). */
+function catalogFrom(map: Row): Catalog {
+  const stored = (map["billing.catalog"] ?? {}) as Partial<Catalog>;
+  const base = { ...DEFAULT_CATALOG, ...stored } as Catalog;
+  const included = (map["features.hostingIncluded"] ?? base.features?.hostingIncluded ?? false) === true;
+  const plans = Object.fromEntries(PAID.map(id => {
+    const p: CatalogPlan = { ...DEFAULT_CATALOG.plans[id], ...(stored.plans?.[id] ?? {}) };
+    const policy = map.plans?.[id];
+    const merged: CatalogPlan = { ...p, ...(policy ? { credits: policy.tokens, activeSites: policy.max_active_sites ?? p.activeSites, activeSitesMax: policy.fair_use_sites ?? p.activeSitesMax, validityMonths: policy.validity_months ?? p.validityMonths, cloudMinutes: policy.cloud_minutes ?? p.cloudMinutes } : {}),
+      extras: { ...p.extras, domain: id === "knight" && map["features.knightDomain"] !== false, netlifyCredits: false, boost: false } };
+    return [id, soldPlan(merged, included)];
+  }));
+  const freePolicy = map.plans?.free;
+  const free = base.free ? { ...base.free, ...(freePolicy ? { credits: freePolicy.tokens, activeSites: freePolicy.max_active_sites ?? base.free.activeSites } : {}) } : null;
+  return { ...base, free, features: { ...(base.features ?? {}), hostingIncluded: included }, plans };
+}
+
 function tierForPrice(catalog: Catalog, priceId: string | undefined): Plan | null {
   if (!priceId) return null;
-  for (const [tier, p] of Object.entries(catalog.plans)) if (p.paddlePriceId === priceId || p.yearly?.paddlePriceId === priceId) return tier as Plan;
+  // Existing subscribers may hold either price set, whatever is on sale today.
+  for (const [tier, p] of Object.entries(catalog.plans)) {
+    const sets = [p, p.hostingIncluded, p.connected].filter(Boolean) as PriceSet[];
+    if (sets.some(set => set.paddlePriceId === priceId || set.yearly?.paddlePriceId === priceId)) return tier as Plan;
+  }
   return null;
 }
 
@@ -230,7 +271,8 @@ async function handleWebhook(req: Request, deps: BillingDeps): Promise<Response>
             const {data:knownSubs}=await db.from("subscriptions").select("provider_ref,period_start,period_end,tier,status").eq("user_id",userId).eq("provider","paddle").eq("tier",tier).order("updated_at",{ascending:false}).limit(1);
             const known=knownSubs?.[0];
             const start=new Date(d.billing_period?.starts_at ?? known?.period_start ?? occurredAt);
-            const interval=catalog.plans[tier]?.yearly?.paddlePriceId===priceId?"year":"month";
+            const plan=catalog.plans[tier];
+            const interval=[plan?.yearly?.paddlePriceId,plan?.hostingIncluded?.yearly?.paddlePriceId,plan?.connected?.yearly?.paddlePriceId].includes(priceId)?"year":"month";
             const end=d.billing_period?.ends_at ?? known?.period_end ?? addMonths(start,interval==="year"?12:1).toISOString();
             const receipt=await creditRpc(db,"bid_record_payment",{p_user:userId,p_transaction:txn,p_subscription:d.subscription_id??known?.provider_ref??null,p_tier:tier,p_interval:interval,p_credits:tokens,p_start:start.toISOString(),p_end:end,p_now:now.toISOString()});
             if (!receipt.duplicate) granted.push({ tier, tokens });
@@ -359,10 +401,16 @@ export function createBillingHandler(deps: BillingDeps): (req: Request) => Promi
         return json(200, {
             source: "cloud", taxInclusive: true, version: catalog.version, pricing,
             currency: catalog.currency,
+            features: catalog.features ?? { hostingIncluded: false },
+            hostingMode: catalog.features?.hostingIncluded ? "included" : "connected",
+            release: catalog.release ?? null, starterBonus: catalog.starterBonus ?? null,
+            free: catalog.free ? { id: "free", price: 0, tokens: catalog.free.credits, activeSites: catalog.free.activeSites, cloudMinutes: catalog.free.cloudMinutes ?? 0, hosting: catalog.free.hosting ?? null } : null,
             plans: PAID.map((id) => ({
               id,
               activeSites: catalog.plans[id]?.activeSites, activeSitesMax: catalog.plans[id]?.activeSitesMax,
-              validityMonths: catalog.plans[id]?.validityMonths, window5h: catalog.plans[id]?.window5h, weekly: catalog.plans[id]?.weekly, extras: catalog.plans[id]?.extras,
+              validityMonths: catalog.plans[id]?.validityMonths, extras: catalog.plans[id]?.extras,
+              cloudMinutes: catalog.plans[id]?.cloudMinutes ?? 0, hosting: catalog.plans[id]?.hosting ?? null, hostingMode: catalog.plans[id]?.hostingMode ?? "connected",
+              yearlyDomain: catalog.plans[id]?.yearly?.domain === true,
               price: catalog.plans[id]?.price ?? null,
               tokens: planTokens[id]?.tokens ?? 0,
               available: !!deps.paddleApiKey && !!catalog.plans[id]?.paddlePriceId && !catalog.plans[id]?.needsReconciliation,
@@ -384,7 +432,7 @@ export function createBillingHandler(deps: BillingDeps): (req: Request) => Promi
     const { catalog, planTokens } = await loadCatalog(db);
 
     // checkout / portal create a Paddle session per call, sync calls the Paddle API: limited per user (WP03)
-    if (body.action === "checkout" || body.action === "confirm-change" || body.action === "portal" || body.action === "sync") {
+    if (["checkout", "confirm-change", "portal", "sync", "bonus"].includes(body.action)) {
       const limited = await rateLimited(db, userId, `billing.${body.action}`);
       if (limited) return limited;
     }
@@ -408,8 +456,11 @@ export function createBillingHandler(deps: BillingDeps): (req: Request) => Promi
           const status=await statusOf(db,userId,email,catalog,now);
           const report=await creditRpc(db,"bid_usage_summary",{p_user:userId,p_now:now.toISOString()});
           Object.assign(report,{reconciled:{releasedHolds:cleanup.released},subscription:status.subscription,scheduledChange:status.scheduledChange,trialAvailable:status.trialAvailable,pricing:{...report.pricing,version:await pricingVersion(settings),actions:{...actionPrices,...settings["pricing.actions"]}}});
-          // V1 keeps the same required decoder fields; both versions now use the exact SQL counters.
-          if(Number(body.v)!==2) { const legacy={...report};delete legacy.v;return json(200,legacy); }
+          // The SQL report is contract v3, a superset of v2 (v2's session/weekly now describe the 24 h / 7-day guards).
+          // v1 keeps the same required decoder fields without a version; v2 callers get the v2 label.
+          const version=Number(body.v);
+          if(version!==2 && version!==3) { const legacy={...report};delete legacy.v;return json(200,legacy); }
+          report.v=version;
           const {serverTime:_,...stable}=report;
           const etag=`"${await sha256Hex(JSON.stringify(stable))}"`;
           if(req.headers.get("if-none-match")===etag) return new Response(null,{status:304,headers:{etag,"cache-control":"private, no-cache"}});
@@ -470,7 +521,7 @@ export function createBillingHandler(deps: BillingDeps): (req: Request) => Promi
             const active = (subscriptions ?? []).filter(s => ["active","trial","past_due","paused","expired"].includes(s.status));
             if (active.length > 1) return json(409,{code:"billing_conflict",error:"Multiple subscriptions require reconciliation in the customer portal"});
             if (active.length === 1) {
-              const prices = Object.values(catalog.plans).flatMap(p=>[p.paddlePriceId,p.yearly?.paddlePriceId]).filter((p):p is string=>!!p);
+              const prices = Object.values(catalog.plans).flatMap(p=>[p,p.hostingIncluded,p.connected].flatMap(set=>[set?.paddlePriceId,set?.yearly?.paddlePriceId])).filter((p):p is string=>!!p);
               return await previewChange(db,userId,{...active[0],tier:await effectiveSubscriptionTier(db,userId,active[0],now)},planId,priceId,prices,(path,body,method)=>paddle(deps,path,body,method),now,yearly?"year":"month");
             }
           }
@@ -490,6 +541,12 @@ export function createBillingHandler(deps: BillingDeps): (req: Request) => Promi
           const started=await creditRpc(db,"bid_start_trial",{p_user:userId,p_email_hash:await sha256Hex(email.trim().toLowerCase()),p_tier:t.plan,p_days:t.days,p_credits:t.tokens,p_now:now.toISOString()});
           if(!started.ok)return json(409,{error:"The trial was already used",...started});
           return json(200, await statusOf(db, userId, email, catalog, now));
+        }
+
+        case "bonus": {
+          if (!email) return json(409, { error: "an e-mail address is required", code: "bonus_used" });
+          const claimed = await creditRpc(db, "bid_v13_claim_bonus", { p_user: userId, p_email_hash: await sha256Hex(email.trim().toLowerCase()), p_now: now.toISOString() });
+          return json(claimed.ok ? 200 : 409, claimed);
         }
 
         case "portal": {

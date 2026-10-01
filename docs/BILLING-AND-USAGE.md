@@ -1,167 +1,171 @@
-> V12: плановете, кредитите и цените от V1 в този документ са заменени от [одобрения модел V2](PLANS-AND-CREDITS-V2-BG.md), §17.2. Актуалният каталог е `supabase/functions/_shared/plans-catalog.json`.
+# Billing and usage — credit model V3 (catalog v13)
 
-# Billing and usage — ledger, tariffs, periods, entitlements, retries, reconciliation (V11 RC)
+Binding spec: [PLAN-UNIFIED-BG.md §9.2–§9.10 and §11.9](PLAN-UNIFIED-BG.md). Reference math with tests:
+`web/src/lib/credits.ts` (+ `credits.test.ts`); the database enforces the same rules in
+`supabase/credits-v13.sql` (tests: `tests/rls/credits-v13.mjs`). Canonical sources — never edit the generated copies:
 
-One source of truth for AI credits: `public.credit_ledger` in the cloud. The app shows what the cloud returns
-(`billing usage`), never a client-side estimate; the engine keeps a local cost journal only for the owner's own
-providers (Netlify, own AI keys) and marks it as such.
+| Source | Generated copies (sync script, `--check` in CI) |
+|---|---|
+| `supabase/functions/_shared/plans-catalog.json` | `engine/src/plans-data.json`, the catalog seed + migration block in `supabase/schema.sql`, `supabase/migrations/202610010002_catalog_v13.sql` (`scripts/catalog-sync.mjs`) |
+| `supabase/credits-v12.sql`, `supabase/credits-v13.sql` | the `V12 CREDITS` and `V13 CREDITS` blocks of `supabase/schema.sql`, `engine/src/pricing-actions.json` (`scripts/credits-sync.mjs`) |
+| `supabase/functions/_shared/pricing-actions.json` | must equal the seed in `credits-v12.sql` |
 
-## 1. Units (revised 2026-09-30 — docs/PLANS-AND-CREDITS-BG.md)
+The app shows what the cloud returns (`billing usage`), never a client-side estimate; `web/src/lib/credits.ts` is used
+only to explain availability ("ready at 14:30").
+
+## 1. Units
 
 | Unit | Where it appears | Never mixed with |
 |---|---|---|
-| **credits** | plan grants, packs, holds, charges; every number on "Plan & usage" (the ledger column is still named `tokens` / `charged_tokens` for compatibility) | money, model tokens |
-| **money** (EUR in the catalog) | plan and pack prices in the catalog / checkout; proration and tax from Paddle's checkout; the owner's cost per credit (`ai.creditEur`) | credits |
-| **model tokens** (input / output) | `ai_usage.input_tokens / output_tokens`; the charge is `ceil(model cost in EUR / credit value of the plan)` (`creditsFor` in `ai-fix`) | — |
+| **AI credits** | plan budgets, bonus, packs, holds, charges; every number on "Plan & usage" (ledger columns are still named `tokens`) | money, model tokens, site entitlements |
+| **entitlements** | active sites, monitoring, backups, cloud minutes — part of the plan, never paid with credits | credits |
+| **money** (EUR) | plan and pack prices; tax and proration from Paddle | credits |
+| **model tokens** | `ai_usage.input_tokens / output_tokens`; charge = `ceil(model cost in EUR / ai.creditEur)` | — |
 
-A credit is a money-backed unit (one rate for every plan, `ai.creditEur` = 0.000025 €): Flash 100 000 credits
-= 2.50 € of model cost, High 300 000 = 7.50 €, Knight 1 000 000 = 25 €. Because the charge follows the model's
-real price, the plan's credits can never cost the owner more than that cap, whatever model or answer length.
-Current catalog (V12.2, `supabase/functions/_shared/plans-catalog.json`): Flash 9.99 €, High 29.99 €, Knight
-99.99 € a month (yearly 99.90 / 299.90 / 999.90 €); packs 100k / 500k / 1M credits at 4.99 / 19.99 / 39.99 €
-(valid 12 months); trial 7 days of High with 50 000 credits. The rolling **session** (5 h, 20 % of the monthly
-credits, code `window_5h`, legacy `session_cap`) and the anchored week (40 %) replace the daily cap.
-The next catalog (V3) is proposed in [PLAN-UNIFIED-BG.md §11.9](PLAN-UNIFIED-BG.md) and is not implemented yet.
+One credit = 0.000025 € of model cost (`ai.creditEur`) on every plan: Free 10 000 = 0.25 €, Flash 40 000 = 1 €,
+High 100 000 = 2.50 €, Knight 800 000 = 20 € a month at most.
 
-## 2. Ledger (`credit_ledger`)
+## 2. Catalog v13
 
-`id, user_id, delta (bigint, + grant / − charge), bucket (plan | topup | hold), reason, ref, pricing_version, created_at`.
-Rows are immutable: corrections are compensating rows (`refund`, `expiry`, `admin_grant`), never updates or
-deletes — with two deliberate exceptions: a **hold** row is deleted when the request it belongs to settles or is
-released (it is a reservation, not a fact), and account deletion cascades.
+| Plan | Connected hosting (sold now) | Hosting included (flag) | AI credits / month (B) | Active sites | Cloud minutes | Netlify tier | Carried validity |
+|---|---|---|---:|---:|---:|---|---:|
+| Free | 0 € | — | 10 000 | 1 | 0 | Free 300 (client's own) | 1 month |
+| Flash | 9.99 € / 99.90 € a year | 14.99 € / 183.90 € | 40 000 | 1 | 300 | Personal 1 000 | 1 month |
+| High | 29.99 € / 299.90 € | 29.99 € / 358.90 € | 100 000 | 3 | 1 000 | Pro 3 000 | 3 months |
+| Knight | 99.99 € / 999.90 € | 99.99 € / 1 089.90 € | 800 000 | 10 (fair use 25) | 4 000 | Pro 5 000 | 10 months |
 
-| reason | bucket | ref | once per (user, ref, reason)? |
-|---|---|---|---|
-| `plan_grant` | plan | `<subscription>:m<k>` (month k of a yearly plan, m0 = payment) | yes (`credit_ledger_once`) |
-| `trial_grant` | plan | `trial:<subscription id>` | yes |
-| `topup` | topup | `<transaction>` or `<transaction>:<price id>` | yes |
-| `hold` | hold | `<ai_usage.id>` | one live hold per request |
-| `ai_fix` | plan / topup | `<ai_usage.id>` | one settle per request (settle is idempotent in code) |
-| `refund` | topup / plan | `<adjustment id>` | yes |
-| `expiry` | plan | `<ref of the grant that replaced it>` / `expired:<subscription>` | yes |
-| `admin_grant` | topup | admin audit id | — |
+Packs: 100 000 / 500 000 / 1 000 000 credits for 4.99 / 19.99 / 39.99 €, valid 12 months. Starter bonus: 60 000
+credits once per customer, 30 days, only for creating a site / large fixes (`starterBonus.actions`: `ai.fix`,
+`ai.fix.deep`). Trial: 7 days of High with 50 000 credits (unchanged).
 
-Balances are computed in Postgres (`credit_balance`, `credit_bucket_balance` views, RLS-filtered), never by
-paging rows in a function (audit C8).
+**Hosting mode.** Each paid plan carries both price sets: the top-level `price`/`yearly` is "connected hosting"
+(the customer owns the Netlify team and pays Netlify; our price is without hosting) and `hostingIncluded` holds the
+V3 prices with the Netlify tier and, for yearly plans, a domain included. `features.hostingIncluded` (catalog,
+overridable by the `settings` row of the same name in Admin) decides which set is sold, shown in the app and on the
+website (`scripts/site-build.py`). Webhooks, plan-change previews and upgrade-payment matching recognise both sets,
+so a subscriber keeps working when the flag changes. Default: `false` (until the Netlify agreement, §11.9).
 
-**Spend order**: plan tokens first, then packs (`ai-fix` settle). **Expiry**: plan tokens expire when the next
-period's grant arrives or the subscription ends (`grantPlanTokens`, `expireDue`); packs last 12 months
-(policy in the catalog text; enforcement of the 12-month expiry is a scheduled job that is NOT built yet —
-see §8). **Upgrade**: the new plan's grant replaces the remainder of the old period's plan tokens (the
-`expiry` row), packs are untouched.
+## 3. The credit model (V3)
 
-## 3. Reserve → execute → settle / release (`ai-fix`)
+Kinds of credits and the **spend order** (`bid_v13_lots`):
 
-1. `reconcileHolds`: holds of requests older than 15 min that never settled are deleted and their usage row
-   marked `orphaned` (crashed function, lost client). Runs at the start of every request and of every usage
-   read, so an abandoned request cannot block credits.
-2. `operationId` (client-generated, `[A-Za-z0-9_-]{8,64}`): an existing completed row → `409 duplicate_operation`
-   with the recorded outcome; a pending row → `409 operation_in_progress`. One logical operation bills once.
-3. Insert `ai_usage` (`status: pending`, `operation_id`, `pricing_version`) and the **hold** (`−estimate`), then
-   check rate limits, the daily cap and the balance including other holds (reserve first, check after — audit
-   C1). A refused request removes its hold and its usage row.
-4. Stream the model. On the final token count (or an estimate from the text received when the stream broke),
-   **settle**: delete the hold, update `ai_usage` (real tokens, cost, `status ok | truncated | refused | error`),
-   insert the charge rows (`ai_fix`, plan then topup, with `pricing_version`). Settle is idempotent
-   (`settled ??=`).
-5. A cancelled stream still settles what was received (`status: truncated`) — the product policy is
-   "you pay for what the model produced", shown as such in the history.
-6. Crash between 3 and 4 → the hold stays until step 1 of the next request releases it (≤ 15 min for AI).
-   V12 metered holds take their lifetime from `settings.credits.holdTtlMinutes` (deploys and backups 25 min =
-   the provider CLI's 20-minute timeout + 5, AI and checks 15 min).
+| # | Kind | Source | Released | Valid |
+|---|---|---|---|---|
+| 1 | bonus | starter bonus (`bonus_grant`) | at once | 30 days; only `starterBonus.actions` |
+| 2 | carried | plan lots of earlier periods (oldest expiry first), trial gifts, lots from before V3 | at once | validity months from the grant; accumulation cap = B × validity |
+| 3 | included | the current period's plan / Free / upgrade lots | `R(t)` | until the period ends, then carried |
+| 4 | packs | purchases (`topup`), admin restorations (`admin_grant`) | at once, rate-limited | 12 months |
 
-Concurrency: two parallel requests each insert a hold before checking the balance, so the second one sees the
-first's reservation (test "parallel requests see each other's reservations"). Negative balances are prevented
-at reservation time; a race that slips through settles to a negative balance, which the next request refuses
-(`quota_exhausted`) — the ledger never hides it.
+**Release.** A period starts at `t₀` = the grant time of a plan payment (a yearly plan: 12 monthly periods, each with
+its own `t₀`; Free: monthly from sign-up). Released included credits:
+`R(t) = floor(B · min(1, max(0, (t − t₀) / 336 h)))`. Spendable included = `min(R − spent − held, unreserved left)`.
+Because `spent + held ≤ R(t) < B` for `t < 336 h`, the included budget cannot be exhausted in the first 14 days.
 
-## 4. Pricing version
+**Guards** (on SETTLED included spend, `credit_spends`, rolling windows): 24 h ≤ 25 % of B, 7 days ≤ 50 % of B.
+They decide whether a **new** task may start on included credits, never how large it may be: one task larger than
+25 % of B runs when the window is clear. Bonus, carried credits and packs are not guarded.
 
-`settings.pricing.version` (explicit, e.g. `2026-10`) or, when unset, `p-<sha256 prefix>` of
-`{ai.prices, ai.multipliers, plans}`. Written on every `ai_usage` row and charge row; shown on Plan & usage.
-Changing prices in the Admin panel therefore never rewrites history.
+**Packs** are outside `R(t)` and the guards, under a technical limit of 200 000 credits per rolling hour (held +
+settled) against a stolen session (`release.packCreditsPerHour`).
 
-## 5. Periods and entitlements
+**Upgrade** joins the running period: `t₀` is unchanged and B becomes the new tier's; Paddle prorates the payment
+and only the proportional difference is granted (`bid_upgrade_grant`), so the lot total caps what `R(t)` can unlock.
+**Downgrade** applies at the next period; paid lots stay until their own expiry (carried).
 
-| Plan | Period | Renewal | Included tokens |
-|---|---|---|---|
-| Paddle monthly | `subscriptions.period_start/end` from the webhook | `period_end` | `settings.plans[tier].tokens` at each `subscription.*` renewal event |
-| Paddle yearly | payment month + 11 lazy monthly grants (`ensureMonthlyGrant`, ref `<sub>:m<k>`) | monthly, from `period_start` | same |
-| Trial | 7 days (`trial_claims`, once per e-mail hash) | — | catalog `trial.tokens` |
-| Free | calendar month (UTC), nothing renews | — | 0; bought packs still work (audit C9) |
+**Migration.** Lots that existed before V3 have no period and count as fully released (carried). `usage_windows`
+remains for history only; the 5 h session, the anchored week and Boost are no longer enforced (`bid_boost` answers
+`boost_unavailable`).
 
-`billing usage` returns `period {start, end, renewsAt, source: subscription | calendar}`; the app formats it in
-the user's time zone. Entitlements (`features`) come from the profile's plan after `expireDue` — an ended trial
-or subscription stops AI everywhere on the next call, not only on the billing screen.
+**Sites are entitlements.** `site.day` costs 0 credits; the daily pass (`bid_site_burn`) only renews paid monitoring
+extras. Activating a site needs a free slot of the plan (`site_limit`), not credits.
 
-Exhausted AI credits never block the project, its history, backups or recovery actions: they only return
-`quota_exhausted` for AI calls.
+Parameters (catalog `release`): `hours` 336, `guard24hShare` 0.25, `guard7dShare` 0.5, `packCreditsPerHour` 200 000.
 
-## 6. Purchases and subscriptions (Paddle, hosted)
+## 4. Reserve → execute → settle / release
 
-- **Checkout**: `billing checkout` → Paddle transaction with `custom_data.user_id` → hosted checkout URL. The
-  client never states a price or a token amount; the backend maps `price_id` → plan / pack from the catalog.
-- **A success redirect is not a payment.** Credits and entitlements change only on a verified webhook
-  (`Paddle-Signature` HMAC over `ts:body`, 5-minute tolerance) or on `billing sync`, which reads the
-  subscription back from Paddle (recovery after a missed webhook).
-- **Webhooks** (`billing_events`): duplicate deliveries are claimed by `event_id` (primary key) and ignored;
-  out-of-order events are ignored when older than the stored `event_at` (audit C5); a failed handler removes
-  the claim so Paddle's retry runs it again. Covered: `subscription.created/updated/activated/past_due/
-  canceled/paused/resumed`, `transaction.completed` (plan grant or pack), `adjustment.created/updated`
-  (approved refund → `grant_refund` per invoice line item: a pack-only refund never touches the plan lot, spent
-  credits are owed and become debt if the balance cannot pay them; `chargeback` → the same take-back plus a
-  suspension of paid entitlements and an `admin_notifications` row; `chargeback_warning` → notification only;
-  `chargeback_reverse` → credits and entitlements restored; all once per adjustment id).
-- **Declined card / cancelled checkout**: no event → nothing changes; the app's "waiting for payment" poll
-  ends after 3 minutes without a change.
-- **Past due**: status carried, plan kept for 7 days from the first failed payment (`subscriptions.past_due_since`,
-  not from `period_end`, which Paddle moves forward), then expired → Free. An active subscription keeps 3 days
-  after `period_end` for a late renewal webhook.
-- **Downgrade**: takes effect at the next period; credits already paid stay until their own expiry. The
-  accumulation cap (monthly × validity) limits only the new grant and counts only lots of the new tier.
-- **Upgrade / downgrade**: the app opens the customer portal (Paddle quotes proration and tax); the resulting
-  `subscription.updated` carries the new price id → tier; the plan grant follows the next renewal event.
-- **Manual plans** (`provider: manual`, granted by an admin) outlive Paddle events (audit C15).
+1. `bid_hold(user, action, credits, operation_id, …)`: idempotent by `operation_id`; checks suspension, site,
+   ledger balance, then the V3 availability for this action and pins the reservation to lots in spend order
+   (`credit_allocations`). Refusals:
 
-`billing sync` is the explicit recovery path: for each Paddle subscription it fetches the current state and
-writes status, period, cancellation, tier (from the item's price id) and the profile plan.
+   | code | reason | meaning |
+   |---|---|---|
+   | `quota_exhausted` | `exhausted` | not enough credits at all |
+   | `credits_release` | `release` | included credits are not released yet |
+   | `guard_24h` / `guard_7d` | `guard24h` / `guard7d` | a guard blocks a new task on included credits |
+   | `pack_rate` | `packRate` | more than 200 000 pack credits within an hour |
 
-## 7. What the app shows (Plan & usage)
+   Every refusal carries `readyAt` (also as `resetsAt` for older clients) and the full availability (`credits`).
+   Technical actions with `p_counts_window = false` (rollback, monitoring extras) follow the spend order but not the
+   release curve, guards or pack rate.
+2. The task runs. `bid_settle` consumes the pinned lots first, then (an underestimate) the rest in spend order without
+   the release limits — started work is always recorded; a shortfall becomes debt. Each take writes `credit_spends`
+   (kind at that moment), which feeds the guards.
+3. `bid_release` returns an unused reservation; abandoned holds expire after their TTL (`credits.holdTtlMinutes`:
+   AI and checks 15 min, deploys and backups 25 min).
 
-From `billing usage` only: plan + billing status; period + renewal (local time zone); included / used /
-reserved / remaining plan tokens (bar + legend); purchased packs as a separate balance; available =
-plan + packs − reserved; rate limits (per minute / hour, daily cap and today's spend); pricing version; the
-last 50 operations (with status: done / in flight / abandoned / truncated / refused / error) and the last 50
-ledger rows; buttons: Buy credits, Upgrade, Manage subscription (portal), Sync with provider, Refresh. The
-assistant shows the estimate before a request and the real cost after; a compact pill shows available tokens.
+Rounding: release down (`floor`), charges up (`ceil`) per operation; amounts are whole credits.
 
-## 7a. Retention and rate limits (WP03)
+## 5. `billing usage` — contract v3
 
-Retention runs inside the database: `bid_prune(p_batch)` (schema.sql) deletes at most `p_batch` rows per
-table per call and is called by every scheduler run (`monitor` → `run`), so a backlog drains over a few
-runs without a long lock; `tests/rls` proves it on real Postgres with 1500 rows.
+Request `{action: "usage", v: 3}` (the engine does). `v: 2` returns the same report labelled v2; no `v` → v1 shape.
+v3 is a superset of v2, so older decoders keep working.
 
-| Data | Kept | Why |
+| Field | Meaning |
+|---|---|
+| `included` | `{tokens (= B, v2 field), budget, released, spent, held, left, free, availableNow, periodStart, periodEnd, releaseEndsAt}` |
+| `guards` | `{last24h, cap24h, last7d, cap7d, clears24hAt, clears7dAt}` |
+| `reason` | `ok` · `release` · `guard24h` · `guard7d` · `exhausted` (for the included budget) |
+| `available` | `{now, total}` — spendable now (all kinds, after release, guards and pack rate) / in lots |
+| `carried` | lots with `remaining`, `available`, `grantedAt`, `expiresAt` |
+| `bonus` | `{credits, remaining, expiresAt, claimed, appliesTo}` |
+| `packs` | pack lots with `remaining`, `expiresAt`; `packRate {lastHour, capPerHour}` |
+| `cloudMinutes` | `{included, used: null, tracked: false}` — the entitlement; runner minutes are not metered yet |
+| `sites` | `{active, paused, limit, max, fairUse, items}` |
+| `session` / `weekly` | v2 compatibility: the 24 h and 7-day guard meters (`windowHours` 24 / 168) |
+| `period`, `used`, `reserved`, `remaining`, `purchased`, `grants`, `byAction`, `daily`, `byModel`, `nudge`, `limits`, `pricing`, `history` | as in v2; `pricing.spendOrder` = `bonus, carried, included, packs` |
+
+**When can a task start?** `{action: "estimate", credits: N, usageAction?}` → `bid_v13_ready_at` →
+`{need, availableNow, readyAt, reason, nextPeriodAt?}`; `readyAt` is null when the current period cannot cover it
+(`exhausted`, next period at `nextPeriodAt`). An action quote (`{action: "estimate", usageAction}`) also carries
+`readyAt`. CLI: `bid billing estimate --credits 37000 --usage-action ai.fix`.
+
+**Starter bonus.** `{action: "bonus"}` → `bid_v13_claim_bonus` (e-mail hash, account, Paddle customer; the claim
+survives account deletion like `trial_claims`) → `bonus_used` when already claimed. CLI: `bid billing bonus`.
+
+## 6. Ledger and lots
+
+`credit_ledger` stays the compatibility balance (`delta`, `bucket plan | topup | hold`, `reason`, `ref`); every lot is a
+`credit_grants` row (`credits`, `left_credits`, `removed_credits`, `expires_at`, and for V3 periods `period_start`,
+`period_end`, `budget`). Grant sources: `plan_grant`, `upgrade_grant`, `trial_grant`, `free_grant`, `bonus_grant`,
+`topup`, `admin_grant`. Idempotency: one lot per `(user, ref, source)`; one settlement per `operation_id`.
+Refunds take back what is left of the refunded line's lots (spent → debt), chargebacks suspend entitlements — both
+unchanged from V12 (`bid_refund`, `bid_v12_apply_adjustment`).
+
+## 7. Periods and entitlements
+
+| Plan | Period / `t₀` | Included B |
 |---|---|---|
-| `monitor_probes` | 90 days | evidence behind incidents |
-| `monitor_incidents` (resolved) | 90 days after resolution; open ones always | history in the app |
-| `monitor_heartbeat` | 7 days | only "is the scheduler alive" is read |
-| `rate_events` | 2 days | limits look back at most one hour |
-| `ai_usage` | 13 months | the usage page shows the period; a year back for disputes |
-| `admin_audit` | 24 months | who changed an account |
-| `credit_ledger`, `subscriptions`, `billing_events` | while the account exists | money; deleted with the account (cascade / explicit) — Paddle as Merchant of Record keeps the tax records |
-| `trial_claims` | always (hash only) | one trial per address |
+| Paddle monthly | each payment (`bid_record_payment` → `bid_accrue_periods`) | `settings.plans[tier].tokens` |
+| Paddle yearly | 12 monthly slices from `period_start`, granted even while the Mac is closed (`bid_scheduler_credits`) | same, per slice |
+| Upgrade | joins the running period, B = new tier | proportional difference granted |
+| Trial | 7 days | catalog `trial.tokens`, released at once |
+| Free | monthly from sign-up, granted lazily while there is no paid/trial entitlement (`bid_v13_accrue_free`) | `settings.plans.free.tokens` (10 000) |
 
-Rate limits: `bid_rate_hit(user, action, limit, window)` counts and records under an advisory lock, so every
-Edge Function instance shares the same numbers (`_shared/ratelimit.ts`): billing checkout / portal / sync 5
-per minute, monitor test 10 per minute and register 120 per hour, account export 3 per hour, admin writes
-60 per minute. A database without the function lets calls through and logs it; any other database error
-refuses the call (`rate_limit_unavailable`). `ai-fix` keeps its per-plan limits (`settings.ai.rate`).
+Cancellation keeps the plan until the end of the paid period; credits stay until expiry; sites and data are never
+deleted. Past due: 7 days from the first failed payment, then Free.
 
-## 8. Not built (honest list)
+## 8. Retention and rate limits
 
-- Pack expiry after 12 months is stated policy without an enforcing job (`expiry` rows for packs are never
-  written automatically). Owner decision: keep as is, or add a scheduled function.
-- No live Paddle sandbox run from this environment (no network to Paddle): the flows are covered by 80 Deno
-  tests against a fake Paddle; the owner acceptance test walks the sandbox checkout end to end.
-- Multi-currency: the catalog has one currency.
+Unchanged from V12: `bid_prune` retention, `bid_rate_hit` per-user limits (`_shared/ratelimit.ts`; `billing.bonus`
+5 per minute, like checkout). `credit_spends` is kept while the account exists (money).
+
+## 9. Not built (honest list)
+
+- Cloud minutes are an entitlement in the catalog and the usage report; the runner does not meter minutes yet.
+- Netlify tiers are shown as the recommended / included tier; provisioning or paying Netlify for customers needs the
+  Netlify agreement (§11.2, §11.8) — `features.hostingIncluded` stays off until then.
+- The domain included with yearly hosting-included plans is a catalog flag (`yearly.domain`); the domain workflow
+  still follows `features.knightDomain` (Knight).
+- Pack expiry after 12 months is enforced lazily (lots expire on the next read), not by a separate job.
+- No live Paddle sandbox run from this environment; flows are covered by Deno tests against a fake Paddle and by the
+  SQL tests on PGlite.

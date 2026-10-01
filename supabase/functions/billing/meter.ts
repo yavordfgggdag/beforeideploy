@@ -6,7 +6,7 @@ import {rateLimited} from "../_shared/ratelimit.ts";
 export const METER_ACTIONS=["sites","site_activate","site_pause","estimate","meter","boost","nudge_ack","domain_request"];
 const billable=["check.run","audit.full","deploy.preview","deploy.production","deploy.rollback","backup.snapshot"];
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const result=(r:Row)=>json(r.ok===false ? r.code==="invalid_domain"?400:r.code==="quota_exhausted"?402:["operation_conflict","operation_released","boost_used","hosting_not_ready","domain_used"].includes(r.code)?409:403 : 200,r);
+const result=(r:Row)=>json(r.ok===false ? r.code==="invalid_domain"?400:r.code==="quota_exhausted"?402:["operation_conflict","operation_released","boost_used","boost_unavailable","hosting_not_ready","domain_used"].includes(r.code)?409:403 : 200,r);
 
 /** The client never chooses the price, window flag or settlement amount. */
 export async function meterAction(db:DbClient,user:string,body:Row,now:Date):Promise<Response> {
@@ -32,10 +32,18 @@ export async function meterAction(db:DbClient,user:string,body:Row,now:Date):Pro
  const settings=Object.fromEntries((settingsRows??[]).map(r=>[r.key,r.value]));
  const prices={...actions,...settings["pricing.actions"]} as Row;
  if(body.action==="estimate") {
+  // V3 readiness (docs/PLAN-UNIFIED-BG.md §9.9): `credits` asks when N credits can start ({readyAt, reason});
+  // with an AI action (ai.fix …) the starter bonus counts only where it applies.
+  if(body.credits!=null) {
+   if(!Number.isSafeInteger(body.credits)||body.credits<0||body.credits>1000000000)return json(400,{error:"credits must be a whole number"});
+   if(body.usageAction!=null&&![...billable,"ai.fix","ai.fix.deep","ai.chat"].includes(body.usageAction))return json(400,{error:"unknown metered action"});
+   return json(200,await creditRpc(db,"bid_v13_ready_at",{...base,p_need:body.credits,p_action:body.usageAction??null}));
+  }
   if(![...billable,"site.day","monitor.fast","monitor.path"].includes(body.usageAction))return json(400,{error:"unknown metered action"});
   const price=prices[body.usageAction];
   if(!Number.isSafeInteger(price?.credits)||price.credits<0||price.credits>1000000000||typeof price.window!=="boolean")return json(503,{error:"Action pricing is unavailable",code:"meter_unavailable"});
-  return json(200,{action:body.usageAction,credits:price.credits,countsInWindow:price.window,pricingVersion:await pricingVersion(settings)});
+  const ready=price.credits>0?await creditRpc(db,"bid_v13_ready_at",{...base,p_need:price.credits,p_action:body.usageAction}):{readyAt:now.toISOString(),reason:"ok"};
+  return json(200,{action:body.usageAction,credits:price.credits,countsInWindow:price.window,pricingVersion:await pricingVersion(settings),readyAt:ready.readyAt??null,reason:ready.reason??null});
  }
  if(typeof body.operationId!=="string"||!/^[A-Za-z0-9_:-]{8,200}$/.test(body.operationId))return json(400,{error:"operationId required"});
  const kind=body.kind??"charge";

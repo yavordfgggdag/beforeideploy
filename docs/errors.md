@@ -102,7 +102,6 @@ Returned as `code` in the JSON body; the engine maps them to the codes above (`q
 | `disabled` | 403 | An admin disabled AI for this account. |
 | `no_plan` | 403 | Normal user on the Free plan asked for cloud AI. |
 | `forbidden` | 403 | Admin function called by a non-admin. |
-| `session_cap` | 403 | The 5-hour session's AI credit share is used; the body carries `resetsAt`, `cap`, `spent`. |
 | `quota_exhausted` | 402 | No credits left. |
 | `account_suspended` | 402 | The account is suspended after a payment chargeback; no new paid work until it is reversed or repaid. Sites are paused, never deleted. |
 | `bad_secret` | 401 | `monitor` scheduler call without the `x-monitor-secret` that matches `MONITOR_CRON_SECRET` (V11 RC). |
@@ -154,15 +153,19 @@ Returned as `code` in the JSON body; the engine maps them to the codes above (`q
 | Code | HTTP | Meaning |
 |---|---|---|
 | `meter_unavailable` | 503 | Atomic credit accounting is unavailable or its migration is missing; no new paid work starts. |
-| `window_week` | 403 | The anchored weekly credit limit is reached; `resetsAt` gives the reset time. Packs do not bypass it. |
+| `window_week` | 403 | V12 servers only: the anchored weekly credit limit is reached; `resetsAt` gives the reset time. Credit model V3 replaced it with `guard_7d`. |
+| `credits_release` | 403 | Credit model V3: the period's included credits are released over 14 days (`R(t)`) and not enough is released yet. The body carries `readyAt` (when the task can start), `reason: "release"` and the balances. Use the starter bonus, carried credits or a pack, run a smaller task or wait. |
+| `guard_24h` | 403 | V3 guard: settled included spend in the last 24 h reached 25 % of the monthly budget, so a new task cannot start on included credits; `readyAt` says when. Packs and carried credits still work. One large task is never refused for its size alone. |
+| `guard_7d` | 403 | V3 guard: settled included spend in the last 7 days reached 50 % of the monthly budget; `readyAt` says when a new task can start. |
+| `pack_rate` | 403 | More than 200 000 pack credits within an hour (protection against a stolen session); `readyAt` gives the next hour. |
+| `bonus_used` | 409 | The one-time starter bonus was already claimed by this account, e-mail address or payment customer. |
 | `operation_conflict` | 409 | An operation ID was reused for a different action or site. |
 | `operation_released` | 409 | A released reservation cannot be reused; start a new logical operation. |
 | `site_paused` | 403 | The site is paused or does not belong to this account. Rollback remains available. |
 | `site_limit` | 403 | The active-site limit is reached. Pause a site or change plans. |
 | `hosting_plan` | 403 | Hosting in the owner's account requires Knight. |
 | `hosting_not_ready` | 409 | Owner hosting has not been provisioned; no hosting service was activated. |
-| `boost_unavailable` | 403 | Boost requires an active Knight entitlement. |
-| `boost_used` | 409 | This subscription week's Boost was already used; wait until `resetsAt`. |
+| `boost_unavailable` | 409 | Boost was retired with credit model V3 (nothing to raise: the release curve and guards replaced the 5 h / weekly windows). |
 | `invalid_domain` | 400 | Domain name is malformed; submit a public DNS name without a scheme or path. |
 | `domain_unavailable` | 403 | The included domain needs an active, paid Knight subscription. |
 | `domain_wait` | 403 | Monthly Knight's seven-day waiting period has not ended; `availableAt` gives the date. |

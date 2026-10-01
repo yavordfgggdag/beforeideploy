@@ -91,11 +91,12 @@ private struct PlanUsageContent: View {
             TimelineView(.periodic(from: .now, by: 30)) { _ in
                 VStack(alignment: .leading, spacing: 22) {
                     if let s = u.session {
-                        CreditsMeter(title: L("usage.fiveHours"), used: s.used, reserved: s.reserved ?? 0, total: s.cap, detail: resetDetail(s.resetsAt, rolling: u.v != 2))
+                        // usage v3: the two meters are the 24 h / 7-day guards on settled included spend
+                        CreditsMeter(title: L(s.windowHours >= 24 ? "usage.last24h" : "usage.fiveHours"), used: s.used, reserved: s.reserved ?? 0, total: s.cap, detail: resetDetail(s.resetsAt, rolling: u.v != 2))
                     } else { EmptyLine(icon: "timer", text: L("usage.sessionFree")) }
                     Divider()
                     if let w = u.weekly {
-                        CreditsMeter(title: L("usage.week"), used: w.used, reserved: w.reserved ?? 0, total: w.cap, detail: resetDetail(w.resetsAt))
+                        CreditsMeter(title: L(u.v == 3 ? "usage.last7d" : "usage.week"), used: w.used, reserved: w.reserved ?? 0, total: w.cap, detail: resetDetail(w.resetsAt))
                     } else {
                         HStack { Text(L("usage.week")); Spacer(); Text(L("usage.windowUnavailable")).foregroundColor(Theme.tertiary) }.font(Typo.font(.callout))
                     }
@@ -103,6 +104,9 @@ private struct PlanUsageContent: View {
                     CreditsMeter(title: L("usage.period"), used: u.used.tokens, reserved: u.reserved.tokens,
                                  total: u.included.tokens,
                                  detail: L("usage.periodDates", BillingFormat.day(u.period.start), BillingFormat.day(u.period.end)))
+                    if let released = u.included.released, let budget = u.included.budget, released < budget {
+                        Text(L("usage.releasedNow", released, budget)).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
+                    }
                 }
             }
             if u.weekly?.boostAvailable == true {
