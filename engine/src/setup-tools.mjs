@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { APP_DIR, ENGINE_DIR, EngineError, ensureDir, which, sh, runStream, fetchT, readJSON, processHolds, pidStartTime } from './util.mjs';
+import { APP_DIR, ENGINE_DIR, EngineError, ensureDir, which, sh, runStream, fetchT, readJSON, processHolds, pidAlive, pidStartTime, onChildSpawn, killGroup } from './util.mjs';
 import { msg } from './i18n.mjs';
 import { cliEnv } from './isolation.mjs';
 
@@ -36,7 +36,41 @@ export function resolveNpm() {
   return fs.existsSync(bundled) ? { cmd: process.execPath, args: [bundled] } : null;
 }
 
-/** O_EXCL lock with process identity; release only our own inode. */
+/** Stops the process groups a dead lock owner recorded (npm, gh, unzip left running after a hard kill). */
+function stopOrphans(owner) {
+  for (const child of Array.isArray(owner?.children) ? owner.children : []) {
+    // only a recorded start time that ps confirms proves the pid is still that child, not a reused pid
+    if (!Number.isInteger(child?.pid) || child.pid <= 1 || child.pid === process.pid || child.pidStart == null || !pidAlive(child.pid)) continue;
+    const now = pidStartTime(child.pid);
+    if (now !== null && now === child.pidStart) killGroup(child.pid, 'SIGKILL');
+  }
+}
+
+/**
+ * Start-of-run sweep (audit B1), only while holding the lock: every `.staging-*` folder and half-made
+ * `bin/<bin>.<uuid>` link older than our lock belongs to a run that was killed before its exit handlers ran.
+ */
+export function sweepStale(since = Date.now()) {
+  const removed = [];
+  const sweep = (dir, match) => {
+    let names = [];
+    try { names = fs.readdirSync(dir); } catch { return; }
+    for (const name of names) {
+      if (!match(name)) continue;
+      const file = path.join(dir, name);
+      try {
+        if (fs.lstatSync(file).mtimeMs > since) continue;
+        fs.rmSync(file, { recursive: true, force: true });
+        removed.push(file);
+      } catch {}
+    }
+  };
+  sweep(TOOLS_DIR, name => name.startsWith('.staging-'));
+  sweep(path.join(TOOLS_DIR, 'bin'), name => /\.[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(name));
+  return removed;
+}
+
+/** O_EXCL lock with process identity; release only our own inode. Records our children for orphan recovery. */
 export function setupLock() {
   ensureDir(APP_DIR);
   const file = path.join(APP_DIR, 'setup.lock');
@@ -44,13 +78,22 @@ export function setupLock() {
     try {
       const fd = fs.openSync(file, 'wx', 0o600);
       const inode = fs.fstatSync(fd).ino;
-      fs.writeFileSync(fd, JSON.stringify({ pid: process.pid, pidStart: pidStartTime(process.pid) }));
+      const record = { pid: process.pid, pidStart: pidStartTime(process.pid), children: [] };
+      fs.writeFileSync(fd, JSON.stringify(record));
       fs.closeSync(fd);
+      const takenAt = Date.now();
+      const stopTracking = onChildSpawn(child => {
+        if (!child.pid) return;
+        record.children = [...record.children.filter(c => c.pid !== child.pid), { pid: child.pid, pidStart: pidStartTime(child.pid) }].slice(-32);
+        try { if (fs.statSync(file).ino === inode) fs.writeFileSync(file, JSON.stringify(record), { mode: 0o600 }); } catch {}
+      });
       const release = () => {
+        stopTracking();
         try { if (fs.statSync(file).ino === inode) fs.unlinkSync(file); } catch {}
         process.removeListener('exit', release);
       };
       process.once('exit', release);
+      sweepStale(takenAt);
       return release;
     } catch (e) {
       if (e.code !== 'EEXIST') throw e;
@@ -58,6 +101,7 @@ export function setupLock() {
       const owner = readJSON(file, null);
       // An empty record can be a concurrent process still writing its identity; never steal a fresh lock.
       if (processHolds(owner) || (!owner && Date.now() - before.mtimeMs < 30000)) break;
+      stopOrphans(owner);
       try { if (fs.statSync(file).ino === before.ino) fs.unlinkSync(file); } catch {}
     }
   }

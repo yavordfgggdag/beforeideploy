@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'bid-setup-v12-'));
@@ -88,4 +88,68 @@ test('preflight probes in parallel, denies service failure and insufficient disk
   await setupPreflight({disk,probe}); assert.equal(max,3);
   await assert.rejects(()=>setupPreflight({disk,probe:async()=>({status:503})}),e=>e.code==='offline');
   await assert.rejects(()=>setupPreflight({disk:()=>({bavail:1,bsize:1}),probe}),e=>e.code==='setup_disk_space');
+});
+
+// ---------------------------------------------------------------- V13 (docs/plan-v13/codex-setup-platform.md)
+
+const sleepMs = ms => new Promise(r => setTimeout(r, ms));
+const alive = pid => { try { process.kill(pid, 0); return true; } catch (e) { return e.code === 'EPERM'; } };
+async function waitFor(fn, ms = 10000) { const end = Date.now() + ms; while (Date.now() < end) { if (fn()) return true; await sleepMs(50); } return false; }
+const engineEnv = (dir, fake) => {
+  const env = { PATH: `${fake}:/usr/bin:/bin`, HOME: path.join(dir, 'home'), BID_APP_DIR: path.join(dir, 'app'), BID_CACHE_DIR: path.join(dir, 'cache'), BID_NO_KEYCHAIN: '1', BID_NO_BUNDLED_CLOUD: '1', BID_LANG: 'en' };
+  fs.mkdirSync(env.HOME, { recursive: true });
+  return env;
+};
+
+test('B1: cancel kills the npm tree at once, cleans staging and reports cancelled well before the app SIGKILL', async () => {
+  const dir = fs.mkdtempSync(path.join(tmp, 'cancel-'));
+  const fake = path.join(dir, 'bin'); fs.mkdirSync(fake);
+  const pidFile = path.join(dir, 'npm.pid');
+  // npm that ignores SIGTERM (as a hung install can): only SIGKILL of its process group stops it
+  fs.writeFileSync(path.join(fake, 'npm'), `#!/bin/sh\nif [ "$1" = "--version" ]; then echo 10.9.0; exit 0; fi\ntrap '' TERM\necho $$ > ${JSON.stringify(pidFile)}\nexec /bin/sleep 300\n`, { mode: 0o755 });
+  const env = engineEnv(dir, fake);
+  const child = spawn(process.execPath, [path.join(root, 'engine/src/bid.mjs'), 'setup', 'run', 'netlify-cli', '--yes'], { env, stdio: ['ignore', 'pipe', 'pipe'] });
+  let out = ''; child.stdout.on('data', d => { out += d; });
+  const exited = new Promise(r => child.on('close', code => r(code)));
+  assert.ok(await waitFor(() => fs.existsSync(pidFile) && fs.readFileSync(pidFile, 'utf8').trim()), 'fake npm started');
+  const npmPid = Number(fs.readFileSync(pidFile, 'utf8').trim());
+  const tools = path.join(env.BID_APP_DIR, 'tools');
+  assert.ok(fs.readdirSync(tools).some(n => n.startsWith('.staging-')), 'staging exists while installing');
+  const lock = JSON.parse(fs.readFileSync(path.join(env.BID_APP_DIR, 'setup.lock'), 'utf8'));
+  assert.ok((lock.children || []).some(c => c.pid === npmPid), 'lock records the npm child for orphan recovery');
+  const t0 = Date.now(); child.kill('SIGTERM');
+  const code = await Promise.race([exited, sleepMs(7000).then(() => 'timeout')]);
+  const took = Date.now() - t0;
+  if (code === 'timeout') child.kill('SIGKILL');
+  try { process.kill(-npmPid, 'SIGKILL'); } catch {}
+  assert.equal(code, 130); assert.ok(took < 2600, `engine exited after ${took} ms (app SIGKILLs at 8 s)`);
+  assert.ok(/"code":"cancelled"/.test(out), 'cancelled result line');
+  assert.equal(fs.readdirSync(tools).some(n => n.startsWith('.staging-')), false, 'staging removed');
+  assert.equal(fs.existsSync(path.join(env.BID_APP_DIR, 'setup.lock')), false, 'lock released');
+});
+
+test('B1: lock recovery stops a dead owner\'s orphaned children and sweeps stale staging and temp links', async () => {
+  const { pidStartTime } = await import('../engine/src/util.mjs');
+  const orphan = spawn('/bin/sh', ['-c', 'trap "" TERM; exec /bin/sleep 300'], { detached: true, stdio: 'ignore' });
+  const bystander = spawn('/bin/sleep', ['300'], { detached: true, stdio: 'ignore' });
+  orphan.unref(); bystander.unref();
+  assert.ok(await waitFor(() => pidStartTime(orphan.pid) !== null, 2000), 'ps works with a minimal PATH');
+  const file = path.join(process.env.BID_APP_DIR, 'setup.lock');
+  fs.mkdirSync(process.env.BID_APP_DIR, { recursive: true });
+  fs.writeFileSync(file, JSON.stringify({ pid: 999999999, pidStart: 1, children: [{ pid: orphan.pid, pidStart: pidStartTime(orphan.pid) }, { pid: bystander.pid, pidStart: 1 }] }));
+  const stale = path.join(TOOLS_DIR, '.staging-netlify-cli-old'); fs.mkdirSync(path.join(stale, 'node_modules'), { recursive: true });
+  fs.mkdirSync(path.join(TOOLS_DIR, 'bin'), { recursive: true });
+  const tempLink = path.join(TOOLS_DIR, 'bin', 'netlify.0b8f4c2e-1111-4222-8333-123456789abc');
+  fs.symlinkSync('/nonexistent', tempLink);
+  const old = new Date(Date.now() - 60000);
+  fs.utimesSync(stale, old, old); fs.lutimesSync(tempLink, old, old);
+  const release = setupLock();
+  try {
+    const killed = await waitFor(() => orphan.signalCode === 'SIGKILL', 2000);
+    const spared = alive(bystander.pid);
+    for (const p of [orphan.pid, bystander.pid]) { try { process.kill(-p, 'SIGKILL'); } catch {} }
+    assert.ok(killed, 'orphan killed');
+    assert.ok(spared, 'a pid whose start time does not match is never killed');
+    assert.equal(fs.existsSync(stale), false); assert.equal(fs.existsSync(tempLink), false);
+  } finally { release(); }
 });
