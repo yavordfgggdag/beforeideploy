@@ -69,10 +69,11 @@ create table if not exists public.usage_nudges (
 );
 create table if not exists public.domain_orders (
   id uuid primary key default gen_random_uuid(), user_id uuid not null references public.profiles(user_id) on delete cascade,
-  site_id uuid, domain text not null, registrar text not null default 'spaceship', cost_eur numeric(10,2),
+  site_id uuid, domain text not null, registrar text not null default 'spaceship', cost_eur numeric(10,2) check(cost_eur>=0),
   status text not null default 'review', included boolean not null default true, year_ref text not null,
   registered_at timestamptz, expires_at timestamptz, created_at timestamptz not null default now(),
-  foreign key(user_id,site_id) references public.sites(user_id,id)
+  foreign key(user_id,site_id) references public.sites(user_id,id),
+  check(not included or cost_eur<=15)
 );
 create unique index if not exists domain_orders_included on public.domain_orders(user_id,year_ref) where included and status<>'rejected';
 create table if not exists public.netlify_allocations (
@@ -446,7 +447,8 @@ declare r record; held bigint; take bigint; taken bigint:=0;
 begin
  perform bid_v12_refresh(p_user,p_now);
  if p_share<=0 or p_share>1 then raise exception 'invalid refund share'; end if;
- for r in select * from credit_grants where user_id=p_user and (ref=p_ref or starts_with(ref,p_ref||':')) loop
+ if exists(select 1 from credit_ledger where user_id=p_user and reason='payment_refund' and ref=p_adjustment||':'||p_ref) then return jsonb_build_object('ok',true,'taken',0,'duplicate',true); end if;
+ for r in select * from credit_grants where user_id=p_user and (ref=p_ref or payment_ref=p_ref or starts_with(ref,p_ref||':')) loop
   if exists(select 1 from credit_ledger where user_id=p_user and reason='grant_refund' and ref=p_adjustment||':'||r.id) then continue; end if;
   select coalesce(sum(credits),0) into held from credit_allocations where grant_id=r.id;
   if held>0 then raise exception 'refund waits for reserved work' using errcode='55P03'; end if;
@@ -455,6 +457,8 @@ begin
   insert into credit_ledger(user_id,delta,bucket,reason,ref,created_at) values(p_user,-take,r.bucket,'grant_refund',p_adjustment||':'||r.id,p_now);
   taken:=taken+take;
  end loop;
+ update credit_periods set refund_share=least(1,refund_share+p_share) where transaction_ref=p_ref and user_id=p_user;
+ insert into credit_ledger(user_id,delta,bucket,reason,ref,created_at) values(p_user,0,'plan','payment_refund',p_adjustment||':'||p_ref,p_now);
  return jsonb_build_object('ok',true,'taken',taken);
 end $$;
 
@@ -462,9 +466,19 @@ end $$;
 
 create or replace function public.bid_enforce_sites(p_user uuid,p_now timestamptz default now()) returns jsonb
 language plpgsql security definer set search_path=public,pg_temp as $$
-declare ent jsonb; lim integer; n integer:=0; r record; rank integer:=0; debt_at timestamptz;
+declare ent jsonb; lim integer; n integer:=0; r record; rank integer:=0; debt_at timestamptz; best_tier text;
 begin
  perform bid_v12_refresh(p_user,p_now);
+ -- The scheduler must expire entitlements even when the owner's Mac never opens the app.
+ update subscriptions set status='expired',updated_at=p_now where user_id=p_user and status in ('active','trial','past_due') and period_end is not null
+  and period_end+case when provider='paddle' and status in ('active','past_due') then interval '3 days' else interval '0 days' end<=p_now;
+ if exists(select 1 from subscriptions where user_id=p_user) and exists(select 1 from profiles where user_id=p_user and role='normal') then
+  select effective into best_tier from (
+   select coalesce((select c.from_tier from billing_changes c where c.user_id=p_user and c.provider_ref=sub.provider_ref and c.to_tier=sub.tier::text and c.status in ('applying','applied') and c.effective_at>p_now order by c.created_at desc limit 1),sub.tier::text) as effective
+   from subscriptions sub where sub.user_id=p_user and sub.status in ('active','trial','past_due')
+  ) entitled order by array_position(array['free','flash','high','knight'],effective) desc limit 1;
+  update profiles set plan=coalesce(best_tier,'free')::plan_tier where user_id=p_user and plan::text is distinct from coalesce(best_tier,'free');
+ end if;
  ent:=bid_v12_entitlement(p_user,p_now); lim:=(ent->>'siteLimit')::integer;
  select debt_since into debt_at from credit_accounts where user_id=p_user and debt>0;
  for r in select * from sites where user_id=p_user and state='active' order by activated_at,id loop
@@ -480,7 +494,7 @@ end $$;
 
 create or replace function public.bid_v12_burn_one(p_user uuid,p_site uuid,p_day date,p_now timestamptz default now()) returns jsonb
 language plpgsql security definer set search_path=public,pg_temp as $$
-declare s sites; r jsonb; op text; price bigint; extra bigint; conf jsonb; tier text; cnt integer; debt_now bigint; debt_at timestamptz; h credit_holds;
+declare s sites; r jsonb; op text; price bigint; extra bigint; conf jsonb; tier text; cnt integer; debt_now bigint; debt_at timestamptz; h credit_holds; version text;
 begin
  perform bid_v12_refresh(p_user,p_now);
  select * into s from sites where user_id=p_user and id=p_site;
@@ -490,7 +504,8 @@ begin
  if exists(select 1 from usage_events where user_id=p_user and operation_id=op) then return jsonb_build_object('ok',true,'duplicate',true); end if;
  select value into conf from settings where key='pricing.actions';
  price:=coalesce((conf#>>'{site.day,credits}')::bigint,1000);
- r:=bid_charge(p_user,'site.day',price,op,p_site,false,'2026-10',p_now);
+ select coalesce(value#>>'{}','2026-10') into version from settings where key='pricing.version';
+ r:=bid_charge(p_user,'site.day',price,op,p_site,false,version,p_now);
  if r->>'code'='quota_exhausted' then
   select count(*) into cnt from sites where user_id=p_user and state='active';
   select debt,debt_since into debt_now,debt_at from credit_accounts where user_id=p_user;
@@ -502,24 +517,20 @@ begin
   end if;
   -- Only the scheduler can authorize this bounded hosting overdraft. It still uses the common settle.
   insert into credit_holds(user_id,operation_id,action,credits,site_id,counts_in_window,pricing_version,created_at,expires_at)
-  values(p_user,op,'site.day',0,p_site,false,'2026-10',p_now,p_now+interval '15 minutes') returning * into h;
+  values(p_user,op,'site.day',0,p_site,false,version,p_now,p_now+interval '15 minutes') returning * into h;
   r:=bid_settle(p_user,op,price,null,p_now);
  end if;
  if not coalesce((r->>'ok')::boolean,false) then return r; end if;
- select plan::text into tier from profiles where user_id=p_user;
- -- Paid extras never increase the hosting debt allowance. Repeated scheduler runs stay idempotent.
- if tier<>'knight' and exists(select 1 from monitor_targets where site_id=p_site and enabled and interval_min<10) then
-  extra:=coalesce((conf#>>'{monitor.fast,credits}')::bigint,500);
-  r:=bid_charge(p_user,'monitor.fast',extra,'fast:'||p_site||':'||p_day,p_site,false,'2026-10',p_now);
-  if not (r->>'ok')::boolean then update monitor_targets set interval_min=10 where site_id=p_site; end if;
+ select coalesce(min(interval_min),10),coalesce(max(jsonb_array_length(coalesce(checks->'paths','[]'::jsonb))),0) into cnt,extra from monitor_targets where site_id=p_site and enabled;
+ r:=bid_v12_monitor_extras(p_user,p_site,cnt,extra::integer,p_day,p_now);
+ if not (r->>'ok')::boolean then
+  update monitor_targets set interval_min=greatest(interval_min,10),checks=jsonb_set(checks,'{paths}',coalesce((select jsonb_agg(value) from jsonb_array_elements(checks->'paths') with ordinality as p(value,n) where n<=3),'[]'::jsonb)) where site_id=p_site;
  end if;
- select greatest(0,coalesce(max(jsonb_array_length(coalesce(checks->'paths','[]'::jsonb))),0)-3) into cnt from monitor_targets where site_id=p_site and enabled;
- if cnt>0 then
-  extra:=cnt*coalesce((conf#>>'{monitor.path,credits}')::bigint,50);
-  r:=bid_charge(p_user,'monitor.path',extra,'paths:'||p_site||':'||p_day,p_site,false,'2026-10',p_now);
-  if not (r->>'ok')::boolean then
-   update monitor_targets set checks=jsonb_set(checks,'{paths}',coalesce((select jsonb_agg(value) from jsonb_array_elements(checks->'paths') with ordinality as p(value,n) where n<=3),'[]'::jsonb)) where site_id=p_site;
-  end if;
+ if p_day<>(p_now at time zone 'UTC')::date then
+  update usage_events set created_at=p_day::timestamp at time zone 'UTC' where user_id=p_user and operation_id=op;
+  update usage_daily set credits=credits-price,count=count-1 where user_id=p_user and site_id=p_site and action='site.day' and day=(p_now at time zone 'UTC')::date;
+  insert into usage_daily(user_id,day,site_id,action,credits,count) values(p_user,p_day,p_site,'site.day',price,1)
+   on conflict(user_id,day,(coalesce(site_id,'00000000-0000-0000-0000-000000000000'::uuid)),action) do update set credits=usage_daily.credits+excluded.credits,count=usage_daily.count+1;
  end if;
  return jsonb_build_object('ok',true,'charged',price);
 end $$;
@@ -671,7 +682,7 @@ begin
  select coalesce(sum(delta),0) into available from credit_ledger where user_id=p_user;
  select coalesce(sum(left_credits) filter(where bucket='plan'),0),coalesce(sum(left_credits) filter(where bucket='topup'),0) into plan_left,packs_left from credit_grants where user_id=p_user;
  select debt into debt_now from credit_accounts where user_id=p_user;
- return jsonb_build_object('ok',true,'released',before_n-after_n,'reservedTokens',reserved,'open',after_n,'available',greatest(0,available),'balance',available,'plan',plan_left,'topup',packs_left,'total',greatest(0,plan_left+packs_left-debt_now),'debt',debt_now);
+ return jsonb_build_object('ok',true,'released',before_n-after_n,'reservedTokens',reserved,'open',after_n,'available',greatest(0,available),'balance',available,'plan',plan_left,'topup',packs_left,'total',greatest(0,plan_left+packs_left-debt_now),'debt',debt_now,'entitlements',bid_v12_entitlement(p_user,p_now));
 end $$;
 
 -- Preserve the subscription-start anchor when Paddle advances current_billing_period each month.
@@ -685,9 +696,222 @@ end $$;
 drop trigger if exists bid_v12_subscription_anchor on subscriptions;
 create trigger bid_v12_subscription_anchor before insert or update on subscriptions for each row execute function bid_v12_subscription_anchor();
 
+create or replace function public.bid_start_trial(p_user uuid,p_email_hash text,p_tier text,p_days integer,p_credits bigint,p_now timestamptz default now()) returns jsonb
+language plpgsql security definer set search_path=public,pg_temp as $$
+declare sub_id uuid;
+begin
+ perform bid_v12_lock(p_user);
+ if p_tier not in ('flash','high','knight') or p_days not between 1 and 30 or p_credits<1 or p_email_hash !~ '^[a-f0-9]{64}$' then raise exception 'invalid trial'; end if;
+ if exists(select 1 from subscriptions where user_id=p_user and provider in ('paddle','trial')) then return jsonb_build_object('ok',false,'code','trial_used'); end if;
+ insert into trial_claims(email_hash,claimed_at) values(p_email_hash,p_now) on conflict do nothing;
+ if not found then return jsonb_build_object('ok',false,'code','trial_used'); end if;
+ insert into subscriptions(user_id,provider,tier,status,period_start,period_end,updated_at) values(p_user,'trial',p_tier::plan_tier,'trial',p_now,p_now+make_interval(days=>p_days),p_now) returning id into sub_id;
+ update profiles set plan=p_tier::plan_tier where user_id=p_user;
+ perform bid_grant(p_user,p_credits,'trial_grant',sub_id::text,p_tier,p_now,p_now+make_interval(days=>p_days),p_now);
+ return jsonb_build_object('ok',true,'subscriptionId',sub_id);
+end $$;
+
+create or replace function public.bid_upgrade_grant(p_user uuid,p_change uuid,p_now timestamptz default now()) returns jsonb
+language plpgsql security definer set search_path=public,pg_temp as $$
+declare c billing_changes; plans jsonb; from_credits bigint; to_credits bigint; grant_credits bigint; start_at timestamptz; end_at timestamptz; k integer;
+begin
+ perform bid_v12_refresh(p_user,p_now);
+ select * into c from billing_changes where id=p_change and user_id=p_user and status='applied';
+ if not found or c.effective_at>p_now or not exists(select 1 from subscriptions where user_id=p_user and provider_ref=c.provider_ref and provider='paddle' and status='active') then return jsonb_build_object('ok',true,'granted',0); end if;
+ if array_position(array['free','flash','high','knight'],c.to_tier)<=array_position(array['free','flash','high','knight'],c.from_tier) then return jsonb_build_object('ok',true,'granted',0); end if;
+ select value into plans from settings where key='plans';
+ from_credits:=coalesce((plans#>>array[c.from_tier,'tokens'])::bigint,0); to_credits:=coalesce((plans#>>array[c.to_tier,'tokens'])::bigint,0);
+ start_at:=(c.quote->>'periodStart')::timestamptz; end_at:=(c.quote->>'periodEnd')::timestamptz;
+ if start_at is null or end_at is null or end_at<=start_at then return jsonb_build_object('ok',false,'code','billing_conflict'); end if;
+ if end_at-start_at>interval '40 days' then
+  k:=greatest(0,(extract(year from c.effective_at)::int-extract(year from start_at)::int)*12+extract(month from c.effective_at)::int-extract(month from start_at)::int);
+  if start_at+make_interval(months=>k)>c.effective_at then k:=greatest(0,k-1); end if;
+  end_at:=least(end_at,start_at+make_interval(months=>k+1)); start_at:=start_at+make_interval(months=>k);
+ end if;
+ grant_credits:=greatest(0,round((to_credits-from_credits)*least(1,greatest(0,extract(epoch from(end_at-c.effective_at))/extract(epoch from(end_at-start_at))))))::bigint;
+ return bid_grant(p_user,grant_credits,'upgrade_grant',c.provider_ref||':upg:'||c.id,c.to_tier,c.effective_at,null,p_now);
+end $$;
+
+-- Domain requests create a review record, never purchase/register a domain. Owner fulfillment must
+-- verify availability and the <= EUR15 registrar cost. Additional domains are money products, not credits.
+create or replace function public.bid_domain_request(p_user uuid,p_domain text,p_site uuid default null,p_now timestamptz default now()) returns jsonb
+language plpgsql security definer set search_path=public,pg_temp as $$
+declare sub subscriptions; first_paid timestamptz; v_year_ref text; n integer; existing domain_orders; order_id uuid;
+begin
+ perform bid_v12_refresh(p_user,p_now);
+ if not coalesce((select value='true'::jsonb from settings where key='features.knightDomain'),false) then return jsonb_build_object('ok',false,'code','not_available'); end if;
+ if p_domain is null or length(p_domain)>253 or exists(select 1 from unnest(string_to_array(p_domain,'.')) label where length(label)>63) or p_domain !~ '^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$' then return jsonb_build_object('ok',false,'code','invalid_domain'); end if;
+ if not exists(select 1 from profiles where user_id=p_user and plan='knight') then return jsonb_build_object('ok',false,'code','domain_unavailable'); end if;
+ if p_site is not null and not exists(select 1 from sites where user_id=p_user and id=p_site and state='active') then return jsonb_build_object('ok',false,'code','site_paused'); end if;
+ select * into sub from subscriptions where user_id=p_user and provider='paddle' and status='active' and period_end>p_now order by updated_at desc limit 1;
+ select min(granted_at) into first_paid from credit_grants where user_id=p_user and source in ('plan_grant','upgrade_grant') and tier='knight' and credits>0;
+ if sub.id is null or first_paid is null then return jsonb_build_object('ok',false,'code','domain_unavailable'); end if;
+ if sub.raw#>>'{billing_cycle,interval}' is distinct from 'year' and first_paid+interval '7 days'>p_now then return jsonb_build_object('ok',false,'code','domain_wait','availableAt',first_paid+interval '7 days'); end if;
+ n:=extract(year from age(p_now,first_paid))::integer;
+ v_year_ref:=sub.provider_ref||':'||(first_paid+make_interval(years=>n))::date;
+ select * into existing from domain_orders where user_id=p_user and domain_orders.year_ref=v_year_ref and included and status<>'rejected';
+ if found then
+  if existing.domain<>p_domain then return jsonb_build_object('ok',false,'code','domain_used'); end if;
+  return jsonb_build_object('ok',true,'orderId',existing.id,'status',existing.status,'duplicate',true);
+ end if;
+ insert into domain_orders(user_id,site_id,domain,year_ref,status,included) values(p_user,p_site,p_domain,v_year_ref,'review',true) returning id into order_id;
+ return jsonb_build_object('ok',true,'orderId',order_id,'status','review','costCapEur',15);
+end $$;
+
+-- Quote and charge only newly enabled daily extras, under the same user lock as the configuration.
+create or replace function public.bid_v12_monitor_extras(p_user uuid,p_site uuid,p_interval integer,p_paths integer,p_day date,p_now timestamptz default now()) returns jsonb
+language plpgsql security definer set search_path=public,pg_temp as $$
+declare prices jsonb; version text; tier text; fast bigint:=0; paths bigint:=0; prior integer:=0; wanted integer; available bigint; op text; r jsonb;
+begin
+ perform bid_v12_refresh(p_user,p_now);
+ select value into prices from settings where key='pricing.actions';
+ select value#>>'{}' into version from settings where key='pricing.version';
+ select plan::text into tier from profiles where user_id=p_user;
+ if p_interval<10 and tier<>'knight' and not exists(select 1 from usage_events where user_id=p_user and operation_id='fast:'||p_site||':'||p_day) then fast:=coalesce((prices#>>'{monitor.fast,credits}')::bigint,500); end if;
+ wanted:=greatest(0,p_paths-3);
+ select coalesce(max(split_part(operation_id,':',4)::integer),0) into prior from usage_events where user_id=p_user and action='monitor.path' and operation_id like 'paths:'||p_site||':'||p_day||':%';
+ paths:=greatest(0,wanted-prior)*coalesce((prices#>>'{monitor.path,credits}')::bigint,50);
+ select coalesce(sum(delta),0) into available from credit_ledger where user_id=p_user;
+ if available<fast+paths and fast+paths>0 then return jsonb_build_object('ok',false,'code','quota_exhausted','required',fast+paths,'balance',available); end if;
+ if fast>0 then
+  r:=bid_charge(p_user,'monitor.fast',fast,'fast:'||p_site||':'||p_day,p_site,false,coalesce(version,'2026-10'),p_now);
+  if not (r->>'ok')::boolean then raise exception 'monitor extras charge refused'; end if;
+ end if;
+ if paths>0 then
+  op:='paths:'||p_site||':'||p_day||':'||wanted;
+  r:=bid_charge(p_user,'monitor.path',paths,op,p_site,false,coalesce(version,'2026-10'),p_now);
+  if not (r->>'ok')::boolean then raise exception 'monitor extras charge refused'; end if;
+  update usage_events set units=wanted-prior where user_id=p_user and operation_id=op;
+ end if;
+ return jsonb_build_object('ok',true,'charged',fast+paths);
+end $$;
+
+create or replace function public.bid_monitor_register(p_user uuid,p_project text,p_url text,p_interval integer,p_checks jsonb,p_now timestamptz default now()) returns jsonb
+language plpgsql security definer set search_path=public,pg_temp as $$
+declare s sites; r jsonb; target monitor_targets;
+begin
+ perform bid_enforce_sites(p_user,p_now);
+ select * into s from sites where user_id=p_user and project_key=p_project and state='active';
+ if not found then return jsonb_build_object('ok',false,'code','site_paused'); end if;
+ if p_interval not between 5 and 1440 or jsonb_typeof(p_checks->'paths')<>'array' or jsonb_array_length(p_checks->'paths')>10 then raise exception 'invalid monitor configuration'; end if;
+ r:=bid_v12_monitor_extras(p_user,s.id,p_interval,jsonb_array_length(p_checks->'paths'),(p_now at time zone 'UTC')::date,p_now);
+ if not (r->>'ok')::boolean then return r; end if;
+ insert into monitor_targets(user_id,project_key,site_id,url,enabled,interval_min,checks,next_run_at,updated_at)
+ values(p_user,p_project,s.id,p_url,true,p_interval,p_checks,p_now,p_now)
+ on conflict(user_id,project_key) do update set site_id=excluded.site_id,url=excluded.url,enabled=true,interval_min=excluded.interval_min,checks=excluded.checks,next_run_at=p_now,updated_at=p_now returning * into target;
+ return jsonb_build_object('ok',true,'registered',true,'target',to_jsonb(target),'charged',r->'charged');
+end $$;
+
+-- Paid periods outlive the current Paddle subscription row. Annual grants must accrue while the Mac
+-- is closed, and refunds must cover every monthly slice bought by that same payment.
+create table if not exists public.credit_periods (
+ transaction_ref text primary key, user_id uuid not null references profiles(user_id) on delete cascade,
+ subscription_ref text, tier text not null check(tier in ('flash','high','knight')),
+ interval text not null check(interval in ('month','year')), monthly_credits bigint not null check(monthly_credits>0),
+ validity_months integer not null check(validity_months between 1 and 24),
+ starts_at timestamptz not null, ends_at timestamptz not null check(ends_at>starts_at),
+ granted_through integer not null default -1 check(granted_through between -1 and 11),
+ refund_share numeric not null default 0 check(refund_share between 0 and 1), created_at timestamptz not null default now()
+);
+alter table credit_periods enable row level security;
+drop policy if exists own_read on credit_periods;
+create policy own_read on credit_periods for select to authenticated using(auth.uid()=user_id);
+alter table credit_accounts add column if not exists last_entitlement_check timestamptz;
+
+-- Recover verified V1 annual receipts without reissuing previously delivered monthly slices.
+alter table credit_periods add column if not exists legacy boolean not null default false;
+alter table credit_grants add column if not exists payment_ref text;
+create or replace function public.bid_v12_import_periods(p_user uuid,p_now timestamptz default now()) returns void
+language plpgsql security definer set search_path=public,pg_temp as $$
+declare s subscriptions; e record; conf jsonb; refunded numeric; old_month integer; legacy_refs text[];
+begin
+ perform bid_v12_lock(p_user);
+ for s in select * from subscriptions where user_id=p_user and provider='paddle' and raw#>>'{billing_cycle,interval}'='year' and period_start is not null and period_end>period_start loop
+  for e in select distinct on (b.ref) b.ref,b.payload from billing_events b join credit_ledger l on l.user_id=p_user and l.reason='plan_grant' and l.ref=b.ref
+   where b.user_id=p_user and b.type='transaction.completed' and b.ref is not null and not exists(select 1 from credit_periods p where p.transaction_ref=b.ref)
+   and b.payload#>>'{data,subscription_id}'=s.provider_ref
+   and (b.payload#>>'{data,billing_period,starts_at}')::timestamptz=s.period_start
+   and (b.payload#>>'{data,billing_period,ends_at}')::timestamptz=s.period_end
+   and coalesce(b.payload#>>'{data,origin}','web') in ('web','api','subscription_recurring','subscription_charge') order by b.ref,b.processed_at
+  loop
+   select value->s.tier::text into conf from settings where key='plans';
+   -- Historic refunds with incomplete totals stop future accrual pending owner reconciliation.
+   select least(1,coalesce(sum(case when coalesce((e.payload#>>'{data,details,totals,total}')::numeric,0)>0 and coalesce((a.payload#>>'{data,totals,total}')::numeric,0)>0
+     then (a.payload#>>'{data,totals,total}')::numeric/(e.payload#>>'{data,details,totals,total}')::numeric else 1 end),0)) into refunded
+   from (select distinct on (payload#>>'{data,id}') payload from billing_events where type in ('adjustment.created','adjustment.updated') and payload#>>'{data,transaction_id}'=e.ref and payload#>>'{data,action}'='refund' and payload#>>'{data,status}'='approved' order by payload#>>'{data,id}',processed_at desc) a;
+   insert into credit_periods(transaction_ref,user_id,subscription_ref,tier,interval,monthly_credits,validity_months,starts_at,ends_at,granted_through,refund_share,legacy)
+   values(e.ref,p_user,s.provider_ref,s.tier::text,'year',(conf->>'tokens')::bigint,(conf->>'validity_months')::int,s.period_start,s.period_end,0,refunded,true);
+   update credit_grants set payment_ref=e.ref where user_id=p_user and ref=e.ref;
+   for old_month in 1..11 loop
+    legacy_refs:=array[s.provider_ref||':m'||old_month,s.provider_ref||':'||to_char(s.period_start at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"')||':m'||old_month,s.provider_ref||':'||to_char(s.period_start at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')||':m'||old_month];
+    update credit_grants set payment_ref=e.ref where user_id=p_user and ref=any(legacy_refs) and granted_at>=s.period_start and granted_at<s.period_end;
+   end loop;
+  end loop;
+ end loop;
+end $$;
+
+create or replace function public.bid_accrue_periods(p_user uuid,p_now timestamptz default now()) returns jsonb
+language plpgsql security definer set search_path=public,pg_temp as $$
+declare period credit_periods; until_at timestamptz; k integer; m integer; at timestamptz; amount bigint; ref text; given bigint:=0;
+begin
+ perform bid_v12_refresh(p_user,p_now);
+ perform bid_v12_import_periods(p_user,p_now);
+ for period in select * from credit_periods where user_id=p_user and starts_at<=p_now and refund_share<1 and granted_through<case when interval='year' then 11 else 0 end order by starts_at,transaction_ref loop
+  until_at:=least(p_now,period.ends_at-interval '1 microsecond');
+  k:=greatest(0,(extract(year from until_at)::int-extract(year from period.starts_at)::int)*12+extract(month from until_at)::int-extract(month from period.starts_at)::int);
+  if period.starts_at+make_interval(months=>k)>until_at then k:=greatest(0,k-1); end if;
+  k:=least(k,case when period.interval='year' then 11 else 0 end);
+  for m in (period.granted_through+1)..k loop
+   at:=period.starts_at+make_interval(months=>m);
+   if period.legacy and exists(select 1 from credit_ledger old_grant where old_grant.user_id=p_user and old_grant.reason='plan_grant' and old_grant.created_at>=period.starts_at and old_grant.created_at<period.ends_at and
+      old_grant.ref in (period.subscription_ref||':m'||m,period.subscription_ref||':'||to_char(period.starts_at at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"')||':m'||m,period.subscription_ref||':'||to_char(period.starts_at at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')||':m'||m)) then continue; end if;
+   amount:=round(period.monthly_credits*(1-period.refund_share))::bigint;
+   ref:=case when m=0 then period.transaction_ref else period.transaction_ref||':m'||m end;
+   perform bid_grant(p_user,amount,'plan_grant',ref,period.tier,at,at+make_interval(months=>period.validity_months),p_now);
+   given:=given+amount;
+  end loop;
+  update credit_periods set granted_through=greatest(granted_through,k) where transaction_ref=period.transaction_ref;
+ end loop;
+ return jsonb_build_object('ok',true,'granted',given);
+end $$;
+
+create or replace function public.bid_record_payment(p_user uuid,p_transaction text,p_subscription text,p_tier text,p_interval text,p_credits bigint,p_start timestamptz,p_end timestamptz,p_now timestamptz default now()) returns jsonb
+language plpgsql security definer set search_path=public,pg_temp as $$
+declare period credit_periods; months integer; r jsonb;
+begin
+ perform bid_v12_lock(p_user);
+ select * into period from credit_periods where transaction_ref=p_transaction;
+ if found then
+  if period.user_id<>p_user then raise exception 'payment identity mismatch'; end if;
+  return jsonb_build_object('ok',true,'duplicate',true);
+ end if;
+ select coalesce((value#>>array[p_tier,'validity_months'])::integer,1) into months from settings where key='plans';
+ insert into credit_periods(transaction_ref,user_id,subscription_ref,tier,interval,monthly_credits,validity_months,starts_at,ends_at)
+ values(p_transaction,p_user,p_subscription,p_tier,p_interval,p_credits,months,p_start,p_end);
+ r:=bid_accrue_periods(p_user,p_now);
+ return r||jsonb_build_object('transaction',p_transaction);
+end $$;
+
+create or replace function public.bid_scheduler_credits(p_batch integer default 1000,p_now timestamptz default now()) returns jsonb
+language plpgsql security definer set search_path=public,pg_temp as $$
+declare u record; n integer:=0;
+begin
+ for u in select candidate.user_id from (
+  select user_id from sites where state='active'
+  union select user_id from subscriptions where provider='paddle' and status='active' and raw#>>'{billing_cycle,interval}'='year'
+  union select user_id from credit_periods where refund_share<1 and granted_through<case when interval='year' then 11 else 0 end and starts_at+make_interval(months=>granted_through+1)<=p_now
+ ) candidate left join credit_accounts a on a.user_id=candidate.user_id order by a.last_entitlement_check nulls first,candidate.user_id limit greatest(1,least(p_batch,5000)) loop
+  perform bid_accrue_periods(u.user_id,p_now);
+  perform bid_enforce_sites(u.user_id,p_now);
+  update credit_accounts set last_entitlement_check=p_now where user_id=u.user_id;
+  n:=n+1;
+ end loop;
+ return jsonb_build_object('ok',true,'accounts',n);
+end $$;
+
 -- No client can invoke a monetary mutation or a SECURITY DEFINER helper, including via PostgREST.
 do $$ declare f record; begin
- for f in select p.oid::regprocedure as signature from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and (p.proname like 'bid_v12_%' or p.proname in ('bid_credit_status','bid_grant','bid_hold','bid_settle','bid_release','bid_charge','bid_boost','bid_refund','bid_enforce_sites','bid_site_burn','bid_site_change','bid_nudge_ack','bid_usage_summary','bid_reconcile_usage')) loop
+ for f in select p.oid::regprocedure as signature from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and (p.proname like 'bid_v12_%' or p.proname in ('bid_accrue_periods','bid_record_payment','bid_scheduler_credits','bid_monitor_register','bid_start_trial','bid_upgrade_grant','bid_domain_request','bid_credit_status','bid_grant','bid_hold','bid_settle','bid_release','bid_charge','bid_boost','bid_refund','bid_enforce_sites','bid_site_burn','bid_site_change','bid_nudge_ack','bid_usage_summary','bid_reconcile_usage')) loop
   execute format('revoke all on function %s from public,anon,authenticated',f.signature);
   execute format('grant execute on function %s to service_role',f.signature);
  end loop;

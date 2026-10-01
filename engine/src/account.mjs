@@ -145,9 +145,13 @@ async function loadProfile(session) {
   if (!id) return null;
   const cached = readJSON(PROFILE_CACHE(), null);
   try {
-    const [rows, balance, settingsRows, subs] = await Promise.all([
+    const { billingCall } = await import('./billing.mjs');
+    const [rows, billing, settingsRows, subs] = await Promise.all([
       rest(`/profiles?select=role,plan,locale,ai_disabled,display_name&user_id=eq.${encodeURIComponent(id)}`, { token: session.accessToken }),
-      rest(`/credit_balance?select=balance&user_id=eq.${encodeURIComponent(id)}`, { token: session.accessToken }).catch(() => []),
+      billingCall('status', {}, { session }).catch(error => {
+        if (['network','cloud_function_missing','not_configured','meter_unavailable'].includes(error.code)) return null;
+        throw error;
+      }),
       rest('/settings?select=key,value', { token: session.accessToken }).catch(() => []),
       rest(`/subscriptions?select=provider,status,period_end,cancel_at&user_id=eq.${encodeURIComponent(id)}&order=updated_at.desc&limit=5`, { token: session.accessToken }).catch(() => []),
     ]);
@@ -156,11 +160,18 @@ async function loadProfile(session) {
     const profile = {
       userId: id,
       role: row.role || 'normal',
-      plan: row.plan || 'free',
+      plan: billing?.plan ?? row.plan ?? 'free',
       locale: row.locale || null,
       aiDisabled: !!row.ai_disabled,
       displayName: row.display_name || null,
-      credits: creditsOf(row.plan || 'free', balance, settingsRows, subs),
+      credits: {
+        ...creditsOf(billing?.plan ?? row.plan ?? 'free', [], settingsRows, subs),
+        balance: billing ? Math.max(0,Number(billing.balance?.available ?? billing.balance?.total ?? 0)) : (cached?.userId === id ? cached.credits?.balance ?? 0 : 0),
+        ...(billing?.entitlements ? {monthlyGrant:billing.entitlements.monthly} : {}),
+        ...(billing?.subscription ? {renewsAt:billing.subscription.renewsAt,endsAt:billing.subscription.endsAt} : {}),
+      },
+      sitesActiveMax: billing?.entitlements?.siteLimit ?? null,
+      stale: !billing,
       settings: Object.fromEntries((Array.isArray(settingsRows) ? settingsRows : []).map((r) => [r.key, r.value])),
       fetchedAt: nowISO(),
     };
@@ -200,7 +211,7 @@ function withFeatures(user, profile) {
     profileStale: !!p.stale,
     schemaMissing: !!p.schemaMissing,
     hasOwnKey,
-    features: features({ role: p.role, plan: p.plan, aiDisabled: p.aiDisabled, hasOwnKey }),
+    features: features({ role: p.role, plan: p.plan, aiDisabled: p.aiDisabled, hasOwnKey, credits: p.credits, sitesActiveMax: p.sitesActiveMax }),
   };
 }
 
@@ -408,7 +419,7 @@ export async function syncProjects() {
     name: p.name,
     framework: p.framework || null,
     hosting: p.hosting || 'netlify',
-    live_url: p.netlify?.liveUrl || null,
+    live_url: p.liveUrl || p.netlify?.liveUrl || null,
     domain: p.domain || null,
     last_status: p.lastStatus || null,
     updated_at: nowISO(),

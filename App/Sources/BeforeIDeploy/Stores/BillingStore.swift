@@ -141,6 +141,41 @@ final class BillingStore: ObservableObject {
         }
     }
 
+    func creditAction(_ action: String, arguments: [String] = []) {
+        perform(action) {
+            _ = try await self.engine.call(["billing", action] + arguments, as: CreditActionReceipt.self)
+            return { if action == "domain_request" { self.feedback?.flash(L("usage.domainRequested"), error: false) }; await self.loadUsage(); await self.onChanged?() }
+        }
+    }
+
+    func changeSite(projectKey: String, active: Bool) {
+        perform(active ? "site_activate" : "site_pause") {
+            if active {
+                let estimate = try await self.engine.call(["billing", "estimate", "--usage-action", "site.day"], as: CreditActionReceipt.self)
+                guard let credits = estimate.credits else { throw CancellationError() }
+                return { await self.confirmActivation(projectKey, credits: credits) }
+            }
+            _ = try await self.engine.call(["billing", "site_pause", "--project", projectKey], as: CreditActionReceipt.self)
+            return { await self.loadUsage() }
+        }
+    }
+
+    private func confirmActivation(_ projectKey: String, credits: Int) async {
+        let epoch = generation
+        let alert = NSAlert()
+        alert.messageText = L("usage.activateSite")
+        alert.informativeText = L("usage.activationCost", Fmt.tokens(credits))
+        alert.addButton(withTitle: L("usage.activateSite")); alert.addButton(withTitle: L("common.cancel"))
+        guard alert.runModal() == .alertFirstButtonReturn, epoch == generation else { return }
+        do {
+            _ = try await engine.call(["account", "sync"], as: JSONValue.self)
+            guard epoch == generation else { return }
+            _ = try await engine.call(["billing", "site_activate", "--project", projectKey], as: CreditActionReceipt.self)
+            guard epoch == generation else { return }
+            await loadUsage(); await onChanged?()
+        } catch { if epoch == generation { feedback?.show(error) } }
+    }
+
     /// Serialize billing mutations; a second click cannot overwrite the first operation's busy state.
     private func perform(_ key: String, action: @escaping () async throws -> (@MainActor () async -> Void)) {
         guard busy == nil, canReadUsage, !demo else { return }

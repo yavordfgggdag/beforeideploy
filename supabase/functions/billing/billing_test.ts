@@ -249,11 +249,11 @@ Deno.test("billing: a yearly plan grants the monthly tokens every month, once ea
   await at("2026-11-12T00:00:00Z")(post("billing", { action: "status" }));
   await at("2026-11-20T00:00:00Z")(post("billing", { action: "status" }));
   const grants = db.rows("credit_ledger").filter((r) => r.reason === "plan_grant");
-  assert.deepEqual(grants.map((r) => r.ref), ["txn_year", "sub_1:2026-10-10T00:00:00.000Z:m1"], "month 1 granted once");
+  assert.deepEqual(grants.map((r) => r.ref), ["txn_year", "txn_year:m1"], "month 1 granted once");
   assert.equal(sum(db.rows("credit_ledger"), "plan"), 600000, "both High grants remain valid for three months");
 
   await at("2027-12-01T00:00:00Z")(post("billing", { action: "status" }));
-  assert.equal(db.rows("credit_ledger").filter((r) => r.reason === "plan_grant").length, 2, "nothing after the paid year");
+  assert.equal(db.rows("credit_ledger").filter((r) => r.reason === "plan_grant").length, 12, "all twelve paid slices accrue even if the app stayed closed");
 });
 
 // ---------------------------------------------------------------- audit batch 2 (C4–C6, C12)

@@ -161,3 +161,7 @@ Returned as `code` in the JSON body; the engine maps them to the codes above (`q
 | `hosting_not_ready` | 409 | Owner hosting has not been provisioned; no hosting service was activated. |
 | `boost_unavailable` | 403 | Boost requires an active Knight entitlement. |
 | `boost_used` | 409 | This subscription week's Boost was already used; wait until `resetsAt`. |
+| `invalid_domain` | 400 | Domain name is malformed; submit a public DNS name without a scheme or path. |
+| `domain_unavailable` | 403 | The included domain needs an active, paid Knight subscription. |
+| `domain_wait` | 403 | Monthly Knight's seven-day waiting period has not ended; `availableAt` gives the date. |
+| `domain_used` | 409 | The included domain for this subscription year has already been requested. |

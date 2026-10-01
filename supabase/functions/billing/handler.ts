@@ -1,5 +1,6 @@
+import {METER_ACTIONS,meterAction} from "./meter.ts";
 import { previewChange, confirmChange } from "./subscription-change.ts";
-import { monthlySlice } from "../_shared/billing-period.ts";
+import { addMonths, monthlySlice } from "../_shared/billing-period.ts";
 import catalogData from "../_shared/plans-catalog.json" with { type: "json" };
 // Before I Deploy — `billing` Edge Function (V10 WP4). Two kinds of callers:
 //
@@ -20,7 +21,7 @@ import catalogData from "../_shared/plans-catalog.json" with { type: "json" };
 // Prices and Paddle price ids live in `settings.billing.catalog`, token amounts in `settings.plans`.
 import { callerOf, type DbClient, type Deps, internalError, isDuplicate, json, must, type Row, sha256Hex } from "../_shared/db.ts";
 import { rateLimited } from "../_shared/ratelimit.ts";
-import { creditRpc, creditStatus, bucketBalance, reconcilePlan, effectiveSubscriptionTier, ensureMonthlyGrant, expireDue, grantPlanTokens, insertOnce, pricingVersion, reconcileHolds } from "../_shared/credits.ts";
+import { creditRpc, creditStatus, bucketBalance, ensureUpgradeGrants, reconcilePlan, effectiveSubscriptionTier, ensureMonthlyGrant, expireDue, grantPlanTokens, insertOnce, pricingVersion, reconcileHolds } from "../_shared/credits.ts";
 
 export type Plan = "free" | "flash" | "high" | "knight";
 const PAID: Plan[] = ["flash", "high", "knight"];
@@ -85,7 +86,7 @@ async function loadCatalog(db: DbClient): Promise<{ catalog: Catalog; planTokens
   const { data } = await db.from("settings").select("key,value");
   const map = Object.fromEntries((data ?? []).map((r: Row) => [r.key, r.value]));
   return {
-    catalog: { ...DEFAULT_CATALOG, ...(map["billing.catalog"] ?? {}), plans: Object.fromEntries(PAID.map(id => [id, { ...DEFAULT_CATALOG.plans[id], ...(map["billing.catalog"]?.plans?.[id] ?? {}) }])) } as Catalog,
+    catalog: { ...DEFAULT_CATALOG, ...(map["billing.catalog"] ?? {}), plans: Object.fromEntries(PAID.map(id => { const p={ ...DEFAULT_CATALOG.plans[id], ...(map["billing.catalog"]?.plans?.[id] ?? {}) }; const policy=map.plans?.[id]; return [id,{...p,...(policy ? {credits:policy.tokens,activeSites:policy.max_active_sites ?? p.activeSites,activeSitesMax:policy.fair_use_sites ?? p.activeSitesMax,validityMonths:policy.validity_months ?? p.validityMonths,window5h:Math.floor(policy.tokens*0.2),weekly:Math.floor(policy.tokens*0.4)} : {}),extras:{...p.extras,domain:id==="knight" && map["features.knightDomain"]!==false,netlifyCredits:false}}]; })) } as Catalog,
     planTokens: { ...DEFAULT_PLAN_TOKENS, ...(map["plans"] ?? {}) },
   };
 }
@@ -164,14 +165,28 @@ async function handleWebhook(req: Request, deps: BillingDeps): Promise<Response>
           raw: d,
           updated_at: now.toISOString(),
         };
-        const { data: existing } = await db.from("subscriptions").select("id,event_at").eq("provider", "paddle").eq("provider_ref", row.provider_ref).maybeSingle();
+        const { data: existing } = await db.from("subscriptions").select("*").eq("provider", "paddle").eq("provider_ref", row.provider_ref).maybeSingle();
         // Paddle does not promise order: an older event must not undo a newer one (audit C5)
         if (existing?.event_at && new Date(existing.event_at).getTime() > new Date(occurredAt).getTime()) {
           result = { ignored: "older than the stored state", subscription: row.provider_ref };
         } else {
+          // A verified external portal upgrade also gets its proportional grant. Match an in-app
+          // change first so a webhook racing the PATCH response cannot mint a second grant.
+          if(existing && status==="active" && PAID.indexOf(tier)>PAID.indexOf(await effectiveSubscriptionTier(db,userId,existing,now) as Plan)) {
+            const {data:changes}=await db.from("billing_changes").select("*").eq("user_id",userId).eq("provider_ref",row.provider_ref).eq("to_tier",tier).in("status",["applying","applied"]).order("created_at",{ascending:false}).limit(1);
+            const recent=changes?.[0];
+            if(recent && (recent.status==="applying" || Date.parse(recent.created_at)>=Date.parse(occurredAt)-5*60_000)) {
+              must(await db.from("billing_changes").update({status:"applied"}).eq("id",recent.id));
+            } else {
+              const fingerprint=`webhook:${eventId}`;
+              const {data:saved}=await db.from("billing_changes").select("id").eq("user_id",userId).eq("fingerprint",fingerprint).maybeSingle();
+              if(!saved) must(await db.from("billing_changes").insert({id:crypto.randomUUID(),user_id:userId,provider_ref:row.provider_ref,from_tier:existing.tier,to_tier:tier,status:"applied",request:{},quote:{periodStart:existing.period_start,periodEnd:existing.period_end},fingerprint,effective_at:occurredAt,expires_at:now.toISOString(),created_at:now.toISOString()}));
+            }
+          }
           if (existing) must(await db.from("subscriptions").update(row).eq("id", existing.id));
           else must(await db.from("subscriptions").insert(row));
           const plan = await reconcilePlan(db,userId,now);
+          await ensureUpgradeGrants(db,userId,now);
           result = { subscription: row.provider_ref, plan };
         }
       }
@@ -191,7 +206,13 @@ async function handleWebhook(req: Request, deps: BillingDeps): Promise<Response>
           const pack = packForPrice(catalog, priceId);
           if (tier) {
             const tokens = planTokens[tier]?.tokens ?? 0;
-            if (await grantPlanTokens(db, userId, tokens, "plan_grant", txn,{tier,at:new Date(d.billing_period?.starts_at ?? occurredAt),now})) granted.push({ tier, tokens });
+            const {data:knownSubs}=await db.from("subscriptions").select("provider_ref,period_start,period_end,tier,status").eq("user_id",userId).eq("provider","paddle").eq("tier",tier).order("updated_at",{ascending:false}).limit(1);
+            const known=knownSubs?.[0];
+            const start=new Date(d.billing_period?.starts_at ?? known?.period_start ?? occurredAt);
+            const interval=catalog.plans[tier]?.yearly?.paddlePriceId===priceId?"year":"month";
+            const end=d.billing_period?.ends_at ?? known?.period_end ?? addMonths(start,interval==="year"?12:1).toISOString();
+            const receipt=await creditRpc(db,"bid_record_payment",{p_user:userId,p_transaction:txn,p_subscription:d.subscription_id??known?.provider_ref??null,p_tier:tier,p_interval:interval,p_credits:tokens,p_start:start.toISOString(),p_end:end,p_now:now.toISOString()});
+            if (!receipt.duplicate) granted.push({ tier, tokens });
             else duplicate = true;
           } else if (pack) {
             if (!(await creditRpc(db,"bid_grant",{p_user:userId,p_credits:pack.tokens*qty,p_source:"topup",p_ref:`${txn}:${priceId}`,p_granted_at:occurredAt,p_now:now.toISOString()})).duplicate) {
@@ -266,6 +287,7 @@ async function statusOf(db: DbClient, userId: string, email: string | null, cata
     subscription: current
       ? { provider: current.provider, tier: current.tier, status: current.status, interval: current.raw?.billing_cycle?.interval ?? "month", renewsAt: current.cancel_at ? null : current.period_end, endsAt: current.cancel_at ?? (current.provider === "trial" ? current.period_end : null), manageable: current.provider === "paddle" && !!current.customer_ref }
       : null,
+    entitlements: credits.entitlements ?? null,
     balance: { plan: credits.plan, topup: credits.topup, total: credits.total, available: credits.available },
     trialAvailable: !!catalog.trial && !claim && !list.some((s) => s.provider === "trial" || s.provider === "paddle"),
     usage: (usage ?? []).map((u: Row) => ({ id:u.id, at: u.created_at, step: u.step, model: u.model, tokens: Number(u.charged_tokens ?? 0), project: u.project_key })),
@@ -411,6 +433,7 @@ export function createBillingHandler(deps: BillingDeps): (req: Request) => Promi
     }
 
     try {
+      if(METER_ACTIONS.includes(body.action)) return await meterAction(db,userId,body,now);
       switch (body.action) {
 
         case "status":
@@ -418,15 +441,16 @@ export function createBillingHandler(deps: BillingDeps): (req: Request) => Promi
           return json(200, await statusOf(db, userId, email, catalog, now));
 
         case "usage": {
+          const cleanup=await reconcileHolds(db,userId,now);
           await ensureMonthlyGrant(db, userId, planTokens, now);
           const { data: rows } = await db.from("settings").select("key,value");
           const settings: Row = {};
           for (const r of (rows ?? []) as Row[]) settings[String(r.key)] = r.value;
           if (!settings.plans) settings.plans = planTokens;
-          if(Number(body.v)!==2) return json(200, await usageOf(db, userId, email, catalog, planTokens, settings, now));
+          if(Number(body.v)!==2) { const report=await usageOf(db,userId,email,catalog,planTokens,settings,now);report.reconciled.releasedHolds+=cleanup.released;return json(200,report); }
           const status=await statusOf(db,userId,email,catalog,now);
           const report=await creditRpc(db,"bid_usage_summary",{p_user:userId,p_now:now.toISOString()});
-          Object.assign(report,{subscription:status.subscription,trialAvailable:status.trialAvailable,pricing:{...report.pricing,version:await pricingVersion(settings),actions:settings["pricing.actions"] ?? null}});
+          Object.assign(report,{reconciled:{releasedHolds:cleanup.released},subscription:status.subscription,trialAvailable:status.trialAvailable,pricing:{...report.pricing,version:await pricingVersion(settings),actions:settings["pricing.actions"] ?? null}});
           const {serverTime:_,...stable}=report;
           const etag=`"${await sha256Hex(JSON.stringify(stable))}"`;
           if(req.headers.get("if-none-match")===etag) return new Response(null,{status:304,headers:{etag,"cache-control":"private, no-cache"}});
@@ -503,22 +527,8 @@ export function createBillingHandler(deps: BillingDeps): (req: Request) => Promi
           const st = await statusOf(db, userId, email, catalog, now);
           if (!st.trialAvailable || !catalog.trial || !email) return json(409, { error: "the trial was already used", code: "trial_used" });
           const t = catalog.trial;
-          // one trial per e-mail address, even after the account is deleted and created again (audit C6)
-          const claim = await db.from("trial_claims").insert({ email_hash: await sha256Hex(email.trim().toLowerCase()), claimed_at: now.toISOString() });
-          if (claim.error) {
-            if (isDuplicate(claim.error)) return json(409, { error: "the trial was already used", code: "trial_used" });
-            must(claim);
-          }
-          const end = new Date(now.getTime() + t.days * 86400_000).toISOString();
-          const sub = await db.from("subscriptions").insert({
-            user_id: userId, provider: "trial", tier: t.plan, status: "trial", period_start: now.toISOString(), period_end: end, updated_at: now.toISOString(),
-          }).select("id").maybeSingle();
-          if (sub.error) {
-            if (isDuplicate(sub.error)) return json(409, { error: "the trial was already used", code: "trial_used" });
-            must(sub);
-          }
-          must(await db.from("profiles").update({ plan: t.plan }).eq("user_id", userId));
-          await grantPlanTokens(db, userId, t.tokens, "trial_grant", String(sub.data?.id ?? `trial:${userId}`),{tier:t.plan,now,expiresAt:end});
+          const started=await creditRpc(db,"bid_start_trial",{p_user:userId,p_email_hash:await sha256Hex(email.trim().toLowerCase()),p_tier:t.plan,p_days:t.days,p_credits:t.tokens,p_now:now.toISOString()});
+          if(!started.ok)return json(409,{error:"The trial was already used",...started});
           return json(200, await statusOf(db, userId, email, catalog, now));
         }
 

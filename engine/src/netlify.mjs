@@ -1,3 +1,4 @@
+import { meteredProviderCall } from './meter.mjs';
 // Netlify: auth, teams, sites, link/create (NO `netlify init` — never enables CI), manual deploys
 import path from 'node:path';
 import { HOME, EngineError, ev, emit, which, runStream, logDir, readJSON, extractJSON, nowISO } from './util.mjs';
@@ -290,7 +291,7 @@ export async function netlifyDeploy(project, { prod = false, confirm = null, exp
   const t0 = Date.now();
   let r;
   try {
-    r = await nl(project, args, { step: stepId, logFile, captureStdout: true, timeout: 20 * 60 * 1000 });
+    r = await meteredProviderCall(project, prod ? 'deploy.production' : 'deploy.preview', () => nl(project, args, { step: stepId, logFile, captureStdout: true, timeout: 20 * 60 * 1000 }));
     if (staged) await staged.verify();
   } finally {
     staged?.cleanup();

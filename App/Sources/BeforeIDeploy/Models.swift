@@ -946,10 +946,11 @@ struct AccountState: Codable {
         var adminPanel = false
         var billingPlans = false
         var projectsMax: Int?
+        var sitesActiveMax: Int?
 
         enum CodingKeys: String, CodingKey {
             case aiCloud = "ai.cloud", aiOwnKey = "ai.ownKey", aiBuiltin = "ai.builtin", aiExternal = "ai.external", aiDeep = "ai.deep"
-            case cloudSync = "cloud.sync", adminPanel = "admin.panel", billingPlans = "billing.plans", projectsMax = "projects.max"
+            case cloudSync = "cloud.sync", adminPanel = "admin.panel", billingPlans = "billing.plans", projectsMax = "projects.max", sitesActiveMax = "sites.activeMax"
         }
     }
 
@@ -1112,7 +1113,9 @@ struct BillingStatus: Codable, Hashable {
         var model: String?
         var tokens: Int
         var project: String?
-        var id: String { [at, step ?? "", model ?? "", project ?? "", String(tokens)].joined(separator: "|") }
+        var serverID: String?
+        var id: String { serverID ?? [at, step ?? "", model ?? "", project ?? "", String(tokens)].joined(separator: "|") }
+        enum CodingKeys: String, CodingKey { case at, step, model, tokens, project; case serverID = "id" }
     }
     var plan: String
     var subscription: Subscription?
@@ -1404,7 +1407,7 @@ struct PromptInfo: Codable, Identifiable, Hashable {
 // MARK: - Plan & usage (V11 RC): server-authoritative, all in tokens
 
 struct UsageReport: Codable {
-    struct Period: Codable, Hashable { var start: String; var end: String; var renewsAt: String?; var source: String }
+    struct Period: Codable, Hashable { var start: String; var end: String; var renewsAt: String?; var source: String; var debt: Int?; var forecastDaysLeft: Double? }
     struct Tokens: Codable, Hashable { var tokens: Int; var operations: Int? }
     struct Remaining: Codable, Hashable { var plan: Int; var purchased: Int; var total: Int; var available: Int }
     struct Purchased: Codable, Hashable { var tokens: Int; var expires: String? }
@@ -1438,14 +1441,17 @@ struct UsageReport: Codable {
     }
     struct History: Codable { var operations: [Operation]; var ledger: [LedgerRow] }
 
-    struct Window: Codable { var used: Int; var cap: Int; var remaining: Int; var resetsAt: String?; var reserved: Int? }
-    struct Sites: Codable { var active: Int; var limit: Int; var paused: Int? }
+    struct Window: Codable { var used: Int; var cap: Int; var remaining: Int; var resetsAt: String?; var reserved: Int?; var boostAvailable: Bool?; var boostUntil: String? }
+    struct Sites: Codable { var active: Int; var limit: Int; var paused: Int?; var items: [Site]? }
+    struct Site: Codable, Identifiable { var id: String; var projectKey: String; var name: String; var state: String; var hostingOwner: String?; var pausedReason: String?; var graceUntil: String?; var credits: Int? }
+    struct Nudge: Codable { var threshold: Int; var periodRef: String; var kind: String; var target: String? }
     struct PackLot: Codable, Identifiable { var id: String; var remaining: Int; var expiresAt: String }
     struct ActionUsage: Codable, Identifiable { var action: String; var credits: Int; var operations: Int; var id: String { action } }
     struct DailyUsage: Codable, Identifiable { var date: String; var credits: Int; var id: String { date } }
     var v: Int?
     var source: String?
     var stale: Bool?
+    var nudge: Nudge?
     var weekly: Window?
     var sites: Sites?
     var packs: [PackLot]?
@@ -1490,3 +1496,5 @@ struct AdminDiagnostics: Codable, Hashable {
     var todo: [String]
     var ready: Bool
 }
+
+struct CreditActionReceipt: Decodable { var ok: Bool?; var state: String?; var credits: Int?; var pricingVersion: String? }

@@ -213,3 +213,16 @@ Deno.test("admin (WP03): diagnostics says what is missing with yes/no only — n
   const normal = createAdminHandler({ ...fakeDeps(world(NORMAL.id).db), hasSecret: () => true });
   assert.equal((await normal(post("admin", { action: "diagnostics" }))).status, 403, "admins only");
 });
+
+Deno.test("admin V12: financial settings reject invalid prices, free-action fees and ungated Netlify credits", async()=>{
+ const {handle}=world();
+ for(const settings of [
+  {"pricing.actions":{"deploy.rollback":{credits:10,window:false}}},
+  {"pricing.actions":{"deploy.preview":{credits:150,window:false}}},
+  {"pricing.actions":{"ai.chat":{credits:1,window:true}}},
+  {"ai.prices":{"model":[0,0]}},{"ai.creditEur":0},{"ai.usdToEur":-1},
+  {"plans":{"high":{"tokens":300000}}}
+ ])assert.equal((await handle(post("admin",{action:"set_settings",settings}))).status,400);
+ assert.equal((await handle(post("admin",{action:"set_settings",settings:{"features.netlifyCredits":true}}))).status,409);
+ assert.equal((await handle(post("admin",{action:"set_settings",settings:{"pricing.actions":{"deploy.preview":{credits:150,window:true}},"pricing.version":"2026-10"}}))).status,200);
+});

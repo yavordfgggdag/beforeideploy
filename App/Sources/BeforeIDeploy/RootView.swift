@@ -83,6 +83,7 @@ struct RootView: View {
                     }
                 }
             }
+            .safeAreaInset(edge: .top, spacing: 0) { CreditNudgeBanner(store: model.billingStore) }
             .animation(Motion.spring, value: model.screen)
             .animation(Motion.spring, value: model.selectedKey)
         }

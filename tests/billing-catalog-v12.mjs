@@ -51,3 +51,56 @@ test('demo reads are consistent and every mutation is refused before network acc
     assert.equal(fixed.byModel.reduce((sum,m)=>sum+m.tokens,0),fixed.byAction.find(a=>a.action==='ai').credits);
   } finally { globalThis.fetch = fetchBefore; }
 });
+
+
+test('usage ETag is scoped to account and cloud, handles 304, and never restores a logged-out cache', async () => {
+  const { setSecret, deleteSecret } = await import('../engine/src/secrets.mjs');
+  const { setCloudConfig } = await import('../engine/src/account.mjs');
+  setCloudConfig({url:'https://receipt-tests.supabase.co',anonKey:'test-only'});
+  const session = id => setSecret('session',{accessToken:'fake',expiresAt:Date.now()+3600000,user:{id}});
+  const previous = globalThis.fetch;
+  let calls=0;
+  session('alice');
+  try {
+    globalThis.fetch = async (_url, options) => {
+      calls++;
+      if(calls===1) { assert.equal(options.headers['If-None-Match'],undefined); return Response.json({...billingDemo('usage'),source:'cloud'},{headers:{etag:'"one"'}}); }
+      assert.equal(options.headers['If-None-Match'],'"one"');
+      return new Response(null,{status:304,headers:{etag:'"one"'}});
+    };
+    const first=await billingCommand('usage',{}), second=await billingCommand('usage',{});
+    assert.equal(second.remaining.available,first.remaining.available);assert.equal(second.stale,false);
+    session('bob');
+    globalThis.fetch = async (_url,options) => {assert.equal(options.headers['If-None-Match'],undefined);deleteSecret('session');return Response.json(billingDemo('usage'));};
+    await assert.rejects(billingCommand('usage',{}),{code:'not_logged_in'});
+    assert.equal(JSON.parse(fs.readFileSync(path.join(tmp,'usage-report.json'))).userId,'alice');
+  } finally { globalThis.fetch=previous;deleteSecret('session'); }
+});
+
+test('provider metering reserves before dispatch, settles failed remote attempts, releases launch failures and recovers only the receipt',async()=>{
+  const {setSecret,deleteSecret}=await import('../engine/src/secrets.mjs');
+  const {meteredProviderCall,reconcileMeter}=await import('../engine/src/meter.mjs');
+  const session={accessToken:'fake',expiresAt:Date.now()+3600000,user:{id:'meter-user'}};
+  setSecret('session',session);
+  const previous=globalThis.fetch;
+  const calls=[];let blocked=false,receiptLost=false,providerCalls=0;
+  globalThis.fetch=async(url,options)=>{
+    if(url.includes('/rest/'))return Response.json([{role:'normal'}]);
+    const body=JSON.parse(options.body);calls.push(body);
+    if(blocked && body.kind==='reserve')return Response.json({code:'window_week',resetsAt:'2026-10-08T00:00:00Z'},{status:403});
+    if(receiptLost && body.kind==='settle')throw new Error('offline');
+    return Response.json({ok:true});
+  };
+  try {
+    const invoke=async()=>{providerCalls++;assert.equal(calls.at(-1).kind,'reserve');return {code:0};};
+    await meteredProviderCall({key:'shop'},'deploy.preview',invoke);
+    assert.deepEqual(calls.map(c=>c.kind),['reserve','settle']);assert.equal(calls[0].operationId,calls[1].operationId);
+    await meteredProviderCall({key:'shop'},'deploy.preview',async()=>({code:127}));assert.equal(calls.at(-1).kind,'release');
+    await assert.rejects(meteredProviderCall({key:'shop'},'deploy.preview',async()=>{throw Object.assign(new Error('provider rejected'),{code:'netlify_failed'});}));assert.equal(calls.at(-1).kind,'settle');
+    receiptLost=true;await meteredProviderCall({key:'shop'},'deploy.preview',invoke);
+    const operation=calls.at(-1).operationId;receiptLost=false;await reconcileMeter(session);
+    assert.equal(calls.at(-1).operationId,operation);assert.equal(calls.at(-1).kind,'settle');assert.equal(providerCalls,2);
+    blocked=true;await assert.rejects(meteredProviderCall({key:'shop'},'deploy.preview',invoke),{code:'window_week',resetsAt:'2026-10-08T00:00:00Z'});assert.equal(providerCalls,2);
+    const before=calls.length;await reconcileMeter({...session,user:{id:'other'}});assert.equal(calls.length,before);
+  } finally {globalThis.fetch=previous;deleteSecret('session');}
+});

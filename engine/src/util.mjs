@@ -134,6 +134,7 @@ export function fail(err) {
     out.key = err.key;
     if (err.params) out.params = err.params;
   }
+  if (typeof err?.resetsAt === 'string') out.resetsAt = err.resetsAt;
   emit(out);
   return err?.exitCode || 1;
 }

@@ -418,3 +418,10 @@ Deno.test("ai-fix V12: cancellation residual credits work and insufficient worst
   assert.equal(low.up.calls.length,0); assert.equal(low.db.rows("ai_usage").length,0);
   assert.equal(low.db.rows("credit_ledger").reduce((n,r)=>n+r.delta,0),100);
 });
+
+Deno.test("ai-fix V12: missing model prices fail before the upstream call and before reserving credits", async()=>{
+ const w=world({settings:[{key:"ai.prices",value:{}}]});
+ const res=await w.handle(post("ai-fix",PROMPT));
+ assert.equal(res.status,503);assert.equal((await res.json()).code,"meter_unavailable");
+ assert.equal(w.up.calls.length,0);assert.equal(w.db.rows("credit_holds").length,0);
+});

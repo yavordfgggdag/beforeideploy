@@ -2,6 +2,7 @@
 // Every request carries the caller's user JWT; we check profiles.role = 'admin', then act with the
 // service role and write a row to admin_audit. The engine calls it via `bid admin <action>`.
 import { callerOf, type DbClient, type Deps, internalError, json, readJson } from "../_shared/db.ts";
+import actions from "../_shared/pricing-actions.json" with {type:"json"};
 import { creditRpc } from "../_shared/credits.ts";
 import { rateLimited } from "../_shared/ratelimit.ts";
 
@@ -16,7 +17,7 @@ export interface AdminDeps extends Deps {
 
 /** Settings an admin may change (audit C14); anything else is a typo or an attempt to plant data. */
 export const SETTINGS_KEYS = [
-  "billing.catalog", "plans", "ai.models", "ai.creditEur", "ai.usdToEur", "ai.sessionHours", "ai.sessionCapPercent", "ai.rate", "ai.promptMaxChars", "ai.prices",
+  "pricing.actions", "pricing.version", "features.knightDomain", "features.netlifyCredits", "billing.catalog", "plans", "ai.models", "ai.creditEur", "ai.usdToEur", "ai.sessionHours", "ai.sessionCapPercent", "ai.rate", "ai.promptMaxChars", "ai.prices",
   "release.url", "help.url", "legal.privacy", "legal.terms", "legal.refund", "support.email",
 ];
 
@@ -159,6 +160,23 @@ export function createAdminHandler(deps: AdminDeps): (req: Request) => Promise<R
           if (!entries.length) return json(400, { error: "settings required" });
           const unknown = entries.map(([k]) => k).filter((k) => !SETTINGS_KEYS.includes(k));
           if (unknown.length) return json(400, { error: `unknown settings: ${unknown.join(", ")}`, code: "unknown_setting" });
+          for (const [key,value] of entries) {
+            const object = value && typeof value === "object" && !Array.isArray(value) ? value as Record<string,unknown> : null;
+            const positive = (v:unknown) => typeof v === "number" && Number.isFinite(v) && v > 0;
+            if (key === "pricing.actions" && (!object || Object.entries(object).some(([name,raw]) => {
+              const price=raw as {credits?:number;window?:boolean}; const known=actions[name as keyof typeof actions];
+              return !known || !("credits" in known) || !price || !Number.isSafeInteger(price.credits) || price.credits! < 0 || price.credits! > 1000000000 || price.window !== known.window || (known.credits===0 && price.credits!==0);
+            }))) return json(400,{error:"Invalid action prices or window participation"});
+            if (key === "pricing.version" && (typeof value !== "string" || !/^[A-Za-z0-9._-]{1,64}$/.test(value))) return json(400,{error:"Invalid pricing version"});
+            if (key.startsWith("features.") && typeof value !== "boolean") return json(400,{error:"Feature flags must be boolean"});
+            if (key === "features.netlifyCredits" && value === true) return json(409,{error:"Netlify credits require written authorization and provisioning; this release cannot enable them"});
+            if (key === "ai.prices" && (!object || Object.values(object).some(price => !Array.isArray(price) || price.length!==2 || !price.every(positive)))) return json(400,{error:"Every AI model requires positive input/output prices"});
+            if (key === "ai.creditEur" && !(positive(value) || (object && Object.keys(object).length>0 && Object.values(object).every(positive)))) return json(400,{error:"Invalid credit rate"});
+            if (key === "ai.usdToEur" && !positive(value)) return json(400,{error:"Invalid exchange rate"});
+            if (key === "plans" && (!object || ["flash","high","knight"].some(tier => {
+              const plan=object[tier] as Record<string,number>; return !plan || !Number.isSafeInteger(plan.tokens) || plan.tokens<=0 || !Number.isInteger(plan.validity_months) || plan.validity_months<1 || plan.validity_months>24 || !Number.isInteger(plan.max_active_sites) || plan.max_active_sites<1 || plan.max_active_sites>25;
+            }))) return json(400,{error:"Plans require credits, validity months and active site limits"});
+          }
           const rows = entries.map(([key, value]) => ({ key, value, updated_at: new Date().toISOString() }));
           const { error } = await db.from("settings").upsert(rows, { onConflict: "key" });
           if (error) throw error;

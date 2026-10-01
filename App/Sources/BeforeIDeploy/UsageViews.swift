@@ -10,6 +10,7 @@ private struct PlanUsageContent: View {
     @EnvironmentObject var model: AppModel
     @ObservedObject var store: BillingStore
     @Local private var historyExpanded = false
+    @Local private var domain = ""
 
     var body: some View {
         ScrollView {
@@ -20,6 +21,8 @@ private struct PlanUsageContent: View {
                     if u.stale == true { Label(L("usage.cached"), systemImage: "wifi.slash").font(Typo.font(.callout)).foregroundColor(Theme.warn) }
                     windows(u)
                     balances(u)
+                    if let sites = u.sites { siteManagement(sites) }
+                    if u.plan == "knight", store.catalog?.plans.first(where: { $0.id == "knight" })?.extras?["domain"] == true { domainRequest }
                     if let actions = u.byAction, !actions.isEmpty { actionBreakdown(actions) }
                     if let days = u.daily, !days.isEmpty { dailyChart(days) }
                     if let models = u.byModel, !models.isEmpty {
@@ -50,7 +53,7 @@ private struct PlanUsageContent: View {
                 }
             }.frame(maxWidth: 860, alignment: .leading).padding(24).frame(maxWidth: .infinity)
         }
-        .task(id: model.account?.id) { await store.observeUsage(every: 10) }
+        .task(id: model.account?.id) { await store.load(); await store.observeUsage(every: 10) }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in Task { await store.loadUsage() } }
     }
 
@@ -101,6 +104,15 @@ private struct PlanUsageContent: View {
                                  detail: L("usage.periodDates", BillingFormat.day(u.period.start), BillingFormat.day(u.period.end)))
                 }
             }
+            if u.weekly?.boostAvailable == true {
+                HStack {
+                    Text(L("usage.boostDetail")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
+                    Spacer()
+                    Button(L("usage.boost")) { store.creditAction("boost") }.bidButton(.secondary).disabled(store.busy != nil || store.demo)
+                }
+            } else if let until = u.weekly?.boostUntil {
+                Label(L("usage.boostUntil", Fmt.dateTime(until)), systemImage: "bolt.fill").font(Typo.font(.callout)).foregroundColor(Theme.accent)
+            }
             if u.session?.remaining == 0 || u.weekly?.remaining == 0 {
                 Text(L("billing.packWindows")).font(Typo.font(.callout)).foregroundColor(Theme.warn)
                 Button(L("usage.changePlan")) { model.sheet = .plans }.bidButton(.secondary)
@@ -118,6 +130,12 @@ private struct PlanUsageContent: View {
                 Spacer()
                 Button(L("usage.buyCredits")) { model.sheet = .plans }.bidButton(.primary)
             }
+            if let debt = u.period.debt, debt > 0 {
+                Text(L("usage.debt", Fmt.tokens(debt))).font(Typo.font(.callout)).foregroundColor(Theme.warn)
+            }
+            if let days = u.period.forecastDaysLeft {
+                Text(L("usage.forecast", Int(days))).font(Typo.font(.caption)).foregroundColor(Theme.secondary)
+            }
             InfoRow(label: L("usage.purchased"), value: L("usage.creditsCount", Fmt.tokens(u.purchased.tokens)))
             if let lots = u.packs {
                 ForEach(lots) { lot in
@@ -134,6 +152,45 @@ private struct PlanUsageContent: View {
         }.card()
     }
 
+    private func siteManagement(_ sites: UsageReport.Sites) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text(L("usage.activeSites")).font(Typo.font(.subhead))
+            Text(L("usage.pauseExplanation")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
+            ForEach(sites.items ?? []) { site in
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(site.name).font(Typo.font(.body, weight: .semibold)).lineLimit(2)
+                        Text(site.state == "active" ? L("usage.siteActive") : L("usage.sitePaused")).font(Typo.font(.caption)).foregroundColor(site.state == "active" ? Theme.ready : Theme.secondary)
+                        if let grace = site.graceUntil, let date = Fmt.date(grace), date > Date() {
+                            Text(L("usage.siteGrace", BillingFormat.day(grace))).font(Typo.font(.caption)).foregroundColor(Theme.secondary)
+                        }
+                    }
+                    Spacer()
+                    Button(site.state == "active" ? L("usage.pauseSite") : L("usage.activateSite")) { store.changeSite(projectKey: site.projectKey, active: site.state != "active") }
+                        .bidButton(.secondary, compact: true).disabled(store.busy != nil || store.demo)
+                }
+            }
+            ForEach(model.projects.filter { project in !(sites.items ?? []).contains { $0.projectKey == project.key } }) { project in
+                HStack {
+                    Text(project.name).font(Typo.font(.body)).lineLimit(2)
+                    Spacer()
+                    Button(L("usage.activateSite")) { store.changeSite(projectKey: project.key, active: true) }.bidButton(.secondary, compact: true).disabled(store.busy != nil || store.demo)
+                }
+            }
+        }.card()
+    }
+
+    private var domainRequest: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(L("usage.domainTitle")).font(Typo.font(.subhead))
+            Text(L("usage.domainDetail")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
+            HStack {
+                TextField(L("usage.domainPlaceholder"), text: $domain).textFieldStyle(.roundedBorder)
+                Button(L("usage.domainRequest")) { store.creditAction("domain_request", arguments: ["--domain", domain]) }.bidButton(.secondary).disabled(domain.trimmingCharacters(in: .whitespaces).isEmpty || store.busy != nil || store.demo)
+            }
+        }.card()
+    }
+
     private func actionBreakdown(_ actions: [UsageReport.ActionUsage]) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(L("usage.byAction")).font(Typo.font(.subhead))
@@ -142,10 +199,13 @@ private struct PlanUsageContent: View {
     }
     private func actionName(_ value: String) -> String {
         switch value {
-        case "ai": return L("usage.actionAI")
-        case "check": return L("usage.actionCheck")
-        case "audit": return L("usage.actionAudit")
-        case "deploy": return L("usage.actionDeploy")
+        case "ai", "ai.chat", "ai.fix": return L("usage.actionAI")
+        case "check", "check.run": return L("usage.actionCheck")
+        case "audit", "audit.full": return L("usage.actionAudit")
+        case "deploy", "deploy.preview", "deploy.production", "deploy.rollback": return L("usage.actionDeploy")
+        case "site.day": return L("usage.actionHosting")
+        case "monitor.fast", "monitor.path": return L("usage.actionMonitor")
+        case "backup.snapshot": return L("usage.actionBackup")
         default: return L("usage.actionOther")
         }
     }
@@ -237,5 +297,22 @@ private struct UsagePillContent: View {
                 .overlay(Capsule().strokeBorder(Theme.hairline, lineWidth: 1))
         }.buttonStyle(.plain).help(L("usage.pillHelp")).accessibilityLabel(L("usage.title"))
             .task(id: model.account?.id) { await store.observeUsage(every: 60) }
+    }
+}
+
+struct CreditNudgeBanner: View {
+    @EnvironmentObject var model: AppModel
+    @ObservedObject var store: BillingStore
+    var body: some View {
+        if let nudge = store.usage?.nudge {
+            HStack(spacing: 12) {
+                Image(systemName: "info.circle").foregroundColor(Theme.warn)
+                Text(L("usage.nudge", nudge.threshold)).font(Typo.font(.callout)).fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 8)
+                Button(nudge.kind == "buy" ? L("usage.buyCredits") : L("usage.changePlan")) { model.sheet = .plans }.bidButton(.secondary, compact: true)
+                Button(L("usage.details")) { model.screen = .usage }.bidButton(.ghost, compact: true)
+                IconButton(symbol: "xmark", help: L("common.close")) { store.creditAction("nudge_ack", arguments: ["--period-ref", nudge.periodRef, "--threshold", String(nudge.threshold)]) }.disabled(store.busy != nil || store.demo)
+            }.padding(12).background(Theme.panel)
+        }
     }
 }

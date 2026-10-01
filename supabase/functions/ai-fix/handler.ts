@@ -77,12 +77,16 @@ export function chooseModel(settings: Settings, role: Role, plan: Plan, body: Pi
  * (docs/PLANS-AND-CREDITS-BG.md §2). At least one credit for any request that reached the model.
  */
 export function creditsFor(settings: Settings, plan: string, model: string, inputTokens: number, outputTokens: number) {
-  const [pin, pout] = settings["ai.prices"][model] ?? [0, 0];
+  const price = settings["ai.prices"]?.[model];
+  if (!Array.isArray(price) || price.length !== 2 || price.some(x => !Number.isFinite(x) || x <= 0)) throw Object.assign(new Error("AI model pricing is unavailable"), {status:503,code:"meter_unavailable"});
+  const [pin, pout] = price;
   const costUsd = (inputTokens * pin + outputTokens * pout) / 1_000_000;
   const rates = settings["ai.creditEur"] ?? {};
   const rate = Number(typeof rates === "number" ? rates : rates[plan] ?? rates.default ?? 0.000025);
   if (!Number.isFinite(rate) || rate <= 0) throw new Error("Invalid AI credit rate");
-  const costEur = costUsd * Number(settings["ai.usdToEur"] ?? 0.92);
+  const exchange = Number(settings["ai.usdToEur"] ?? 0.92);
+  if (!Number.isFinite(exchange) || exchange <= 0) throw Object.assign(new Error("AI exchange rate is unavailable"), {status:503,code:"meter_unavailable"});
+  const costEur = costUsd * exchange;
   const credits = costUsd > 0 ? Math.max(1, Math.ceil(costEur / rate - 1e-9)) : 0; // 1e-9 absorbs float noise on exact quotients
   return { costUsd, costEur, rate, credits };
 }
@@ -230,7 +234,7 @@ export function createAiFixHandler(deps: AiFixDeps): (req: Request) => Promise<R
       settled ??= (async () => {
         const inTok = input || estInput;
         const outTok = outputReported ? output : Math.max(output, Math.ceil(deltaChars / CHARS_PER_TOKEN));
-        const { credits: charged, costUsd } = creditsFor(settings, plan, usedModel, inTok, outTok);
+        const { credits: charged, costUsd } = creditsFor(settings, plan, settings["ai.prices"]?.[usedModel] ? usedModel : model, inTok, outTok);
         const receipt = await creditRpc(db,"bid_settle",{p_user:user.id,p_operation_id:accountingId,p_credits:charged,p_ai:{model:usedModel,input:inTok,output:outTok,costUsd,status}});
         if(!receipt.ok) throw new Error("Credit settlement was not accepted");
         return {charged:Number(receipt.charged),balance:Number(receipt.balance ?? await balanceOf())};

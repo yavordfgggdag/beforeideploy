@@ -803,5 +803,17 @@
   "billing.conflict": "This subscription needs attention. Open Manage subscription or synchronize its status before trying again.",
   "billing.previewExpired": "The price preview expired or changed. Choose the plan again to review the current amount.",
   "ai.weeklyCap": "Weekly credit limit reached. It resets at {at}. Credit packs do not raise this limit.",
-  "billing.meterUnavailable": "Credit accounting is temporarily unavailable. Please try again shortly."
+  "billing.meterUnavailable": "Credit accounting is temporarily unavailable. Try again shortly.",
+  "billing.creditLimit": "You have used your available credits. Open Plan and usage to continue.",
+  "billing.windowLimit": "The usage window is full. Open Plan and usage for its reset time. Packs do not increase this limit.",
+  "billing.sitePaused": "Activate this site in Plan and usage first.",
+  "billing.siteLimit": "Your active site limit is reached. Pause a site or change your plan.",
+  "billing.boostUsed": "Boost has already been used this week.",
+  "billing.boostUnavailable": "Boost is available with an active Knight plan.",
+  "billing.domainWait": "The included domain becomes available seven days after your first monthly Knight payment.",
+  "billing.domainUsed": "Your included domain for this year is already requested.",
+  "billing.domainUnavailable": "An included domain requires a paid Knight subscription.",
+  "billing.invalidDomain": "Enter a valid domain name without a URL or path.",
+  "billing.hostingNotReady": "Managed hosting has not been configured for this site yet.",
+  "billing.receiptPending": "Publishing was submitted. Its credit receipt will be synchronized on the next cloud action."
 }

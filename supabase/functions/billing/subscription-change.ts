@@ -1,3 +1,4 @@
+import {ensureUpgradeGrants,reconcilePlan} from "../_shared/credits.ts";
 import { type DbClient, type Row, json, must, sha256Hex, isDuplicate } from "../_shared/db.ts";
 
 type Provider = (path: string, body?: Row, method?: string) => Promise<Row>;
@@ -14,6 +15,8 @@ const totals = (p: Row) => {
 
 /** Preview the change to the existing subscription. Never creates a second transaction/subscription. */
 export async function previewChange(db: DbClient, userId: string, sub: Row, target: string, priceId: string, knownPrices: string[], provider: Provider, now: Date) {
+  const {data:pending} = await db.from("billing_changes").select("id,effective_at,status").eq("user_id",userId).eq("provider_ref",sub.provider_ref).in("status",["applying","applied"]).order("created_at",{ascending:false}).limit(1);
+  if (pending?.some(c => c.status === "applying" || Date.parse(c.effective_at)>now.getTime())) return json(409,{code:"billing_conflict",error:"Resolve the pending plan change before requesting another"});
   const remote = await provider(`/subscriptions/${sub.provider_ref}`, undefined, "GET");
   if (!["active", "trialing"].includes(remote.status)) return json(409, { code:"billing_conflict", error:"Resolve the subscription's status before changing plan" });
   if (remote.scheduled_change) return json(409, { code:"billing_conflict", error:"Resolve the scheduled change in the customer portal first" });
@@ -34,14 +37,14 @@ export async function previewChange(db: DbClient, userId: string, sub: Row, targ
   if (!Number.isSafeInteger(money.amount) || !Number.isSafeInteger(money.nextAmount) || money.amount < 0 || money.nextAmount < 0) return json(502,{code:"provider_error",error:"Invalid provider preview amount"});
   const id = crypto.randomUUID();
   const expiresAt = new Date(now.getTime()+10*60_000).toISOString();
-  must(await db.from("billing_changes").insert({id,user_id:userId,provider_ref:sub.provider_ref,from_tier:sub.tier,to_tier:target,effective_at:effectiveAt,expires_at:expiresAt,request,quote:money,fingerprint:await fingerprint(remote),status:"preview",created_at:now.toISOString()}));
+  must(await db.from("billing_changes").insert({id,user_id:userId,provider_ref:sub.provider_ref,from_tier:sub.tier,to_tier:target,effective_at:effectiveAt,expires_at:expiresAt,request,quote:{...money,periodStart:remote.current_billing_period?.starts_at,periodEnd:remote.current_billing_period?.ends_at},fingerprint:await fingerprint(remote),status:"preview",created_at:now.toISOString()}));
   return json(200, { preview:{ id,plan:target,...money,effectiveAt,expiresAt,downgrade } });
 }
 
 export async function confirmChange(db: DbClient, userId: string, id: string, provider: Provider, now: Date) {
   const {data:change} = await db.from("billing_changes").select("*").eq("id",id).eq("user_id",userId).maybeSingle();
   if (!change) return json(404,{code:"not_found",error:"Preview not found"});
-  if (change.status === "applied") return json(200,{changed:true, effectiveAt:change.effective_at});
+  if (change.status === "applied") { await ensureUpgradeGrants(db,userId,now); return json(200,{changed:true, effectiveAt:change.effective_at}); }
   if (change.status !== "preview") return json(409,{code:"billing_conflict",error:"This change is already being processed; synchronize the subscription"});
   if (Date.parse(change.expires_at)<=now.getTime()) return json(409,{code:"preview_expired",error:"Preview expired; review the current price again"});
   // A partial unique index permits one applying change per subscription. Conditional UPDATE claims this preview once.
@@ -65,7 +68,9 @@ export async function confirmChange(db: DbClient, userId: string, id: string, pr
     const updated = await provider(`/subscriptions/${change.provider_ref}`,change.request,"PATCH");
     // The webhook/sync remains authoritative for payments and grants. Keep the intent for deferred entitlements.
     must(await db.from("billing_changes").update({status:"applied"}).eq("id",id));
-    must(await db.from("subscriptions").update({tier:change.to_tier,raw:updated,updated_at:now.toISOString()}).eq("user_id",userId).eq("provider_ref",change.provider_ref));
+    must(await db.from("subscriptions").update({tier:change.to_tier,raw:updated,...(updated.current_billing_period ? {period_start:updated.current_billing_period.starts_at,period_end:updated.current_billing_period.ends_at} : {}),...(updated.status ? {status:updated.status==="trialing"?"trial":updated.status} : {}),updated_at:now.toISOString()}).eq("user_id",userId).eq("provider_ref",change.provider_ref));
+    await reconcilePlan(db,userId,now);
+    await ensureUpgradeGrants(db,userId,now);
     return json(200,{changed:true,effectiveAt:change.effective_at});
   } catch (error) {
     // An unknown network outcome after PATCH must not invite another charge. Sync resolves it against Paddle.

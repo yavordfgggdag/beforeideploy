@@ -6,7 +6,7 @@ import catalog from "./plans-catalog.json" with { type: "json" };
 import { addMonths } from "./billing-period.ts";
 
 export function fakeCreditRpc(db: FakeDb, fn: string, a: Row): Row | null {
-  if(!["bid_grant","bid_refund","bid_credit_status","bid_enforce_sites","bid_hold","bid_settle","bid_release"].includes(fn)) return null;
+  if(!["bid_record_payment","bid_accrue_periods","bid_scheduler_credits","bid_site_burn","bid_monitor_register","bid_start_trial","bid_upgrade_grant","bid_grant","bid_refund","bid_credit_status","bid_enforce_sites","bid_hold","bid_settle","bid_release"].includes(fn)) return null;
   const t=db.tables, user=a.p_user, now=new Date(a.p_now ?? db.clock()), iso=now.toISOString();
   const rows=(name:string)=>t[name]??=[];
   const mine=(name:string)=>rows(name).filter(r=>r.user_id===user);
@@ -14,6 +14,16 @@ export function fakeCreditRpc(db: FakeDb, fn: string, a: Row): Row | null {
   const profile=mine("profiles")[0] ?? {};
   const ledger=(delta:number,bucket:string,reason:string,ref:string,extra:Row={})=>rows("credit_ledger").push({id:crypto.randomUUID(),user_id:user,delta,bucket,reason,ref,created_at:iso,...extra});
   const balance=(bucket?:string)=>mine("credit_ledger").filter(r=>!bucket||r.bucket===bucket).reduce((n,r)=>n+Number(r.delta??0),0);
+  if(fn==="bid_scheduler_credits")return {ok:true,accounts:0};
+  if(fn==="bid_site_burn")return {ok:true,processed:rows("sites").filter(s=>s.state==="active").length};
+  if(fn==="bid_monitor_register") {
+    const site=mine("sites").find(s=>s.project_key===a.p_project&&s.state==="active");
+    if(!site)return {ok:false,code:"site_paused"};
+    const target={user_id:user,project_key:a.p_project,site_id:site.id,url:a.p_url,enabled:true,interval_min:a.p_interval,checks:a.p_checks,next_run_at:iso,updated_at:iso};
+    const old=mine("monitor_targets").find(r=>r.project_key===a.p_project);
+    if(old)Object.assign(old,target);else rows("monitor_targets").push({id:crypto.randomUUID(),...target});
+    return {ok:true,registered:true,target,charged:0};
+  }
   if(!mine("credit_accounts").length) {
     rows("credit_accounts").push({user_id:user});
     for(const bucket of ["plan","topup"]) {
@@ -54,6 +64,37 @@ export function fakeCreditRpc(db: FakeDb, fn: string, a: Row): Row | null {
       const take=Math.min(rest,g.left_credits);g.left_credits-=take;rest-=take;if(!rest)break;
     }
   };
+  if(fn==="bid_accrue_periods") {
+    for(const p of mine("credit_periods").filter(p=>p.refund_share<1)) {
+      for(let m=p.granted_through+1;m<(p.interval==="year"?12:1);m++) {
+        const at=addMonths(new Date(p.starts_at),m);if(+at>+now)break;
+        fakeCreditRpc(db,"bid_grant",{p_user:user,p_credits:Math.round(p.monthly_credits*(1-p.refund_share)),p_source:"plan_grant",p_ref:m?`${p.transaction_ref}:m${m}`:p.transaction_ref,p_tier:p.tier,p_granted_at:at.toISOString(),p_now:iso});p.granted_through=m;
+      }
+    }
+    return {ok:true};
+  }
+  if(fn==="bid_record_payment") {
+    if(rows("credit_periods").some(p=>p.transaction_ref===a.p_transaction))return {ok:true,duplicate:true};
+    rows("credit_periods").push({user_id:user,transaction_ref:a.p_transaction,subscription_ref:a.p_subscription,tier:a.p_tier,interval:a.p_interval,monthly_credits:a.p_credits,starts_at:a.p_start,ends_at:a.p_end,granted_through:-1,refund_share:0});
+    fakeCreditRpc(db,"bid_accrue_periods",a);return {ok:true};
+  }
+  if(fn==="bid_start_trial") {
+    if(rows("trial_claims").some(r=>r.email_hash===a.p_email_hash)||mine("subscriptions").some(s=>["trial","paddle"].includes(s.provider)))return {ok:false,code:"trial_used"};
+    rows("trial_claims").push({email_hash:a.p_email_hash,claimed_at:iso});
+    const id=crypto.randomUUID(),end=new Date(+now+a.p_days*86400000).toISOString();
+    rows("subscriptions").push({id,user_id:user,provider:"trial",tier:a.p_tier,status:"trial",period_start:iso,period_end:end,updated_at:iso});profile.plan=a.p_tier;
+    fakeCreditRpc(db,"bid_grant",{...a,p_source:"trial_grant",p_ref:id,p_granted_at:iso,p_expires_at:end});
+    return {ok:true,subscriptionId:id};
+  }
+  if(fn==="bid_upgrade_grant") {
+    const c=mine("billing_changes").find(c=>c.id===a.p_change&&c.status==="applied");
+    if(!c||Date.parse(c.effective_at)>+now)return {ok:true,granted:0};
+    const credits=(tier:string)=>settings.plans?.[tier]?.tokens??(catalog.plans as Row)[tier]?.credits??0;
+    const fraction=Math.min(1,Math.max(0,(Date.parse(c.quote.periodEnd)-Date.parse(c.effective_at))/(Date.parse(c.quote.periodEnd)-Date.parse(c.quote.periodStart))));
+    const n=Math.round((credits(c.to_tier)-credits(c.from_tier))*fraction);
+    if(!(n>0))return {ok:true,granted:0};
+    return fakeCreditRpc(db,"bid_grant",{...a,p_credits:n,p_source:"upgrade_grant",p_ref:`${c.provider_ref}:upg:${c.id}`,p_tier:c.to_tier,p_granted_at:c.effective_at});
+  }
   if(fn==="bid_credit_status") return status();
   if(fn==="bid_enforce_sites") return {ok:true,paused:0};
   if(fn==="bid_grant") {
@@ -67,11 +108,14 @@ export function fakeCreditRpc(db: FakeDb, fn: string, a: Row): Row | null {
     return {ok:true,granted:a.p_credits,expiresAt:expires};
   }
   if(fn==="bid_refund") {
+    if(mine("credit_ledger").some(l=>l.reason==="payment_refund"&&l.ref===a.p_adjustment))return {ok:true,taken:0,duplicate:true};
+    ledger(0,"plan","payment_refund",a.p_adjustment);
     let taken=0;
     for(const g of mine("credit_grants").filter(g=>g.ref===a.p_ref||String(g.ref).startsWith(`${a.p_ref}:`))) {
       const ref=`${a.p_adjustment}:${g.id}`;if(mine("credit_ledger").some(l=>l.reason==="grant_refund"&&l.ref===ref))continue;
       const n=Math.min(g.left_credits,Math.round(g.credits*a.p_share));g.left_credits-=n;taken+=n;ledger(-n,g.bucket,"grant_refund",ref);
     }
+    const period=mine("credit_periods").find(p=>p.transaction_ref===a.p_ref);if(period)period.refund_share=Math.min(1,period.refund_share+a.p_share);
     return {ok:true,taken};
   }
   const prior=mine("usage_events").find(e=>e.operation_id===a.p_operation_id);

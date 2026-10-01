@@ -1,3 +1,4 @@
+import { meteredProviderCall } from './meter.mjs';
 // Releases (V11): one operation record per release, with stages, timestamps, log and a final state, so the
 // app can show progress, resume after a restart and never report a half-done publish as success.
 //
@@ -322,7 +323,7 @@ export async function releasePromote(project, { op: opId, confirm } = {}) {
       const before = await netlifySiteState(p);
       op.production = { previousDeployId: before.publishedDeployId, previousPublishedAt: before.publishedAt };
       saveOp(op);
-      const published = await netlifyPublishDeploy(p, op.preview.deployId);
+      const published = await meteredProviderCall(p, 'deploy.production', () => netlifyPublishDeploy(p, op.preview.deployId));
       const after = await netlifySiteState(p);
       if (after.publishedDeployId !== op.preview.deployId) throw new EngineError(msg('netlify.publishFailed'), 'netlify_failed');
       production = { url: after.liveUrl, deployId: published.id, at: nowISO(), sha: null };

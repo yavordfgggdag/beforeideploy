@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 const root = new URL('../', import.meta.url);
 const source = fs.readFileSync(new URL('supabase/credits-v12.sql',root),'utf8');
+const actions = JSON.stringify(JSON.parse(fs.readFileSync(new URL('supabase/functions/_shared/pricing-actions.json',root),'utf8')));
+if (!source.includes(`('pricing.actions','${actions}')`)) { console.error('SQL action seed differs from pricing-actions.json'); process.exit(1); }
 const path = new URL('supabase/schema.sql',root);
 const old = fs.readFileSync(path,'utf8');
 const begin = '-- BEGIN GENERATED V12 CREDITS';

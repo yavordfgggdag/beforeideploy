@@ -1,6 +1,6 @@
 // Token ledger helpers shared by `billing` and `ai-fix` (V10 WP4, hardened after the V10 audit C3/C4/C10).
 import { addMonths, monthlySlice } from "./billing-period.ts";
-import { type DbClient, isDuplicate, must, type Row } from "./db.ts";
+import { allRows, type DbClient, isDuplicate, must, type Row } from "./db.ts";
 
 /** Sum of one bucket, computed in Postgres (view credit_bucket_balance) — summing rows here would stop at
  * PostgREST's 1000-row page for an active user (audit C8). */
@@ -41,9 +41,12 @@ export async function grantPlanTokens(db: DbClient, userId: string, tokens: numb
 /** A paid annual period earns each monthly slice even if the app was closed for several months.
  * Grant dates/expiry use the original calendar anchor, and references include the paid year. */
 export async function ensureMonthlyGrant(db: DbClient, userId: string, planTokens: Record<string, { tokens: number }>, now: Date) {
+  await creditRpc(db,"bid_accrue_periods",{p_user:userId,p_now:now.toISOString()});
   const { data: subs } = await db.from("subscriptions").select("*").eq("user_id", userId).eq("provider", "paddle");
   const sub = (subs ?? []).find((s: Row) => s.status === "active" && s.raw?.billing_cycle?.interval === "year" && s.period_start && s.period_end && now.getTime()<Date.parse(s.period_end));
   if (!sub) return null;
+  const {data:paid}=await db.from("credit_periods").select("transaction_ref").eq("user_id",userId).eq("interval","year").eq("starts_at",new Date(sub.period_start).toISOString()).limit(1);
+  if(paid?.length)return null; // The SQL scheduler/receipt owns this paid year's monthly accrual.
   const k = monthlySlice(sub.period_start, sub.period_end, now).month;
   const tier = await effectiveSubscriptionTier(db,userId,sub,now);
   let tokens = planTokens[tier]?.tokens ?? 0;
@@ -86,6 +89,15 @@ export async function reconcilePlan(db: DbClient, userId: string, now: Date): Pr
   return best;
 }
 
+/** Provider-confirmed changes are credited once, including recovery after a lost confirmation response. */
+export async function ensureUpgradeGrants(db:DbClient,userId:string,now:Date) {
+  const changes=await allRows(()=>db.from("billing_changes").select("id,effective_at").eq("user_id",userId).eq("status","applied").order("created_at"));
+  for(const change of changes) if(Date.parse(change.effective_at)<=now.getTime()) {
+    const receipt=await creditRpc(db,"bid_upgrade_grant",{p_user:userId,p_change:change.id,p_now:now.toISOString()});
+    if(!receipt.ok) throw Object.assign(new Error("Subscription credit period needs reconciliation"),{status:409,code:"billing_conflict"});
+  }
+}
+
 /** Ending a subscription changes entitlements, not the expiry dates of already paid credit lots. */
 export async function expireDue(db: DbClient, userId: string, now: Date): Promise<string | null> {
   const {data:profile} = await db.from("profiles").select("plan,role").eq("user_id",userId).maybeSingle();
@@ -100,6 +112,7 @@ export async function expireDue(db: DbClient, userId: string, now: Date): Promis
   }
   const {data:changes} = await db.from("billing_changes").select("id").eq("user_id",userId).in("status",["applying","applied"]).limit(1);
   const plan = changed || changes?.length ? await reconcilePlan(db,userId,now) : profile?.plan ?? null;
+  await ensureUpgradeGrants(db,userId,now);
   await creditRpc(db,"bid_enforce_sites",{p_user:userId,p_now:now.toISOString()});
   return plan;
 }

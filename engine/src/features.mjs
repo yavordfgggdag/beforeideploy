@@ -31,15 +31,18 @@ export function features(account) {
   const a = normalize(account);
   const privileged = a.role === 'vip' || a.role === 'admin';
   const paid = PAID.includes(a.plan);
+  const credits = Number(account?.credits?.balance ?? 0) > 0;
+  const cloudAI = a.role === 'normal' && (paid || credits) && !a.aiDisabled;
   return {
-    'ai.cloud': a.role === 'normal' && paid && !a.aiDisabled,   // central key, metered by the backend
+    'ai.cloud': cloudAI,   // central key, metered by the backend
     'ai.ownKey': privileged || OWN_KEY_FOR_EVERYONE,             // own Anthropic/OpenAI key from Keychain
-    'ai.builtin': (a.role === 'normal' && paid && !a.aiDisabled) || (privileged && a.hasOwnKey),
+    'ai.builtin': cloudAI || (privileged && a.hasOwnKey),
     'ai.external': true,                                         // ChatGPT/Claude/Codex buttons — free for everyone
     'ai.deep': a.plan === 'knight' || privileged,
-    'cloud.sync': privileged || paid || FREE_CLOUD_SYNC,
+    'cloud.sync': privileged || paid || credits || FREE_CLOUD_SYNC,
     'admin.panel': a.role === 'admin',
     'billing.plans': a.role === 'normal',                        // normal users see the plans / subscription
+    'sites.activeMax': Number.isInteger(account?.sitesActiveMax) ? account.sitesActiveMax : null,
     'projects.max': privileged ? null : PROJECT_LIMITS[a.plan] ?? null,
   };
 }
