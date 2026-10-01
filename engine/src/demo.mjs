@@ -5,12 +5,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { sh } from './util.mjs';
 import { upsertProject } from './store.mjs';
+import { gitSh } from './gitbin.mjs';
 
 const FILES = {
   'package.json': JSON.stringify({ name: 'demo-site', private: true, scripts: { build: 'node build.mjs' } }, null, 2) + '\n',
   'build.mjs': `// Copies src/ to dist/ and stamps the build time — a stand-in for Vite / Next / Astro.
 import fs from 'node:fs';
-import { gitSh } from './gitbin.mjs';
 fs.rmSync('dist', { recursive: true, force: true });
 fs.mkdirSync('dist', { recursive: true });
 for (const f of fs.readdirSync('src')) fs.copyFileSync('src/' + f, 'dist/' + f);
