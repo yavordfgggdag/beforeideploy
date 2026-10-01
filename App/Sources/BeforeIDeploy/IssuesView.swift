@@ -79,7 +79,7 @@ struct IssueRow: View {
                     .font(Typo.font(.micro, weight: .bold)).tracking(0.5)
                     .foregroundColor(issue.severity == "blocker" ? .white : tint)
                     .padding(.horizontal, 7).padding(.vertical, 3)
-                    .background(Capsule().fill(issue.severity == "blocker" ? tint : tint.opacity(0.14)))
+                    .background(Capsule().fill(issue.severity == "blocker" ? Tone.danger.fill : tint.opacity(0.14)))
                     .fixedSize(horizontal: true, vertical: false)
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 6) {

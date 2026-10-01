@@ -47,7 +47,7 @@
 "admin.inviteHint" = "Supabase изпраща имейл с линк за покана; човекът задава парола и започва с тази роля (VIP: безплатно, собствени API ключове).";
 "admin.invited" = "Поканата е изпратена до %@";
 "admin.inviting" = "Изпращам…";
-"admin.lastAi" = "Последен AI Fix";
+"admin.lastAi" = "Последна AI поправка";
 "admin.locale" = "Език";
 "admin.noUsers" = "Няма потребители";
 "admin.pickUser" = "Избери потребител от списъка";
@@ -95,8 +95,8 @@
 "ai.explanation" = "Обяснение";
 "ai.fileApplied" = "приложен";
 "ai.fileSkipped" = "пропуснат";
-"ai.fixButton" = "Оправи с AI";
-"ai.fixHelp" = "Вграден AI Fix — предлага промени по файловете, прилагаш ги само с потвърждение";
+"ai.fixButton" = "Поправи с AI";
+"ai.fixHelp" = "Вградена AI поправка — предлага промени по файловете, прилагаш ги само с потвърждение";
 "ai.keyNeeded" = "Първо една стъпка: свържи Anthropic или OpenAI ключ — после всеки AI бутон работи.";
 "ai.noChanges" = "Моделът не предложи промени по файлове.";
 "ai.planHelp" = "Облачният AI е част от плановете Flash, High и Knight; VIP акаунтите ползват свой ключ.";
@@ -117,7 +117,7 @@
 "ai.selectAll" = "Избери всички";
 "ai.signInNeeded" = "Влез, за да ползваш AI. Без акаунт работят само външните бутони ChatGPT / Claude.";
 "ai.thinking" = "Мисля…";
-"ai.title" = "Оправи с AI";
+"ai.title" = "Поправи с AI";
 "ai.tokensCount" = "%@ кредита";
 "ai.tokensUsed" = "Собствен ключ · %@ кредита в приложението";
 "ai.undo" = "Върни AI поправката";
@@ -130,24 +130,24 @@
 "ai.viaProvider" = "%@ · %@";
 
 "aifix.chatgpt" = "Оправи в ChatGPT";
-"aifix.chatgptHelp" = "Нов чат в ChatGPT с готов prompt";
+"aifix.chatgptHelp" = "Нов чат в ChatGPT с готова заявка към AI";
 "aifix.claudeCodeHelp" = "Claude Code в папката на проекта";
-"aifix.claudeHelp" = "Нов чат в Claude с готов prompt";
+"aifix.claudeHelp" = "Нов чат в Claude с готова заявка към AI";
 "aifix.codexHelp" = "Codex в папката на проекта — може да поправи кода сам";
-"aifix.copiedChars" = "Prompt-ът е копиран (%@ символа)";
-"aifix.copiedPaste" = "Prompt-ът е копиран — постави го с ⌘V";
-"aifix.copyOnly" = "Само копирай prompt-а";
+"aifix.copiedChars" = "Заявката към AI е копирана (%@ символа)";
+"aifix.copiedPaste" = "Заявката към AI е копирана — постави я с ⌘V";
+"aifix.copyOnly" = "Само копирай заявката";
 "aifix.external" = "Външен AI…";
 "aifix.externalHelp" = "ChatGPT, Claude, Codex, Claude Code или копирай готовия текст — безплатно, отваря се извън приложението.";
-"aifix.help" = "Оправи с AI — нов чат със специален prompt: лог, файлове, версии (ключовете се скриват)";
-"aifix.openedChat" = "Отворих нов чат с готов prompt";
+"aifix.help" = "Поправи с AI — нов чат със специална заявка към AI: лог, файлове, версии (ключовете се скриват)";
+"aifix.openedChat" = "Отворих нов чат с готова заявка към AI";
 "aifix.openedCli" = "Отворих %@ в папката на проекта";
 
 "aikeys.checking" = "Проверявам…";
 "aikeys.connectedHint" = "Свързан · %@";
 "aikeys.getKey" = "Вземи ключ";
 "aikeys.group" = "AI ключове";
-"aikeys.intro" = "VIP и admin акаунтите движат асистента, AI Fix и дълбоките поправки на свой ключ вместо на общия облачен модел. Ключът се пази само в macOS Keychain и се проверява с една заявка.";
+"aikeys.intro" = "VIP и admin акаунтите движат асистента, AI поправката и дълбоките поправки на свой ключ вместо на общия облачен модел. Ключът се пази само в macOS Keychain и се проверява с една заявка.";
 "aikeys.notConnected" = "Не е добавен";
 "aikeys.orPlan" = "Не искаш да управляваш ключ? Планът ползва облачния модел на Before I Deploy.";
 "aikeys.placeholder" = "API ключ";
@@ -314,7 +314,7 @@
 "billing.tokensPerMonth" = "%@ кредита на месец";
 "billing.trialDetail" = "%@ кредита за вградения AI, без карта.";
 "billing.trialEnds" = "%@ пробен · до %@";
-"billing.trialStarted" = "Пробният период започна — приятна работа с вградения AI Fix.";
+"billing.trialStarted" = "Пробният период започна — приятна работа с вградената AI поправка.";
 "billing.trialTitle" = "Пробвай %@ безплатно за %@ дни";
 "billing.updated" = "Планът ти е обновен.";
 "billing.waiting" = "Чакам потвърждение на плащането…";
@@ -433,10 +433,10 @@
 "dashboard.checkedAgo" = "Проверено %@";
 "dashboard.connectHostingHelp" = "Свържи хостинга, за да публикуваш";
 "dashboard.fixErrorsFirst" = "Оправи грешките първо";
-"dashboard.issuesOnePrompt" = "%@ проблема — един prompt за всички";
+"dashboard.issuesOnePrompt" = "%@ проблема — една заявка към AI за всички";
 "dashboard.localTitle" = "Локално";
 "dashboard.noEvents" = "Още няма събития за този проект.";
-"dashboard.noRepo" = "няма repo";
+"dashboard.noRepo" = "няма хранилище";
 "dashboard.notChecked" = "НЕ Е ПРОВЕРЕН";
 "dashboard.openInEditor" = "Отвори в Cursor / VS Code";
 "dashboard.productionHelp" = "Обновява сайта на живо след потвърждение";
@@ -449,7 +449,7 @@
 "dashboard.smartHelp" = "⌘D — проверка → преглед; спира при първата грешка";
 "dashboard.stale" = "· остаряло";
 "dashboard.stopped" = "спрян";
-"dashboard.tab.hosting" = "Хостинг & домейн";
+"dashboard.tab.hosting" = "Хостинг";
 "dashboard.tab.local" = "Локално";
 "dashboard.tab.overview" = "Преглед";
 
@@ -520,7 +520,7 @@
 "firstSteps.account" = "Влез — или остани локално";
 "firstSteps.accountHint" = "Акаунтът добавя AI кредити, синхронизация и облачен мониторинг. Без него проверките и публикуването работят на този Mac.";
 "firstSteps.add" = "Добави проект";
-"firstSteps.addHint" = "Папка с уебсайт — framework-ът, package manager-ът и хостингът се откриват автоматично.";
+"firstSteps.addHint" = "Папка с уебсайт — framework-ът, мениджърът на пакети и хостингът се откриват автоматично.";
 "firstSteps.ai" = "Нека асистентът обясни проблем";
 "firstSteps.aiHint" = "Показва какво ще изпрати преди да изпрати, предлага diff и прилага само с твое потвърждение — после проверява.";
 "firstSteps.check" = "Пусни проверка";
@@ -530,7 +530,7 @@
 "firstSteps.hosting" = "Свържи hosting";
 "firstSteps.hostingHint" = "Netlify предлага преглед, публикуване на проверена версия и възстановяване. Поддържат се и Vercel, Cloudflare Pages и GitHub Pages.";
 "firstSteps.monitor" = "Включи мониторинга";
-"firstSteps.monitorHint" = "На този Mac (приложение или фонов агент) и, щом облачният scheduler работи, от облака, когато Mac-ът спи.";
+"firstSteps.monitorHint" = "На този Mac (приложение или фонов агент) и, щом облачният планировчик работи, от облака, когато Mac-ът спи.";
 "firstSteps.setupHint" = "Липсват задължителни инструменти — Настройка ги инсталира.";
 "firstSteps.title" = "Първи стъпки";
 
@@ -543,15 +543,15 @@
 
 "git.addRemote" = "Добави remote";
 "git.changes" = "промени";
-"git.createRepo" = "Създай GitHub repo";
+"git.createRepo" = "Създай хранилище в GitHub";
 "git.fetchHelp" = "git fetch — обнови какво има в remote-а";
 "git.init" = "Инициализирай Git";
 "git.more" = "+ още %@";
 "git.notPushed" = "не е качено";
-"git.notRepo" = "Проектът не е Git repository.";
+"git.notRepo" = "Проектът не е Git хранилище.";
 
 "history.checkBlocked" = "Проверка — blocked";
-"history.draftFailed" = "Draft — грешка";
+"history.draftFailed" = "Чернова — грешка";
 "history.netlifyCreated" = "Netlify сайт създаден";
 "history.netlifyLinked" = "Netlify свързан";
 "history.productionFailed" = "Публикуване на живо — грешка";
@@ -695,16 +695,16 @@
 "monitor.agentOn" = "Фоновият агент е инсталиран";
 "monitor.agentToggle" = "Фонов агент";
 "monitor.checkNow" = "Провери сега";
-"monitor.cloudActive" = "Върви и в облака: %@ регистрирани сайта, scheduler-ът е жив.";
+"monitor.cloudActive" = "Върви и в облака: %@ регистрирани сайта, планировчикът работи.";
 "monitor.cloudNeedsLiveUrl" = "Сайтът още няма публичен адрес — първо публикувай.";
-"monitor.cloudNever" = "Облачният scheduler никога не е работил — функцията monitor е качена, но не е насрочена (собственик: изпълни supabase/monitor-cron.sql). Дотогава проверява само този Mac.";
-"monitor.cloudNoTargets" = "Облачният scheduler е жив; този сайт още не е регистриран.";
+"monitor.cloudNever" = "Облачният планировчик никога не е работил — функцията monitor е качена, но не е насрочена (собственик: изпълни supabase/monitor-cron.sql). Дотогава проверява само този Mac.";
+"monitor.cloudNoTargets" = "Облачният планировчик работи; този сайт още не е регистриран.";
 "monitor.cloudOff" = "Облачният мониторинг е изключен за този сайт.";
 "monitor.cloudOffline" = "Облачният мониторинг не е достъпен в момента.";
 "monitor.cloudOn" = "Облачният мониторинг е включен за този сайт.";
 "monitor.cloudScheduler" = "Последно изпълнение %@ · следваща проверка %@ · история %@ дни";
 "monitor.cloudSignedOut" = "Облачният мониторинг изисква вход в акаунта.";
-"monitor.cloudStale" = "Облачният scheduler е спрял: последно изпълнение %@. Дотогава проверява само този Mac.";
+"monitor.cloudStale" = "Облачният планировчик е спрял: последно изпълнение %@. Дотогава проверява само този Mac.";
 "monitor.cloudTarget" = "%@ · на всеки %@ мин · последна проверка: %@";
 "monitor.cloudToggle" = "Облак";
 "monitor.cloudToggleHelp" = "Регистрира публичния адрес за автоматични облачни проверки. Разрешен е само адресът на собствения сайт.";
@@ -751,12 +751,12 @@
 "netlify.connectTitle" = "Свържи с Netlify";
 "netlify.dashboard" = "Управление";
 "netlify.hasCi" = "Автоматичното публикуване през GitHub е включено — качването на промени обновява сайта.";
-"netlify.lastDraft" = "Последен draft";
+"netlify.lastDraft" = "Последна чернова";
 "netlify.linkHint" = "Създай нов сайт или свържи съществуващ. Публикуването ще остане ръчно.";
 "netlify.notLinked" = "Проектът не е свързан";
 "netlify.signIn" = "Вход в Netlify";
 "netlify.signInHint" = "Влез в Netlify, за да свържеш и публикуваш проекта.";
-"netlify.theLastDraft" = "Последният draft";
+"netlify.theLastDraft" = "Последната чернова";
 
 "netlifySetup.createAndLink" = "Създай и свържи";
 "netlifySetup.createNew" = "Създай нов";
@@ -926,14 +926,14 @@
 
 "remote.openNew" = "Отвори github.com/new";
 "remote.sheetTitle" = "Отдалечено Git хранилище";
-"remote.steps" = "1. Създай празно repo в GitHub (без README).\n2. Постави URL-а му тук.";
+"remote.steps" = "1. Създай празно хранилище в GitHub (без README).\n2. Постави URL-а му тук.";
 "remote.title" = "Свържи проекта с GitHub repository";
 
 "report.hint" = "Докладът съдържа лога на изпълняващия модул и логовете на последните операции с премахнати ключове, имейли и пътища. Нищо не се изпраща автоматично.";
 "report.save" = "Запази доклад за поддръжка…";
 "report.saved" = "Докладът е готов, с прикрити поверителни данни — показвам го във Finder";
 
-"root.emptyHint" = "Добави първия си проект — ще разпозная framework, package manager,\nGitHub и Netlify автоматично и ще ги запомня.";
+"root.emptyHint" = "Добави първия си проект — ще разпозная framework, мениджъра на пакети,\nGitHub и Netlify автоматично и ще ги запомня.";
 "root.engineMissing" = "Изпълняващият модул не е инсталиран";
 "root.engineMissingHint" = "Изпълняващият модул идва с приложението и се инсталира сам. Изтегли приложението отново от сайта или пиши на поддръжката.\nОчаквам го тук:";
 "root.loadingProject" = "Зареждам проекта…";
@@ -1008,7 +1008,7 @@
 "setup.missingRequired.one" = "%@ задължително нещо липсва";
 "setup.missingRequired.other" = "%@ задължителни неща липсват";
 "setup.optional" = "по желание";
-"setup.subtitle" = "Всичко, от което зависи workflow-ът — с бутон за автоматична настройка";
+"setup.subtitle" = "Всичко, от което зависи процесът — с бутон за автоматична настройка";
 
 "sidebar.folderMissing" = "папката липсва";
 "sidebar.openInCursor" = "Отвори в Cursor";
@@ -1062,7 +1062,7 @@
 "tour.2.b3" = "Домейни и DNS с един бутон (Spaceship)";
 "tour.2.text" = "Първо преглед, после публикуване на живо с потвърждение и предварително показан разход.";
 "tour.2.title" = "Публикувай и свържи домейн";
-"tour.3.b1" = "Вграден AI Fix с diff-ове или ChatGPT, Claude и Codex с готов prompt";
+"tour.3.b1" = "Вградена AI поправка с преглед на промените или ChatGPT, Claude и Codex с готова заявка към AI";
 "tour.3.b2" = "Ключовете ти за хостинг остават в Keychain на Mac-а";
 "tour.3.b3" = "Акаунтът синхронизира имена, състояния и публични адреси, без кода или ключовете";
 "tour.3.text" = "Провалена стъпка получава обяснение и предложени промени по файловете; нищо не се записва, докато не одобриш.";
@@ -1137,7 +1137,7 @@
 "usage.upgrade" = "Надгради…";
 
 "welcome.feature.ai" = "AI оправя грешките";
-"welcome.feature.aiDetail" = "ChatGPT, Claude и Codex с готов prompt";
+"welcome.feature.aiDetail" = "ChatGPT, Claude и Codex с готова заявка към AI";
 "welcome.feature.check" = "Проверка преди всяко публикуване";
 "welcome.feature.checkDetail" = "Git, поверителни данни, качество, типове и сглобяване — автоматично";
 "welcome.feature.costs" = "Разходи под контрол";
@@ -1335,6 +1335,11 @@
 "k.step.secrets" = "Поверителни данни";
 "k.step.lint" = "Качество на кода";
 "k.step.typecheck" = "Проверка на типовете";
+"k.stepShort.git" = "Промени";
+"k.stepShort.lint" = "Качество";
+"k.stepShort.secrets" = "Тайни";
+"k.stepShort.site" = "Сайт";
+"k.stepShort.typecheck" = "Типове";
 "k.step.build" = "Сглобяване";
 "k.step.hosting" = "Хостинг";
 "k.audit.set_role" = "Променена роля";

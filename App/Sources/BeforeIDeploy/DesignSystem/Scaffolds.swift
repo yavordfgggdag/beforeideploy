@@ -102,7 +102,7 @@ struct Segmented<T: Hashable>: View {
                 } label: {
                     HStack(spacing: Space.xs) {
                         if let icon = icons[opt.1] { Image(systemName: icon).accessibilityHidden(true) }
-                        Text(opt.0)
+                        Text(opt.0).lineLimit(1).fixedSize(horizontal: true, vertical: false)
                         if let badge = badges[opt.1] { Badge(text: badge, tone: selection == opt.1 ? .accent : .neutral, size: .sm) }
                     }
                         .font(Typo.font(.body, weight: .semibold))

@@ -310,6 +310,17 @@ extension K {
         default: return other(value)
         }
     }
+    /// Short single-line label for compact places (project tabs, health tiles, mini stats); full name stays in `step`.
+    static func stepShort(_ value: String) -> String {
+        switch value {
+        case "git": return L("k.stepShort.git")
+        case "secrets": return L("k.stepShort.secrets")
+        case "lint": return L("k.stepShort.lint")
+        case "typecheck": return L("k.stepShort.typecheck")
+        case "site": return L("k.stepShort.site")
+        default: return step(value)
+        }
+    }
     static func step(_ value: String) -> String {
         switch value {
         case "git": return L("k.step.git")

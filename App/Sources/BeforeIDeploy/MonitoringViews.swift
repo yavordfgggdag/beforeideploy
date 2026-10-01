@@ -197,10 +197,12 @@ struct IncidentRow: View {
             Spacer()
             if let u = incident.url {
                 Button { model.open(u) } label: { Image(systemName: "safari") }.buttonStyle(.plain).foregroundColor(Theme.secondary).help(u)
+                    .accessibilityLabel(L("common.openSite"))
             }
             if !incident.project.hasPrefix("domain:") {
                 Button { Task { await model.select(incident.project) } } label: { Image(systemName: "chevron.right") }
                     .buttonStyle(.plain).foregroundColor(Theme.tertiary)
+                    .accessibilityLabel(L("palette.openProject"))
             }
         }
         .padding(.vertical, 3)

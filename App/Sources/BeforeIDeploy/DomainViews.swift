@@ -30,12 +30,12 @@ struct DomainsView: View {
                     LoadingState()
                 } else if let s = model.spaceship, s.connected {
                     let expiring = s.domains.filter { ($0.daysLeft ?? 999) < 30 }.count
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 180), spacing: Space.m)], spacing: Space.m) {
-                        KPITile(value: "\(s.domains.count)", label: L("domains.countLabel"), icon: "network")
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 160), spacing: Space.s)], spacing: Space.s) {
+                        KPITile(value: "\(s.domains.count)", label: L("domains.countLabel"), icon: "network", compact: true)
                         KPITile(value: "\(expiring)", label: L("domains.expiring30"), icon: "calendar.badge.exclamationmark",
-                                tint: expiring > 0 ? Theme.warn : Theme.text)
+                                tint: expiring > 0 ? Theme.warn : Theme.text, compact: true)
                         KPITile(value: "\(s.domains.filter { !$0.autoRenew }.count)", label: L("domains.noAutoRenew"), icon: "arrow.triangle.2.circlepath",
-                                tint: s.domains.contains { !$0.autoRenew } ? Theme.warn : Theme.text)
+                                tint: s.domains.contains { !$0.autoRenew } ? Theme.warn : Theme.text, compact: true)
                     }
 
                     AdaptiveColumns(spacing: 14) {

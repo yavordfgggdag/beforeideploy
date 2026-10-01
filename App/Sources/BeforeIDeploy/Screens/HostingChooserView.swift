@@ -120,6 +120,7 @@ struct GenericHostingCard: View {
                             .bidButton(.secondary, compact: true)
                         Button { model.copy(live) } label: { Image(systemName: "doc.on.doc") }
                             .bidButton(.secondary, compact: true)
+                            .accessibilityLabel(L("common.copyUrl"))
                     }
                 }
             }

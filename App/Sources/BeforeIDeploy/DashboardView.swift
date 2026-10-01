@@ -7,7 +7,7 @@ enum ProjectTab: String, CaseIterable, Hashable {
         switch self {
         case .overview: return L("dashboard.tab.overview")
         case .local: return L("dashboard.tab.local")
-        case .git: return K.step("git")
+        case .git: return K.stepShort("git")
         case .hosting: return L("dashboard.tab.hosting")
         case .history: return L("common.history")
         }
@@ -40,10 +40,10 @@ struct DashboardView: View {
 
                 switch tab {
                 case .overview:
+                    HeroCard(status: status)
                     if let launch = status.launch, !launch.complete {
                         LaunchCard(launch: launch, tab: $tab)
                     }
-                    HeroCard(status: status)
                     IssuesCard(status: status)
                     HealthGrid(status: status)
                     // safe fixes no issue points at (e.g. "create a GitHub repository") keep their own card
@@ -53,7 +53,7 @@ struct DashboardView: View {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 180), spacing: Space.m)], spacing: Space.m) {
                         MiniStat(title: L("dashboard.localTitle"), value: status.local.running ? Fmt.host(status.local.url) : L("dashboard.stopped"),
                                  tint: status.local.running ? Theme.ready : Theme.tertiary, icon: "desktopcomputer") { tab = .local }
-                        MiniStat(title: K.step("git"), value: status.git.isRepo ? L("dashboard.changes", count: status.git.changedCount ?? 0) : L("dashboard.noRepo"),
+                        MiniStat(title: K.stepShort("git"), value: status.git.isRepo ? L("dashboard.changes", count: status.git.changedCount ?? 0) : L("dashboard.noRepo"),
                                  tint: (status.git.changedCount ?? 0) > 0 ? Theme.warn : Theme.text, icon: "arrow.triangle.branch") { tab = .git }
                         MiniStat(title: L("dashboard.liveProvider", status.hosting?.name ?? "Netlify"),
                                  value: (status.hosting?.liveUrl ?? status.project.netlify?.liveUrl).map { Fmt.host($0) } ?? (status.hosting?.ready == true ? L("common.connectedLower") : L("common.notConnectedLower")),
@@ -108,6 +108,14 @@ struct TabStrip: View {
     @Namespace private var pill
 
     var body: some View {
+        // Full-width strip when the single-line labels fit; otherwise it scrolls sideways instead of wrapping (900 pt window).
+        ViewThatFits(in: .horizontal) {
+            segmented
+            ScrollView(.horizontal, showsIndicators: false) { segmented }
+        }
+    }
+
+    private var segmented: some View {
         Segmented(options: ProjectTab.allCases.map { ($0.title, $0) }, selection: $selection,
                   icons: Dictionary(uniqueKeysWithValues: ProjectTab.allCases.map { ($0, $0.icon) }), badges: badges)
     }
@@ -126,7 +134,7 @@ struct MiniStat: View {
             HStack(spacing: 12) {
                 Image(systemName: icon).font(Typo.font(.subhead, weight: .semibold)).foregroundColor(Theme.accent).frame(width: 22)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(title.uppercased()).font(Typo.font(.micro, weight: .bold)).tracking(0.8).foregroundColor(Theme.tertiary)
+                    Text(title.uppercased()).font(Typo.font(.micro, weight: .bold)).tracking(0.8).foregroundColor(Theme.tertiary).lineLimit(1)
                     Text(value).font(Typo.font(.subhead, weight: .semibold)).foregroundColor(tint).lineLimit(1)
                 }
                 Spacer()
@@ -513,9 +521,12 @@ struct HealthTile: View {
                     Image(systemName: Self.icon(step.id))
                         .font(Typo.font(.callout, weight: .semibold))
                         .foregroundColor(Theme.secondary)
-                    Text(K.step(step.id))
+                    Text(K.stepShort(step.id))
                         .font(Typo.font(.body, weight: .semibold))
                         .foregroundColor(Theme.text)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .help(K.step(step.id))
                     Spacer()
                     Image(systemName: Theme.symbol(for: step.status))
                         .font(Typo.font(.callout))
