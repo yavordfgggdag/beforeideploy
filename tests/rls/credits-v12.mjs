@@ -17,6 +17,13 @@ export async function testCredits({db,t,assert,rejects,as}) {
  const charge=(id,n,op,at=now,window=true)=>rpc('bid_charge',{p_user:id,p_action:'ai.chat',p_credits:n,p_operation_id:op,p_counts_window:window,p_now:at});
  const summary=(id,at=now)=>rpc('bid_usage_summary',{p_user:id,p_now:at});
  const balance=async id=>Number((await db.query('select coalesce(sum(delta),0) as n from credit_ledger where user_id=$1',[id])).rows[0].n);
+ // V3 (credits-v13.sql) adds a release curve, rolling guards, a pack rate limit and a monthly Free grant. This suite
+ // keeps proving the V12 lot/ledger/refund/period/site mechanics, so it runs on fully released lots ("hours":0 — the
+ // migration rule for pre-V3 lots) with the guards off and no Free grant. tests/rls/credits-v13.mjs covers V3.
+ const saved=(await db.query("select key,value from settings where key in ('billing.catalog','plans')")).rows;
+ await db.query(`update settings set value=jsonb_set(value,'{release}','{"hours":0,"guard24hShare":0,"guard7dShare":0,"packCreditsPerHour":0}') where key='billing.catalog'`);
+ // Amounts are the V12 catalog's (Flash 100k, High 300k, Knight 1M) that these scenarios were computed with.
+ await db.query(`update settings set value=jsonb_set(jsonb_set(jsonb_set(jsonb_set(value,'{free,tokens}','0'),'{flash,tokens}','100000'),'{high,tokens}','300000'),'{knight,tokens}','1000000') where key='plans'`);
  await t('V12 grants: idempotency, FIFO expiry, accumulation cap and original-price preservation',async()=>{
   const id=await user();
   await grant(id,300000,'old','high',now,later(2));
@@ -34,7 +41,9 @@ export async function testCredits({db,t,assert,rejects,as}) {
   const id=await user(); await grant(id,300000,'held-lot','high',now,later(0,0.1));
   const hold={p_user:id,p_action:'ai.fix',p_credits:40000,p_operation_id:'reserve-one',p_now:now};
   assert((await rpc('bid_hold',hold)).ok,'reserve');
-  assert((await rpc('bid_hold',{...hold,p_operation_id:'reserve-two'})).code==='window_5h','other reservation consumes window');
+  // V3: no 5 h window — a second reservation only needs unreserved credits (guards look at settled spend).
+  assert((await rpc('bid_hold',{...hold,p_operation_id:'reserve-two'})).ok,'no 5 h window in V3');
+  assert((await rpc('bid_release',{p_user:id,p_operation_id:'reserve-two',p_now:now})).released,'second reservation released');
   assert((await rpc('bid_hold',hold)).duplicate,'retry shares reservation');
   assert((await summary(id,later(0,0.11))).remaining.total===40000,'hold pins expiring credits');
   const settle=await rpc('bid_settle',{p_user:id,p_operation_id:'reserve-one',p_credits:10000,p_now:later(0,0.12)});
@@ -50,25 +59,7 @@ export async function testCredits({db,t,assert,rejects,as}) {
   await rpc('bid_hold',{...hold,p_user:id2,p_operation_id:'orphan-test'});
   assert((await summary(id2,later(0,0.3))).reserved.tokens===0 && await balance(id2)===300000,'orphan released after TTL');
  });
- await t('V12 windows: 5h reset, anchored week, packs cannot bypass, upgrade and Boost',async()=>{
-  const id=await user('flash'); await grant(id,100000,'monthly','flash');
-  assert((await charge(id,20001,'too-large')).code==='window_5h','deny above cap');
-  assert((await summary(id)).session.resetsAt===null,'denied operation does not start session');
-  assert((await charge(id,20000,'first-pass')).ok,'cap exact');
-  await rpc('bid_grant',{p_user:id,p_credits:1000000,p_source:'topup',p_ref:'pack',p_now:now,p_granted_at:now});
-  assert((await charge(id,1,'pack-cannot-bypass')).code==='window_5h','packs keep window');
-  assert((await charge(id,20000,'next-session',later(0,5))).ok,'whole session resets');
-  assert((await charge(id,1,'week-denied',later(0,10))).code==='window_week','week cap');
-  const s=await summary(id,later(1)); assert(Date.parse(s.weekly.resetsAt)===Date.parse(later(7)),'week anchored at subscription');
-  await db.query("update profiles set plan='knight' where user_id=$1",[id]);
-  await db.query("update subscriptions set tier='knight' where user_id=$1",[id]);
-  assert((await summary(id,later(1))).session.cap===200000,'upgrade applies immediately');
-  const boosted=await rpc('bid_boost',{p_user:id,p_now:later(1)});
-  assert(boosted.ok && boosted.windows.session.cap===300000 && boosted.windows.week.cap===600000,'boost both caps');
-  assert((await rpc('bid_boost',{p_user:id,p_now:later(1)})).code==='boost_used','once a week');
-  assert((await summary(id,later(2,1))).session.cap===200000,'boost expires');
-  assert((await rpc('bid_boost',{p_user:id,p_now:later(7)})).ok,'next subscription week');
- });
+ // 'V12 windows' (5 h / anchored week / Boost) retired in V3: tests/rls/credits-v13.mjs covers the release curve and guards.
  await t('V12 settlement: underestimated started work becomes debt, next pack repays it exactly',async()=>{
   const id=await user(); await grant(id,1000);
   await rpc('bid_hold',{p_user:id,p_action:'ai.chat',p_credits:800,p_operation_id:'underestimated',p_now:now});
@@ -94,27 +85,30 @@ export async function testCredits({db,t,assert,rejects,as}) {
   for(const key of ['one','two','three','four']) await db.query('insert into bid_projects(user_id,key,name) values($1,$2,$2)',[id,key]);
   for(const key of ['one','two','three']) assert((await rpc('bid_site_change',{p_user:id,p_project:key,p_active:true,p_now:now})).ok,'activate');
   assert((await rpc('bid_site_change',{p_user:id,p_project:'four',p_active:true,p_now:now})).code==='site_limit','fourth requires Knight');
-  assert(await balance(id)===297000,'one daily charge each');
+  assert(await balance(id)===300000,'V3: active sites are an entitlement, no AI credits');
   await rpc('bid_site_change',{p_user:id,p_project:'one',p_active:false,p_now:now});
   await rpc('bid_site_change',{p_user:id,p_project:'one',p_active:true,p_now:now});
-  assert(await balance(id)===297000,'reactivation same UTC day free');
+  assert(await balance(id)===300000,'reactivation free');
   await db.query("update profiles set plan='free' where user_id=$1",[id]);
   await db.query("update subscriptions set status='canceled' where user_id=$1",[id]);
   const s=await summary(id); assert(s.sites.active===1 && s.sites.paused===2 && s.sites.items.length===3,'residual mode one site, never delete');
   const free=await user('free'); await rpc('bid_grant',{p_user:free,p_credits:100000,p_source:'topup',p_ref:'freepack',p_now:now,p_granted_at:now});
   await db.query("insert into bid_projects(user_id,key,name) values($1,'free','Free')",[free]);
-  assert((await rpc('bid_site_change',{p_user:free,p_project:'free',p_active:true,p_now:now})).code==='site_limit','free packs provide no site slots');
-  assert((await charge(free,100,'free-pack-ai')).ok,'free packs retain metered AI access');
+  await db.query("insert into bid_projects(user_id,key,name) values($1,'free2','Free 2')",[free]);
+  assert((await rpc('bid_site_change',{p_user:free,p_project:'free',p_active:true,p_now:now})).ok,'V3: Free includes one active site');
+  assert((await rpc('bid_site_change',{p_user:free,p_project:'free2',p_active:true,p_now:now})).code==='site_limit','packs add no site slots');
+  { const r=await charge(free,100,'free-pack-ai'); assert(r.ok,'free packs retain metered AI access '+JSON.stringify(r)); }
  });
- await t('V12 sites: 3-day bounded hosting debt, pause without deletion and free rollback',async()=>{
+ await t('V3 sites: an active site never spends AI credits; pause keeps the site and rollback stays free',async()=>{
   const id=await user('flash'); await grant(id,1000,'start','flash');
   await db.query("insert into bid_projects(user_id,key,name) values($1,'debt','Debt')",[id]);
   const active=await rpc('bid_site_change',{p_user:id,p_project:'debt',p_active:true,p_now:now});
   for(let d=1;d<=3;d++) await rpc('bid_v12_burn_one',{p_user:id,p_site:active.siteId,p_day:later(d).slice(0,10),p_now:later(d)});
-  assert((await summary(id,later(3))).period.debt===3000,'three days debt cap');
-  await rpc('bid_enforce_sites',{p_user:id,p_now:later(4)});
-  const s=await summary(id,later(4)); assert(s.sites.active===0 && s.sites.items[0].pausedReason==='no_credits','pause after grace');
-  assert((await rpc('bid_charge',{p_user:id,p_action:'deploy.rollback',p_credits:0,p_operation_id:'safety-rollback',p_site:active.siteId,p_counts_window:false,p_now:later(4)})).ok,'rollback allowed with debt and paused site');
+  const s=await summary(id,later(3)); assert(s.period.debt===0 && await balance(id)===1000 && s.sites.active===1,'no site.day charge, no debt, site stays active');
+  assert(!s.byAction.some(a=>a.action==='site.day'),'no site.day usage events');
+  await rpc('bid_site_change',{p_user:id,p_project:'debt',p_active:false,p_now:later(4)});
+  const paused=await summary(id,later(4)); assert(paused.sites.active===0 && paused.sites.items.length===1 && paused.sites.items[0].pausedReason==='user','pause without deletion');
+  assert((await rpc('bid_charge',{p_user:id,p_action:'deploy.rollback',p_credits:0,p_operation_id:'safety-rollback',p_site:active.siteId,p_counts_window:false,p_now:later(4)})).ok,'rollback allowed on a paused site');
  });
  await t('V12 migration: old ledger remains intact, FIFO imports balances, site grace prevents forced pause',async()=>{
   const id=await user('high');
@@ -146,22 +140,19 @@ export async function testCredits({db,t,assert,rejects,as}) {
   await db.query("update ai_usage set status='ok',charged_tokens=1234 where id=$1",[u]);
   await db.query("insert into credit_ledger(user_id,delta,bucket,reason,ref,created_at) values($1,-1234,'plan','ai_fix',$2,$3)",[id,u,now]);
   const after=await summary(id);assert(after.remaining.available===298766 && after.remaining.plan===298766,'late debit consumed imported lot');
-  assert(after.used.tokens===1234 && after.session.used===1234 && after.weekly.used===1234,'late usage in both windows');
+  // V3 guards read settled V3 spends (credit_spends); a pre-migration V1 debit is history, not guard usage.
+  assert(after.used.tokens===1234,'late usage counted once');
   assert((await summary(id)).used.tokens===1234,'repeated read does not reimport');
   assert((await rpc('bid_reconcile_usage',{})).drift.length===0,'legacy debit and receipt agree');
  });
- await t('V12 orphan settlement, calendar anchor on renewal and a Boost crossing a week boundary',async()=>{
+ await t('V12 orphan settlement once; V3 retires Boost',async()=>{
   const id=await user('knight');await grant(id,1000000,'base','knight');
   await rpc('bid_hold',{p_user:id,p_action:'ai.chat',p_credits:1000,p_operation_id:'late-provider',p_now:now});
   await summary(id,later(0,1));
   assert((await rpc('bid_settle',{p_user:id,p_operation_id:'late-provider',p_credits:800,p_now:later(0,1)})).ok,'late result after TTL is billed once');
   assert(await balance(id)===999200,'TTL release not returned twice');
-  await db.query("update subscriptions set period_start=$2,period_end=$3 where user_id=$1",[id,later(31),later(61)]);
-  assert(Date.parse((await summary(id,later(32))).weekly.resetsAt)===Date.parse(later(35)),'renewal preserves original week anchor');
-  const crossing=await user('knight'); await grant(crossing,1000000,'base','knight');
-  await rpc('bid_boost',{p_user:crossing,p_now:later(6,20)});
-  assert((await summary(crossing,later(7,1))).weekly.cap===600000,'Boost lasts full 24h across week boundary');
-  assert((await summary(crossing,later(7,21))).weekly.cap===400000,'Boost ends on time');
+  // V3 retires the anchored week and Boost (Р-4): nothing left to boost.
+  assert((await rpc('bid_boost',{p_user:id,p_now:later(6,20)})).code==='boost_unavailable','Boost retired');
  });
  await t('V12 economics: actual 30-day action profile fits each plan and multi-month validity',async()=>{
   // Runs the actual charge paths every day, including both windows, at normal distributed usage.
@@ -189,7 +180,7 @@ export async function testCredits({db,t,assert,rejects,as}) {
   assert((await db.query('select count(*)::int as n from trial_claims where email_hash=$1',[hash])).rows[0].n===0,'failure did not claim address');
   assert((await rpc('bid_start_trial',args)).ok,'trial starts');
   assert((await rpc('bid_start_trial',{...args,p_user:other})).code==='trial_used','same email cannot claim twice');
-  const during=await summary(id);assert(during.included.tokens===50000 && during.session.cap===10000 && during.sites.limit===1,'gift defines trial base');
+  const during=await summary(id);assert(during.included.tokens===50000 && during.sites.limit===1,'gift defines trial base');
   const expired=await summary(id,later(7));assert(expired.plan==='free' && expired.remaining.available===0,'gift expires at seven days');
  });
  await t('V12 upgrade: proportional grant once, monthly slice for annual plans, no downgrade grant',async()=>{
@@ -212,11 +203,11 @@ export async function testCredits({db,t,assert,rejects,as}) {
   assert((await rpc('bid_monitor_register',config)).charged===50,'only newly added path');
   assert((await rpc('bid_monitor_register',config)).charged===0,'same-day repeat free');
   await rpc('bid_v12_burn_one',{p_user:id,p_site:site.siteId,p_day:later(1).slice(0,10),p_now:later(1)});
-  assert(await balance(id)===296800,'two days base and extras');
+  assert(await balance(id)===298800,'two days of extras, no site.day');
   const knight=await user('knight');await grant(knight,1000000,'base','knight');await db.query("insert into bid_projects(user_id,key,name) values($1,'knight','Knight')",[knight]);
   await rpc('bid_site_change',{p_user:knight,p_project:'knight',p_active:true,p_now:now});
   assert((await rpc('bid_monitor_register',{...config,p_user:knight,p_project:'knight',p_checks:JSON.stringify({kinds:['down'],paths:[]})})).charged===0,'Knight fast included');
-  await charge(id,296800,"spend-remainder",later(1),false);
+  await charge(id,298800,"spend-remainder",later(1),false);
   const denied=await rpc('bid_monitor_register',{...config,p_checks:JSON.stringify({kinds:['down'],paths:['/1','/2','/3','/4','/5','/6']})});
   assert(denied.code==='quota_exhausted','cannot enable unpaid extras');
   assert((await db.query('select checks from monitor_targets where user_id=$1',[id])).rows[0].checks.paths.length===5,'old configuration unchanged');
@@ -317,7 +308,7 @@ export async function testCredits({db,t,assert,rejects,as}) {
   await rpc('bid_hold',{p_user:id,p_action:'ai.chat',p_credits:30000,p_operation_id:'live-window',p_now:at});
   const u=await summary(id,at);
   assert(Date.parse(u.period.start)===Date.parse('2026-02-28T10:00:00Z') && Date.parse(u.period.end)===Date.parse('2026-03-31T10:00:00Z'),'calendar anchor preserved across February');
-  assert(u.used.tokens===3000 && u.reserved.tokens===30000 && u.session.remaining===30000,'settled and reserved are distinct');
+  assert(u.used.tokens===3000 && u.reserved.tokens===30000,'settled and reserved are distinct');
   assert(u.remaining.available===265000 && u.remaining.total===295000,'same canonical available balance for both usage decoders');
   for(const field of ['serverTime','unit','plan','period','included','used','reserved','remaining','purchased','limits','pricing','history'])assert(field in u,`legacy required field ${field}`);
  });
@@ -351,7 +342,7 @@ export async function testCredits({db,t,assert,rejects,as}) {
   assert((await as('authenticated',id,q=>q('select * from admin_notifications'))).rows.length===0,'admin notifications are service-only');
   await db.query("insert into credit_periods(transaction_ref,user_id,tier,interval,monthly_credits,validity_months,starts_at,ends_at) values('security-paid',$1,'high','year',300000,3,$2,$3)",[id,now,later(365)]);
   await rpc('bid_refund',{p_user:id,p_ref:'security-paid',p_adjustment:'security-refund',p_share:0.1,p_now:now});
-  for(const table of ['credit_disputes','credit_refunds','credit_periods','credit_accounts','credit_grants','credit_holds','credit_allocations','sites','usage_windows','usage_events','usage_daily','usage_nudges','domain_orders','netlify_allocations']) {
+  for(const table of ['credit_disputes','credit_refunds','credit_periods','credit_accounts','credit_grants','credit_holds','credit_allocations','sites','usage_events','usage_daily','usage_nudges','domain_orders','netlify_allocations','credit_spends']) {
    const mine=await as('authenticated',id,q=>q(`select * from ${table}`)); assert(mine.rows.length>0 && mine.rows.every(r=>r.user_id===id),`${table} own read`);
    assert((await as('anon',null,q=>q(`select * from ${table}`))).rows.length===0,`${table} anon invisible`);
    assert((await as('authenticated',other,q=>q(`select * from ${table} where user_id=$1`,[id]))).rows.length===0,`${table} other tenant invisible`);
@@ -359,7 +350,7 @@ export async function testCredits({db,t,assert,rejects,as}) {
    assert((await as('authenticated',id,q=>q(`delete from ${table}`))).affectedRows===0,`${table} no client delete`);
   }
   await rejects(()=>as('authenticated',id,q=>q("insert into credit_grants(user_id,source,bucket,credits,left_credits,granted_at,expires_at,ref) values($1,'topup','topup',999,999,now(),now()+interval '1 year','hack')",[id])),/row-level security/);
-  const funcs=(await db.query("select p.oid,p.proname,p.prosecdef,p.proconfig from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and (p.proname like 'bid_v12_%' or p.proname in ('bid_accrue_periods','bid_record_payment','bid_scheduler_credits','bid_monitor_register','bid_start_trial','bid_upgrade_grant','bid_domain_request','bid_credit_status','bid_grant','bid_charge','bid_hold','bid_settle','bid_release','bid_boost','bid_refund','bid_site_change','bid_site_burn','bid_enforce_sites','bid_usage_summary','bid_nudge_ack','bid_reconcile_usage'))")).rows;
+  const funcs=(await db.query("select p.oid,p.proname,p.prosecdef,p.proconfig from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and (p.proname like 'bid_v12_%' or p.proname like 'bid_v13_%' or p.proname in ('bid_accrue_periods','bid_record_payment','bid_scheduler_credits','bid_monitor_register','bid_start_trial','bid_upgrade_grant','bid_domain_request','bid_credit_status','bid_grant','bid_charge','bid_hold','bid_settle','bid_release','bid_boost','bid_refund','bid_site_change','bid_site_burn','bid_enforce_sites','bid_usage_summary','bid_nudge_ack','bid_reconcile_usage'))")).rows;
   for(const f of funcs) {
    assert(f.prosecdef && f.proconfig.some(s=>s.includes('search_path=public, pg_temp')),`${f.proname} fixed search path`);
    const p=(await db.query("select has_function_privilege('authenticated',$1,'execute') as client,has_function_privilege('anon',$1,'execute') as anon,has_function_privilege('service_role',$1,'execute') as service",[f.oid])).rows[0];
@@ -404,7 +395,7 @@ export async function testCredits({db,t,assert,rejects,as}) {
   assert(await balance(id)===100000,'no site.day charge during the 14-day grace');
   await rpc('bid_site_burn',{p_day:later(15).slice(0,10),p_now:later(15,1)});
   const s=await summary(id,later(15,2));
-  assert(s.sites.active===1 && await balance(id)===99000,'after grace: limit enforced, only the kept site billed');
+  assert(s.sites.active===1 && await balance(id)===100000,'after grace: limit enforced, no site.day credits');
   // the migration itself: Flash (1 site) with three monitored projects activates only one
   const m=await user('flash'); await grant(m,100000,'b4-m','flash');
   for(const [i,k] of ['m-a','m-b','m-c'].entries()) {
@@ -478,7 +469,7 @@ export async function testCredits({db,t,assert,rejects,as}) {
   await db.query("insert into billing_events(id,type,user_id,ref,payload) values('evt-cb-txn','transaction.completed',$1,'cb-txn',$2)",[id,JSON.stringify({data:{id:'cb-txn',details:{totals:{total:'2999'}}}})]);
   await db.query("insert into bid_projects(user_id,key,name) values($1,'cb-site','Site')",[id]);
   assert((await rpc('bid_site_change',{p_user:id,p_project:'cb-site',p_active:true,p_now:now})).ok,'site active');
-  assert((await charge(id,99000,'cb-spend',now,false)).ok,'spent 100k with the site day');
+  assert((await charge(id,100000,'cb-spend',now,false)).ok,'spent 100k');
   const warn=await rpc('bid_v12_apply_adjustment',{p_user:id,p_adjustment:{id:'cbw-1',transaction_id:'cb-txn',action:'chargeback_warning',status:'approved',totals:{total:'2999'}},p_now:now});
   assert(warn.ok && (await notes(id,'chargeback_warning')).length===1,'warning notifies the owner');
   assert((await charge(id,100,'cb-after-warning',now,false)).ok,'a warning alone does not suspend');
@@ -510,4 +501,5 @@ export async function testCredits({db,t,assert,rejects,as}) {
   assert(n.length===1 && Number(n[0].payload.unpinned)===2000,'owner sees a reconciliation row');
   assert((await rpc('bid_settle',{p_user:id,p_operation_id:'b8-drift-op',p_credits:3000,p_now:now})).ok,'settles');
  });
+ for(const row of saved) await db.query('update settings set value=$2 where key=$1',[row.key,row.value]);
 }

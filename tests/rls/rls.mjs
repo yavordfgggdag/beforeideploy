@@ -173,7 +173,7 @@ await t('subscriptions, ai_usage: own rows only; billing_events, admin_audit, tr
 
 await t('settings: readable by signed-in users, not by anonymous, never writable by clients', async () => {
   const s = await asA((q) => q(`select key from public.settings order by key`));
-  assert(s.rows.map((r) => r.key).join() === 'ai.creditEur,billing.catalog,billing.graceDays,credits.holdTtlMinutes,credits.migration,credits.sitesMigrated,features.knightDomain,features.netlifyCredits,plans,pricing.actions,pricing.version', JSON.stringify(s.rows));
+  assert(s.rows.map((r) => r.key).join() === 'ai.creditEur,billing.catalog,billing.graceDays,credits.holdTtlMinutes,credits.migration,credits.sitesMigrated,credits.v13,features.knightDomain,features.netlifyCredits,plans,pricing.actions,pricing.version', JSON.stringify(s.rows));
   assert((await asAnon((q) => q('select key from public.settings'))).rows.length === 0, 'anon');
   await rejects(() => asA((q) => q(`insert into public.settings (key, value) values ('ai.models', '{}')`)), /row-level security/);
   const u = await asA((q) => q(`update public.settings set value = '{}' where key = 'plans'`));
@@ -246,6 +246,7 @@ await t('V12 subscription changes: tenant reads, service-only writes, one provid
 });
 
 await (await import('./credits-v12.mjs')).testCredits({db,t,assert,rejects,as});
+await (await import('./credits-v13.mjs')).testCreditsV3({db,t,assert,rejects,as});
 
 await t('account deletion cascades: removing the auth user removes every row of that tenant and nothing of the other', async () => {
   await db.query(`delete from auth.users where id = $1`, [B]); // the auth service (owner), not the API role
@@ -256,10 +257,10 @@ await t('account deletion cascades: removing the auth user removes every row of 
   assert((await asA((q) => q('select key from public.bid_projects'))).rows.length === 1, 'A untouched');
 });
 
-await t('V12 catalog migration: preserves provider IDs, disables changed prices, runs once', async () => {
+await t('Catalog migration (v13): preserves provider IDs, disables changed prices, runs once', async () => {
   const old = { currency: 'EUR', plans: { high: { price: 29.99, paddlePriceId: 'pri_old_high', yearly: { price: 299.9, paddlePriceId: 'pri_year' } } }, packs: [{ id: 'pack-100k', price: 3.99, paddlePriceId: 'pri_old_pack' }], custom: true };
   await db.query("update public.settings set value=$1::jsonb where key='billing.catalog'", [JSON.stringify(old)]);
-  const migration = fs.readFileSync(path.join(ROOT, 'supabase/migrations/202610010001_catalog_v12.sql'), 'utf8');
+  const migration = fs.readFileSync(path.join(ROOT, 'supabase/migrations/202610010002_catalog_v13.sql'), 'utf8');
   await db.exec(migration);
   const current = (await db.query("select value from public.settings where key='billing.catalog'")).rows[0].value;
   assert(current.custom && current.plans.high.paddlePriceId === 'pri_old_high', 'provider IDs and unrelated settings retained');
