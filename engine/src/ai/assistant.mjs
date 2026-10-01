@@ -165,7 +165,7 @@ async function callModel({ provider, model, system, prompt, action, project, set
   const d = detect(project.path);
   const controller = new AbortController();
   const params = provider === 'cloud'
-    ? { prompt, system, step: `assistant:${action}`, project: { framework: d.framework, pm: d.packageManager }, locale: currentLang(), deep: false, model: model || undefined, mode: 'assistant' }
+    ? { prompt, system, operationId: crypto.randomUUID(), step: `assistant:${action}`, project: { key: project.key, framework: d.framework, pm: d.packageManager }, locale: currentLang(), deep: false, model: model || undefined, mode: 'assistant' }
     : { model, system, messages: [...conversation, { role: 'user', content: prompt }], maxTokens: Math.max(1, Math.min(6000, budget.limit - budget.used - estimate)), effort: 'medium' };
   params.signal = controller.signal;
   params.idleMs = Math.min(settings.callTimeoutMs, Number(process.env.BID_AI_IDLE_MS) || Infinity);
@@ -200,7 +200,7 @@ async function callModel({ provider, model, system, prompt, action, project, set
     clearTimeout(idleTimer);
     controller.abort();
     budget.used += usage.charged ?? usage.input + usage.output;
-    calls.push({ ...usage });
+    calls.push({ ...usage, ...(params.operationId ? {operationId:params.operationId} : {}) });
   }
 }
 

@@ -155,7 +155,7 @@ async function* openai({ key, model, system, messages, maxTokens = 8000, signal,
 
 // ---------------------------------------------------------------- cloud (metered Edge Function)
 
-async function* cloud({ prompt, system, step, project, locale, deep, model, signal, idleMs }) {
+async function* cloud({ prompt, system, step, project, locale, deep, model, mode, operationId, signal, idleMs }) {
   const c = cloudConfig();
   if (!c) throw new EngineError(msg('account.cloud.notConfigured'), 'not_configured', 7);
   const s = await currentSession();
@@ -165,7 +165,7 @@ async function* cloud({ prompt, system, step, project, locale, deep, model, sign
     res = await fetchT(`${c.url}/functions/v1/ai-fix`, {
       signal, method: 'POST',
       headers: { apikey: c.anonKey, Authorization: `Bearer ${s.accessToken}`, 'Content-Type': 'application/json', Accept: 'text/event-stream' },
-      body: JSON.stringify({ prompt, system, step, project, locale, deep: !!deep, model: model || undefined }),
+      body: JSON.stringify({ prompt, system, step, project, locale, mode, operationId, deep: !!deep, model: model || undefined }),
     }, Number(process.env.BID_AI_CONNECT_MS) || 60000);
   } catch (e) {
     if (e.code === 'ETIMEDOUT') throw new EngineError(msg('ai.streamIdle', { seconds: Math.round((Number(process.env.BID_AI_CONNECT_MS) || 60000) / 1000) }), 'ai_timeout');
@@ -175,7 +175,9 @@ async function* cloud({ prompt, system, step, project, locale, deep, model, sign
     const j = (await res.json().catch(() => null)) || {};
     if (res.status === 404 && j.code === 'NOT_FOUND') throw new EngineError(msg('cloud.functionMissing', { name: 'ai-fix' }), 'cloud_function_missing');
     if (res.status === 402) throw new EngineError(msg('ai.quotaExhausted', { renewsAt: j.renewsAt || '—' }), 'quota_exhausted', 8);
-    if (res.status === 403 && j.code === 'session_cap') throw new EngineError(msg('ai.sessionCap', { at: j.resetsAt ? new Date(j.resetsAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—', hours: j.windowHours || 5 }), 'ai_session_cap');
+    if (res.status === 403 && ['session_cap','window_5h'].includes(j.code)) throw new EngineError(msg('ai.sessionCap', { at: j.resetsAt ? new Date(j.resetsAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—', hours: j.windowHours || 5 }), 'ai_session_cap');
+    if (res.status === 403 && j.code === 'window_week') throw new EngineError(msg('ai.weeklyCap', { at: j.resetsAt ? new Date(j.resetsAt).toLocaleString() : '—' }), 'window_week');
+    if (j.code === 'meter_unavailable') throw new EngineError(msg('billing.meterUnavailable'), 'meter_unavailable');
     if (res.status === 403) throw new EngineError(msg('ai.unavailable.noPlan'), 'ai_unavailable');
     if (res.status === 429) throw new EngineError(msg('ai.rateLimited', { name: 'Before I Deploy AI' }), 'ai_rate_limited');
     if (res.status === 401) throw new EngineError(msg('account.notLoggedIn'), 'not_logged_in', 5);

@@ -94,8 +94,11 @@ const cloud = new Set();
 // handlers plus the shared modules they answer through (_shared/ratelimit.ts …); tests and fakes excluded
 const cloudFiles = walk(path.join(ROOT, 'supabase', 'functions'), '.ts').filter((f) => !/fake_|_test\.ts$/.test(f));
 for (const f of cloudFiles) {
-  for (const m of fs.readFileSync(f, 'utf8').matchAll(/\bcode:\s*"([a-z_]+)"/g)) cloud.add(m[1]);
+  for (const m of fs.readFileSync(f, 'utf8').matchAll(/\b(?:code|legacyCode):\s*"([a-z_]+)"/g)) cloud.add(m[1]);
 }
+
+// Monetary RPCs also return stable, public error codes.
+for (const m of fs.readFileSync(path.join(ROOT,'supabase','credits-v12.sql'),'utf8').matchAll(/'(?:code|legacyCode)'\s*,\s*'([a-z_]+)'/g)) cloud.add(m[1]);
 
 // ---- documented
 const docFile = path.join(ROOT, 'docs', 'errors.md');

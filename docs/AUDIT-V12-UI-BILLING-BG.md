@@ -177,3 +177,13 @@ Phase 3 CI passed on `999d71f` (app, engine Linux/macOS and screenshots). Its co
 Phase 4 local checks so far: Swift build succeeds; 98 Deno tests and 12 SQL/RLS tests pass. The full engine run passed 114/114; macOS XCTest and screenshot CI are still required. Review uses isolated demo data and makes no paid model call or payment.
 
 **Correction to PU-19:** Paddle does not accept a top-level `effective_from` for subscription item updates. That literal fix is skipped as unsupported. The implementation uses `do_not_bill` for the provider item change and a server-only `billing_changes` record to retain the original entitlement until the reviewed period end. Sources: [update subscription](https://developer.paddle.com/api-reference/subscriptions/update-subscription/) and [preview subscription update](https://developer.paddle.com/api-reference/subscriptions/preview-subscription-update/). Real sandbox acceptance remains required, particularly annual/monthly interval changes.
+
+### Етап 5 — междинна проверка на отчитането (2026-10-01)
+
+| Обхват | Статус | Проверка |
+|---|---|---|
+| Партиди, FIFO, валидност, таван; атомарни hold/settle/release/charge | Изпълнено в SQL и свързано към AI/плащанията | 25 PostgreSQL/RLS теста, включително резервирани партиди и закъснели резултати |
+| Единен курс, старите грантове, годишни месечни грантове, refunds | Изпълнен основен път; пропорционалният upgrade grant предстои | 101 Deno теста; V1 остатъкът не се занулява |
+| Usage v2, агрегати над 1000 реда, ETag на сървъра | Изпълнено; ETag в engine предстои | SQL + HTTP тестове |
+| Сайтове, прозорци, Boost, дневен разход и подкани | SQL основа проверена; endpoints, планировчик и UI предстоят | 100k стандартен профил и High/Knight сценарии минават |
+| Домейн, административни контроли, експорт, обща проверка | Предстои | Не е извършвано публикуване или реално плащане |

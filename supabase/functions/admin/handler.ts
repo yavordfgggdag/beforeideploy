@@ -2,6 +2,7 @@
 // Every request carries the caller's user JWT; we check profiles.role = 'admin', then act with the
 // service role and write a row to admin_audit. The engine calls it via `bid admin <action>`.
 import { callerOf, type DbClient, type Deps, internalError, json, readJson } from "../_shared/db.ts";
+import { creditRpc } from "../_shared/credits.ts";
 import { rateLimited } from "../_shared/ratelimit.ts";
 
 /** Project secrets the functions need. Diagnostics reports only yes / no — never a value or a prefix. */
@@ -123,8 +124,11 @@ export function createAdminHandler(deps: AdminDeps): (req: Request) => Promise<R
         case "grant_credits": {
           const delta = Number(body.delta);
           if (!body.user_id || !Number.isFinite(delta) || delta === 0) return json(400, { error: "user_id and a non-zero delta required" });
-          const { error } = await db.from("credit_ledger").insert({ user_id: body.user_id, delta: Math.trunc(delta), bucket: "topup", reason: "admin_grant", ref: body.reason ?? null });
-          if (error) throw error;
+          const operationId=crypto.randomUUID();
+          const receipt = delta>0
+            ? await creditRpc(db,"bid_grant",{p_user:body.user_id,p_credits:Math.trunc(delta),p_source:"admin_grant",p_ref:operationId})
+            : await creditRpc(db,"bid_charge",{p_user:body.user_id,p_action:"admin.adjust",p_credits:-Math.trunc(delta),p_operation_id:operationId,p_counts_window:false});
+          if(!receipt.ok) return json(409,{error:"Credit adjustment refused",...receipt});
           await audit(body.user_id, { delta: Math.trunc(delta), reason: body.reason ?? null });
           return json(200, { balance: await balanceOf(db, body.user_id) });
         }

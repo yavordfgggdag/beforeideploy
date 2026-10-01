@@ -96,7 +96,8 @@ Deno.test("admin: grant_credits inserts a top-up ledger row", async () => {
   assert.equal(ledger[0].delta, 500);
   assert.equal(ledger[0].bucket, "topup");
   assert.equal(ledger[0].reason, "admin_grant");
-  assert.equal(ledger[0].ref, "beta tester");
+  assert.match(ledger[0].ref, /^[0-9a-f-]{36}$/);
+  assert.equal(db.rpcCalls.find(c=>c.fn==="bid_grant")?.args.p_credits,500);
   assert.equal((await handle(post("admin", { action: "grant_credits", user_id: NORMAL.id, delta: 0 }))).status, 400);
 });
 

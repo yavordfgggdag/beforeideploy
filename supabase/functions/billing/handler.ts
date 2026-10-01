@@ -20,7 +20,7 @@ import catalogData from "../_shared/plans-catalog.json" with { type: "json" };
 // Prices and Paddle price ids live in `settings.billing.catalog`, token amounts in `settings.plans`.
 import { callerOf, type DbClient, type Deps, internalError, isDuplicate, json, must, type Row, sha256Hex } from "../_shared/db.ts";
 import { rateLimited } from "../_shared/ratelimit.ts";
-import { bucketBalance, reconcilePlan, effectiveSubscriptionTier, ensureMonthlyGrant, expireDue, grantPlanTokens, insertOnce, pricingVersion, reconcileHolds } from "../_shared/credits.ts";
+import { creditRpc, creditStatus, bucketBalance, reconcilePlan, effectiveSubscriptionTier, ensureMonthlyGrant, expireDue, grantPlanTokens, insertOnce, pricingVersion, reconcileHolds } from "../_shared/credits.ts";
 
 export type Plan = "free" | "flash" | "high" | "knight";
 const PAID: Plan[] = ["flash", "high", "knight"];
@@ -191,10 +191,10 @@ async function handleWebhook(req: Request, deps: BillingDeps): Promise<Response>
           const pack = packForPrice(catalog, priceId);
           if (tier) {
             const tokens = planTokens[tier]?.tokens ?? 0;
-            if (await grantPlanTokens(db, userId, tokens, "plan_grant", txn)) granted.push({ tier, tokens });
+            if (await grantPlanTokens(db, userId, tokens, "plan_grant", txn,{tier,at:new Date(d.billing_period?.starts_at ?? occurredAt),now})) granted.push({ tier, tokens });
             else duplicate = true;
           } else if (pack) {
-            if (await insertOnce(db, { user_id: userId, delta: pack.tokens * qty, bucket: "topup", reason: "topup", ref: `${txn}:${priceId}` })) {
+            if (!(await creditRpc(db,"bid_grant",{p_user:userId,p_credits:pack.tokens*qty,p_source:"topup",p_ref:`${txn}:${priceId}`,p_granted_at:occurredAt,p_now:now.toISOString()})).duplicate) {
               granted.push({ pack: pack.id, tokens: pack.tokens * qty });
             } else duplicate = true;
           }
@@ -216,12 +216,11 @@ async function handleWebhook(req: Request, deps: BillingDeps): Promise<Response>
       const total = Number(original?.details?.totals?.total ?? original?.totals?.total ?? 0);
       const share = refunded > 0 && total > 0 ? Math.min(1, refunded / total) : 1;
       const taken: Row[] = [];
-      for (const g of granted) {
-        const left = await bucketBalance(db, g.user_id, g.bucket);
-        const take = Math.min(Math.round(Number(g.delta) * share), Math.max(0, left));
-        if (take > 0 && (await insertOnce(db, { user_id: g.user_id, delta: -take, bucket: g.bucket, reason: "refund", ref: `refund:${d.id ?? txn}:${g.ref}` }))) {
-          taken.push({ bucket: g.bucket, tokens: take });
-        }
+      const users = [...new Set(granted.map((g:Row)=>String(g.user_id)))];
+      if(!users.length && originalEvent?.user_id) users.push(originalEvent.user_id);
+      for (const owner of users) {
+        const receipt=await creditRpc(db,"bid_refund",{p_user:owner,p_ref:txn,p_adjustment:String(d.id ?? txn),p_share:share,p_now:now.toISOString()});
+        if(receipt.taken>0) taken.push({tokens:receipt.taken});
       }
       result = { refund: txn, taken, share };
     }
@@ -260,18 +259,16 @@ async function statusOf(db: DbClient, userId: string, email: string | null, cata
   const emailHash = email ? await sha256Hex(email.trim().toLowerCase()) : null;
   const { data: claim } = emailHash ? await db.from("trial_claims").select("email_hash").eq("email_hash", emailHash).maybeSingle() : { data: null };
 
-  const holds = await reconcileHolds(db, userId, now);
-  const planBalance = await bucketBalance(db, userId, "plan");
-  const topupBalance = await bucketBalance(db, userId, "topup");
-  const { data: usage } = await db.from("ai_usage").select("created_at,step,model,charged_tokens,project_key").eq("user_id", userId).order("created_at", { ascending: false }).limit(20);
+  const credits = await creditStatus(db,userId,now);
+  const { data: usage } = await db.from("ai_usage").select("id,created_at,step,model,charged_tokens,project_key").eq("user_id", userId).order("created_at", { ascending: false }).limit(20);
   return {
     plan,
     subscription: current
       ? { provider: current.provider, tier: current.tier, status: current.status, interval: current.raw?.billing_cycle?.interval ?? "month", renewsAt: current.cancel_at ? null : current.period_end, endsAt: current.cancel_at ?? (current.provider === "trial" ? current.period_end : null), manageable: current.provider === "paddle" && !!current.customer_ref }
       : null,
-    balance: { plan: Math.max(0, planBalance), topup: Math.max(0, topupBalance), total: Math.max(0, planBalance + topupBalance), available: Math.max(0, planBalance + topupBalance - holds.reservedTokens) },
+    balance: { plan: credits.plan, topup: credits.topup, total: credits.total, available: credits.available },
     trialAvailable: !!catalog.trial && !claim && !list.some((s) => s.provider === "trial" || s.provider === "paddle"),
-    usage: (usage ?? []).map((u: Row) => ({ at: u.created_at, step: u.step, model: u.model, tokens: Number(u.charged_tokens ?? 0), project: u.project_key })),
+    usage: (usage ?? []).map((u: Row) => ({ id:u.id, at: u.created_at, step: u.step, model: u.model, tokens: Number(u.charged_tokens ?? 0), project: u.project_key })),
   };
 }
 
@@ -426,7 +423,14 @@ export function createBillingHandler(deps: BillingDeps): (req: Request) => Promi
           const settings: Row = {};
           for (const r of (rows ?? []) as Row[]) settings[String(r.key)] = r.value;
           if (!settings.plans) settings.plans = planTokens;
-          return json(200, await usageOf(db, userId, email, catalog, planTokens, settings, now));
+          if(Number(body.v)!==2) return json(200, await usageOf(db, userId, email, catalog, planTokens, settings, now));
+          const status=await statusOf(db,userId,email,catalog,now);
+          const report=await creditRpc(db,"bid_usage_summary",{p_user:userId,p_now:now.toISOString()});
+          Object.assign(report,{subscription:status.subscription,trialAvailable:status.trialAvailable,pricing:{...report.pricing,version:await pricingVersion(settings),actions:settings["pricing.actions"] ?? null}});
+          const {serverTime:_,...stable}=report;
+          const etag=`"${await sha256Hex(JSON.stringify(stable))}"`;
+          if(req.headers.get("if-none-match")===etag) return new Response(null,{status:304,headers:{etag,"cache-control":"private, no-cache"}});
+          const res=json(200,report); res.headers.set("etag",etag); res.headers.set("cache-control","private, no-cache"); return res;
         }
 
         case "sync": {
@@ -514,7 +518,7 @@ export function createBillingHandler(deps: BillingDeps): (req: Request) => Promi
             must(sub);
           }
           must(await db.from("profiles").update({ plan: t.plan }).eq("user_id", userId));
-          await grantPlanTokens(db, userId, t.tokens, "trial_grant", String(sub.data?.id ?? `trial:${userId}`));
+          await grantPlanTokens(db, userId, t.tokens, "trial_grant", String(sub.data?.id ?? `trial:${userId}`),{tier:t.plan,now,expiresAt:end});
           return json(200, await statusOf(db, userId, email, catalog, now));
         }
 

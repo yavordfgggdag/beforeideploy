@@ -17,6 +17,8 @@ after(() => fs.rmSync(tmp, { recursive: true, force: true }));
 test('one canonical catalog drives the engine, schema and generated website prices', () => {
   const check = spawnSync(process.execPath, ['scripts/catalog-sync.mjs', '--check'], { cwd: root, encoding: 'utf8' });
   assert.equal(check.status, 0, check.stderr);
+  const credits = spawnSync(process.execPath, ['scripts/credits-sync.mjs', '--check'], { cwd: root, encoding: 'utf8' });
+  assert.equal(credits.status, 0, credits.stderr);
   assert.deepEqual(DEFAULT_CATALOG, JSON.parse(fs.readFileSync(path.join(root, 'supabase/functions/_shared/plans-catalog.json'), 'utf8')));
   const html = fs.readFileSync(path.join(root, 'site/index.html'), 'utf8');
   for (const plan of Object.values(DEFAULT_CATALOG.plans)) {

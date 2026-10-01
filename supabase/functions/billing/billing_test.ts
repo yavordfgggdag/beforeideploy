@@ -97,7 +97,7 @@ Deno.test("billing: a repeated event is processed once", async () => {
   assert.equal(sum(db.rows("credit_ledger")), 300000);
 });
 
-Deno.test("billing: a new period expires the unused rest of the previous grant; packs add top-up", async () => {
+Deno.test("billing: a new period retains unexpired V2 grants; packs add top-up", async () => {
   const { db, handle } = world({ ledger: [
     { user_id: USER.id, delta: 1000000, bucket: "plan", reason: "plan_grant", ref: "txn_old" },
     { user_id: USER.id, delta: -400000, bucket: "plan", reason: "ai_fix", ref: "u1" },
@@ -105,8 +105,8 @@ Deno.test("billing: a new period expires the unused rest of the previous grant; 
   ] });
   await webhook(handle, { event_id: "evt_r", event_type: "transaction.completed", data: { id: "txn_renew", custom_data: { user_id: USER.id }, items: [{ price: { id: "pri_high" } }] } });
   const ledger = db.rows("credit_ledger");
-  assert.equal(ledger.find((r) => r.reason === "expiry")?.delta, -600000);
-  assert.equal(sum(ledger, "plan"), 300000, "fresh month, no rollover");
+  assert.equal(ledger.some((r) => r.reason === "expiry"), false);
+  assert.equal(sum(ledger, "plan"), 900000, "new month plus the unexpired previous grant");
   assert.equal(sum(ledger, "topup"), 200000, "top-up is untouched");
 
   await webhook(handle, { event_id: "evt_p", event_type: "transaction.completed", data: { id: "txn_pack", custom_data: { user_id: USER.id }, items: [{ price: { id: "pri_pack" }, quantity: 2 }] } });
@@ -217,10 +217,10 @@ Deno.test("billing: an approved refund takes back what is left of the transactio
   ] });
   const refund = { event_id: "evt_ref", event_type: "adjustment.updated", data: { id: "adj_1", action: "refund", status: "approved", transaction_id: "txn_pack" } };
   const r = await (await webhook(handle, refund)).json();
-  assert.deepEqual(r.taken, [{ bucket: "topup", tokens: 300000 }]);
+  assert.deepEqual(r.taken, [{ tokens: 300000 }]);
   assert.equal(sum(db.rows("credit_ledger"), "topup"), 0);
   await webhook(handle, { ...refund, event_id: "evt_ref2" });
-  assert.equal(db.rows("credit_ledger").filter((x) => x.reason === "refund").length, 1, "same adjustment is not applied twice");
+  assert.equal(db.rows("credit_ledger").filter((x) => x.reason === "grant_refund").length, 1, "same adjustment is not applied twice");
   // a pending refund changes nothing
   const pending = await (await webhook(handle, { event_id: "evt_p", event_type: "adjustment.created", data: { id: "adj_2", action: "refund", status: "pending_approval", transaction_id: "txn_pack" } })).json();
   assert.equal(pending.ignored, true);
@@ -249,8 +249,8 @@ Deno.test("billing: a yearly plan grants the monthly tokens every month, once ea
   await at("2026-11-12T00:00:00Z")(post("billing", { action: "status" }));
   await at("2026-11-20T00:00:00Z")(post("billing", { action: "status" }));
   const grants = db.rows("credit_ledger").filter((r) => r.reason === "plan_grant");
-  assert.deepEqual(grants.map((r) => r.ref), ["txn_year", "sub_1:2026-10-10T00:00:00Z:m1"], "month 1 granted once");
-  assert.equal(sum(db.rows("credit_ledger"), "plan"), 300000, "the unused month-0 rest expired");
+  assert.deepEqual(grants.map((r) => r.ref), ["txn_year", "sub_1:2026-10-10T00:00:00.000Z:m1"], "month 1 granted once");
+  assert.equal(sum(db.rows("credit_ledger"), "plan"), 600000, "both High grants remain valid for three months");
 
   await at("2027-12-01T00:00:00Z")(post("billing", { action: "status" }));
   assert.equal(db.rows("credit_ledger").filter((r) => r.reason === "plan_grant").length, 2, "nothing after the paid year");
@@ -557,4 +557,21 @@ Deno.test("billing: canceling an old Paddle subscription retains another active 
   const r=await(await webhook(w.handle,subEvent("cancel_old","canceled","pri_flash"))).json();
   assert.equal(r.plan,"high");
   assert.equal(w.db.rows("profiles")[0].plan,"high");
+});
+
+Deno.test("billing V12: usage v2 is an authenticated SQL receipt; ETag skips unchanged content",async()=>{
+  const w=world({plan:"high"});
+  const receipt={v:2,unit:"credits",serverTime:NOW.toISOString(),plan:"high",period:{used:1234},remaining:{available:28766},windows:{session:{used:1234,cap:60000}},pricing:{version:"2026-10"},sites:{active:1,limit:3},byAction:[{action:"ai.chat",credits:1234,count:1}]};
+  w.db.rpcResponses.bid_usage_summary=receipt;
+  const res=await w.handle(post("billing",{action:"usage",v:2}));assert.equal(res.status,200);
+  const payload=await res.json(); assert.equal(payload.remaining.available,28766);assert.deepEqual(payload.byAction,receipt.byAction);
+  assert.deepEqual(w.db.rpcCalls.find(c=>c.fn==="bid_usage_summary")?.args,{p_user:USER.id,p_now:NOW.toISOString()});
+  const tag=res.headers.get("etag");assert.ok(tag);
+  const req=post("billing",{action:"usage",v:2});req.headers.set("if-none-match",tag);
+  assert.equal((await w.handle(req.clone())).status,304);
+  w.db.rpcResponses.bid_usage_summary={...receipt,remaining:{available:28000}};
+  const changed=await w.handle(req);assert.equal(changed.status,200);assert.notEqual(changed.headers.get("etag"),tag);
+  w.db.missingFunctions=["bid_usage_summary"];
+  const unavailable=await w.handle(post("billing",{action:"usage",v:2}));assert.equal(unavailable.status,503);
+  assert.equal((await unavailable.json()).code,"meter_unavailable");
 });

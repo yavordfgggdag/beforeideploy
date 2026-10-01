@@ -171,7 +171,7 @@ await t('subscriptions, ai_usage: own rows only; billing_events, admin_audit, tr
 
 await t('settings: readable by signed-in users, not by anonymous, never writable by clients', async () => {
   const s = await asA((q) => q(`select key from public.settings order by key`));
-  assert(s.rows.map((r) => r.key).join() === 'billing.catalog,plans', JSON.stringify(s.rows));
+  assert(s.rows.map((r) => r.key).join() === 'ai.creditEur,billing.catalog,billing.graceDays,credits.migration,credits.sitesMigrated,features.knightDomain,features.netlifyCredits,plans,pricing.actions,pricing.version', JSON.stringify(s.rows));
   assert((await asAnon((q) => q('select key from public.settings'))).rows.length === 0, 'anon');
   await rejects(() => asA((q) => q(`insert into public.settings (key, value) values ('ai.models', '{}')`)), /row-level security/);
   const u = await asA((q) => q(`update public.settings set value = '{}' where key = 'plans'`));
@@ -242,6 +242,8 @@ await t('V12 subscription changes: tenant reads, service-only writes, one provid
   await asService(q => q("update public.billing_changes set status='applied' where id=$1",[first]));
   await asService(q => q("update public.billing_changes set status='applying' where id=$1",[second]));
 });
+
+await (await import('./credits-v12.mjs')).testCredits({db,t,assert,rejects,as});
 
 await t('account deletion cascades: removing the auth user removes every row of that tenant and nothing of the other', async () => {
   await db.query(`delete from auth.users where id = $1`, [B]); // the auth service (owner), not the API role

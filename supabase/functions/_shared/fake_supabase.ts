@@ -1,6 +1,7 @@
 // In-memory stand-in for the Supabase client used by the Edge Function tests (V10 L6).
 // It implements exactly the query surface in `db.ts`: rows live in plain arrays, RLS is not simulated
 // (the tests decide who the caller is through `user`). Only `deno test` imports this file.
+import { fakeCreditRpc } from "./fake_credits.ts";
 import type { AuthUser, DbClient, DbError, Query, Result, Row } from "./db.ts";
 
 type Filter = (row: Row) => boolean;
@@ -204,6 +205,8 @@ export class FakeDb implements DbClient {
   missingFunctions: string[] = [];
   /** rpc name → a database error (not "missing"). */
   rpcErrors: Record<string, DbError> = {};
+  rpcResponses: Record<string, Row> = {};
+  rpcCalls: {fn:string;args:Row}[] = [];
   deletedUsers: string[] = [];
   invited: { email: string; data: Row }[] = [];
   user: AuthUser | null;
@@ -222,6 +225,13 @@ export class FakeDb implements DbClient {
     return Promise.resolve().then(() => {
       if (this.missingFunctions.includes(fn)) return { data: null, error: { message: `Could not find the function public.${fn}`, code: "PGRST202" } };
       if (this.rpcErrors[fn]) return { data: null, error: this.rpcErrors[fn] };
+      this.rpcCalls.push({fn,args});
+      if(this.rpcResponses[fn]) return {data:structuredClone(this.rpcResponses[fn]),error:null};
+      if(fn.startsWith("bid_") && !["bid_rate_hit","bid_prune"].includes(fn)) {
+        if(this.writeFailures.credit_ledger || this.failures.credit_ledger) return {data:null,error:this.writeFailures.credit_ledger ?? this.failures.credit_ledger};
+        const receipt=fakeCreditRpc(this,fn,args);
+        if(receipt) return {data:receipt,error:null};
+      }
       const t = this.tables;
       const now = this.clock();
       const iso = (ms: number) => new Date(ms).toISOString();

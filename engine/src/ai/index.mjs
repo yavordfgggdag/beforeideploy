@@ -1,6 +1,7 @@
 // Built-in AI Fix (V10 WP3): `bid ai fix|explain|apply|usage`.
 // The model only proposes; nothing in the project changes before `bid ai apply --yes` (invariant 15).
 import fs from 'node:fs';
+import crypto from 'node:crypto';
 import path from 'node:path';
 import { ev, emit, EngineError, logDir, nowISO, sh, readJSON, writeJSON, APP_DIR } from '../util.mjs';
 import { t, msg, currentLang } from '../i18n.mjs';
@@ -59,7 +60,7 @@ export async function aiFix(project, { step, model, deep = false, provider: requ
   try {
     const params =
       provider === 'cloud'
-        ? { prompt, system, step, project: { framework: d.framework, pm: d.packageManager }, locale: currentLang(), deep, model: model && model !== true ? model : undefined, mode }
+        ? { prompt, system, step, operationId:crypto.randomUUID(), project: { key:project.key, framework: d.framework, pm: d.packageManager }, locale: currentLang(), deep, model: model && model !== true ? model : undefined, mode }
         : { model: chosenModel, system, messages: [{ role: 'user', content: prompt }], maxTokens: mode === 'explain' ? 1500 : 8000, effort: deep ? 'high' : 'medium' };
     for await (const e of stream(provider, params)) {
       if (e.type === 'delta') {

@@ -146,3 +146,18 @@ Returned as `code` in the JSON body; the engine maps them to the codes above (`q
 
 | `billing_conflict` | 409 | A subscription change is already running, the subscription has a scheduled change, or multiple active subscriptions need reconciliation. | Sync or open the customer portal. |
 | `preview_expired` | 409 | The subscription or the reviewed price changed, or the ten-minute preview expired. | Review the plan again before confirming. |
+
+## V12 credit accounting
+
+| Code | HTTP | Meaning |
+|---|---|---|
+| `meter_unavailable` | 503 | Atomic credit accounting is unavailable or its migration is missing; no new paid work starts. |
+| `window_week` | 403 | The anchored weekly credit limit is reached; `resetsAt` gives the reset time. Packs do not bypass it. |
+| `operation_conflict` | 409 | An operation ID was reused for a different action or site. |
+| `operation_released` | 409 | A released reservation cannot be reused; start a new logical operation. |
+| `site_paused` | 403 | The site is paused or does not belong to this account. Rollback remains available. |
+| `site_limit` | 403 | The active-site limit is reached. Pause a site or change plans. |
+| `hosting_plan` | 403 | Hosting in the owner's account requires Knight. |
+| `hosting_not_ready` | 409 | Owner hosting has not been provisioned; no hosting service was activated. |
+| `boost_unavailable` | 403 | Boost requires an active Knight entitlement. |
+| `boost_used` | 409 | This subscription week's Boost was already used; wait until `resetsAt`. |

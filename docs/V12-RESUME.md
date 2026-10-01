@@ -4,17 +4,18 @@ The owner resumed on 2026-10-01: “вече сме в нас искам да п
 
 ## Latest progress (overrides the older checkpoint details below)
 
-- Phase 3 CI was checked: `999d71f` app/engine/engine-macos/screenshots are green; screenshots reviewed.
-- Phase 4 implementation checkpoint (commit/push in progress): shared catalog and migration, public/offline/demo, Plans/Usage UI and optional models, identity-scoped polling/cache/logout, annual slices/trial base/available, reviewed Paddle PATCH with serialized server changes and deferred downgrade entitlement. No live payments.
-- Latest logs in `../`: `v12-phase4-deno.log` 98 passing; `v12-billing-rls2.log` 12 passing; `v12-phase4-engine.log` 114 passing; `v12-billing-build8.log` successful Swift build; current small plural-label edit to be compiled in CI.
-- Isolated UI review in `../v12-billing-preview/`: `light-usage.png` reviewed, `dark-plans.png` captured scrolled down (fixed scaffold reset afterward), `light-plans-top.png` is INVALID early overview capture. Snapshot readiness now waits for the requested screen/sheet and loaded demo catalog. `light-plans-fixed.png` is the corrected, visually reviewed Plans capture; all four cards fit and prices remain visible.
-- Continue phases 5 and 6 after phase 4 is green. All earlier owner restrictions remain.
+- Phase 3 `999d71f` and phase 4 `cd57e53` are pushed. All phase-4 CI workflows are green: engine 36844144130, engine-macos 36844144180, app 36844144156, functions 36844144140, screenshots 36844144077.
+- Phase 5 atomic-accounting checkpoint is being committed: `supabase/credits-v12.sql` is the source, generated into `schema.sql` by `scripts/credits-sync.mjs`. Grants/FIFO/expiry/cap, reservations with pinned lots, settlement/debt, windows/Boost, sites/burn/grace, usage aggregates/nudges and RLS are implemented in SQL. AI, grants/refunds, admin credit grants and v2 usage are connected; V1 usage remains supported. A missing monetary RPC fails closed. No cloud deploy or paid call.
+- Local checks: `../v12-phase5-engine.log` 114 passing; `../v12-phase5-deno6.log` 101 passing; `../v12-phase5-rls7.log` 25 passing. PostgreSQL tests include the 100k site-month scenarios, >1000-event totals, migration and late V1/AI settlement, calendar/week boundaries, debt/rollback and tenant ACLs.
+- NOT DONE in phase 5: connect billing site/estimate/meter/boost/nudge/domain actions; engine cloud-action metering and ETag/watch; scheduler burn and active-site filtering; admin action-price/site/drift controls; upgrade grants; UI sites/banner/Boost; account export of new tables. Review the SQL helpers before enabling their endpoints (daily extras, delayed burn dates, domain eligibility, configurable price version). No V12 release yet.
+- Phase 6 and release-dryrun/owner acceptance still follow. The isolated phase-4 UI review is in `../v12-billing-preview/`; `light-plans-fixed.png` and `light-usage.png` are reviewed. CI screenshots passed, artifacts not yet downloaded for this checkpoint.
+- Local Deno binary is `/Users/y.yakowvw/.npm/_npx/05b6ef7b13673c57/node_modules/deno/deno` (not in PATH).
 
 
 ## Checkout
 
 - Branch: `codex/v12-completion`, pushed to origin.
-- Last implementation commit: `999d71f` (`feat(assistant): rebuild chat with durable history and safe proposals`).
+- Latest pushed implementation before this checkpoint: `cd57e53`; inspect `git log` for the new atomic-accounting commit.
 - Worktree: `/Users/y.yakowvw/Documents/Codex/2026-09-29/s/work/beforeideploy-v12`.
 - Original checkout: `/Users/y.yakowvw/beforeideploy`. Preserve its existing modified `tests/last-run.txt` and untracked `tihagranica-store/`.
 - Repository: https://github.com/yavordfgggdag/beforeideploy
