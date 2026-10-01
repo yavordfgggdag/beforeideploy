@@ -7,13 +7,10 @@ import { msg } from './i18n.mjs';
 import { cliEnv } from './isolation.mjs';
 
 export const TOOLS_DIR = path.join(APP_DIR, 'tools');
-export const TOOL_PACKAGES = Object.freeze({
-  'netlify-cli': { pkg: 'netlify-cli@23', bin: 'netlify' },
-  vercel: { pkg: 'vercel@48', bin: 'vercel' },
-  wrangler: { pkg: 'wrangler@4', bin: 'wrangler' },
-  codex: { pkg: '@openai/codex@0.115', bin: 'codex' },
-  'claude-code': { pkg: '@anthropic-ai/claude-code@2', bin: 'claude' },
-});
+// audit B5: one manifest with exact versions + tarball integrity (tools-manifest.json)
+const MANIFEST = JSON.parse(fs.readFileSync(new URL('./tools-manifest.json', import.meta.url), 'utf8')).tools;
+export const TOOL_PACKAGES = Object.freeze(Object.fromEntries(Object.entries(MANIFEST).map(([id, m]) =>
+  [id, Object.freeze({ ...m, pkg: `${m.package}@${m.version}` })])));
 
 export { gitAvailable } from './gitbin.mjs'; // kept for callers; the logic lives in gitbin.mjs
 
@@ -150,6 +147,15 @@ export function installError(result) {
   return msg('setup.toolFailed');
 }
 
+/** npm recorded what it installed; it must be exactly the pinned version with the pinned tarball integrity. */
+export function verifyLocked(prefix, tool) {
+  const lock = readJSON(path.join(prefix, 'package-lock.json'), null);
+  const entry = lock?.packages?.[`node_modules/${tool.package}`];
+  if (!entry || entry.version !== tool.version || entry.integrity !== tool.integrity) {
+    throw new EngineError(msg('setup.integrity', { name: tool.package }), 'install_failed');
+  }
+}
+
 export async function installManaged(id, { logFile, run = runStream } = {}) {
   const tool = TOOL_PACKAGES[id];
   if (!tool) throw new EngineError(msg('setup.unknownStep', { id }), 'usage', 2);
@@ -168,13 +174,22 @@ export async function installManaged(id, { logFile, run = runStream } = {}) {
   const cleanup = () => { fs.rmSync(staging, { recursive: true, force: true }); if (!published) fs.rmSync(destination, { recursive: true, force: true }); };
   process.once('exit', cleanup);
   try {
-    const result = await run(npm.cmd, [...npm.args, 'install', '--prefix', staging, '--no-audit', '--no-fund',
+    // a per-install cache inside staging: it is deleted with the staging folder, so it can never grow unbounded
+    const env = { ...cliEnv(), npm_config_cache: path.join(staging, '.npm-cache'), npm_config_update_notifier: 'false' };
+    // --ignore-scripts: no package code runs before the integrity check below (audit B5)
+    const result = await run(npm.cmd, [...npm.args, 'install', '--prefix', staging, '--ignore-scripts', '--save-exact', '--no-audit', '--no-fund',
       '--loglevel=http', '--progress=false', '--fetch-timeout=60000', '--fetch-retries=2', tool.pkg], {
-      cwd: staging, step: id, logFile, timeout: 360000,
-      // a per-install cache inside staging: it is deleted with the staging folder, so it can never grow unbounded
-      env: { ...cliEnv(), npm_config_cache: path.join(staging, '.npm-cache'), npm_config_update_notifier: 'false' },
+      cwd: staging, step: id, logFile, timeout: 360000, env,
     });
     if (result.code !== 0) throw new EngineError(installError(result), 'install_failed');
+    verifyLocked(staging, tool);
+    if (tool.scripts) {
+      // only this package's own install script (see tools-manifest.json note), after the bytes were verified
+      const rebuilt = await run(npm.cmd, [...npm.args, 'rebuild', '--prefix', staging, '--foreground-scripts', '--loglevel=http', tool.package], {
+        cwd: staging, step: id, logFile: null, timeout: 180000, env,
+      });
+      if (rebuilt.code !== 0) throw new EngineError(installError(rebuilt), 'install_failed');
+    }
     const candidate = path.join(staging, 'node_modules', '.bin', tool.bin);
     const check = await run(candidate, ['--version'], { cwd: staging, step: id, timeout: 15000, quiet: true });
     if (check.code !== 0) throw new EngineError(msg('setup.toolFailed'), 'install_failed');

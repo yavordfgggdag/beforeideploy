@@ -818,5 +818,6 @@
   "billing.receiptPending": "Publishing was submitted. Its credit receipt will be synchronized on the next cloud action.",
   "billing.intervalChange": "Changing between monthly and annual billing is not available yet. Keep your current billing interval to change plan.",
   "setup.identity.detailGitHub": "I can take them from your GitHub profile",
-  "setup.identity.useForm": "Enter your name and email in Setup (no GitHub sign-in needed)."
+  "setup.identity.useForm": "Enter your name and email in Setup (no GitHub sign-in needed).",
+  "setup.integrity": "The downloaded {name} does not match the pinned version and checksum. Nothing was installed."
 }

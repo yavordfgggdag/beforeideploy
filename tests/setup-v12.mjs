@@ -17,7 +17,10 @@ script('npm', 'echo 10.9.0');
 script('netlify', 'exit 1');
 process.env.PATH = bin;
 const { setupStatus, setupStatusFull, setupAuto } = await import('../engine/src/setup.mjs');
-const { setupLock, setupPreflight, installManaged, TOOLS_DIR } = await import('../engine/src/setup-tools.mjs');
+const { setupLock, setupPreflight, installManaged, TOOLS_DIR, TOOL_PACKAGES } = await import('../engine/src/setup-tools.mjs');
+// what `npm install` records: the pinned version and tarball integrity (installManaged verifies it, audit B5)
+const writeLock = (prefix, id, patch = {}) => { const t = TOOL_PACKAGES[id];
+  fs.writeFileSync(path.join(prefix, 'package-lock.json'), JSON.stringify({ lockfileVersion: 3, packages: { [`node_modules/${t.package}`]: { version: t.version, integrity: t.integrity, ...patch } } })); };
 after(() => { process.env.PATH = originalPath; fs.rmSync(tmp,{recursive:true,force:true}); });
 
 test('Finder PATH: bundled engine exposes Node, npm and managed tools', () => {
@@ -71,7 +74,7 @@ test('managed install publishes only a verified tool and preserves the previous 
     if(args[0]==='install') {
       assert.equal(args.includes('-g'),false); prefix=args[args.indexOf('--prefix')+1];
       assert.ok(prefix.startsWith(TOOLS_DIR)); fs.mkdirSync(path.join(prefix,'node_modules/.bin'),{recursive:true});
-      fs.writeFileSync(path.join(prefix,'node_modules/.bin/netlify'),'#!/bin/sh\necho verified',{mode:0o755});
+      fs.writeFileSync(path.join(prefix,'node_modules/.bin/netlify'),'#!/bin/sh\necho verified',{mode:0o755}); writeLock(prefix,'netlify-cli');
     }
     return {code:0,tail:['version']};
   };
@@ -159,7 +162,7 @@ test('B2: reinstalls keep only the active and the previous package folder', asyn
     if (args[0] === 'install') {
       const prefix = args[args.indexOf('--prefix') + 1];
       fs.mkdirSync(path.join(prefix, 'node_modules/.bin'), { recursive: true });
-      fs.writeFileSync(path.join(prefix, 'node_modules/.bin/wrangler'), '#!/bin/sh\necho 4', { mode: 0o755 });
+      fs.writeFileSync(path.join(prefix, 'node_modules/.bin/wrangler'), '#!/bin/sh\necho 4', { mode: 0o755 }); writeLock(prefix, 'wrangler');
       fs.mkdirSync(path.join(prefix, '.npm-cache'), { recursive: true });
     }
     return { code: 0, tail: ['4'] };
@@ -289,4 +292,41 @@ test('B6: gh archive is checked against the sha256 in source, never against chec
   await assert.rejects(() => installGitHub({ platformKey: 'darwin-x64', fetch: async () => { throw new TypeError('fetch failed'); } }), e => e.code === 'offline');
   await assert.rejects(() => installGitHub({ platformKey: 'plan9-mips', fetch: serve(200, '') }), e => e.code === 'not_runnable');
   assert.equal(fs.readdirSync(TOOLS_DIR).some(n => n.startsWith('.staging-gh-')), false);
+});
+
+test('B5: exact pins, no install scripts before the integrity check, tampered tarball refused', async () => {
+  const pinned = JSON.parse(fs.readFileSync(path.join(root, 'engine/src/tools-manifest.json'), 'utf8')).tools;
+  for (const [id, m] of Object.entries(pinned)) {
+    assert.match(m.version, /^\d+\.\d+\.\d+$/, `${id} is pinned to an exact version`);
+    assert.match(m.integrity, /^sha512-[A-Za-z0-9+/]{86}==$/, `${id} has a sha512 integrity`);
+    assert.equal(typeof m.scripts, 'boolean');
+    if (m.scripts) assert.ok(m.note, `${id} documents why it needs install scripts`);
+  }
+  const calls = [];
+  const fake = (patch) => async (cmd, args) => {
+    calls.push(args.filter(a => !a.startsWith('/')));
+    if (args[0] === 'install') {
+      const prefix = args[args.indexOf('--prefix') + 1];
+      fs.mkdirSync(path.join(prefix, 'node_modules/.bin'), { recursive: true });
+      fs.writeFileSync(path.join(prefix, 'node_modules/.bin/claude'), '#!/bin/sh\necho 2', { mode: 0o755 });
+      writeLock(prefix, 'claude-code', patch);
+    }
+    return { code: 0, tail: ['ok'] };
+  };
+  const link = path.join(TOOLS_DIR, 'bin', 'claude');
+  // a tarball whose integrity differs from the pin: nothing is published, and no script ran
+  await assert.rejects(() => installManaged('claude-code', { run: fake({ integrity: 'sha512-' + 'A'.repeat(86) + '==' }) }), e => e.code === 'install_failed' && /pinned/.test(e.message));
+  assert.equal(fs.existsSync(link), false);
+  assert.equal(calls.some(a => a[0] === 'rebuild'), false, 'install scripts never run for unverified bytes');
+  const install = calls[0];
+  assert.ok(install.includes('--ignore-scripts'));
+  assert.ok(install.includes(`@anthropic-ai/claude-code@${pinned['claude-code'].version}`));
+  calls.length = 0;
+  await assert.rejects(() => installManaged('claude-code', { run: fake({ version: '2.0.0' }) }), e => e.code === 'install_failed');
+  // verified: claude-code (scripts:true) then runs only its own install script; netlify-cli never does
+  calls.length = 0;
+  await installManaged('claude-code', { run: fake({}) });
+  assert.deepEqual(calls.map(a => a[0]), ['install', 'rebuild', '--version']);
+  assert.ok(calls[1].includes('@anthropic-ai/claude-code'));
+  assert.equal(fs.existsSync(link), true);
 });
