@@ -18,7 +18,9 @@
     "start": "2026-09-16T00:00:00.000Z",
     "end": "2026-10-16T00:00:00.000Z",
     "renewsAt": "2026-10-16T00:00:00.000Z",
-    "source": "subscription"
+    "source": "subscription",
+    "debt": 0,
+    "forecastDaysLeft": 9
   },
   "included": {
     "tokens": 300000
@@ -60,7 +62,25 @@
   "sites": {
     "active": 2,
     "limit": 3,
-    "paused": 0
+    "paused": 0,
+    "items": [
+      {
+        "id": "demo-shop",
+        "projectKey": "demo-shop",
+        "name": "shop.example",
+        "state": "active",
+        "hostingOwner": "user",
+        "credits": 1000
+      },
+      {
+        "id": "demo-studio",
+        "projectKey": "demo-studio",
+        "name": "studio.example",
+        "state": "active",
+        "hostingOwner": "user",
+        "credits": 1000
+      }
+    ]
   },
   "packs": [
     {
@@ -72,7 +92,7 @@
   "byAction": [
     {
       "action": "ai",
-      "credits": 87500,
+      "credits": 85500,
       "operations": 31
     },
     {
@@ -84,6 +104,11 @@
       "action": "audit",
       "credits": 2000,
       "operations": 5
+    },
+    {
+      "action": "site.day",
+      "credits": 2000,
+      "operations": 2
     }
   ],
   "daily": [
@@ -211,7 +236,7 @@
   "byModel": [
     {
       "model": "claude-opus-5-5",
-      "tokens": 65000,
+      "tokens": 63000,
       "operations": 20
     },
     {
@@ -229,7 +254,57 @@
     "sessionUsed": 18500
   },
   "pricing": {
-    "version": "v12.2",
+    "version": "2026-10",
+    "actions": {
+      "site.day": {
+        "credits": 1000,
+        "window": false
+      },
+      "monitor.fast": {
+        "credits": 500,
+        "window": false
+      },
+      "monitor.path": {
+        "credits": 50,
+        "window": false
+      },
+      "check.run": {
+        "credits": 50,
+        "window": true
+      },
+      "audit.full": {
+        "credits": 400,
+        "window": true
+      },
+      "deploy.preview": {
+        "credits": 150,
+        "window": true
+      },
+      "deploy.production": {
+        "credits": 500,
+        "window": true
+      },
+      "deploy.rollback": {
+        "credits": 0,
+        "window": false
+      },
+      "backup.snapshot": {
+        "credits": 100,
+        "window": true
+      },
+      "ai.fix": {
+        "actual": true,
+        "window": true
+      },
+      "ai.fix.deep": {
+        "actual": true,
+        "window": true
+      },
+      "ai.chat": {
+        "actual": true,
+        "window": true
+      }
+    },
     "spendOrder": [
       "oldest-first"
     ]

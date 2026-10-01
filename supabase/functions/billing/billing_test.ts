@@ -343,61 +343,19 @@ Deno.test("billing: a plan an admin granted by hand survives a cancelled Paddle 
 
 // ---------------------------------------------------------------- V11 RC: usage, sync
 
-Deno.test("billing: usage is server-authoritative — period, included / used / reserved / remaining, purchased apart, limits, pricing version, history", async () => {
-  const { db, handle } = world({
-    plan: "high",
-    subs: [{ id: "s1", user_id: USER.id, provider: "paddle", provider_ref: "sub_1", customer_ref: "ctm_1", tier: "high", status: "active", period_start: "2026-10-10T00:00:00Z", period_end: "2026-11-10T00:00:00Z", updated_at: "2026-10-10T00:00:00Z" }],
-    ledger: [
-      { id: "l1", user_id: USER.id, delta: 1000000, bucket: "plan", reason: "plan_grant", ref: "sub_1:m0", created_at: "2026-10-10T00:00:01Z" },
-      { id: "l2", user_id: USER.id, delta: 500000, bucket: "topup", reason: "topup", ref: "txn_9", created_at: "2026-10-10T00:00:02Z" },
-      { id: "l3", user_id: USER.id, delta: -6000, bucket: "plan", reason: "ai_fix", ref: "u1", pricing_version: "p-old", created_at: "2026-10-12T10:00:00Z" },
-      { id: "l4", user_id: USER.id, delta: -30000, bucket: "hold", reason: "hold", ref: "u-live", created_at: "2026-10-15T11:59:00Z" },
-      { id: "l5", user_id: USER.id, delta: -30000, bucket: "hold", reason: "hold", ref: "u-dead", created_at: "2026-10-15T10:00:00Z" },
-    ],
-    now: new Date("2026-10-15T12:00:00Z"),
-  });
-  db.tables.ai_usage = [
-    { id: "u1", user_id: USER.id, created_at: "2026-10-12T10:00:00Z", step: "build", model: "claude-sonnet-5", charged_tokens: 6000, status: "ok", project_key: "p1", pricing_version: "p-old" },
-    { id: "u0", user_id: USER.id, created_at: "2026-10-01T10:00:00Z", step: "build", model: "claude-sonnet-5", charged_tokens: 999, status: "ok", project_key: "p1" },
-    { id: "u-live", user_id: USER.id, created_at: "2026-10-15T11:59:00Z", step: "lint", status: "pending", charged_tokens: 0 },
-    { id: "u-dead", user_id: USER.id, created_at: "2026-10-15T10:00:00Z", step: "lint", status: "pending", charged_tokens: 0 },
-  ];
-  const res = await handle(post("billing", { action: "usage" }));
-  assert.equal(res.status, 200);
-  const u = await res.json();
-  assert.equal(u.unit, "credits");
-  assert.equal(u.plan, "high");
-  assert.deepEqual(u.period, { start: "2026-10-10T00:00:00Z", end: "2026-11-10T00:00:00Z", renewsAt: "2026-11-10T00:00:00Z", source: "subscription" });
-  assert.equal(u.included.tokens, 300000);
-  assert.deepEqual(u.used, { tokens: 6000, operations: 1 }, "only settled charges inside the period; u0 is before it");
-  assert.deepEqual(u.reserved, { tokens: 30000, operations: 1 }, "the live hold is reserved, the abandoned one was released");
-  assert.equal(u.reconciled.releasedHolds, 1);
-  assert.equal(db.rows("ai_usage").find((r) => r.id === "u-dead")?.status, "orphaned");
-  assert.equal(db.rows("credit_ledger").filter((r) => r.reason === "hold").length, 1);
-  assert.deepEqual(u.remaining, { plan: 994000, purchased: 500000, total: 1494000, available: 1464000 });
-  assert.equal(u.purchased.tokens, 500000, "purchased packs are shown apart from the plan tokens");
-  assert.equal(u.limits.perMinute, 6);
-  // the 5-hour session: 20 % of 300 000 = 60 000; u1 (three days ago) is outside it, the live hold is not charged yet
-  assert.equal(u.limits.sessionCap, 60000);
-  assert.deepEqual(u.session, { windowHours: 5, capPercent: 20, cap: 60000, used: 0, remaining: 60000, resetsAt: "2026-10-15T16:59:00.000Z" });
-  assert.deepEqual(u.byModel, [{ model: "claude-sonnet-5", tokens: 6000, operations: 1 }]);
-  assert.match(u.pricing.version, /^p-[0-9a-f]{12}$/, "a hash of the price table when no explicit version is set");
-  assert.deepEqual(u.pricing.spendOrder, ["plan", "topup"]);
-  assert.equal(u.history.operations.length, 4);
-  assert.equal(u.history.operations[0].id, "u-live");
-  assert.equal(u.history.ledger.length, 4);
-  assert.equal(u.history.ledger.find((l: Row) => l.ref === "u1").pricingVersion, "p-old");
-  // an explicit pricing version setting wins
-  db.tables.settings.push({ key: "pricing.version", value: "2026-10" });
-  const u2 = await (await handle(post("billing", { action: "usage" }))).json();
-  assert.equal(u2.pricing.version, "2026-10");
-  // Free without a subscription: calendar period, nothing renews
-  const free = world({ plan: "free", now: new Date("2026-10-15T12:00:00Z") });
-  const f = await (await free.handle(post("billing", { action: "usage" }))).json();
-  assert.deepEqual(f.period, { start: "2026-10-01T00:00:00.000Z", end: "2026-11-01T00:00:00.000Z", renewsAt: null, source: "calendar" });
-  assert.equal(f.included.tokens, 0);
-  assert.equal(f.limits.sessionCap, null);
-  assert.equal(f.session, null);
+Deno.test("billing: V1 and V2 preserve required fields and return the same SQL balances, reservation and exact windows", async()=>{
+  // Monetary invariants formerly duplicated in this HTTP fake are tested against real SQL in
+  // tests/rls/credits-v12.mjs, including this trial/calendar/hold contract and >1000 settled events.
+  const w=world({plan:"high"});
+  const receipt={v:2,unit:"credits",serverTime:NOW.toISOString(),plan:"high",period:{start:"2026-10-01",end:"2026-11-01",source:"subscription"},included:{tokens:300000},used:{tokens:126001,operations:1201},reserved:{tokens:30000,operations:1},remaining:{plan:173999,purchased:500000,total:673999,available:643999},purchased:{tokens:500000,expires:"12 months"},session:{windowHours:5,capPercent:20,cap:60000,used:10000,reserved:30000,remaining:20000,resetsAt:"2026-10-01T14:00:00Z"},weekly:{cap:120000,used:110000,reserved:1000,remaining:9000},limits:{perMinute:6,perHour:60},pricing:{version:"2026-10",spendOrder:["expires_at","granted_at"]},history:{operations:[],ledger:[]}};
+  w.db.rpcResponses.bid_usage_summary=receipt;
+  for(const v of [1,2]) {
+    const res=await w.handle(post("billing",{action:"usage",v}));assert.equal(res.status,200);const u=await res.json();
+    for(const key of ["period","included","used","reserved","remaining","purchased","session","weekly","limits","history"])assert.deepEqual(u[key],(receipt as Row)[key]);
+    assert.equal(u.v,v===2?2:undefined);
+  }
+  w.db.missingFunctions=["bid_usage_summary"];
+  assert.equal((await w.handle(post("billing",{action:"usage"}))).status,503,"V1 cannot silently revert to incorrect rolling/capped counters");
 });
 
 Deno.test("billing: sync recovers a missed webhook from the provider's current subscription state", async () => {
@@ -507,32 +465,20 @@ Deno.test("billing: engine, cloud and generated schema share the approved catalo
   assert.deepEqual(engine.packs.map((p: Row) => p.price), [4.99,19.99,39.99]);
 });
 
-Deno.test("billing: trial reports the actual gift and yearly usage is a calendar month slice", async () => {
-  const trial = world();
-  await trial.handle(post("billing", { action: "trial" }));
-  const u = await (await trial.handle(post("billing", { action: "usage" }))).json();
-  assert.equal(u.included.tokens, CATALOG.trial.tokens);
-  assert.equal(u.session.cap, CATALOG.trial.tokens*0.2);
-  const w = world({ plan: "high", now: new Date("2026-03-02T12:00:00Z"), subs: [{ id:"year",user_id:USER.id,provider:"paddle",provider_ref:"sub_year",tier:"high",status:"active",period_start:"2026-01-31T10:00:00Z",period_end:"2027-01-31T10:00:00Z",raw:{billing_cycle:{interval:"year"}} }] });
-  w.db.tables.ai_usage = [
-    { id:"old",user_id:USER.id,created_at:"2026-02-01T10:00:00Z",status:"ok",charged_tokens:2000 },
-    { id:"current",user_id:USER.id,created_at:"2026-03-01T10:00:00Z",status:"ok",charged_tokens:3000 }
-  ];
-  const current = await (await w.handle(post("billing", { action:"usage" }))).json();
-  assert.equal(current.period.start, "2026-02-28T10:00:00.000Z");
-  assert.equal(current.period.end, "2026-03-31T10:00:00.000Z");
-  assert.equal(current.used.tokens, 3000);
-  assert.equal(current.remaining.available, (await (await w.handle(post("billing",{action:"status"}))).json()).balance.available);
+Deno.test("billing: a trial's SQL usage receipt is returned after the atomic gift, with no client recomputation",async()=>{
+ const w=world();await w.handle(post("billing",{action:"trial"}));
+ const receipt={v:2,included:{tokens:CATALOG.trial.tokens},session:{cap:CATALOG.trial.tokens*0.2},pricing:{version:"2026-10"}};
+ w.db.rpcResponses.bid_usage_summary=receipt;
+ const res=await w.handle(post("billing",{action:"usage"}));assert.equal(res.status,200);
+ const u=await res.json();assert.deepEqual(u.included,receipt.included);assert.deepEqual(u.session,receipt.session);
+ assert.ok(w.db.rpcCalls.some(c=>c.fn==="bid_start_trial"));assert.ok(w.db.rpcCalls.some(c=>c.fn==="bid_usage_summary"));
 });
 
-Deno.test("billing: yearly month grants do not collide at the following year's renewal", async () => {
+Deno.test("billing: missing annual payment receipts fail closed instead of inventing monthly credits", async () => {
   const { ensureMonthlyGrant } = await import("../_shared/credits.ts");
-  const w = world({ subs:[{id:"year",user_id:USER.id,provider:"paddle",provider_ref:"sub_year",tier:"high",status:"active",period_start:"2026-01-31T10:00:00Z",period_end:"2027-01-31T10:00:00Z",raw:{billing_cycle:{interval:"year"}}}] });
-  assert.ok(await ensureMonthlyGrant(w.db,USER.id,{high:{tokens:300000}},new Date("2026-02-28T10:00:00Z")));
-  assert.equal(await ensureMonthlyGrant(w.db,USER.id,{high:{tokens:300000}},new Date("2026-02-28T10:01:00Z")),null);
-  w.db.tables.subscriptions[0].period_start="2027-01-31T10:00:00Z";
-  w.db.tables.subscriptions[0].period_end="2028-01-31T10:00:00Z";
-  assert.ok(await ensureMonthlyGrant(w.db,USER.id,{high:{tokens:300000}},new Date("2027-02-28T10:00:00Z")));
+  const w = world({subs:[{id:"year",user_id:USER.id,provider:"paddle",provider_ref:"sub_year",tier:"high",status:"active",period_start:"2026-01-31T10:00:00Z",period_end:"2027-01-31T10:00:00Z",raw:{billing_cycle:{interval:"year"}}}]});
+  await assert.rejects(()=>ensureMonthlyGrant(w.db,USER.id,{high:{tokens:300000}},new Date("2026-02-28T10:00:00Z")),{code:"billing_conflict"});
+  assert.equal(w.db.rows("credit_ledger").length,0);
 });
 
 Deno.test("billing: checkout on an existing plan previews then confirms a PATCH, never another subscription", async () => {
@@ -574,4 +520,14 @@ Deno.test("billing V12: usage v2 is an authenticated SQL receipt; ETag skips unc
   w.db.missingFunctions=["bid_usage_summary"];
   const unavailable=await w.handle(post("billing",{action:"usage",v:2}));assert.equal(unavailable.status,503);
   assert.equal((await unavailable.json()).code,"meter_unavailable");
+});
+
+Deno.test("billing: an interval switch stops before preview, mutation or checkout",async()=>{
+ const {previewChange}=await import("./subscription-change.ts");
+ const w=world();const calls:string[]=[];
+ const response=await previewChange(w.db,USER.id,{provider_ref:"sub_year",tier:"flash"},"high","pri_high_year",["pri_flash","pri_high_year"],async(path,_body,method)=>{
+  calls.push(`${method}:${path}`);return {status:"active",billing_cycle:{interval:"month"},items:[{price:{id:"pri_flash"}}]};
+ },NOW,"year");
+ assert.equal(response.status,409);assert.equal((await response.json()).code,"billing_interval_change");
+ assert.deepEqual(calls,["GET:/subscriptions/sub_year"]);assert.equal(w.db.rows("billing_changes").length,0);
 });

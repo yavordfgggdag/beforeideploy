@@ -815,5 +815,6 @@
   "billing.domainUnavailable": "An included domain requires a paid Knight subscription.",
   "billing.invalidDomain": "Enter a valid domain name without a URL or path.",
   "billing.hostingNotReady": "Managed hosting has not been configured for this site yet.",
-  "billing.receiptPending": "Publishing was submitted. Its credit receipt will be synchronized on the next cloud action."
+  "billing.receiptPending": "Publishing was submitted. Its credit receipt will be synchronized on the next cloud action.",
+  "billing.intervalChange": "Changing between monthly and annual billing is not available yet. Keep your current billing interval to change plan."
 }

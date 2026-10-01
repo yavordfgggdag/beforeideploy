@@ -12,6 +12,7 @@ create table if not exists public.credit_grants (
   granted_at timestamptz not null, expires_at timestamptz not null, ref text not null,
   unique(user_id,ref,source), unique(user_id,id)
 );
+alter table public.credit_grants add column if not exists refund_base bigint check(refund_base>=credits);
 create index if not exists credit_grants_fifo on public.credit_grants(user_id,expires_at,granted_at,id) where left_credits>0;
 create table if not exists public.sites (
   id uuid primary key default gen_random_uuid(), user_id uuid not null references public.profiles(user_id) on delete cascade,
@@ -441,25 +442,66 @@ begin
 end $$;
 
 -- Refund only the unspent, unreserved part of the ORIGINAL grant, never credits from a later purchase.
+-- Persist approved adjustments even when their payment/upgrade grant arrives later.
+create table if not exists public.credit_refunds (
+ user_id uuid not null references public.profiles(user_id) on delete cascade,
+ payment_ref text not null, adjustment_ref text not null, share numeric not null check(share>0 and share<=1),
+ created_at timestamptz not null default now(), primary key(user_id,payment_ref,adjustment_ref)
+);
+alter table credit_refunds enable row level security;
+drop policy if exists own_read on credit_refunds;
+create policy own_read on credit_refunds for select to authenticated using(auth.uid()=user_id);
+
 create or replace function public.bid_refund(p_user uuid,p_ref text,p_adjustment text,p_share numeric,p_now timestamptz default now()) returns jsonb
 language plpgsql security definer set search_path=public,pg_temp as $$
-declare r record; held bigint; take bigint; taken bigint:=0;
+declare r record; held bigint; take bigint; taken bigint:=0; prior numeric;
 begin
  perform bid_v12_refresh(p_user,p_now);
  if p_share<=0 or p_share>1 then raise exception 'invalid refund share'; end if;
- if exists(select 1 from credit_ledger where user_id=p_user and reason='payment_refund' and ref=p_adjustment||':'||p_ref) then return jsonb_build_object('ok',true,'taken',0,'duplicate',true); end if;
+ select share into prior from credit_refunds where user_id=p_user and payment_ref=p_ref and adjustment_ref=p_adjustment;
+ if prior is not null and prior<>p_share then raise exception 'refund adjustment changed'; end if;
+ insert into credit_refunds(user_id,payment_ref,adjustment_ref,share,created_at) values(p_user,p_ref,p_adjustment,p_share,p_now) on conflict do nothing;
  for r in select * from credit_grants where user_id=p_user and (ref=p_ref or payment_ref=p_ref or starts_with(ref,p_ref||':')) loop
   if exists(select 1 from credit_ledger where user_id=p_user and reason='grant_refund' and ref=p_adjustment||':'||r.id) then continue; end if;
   select coalesce(sum(credits),0) into held from credit_allocations where grant_id=r.id;
   if held>0 then raise exception 'refund waits for reserved work' using errcode='55P03'; end if;
-  take:=least(round(r.credits*p_share)::bigint,r.left_credits);
+  take:=least(round(coalesce(r.refund_base,r.credits)*p_share)::bigint,r.left_credits);
   update credit_grants set left_credits=left_credits-take where id=r.id;
   insert into credit_ledger(user_id,delta,bucket,reason,ref,created_at) values(p_user,-take,r.bucket,'grant_refund',p_adjustment||':'||r.id,p_now);
   taken:=taken+take;
  end loop;
- update credit_periods set refund_share=least(1,refund_share+p_share) where transaction_ref=p_ref and user_id=p_user;
- insert into credit_ledger(user_id,delta,bucket,reason,ref,created_at) values(p_user,0,'plan','payment_refund',p_adjustment||':'||p_ref,p_now);
+ update credit_periods set refund_share=greatest(refund_share,least(1,(select sum(share) from credit_refunds where user_id=p_user and payment_ref=p_ref))) where transaction_ref=p_ref and user_id=p_user;
+ insert into credit_ledger(user_id,delta,bucket,reason,ref,created_at) values(p_user,0,'plan','payment_refund',p_adjustment||':'||p_ref,p_now) on conflict do nothing;
  return jsonb_build_object('ok',true,'taken',taken);
+end $$;
+
+create or replace function public.bid_v12_replay_refunds(p_user uuid,p_ref text,p_now timestamptz default now()) returns void
+language plpgsql security definer set search_path=public,pg_temp as $$
+declare r record;
+begin
+ perform bid_v12_lock(p_user);
+ for r in select * from credit_refunds where user_id=p_user and payment_ref=p_ref order by created_at,adjustment_ref loop
+  perform bid_refund(p_user,p_ref,r.adjustment_ref,r.share,p_now);
+ end loop;
+end $$;
+
+-- Verified webhook payloads may arrive out of order; recover adjustments once the owner is known.
+create or replace function public.bid_v12_payment_refunds(p_user uuid,p_ref text,p_now timestamptz default now()) returns jsonb
+language plpgsql security definer set search_path=public,pg_temp as $$
+declare r record; total numeric; share numeric;
+begin
+ perform bid_v12_lock(p_user);
+ select coalesce((payload#>>'{data,details,totals,total}')::numeric,(payload#>>'{data,totals,total}')::numeric,0) into total
+ from billing_events where user_id=p_user and type='transaction.completed' and ref=p_ref order by processed_at desc limit 1;
+ if found then
+  for r in select distinct on (payload#>>'{data,id}') payload from billing_events where type in ('adjustment.created','adjustment.updated')
+   and payload#>>'{data,transaction_id}'=p_ref and payload#>>'{data,action}'='refund' and payload#>>'{data,status}'='approved' order by payload#>>'{data,id}',processed_at desc loop
+   share:=case when total>0 and coalesce((r.payload#>>'{data,totals,total}')::numeric,0)>0 then least(1,(r.payload#>>'{data,totals,total}')::numeric/total) else 1 end;
+   perform bid_refund(p_user,p_ref,r.payload#>>'{data,id}',share,p_now);
+  end loop;
+ end if;
+ perform bid_v12_replay_refunds(p_user,p_ref,p_now);
+ return jsonb_build_object('ok',true);
 end $$;
 
 -- Function ACLs are assigned explicitly at the end of this module, including internal helpers.
@@ -625,7 +667,7 @@ begin
  select count(*) filter(where state='active'),count(*) filter(where state='paused') into active_count,paused_count from sites where user_id=p_user;
  lim:=(ent->>'siteLimit')::integer;
  select coalesce(jsonb_agg(x),'[]') into site_items from(select t.id,t.project_key as "projectKey",coalesce(p.name,t.project_key) as name,t.state,t.hosting_owner as "hostingOwner",t.paused_reason as "pausedReason",t.migration_grace_until as "graceUntil",coalesce((select sum(credits) from usage_events where site_id=t.id and created_at>=start_at and created_at<end_at),0) as credits from sites t left join bid_projects p on p.user_id=t.user_id and p.key=t.project_key where t.user_id=p_user order by t.state,t.activated_at,t.id) x;
- select coalesce(jsonb_agg(x),'[]') into hist from(select e.id::text as id,e.created_at as at,e.action as step,a.project_key as project,a.model,coalesce(a.status,'ok') as status,e.credits as tokens,a.input_tokens as input,a.output_tokens as output,e.pricing_version as "pricingVersion",e.operation_id as "operationId" from usage_events e left join ai_usage a on a.id=e.ai_usage_id where e.user_id=p_user order by e.created_at desc,e.id desc limit 50) x;
+ select coalesce(jsonb_agg(x),'[]') into hist from(select e.id::text as id,e.created_at as at,e.action as step,coalesce(a.project_key,cr.project_key) as project,a.model,coalesce(a.status,case when cr.report->>'status' in ('ready','warnings','complete') then 'ok' else cr.report->>'status' end,'ok') as status,e.credits as tokens,a.input_tokens as input,a.output_tokens as output,e.pricing_version as "pricingVersion",e.operation_id as "operationId" from usage_events e left join ai_usage a on a.id=e.ai_usage_id left join cloud_reports cr on cr.user_id=e.user_id and cr.operation_id=e.operation_id where e.user_id=p_user order by e.created_at desc,e.id desc limit 50) x;
  select coalesce(jsonb_agg(x),'[]') into ledger from(select id,created_at as at,delta,bucket,reason,ref,pricing_version as "pricingVersion" from credit_ledger where user_id=p_user order by created_at desc,id desc limit 50) x;
  v_threshold:=case when included<=0 then 0 when used>=included then 100 when used>=included*0.9 then 90 when used>=included*0.75 then 75 else 0 end;
  v_period_ref:=start_at::text;
@@ -713,7 +755,7 @@ end $$;
 
 create or replace function public.bid_upgrade_grant(p_user uuid,p_change uuid,p_now timestamptz default now()) returns jsonb
 language plpgsql security definer set search_path=public,pg_temp as $$
-declare c billing_changes; plans jsonb; from_credits bigint; to_credits bigint; grant_credits bigint; start_at timestamptz; end_at timestamptz; k integer;
+declare c billing_changes; plans jsonb; from_credits bigint; to_credits bigint; grant_credits bigint; start_at timestamptz; end_at timestamptz; k integer; annual_start timestamptz; annual_end timestamptz; receipt jsonb; payment text; payment_count integer;
 begin
  perform bid_v12_refresh(p_user,p_now);
  select * into c from billing_changes where id=p_change and user_id=p_user and status='applied';
@@ -724,12 +766,37 @@ begin
  start_at:=(c.quote->>'periodStart')::timestamptz; end_at:=(c.quote->>'periodEnd')::timestamptz;
  if start_at is null or end_at is null or end_at<=start_at then return jsonb_build_object('ok',false,'code','billing_conflict'); end if;
  if end_at-start_at>interval '40 days' then
+  annual_start:=start_at; annual_end:=end_at;
   k:=greatest(0,(extract(year from c.effective_at)::int-extract(year from start_at)::int)*12+extract(month from c.effective_at)::int-extract(month from start_at)::int);
   if start_at+make_interval(months=>k)>c.effective_at then k:=greatest(0,k-1); end if;
   end_at:=least(end_at,start_at+make_interval(months=>k+1)); start_at:=start_at+make_interval(months=>k);
  end if;
  grant_credits:=greatest(0,round((to_credits-from_credits)*least(1,greatest(0,extract(epoch from(end_at-c.effective_at))/extract(epoch from(end_at-start_at))))))::bigint;
- return bid_grant(p_user,grant_credits,'upgrade_grant',c.provider_ref||':upg:'||c.id,c.to_tier,c.effective_at,null,p_now);
+ receipt:=bid_grant(p_user,grant_credits,'upgrade_grant',c.provider_ref||':upg:'||c.id,c.to_tier,c.effective_at,null,p_now);
+ payment:=c.quote->>'paymentRef';
+ if payment is null then
+  select min(ref),count(distinct ref) into payment,payment_count from billing_events e where e.user_id=p_user and e.type='transaction.completed' and e.payload#>>'{data,origin}'='subscription_update' and e.payload#>>'{data,subscription_id}'=c.provider_ref
+   and (e.payload->>'occurred_at')::timestamptz between c.effective_at-interval '2 seconds' and c.effective_at+interval '10 minutes'
+   and exists(select 1 from jsonb_array_elements(e.payload#>'{data,items}') item where coalesce(item#>>'{price,id}',item->>'price_id') in ((select value#>>array['plans',c.to_tier,'paddlePriceId'] from settings where key='billing.catalog'),(select value#>>array['plans',c.to_tier,'yearly','paddlePriceId'] from settings where key='billing.catalog')));
+  if payment_count<>1 then payment:=null; end if;
+  if payment is not null then update billing_changes set quote=quote||jsonb_build_object('paymentRef',payment) where id=c.id; end if;
+ end if;
+ payment:=coalesce(payment,'upgrade:'||c.id);
+ update credit_grants set payment_ref=payment where user_id=p_user and ref=c.provider_ref||':upg:'||c.id and source='upgrade_grant';
+ if annual_start is not null then
+  -- Keep each paid component separately refundable. Existing slices keep their original expiry;
+  -- following slices use the upgraded validity and add only the newly paid monthly difference.
+  perform bid_accrue_periods(p_user,c.effective_at);
+  update credit_periods set tier=c.to_tier,validity_months=(plans#>>array[c.to_tier,'validity_months'])::int
+   where user_id=p_user and subscription_ref=c.provider_ref and starts_at=annual_start and array_position(array['free','flash','high','knight'],tier)<array_position(array['free','flash','high','knight'],c.to_tier);
+  insert into credit_periods(transaction_ref,user_id,subscription_ref,tier,interval,monthly_credits,validity_months,starts_at,ends_at,granted_through,billing_change_id)
+  values(payment,p_user,c.provider_ref,c.to_tier,'year',to_credits-from_credits,(plans#>>array[c.to_tier,'validity_months'])::int,annual_start,annual_end,k,c.id)
+  on conflict(billing_change_id) do nothing;
+  update credit_grants set payment_ref=payment where user_id=p_user and (ref='upgrade:'||c.id or starts_with(ref,'upgrade:'||c.id||':'));
+  update credit_periods set transaction_ref=payment where user_id=p_user and billing_change_id=c.id and transaction_ref<>payment;
+ end if;
+ perform bid_v12_payment_refunds(p_user,payment,p_now);
+ return receipt;
 end $$;
 
 -- Domain requests create a review record, never purchase/register a domain. Owner fulfillment must
@@ -819,6 +886,8 @@ create policy own_read on credit_periods for select to authenticated using(auth.
 alter table credit_accounts add column if not exists last_entitlement_check timestamptz;
 
 -- Recover verified V1 annual receipts without reissuing previously delivered monthly slices.
+alter table credit_periods add column if not exists billing_change_id uuid references public.billing_changes(id) on delete set null;
+create unique index if not exists credit_periods_change_once on credit_periods(billing_change_id);
 alter table credit_periods add column if not exists legacy boolean not null default false;
 alter table credit_grants add column if not exists payment_ref text;
 create or replace function public.bid_v12_import_periods(p_user uuid,p_now timestamptz default now()) returns void
@@ -852,7 +921,7 @@ end $$;
 
 create or replace function public.bid_accrue_periods(p_user uuid,p_now timestamptz default now()) returns jsonb
 language plpgsql security definer set search_path=public,pg_temp as $$
-declare period credit_periods; until_at timestamptz; k integer; m integer; at timestamptz; amount bigint; ref text; given bigint:=0;
+declare period credit_periods; until_at timestamptz; k integer; m integer; at timestamptz; amount bigint; ref text; given bigint:=0; receipt jsonb;
 begin
  perform bid_v12_refresh(p_user,p_now);
  perform bid_v12_import_periods(p_user,p_now);
@@ -867,7 +936,10 @@ begin
       old_grant.ref in (period.subscription_ref||':m'||m,period.subscription_ref||':'||to_char(period.starts_at at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"')||':m'||m,period.subscription_ref||':'||to_char(period.starts_at at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')||':m'||m)) then continue; end if;
    amount:=round(period.monthly_credits*(1-period.refund_share))::bigint;
    ref:=case when m=0 then period.transaction_ref else period.transaction_ref||':m'||m end;
-   perform bid_grant(p_user,amount,'plan_grant',ref,period.tier,at,at+make_interval(months=>period.validity_months),p_now);
+   receipt:=bid_grant(p_user,amount,'plan_grant',ref,period.tier,at,at+make_interval(months=>period.validity_months),p_now);
+   update credit_grants set refund_base=period.monthly_credits,payment_ref=period.transaction_ref where id=(receipt->>'id')::uuid;
+   -- This slice was already reduced by these adjustments; retries must not refund it again.
+   insert into credit_ledger(user_id,delta,bucket,reason,ref,created_at) select p_user,0,'plan','grant_refund',adjustment_ref||':'||(receipt->>'id'),p_now from credit_refunds where user_id=p_user and payment_ref=period.transaction_ref on conflict do nothing;
    given:=given+amount;
   end loop;
   update credit_periods set granted_through=greatest(granted_through,k) where transaction_ref=period.transaction_ref;
@@ -888,6 +960,7 @@ begin
  select coalesce((value#>>array[p_tier,'validity_months'])::integer,1) into months from settings where key='plans';
  insert into credit_periods(transaction_ref,user_id,subscription_ref,tier,interval,monthly_credits,validity_months,starts_at,ends_at)
  values(p_transaction,p_user,p_subscription,p_tier,p_interval,p_credits,months,p_start,p_end);
+ perform bid_v12_payment_refunds(p_user,p_transaction,p_now);
  r:=bid_accrue_periods(p_user,p_now);
  return r||jsonb_build_object('transaction',p_transaction);
 end $$;
@@ -907,6 +980,39 @@ begin
   n:=n+1;
  end loop;
  return jsonb_build_object('ok',true,'accounts',n);
+end $$;
+
+-- Cloud artifacts are private and require the corresponding settled operation receipt.
+create table if not exists public.cloud_reports (
+ user_id uuid not null references public.profiles(user_id) on delete cascade,
+ operation_id text not null, project_key text not null, action text not null,
+ report jsonb not null, created_at timestamptz not null default now(),
+ primary key(user_id,operation_id), foreign key(user_id,operation_id) references public.usage_events(user_id,operation_id) on delete cascade,
+ check(octet_length(report::text)<=65536)
+);
+alter table cloud_reports enable row level security;
+drop policy if exists own_read on cloud_reports;
+create policy own_read on cloud_reports for select to authenticated using(auth.uid()=user_id);
+
+create or replace function public.bid_v12_report(p_user uuid,p_operation_id text,p_project text,p_report jsonb,p_now timestamptz default now()) returns jsonb
+language plpgsql security definer set search_path=public,pg_temp as $$
+declare h credit_holds; e usage_events; saved cloud_reports; r jsonb;
+begin
+ perform bid_v12_lock(p_user);
+ select * into saved from cloud_reports where user_id=p_user and operation_id=p_operation_id;
+ if found then return jsonb_build_object('ok',true,'duplicate',true,'report',saved.report,'operationId',p_operation_id); end if;
+ if not exists(select 1 from bid_projects where user_id=p_user and key=p_project) then return jsonb_build_object('ok',false,'code','not_found'); end if;
+ select * into h from credit_holds where user_id=p_user and operation_id=p_operation_id;
+ if h.action not in ('check.run','audit.full','deploy.preview','deploy.production','deploy.rollback','backup.snapshot') or h.id is null then return jsonb_build_object('ok',false,'code','not_found'); end if;
+ if h.site_id is not null and not exists(select 1 from sites where id=h.site_id and user_id=p_user and project_key=p_project) then return jsonb_build_object('ok',false,'code','not_found'); end if;
+ if h.status<>'settled' then
+  r:=bid_settle(p_user,p_operation_id,h.credits,null,p_now);
+  if not coalesce((r->>'ok')::boolean,false) then return r; end if;
+ end if;
+ select * into e from usage_events where user_id=p_user and operation_id=p_operation_id;
+ if e.id is null then return jsonb_build_object('ok',false,'code','not_found'); end if;
+ insert into cloud_reports(user_id,operation_id,project_key,action,report,created_at) values(p_user,p_operation_id,p_project,e.action,p_report,p_now);
+ return jsonb_build_object('ok',true,'operationId',p_operation_id,'charged',e.credits,'report',p_report);
 end $$;
 
 -- No client can invoke a monetary mutation or a SECURITY DEFINER helper, including via PostgREST.

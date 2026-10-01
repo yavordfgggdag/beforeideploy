@@ -6,7 +6,7 @@ import catalog from "./plans-catalog.json" with { type: "json" };
 import { addMonths } from "./billing-period.ts";
 
 export function fakeCreditRpc(db: FakeDb, fn: string, a: Row): Row | null {
-  if(!["bid_record_payment","bid_accrue_periods","bid_scheduler_credits","bid_site_burn","bid_monitor_register","bid_start_trial","bid_upgrade_grant","bid_grant","bid_refund","bid_credit_status","bid_enforce_sites","bid_hold","bid_settle","bid_release"].includes(fn)) return null;
+  if(!["bid_v12_payment_refunds","bid_record_payment","bid_accrue_periods","bid_scheduler_credits","bid_site_burn","bid_monitor_register","bid_start_trial","bid_upgrade_grant","bid_grant","bid_refund","bid_credit_status","bid_enforce_sites","bid_hold","bid_settle","bid_release"].includes(fn)) return null;
   const t=db.tables, user=a.p_user, now=new Date(a.p_now ?? db.clock()), iso=now.toISOString();
   const rows=(name:string)=>t[name]??=[];
   const mine=(name:string)=>rows(name).filter(r=>r.user_id===user);
@@ -64,6 +64,7 @@ export function fakeCreditRpc(db: FakeDb, fn: string, a: Row): Row | null {
       const take=Math.min(rest,g.left_credits);g.left_credits-=take;rest-=take;if(!rest)break;
     }
   };
+  if(fn==="bid_v12_payment_refunds") return {ok:true}; // Real out-of-order reconciliation is covered against SQL.
   if(fn==="bid_accrue_periods") {
     for(const p of mine("credit_periods").filter(p=>p.refund_share<1)) {
       for(let m=p.granted_through+1;m<(p.interval==="year"?12:1);m++) {

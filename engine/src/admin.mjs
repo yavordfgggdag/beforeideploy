@@ -5,7 +5,7 @@ import { EngineError, fetchT, throwIfRateLimited } from './util.mjs';
 import { cloudConfig, currentSession } from './account.mjs';
 import { msg } from './i18n.mjs';
 
-export const ADMIN_ACTIONS = ['list_users', 'get_user', 'set_role', 'set_plan_manual', 'grant_credits', 'disable_ai', 'get_usage', 'get_settings', 'set_settings', 'audit_log', 'invite', 'diagnostics'];
+export const ADMIN_ACTIONS = ['list_users', 'get_user', 'set_role', 'set_plan_manual', 'grant_credits', 'disable_ai', 'get_usage', 'get_settings', 'set_settings', 'audit_log', 'invite', 'diagnostics', 'get_credit_state', 'pause_site'];
 
 export async function adminCall(action, params = {}) {
   if (!ADMIN_ACTIONS.includes(action)) throw new EngineError(msg('admin.unknownAction', { action }), 'usage', 2);

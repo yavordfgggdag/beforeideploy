@@ -1,5 +1,4 @@
 // Token ledger helpers shared by `billing` and `ai-fix` (V10 WP4, hardened after the V10 audit C3/C4/C10).
-import { addMonths, monthlySlice } from "./billing-period.ts";
 import { allRows, type DbClient, isDuplicate, must, type Row } from "./db.ts";
 
 /** Sum of one bucket, computed in Postgres (view credit_bucket_balance) — summing rows here would stop at
@@ -47,22 +46,7 @@ export async function ensureMonthlyGrant(db: DbClient, userId: string, planToken
   if (!sub) return null;
   const {data:paid}=await db.from("credit_periods").select("transaction_ref").eq("user_id",userId).eq("interval","year").eq("starts_at",new Date(sub.period_start).toISOString()).limit(1);
   if(paid?.length)return null; // The SQL scheduler/receipt owns this paid year's monthly accrual.
-  const k = monthlySlice(sub.period_start, sub.period_end, now).month;
-  const tier = await effectiveSubscriptionTier(db,userId,sub,now);
-  let tokens = planTokens[tier]?.tokens ?? 0;
-  let granted = false;
-  const anchor = new Date(sub.period_start);
-  for(let month=1;month<=Math.min(k,11);month++) {
-    // V1 references lacked a year: recognize them only in the year that actually created the row.
-    const {data:legacy} = await db.from("credit_ledger").select("id").eq("user_id",userId).in("ref",[`${sub.provider_ref}:m${month}`,`${sub.provider_ref}:${sub.period_start}:m${month}`,`${sub.provider_ref}:${anchor.toISOString()}:m${month}`]).eq("reason","plan_grant").gte("created_at",anchor.toISOString()).lt("created_at",sub.period_end).limit(1);
-    if(legacy?.length) continue;
-    const at=addMonths(anchor,month);
-    const {data:previous} = await db.from("credit_grants").select("tier,granted_at").eq("user_id",userId).in("source",["plan_grant","upgrade_grant"]).lt("granted_at",new Date(at.getTime()+1).toISOString()).order("granted_at",{ascending:false}).limit(1);
-    const sliceTier=previous?.[0]?.tier ?? tier;
-    tokens=planTokens[sliceTier]?.tokens ?? 0;
-    granted = await grantPlanTokens(db,userId,tokens,"plan_grant",`${sub.provider_ref}:${anchor.toISOString()}:m${month}`,{tier:sliceTier,at,now}) || granted;
-  }
-  return granted ? {month:k,tokens} : null;
+  throw Object.assign(new Error("The annual payment needs reconciliation before more credits can be granted"), {status:409,code:"billing_conflict"});
 }
 
 /** A downgrade changes provider items now, while the paid entitlement lasts to the reviewed renewal. */
@@ -96,6 +80,7 @@ export async function ensureUpgradeGrants(db:DbClient,userId:string,now:Date) {
     const receipt=await creditRpc(db,"bid_upgrade_grant",{p_user:userId,p_change:change.id,p_now:now.toISOString()});
     if(!receipt.ok) throw Object.assign(new Error("Subscription credit period needs reconciliation"),{status:409,code:"billing_conflict"});
   }
+  if(changes.length) await creditRpc(db,"bid_accrue_periods",{p_user:userId,p_now:now.toISOString()});
 }
 
 /** Ending a subscription changes entitlements, not the expiry dates of already paid credit lots. */

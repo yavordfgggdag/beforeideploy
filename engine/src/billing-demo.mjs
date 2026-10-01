@@ -1,4 +1,4 @@
-import { offlineCatalog } from './plans-catalog.mjs';
+import { offlineCatalog, DEFAULT_ACTION_PRICES } from './plans-catalog.mjs';
 /** Review data only. Demo mutations are refused before any credentials or network access. */
 export function billingDemo(action, now = new Date()) {
   if (action === 'catalog') return offlineCatalog('demo', 'demo');
@@ -9,13 +9,13 @@ export function billingDemo(action, now = new Date()) {
   if (action === 'status') return status;
   const window = (used,cap,hours) => ({ used, cap, reserved: 1000, remaining: cap-used-1000, resetsAt: new Date(now.getTime()+hours*3600000).toISOString() });
   return { source: 'demo', v: 2, serverTime: now.toISOString(), unit: 'credits', plan: 'high', subscription, trialAvailable: false,
-    period: { start, end, renewsAt: end, source: 'subscription' }, included: { tokens: 300000 }, used: { tokens: 90000, operations: 46 }, reserved: { tokens: 1000, operations: 1 },
+    period: { start, end, renewsAt: end, source: 'subscription', debt:0, forecastDaysLeft:9 }, included: { tokens: 300000 }, used: { tokens: 90000, operations: 46 }, reserved: { tokens: 1000, operations: 1 },
     remaining: { plan: 210000, purchased: 120000, total: 330000, available: 329000 }, purchased: { tokens: 120000, expires: '12 months after purchase' },
     session: { ...window(18500,60000,3),windowHours:5,capPercent:20 }, weekly: window(62000,120000,58),
-    sites: { active: 2, limit: 3, paused: 0 }, packs: [{ id:'demo-pack',remaining:120000,expiresAt:new Date(now.getTime()+180*86400000).toISOString() }],
-    byAction: [{action:'ai',credits:87500,operations:31},{action:'check',credits:500,operations:10},{action:'audit',credits:2000,operations:5}],
+    sites: { active: 2, limit: 3, paused: 0, items:[{id:'demo-shop',projectKey:'demo-shop',name:'shop.example',state:'active',hostingOwner:'user',credits:1000},{id:'demo-studio',projectKey:'demo-studio',name:'studio.example',state:'active',hostingOwner:'user',credits:1000}] }, packs: [{ id:'demo-pack',remaining:120000,expiresAt:new Date(now.getTime()+180*86400000).toISOString() }],
+    byAction: [{action:'ai',credits:85500,operations:31},{action:'check',credits:500,operations:10},{action:'audit',credits:2000,operations:5},{action:'site.day',credits:2000,operations:2}],
     daily: Array.from({length:30},(_,i)=>({date:new Date(now.getTime()-(29-i)*86400000).toISOString().slice(0,10),credits:i < 22 ? 1200 : i === 22 ? 1600 : i < 29 ? 8800 : 9200})),
-    byModel:[{model:'claude-opus-5-5',tokens:65000,operations:20},{model:'claude-sonnet-5-5',tokens:22500,operations:11}],
+    byModel:[{model:'claude-opus-5-5',tokens:63000,operations:20},{model:'claude-sonnet-5-5',tokens:22500,operations:11}],
     limits:{perMinute:6,perHour:60,sessionHours:5,sessionCapPercent:20,sessionCap:60000,sessionUsed:18500},
-    pricing:{version:'v12.2',spendOrder:['oldest-first']}, reconciled:{releasedHolds:0},history:{operations:[],ledger:[]} };
+    pricing:{version:'2026-10',actions:DEFAULT_ACTION_PRICES,spendOrder:['oldest-first']}, reconciled:{releasedHolds:0},history:{operations:[],ledger:[]} };
 }

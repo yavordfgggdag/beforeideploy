@@ -11,3 +11,7 @@ const block = `${begin}\n${source}\n${end}`;
 const next = old.includes(begin) ? old.slice(0,old.indexOf(begin))+block+old.slice(old.indexOf(end)+end.length) : old+'\n'+block+'\n';
 if(process.argv.includes('--check')) { if(old!==next) { console.error('Run node scripts/credits-sync.mjs'); process.exit(1); } }
 else fs.writeFileSync(path,next);
+const actionPath = new URL('engine/src/pricing-actions.json',root);
+const actionText = JSON.stringify(JSON.parse(actions),null,2)+'\n';
+if(process.argv.includes('--check')) { if(!fs.existsSync(actionPath)||fs.readFileSync(actionPath,'utf8')!==actionText) { console.error('Run node scripts/credits-sync.mjs (action prices)'); process.exit(1); } }
+else fs.writeFileSync(actionPath,actionText);

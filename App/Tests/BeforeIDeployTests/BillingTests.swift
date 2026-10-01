@@ -17,6 +17,8 @@ final class BillingTests: XCTestCase {
         XCTAssertEqual(u.source, "demo")
         XCTAssertEqual(u.weekly?.cap, 120_000)
         XCTAssertEqual(u.sites?.limit, 3)
+        XCTAssertEqual(u.sites?.items?.count, 2)
+        XCTAssertEqual(u.period.forecastDaysLeft, 9)
         XCTAssertEqual(u.remaining.available, 329_000)
         XCTAssertEqual(u.daily?.reduce(0) { $0+$1.credits }, u.used.tokens)
         XCTAssertEqual(u.byAction?.reduce(0) { $0+$1.credits }, u.used.tokens)

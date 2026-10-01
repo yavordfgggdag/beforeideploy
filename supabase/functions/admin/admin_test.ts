@@ -226,3 +226,14 @@ Deno.test("admin V12: financial settings reject invalid prices, free-action fees
  assert.equal((await handle(post("admin",{action:"set_settings",settings:{"features.netlifyCredits":true}}))).status,409);
  assert.equal((await handle(post("admin",{action:"set_settings",settings:{"pricing.actions":{"deploy.preview":{credits:150,window:true}},"pricing.version":"2026-10"}}))).status,200);
 });
+
+Deno.test("admin V12: site pause needs an explanation and role; credit drift reads are scoped to the selected account",async()=>{
+ const w=world();w.db.rpcResponses.bid_usage_summary={sites:{active:1,items:[]},remaining:{available:1200}};
+ w.db.tables.usage_drift=[{user_id:NORMAL.id,operation_id:'one',recorded:50,ledger_charged:40},{user_id:ADMIN.id,operation_id:'two',recorded:60,ledger_charged:10}];
+ const state=await (await w.handle(post('admin',{action:'get_credit_state',user_id:NORMAL.id}))).json();assert.equal(state.drift.length,1);assert.equal(state.drift[0].operation_id,'one');
+ assert.equal((await w.handle(post('admin',{action:'pause_site',user_id:NORMAL.id,project_key:'shop'}))).status,400);
+ w.db.rpcResponses.bid_site_change={ok:true};w.db.tables.sites=[{user_id:NORMAL.id,project_key:'shop',state:'paused'}];
+ assert.equal((await w.handle(post('admin',{action:'pause_site',user_id:NORMAL.id,project_key:'shop',reason:'Owner requested pause'}))).status,200);
+ assert.equal(w.db.rows('sites')[0].paused_reason,'admin');assert.ok(w.db.rows('admin_audit').some(r=>r.action==='pause_site'&&r.payload.reason==='Owner requested pause'));
+ const denied=world(NORMAL.id);assert.equal((await denied.handle(post('admin',{action:'get_credit_state',user_id:ADMIN.id}))).status,403);
+});

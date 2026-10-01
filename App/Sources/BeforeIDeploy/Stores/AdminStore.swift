@@ -10,6 +10,8 @@ final class AdminStore: ObservableObject {
     @Published var query = ""
     @Published var selectedId: String?
     @Published var usage: [AdminUsage] = []
+    @Published var creditState: AdminCreditState?
+    @Published var creditError: String?
     /// Global settings as pretty-printed JSON per key (the cloud `settings` table).
     @Published var settings: [String: String] = [:]
     @Published var diagnostics: AdminDiagnostics?
@@ -78,7 +80,23 @@ final class AdminStore: ObservableObject {
     }
 
     func loadUsage(_ user: AdminUser) async {
-        usage = (try? await engine.call(["admin", "get_usage", "--user", user.userId, "--limit", "50"], as: AdminUsageResult.self))?.usage ?? []
+        creditState = nil; creditError = nil
+        let recent = try? await engine.call(["admin", "get_usage", "--user", user.userId, "--limit", "50"], as: AdminUsageResult.self)
+        guard selectedId == user.userId, !Task.isCancelled else { return }
+        usage = recent?.usage ?? []
+        do {
+            let state = try await engine.call(["admin", "get_credit_state", "--user", user.userId], as: AdminCreditState.self)
+            guard selectedId == user.userId, !Task.isCancelled else { return }
+            creditState = state
+        } catch { if selectedId == user.userId { creditError = error.localizedDescription } }
+    }
+
+    func pauseSite(_ user: AdminUser, projectKey: String, reason: String) async {
+        do {
+            let data = try JSONSerialization.data(withJSONObject: ["project_key": projectKey, "reason": reason])
+            _ = try await engine.call(["admin", "pause_site", "--user", user.userId, "--json", String(decoding: data, as: UTF8.self)], as: CreditActionReceipt.self)
+            await loadUsage(user); await loadAudit()
+        } catch { feedback?.show(error) }
     }
 
     func invite(email: String, role: String) async -> Bool {

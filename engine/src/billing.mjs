@@ -16,13 +16,14 @@ import { APP_DIR, readJSON, EngineError, fetchT, throwIfRateLimited } from './ut
 import { cloudConfig, currentSession } from './account.mjs';
 import { msg } from './i18n.mjs';
 
-export const BILLING_ACTIONS = ['catalog', 'status', 'checkout', 'trial', 'portal', 'usage', 'sync', 'confirm-change', 'sites', 'site_activate', 'site_pause', 'estimate', 'meter', 'boost', 'nudge_ack', 'domain_request'];
+export const BILLING_ACTIONS = ['catalog', 'status', 'checkout', 'trial', 'portal', 'usage', 'sync', 'confirm-change', 'sites', 'site_activate', 'site_pause', 'estimate', 'meter', 'boost', 'nudge_ack', 'domain_request', 'audit_run', 'report_history'];
 
 const CODE_KEYS = {
   not_available: 'billing.notAvailable',
   trial_used: 'billing.trialUsed',
   no_subscription: 'billing.noSubscription',
   billing_conflict: 'billing.conflict',
+  billing_interval_change: 'billing.intervalChange',
   preview_expired: 'billing.previewExpired',
   not_configured: 'billing.notConfigured',
   provider_error: 'billing.providerError',
@@ -76,6 +77,7 @@ export async function billingCommand(sub, flags) {
   if (action === 'usage') {
     const session = await currentSession();
     if (!session) throw new EngineError(msg('account.notLoggedIn'), 'not_logged_in', 5);
+    const origin = cloudConfig()?.url;
     const cache = path.join(APP_DIR, 'usage-report.json');
     try {
       const saved = readJSON(cache, null);
@@ -83,17 +85,23 @@ export async function billingCommand(sub, flags) {
       const reply = await billingCall('usage', { v: 2 }, { session, etag: own?.etag, receipt: true });
       const report = reply.notModified ? { ...own.report, stale: false, source: 'cloud', serverTime: new Date().toISOString() } : reply.report;
       // Logout/account switches during a slow request must not repopulate the old account's cache.
-      if ((await currentSession())?.user?.id !== session.user?.id) throw new EngineError(msg('account.notLoggedIn'), 'not_logged_in', 5);
+      if ((await currentSession())?.user?.id !== session.user?.id || cloudConfig()?.url !== origin) throw new EngineError(msg('account.notLoggedIn'), 'not_logged_in', 5);
       fs.mkdirSync(APP_DIR, { recursive: true, mode: 0o700 });
       const temporary = `${cache}.${process.pid}.tmp`;
       fs.writeFileSync(temporary, JSON.stringify({ userId: session.user?.id, cloudUrl: cloudConfig()?.url, etag: reply.etag, report }), { mode: 0o600 });
       fs.renameSync(temporary, cache);
       return report;
     } catch (error) {
+      if ((await currentSession())?.user?.id !== session.user?.id || cloudConfig()?.url !== origin) throw new EngineError(msg('account.notLoggedIn'), 'not_logged_in', 5);
       const saved = readJSON(cache, null);
       if (error.code === 'network' && session.user?.id && saved?.userId === session.user.id && saved?.cloudUrl === cloudConfig()?.url) return { ...saved.report, stale: true, source: 'cache' };
       throw error;
     }
+  }
+  if (action === 'audit_run') {
+    const { randomUUID } = await import('node:crypto');
+    if (typeof flags.project !== 'string') throw new EngineError(msg('billing.checkoutArgs'), 'usage', 2);
+    return billingCall(action, {projectKey:flags.project,operationId:typeof flags['operation-id'] === 'string' ? flags['operation-id'] : randomUUID()});
   }
   if (action === 'confirm-change') {
     if (typeof flags['preview-id'] !== 'string') throw new EngineError(msg('billing.checkoutArgs'), 'usage', 2);

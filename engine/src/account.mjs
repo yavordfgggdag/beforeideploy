@@ -143,7 +143,10 @@ function creditsOf(plan, balance, settingsRows, subs) {
 async function loadProfile(session) {
   const id = session?.user?.id;
   if (!id) return null;
-  const cached = readJSON(PROFILE_CACHE(), null);
+  const origin = cloudConfig()?.url;
+  const saved = readJSON(PROFILE_CACHE(), null);
+  const cached = saved?.cloudUrl === origin ? saved : null;
+  const assertCurrent = () => { if (getSecret('session')?.user?.id !== id || cloudConfig()?.url !== origin) throw new EngineError(msg('account.notLoggedIn'), 'not_logged_in', 5); };
   try {
     const { billingCall } = await import('./billing.mjs');
     const [rows, billing, settingsRows, subs] = await Promise.all([
@@ -155,10 +158,12 @@ async function loadProfile(session) {
       rest('/settings?select=key,value', { token: session.accessToken }).catch(() => []),
       rest(`/subscriptions?select=provider,status,period_end,cancel_at&user_id=eq.${encodeURIComponent(id)}&order=updated_at.desc&limit=5`, { token: session.accessToken }).catch(() => []),
     ]);
+    assertCurrent();
     const row = Array.isArray(rows) ? rows[0] : null;
     if (!row) return cached?.userId === id ? cached : { ...DEFAULT_PROFILE, userId: id, stale: true };
     const profile = {
       userId: id,
+      cloudUrl: origin,
       role: row.role || 'normal',
       plan: billing?.plan ?? row.plan ?? 'free',
       locale: row.locale || null,
@@ -178,6 +183,7 @@ async function loadProfile(session) {
     writeJSON(PROFILE_CACHE(), profile);
     return profile;
   } catch (e) {
+    assertCurrent();
     if (e.code === 'network' && cached?.userId === id) return { ...cached, stale: true };
     if (e.code === 'network') return { ...DEFAULT_PROFILE, userId: id, stale: true };
     // 404 = the profiles table does not exist: schema.sql was never applied. Sign-in itself succeeded, so the
@@ -274,8 +280,10 @@ export async function currentSession({ refresh = true } = {}) {
   if (refresh && s.expiresAt - Date.now() < 5 * 60 * 1000 && s.refreshToken) {
     try {
       const r = await auth('/token?grant_type=refresh_token', { body: { refresh_token: s.refreshToken } });
+      if (getSecret('session')?.accessToken !== s.accessToken) return getSecret('session');
       return saveSession(r);
     } catch (e) {
+      if (getSecret('session')?.accessToken !== s.accessToken) return getSecret('session');
       if (e.code === 'network') return s; // offline: keep the session, app still works locally
       // only a refused refresh token ends the session; an outage (5xx) or rate limit (429) must not log out (audit E13)
       if (e.status && e.status >= 400 && e.status < 500 && e.status !== 429) {

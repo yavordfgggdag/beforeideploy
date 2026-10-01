@@ -1,9 +1,9 @@
 // Before I Deploy — `admin` Edge Function, request handler (V10 WP2, testable since L6).
 // Every request carries the caller's user JWT; we check profiles.role = 'admin', then act with the
 // service role and write a row to admin_audit. The engine calls it via `bid admin <action>`.
-import { callerOf, type DbClient, type Deps, internalError, json, readJson } from "../_shared/db.ts";
+import { callerOf, type DbClient, type Deps, internalError, json, readJson, must } from "../_shared/db.ts";
 import actions from "../_shared/pricing-actions.json" with {type:"json"};
-import { creditRpc } from "../_shared/credits.ts";
+import { creditRpc, expireDue } from "../_shared/credits.ts";
 import { rateLimited } from "../_shared/ratelimit.ts";
 
 /** Project secrets the functions need. Diagnostics reports only yes / no — never a value or a prefix. */
@@ -39,6 +39,7 @@ export interface AdminBody {
   limit?: number;
   email?: string;
   locale?: string;
+  project_key?: string;
 }
 
 async function balanceOf(db: DbClient, userId: string): Promise<number> {
@@ -71,7 +72,7 @@ export function createAdminHandler(deps: AdminDeps): (req: Request) => Promise<R
     const audit = (target: string | null, payload: unknown) =>
       db.from("admin_audit").insert({ admin_id: me.id, action: body.action, target, payload });
     // writes are limited per admin too: a stolen admin session cannot rewrite every account in a loop (WP03)
-    if (!["list_users", "get_user", "get_usage", "get_settings", "audit_log", "diagnostics"].includes(body.action)) {
+    if (!["list_users", "get_user", "get_usage", "get_settings", "audit_log", "diagnostics", "get_credit_state"].includes(body.action)) {
       const limited = await rateLimited(db, me.id, "admin.write");
       if (limited) return limited;
     }
@@ -117,6 +118,7 @@ export function createAdminHandler(deps: AdminDeps): (req: Request) => Promise<R
           if (!body.user_id || !PLANS.includes(body.plan as Plan)) return json(400, { error: "user_id and plan required" });
           const { error } = await db.from("profiles").update({ plan: body.plan }).eq("user_id", body.user_id);
           if (error) throw error;
+          must(await db.from("subscriptions").update({status:"canceled"}).eq("user_id",body.user_id).eq("provider","manual"));
           await db.from("subscriptions").insert({ user_id: body.user_id, provider: "manual", tier: body.plan, status: body.plan === "free" ? "canceled" : "active", raw: { by: me.id } });
           await audit(body.user_id, { plan: body.plan });
           return json(200, { user: await userRow(db, body.user_id) });
@@ -149,6 +151,23 @@ export function createAdminHandler(deps: AdminDeps): (req: Request) => Promise<R
           return json(200, { usage: data ?? [] });
         }
 
+        case "get_credit_state": {
+          if (!body.user_id) return json(400,{error:"user_id required"});
+          const now=deps.now?.()??new Date();
+          await expireDue(db,body.user_id,now);
+          const usage=await creditRpc(db,"bid_usage_summary",{p_user:body.user_id,p_now:now.toISOString()});
+          const {data:drift}=must(await db.from("usage_drift").select("operation_id,recorded,ledger_charged").eq("user_id",body.user_id).limit(100));
+          return json(200,{usage,drift:drift??[]});
+        }
+        case "pause_site": {
+          if(!body.user_id || typeof body.project_key!=="string" || typeof body.reason!=="string" || body.reason.trim().length<3) return json(400,{error:"user_id, project_key and reason required"});
+          const receipt=await creditRpc(db,"bid_site_change",{p_user:body.user_id,p_project:body.project_key,p_active:false,p_now:(deps.now?.()??new Date()).toISOString()});
+          if(!receipt.ok)return json(409,receipt);
+          must(await db.from("sites").update({paused_reason:"admin"}).eq("user_id",body.user_id).eq("project_key",body.project_key));
+          await audit(body.user_id,{project:body.project_key,reason:body.reason.slice(0,500)});
+          return json(200,receipt);
+        }
+
         case "get_settings": {
           const { data, error } = await db.from("settings").select("key,value,updated_at");
           if (error) throw error;
@@ -174,7 +193,7 @@ export function createAdminHandler(deps: AdminDeps): (req: Request) => Promise<R
             if (key === "ai.creditEur" && !(positive(value) || (object && Object.keys(object).length>0 && Object.values(object).every(positive)))) return json(400,{error:"Invalid credit rate"});
             if (key === "ai.usdToEur" && !positive(value)) return json(400,{error:"Invalid exchange rate"});
             if (key === "plans" && (!object || ["flash","high","knight"].some(tier => {
-              const plan=object[tier] as Record<string,number>; return !plan || !Number.isSafeInteger(plan.tokens) || plan.tokens<=0 || !Number.isInteger(plan.validity_months) || plan.validity_months<1 || plan.validity_months>24 || !Number.isInteger(plan.max_active_sites) || plan.max_active_sites<1 || plan.max_active_sites>25;
+              const plan=object[tier] as Record<string,number>; return !plan || !Number.isSafeInteger(plan.tokens) || plan.tokens<=0 || !Number.isInteger(plan.validity_months) || plan.validity_months<1 || plan.validity_months>24 || !Number.isInteger(plan.max_active_sites) || plan.max_active_sites<1 || plan.max_active_sites>(tier==="knight"?Math.min(25,plan.fair_use_sites??25):tier==="high"?3:1);
             }))) return json(400,{error:"Plans require credits, validity months and active site limits"});
           }
           const rows = entries.map(([key, value]) => ({ key, value, updated_at: new Date().toISOString() }));

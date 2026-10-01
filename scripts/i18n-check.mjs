@@ -65,6 +65,10 @@ if (fs.existsSync(resDir)) {
   }
 }
 compare('app', app, (s) => String(cFormats(s)));
+// L converts every argument to text. Numeric C format specifiers print pointers, not numbers.
+for(const [lang,cat] of Object.entries(app)) for(const [key,value] of Object.entries(cat)) {
+  if(/%(?:\d+\$)?(?:[+\-0.\d]*)(?:ll|l|h)?[diufgescx]/i.test(value.replace(/%%/g,''))) errors.push(`app ${lang}: ${key} must use %@ text placeholders`);
+}
 
 const swiftDir = path.join(ROOT, 'App', 'Sources');
 const swiftFiles = [];

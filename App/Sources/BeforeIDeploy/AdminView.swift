@@ -164,6 +164,23 @@ struct AdminUserDetail: View {
             }
             Text(L("admin.grantHint")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
 
+            if let state = store.creditState {
+                InfoRow(label: L("usage.available"), value: L("usage.creditsCount", Fmt.tokens(state.usage.remaining.available)))
+                Text(state.drift.isEmpty ? L("admin.creditsMatch") : L("admin.creditsDrift", state.drift.count)).font(Typo.font(.callout)).foregroundColor(state.drift.isEmpty ? Theme.ready : Theme.warn)
+                ForEach(state.usage.sites?.items ?? []) { site in
+                    HStack {
+                        Text(site.name).font(Typo.font(.body)).lineLimit(2)
+                        Spacer()
+                        if site.state == "active" {
+                            Button(L("usage.pauseSite")) { Task { await store.pauseSite(user, projectKey: site.projectKey, reason: grantReason) } }.bidButton(.secondary, compact: true).disabled(grantReason.trimmingCharacters(in: .whitespaces).count < 3)
+                        } else { Text(L("usage.sitePaused")).font(Typo.font(.caption)).foregroundColor(Theme.secondary) }
+                    }
+                }
+                Text(L("admin.pauseReason")).font(Typo.font(.caption)).foregroundColor(Theme.secondary)
+            } else if let error = store.creditError {
+                Text(error).font(Typo.font(.caption)).foregroundColor(Theme.warn).textSelection(.enabled)
+            }
+
             SectionLabel(text: L("admin.usage"), icon: "sparkles")
             if store.usage.isEmpty {
                 Text(L("admin.usageEmpty")).font(Typo.font(.callout)).foregroundColor(Theme.tertiary)

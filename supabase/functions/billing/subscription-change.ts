@@ -14,7 +14,7 @@ const totals = (p: Row) => {
 };
 
 /** Preview the change to the existing subscription. Never creates a second transaction/subscription. */
-export async function previewChange(db: DbClient, userId: string, sub: Row, target: string, priceId: string, knownPrices: string[], provider: Provider, now: Date) {
+export async function previewChange(db: DbClient, userId: string, sub: Row, target: string, priceId: string, knownPrices: string[], provider: Provider, now: Date, targetInterval = "month") {
   const {data:pending} = await db.from("billing_changes").select("id,effective_at,status").eq("user_id",userId).eq("provider_ref",sub.provider_ref).in("status",["applying","applied"]).order("created_at",{ascending:false}).limit(1);
   if (pending?.some(c => c.status === "applying" || Date.parse(c.effective_at)>now.getTime())) return json(409,{code:"billing_conflict",error:"Resolve the pending plan change before requesting another"});
   const remote = await provider(`/subscriptions/${sub.provider_ref}`, undefined, "GET");
@@ -24,6 +24,8 @@ export async function previewChange(db: DbClient, userId: string, sub: Row, targ
   const planItems = items.filter(i => knownPrices.includes(i.price?.id ?? i.price_id));
   if (planItems.length !== 1) return json(409, { code:"billing_conflict", error:"The subscription must contain exactly one recognized plan" });
   if ((planItems[0].price?.id ?? planItems[0].price_id) === priceId) return json(200, { changed:false, unchanged:true });
+  const currentInterval = remote.billing_cycle?.interval ?? planItems[0].price?.billing_cycle?.interval ?? sub.raw?.billing_cycle?.interval ?? "month";
+  if(currentInterval!==targetInterval) return json(409,{code:"billing_interval_change",error:"Changing between monthly and annual billing is not available yet. Keep the current billing interval to change plan."});
   const downgrade = tiers.indexOf(target) < tiers.indexOf(sub.tier);
   const effectiveAt = downgrade ? remote.current_billing_period?.ends_at : now.toISOString();
   if (!effectiveAt) return json(409,{ code:"billing_conflict",error:"The billing period is missing" });

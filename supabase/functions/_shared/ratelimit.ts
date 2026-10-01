@@ -9,6 +9,7 @@ export const RATE_LIMITS: Record<string, [number, number]> = {
   "billing.portal": [5, 60],
   "billing.sync": [5, 60],
   "billing.confirm-change": [5,60],
+  "billing.reports": [30,60],
   "billing.meter": [120,60],
   "billing.estimate": [120,60],
   "billing.sites": [30,60],

@@ -10,6 +10,7 @@ final class BillingStore: ObservableObject {
     @Published var loadingUsage = false
     @Published var waitingForPayment = false
     @Published var busy: String?
+    @Published var auditReport: CloudAuditReceipt?
     @Published var usage: UsageReport?
     @Published var usageError: String?
     @Published var billingUnavailable: String?
@@ -33,7 +34,7 @@ final class BillingStore: ObservableObject {
 
     func reset() {
         generation = UUID(); pollTask?.cancel(); pollTask = nil
-        identity = nil; catalog = nil; status = nil; usage = nil
+        identity = nil; auditReport = nil; catalog = nil; status = nil; usage = nil
         loadingCatalog = false; loadingUsage = false; busy = nil
         waitingForPayment = false; usageError = nil; billingUnavailable = nil
     }
@@ -138,6 +139,25 @@ final class BillingStore: ObservableObject {
         perform("sync") {
             let result = try await self.engine.call(["billing", "sync"], as: BillingSync.self)
             return { self.status = result.status; self.feedback?.flash(result.synced.isEmpty ? L("usage.syncNothing") : L("usage.synced"), error: false); await self.loadUsage(); await self.onChanged?() }
+        }
+    }
+
+    func audit(projectKey: String) {
+        perform("audit") {
+            let quote = try await self.engine.call(["billing", "estimate", "--usage-action", "audit.full"], as: CreditActionReceipt.self)
+            guard let credits = quote.credits else { throw CancellationError() }
+            return {
+                let epoch = self.generation
+                let alert = NSAlert(); alert.messageText = L("usage.cloudAudit")
+                alert.informativeText = L("usage.auditCost", Fmt.tokens(credits))
+                alert.addButton(withTitle: L("usage.startAudit")); alert.addButton(withTitle: L("common.cancel"))
+                guard alert.runModal() == .alertFirstButtonReturn, epoch == self.generation else { return }
+                do {
+                    let receipt = try await self.engine.call(["audit", "--project", projectKey], as: CloudAuditReceipt.self)
+                    guard epoch == self.generation else { return }
+                    self.auditReport = receipt; await self.loadUsage(); await self.onChanged?()
+                } catch { if epoch == self.generation { self.feedback?.show(error) } }
+            }
         }
     }
 

@@ -12,6 +12,7 @@
 // laptop). index.ts never sets it; a deployed worker cannot be switched into it by a request.
 
 export interface ProbeOptions {
+  audit?: boolean;
   method?: "GET" | "HEAD";
   timeoutMs?: number;
   maxRedirects?: number;
@@ -37,6 +38,7 @@ export interface ProbeResult {
   title: string | null;
   tlsExpiresAt: string | null;
   bytes: number;
+  audit?: { description: boolean; language: boolean; canonical: boolean; h1: boolean; missingAlt: number; links: string[]; securityHeaders: string[]; truncated: boolean };
 }
 
 // ---------------------------------------------------------------- address classification
@@ -337,7 +339,8 @@ export async function probe(target: string, opts: ProbeOptions = {}): Promise<Pr
       const html = new TextDecoder().decode(res.body);
       const title = /<title[^>]*>([^<]{0,300})<\/title>/i.exec(html)?.[1]?.trim() ?? null;
       const ok = res.status >= 200 && res.status < 300;
-      return done({ ok, finalUrl: current, status: res.status, ip, redirects: hop, title, tlsExpiresAt, bytes: res.bytes, reason: ok ? null : `http_${res.status}` });
+      const audit = o.audit ? auditMarkup(html,url,res.headers,res.bytes>=o.maxBodyBytes) : undefined;
+      return done({ ok, finalUrl: current, status: res.status, ip, redirects: hop, title, tlsExpiresAt, bytes: res.bytes, reason: ok ? null : `http_${res.status}`, ...(audit ? {audit} : {}) });
     } catch (e) {
       try {
         conn?.close();
@@ -349,4 +352,15 @@ export async function probe(target: string, opts: ProbeOptions = {}): Promise<Pr
     }
   }
   return done({ finalUrl: current, reason: "too_many_redirects", redirects: o.maxRedirects + 1 });
+}
+
+/** Bounded metadata only: HTML and cookies never enter a saved report. Links drop query/fragment. */
+export function auditMarkup(html:string,url:URL,headers:Record<string,string>,truncated:boolean):NonNullable<ProbeResult["audit"]> {
+ const attr=(tag:string,name:string)=>new RegExp(`\\b${name}\\s*=\\s*["']([^"']*)["']`,"i").exec(tag)?.[1] ?? "";
+ const tags=(name:string)=>html.match(new RegExp(`<${name}\\b[^>]*>`,"gi")) ?? [];
+ const links:string[]=[];
+ for(const tag of tags("a")) {
+  try {const link=new URL(attr(tag,"href"),url); if(link.origin!==url.origin || link.username || link.password)continue;link.search="";link.hash="";if(!links.includes(link.href)&&link.href!==url.href)links.push(link.href);if(links.length===6)break;}catch{}
+ }
+ return {description:tags("meta").some(t=>attr(t,"name").toLowerCase()==="description"&&attr(t,"content").trim().length>0),language:tags("html").some(t=>!!attr(t,"lang")),canonical:tags("link").some(t=>attr(t,"rel").toLowerCase()==="canonical"&&!!attr(t,"href")),h1:/<h1\b/i.test(html),missingAlt:tags("img").filter(t=>! /\balt\s*=/i.test(t)).length,links,securityHeaders:["strict-transport-security","content-security-policy","x-content-type-options"].filter(name=>!!headers[name]),truncated};
 }

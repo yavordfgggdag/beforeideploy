@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { spawnSync } from 'node:child_process';
+import { spawnSync, spawn } from 'node:child_process';
 import { DEFAULT_CATALOG, offlineCatalog } from '../engine/src/plans-catalog.mjs';
 import { billingDemo } from '../engine/src/billing-demo.mjs';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -33,6 +33,7 @@ test('signed-out/offline catalog keeps all prices visible and disables purchases
   assert.deepEqual(c.plans.map(p => [p.tokens, p.activeSites, p.validityMonths]), [[100000,1,1],[300000,3,3],[1000000,10,10]]);
   assert.ok([...c.plans, ...c.packs].every(p => p.price > 0 && !p.available));
   assert.equal(offlineCatalog().plans[2].extras.netlifyCredits, false);
+  assert.equal(c.pricing.actions["audit.full"].credits,400);
 });
 test('demo reads are consistent and every mutation is refused before network access', async () => {
   const fetchBefore = globalThis.fetch;
@@ -70,6 +71,8 @@ test('usage ETag is scoped to account and cloud, handles 304, and never restores
     };
     const first=await billingCommand('usage',{}), second=await billingCommand('usage',{});
     assert.equal(second.remaining.available,first.remaining.available);assert.equal(second.stale,false);
+    globalThis.fetch = async () => { deleteSecret('session'); throw new Error('offline'); };
+    await assert.rejects(billingCommand('usage',{}),{code:'not_logged_in'});
     session('bob');
     globalThis.fetch = async (_url,options) => {assert.equal(options.headers['If-None-Match'],undefined);deleteSecret('session');return Response.json(billingDemo('usage'));};
     await assert.rejects(billingCommand('usage',{}),{code:'not_logged_in'});
@@ -86,21 +89,32 @@ test('provider metering reserves before dispatch, settles failed remote attempts
   const calls=[];let blocked=false,receiptLost=false,providerCalls=0;
   globalThis.fetch=async(url,options)=>{
     if(url.includes('/rest/'))return Response.json([{role:'normal'}]);
-    const body=JSON.parse(options.body);calls.push(body);
+    const body=JSON.parse(options.body);calls.push({...body,kind:body.action === 'operation_report' ? 'report' : body.kind});
     if(blocked && body.kind==='reserve')return Response.json({code:'window_week',resetsAt:'2026-10-08T00:00:00Z'},{status:403});
-    if(receiptLost && body.kind==='settle')throw new Error('offline');
+    if(receiptLost && body.action==='operation_report')throw new Error('offline');
     return Response.json({ok:true});
   };
   try {
     const invoke=async()=>{providerCalls++;assert.equal(calls.at(-1).kind,'reserve');return {code:0};};
     await meteredProviderCall({key:'shop'},'deploy.preview',invoke);
-    assert.deepEqual(calls.map(c=>c.kind),['reserve','settle']);assert.equal(calls[0].operationId,calls[1].operationId);
+    assert.deepEqual(calls.map(c=>c.kind),['reserve','report']);assert.equal(calls[0].operationId,calls[1].operationId);
     await meteredProviderCall({key:'shop'},'deploy.preview',async()=>({code:127}));assert.equal(calls.at(-1).kind,'release');
-    await assert.rejects(meteredProviderCall({key:'shop'},'deploy.preview',async()=>{throw Object.assign(new Error('provider rejected'),{code:'netlify_failed'});}));assert.equal(calls.at(-1).kind,'settle');
+    await assert.rejects(meteredProviderCall({key:'shop'},'deploy.preview',async()=>{throw Object.assign(new Error('provider rejected'),{code:'netlify_failed'});}));assert.equal(calls.at(-1).kind,'report');
     receiptLost=true;await meteredProviderCall({key:'shop'},'deploy.preview',invoke);
     const operation=calls.at(-1).operationId;receiptLost=false;await reconcileMeter(session);
-    assert.equal(calls.at(-1).operationId,operation);assert.equal(calls.at(-1).kind,'settle');assert.equal(providerCalls,2);
+    assert.equal(calls.at(-1).operationId,operation);assert.equal(calls.at(-1).kind,'report');assert.equal(providerCalls,2);
     blocked=true;await assert.rejects(meteredProviderCall({key:'shop'},'deploy.preview',invoke),{code:'window_week',resetsAt:'2026-10-08T00:00:00Z'});assert.equal(providerCalls,2);
     const before=calls.length;await reconcileMeter({...session,user:{id:'other'}});assert.equal(calls.length,before);
   } finally {globalThis.fetch=previous;deleteSecret('session');}
+});
+
+
+test('usage watch streams reports and cancellation produces one final result without a purchase',async()=>{
+ const child=spawn(process.execPath,[path.join(root,'engine/src/bid.mjs'),'billing','usage','--watch','--demo'],{env:{...process.env,BID_BILLING_DEMO:'1'},stdio:['ignore','pipe','pipe']});
+ let output='',error='',cancelled=false;
+ child.stdout.on('data',chunk=>{output+=chunk; if(!cancelled && output.includes('"type":"usage"')){cancelled=true;child.kill('SIGTERM');}});
+ child.stderr.on('data',chunk=>error+=chunk);
+ const code=await new Promise((resolve,reject)=>{const timer=setTimeout(()=>{child.kill('SIGKILL');reject(new Error('watch did not respond'));},5000);child.once('error',reject);child.once('exit',code=>{clearTimeout(timer);resolve(code);});});
+ assert.equal(code,130,error);const lines=output.trim().split('\n').map(JSON.parse);
+ assert.equal(lines.filter(l=>l.type==='usage').length,1);assert.equal(lines.filter(l=>l.type==='result').length,1);assert.equal(lines.at(-1).code,'cancelled');
 });

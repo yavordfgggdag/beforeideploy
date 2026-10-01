@@ -396,6 +396,7 @@ struct CostsView: View {
                 }
 
                 if let c = model.costs {
+                    if let pricing = c.cloudPricing { CloudPriceCard(pricing: pricing) }
                     SectionLabel(text: L("costs.accounts"), icon: "person.2.fill")
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 320), spacing: 14)], spacing: 14) {
                         ForEach(Array(c.usage.providers.enumerated()), id: \.element.id) { i, p in

@@ -165,3 +165,7 @@ Returned as `code` in the JSON body; the engine maps them to the codes above (`q
 | `domain_unavailable` | 403 | The included domain needs an active, paid Knight subscription. |
 | `domain_wait` | 403 | Monthly Knight's seven-day waiting period has not ended; `availableAt` gives the date. |
 | `domain_used` | 409 | The included domain for this subscription year has already been requested. |
+
+| `operation_in_progress` | Cloud billing, 409 | This operation already holds a reservation. Wait for its saved report; do not repeat the provider action. |
+
+| `billing_interval_change` | Cloud billing, 409 | Switching an existing subscription between monthly and annual billing is unavailable; same-interval plan changes remain supported. No provider mutation is sent. |

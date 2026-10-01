@@ -1,6 +1,8 @@
+import {REPORT_ACTIONS,reportAction,type ReportDeps} from "./reports.ts";
 import {METER_ACTIONS,meterAction} from "./meter.ts";
 import { previewChange, confirmChange } from "./subscription-change.ts";
-import { addMonths, monthlySlice } from "../_shared/billing-period.ts";
+import { addMonths } from "../_shared/billing-period.ts";
+import actionPrices from "../_shared/pricing-actions.json" with { type: "json" };
 import catalogData from "../_shared/plans-catalog.json" with { type: "json" };
 // Before I Deploy — `billing` Edge Function (V10 WP4). Two kinds of callers:
 //
@@ -38,7 +40,7 @@ export interface Catalog {
 export const DEFAULT_CATALOG: Catalog = { ...catalogData, trial: { ...catalogData.trial, plan: "high" } };
 export const DEFAULT_PLAN_TOKENS: Record<string, { tokens: number }> = Object.fromEntries(Object.entries(catalogData.plans).map(([id, p]) => [id, { tokens: p.credits, max_active_sites: p.activeSites, fair_use_sites: p.activeSitesMax, validity_months: p.validityMonths }]));
 
-export interface BillingDeps extends Deps {
+export interface BillingDeps extends ReportDeps {
   paddleApiKey: string;
   paddleWebhookSecret: string;
   paddleApiBase: string; // https://api.paddle.com or https://sandbox-api.paddle.com
@@ -82,11 +84,12 @@ export async function signPaddle(body: string, secret: string, now = new Date())
   return `ts=${ts};h1=${await hmacHex(secret, `${ts}:${body}`)}`;
 }
 
-async function loadCatalog(db: DbClient): Promise<{ catalog: Catalog; planTokens: Record<string, { tokens: number }> }> {
+async function loadCatalog(db: DbClient): Promise<{ catalog: Catalog; planTokens: Record<string, { tokens: number }>; pricing:Row }> {
   const { data } = await db.from("settings").select("key,value");
   const map = Object.fromEntries((data ?? []).map((r: Row) => [r.key, r.value]));
   return {
     catalog: { ...DEFAULT_CATALOG, ...(map["billing.catalog"] ?? {}), plans: Object.fromEntries(PAID.map(id => { const p={ ...DEFAULT_CATALOG.plans[id], ...(map["billing.catalog"]?.plans?.[id] ?? {}) }; const policy=map.plans?.[id]; return [id,{...p,...(policy ? {credits:policy.tokens,activeSites:policy.max_active_sites ?? p.activeSites,activeSitesMax:policy.fair_use_sites ?? p.activeSitesMax,validityMonths:policy.validity_months ?? p.validityMonths,window5h:Math.floor(policy.tokens*0.2),weekly:Math.floor(policy.tokens*0.4)} : {}),extras:{...p.extras,domain:id==="knight" && map["features.knightDomain"]!==false,netlifyCredits:false}}]; })) } as Catalog,
+    pricing:{version:await pricingVersion(map),actions:{...actionPrices,...map["pricing.actions"]}},
     planTokens: { ...DEFAULT_PLAN_TOKENS, ...(map["plans"] ?? {}) },
   };
 }
@@ -195,7 +198,19 @@ async function handleWebhook(req: Request, deps: BillingDeps): Promise<Response>
       // proration charges on a plan change must not buy a whole new month of tokens (audit C12)
       const grantable = !d.origin || ["web", "api", "subscription_recurring", "subscription_charge"].includes(String(d.origin));
       if (!userId) result = { ignored: "no custom_data.user_id" };
-      else if (!grantable) result = { ignored: `origin ${d.origin}`, transaction: txn };
+      else if (!grantable) {
+        if(d.origin==="subscription_update" && d.subscription_id) {
+          const tiers=((d.items??[]) as Row[]).map(item=>tierForPrice(catalog,item.price?.id??item.price_id)).filter(Boolean);
+          const {data:changes}=must(await db.from("billing_changes").select("id,quote,to_tier,effective_at,status").eq("user_id",userId).eq("provider_ref",d.subscription_id).in("status",["applying","applied"]).lt("effective_at",new Date(Date.parse(occurredAt)+1).toISOString()).order("effective_at",{ascending:false}).limit(1));
+          const change=changes?.[0];
+          if(change && tiers.includes(change.to_tier) && Date.parse(occurredAt)-Date.parse(change.effective_at)<10*60_000) {
+            if(change.quote?.paymentRef && change.quote.paymentRef!==txn) throw new Error("Subscription change payment requires reconciliation");
+            must(await db.from("billing_changes").update({quote:{...change.quote,paymentRef:txn}}).eq("id",change.id));
+            await ensureUpgradeGrants(db,userId,now);
+          }
+        }
+        result = { ignored: `origin ${d.origin}`, transaction: txn };
+      }
       else {
         const granted: Row[] = [];
         let duplicate = false;
@@ -220,6 +235,7 @@ async function handleWebhook(req: Request, deps: BillingDeps): Promise<Response>
             } else duplicate = true;
           }
         }
+        await creditRpc(db,"bid_v12_payment_refunds",{p_user:userId,p_ref:txn,p_now:now.toISOString()});
         result = duplicate && !granted.length ? { duplicateTransaction: txn } : { transaction: txn, granted };
       }
     } else if ((type === "adjustment.created" || type === "adjustment.updated") && d.action === "refund" && d.status === "approved") {
@@ -281,6 +297,8 @@ async function statusOf(db: DbClient, userId: string, email: string | null, cata
   const { data: claim } = emailHash ? await db.from("trial_claims").select("email_hash").eq("email_hash", emailHash).maybeSingle() : { data: null };
 
   const credits = await creditStatus(db,userId,now);
+  const {data:scheduled}=must(await db.from("billing_changes").select("to_tier,effective_at").eq("user_id",userId).eq("status","applied").gte("effective_at",now.toISOString()).order("effective_at").limit(1));
+  const change=scheduled?.[0];
   const { data: usage } = await db.from("ai_usage").select("id,created_at,step,model,charged_tokens,project_key").eq("user_id", userId).order("created_at", { ascending: false }).limit(20);
   return {
     plan,
@@ -288,90 +306,10 @@ async function statusOf(db: DbClient, userId: string, email: string | null, cata
       ? { provider: current.provider, tier: current.tier, status: current.status, interval: current.raw?.billing_cycle?.interval ?? "month", renewsAt: current.cancel_at ? null : current.period_end, endsAt: current.cancel_at ?? (current.provider === "trial" ? current.period_end : null), manageable: current.provider === "paddle" && !!current.customer_ref }
       : null,
     entitlements: credits.entitlements ?? null,
+    scheduledChange:change?{plan:change.to_tier,effectiveAt:change.effective_at,siteLimit:catalog.plans[change.to_tier]?.activeSites??0}:null,
     balance: { plan: credits.plan, topup: credits.topup, total: credits.total, available: credits.available },
     trialAvailable: !!catalog.trial && !claim && !list.some((s) => s.provider === "trial" || s.provider === "paddle"),
     usage: (usage ?? []).map((u: Row) => ({ id:u.id, at: u.created_at, step: u.step, model: u.model, tokens: Number(u.charged_tokens ?? 0), project: u.project_key })),
-  };
-}
-
-/**
- * Server-authoritative usage (V11 RC): what the app's "Plan & usage" screen shows. Tokens, product credits
- * and money are never mixed: everything here is in tokens (the product's credit unit); prices live in the
- * catalog. Reserved = holds of requests in flight (abandoned ones are released first), used = settled
- * charges in the current period, remaining = plan tokens + purchased packs minus holds.
- */
-async function usageOf(db: DbClient, userId: string, email: string | null, catalog: Catalog, planTokens: Record<string, { tokens: number }>, settings: Row, now: Date) {
-  const reconciled = await reconcileHolds(db, userId, now);
-  const status = await statusOf(db, userId, email, catalog, now);
-  const sub = status.subscription;
-  const { data: subs } = await db.from("subscriptions").select("period_start,period_end,status,provider,raw").eq("user_id", userId);
-  const active = ((subs ?? []) as Row[]).find((s) => ["active", "trial", "past_due"].includes(s.status));
-  const calendarStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
-  const calendarEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)).toISOString();
-  let period = active?.period_start && active?.period_end
-    ? { start: active.period_start, end: active.period_end, renewsAt: sub?.renewsAt ?? null, source: "subscription" }
-    : { start: calendarStart, end: calendarEnd, renewsAt: status.plan === "free" ? null : calendarEnd, source: "calendar" };
-  if (active?.raw?.billing_cycle?.interval === "year" && active.period_start && active.period_end) {
-    const slice = monthlySlice(active.period_start, active.period_end, now);
-    period = { ...period, start: slice.start, end: slice.end, source: "monthly_slice" };
-  }
-  const { data: ops } = await db.from("ai_usage").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(50);
-  const { data: inPeriod } = await db.from("ai_usage").select("charged_tokens,status,created_at,model").eq("user_id", userId).gte("created_at", period.start);
-  const settledInPeriod = ((inPeriod ?? []) as Row[]).filter((u) => u.status && !["pending", "orphaned"].includes(String(u.status)) && String(u.created_at) < period.end);
-  const usedTokens = settledInPeriod.reduce((a, u) => a + Number(u.charged_tokens ?? 0), 0);
-  const { data: ledger } = await db.from("credit_ledger").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(50);
-  const included = active?.provider === "trial" ? catalog.trial?.tokens ?? 0 : planTokens[status.plan]?.tokens ?? 0;
-  const rate = (settings["ai.rate"] as Row | undefined) ?? { perMinute: 6, perHour: 60 };
-  // the rolling session, as the ai-fix function enforces it: N hours, a share of the monthly credits
-  const sessionHours = Number(settings["ai.sessionHours"] ?? 5);
-  const capPercent = Number(settings["ai.sessionCapPercent"] ?? 20);
-  const windowStart = new Date(now.getTime() - sessionHours * 3600_000).toISOString();
-  const { data: recent } = await db.from("ai_usage").select("charged_tokens,created_at,status").eq("user_id", userId).gte("created_at", windowStart);
-  const inSession = ((recent ?? []) as Row[]).filter((u) => String(u.created_at) >= windowStart && u.status !== "orphaned");
-  const sessionUsed = inSession.reduce((a, u) => a + Number(u.charged_tokens ?? 0), 0);
-  const sessionCap = included > 0 ? Math.floor((included * capPercent) / 100) : null;
-  const oldest = inSession.map((u) => String(u.created_at)).sort()[0];
-  const session = sessionCap === null ? null : {
-    windowHours: sessionHours,
-    capPercent,
-    cap: sessionCap,
-    used: sessionUsed,
-    remaining: Math.max(0, sessionCap - sessionUsed),
-    resetsAt: oldest ? new Date(new Date(oldest).getTime() + sessionHours * 3600_000).toISOString() : null,
-  };
-  // per model inside the period (what Claude shows as "all models" vs "Opus")
-  const byModelMap = new Map<string, { model: string; tokens: number; operations: number }>();
-  for (const u of settledInPeriod as Row[]) {
-    const key = String((u as Row).model ?? "unknown");
-    const cur = byModelMap.get(key) ?? { model: key, tokens: 0, operations: 0 };
-    cur.tokens += Number(u.charged_tokens ?? 0);
-    cur.operations += 1;
-    byModelMap.set(key, cur);
-  }
-  const byModel = [...byModelMap.values()].sort((a, b) => b.tokens - a.tokens);
-  const version = await pricingVersion(settings as unknown as Record<string, unknown>);
-  const available = status.balance.available;
-  return {
-    serverTime: now.toISOString(),
-    unit: "credits",
-    plan: status.plan,
-    subscription: sub,
-    trialAvailable: status.trialAvailable,
-    period,
-    included: { tokens: included },
-    used: { tokens: usedTokens, operations: settledInPeriod.length },
-    reserved: { tokens: reconciled.reservedTokens, operations: reconciled.open },
-    remaining: { plan: status.balance.plan, purchased: status.balance.topup, total: status.balance.total, available },
-    purchased: { tokens: status.balance.topup, expires: "12 months after purchase" },
-    session,
-    byModel,
-    limits: { perMinute: Number(rate.perMinute ?? 6), perHour: Number(rate.perHour ?? 60), sessionHours, sessionCapPercent: capPercent, sessionCap, sessionUsed },
-    pricing: { version, prices: settings["ai.prices"] ?? null, creditEur: settings["ai.creditEur"] ?? null, usdToEur: settings["ai.usdToEur"] ?? null, spendOrder: ["plan", "topup"] },
-    reconciled: { releasedHolds: reconciled.released },
-    history: {
-      operations: ((ops ?? []) as Row[]).map((u) => ({ id: u.id, at: u.created_at, step: u.step, project: u.project_key, model: u.model, status: u.status, tokens: Number(u.charged_tokens ?? 0), input: u.input_tokens ?? null, output: u.output_tokens ?? null, pricingVersion: u.pricing_version ?? null, operationId: u.operation_id ?? null })),
-      ledger: ((ledger ?? []) as Row[]).map((l) => ({ id: l.id, at: l.created_at, delta: Number(l.delta), bucket: l.bucket, reason: l.reason, ref: l.ref ?? null, pricingVersion: l.pricing_version ?? null })),
-    },
   };
 }
 
@@ -398,9 +336,9 @@ export function createBillingHandler(deps: BillingDeps): (req: Request) => Promi
     }
     if (body.action === "catalog") {
       try {
-        const { catalog, planTokens } = await loadCatalog(deps.service());
+        const { catalog, planTokens, pricing } = await loadCatalog(deps.service());
         return json(200, {
-            source: "cloud", taxInclusive: true, version: catalog.version,
+            source: "cloud", taxInclusive: true, version: catalog.version, pricing,
             currency: catalog.currency,
             plans: PAID.map((id) => ({
               id,
@@ -433,6 +371,7 @@ export function createBillingHandler(deps: BillingDeps): (req: Request) => Promi
     }
 
     try {
+      if(REPORT_ACTIONS.includes(body.action)) return await reportAction(db,userId,body,now,deps);
       if(METER_ACTIONS.includes(body.action)) return await meterAction(db,userId,body,now);
       switch (body.action) {
 
@@ -447,10 +386,11 @@ export function createBillingHandler(deps: BillingDeps): (req: Request) => Promi
           const settings: Row = {};
           for (const r of (rows ?? []) as Row[]) settings[String(r.key)] = r.value;
           if (!settings.plans) settings.plans = planTokens;
-          if(Number(body.v)!==2) { const report=await usageOf(db,userId,email,catalog,planTokens,settings,now);report.reconciled.releasedHolds+=cleanup.released;return json(200,report); }
           const status=await statusOf(db,userId,email,catalog,now);
           const report=await creditRpc(db,"bid_usage_summary",{p_user:userId,p_now:now.toISOString()});
-          Object.assign(report,{reconciled:{releasedHolds:cleanup.released},subscription:status.subscription,trialAvailable:status.trialAvailable,pricing:{...report.pricing,version:await pricingVersion(settings),actions:settings["pricing.actions"] ?? null}});
+          Object.assign(report,{reconciled:{releasedHolds:cleanup.released},subscription:status.subscription,scheduledChange:status.scheduledChange,trialAvailable:status.trialAvailable,pricing:{...report.pricing,version:await pricingVersion(settings),actions:{...actionPrices,...settings["pricing.actions"]}}});
+          // V1 keeps the same required decoder fields; both versions now use the exact SQL counters.
+          if(Number(body.v)!==2) { const legacy={...report};delete legacy.v;return json(200,legacy); }
           const {serverTime:_,...stable}=report;
           const etag=`"${await sha256Hex(JSON.stringify(stable))}"`;
           if(req.headers.get("if-none-match")===etag) return new Response(null,{status:304,headers:{etag,"cache-control":"private, no-cache"}});
@@ -511,7 +451,7 @@ export function createBillingHandler(deps: BillingDeps): (req: Request) => Promi
             if (active.length > 1) return json(409,{code:"billing_conflict",error:"Multiple subscriptions require reconciliation in the customer portal"});
             if (active.length === 1) {
               const prices = Object.values(catalog.plans).flatMap(p=>[p.paddlePriceId,p.yearly?.paddlePriceId]).filter((p):p is string=>!!p);
-              return await previewChange(db,userId,{...active[0],tier:await effectiveSubscriptionTier(db,userId,active[0],now)},planId,priceId,prices,(path,body,method)=>paddle(deps,path,body,method),now);
+              return await previewChange(db,userId,{...active[0],tier:await effectiveSubscriptionTier(db,userId,active[0],now)},planId,priceId,prices,(path,body,method)=>paddle(deps,path,body,method),now,yearly?"year":"month");
             }
           }
           const txn = await paddle(deps, "/transactions", {

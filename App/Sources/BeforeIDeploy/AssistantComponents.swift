@@ -111,10 +111,7 @@ struct TurnView: View {
                             Label(error, systemImage: turn.errorCode == "cancelled" ? "stop.circle" : "exclamationmark.triangle")
                                 .font(Typo.font(.body)).foregroundColor(turn.errorCode == "cancelled" ? Theme.secondary : Theme.blocked).textSelection(.enabled)
                             if ["quota_exhausted", "ai_session_cap", "window_week", "window_5h", "plan_required"].contains(turn.errorCode ?? "") {
-                                HStack {
-                                    Button(L("usage.buyCredits")) { model.sheet = .plans }.bidButton(.primary, compact: true)
-                                    Button(L("usage.upgrade")) { model.sheet = .plans }.bidButton(.secondary, compact: true)
-                                }
+                                CreditQuotaActions(store: model.billingStore, code: turn.errorCode ?? "quota_exhausted")
                             } else if !model.aiReady {
                                 Button(L("assistant.connect")) { model.aiUnavailableAction() }.bidButton(.secondary, compact: true)
                             }

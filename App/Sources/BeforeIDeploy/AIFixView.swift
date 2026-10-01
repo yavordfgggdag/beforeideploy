@@ -81,10 +81,7 @@ struct AIFixOverlay: View {
                                 .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(Theme.blocked.opacity(0.1)))
                         }
                         if ["quota_exhausted", "ai_session_cap", "window_5h", "window_week", "ai_unavailable"].contains(state.errorCode ?? "") {
-                            HStack {
-                                Button(L("usage.buyCredits")) { model.sheet = .plans }.bidButton(.primary, compact: true)
-                                Button(L("usage.upgrade")) { model.sheet = .plans }.bidButton(.secondary, compact: true)
-                            }
+                            CreditQuotaActions(store: model.billingStore, code: state.errorCode ?? "quota_exhausted")
                         }
                         if explanationText.isEmpty && state.running {
                             HStack(spacing: 8) { Spinner(size: 12); Text(L("ai.thinking")).font(Typo.font(.callout)).foregroundColor(Theme.secondary) }

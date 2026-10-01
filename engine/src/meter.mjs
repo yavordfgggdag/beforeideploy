@@ -29,7 +29,7 @@ export async function reconcileMeter(session) {
     if (row.pid !== process.pid) { try { process.kill(row.pid, 0); continue; } catch {} }
     const kind = row.state === 'dispatched' ? 'settle' : 'release';
     try {
-      await billingCall('meter', {kind, operationId:row.operationId}, {session});
+      await billingCall(kind === 'settle' ? 'operation_report' : 'meter', kind === 'settle' ? {operationId:row.operationId,projectKey:row.projectKey,status:row.outcome ?? 'unknown',provider:row.provider} : {kind,operationId:row.operationId}, {session});
       save({...row,state:kind === 'settle' ? 'settled' : 'released'});
     } catch (error) {
       // A missing reservation means the initial reserve never committed.
@@ -53,7 +53,7 @@ export async function meteredProviderCall(project, usageAction, invoke) {
   if (!rows?.[0]) throw new EngineError(msg('billing.meterUnavailable'), 'meter_unavailable');
   await reconcileMeter(session);
   const operationId = crypto.randomUUID();
-  let row = {operationId, userId:session.user.id, cloudUrl:config.url, projectKey:project.key, usageAction, state:'reserving', pid:process.pid, at:new Date().toISOString()};
+  let row = {operationId, userId:session.user.id, cloudUrl:config.url, projectKey:project.key, usageAction, provider:project.hosting ?? 'netlify', state:'reserving', pid:process.pid, at:new Date().toISOString()};
   save(row);
   inFlight.add(operationId);
   try {
@@ -63,9 +63,9 @@ export async function meteredProviderCall(project, usageAction, invoke) {
   try { result = await invoke(); } catch (error) { failure = error; }
   const notLaunched = ['ENOENT','EACCES','no_cli'].includes(failure?.code) || result?.code === 127;
   const kind = notLaunched ? 'release' : 'settle';
-  if (notLaunched) { row = {...row,state:'release_pending'}; save(row); }
+  row = {...row,state:notLaunched ? 'release_pending' : 'dispatched',outcome:failure || (result?.code != null && result.code!==0) ? 'failed' : 'ok'}; save(row);
   try {
-    await billingCall('meter', {kind,operationId}, {session});
+    await billingCall(kind === 'settle' ? 'operation_report' : 'meter', kind === 'settle' ? {operationId,projectKey:project.key,status:row.outcome,provider:row.provider} : {kind,operationId}, {session});
     save({...row,state:kind === 'settle' ? 'settled' : 'released'});
   } catch {
     // Keep the receipt for recovery. Never imply publishing failed solely because receipt delivery failed.

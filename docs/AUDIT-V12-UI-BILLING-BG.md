@@ -196,3 +196,17 @@ Phase 4 local checks so far: Swift build succeeds; 98 Deno tests and 12 SQL/RLS 
 - Екранът за използване има управление на сайтове, преглед на дневната цена, Boost, прогноза, задължения и подкани. Engine използва ETag и пази отчетите за публикуване при прекъсване. Приложението се компилира локално.
 - Проверки: SQL/RLS 31; Deno 107; billing client 5; full engine 114 преди последните дребни промени. Нужна е проверка на новия commit в CI.
 - Етапът още не е завършен: V1 usage, годишни промени на план/интервал, облачни отчети/одити, административни контроли, снимки и финална интеграция. Домейнът е заявка за ръчен преглед; CodeGuard/owner-hosting не са provisioned. Етап 6 следва. Няма публикуване в реалния облак или реално плащане.
+
+### Етап 5 — отчети, годишни компоненти и окончателни суми
+
+| Обхват | Статус | Доказателство |
+|---|---|---|
+| PU-23–25, PU-34, PU-36–44 | implemented in source | Atomic FIFO/grants/windows/sites/nudges; V1/V2 read the same SQL aggregates; cloud reports, bounded audit and provider receipts; admin reconciliation/site pause |
+| Годишни кредити и надграждане | implemented in source | Unattended monthly slices, separately refundable upgrade components, original basis for partial refunds; verified legacy receipts migrate |
+| Разменен ред на платежни известия | fixed | Real SQL tests: refund before payment and before upgrade linkage; repeat does not debit net future slices again |
+| Смяна месечно ↔ годишно | unavailable | Explicit error before provider mutation; requires separate sandbox-validated conversion workflow |
+| Липсващ стар годишен документ | reconciliation required | No speculative monthly credits; preserves existing valid balances |
+| Облачен одит | implemented, bounded scope | Public HTML metadata/response and up to six internal links; no browser/Core Web Vitals claim |
+| Собствен хостинг/CodeGuard | provider provisioning pending | No fabricated activation or backup adapter; Netlify allowance remains disabled |
+
+Локално: 35 SQL/RLS, 112 Deno, 6 billing client теста; Swift build успешен. Проверени и поправени числовите формати във визуален преглед. Следва CI върху новия commit, после етап 6.

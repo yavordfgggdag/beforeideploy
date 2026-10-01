@@ -826,6 +826,7 @@ struct CostSummary: Codable {
     var budgets: Budgets
     var usage: UsageInfo
     var pricesFile: String
+    var cloudPricing: UsageReport.Pricing?
 }
 
 // MARK: - Spaceship
@@ -1415,7 +1416,8 @@ struct UsageReport: Codable {
     /// The rolling session (as in Claude): a share of the monthly credits per N hours, with the time it resets.
     struct Session: Codable, Hashable { var windowHours: Double; var capPercent: Double; var cap: Int; var used: Int; var remaining: Int; var resetsAt: String?; var reserved: Int? }
     struct ModelUsage: Codable, Hashable, Identifiable { var model: String; var tokens: Int; var operations: Int; var id: String { model } }
-    struct Pricing: Codable, Hashable { var version: String; var spendOrder: [String]? }
+    struct ActionPrice: Codable, Hashable { var credits: Int?; var window: Bool?; var actual: Bool? }
+    struct Pricing: Codable, Hashable { var version: String; var spendOrder: [String]?; var actions: [String: ActionPrice]? }
     struct Reconciled: Codable, Hashable { var releasedHolds: Int }
     struct Operation: Codable, Identifiable, Hashable {
         var id: String
@@ -1451,6 +1453,8 @@ struct UsageReport: Codable {
     var v: Int?
     var source: String?
     var stale: Bool?
+    struct ScheduledChange: Codable { var plan: String; var effectiveAt: String; var siteLimit: Int }
+    var scheduledChange: ScheduledChange?
     var nudge: Nudge?
     var weekly: Window?
     var sites: Sites?
@@ -1498,3 +1502,21 @@ struct AdminDiagnostics: Codable, Hashable {
 }
 
 struct CreditActionReceipt: Decodable { var ok: Bool?; var state: String?; var credits: Int?; var pricingVersion: String? }
+
+struct CloudAuditReceipt: Decodable, Identifiable {
+    var operationId: String
+    var id: String { operationId }
+    var charged: Int?
+    var report: Report
+    struct Report: Decodable {
+        var status: String; var url: String?; var httpStatus: Int?; var responseMs: Double?; var bytes: Int?; var titlePresent: Bool?; var metadata: Metadata?; var links: [Link]?
+    }
+    struct Metadata: Decodable { var description: Bool; var language: Bool; var canonical: Bool; var h1: Bool; var missingAlt: Int; var securityHeaders: [String]; var truncated: Bool }
+    struct Link: Decodable, Identifiable { var url: String; var ok: Bool; var status: Int?; var id: String { url } }
+}
+
+struct AdminCreditState: Decodable {
+    var usage: UsageReport
+    var drift: [Drift]
+    struct Drift: Decodable, Identifiable { var operation_id: String; var recorded: Int; var ledger_charged: Int; var id: String { operation_id } }
+}

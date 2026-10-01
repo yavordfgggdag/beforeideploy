@@ -4,7 +4,7 @@ import { gitAvailable } from './setup-tools.mjs';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 // Before I Deploy V6 — engine entrypoint. Every command prints NDJSON; the last line is {"type":"result",...}.
-import { parseArgs, ok, fail, ev, sh, which, EngineError, APP_DIR, CACHE_DIR, ENGINE_DIR, ensureDir, exitAfterFlush } from './util.mjs';
+import { parseArgs, ok, fail, ev, emit, sh, which, EngineError, APP_DIR, CACHE_DIR, ENGINE_DIR, ensureDir, exitAfterFlush } from './util.mjs';
 import { detect } from './detect.mjs';
 import { listProjects, upsertProject, removeProject, resolveProject, updateProject, getState, listHistory, findProject } from './store.mjs';
 import { runChecks } from './checks.mjs';
@@ -28,7 +28,8 @@ import { overview } from './overview.mjs';
 import { accountStatus, signup, login, logout, recover, resendConfirmation, oauthUrl, completeOAuth, syncProjects, setCloudConfig, cloudConfig, setLocale, exportAccount, deleteAccount } from './account.mjs';
 import { aiKeysStatus, aiKeySet, aiKeyDelete } from './aikeys.mjs';
 import { adminCommand, ADMIN_ACTIONS } from './admin.mjs';
-import { billingCommand } from './billing.mjs';
+import { billingCommand, billingCall } from './billing.mjs';
+import { randomUUID } from 'node:crypto';
 import { demoCreate } from './demo.mjs';
 import { features as featureGates } from './features.mjs';
 import { aiFix, aiApply, aiUsage, aiUndo } from './ai/index.mjs';
@@ -54,6 +55,7 @@ const HELP = `Before I Deploy engine ${VERSION}
   bid project list | add --path P | remove --project K | touch --project K | rename --project K --name N
   bid status  --project P            dashboard snapshot (fast)
   bid detect  --project P
+  bid audit   --project P            cloud HTTP audit (400 credits, reviewed price in billing estimate)
   bid check   --project P [--stop-on-fail] [--force] [--auto]   --force ignores the incremental cache; --auto (file watcher) refuses changed scripts
   bid smart   --project P [--prod --confirm DEPLOY] [--force]   check → draft (or production)
   bid local   start|stop|restart|status --project P [--mode auto|build|dev]
@@ -232,7 +234,17 @@ async function main() {
       const p = proj();
       const check = await runChecks(p, { stopOnFail: !!flags['stop-on-fail'], force: !!flags.force, auto: !!flags.auto });
       if (check.status === 'blocked') ev.notify(`❌ ${p.name}`, t('check.notify.blocked'), null);
+      if (flags.cloud) {
+        await syncProjects();
+        check.cloudReport = await billingCall('check_report', {projectKey:p.key,operationId:randomUUID(),status:check.status,counts:check.counts});
+      }
       return ok(check);
+    }
+
+    case 'audit': {
+      const p = proj();
+      await syncProjects();
+      return ok(await billingCommand('audit_run', {...flags,project:p.key}));
     }
 
     case 'smart': {
@@ -422,6 +434,13 @@ async function main() {
       return ok(await adminCommand(sub, flags));
 
     case 'billing':
+      if (sub === 'usage' && flags.watch) {
+        const interval = Math.max(10, Math.min(60, Number(flags.interval) || 10));
+        for (;;) {
+          emit({type:'usage',data:await billingCommand(sub, flags)});
+          await new Promise(resolve => setTimeout(resolve, interval * 1000));
+        }
+      }
       return ok(await billingCommand(sub, flags));
 
     case 'demo':

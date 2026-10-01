@@ -228,6 +228,9 @@ export async function providerUsage({ refresh = false } = {}) {
 }
 
 export async function costSummary({ refresh = false } = {}) {
+  const { billingCommand } = await import('./billing.mjs');
+  const cloud = await billingCommand('usage', {}).catch(() => null);
+  const cloudPricing = cloud?.pricing ?? (await billingCommand('catalog', {})).pricing;
   const ledger = listLedger({ limit: 500 });
   const month = new Date().toISOString().slice(0, 7);
   const totals = {};
@@ -257,6 +260,7 @@ export async function costSummary({ refresh = false } = {}) {
     })),
     counts,
     ledger: ledger.slice(0, 150),
+    cloudPricing: cloudPricing ?? null,
     prices: getPrices(),
     budgets: getBudgets(),
     usage: await providerUsage({ refresh }),

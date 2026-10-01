@@ -54,6 +54,7 @@ private struct PlanUsageContent: View {
             }.frame(maxWidth: 860, alignment: .leading).padding(24).frame(maxWidth: .infinity)
         }
         .task(id: model.account?.id) { await store.load(); await store.observeUsage(every: 10) }
+        .sheet(item: $store.auditReport) { CloudAuditSheet(receipt: $0) }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in Task { await store.loadUsage() } }
     }
 
@@ -155,6 +156,9 @@ private struct PlanUsageContent: View {
     private func siteManagement(_ sites: UsageReport.Sites) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             Text(L("usage.activeSites")).font(Typo.font(.subhead))
+            if let change = store.usage?.scheduledChange {
+                Text(L("usage.scheduledSites", BillingFormat.planName(change.plan), BillingFormat.day(change.effectiveAt), change.siteLimit)).font(Typo.font(.callout)).foregroundColor(Theme.warn)
+            }
             Text(L("usage.pauseExplanation")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
             ForEach(sites.items ?? []) { site in
                 HStack(spacing: 12) {
@@ -166,6 +170,7 @@ private struct PlanUsageContent: View {
                         }
                     }
                     Spacer()
+                    Button(L("usage.cloudAudit")) { store.audit(projectKey: site.projectKey) }.bidButton(.ghost, compact: true).disabled(store.busy != nil || store.demo)
                     Button(site.state == "active" ? L("usage.pauseSite") : L("usage.activateSite")) { store.changeSite(projectKey: site.projectKey, active: site.state != "active") }
                         .bidButton(.secondary, compact: true).disabled(store.busy != nil || store.demo)
                 }
@@ -174,6 +179,7 @@ private struct PlanUsageContent: View {
                 HStack {
                     Text(project.name).font(Typo.font(.body)).lineLimit(2)
                     Spacer()
+                    Button(L("usage.cloudAudit")) { store.audit(projectKey: project.key) }.bidButton(.ghost, compact: true).disabled(store.busy != nil || store.demo)
                     Button(L("usage.activateSite")) { store.changeSite(projectKey: project.key, active: true) }.bidButton(.secondary, compact: true).disabled(store.busy != nil || store.demo)
                 }
             }
@@ -197,18 +203,7 @@ private struct PlanUsageContent: View {
             ForEach(actions) { item in InfoRow(label: actionName(item.action), value: L("usage.creditsCount", Fmt.tokens(item.credits))) }
         }.card()
     }
-    private func actionName(_ value: String) -> String {
-        switch value {
-        case "ai", "ai.chat", "ai.fix": return L("usage.actionAI")
-        case "check", "check.run": return L("usage.actionCheck")
-        case "audit", "audit.full": return L("usage.actionAudit")
-        case "deploy", "deploy.preview", "deploy.production", "deploy.rollback": return L("usage.actionDeploy")
-        case "site.day": return L("usage.actionHosting")
-        case "monitor.fast", "monitor.path": return L("usage.actionMonitor")
-        case "backup.snapshot": return L("usage.actionBackup")
-        default: return L("usage.actionOther")
-        }
-    }
+    private func actionName(_ value: String) -> String { CreditActionName.label(value) }
     private func dailyChart(_ days: [UsageReport.DailyUsage]) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             Text(L("usage.daily")).font(Typo.font(.subhead))
@@ -312,6 +307,12 @@ struct CreditNudgeBanner: View {
                 Button(nudge.kind == "buy" ? L("usage.buyCredits") : L("usage.changePlan")) { model.sheet = .plans }.bidButton(.secondary, compact: true)
                 Button(L("usage.details")) { model.screen = .usage }.bidButton(.ghost, compact: true)
                 IconButton(symbol: "xmark", help: L("common.close")) { store.creditAction("nudge_ack", arguments: ["--period-ref", nudge.periodRef, "--threshold", String(nudge.threshold)]) }.disabled(store.busy != nil || store.demo)
+            }.padding(12).background(Theme.panel)
+        } else if let change = store.usage?.scheduledChange, let date = Fmt.date(change.effectiveAt), date.timeIntervalSinceNow > 0, date.timeIntervalSinceNow <= 7 * 86400 {
+            HStack {
+                Text(L("usage.scheduledSites", BillingFormat.planName(change.plan), BillingFormat.day(change.effectiveAt), change.siteLimit)).font(Typo.font(.callout))
+                Spacer()
+                Button(L("usage.details")) { model.screen = .usage }.bidButton(.secondary, compact: true)
             }.padding(12).background(Theme.panel)
         }
     }
