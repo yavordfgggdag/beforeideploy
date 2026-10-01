@@ -2,6 +2,22 @@
 
 All notable changes, newest first. Versions come from `engine/VERSION`. Each entry has an English and a Bulgarian part; the in-app update banner shows the notes from `latest.json`, which are generated from this file at release time (WP8).
 
+## 13.0.0-alpha.1 (2026-10-01) — platform foundation (work in progress)
+
+### English
+- One plan for web, macOS, Windows and Linux (`docs/PLAN-UNIFIED-BG.md`); Codex's V12 work integrated after a file-by-file review.
+- Fixes from the review: AI history keeps working after a restart; AI patches only touch the exact listed files, never rewrite text they saw redacted, and the engine (not the model) decides the risk; untrusted file content is fenced with per-request markers; secrets are removed from every model input. Downgrades keep paid credits; refunds follow the invoice lines; chargebacks suspend paid work without deleting sites; a failed payment has a 7-day grace from the failure. Setup cancels cleanly, verifies every tool it installs, never runs the macOS git stub, and only checks the hosts it needs.
+- Credits V3: included AI credits are released over 14 days (they cannot run out earlier), 24-hour and 7-day safety limits only decide when a new task may start, packs are used outside the schedule, a one-time starter bonus covers creating the first site, and active sites no longer spend AI credits. New prices and plan contents; hosting is "connected" (you pay Netlify directly) until a Netlify agreement exists.
+- The engine runs on macOS, Linux and Windows: per-OS folders, PATH, process handling, launchers, secure secret storage (Keychain, Secret Service or an encrypted file, Windows DPAPI — never plain text) and script isolation (sandbox-exec, bubblewrap).
+- New shared design tokens and a web interface prototype (English first) for the web app and the new desktop shell (Tauri), with a Create-site flow, the assistant, activity and Plan & usage.
+
+### Български
+- Един план за уеб, macOS, Windows и Linux (`docs/PLAN-UNIFIED-BG.md`); работата на Codex по V12 е влята след преглед файл по файл.
+- Поправки от прегледа: AI историята работи и след рестарт; AI промените пипат само изброените файлове, никога не пренаписват текст, видян скрит, и рискът се решава от engine, не от модела; съдържанието на файловете е оградено с маркери за всяка заявка; ключовете се махат от всеки вход към модела. Понижаването на плана пази платените кредити; възстановяванията следват редовете на фактурата; оспорено плащане спира платената работа, без да трие сайтове; неуспешно плащане има 7 дни гратис от неуспеха. Настройката спира чисто, проверява всеки инсталиран инструмент, не вика git заместителя на macOS и проверява само нужните адреси.
+- Кредити V3: включените AI кредити се освобождават за 14 дни (не могат да свършат по-рано), лимитите за 24 часа и 7 дни решават само кога може да започне нова задача, пакетите се ползват извън графика, еднократен стартов бонус покрива създаването на първия сайт, а активните сайтове вече не харчат AI кредити. Нови цени и съдържание на плановете; хостингът е „свързан“ (плащаш на Netlify директно) до споразумение с Netlify.
+- Engine работи на macOS, Linux и Windows: папки, PATH, процеси, стартери, сигурно пазене на ключове (Keychain, Secret Service или криптиран файл, Windows DPAPI — никога открит текст) и изолация на скриптовете (sandbox-exec, bubblewrap).
+- Общи дизайн токени и прототип на уеб интерфейса (английски първо) за уеб приложението и новата обвивка за компютър (Tauri) — „Създай сайт“, асистент, активност, план и използване.
+
 ## 12.0.0-rc.1 (2026-10-01) — V12 review candidate
 
 ### English
