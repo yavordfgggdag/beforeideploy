@@ -39,8 +39,8 @@ export function pathExts(env) {
 // Node refuses to spawn `.cmd` / `.bat` without a shell since CVE-2024-27980. We run them as
 // `cmd.exe /d /s /c "<line>"` with windowsVerbatimArguments and quote every argument ourselves, the way
 // cross-spawn does: first the MSVCRT rules (what the program's argv parser undoes), then a caret before every
-// cmd.exe metacharacter. npm's `node_modules/.bin/*.cmd` shims expand %* once more, so their arguments get
-// the carets twice.
+// cmd.exe metacharacter. A batch file that forwards %* / %1 re-parses the expanded text (and an odd number of
+// quotes in one argument flips the quote state for the rest), so for any `.cmd` / `.bat` the carets go on twice.
 
 const META = /([()\][%!^"`<>&|;, *?])/g;
 
@@ -63,12 +63,10 @@ export function cmdArg(arg, doubleEscape = false) {
 export const cmdCommand = (file) => String(file).replace(META, '^$1');
 
 export const isCmdShim = (file) => /\.(cmd|bat)$/i.test(file);
-const needsDoubleEscape = (file) => /node_modules[\\/]\.bin[\\/][^\\/]+\.cmd$/i.test(file);
 
 /** [command, args, options] that run a `.cmd` / `.bat` through cmd.exe without a Node shell. */
 export function shimSpawn(file, args, env = {}) {
-  const dbl = needsDoubleEscape(file);
-  const line = [cmdCommand(W.normalize(file)), ...args.map((a) => cmdArg(a, dbl))].join(' ');
+  const line = [cmdCommand(W.normalize(file)), ...args.map((a) => cmdArg(a, true))].join(' ');
   const comspec = env.ComSpec || env.COMSPEC || 'cmd.exe';
   return { command: comspec, args: ['/d', '/s', '/c', `"${line}"`], options: { windowsVerbatimArguments: true, windowsHide: true } };
 }

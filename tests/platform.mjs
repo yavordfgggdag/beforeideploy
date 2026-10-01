@@ -76,9 +76,9 @@ test('spawnSpec: POSIX unchanged; Windows .cmd shims through cmd.exe /d /s /c wi
   assert.equal(s.command, 'C:\\Windows\\system32\\cmd.exe');
   assert.deepEqual(s.args.slice(0, 3), ['/d', '/s', '/c']);
   assert.equal(s.options.windowsVerbatimArguments, true);
-  assert.equal(s.args[3], '"C:\\Users\\a\\AppData\\Roaming\\npm\\npm.cmd ^"install^" ^"a^ b^" ^"x^&y^" ^"50^%^" ^"q\\^"t^" ^"tail\\\\^""');
+  assert.equal(s.args[3], '"C:\\Users\\a\\AppData\\Roaming\\npm\\npm.cmd ^^^"install^^^" ^^^"a^^^ b^^^" ^^^"x^^^&y^^^" ^^^"50^^^%^^^" ^^^"q\\^^^"t^^^" ^^^"tail\\\\^^^""', 'batch files re-parse %*: carets twice');
   const dbl = P.spawnSpec('vite', ['a&b'], { platform: 'win32', resolve });
-  assert.match(dbl.args[3], /\^\^\^"a\^\^\^&b\^\^\^"/, 'node_modules/.bin shims expand %* again: carets twice');
+  assert.match(dbl.args[3], /\^\^\^"a\^\^\^&b\^\^\^"/, 'node_modules/.bin shims too');
   assert.deepEqual(P.spawnSpec('nothere', ['x'], { platform: 'win32', resolve }).command, 'nothere', 'unknown: spawn fails as before (ENOENT → 127)');
 });
 
