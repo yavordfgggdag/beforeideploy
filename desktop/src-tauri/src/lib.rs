@@ -64,10 +64,18 @@ pub fn node_bin(engine: &Path) -> PathBuf {
     if let Some(n) = std::env::var_os("BID_NODE") {
         return PathBuf::from(n);
     }
-    let arch = if cfg!(target_arch = "aarch64") { "arm64" } else { "x86_64" };
+    // the engine's runtime key is Node's "<platform>-<arch>" (darwin-arm64, linux-x64, win32-x64);
+    // older macOS bundles used "arm64" / "x86_64"
+    let os = if cfg!(target_os = "macos") { "darwin" } else if cfg!(windows) { "win32" } else { "linux" };
+    let arch = if cfg!(target_arch = "aarch64") { "arm64" } else { "x64" };
+    let legacy = if cfg!(target_arch = "aarch64") { "arm64" } else { "x86_64" };
     let exe = if cfg!(windows) { "node.exe" } else { "node" };
-    let bundled = engine.join("runtime").join(arch).join("bin").join(exe);
-    if bundled.is_file() { bundled } else { PathBuf::from(exe) }
+    let rt = engine.join("runtime");
+    [rt.join(format!("{os}-{arch}")), rt.join(legacy)]
+        .into_iter()
+        .flat_map(|d| [d.join("bin").join(exe), d.join(exe)])
+        .find(|p| p.is_file())
+        .unwrap_or_else(|| PathBuf::from(exe))
 }
 
 /// Runs the engine and calls `on_event` for every NDJSON line; returns the final result object.
