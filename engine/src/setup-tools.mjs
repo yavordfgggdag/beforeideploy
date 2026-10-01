@@ -15,17 +15,7 @@ export const TOOL_PACKAGES = Object.freeze({
   'claude-code': { pkg: '@anthropic-ai/claude-code@2', bin: 'claude' },
 });
 
-export function gitAvailable() {
-  const bin = which('git');
-  if (!bin) return null;
-  let real;
-  try { real = fs.realpathSync(bin); } catch { return null; }
-  if (process.platform === 'darwin' && real === '/usr/bin/git') {
-    if (sh('/usr/bin/xcode-select', ['-p'], { timeout: 2000 }).code !== 0 ||
-        sh('/usr/bin/xcrun', ['--find', 'git'], { timeout: 2000 }).code !== 0) return null;
-  }
-  return bin;
-}
+export { gitAvailable } from './gitbin.mjs'; // kept for callers; the logic lives in gitbin.mjs
 
 export function resolveNpm() {
   const npm = which('npm');

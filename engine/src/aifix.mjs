@@ -7,6 +7,7 @@ import { detect } from './detect.mjs';
 import { getState } from './store.mjs';
 import { recordCost } from './costs.mjs';
 import { t, msg } from './i18n.mjs';
+import { gitSh } from './gitbin.mjs';
 
 const STEP_KEYS = { git: 'aifix.step.git', secrets: 'aifix.step.secrets', deps: 'aifix.step.deps', lint: 'aifix.step.lint', typecheck: 'aifix.step.typecheck', build: 'aifix.step.build', hosting: 'aifix.step.hosting', deploy: 'aifix.step.deploy', local: 'aifix.step.local' };
 export const stepName = (id) => (STEP_KEYS[id] ? t(STEP_KEYS[id]) : id);
@@ -129,8 +130,8 @@ export function buildPrompt(project, stepId) {
   const onlyWarnings = blocks.every((b) => b.isWarn);
   const pkg = readJSON(path.join(dir, 'package.json'), null);
   const node = sh('node', ['--version']).stdout.trim();
-  const diffStat = d.git.isRepo ? sh('git', ['diff', '--stat', 'HEAD'], { cwd: dir }).stdout.trim().split('\n').slice(-15).join('\n') : '';
-  const recent = d.git.isRepo ? sh('git', ['log', '-3', '--format=%h %s (%cr)'], { cwd: dir }).stdout.trim() : '';
+  const diffStat = d.git.isRepo ? gitSh(['diff', '--stat', 'HEAD'], { cwd: dir }).stdout.trim().split('\n').slice(-15).join('\n') : '';
+  const recent = d.git.isRepo ? gitSh(['log', '-3', '--format=%h %s (%cr)'], { cwd: dir }).stdout.trim() : '';
   const files = mentionedFiles(dir, blocks.map((b) => b.log).join('\n'));
 
   const parts = [];

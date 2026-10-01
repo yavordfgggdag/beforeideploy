@@ -230,3 +230,47 @@ test('B3: a GitHub sign-in earlier in the same auto run lets Git identity come f
   const name = spawnSync('git', ['config', '--global', 'user.name'], { encoding: 'utf8', env: process.env }).stdout.trim();
   assert.equal(name, 'Octo Cat');
 });
+
+test('B4: without the Command Line Tools the /usr/bin/git shim is never executed', async () => {
+  const { gitProbe, gitBin } = await import('../engine/src/gitbin.mjs');
+  const { detect } = await import('../engine/src/detect.mjs');
+  const { fingerprint, scanSecrets } = await import('../engine/src/checks.mjs');
+  const { gitStatus } = await import('../engine/src/git.mjs');
+  const dir = fs.mkdtempSync(path.join(tmp, 'shim-'));
+  const fake = path.join(dir, 'bin'); fs.mkdirSync(fake);
+  const calls = path.join(dir, 'calls.log');
+  // the shim: any run of it would pop the "install developer tools" dialog on a real Mac
+  fs.writeFileSync(path.join(fake, 'git'), `#!/bin/sh\necho "$*" >> ${JSON.stringify(calls)}\nexit 1\n`, { mode: 0o755 });
+  for (const n of ['npm', 'netlify']) fs.copyFileSync(path.join(bin, n), path.join(fake, n));
+  const proj = path.join(dir, 'site'); fs.mkdirSync(path.join(proj, '.git'), { recursive: true });
+  fs.writeFileSync(path.join(proj, 'index.html'), '<h1>x</h1>');
+  const saved = { ...gitProbe }, savedPath = process.env.PATH;
+  Object.assign(gitProbe, { platform: 'darwin', shim: fs.realpathSync(path.join(fake, 'git')), toolsReady: () => false });
+  process.env.PATH = fake;
+  try {
+    assert.equal(gitBin({ fresh: true }), null);
+    const d = detect(proj);
+    assert.equal(d.git.isRepo, false);
+    fingerprint(proj, d); scanSecrets(proj, true);
+    assert.equal(gitStatus(proj).installed, false);
+    const s = await setupStatus();
+    assert.equal(s.items.find(i => i.id === 'git').ok, false);
+  } finally { Object.assign(gitProbe, saved); process.env.PATH = savedPath; gitBin({ fresh: true }); }
+  assert.equal(fs.existsSync(calls) ? fs.readFileSync(calls, 'utf8') : '', '', 'the shim was executed');
+});
+
+test('B4: every Git spawn in the engine goes through gitbin.mjs', () => {
+  const src = path.join(root, 'engine/src');
+  const offenders = [];
+  const walk = d => { for (const n of fs.readdirSync(d, { withFileTypes: true })) {
+    const f = path.join(d, n.name);
+    if (n.isDirectory()) walk(f);
+    else if (/\.(mjs|cjs|js)$/.test(n.name) && n.name !== 'gitbin.mjs') {
+      fs.readFileSync(f, 'utf8').split('\n').forEach((line, i) => {
+        if (/\b(sh|runStream|spawn|spawnSync|execFile|execFileSync|which)\(\s*['"`]git['"`]/.test(line)) offenders.push(`${path.relative(root, f)}:${i + 1}`);
+      });
+    }
+  } };
+  walk(src);
+  assert.deepEqual(offenders, []);
+});

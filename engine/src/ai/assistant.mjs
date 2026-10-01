@@ -36,6 +36,7 @@ import { listIncidents } from '../monitor.mjs';
 import { recordCost } from '../costs.mjs';
 import { AnswerStream } from './answer-stream.mjs';
 import { assistantHistory, assistantReset, appendHistory, conversationMessages, historyResult } from './conversation.mjs';
+import { gitSh } from '../gitbin.mjs';
 export { assistantHistory, assistantReset } from './conversation.mjs';
 
 /** Stage labels as literal keys (scripts/i18n-check.mjs proves both languages have them). */
@@ -319,7 +320,7 @@ export async function assistantChat(project, opts = {}) {
     }
     fileSnapshots(project, [...new Set([...(issue ? issueFiles(project, issue) : []), ...files])], settings, evidence);
     const d = detect(project.path);
-    if (d.git.isRepo) block(evidence, 'git', 'git diff --stat HEAD', sh('git', ['diff', '--stat', 'HEAD'], { cwd: project.path }).stdout, 2000);
+    if (d.git.isRepo) block(evidence, 'git', 'git diff --stat HEAD', gitSh(['diff', '--stat', 'HEAD'], { cwd: project.path }).stdout, 2000);
     for (const e of evidence) refs.evidence.add(e.id);
     stage('analyze', { status: 'running', summary: t('assistant.stage.analyzing', { model: model || t('ai.step.cloudModel') }) });
     announce({ template: `${prompt.id}.v${prompt.version}` });

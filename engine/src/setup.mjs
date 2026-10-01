@@ -10,7 +10,8 @@ import { cloudDoctor, cloudSetupItems } from './cloud.mjs';
 import { aiKeysStatus } from './aikeys.mjs';
 import { listProjects } from './store.mjs';
 import { cliEnv } from './isolation.mjs';
-import { gitAvailable, resolveNpm, TOOL_PACKAGES, installManaged, installGitHub, setupLock, setupPreflight } from './setup-tools.mjs';
+import { resolveNpm, TOOL_PACKAGES, installManaged, installGitHub, setupLock, setupPreflight } from './setup-tools.mjs';
+import { gitAvailable, gitSh } from './gitbin.mjs';
 
 /** VIP/admin only (docs/PLANS-AND-CREDITS-BG.md): the last profile seen says which role this Mac has. */
 function ownKeyAllowed() {
@@ -31,7 +32,7 @@ const identityFromGitHub = () => ({ type: 'run', label: t('setup.action.fromGitH
 const npmInstall = (pkg) => ({ type: 'run', label: t('setup.action.install'), display: t('setup.managedInstall'), package: pkg });
 
 export async function setupStatus() {
-  const git = gitAvailable();
+  const git = gitAvailable({ fresh: true });
   const commands = ['node', 'git', 'brew', 'netlify', 'gh', 'vercel', 'wrangler', 'codex', 'claude'];
   const npm = resolveNpm();
   const [pairs, npmVersion, ghToken, gitName, gitEmail] = await Promise.all([
@@ -357,19 +358,19 @@ export async function gitIdentityFromGitHub() {
   const name = u.name || u.login;
   // GitHub's private noreply address — commits still count for your profile, your real email stays hidden
   const email = u.email || `${u.id}+${u.login}@users.noreply.github.com`;
-  sh('git', ['config', '--global', 'user.name', name]);
-  sh('git', ['config', '--global', 'user.email', email]);
+  gitSh(['config', '--global', 'user.name', name]);
+  gitSh(['config', '--global', 'user.email', email]);
   return { id: 'git-identity', ok: true, name, email };
 }
 
 async function installCLT(id, logFile) {
   if (process.platform !== 'darwin') throw new EngineError(msg('setup.notRunnable'), 'not_runnable');
   const launched = await runStream('/usr/bin/xcode-select', ['--install'], { step: id, logFile, timeout: 10000 });
-  if (launched.code !== 0 && !gitAvailable()) throw new EngineError(msg('setup.toolFailed'), 'install_failed');
+  if (launched.code !== 0 && !gitAvailable({ fresh: true })) throw new EngineError(msg('setup.toolFailed'), 'install_failed');
   ev.step(id, { status: 'waiting_user', summary: t('setup.cltWaiting') });
   const until = Date.now() + 30 * 60 * 1000;
   while (Date.now() < until) {
-    if (gitAvailable()) return;
+    if (gitAvailable({ fresh: true })) return;
     await new Promise(resolve => setTimeout(resolve, 10000));
   }
   throw new EngineError(msg('setup.cltWaiting'), 'setup_incomplete');
@@ -382,7 +383,7 @@ export function setupIdentity({ name, email, yes = false } = {}) {
   const unlock = setupLock();
   try {
     for (const [key, value] of [['user.name', name.trim()], ['user.email', email.trim()]]) {
-      if (sh('git', ['config', '--global', key, value], { timeout: 5000 }).code !== 0) throw new EngineError(msg('setup.identity.failed'), 'github_failed');
+      if (gitSh(['config', '--global', key, value], { timeout: 5000 }).code !== 0) throw new EngineError(msg('setup.identity.failed'), 'github_failed');
     }
     return { ok: true };
   } finally { unlock(); }

@@ -8,6 +8,7 @@ import { addHistory, getState, setState } from './store.mjs';
 import { t, msg } from './i18n.mjs';
 import { siteFilesDir, robotsText, sitemapText, notFoundHtml } from './site.mjs';
 import { findProject } from './store.mjs';
+import { gitBin, gitSh } from './gitbin.mjs';
 
 const BG = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'h', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'sht', ъ: 'a', ь: 'y', ю: 'yu', я: 'ya' };
 
@@ -36,7 +37,7 @@ function missingEssentials(text) {
 }
 
 function trackedEnvFiles(dir) {
-  return sh('git', ['ls-files'], { cwd: dir })
+  return gitSh(['ls-files'], { cwd: dir })
     .stdout.split('\n')
     .filter((f) => /(^|\/)\.env(\.[^/]+)?$/.test(f) && !/\.(example|sample|template|dist|defaults)$/i.test(f));
 }
@@ -44,7 +45,7 @@ function trackedEnvFiles(dir) {
 function envIgnored(dir, isRepo) {
   if (isRepo) {
     // test with a hypothetical path so it works even when no .env exists yet
-    return sh('git', ['check-ignore', '-q', '--no-index', '.env'], { cwd: dir }).code === 0;
+    return gitSh(['check-ignore', '-q', '--no-index', '.env'], { cwd: dir }).code === 0;
   }
   return /^\.env/m.test(gitignoreText(dir) || '');
 }
@@ -87,7 +88,7 @@ export function listFixes(dir) {
         risk: 'caution',
       });
     }
-  } else if (which('git')) {
+  } else if (gitBin()) {
     fixes.push({
       id: 'git.init',
       title: t('fix.gitInit.title'),
@@ -179,7 +180,7 @@ export async function applyFix(project, id, { yes = false, recheck = false } = {
       const tracked = trackedEnvFiles(dir);
       ensureGitignore(dir);
       if (tracked.length) {
-        const r = sh('git', ['rm', '--cached', '--quiet', '--', ...tracked], { cwd: dir });
+        const r = gitSh(['rm', '--cached', '--quiet', '--', ...tracked], { cwd: dir });
         if (r.code !== 0) throw new EngineError(r.stderr.trim() || msg('fix.untrack.failed'), 'fix_failed');
       }
       summary = t('fix.untrack.done', { files: tracked.join(', ') });
@@ -191,8 +192,8 @@ export async function applyFix(project, id, { yes = false, recheck = false } = {
         break;
       }
       ensureGitignore(dir);
-      let r = sh('git', ['init', '-b', 'main'], { cwd: dir });
-      if (r.code !== 0) r = sh('git', ['init'], { cwd: dir });
+      let r = gitSh(['init', '-b', 'main'], { cwd: dir });
+      if (r.code !== 0) r = gitSh(['init'], { cwd: dir });
       if (r.code !== 0) throw new EngineError(r.stderr.trim() || msg('fix.gitInit.failed'), 'fix_failed');
       summary = t('fix.gitInit.done');
       break;
@@ -215,10 +216,10 @@ export async function applyFix(project, id, { yes = false, recheck = false } = {
         summary = t('fix.github.hasRemote');
         break;
       }
-      if (sh('git', ['rev-parse', 'HEAD'], { cwd: dir }).code !== 0) {
+      if (gitSh(['rev-parse', 'HEAD'], { cwd: dir }).code !== 0) {
         ensureGitignore(dir);
-        sh('git', ['add', '-A'], { cwd: dir });
-        const c = sh('git', ['commit', '-m', 'Initial commit'], { cwd: dir });
+        gitSh(['add', '-A'], { cwd: dir });
+        const c = gitSh(['commit', '-m', 'Initial commit'], { cwd: dir });
         if (c.code !== 0) throw new EngineError(c.stderr.trim() || msg('fix.github.initialCommitFailed'), 'fix_failed');
       }
       const repo = repoSlug(path.basename(dir));
