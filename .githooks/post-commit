@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Every commit, from any tool: refresh the backup on this computer in the background.
+# (scripts/team/save.sh runs the backup itself after pushing.)
+[ "${BID_SAVING:-0}" = "1" ] && exit 0
+root=$(git rev-parse --show-toplevel)
+( bash "$root/scripts/team/backup.sh" >/dev/null 2>&1 & )
+exit 0
