@@ -647,7 +647,8 @@ begin
  if payment is null then
   select min(ref),count(distinct ref) into payment,payment_count from billing_events e where e.user_id=p_user and e.type='transaction.completed' and e.payload#>>'{data,origin}'='subscription_update' and e.payload#>>'{data,subscription_id}'=c.provider_ref
    and (e.payload->>'occurred_at')::timestamptz between c.effective_at-interval '2 seconds' and c.effective_at+interval '10 minutes'
-   and exists(select 1 from jsonb_array_elements(e.payload#>'{data,items}') item where coalesce(item#>>'{price,id}',item->>'price_id') in ((select value#>>array['plans',c.to_tier,'paddlePriceId'] from settings where key='billing.catalog'),(select value#>>array['plans',c.to_tier,'yearly','paddlePriceId'] from settings where key='billing.catalog')));
+   and exists(select 1 from jsonb_array_elements(e.payload#>'{data,items}') item where coalesce(item#>>'{price,id}',item->>'price_id') in ((select value#>>array['plans',c.to_tier,'paddlePriceId'] from settings where key='billing.catalog'),(select value#>>array['plans',c.to_tier,'yearly','paddlePriceId'] from settings where key='billing.catalog'),
+     (select value#>>array['plans',c.to_tier,'hostingIncluded','paddlePriceId'] from settings where key='billing.catalog'),(select value#>>array['plans',c.to_tier,'hostingIncluded','yearly','paddlePriceId'] from settings where key='billing.catalog')));
   if payment_count<>1 then payment:=null; end if;
   if payment is not null then update billing_changes set quote=quote||jsonb_build_object('paymentRef',payment) where id=c.id; end if;
  end if;

@@ -91,10 +91,10 @@ Deno.test("billing: a repeated event is processed once", async () => {
   await webhook(handle, txn);
   const again = await (await webhook(handle, txn)).json();
   assert.equal(again.duplicate, true);
-  assert.equal(sum(db.rows("credit_ledger")), 300000);
+  assert.equal(sum(db.rows("credit_ledger")), 100000);
   // same transaction under a new event id (Paddle resends) → still one grant
   await webhook(handle, { ...txn, event_id: "evt_t2" });
-  assert.equal(sum(db.rows("credit_ledger")), 300000);
+  assert.equal(sum(db.rows("credit_ledger")), 100000);
 });
 
 Deno.test("billing: a new period retains unexpired V2 grants; packs add top-up", async () => {
@@ -106,7 +106,7 @@ Deno.test("billing: a new period retains unexpired V2 grants; packs add top-up",
   await webhook(handle, { event_id: "evt_r", event_type: "transaction.completed", data: { id: "txn_renew", custom_data: { user_id: USER.id }, items: [{ price: { id: "pri_high" } }] } });
   const ledger = db.rows("credit_ledger");
   assert.equal(ledger.some((r) => r.reason === "expiry"), false);
-  assert.equal(sum(ledger, "plan"), 900000, "new month plus the unexpired previous grant");
+  assert.equal(sum(ledger, "plan"), 700000, "new month (High 100 000) plus the unexpired previous grant");
   assert.equal(sum(ledger, "topup"), 200000, "top-up is untouched");
 
   await webhook(handle, { event_id: "evt_p", event_type: "transaction.completed", data: { id: "txn_pack", custom_data: { user_id: USER.id }, items: [{ price: { id: "pri_pack" }, quantity: 2 }] } });
@@ -128,7 +128,7 @@ Deno.test("billing: catalog lists prices, tokens and what is on sale", async () 
   assert.equal(res.status, 200);
   const c = await res.json();
   assert.equal(c.currency, "EUR");
-  assert.deepEqual(c.plans.map((p: Row) => [p.id, p.price, p.tokens, p.available]), [["flash", 4.99, 100000, true], ["high", 9.99, 300000, true], ["knight", 19.99, 1000000, false]]);
+  assert.deepEqual(c.plans.map((p: Row) => [p.id, p.price, p.tokens, p.available]), [["flash", 4.99, 40000, true], ["high", 9.99, 100000, true], ["knight", 19.99, 800000, false]]);
   assert.deepEqual(c.plans.map((p: Row) => [p.yearlyPrice, p.yearlyAvailable]), [[99.9, false], [95.9, true], [999.9, false]]);
   assert.equal(c.packs[0].id, "pack-500k");
   assert.equal(c.trial.days, 7);
@@ -239,7 +239,7 @@ Deno.test("billing: a yearly plan grants the monthly tokens every month, once ea
   const yearSub = subEvent("evt_y", "active", "pri_high_year", { billing_cycle: { interval: "year", frequency: 1 }, current_billing_period: { starts_at: "2026-10-10T00:00:00Z", ends_at: "2027-10-10T00:00:00Z" } });
   await webhook(handle, yearSub);
   await webhook(handle, { event_id: "evt_yt", event_type: "transaction.completed", data: { id: "txn_year", custom_data: { user_id: USER.id }, items: [{ price: { id: "pri_high_year" } }] } });
-  assert.equal(sum(db.rows("credit_ledger"), "plan"), 300000, "month 0 with the payment");
+  assert.equal(sum(db.rows("credit_ledger"), "plan"), 100000, "month 0 with the payment");
 
   const at = (iso: string) => createBillingHandler({ ...fakeDeps(db), paddleApiKey: "k", paddleWebhookSecret: SECRET, paddleApiBase: "x", fetch: globalThis.fetch, now: () => new Date(iso) });
   const st0 = await (await at("2026-10-25T00:00:00Z")(post("billing", { action: "status" }))).json();
@@ -250,7 +250,7 @@ Deno.test("billing: a yearly plan grants the monthly tokens every month, once ea
   await at("2026-11-20T00:00:00Z")(post("billing", { action: "status" }));
   const grants = db.rows("credit_ledger").filter((r) => r.reason === "plan_grant");
   assert.deepEqual(grants.map((r) => r.ref), ["txn_year", "txn_year:m1"], "month 1 granted once");
-  assert.equal(sum(db.rows("credit_ledger"), "plan"), 600000, "both High grants remain valid for three months");
+  assert.equal(sum(db.rows("credit_ledger"), "plan"), 200000, "both High grants remain valid for three months");
 
   await at("2027-12-01T00:00:00Z")(post("billing", { action: "status" }));
   assert.equal(db.rows("credit_ledger").filter((r) => r.reason === "plan_grant").length, 12, "all twelve paid slices accrue even if the app stayed closed");
@@ -284,7 +284,7 @@ Deno.test("billing: two deliveries of one transaction at the same time grant onc
   const { db, handle } = world();
   const txn = (id: string) => ({ event_id: id, event_type: "transaction.completed", data: { id: "txn_c", custom_data: { user_id: USER.id }, items: [{ price: { id: "pri_high" } }] } });
   await Promise.all([webhook(handle, txn("evt_c1")), webhook(handle, txn("evt_c2")), webhook(handle, txn("evt_c1"))]);
-  assert.equal(sum(db.rows("credit_ledger")), 300000);
+  assert.equal(sum(db.rows("credit_ledger")), 100000);
 });
 
 Deno.test("billing: a proration charge on a plan change does not buy a new month", async () => {
@@ -560,4 +560,72 @@ Deno.test("billing: a chargeback takes back the transaction's credits once and n
   assert.equal(db.rows("admin_notifications").filter((n) => n.kind === "chargeback").length, 1, "one notification for the owner");
   const warn = await (await webhook(handle, { event_id: "evt_cbw", event_type: "adjustment.created", data: { id: "adj_w", action: "chargeback_warning", status: "approved", transaction_id: "txn_cb" } })).json();
   assert.equal(warn.receipts[0].dispute, "chargeback_warning");
+});
+
+// ---------------------------------------------------------------- credit model V3 (catalog v13)
+
+Deno.test("billing: usage v3 relays the SQL V3 contract; v2 and v1 stay readable from the same receipt", async () => {
+  const w = world({ plan: "high" });
+  const receipt = { v: 3, unit: "credits", serverTime: NOW.toISOString(), plan: "high", reason: "guard24h",
+    included: { tokens: 100000, budget: 100000, released: 64285, spent: 30000, held: 0, availableNow: 0, releaseEndsAt: "2026-10-15T00:00:00Z" },
+    guards: { last24h: 30000, cap24h: 25000, last7d: 30000, cap7d: 50000, clears24hAt: "2026-10-11T00:00:00Z", clears7dAt: null },
+    available: { now: 0, total: 170000 }, carried: [{ id: "lot", remaining: 22000, expiresAt: "2026-12-01T00:00:00Z" }], bonus: { credits: 0, remaining: 0, claimed: false },
+    packs: [{ id: "p", remaining: 100000, expiresAt: "2027-10-01T00:00:00Z" }], cloudMinutes: { included: 1000, used: null, tracked: false },
+    sites: { active: 1, limit: 3, max: 3 }, session: { windowHours: 24, capPercent: 25, cap: 25000, used: 30000, remaining: 0 }, weekly: { windowHours: 168, capPercent: 50, cap: 50000, used: 30000, remaining: 20000 },
+    period: { start: "2026-10-01", end: "2026-11-01", source: "subscription" }, used: { tokens: 30000 }, reserved: { tokens: 0 }, remaining: { plan: 70000, purchased: 100000, total: 170000, available: 170000 },
+    purchased: { tokens: 100000 }, limits: { perMinute: 6, perHour: 60 }, pricing: { version: "2026-10" }, history: { operations: [], ledger: [] } };
+  w.db.rpcResponses.bid_usage_summary = receipt;
+  const v3 = await (await w.handle(post("billing", { action: "usage", v: 3 }))).json();
+  assert.equal(v3.v, 3);
+  for (const key of ["included", "guards", "reason", "available", "carried", "bonus", "packs", "cloudMinutes", "sites"]) assert.deepEqual(v3[key], (receipt as Row)[key], key);
+  assert.ok(v3.pricing.actions["ai.fix"], "action price table attached");
+  const v2 = await (await w.handle(post("billing", { action: "usage", v: 2 }))).json();
+  assert.equal(v2.v, 2); assert.equal(v2.included.tokens, 100000); assert.equal(v2.session.cap, 25000);
+  const v1 = await (await w.handle(post("billing", { action: "usage" }))).json();
+  assert.equal(v1.v, undefined); assert.equal(v1.remaining.available, 170000);
+});
+
+Deno.test("billing: catalog v13 sells connected hosting by default; features.hostingIncluded switches to the V3 prices", async () => {
+  const { DEFAULT_CATALOG } = await import("./handler.ts");
+  const ids = (tier: string) => ({ paddlePriceId: `pri_${tier}`, yearly: { ...DEFAULT_CATALOG.plans[tier].yearly!, paddlePriceId: `pri_${tier}_year` },
+    hostingIncluded: { ...DEFAULT_CATALOG.plans[tier].hostingIncluded!, paddlePriceId: `pri_${tier}_inc`, yearly: { ...DEFAULT_CATALOG.plans[tier].hostingIncluded!.yearly!, paddlePriceId: `pri_${tier}_inc_year` } } });
+  const stored = { ...DEFAULT_CATALOG, plans: Object.fromEntries(["flash", "high", "knight"].map(t => [t, { ...DEFAULT_CATALOG.plans[t], ...ids(t) }])) };
+  const w = world();
+  w.db.tables.settings = [{ key: "billing.catalog", value: stored }];
+  const connected = await (await w.handle(post("billing", { action: "catalog" }))).json();
+  assert.equal(connected.version, "v13"); assert.equal(connected.hostingMode, "connected");
+  assert.deepEqual(connected.plans.map((p: Row) => [p.id, p.price, p.yearlyPrice, p.tokens, p.activeSites, p.cloudMinutes, p.hostingMode]),
+    [["flash", 9.99, 99.9, 40000, 1, 300, "connected"], ["high", 29.99, 299.9, 100000, 3, 1000, "connected"], ["knight", 99.99, 999.9, 800000, 10, 4000, "connected"]]);
+  assert.equal(connected.free.tokens, 10000); assert.equal(connected.free.activeSites, 1);
+  assert.equal(connected.starterBonus.credits, 60000); assert.equal(connected.release.hours, 336);
+  assert.ok(connected.plans.every((p: Row) => p.extras.boost === false), "Boost retired");
+  w.db.tables.settings.push({ key: "features.hostingIncluded", value: true });
+  const included = await (await w.handle(post("billing", { action: "catalog" }))).json();
+  assert.equal(included.hostingMode, "included"); assert.equal(included.features.hostingIncluded, true);
+  assert.deepEqual(included.plans.map((p: Row) => [p.id, p.price, p.yearlyPrice, p.yearlyDomain]),
+    [["flash", 14.99, 183.9, true], ["high", 29.99, 358.9, true], ["knight", 99.99, 1089.9, true]]);
+  // checkout sells the included price set; a subscriber on the connected price is still recognised
+  await w.handle(post("billing", { action: "checkout", plan: "flash", interval: "year" }));
+  assert.equal(w.calls.at(-1)!.body.items[0].price_id, "pri_flash_inc_year");
+  await webhook(w.handle, { event_id: "evt_v13", event_type: "transaction.completed", data: { id: "txn_v13", custom_data: { user_id: USER.id }, items: [{ price: { id: "pri_high" } }] } });
+  assert.equal(sum(w.db.rows("credit_ledger"), "plan"), 100000, "connected High price grants High credits");
+});
+
+Deno.test("billing: starter bonus is claimed once; estimate answers when N credits can start", async () => {
+  const w = world({ plan: "flash" });
+  const first = await w.handle(post("billing", { action: "bonus" }));
+  assert.equal(first.status, 200); assert.equal((await first.json()).granted, 60000);
+  const again = await w.handle(post("billing", { action: "bonus" }));
+  assert.equal(again.status, 409); assert.equal((await again.json()).code, "bonus_used");
+  const call = w.db.rpcCalls.find(c => c.fn === "bid_v13_claim_bonus")!;
+  assert.match(String(call.args.p_email_hash), /^[a-f0-9]{64}$/, "only the e-mail hash leaves the function");
+  w.db.rpcResponses.bid_v13_ready_at = { need: 37000, availableNow: 20000, readyAt: "2026-10-12T08:00:00Z", reason: "release" };
+  const est = await (await w.handle(post("billing", { action: "estimate", credits: 37000, usageAction: "ai.fix" }))).json();
+  assert.equal(est.readyAt, "2026-10-12T08:00:00Z"); assert.equal(est.reason, "release");
+  const args = w.db.rpcCalls.filter(c => c.fn === "bid_v13_ready_at").at(-1)!.args;
+  assert.equal(args.p_need, 37000); assert.equal(args.p_action, "ai.fix");
+  assert.equal((await w.handle(post("billing", { action: "estimate", credits: -1 }))).status, 400);
+  assert.equal((await w.handle(post("billing", { action: "estimate", credits: 5, usageAction: "grant" }))).status, 400);
+  const quote = await (await w.handle(post("billing", { action: "estimate", usageAction: "check.run" }))).json();
+  assert.equal(quote.credits, 50); assert.equal(quote.readyAt, "2026-10-12T08:00:00Z", "action quotes carry readyAt");
 });
