@@ -1,0 +1,44 @@
+{
+  "currency": "EUR",
+  "plans": [
+    {
+      "id": "flash",
+      "price": 9.99,
+      "tokens": 100000,
+      "available": true
+    },
+    {
+      "id": "high",
+      "price": 29.99,
+      "tokens": 250000,
+      "available": true,
+      "yearlyPrice": 299.9,
+      "yearlyAvailable": true
+    },
+    {
+      "id": "knight",
+      "price": 99.99,
+      "tokens": 1000000,
+      "available": false
+    }
+  ],
+  "packs": [
+    {
+      "id": "pack-100k",
+      "tokens": 100000,
+      "price": 3.99,
+      "available": true
+    },
+    {
+      "id": "pack-500k",
+      "tokens": 500000,
+      "price": 17.99,
+      "available": true
+    }
+  ],
+  "trial": {
+    "days": 7,
+    "plan": "high",
+    "tokens": 50000
+  }
+}

@@ -1,0 +1,55 @@
+# Release dry run (audit R9): the whole release.sh path without the owner's certificates — tests, a
+# universal (arm64 + x86_64) app with the engine inside, the DMG and latest.json. Signing and notarization
+# need the owner's Developer ID and run on the release Mac (docs/release.md). Manual or on a version tag.
+name: release-dryrun
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+    paths:
+      - 'scripts/release.sh'
+      - 'scripts/build.sh'
+      - '.github/workflows/release-dryrun.yml'
+    branches: ['**']
+
+jobs:
+  dmg:
+    name: universal DMG (unsigned)
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # CFBundleVersion = commit count
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: release.sh (no signing, no notarization)
+        run: zsh scripts/release.sh --skip-notarize --allow-dev --allow-dirty
+      - name: The binary runs on Apple silicon and Intel
+        run: |
+          set -e
+          APP="build/Before I Deploy.app"
+          lipo -archs "$APP/Contents/MacOS/BeforeIDeploy" | tee /dev/stderr | grep -q 'x86_64 arm64\|arm64 x86_64'
+          "$APP/Contents/Resources/engine/bid" version | grep -q '"ok":true'
+          ls -la releases/
+      - name: The shipped engine needs no Node on the Mac (bundled runtime, production copy)
+        run: |
+          set -e
+          APP="build/Before I Deploy.app"
+          ENG="$APP/Contents/Resources/engine"
+          test -x "$ENG/runtime/arm64/bin/node" && test -x "$ENG/runtime/x86_64/bin/node"
+          test -f "$ENG/.production"
+          # no Homebrew, no setup-node, no nvm: only what every Mac has
+          OUT="$(env -i HOME="$RUNNER_TEMP/home" PATH=/usr/bin:/bin:/usr/sbin:/sbin BID_APP_DIR="$RUNNER_TEMP/app" BID_CACHE_DIR="$RUNNER_TEMP/cache" "$ENG/bid" doctor)"
+          echo "$OUT" | tail -c 2000
+          echo "$OUT" | grep -q '"ok":true'
+          echo "$OUT" | grep -q '"runtime":"bundled"'
+          echo "$OUT" | grep -q '"production":true'
+          echo "$OUT" | grep -q '"overrides":false'
+          echo "DMG: $(du -h releases/*.dmg | cut -f1)" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-dryrun
+          path: releases/

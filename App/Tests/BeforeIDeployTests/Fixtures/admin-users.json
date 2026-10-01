@@ -1,0 +1,14 @@
+{
+  "users": [
+    {
+      "user_id": "u-yavor@example.com",
+      "email": "yavor@example.com",
+      "role": "admin",
+      "plan": "free",
+      "locale": "bg",
+      "ai_disabled": false,
+      "display_name": "Yavor",
+      "balance": 0
+    }
+  ]
+}

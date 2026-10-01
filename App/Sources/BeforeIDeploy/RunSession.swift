@@ -13,6 +13,7 @@ struct RunStep: Identifiable, Equatable {
     var fixes: [String] = []
     var log: String?
     var duration: Double?
+    var cached = false
     var lines: [String] = []
 }
 
@@ -26,7 +27,7 @@ final class RunSession: ObservableObject, Identifiable {
     let startedAt = Date()
     let handle = EngineHandle()
 
-    enum Kind { case check, smart, production, draft, git, netlify, fix, local }
+    enum Kind { case check, smart, production, draft, git, netlify, fix, local, setup }
 
     @Published var steps: [RunStep] = []
     @Published var selectedStep: String?
@@ -39,6 +40,7 @@ final class RunSession: ObservableObject, Identifiable {
     @Published var deviceCode: String?
     @Published var deviceURL: String?
     @Published var deviceService: String?
+    @Published var deviceExpiresAt: Date?
 
     init(title: String, subtitle: String, kind: Kind) {
         self.title = title
@@ -46,17 +48,53 @@ final class RunSession: ObservableObject, Identifiable {
         self.kind = kind
     }
 
-    var runningStep: RunStep? { steps.first { $0.status == "running" } }
+    var runningStep: RunStep? { steps.first { ["running", "waiting_user"].contains($0.status) } }
 
     var progress: Double {
         guard !steps.isEmpty else { return finished ? 1 : 0 }
-        let done = steps.filter { !["pending", "running"].contains($0.status) }.count
+        let done = steps.filter { !["pending", "running", "waiting_user"].contains($0.status) }.count
         return Double(done) / Double(steps.count)
+    }
+
+    /// Log lines wait here and reach the UI together at most every 0.1 s: a noisy build prints thousands of
+    /// lines, and one view update per line made the run window stutter (audit A9).
+    private var pendingLines: [(step: String, line: String)] = []
+    private var flushScheduled = false
+
+    private func scheduleFlush() {
+        guard !flushScheduled else { return }
+        flushScheduled = true
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 100_000_000)
+            self?.flushScheduled = false
+            self?.flushLines()
+        }
+    }
+
+    /// Applies the waiting lines in one change of `steps`.
+    func flushLines() {
+        guard !pendingLines.isEmpty else { return }
+        var copy = steps
+        for (stepId, line) in pendingLines {
+            if let i = copy.firstIndex(where: { $0.id == stepId }) {
+                copy[i].lines.append(line)
+            } else {
+                var s = RunStep(id: stepId, label: stepId, status: "running")
+                s.lines = [line]
+                copy.append(s)
+            }
+        }
+        for i in copy.indices where copy[i].lines.count > 600 {
+            copy[i].lines.removeFirst(copy[i].lines.count - 600)
+        }
+        pendingLines.removeAll()
+        steps = copy
     }
 
     func handle(_ e: EngineEvent) {
         switch e.type {
         case "step":
+            flushLines() // keep the order: lines printed before this step change come first
             guard let id = e.string("id") else { return }
             if let i = steps.firstIndex(where: { $0.id == id }) {
                 var s = steps[i]
@@ -68,6 +106,7 @@ final class RunSession: ObservableObject, Identifiable {
                 if let v = e.strings("fixes") { s.fixes = v }
                 if let v = e.string("log") { s.log = v }
                 if let v = e.double("duration") { s.duration = v }
+                if let v = e.raw["cached"] as? Bool { s.cached = v }
                 steps[i] = s
             } else {
                 steps.append(RunStep(
@@ -81,24 +120,20 @@ final class RunSession: ObservableObject, Identifiable {
                     log: e.string("log"),
                     duration: e.double("duration")
                 ))
+                if let v = e.raw["cached"] as? Bool { steps[steps.count - 1].cached = v }
             }
             if e.string("status") == "running" { selectedStep = id }
             if e.string("status") == "fail" { selectedStep = id }
         case "log":
             let stepId = e.string("step") ?? "run"
             guard let line = e.string("line") else { return }
-            if let i = steps.firstIndex(where: { $0.id == stepId }) {
-                steps[i].lines.append(line)
-                if steps[i].lines.count > 600 { steps[i].lines.removeFirst(steps[i].lines.count - 600) }
-            } else {
-                var s = RunStep(id: stepId, label: stepId, status: "running")
-                s.lines = [line]
-                steps.append(s)
-            }
+            pendingLines.append((step: stepId, line: line))
+            scheduleFlush()
         case "devicecode":
             deviceCode = e.string("code")
             deviceURL = e.string("url")
             deviceService = e.string("service")
+            deviceExpiresAt = Date().addingTimeInterval(e.double("expiresIn") ?? 300)
             if let c = deviceCode {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(c, forType: .string)
@@ -115,14 +150,15 @@ final class RunSession: ObservableObject, Identifiable {
     }
 
     func finish(success: Bool, title: String, message: String?) {
+        flushLines()
         self.success = success
         self.outcomeTitle = title
         self.outcomeMessage = message
         self.finished = true
         self.finishedAt = Date()
         // anything still spinning is no longer running
-        for i in steps.indices where steps[i].status == "running" {
-            steps[i].status = success ? "pass" : "skipped"
+        for i in steps.indices where ["pending", "running", "waiting_user"].contains(steps[i].status) {
+            steps[i].status = "skipped"
         }
         if !success, let failed = steps.last(where: { $0.status == "fail" }) {
             selectedStep = failed.id

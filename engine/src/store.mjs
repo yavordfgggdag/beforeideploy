@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { APP_DIR, readJSON, writeJSON, projectKey, nowISO, ensureDir, EngineError, isDir } from './util.mjs';
 import { detect } from './detect.mjs';
+import { msg } from './i18n.mjs';
 
 const PROJECTS_FILE = () => path.join(APP_DIR, 'projects.json');
 const STATE_DIR = () => path.join(APP_DIR, 'state');
@@ -38,7 +39,7 @@ export function findProject(ref) {
 
 export function upsertProject(dir, patch = {}) {
   const abs = path.resolve(String(dir).replace(/^~(?=\/|$)/, process.env.HOME || ''));
-  if (!isDir(abs)) throw new EngineError(`Папката не съществува: ${abs}`, 'not_found');
+  if (!isDir(abs)) throw new EngineError(msg('project.folderNotFound', { path: abs }), 'not_found');
   const d = detect(abs);
   const lib = loadLibrary();
   const key = projectKey(abs);
@@ -94,10 +95,10 @@ export function removeProject(key) {
 
 /** Resolves --project (key or path). Unknown paths are added to the library automatically. */
 export function resolveProject(ref) {
-  if (!ref || ref === true) throw new EngineError('Липсва --project <път или ключ>', 'usage', 2);
+  if (!ref || ref === true) throw new EngineError(msg('project.missingArg'), 'usage', 2);
   const found = findProject(ref);
   if (found) {
-    if (!isDir(found.path)) throw new EngineError(`Папката на проекта липсва: ${found.path}`, 'not_found');
+    if (!isDir(found.path)) throw new EngineError(msg('project.folderMissing', { path: found.path }), 'not_found');
     return found;
   }
   return upsertProject(ref);

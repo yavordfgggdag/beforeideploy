@@ -1,0 +1,170 @@
+import XCTest
+@testable import BeforeIDeploy
+
+final class EngineOutcomeTests: XCTestCase {
+    func testOkResultDecodes() throws {
+        let line = try Fixtures.resultLine("doctor")
+        let outcome = EngineOutcome(exitCode: 0, resultData: line, stderr: "")
+        XCTAssertTrue(outcome.ok)
+        XCTAssertNil(outcome.errorMessage)
+        XCTAssertNil(outcome.errorCode)
+        let d = try outcome.decode(DoctorInfo.self)
+        XCTAssertFalse(d.engine.isEmpty)
+    }
+
+    func testFailedResultExposesMessageCodeAndKey() throws {
+        let json = #"{"type":"result","ok":false,"error":"Production deploy requires --confirm DEPLOY","code":"confirm_required","key":"deploy.confirmRequired"}"#
+        let outcome = EngineOutcome(exitCode: 2, resultData: Data(json.utf8), stderr: "")
+        XCTAssertFalse(outcome.ok)
+        XCTAssertEqual(outcome.errorCode, "confirm_required")
+        XCTAssertEqual(outcome.errorMessage, "Production deploy requires --confirm DEPLOY")
+        XCTAssertThrowsError(try outcome.decode(DoctorInfo.self)) { error in
+            guard case EngineError.failed(let message, let code) = error else { return XCTFail("expected EngineError.failed, got \(error)") }
+            XCTAssertEqual(code, "confirm_required")
+            XCTAssertEqual(message, "Production deploy requires --confirm DEPLOY")
+        }
+    }
+
+    func testMissingResultLineFallsBackToStderr() {
+        let outcome = EngineOutcome(exitCode: 127, resultData: nil, stderr: "zsh: command not found: node\n")
+        XCTAssertFalse(outcome.ok)
+        XCTAssertEqual(outcome.errorMessage, "zsh: command not found: node")
+    }
+
+    func testEngineEventAccessors() throws {
+        let json = #"{"type":"step","id":"build","label":"Build","status":"pass","details":["Output: dist"],"duration":1.5,"cached":true}"#
+        let raw = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(json.utf8)) as? [String: Any])
+        let ev = EngineEvent(raw: raw, data: Data(json.utf8))
+        XCTAssertEqual(ev.type, "step")
+        XCTAssertEqual(ev.string("id"), "build")
+        XCTAssertEqual(ev.strings("details"), ["Output: dist"])
+        XCTAssertEqual(ev.double("duration"), 1.5)
+        XCTAssertEqual(ev.raw["cached"] as? Bool, true)
+    }
+}
+
+final class LocalizationTests: XCTestCase {
+    func testUnknownKeyFallsBackToTheKey() {
+        XCTAssertEqual(L("this.key.does.not.exist"), "this.key.does.not.exist")
+    }
+
+    func testFormatArgumentsAreInsertedAsText() {
+        // no catalog in the test bundle → the key itself is the format string
+        XCTAssertEqual(L("%@ tokens", 250000), "250000 tokens")
+        XCTAssertEqual(L("%@ of %@", 1, 2), "1 of 2")
+    }
+
+    func testCurrentLanguageDefaultsToEnglishWithoutASetting() {
+        UserDefaults.standard.removeObject(forKey: Localization.storageKey)
+        XCTAssertEqual(Localization.current, "en")
+        XCTAssertNil(Localization.stored)
+    }
+
+    func testPluralCategories() {
+        XCTAssertEqual(Plural.category(1, language: "en"), "one")
+        XCTAssertEqual(Plural.category(0, language: "en"), "other")
+        XCTAssertEqual(Plural.category(5, language: "bg"), "other")
+        XCTAssertEqual(Plural.category(1, language: "bg"), "one")
+        XCTAssertEqual(Plural.category(0, language: "fr"), "one")
+        XCTAssertEqual(Plural.category(1, language: "pt-BR"), "one")
+        XCTAssertEqual(Plural.category(3, language: "pl"), "few")
+        XCTAssertEqual(Plural.category(12, language: "pl"), "many")
+        XCTAssertEqual(Plural.category(22, language: "pl"), "few")
+        XCTAssertEqual(Plural.category(21, language: "ru"), "one")
+        XCTAssertEqual(Plural.category(0, language: "ro"), "few")
+        XCTAssertEqual(Plural.category(20, language: "ro"), "other")
+        XCTAssertEqual(Plural.category(1, language: "ja"), "other")
+    }
+
+    func testPluralWithoutCatalogFallsBackToTheKey() {
+        // no .lproj in the test bundle: the key is the format and gets no argument slot
+        XCTAssertEqual(L("files.count", count: 3), "files.count")
+    }
+
+    func testLanguageWithoutCatalogIsNotReviewed() {
+        XCTAssertFalse(Localization.isReviewed("xx"))
+    }
+
+    func testTokensFormatterGroupsDigits() {
+        UserDefaults.standard.set("en", forKey: Localization.storageKey)
+        let s = Fmt.tokens(1_000_000)
+        XCTAssertTrue(s.count >= 7, s) // grouped: "1,000,000" / "1 000 000"
+        XCTAssertTrue(s.contains("000"))
+        UserDefaults.standard.removeObject(forKey: Localization.storageKey)
+    }
+}
+
+final class RunSessionTests: XCTestCase {
+    @MainActor
+    func testStepEventsCreateAndUpdateSteps() throws {
+        let session = RunSession(title: "t", subtitle: "s", kind: .check)
+        func event(_ json: String) throws -> EngineEvent {
+            let raw = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(json.utf8)) as? [String: Any])
+            return EngineEvent(raw: raw, data: Data(json.utf8))
+        }
+        session.handle(try event(#"{"type":"step","id":"git","label":"Git","status":"running"}"#))
+        session.handle(try event(#"{"type":"log","step":"git","line":"On branch main"}"#))
+        session.handle(try event(#"{"type":"step","id":"git","status":"pass","summary":"Clean working tree","cached":false}"#))
+        session.handle(try event(#"{"type":"step","id":"build","label":"Build","status":"pass","cached":true}"#))
+        XCTAssertEqual(session.steps.count, 2)
+        XCTAssertEqual(session.steps[0].status, "pass")
+        XCTAssertEqual(session.steps[0].summary, "Clean working tree")
+        XCTAssertEqual(session.steps[0].lines, ["On branch main"])
+        XCTAssertTrue(session.steps[1].cached)
+        XCTAssertEqual(session.progress, 1)
+        session.finish(success: true, title: "done", message: nil)
+        XCTAssertTrue(session.finished)
+    }
+
+    /// Log lines are batched (audit A9): nothing is lost, the order is kept, at most 600 per step.
+    @MainActor
+    func testLogLinesAreBatchedAndCapped() throws {
+        let session = RunSession(title: "t", subtitle: "s", kind: .check)
+        for i in 0..<700 {
+            let json = #"{"type":"log","step":"build","line":"line \#(i)"}"#
+            let raw = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(json.utf8)) as? [String: Any])
+            session.handle(EngineEvent(raw: raw, data: Data(json.utf8)))
+        }
+        session.flushLines()
+        XCTAssertEqual(session.steps.count, 1)
+        XCTAssertEqual(session.steps[0].lines.count, 600)
+        XCTAssertEqual(session.steps[0].lines.first, "line 100")
+        XCTAssertEqual(session.steps[0].lines.last, "line 699")
+    }
+}
+
+final class AutoCheckTests: XCTestCase {
+    func testOnlySourceChangesTriggerACheck() {
+        XCTAssertTrue(ProjectWatcher.isRelevant(["/p/src/app.js"]))
+        XCTAssertFalse(ProjectWatcher.isRelevant(["/p/node_modules/x/index.js", "/p/dist/index.html", "/p/.git/index"]))
+        XCTAssertTrue(ProjectWatcher.isRelevant(["/p/dist/a.js", "/p/index.html"]))
+        XCTAssertFalse(ProjectWatcher.isRelevant(["/p/.next/cache/x", "/p/.DS_Store"]))
+        // a project under a folder called build/ still reacts to its own sources
+        XCTAssertTrue(ProjectWatcher.isRelevant(["/Users/a/build/site/src/app.js"], root: "/Users/a/build/site"))
+        XCTAssertFalse(ProjectWatcher.isRelevant(["/Users/a/build/site/dist/app.js"], root: "/Users/a/build/site"))
+        // files the check writes itself do not start another check
+        XCTAssertFalse(ProjectWatcher.isRelevant(["/p/tsconfig.tsbuildinfo", "/p/.eslintcache"], root: "/p"))
+    }
+}
+
+final class SetupRunTests: XCTestCase {
+    @MainActor
+    func testUnfinishedStepsNeverBecomeSuccessful() {
+        let s = RunSession(title: "setup", subtitle: "", kind: .setup)
+        s.steps = [RunStep(id: "a", label: "A", status: "running"), RunStep(id: "b", label: "B", status: "pending"), RunStep(id: "c", label: "C", status: "waiting_user")]
+        XCTAssertEqual(s.progress, 0)
+        s.finish(success: false, title: "incomplete", message: nil)
+        XCTAssertFalse(s.success)
+        XCTAssertTrue(s.steps.allSatisfy { $0.status == "skipped" })
+        XCTAssertEqual(s.progress, 1)
+    }
+    func testLineBufferPreservesSplitUnicodeAndFinishesExactlyOnce() async {
+        let lines = EngineLines()
+        let data = Data("héllo\nresult".utf8)
+        lines.append(data.prefix(2)); lines.append(data.dropFirst(2))
+        lines.finish(); lines.finish(); lines.append(Data("ignored".utf8))
+        var received: [String] = []
+        for await line in lines.stream { received.append(line) }
+        XCTAssertEqual(received, ["héllo", "result"])
+    }
+}

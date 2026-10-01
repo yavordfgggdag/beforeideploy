@@ -1,0 +1,190 @@
+{
+  "month": "2026-09",
+  "totals": [
+    {
+      "service": "codex",
+      "unit": "tasks",
+      "amount": 1
+    },
+    {
+      "service": "claude",
+      "unit": "messages",
+      "amount": 1
+    },
+    {
+      "service": "chatgpt",
+      "unit": "messages",
+      "amount": 1
+    }
+  ],
+  "byProject": [
+    {
+      "name": "failing-build",
+      "items": [
+        {
+          "service": "codex",
+          "unit": "tasks",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "leaky-build",
+      "items": [
+        {
+          "service": "claude",
+          "unit": "messages",
+          "amount": 1
+        },
+        {
+          "service": "chatgpt",
+          "unit": "messages",
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "counts": {
+    "aifix:build": 3
+  },
+  "ledger": [
+    {
+      "ts": "2026-09-29T07:25:26.842Z",
+      "project": "420e262e548c",
+      "projectName": "failing-build",
+      "service": "codex",
+      "op": "aifix:build",
+      "amount": 1,
+      "unit": "tasks",
+      "estimated": true,
+      "ref": null
+    },
+    {
+      "ts": "2026-09-29T07:25:26.472Z",
+      "project": "df0323982dad",
+      "projectName": "leaky-build",
+      "service": "claude",
+      "op": "aifix:build",
+      "amount": 1,
+      "unit": "messages",
+      "estimated": true,
+      "ref": null
+    },
+    {
+      "ts": "2026-09-29T07:25:26.282Z",
+      "project": "df0323982dad",
+      "projectName": "leaky-build",
+      "service": "chatgpt",
+      "op": "aifix:build",
+      "amount": 1,
+      "unit": "messages",
+      "estimated": true,
+      "ref": null
+    }
+  ],
+  "prices": {
+    "version": 1,
+    "note": "Estimates — edit when provider prices change.",
+    "items": {
+      "netlify:production": {
+        "unit": "credits",
+        "amount": 15,
+        "label": "Netlify production deploy"
+      },
+      "netlify:draft": {
+        "unit": "credits",
+        "amount": 0,
+        "label": "Netlify draft preview"
+      },
+      "netlify:bandwidth-gb": {
+        "unit": "credits",
+        "amount": 10,
+        "label": "Netlify bandwidth (per GB)"
+      },
+      "chatgpt:aifix": {
+        "unit": "messages",
+        "amount": 1,
+        "label": "ChatGPT AI Fix (from the plan limit)"
+      },
+      "claude:aifix": {
+        "unit": "messages",
+        "amount": 1,
+        "label": "Claude AI Fix (from the plan limit)"
+      },
+      "codex:aifix": {
+        "unit": "tasks",
+        "amount": 1,
+        "label": "Codex AI Fix (from the plan limit)"
+      },
+      "github:push": {
+        "unit": "free",
+        "amount": 0,
+        "label": "Моят push"
+      },
+      "vercel:production": {
+        "unit": "free",
+        "amount": 0,
+        "label": "Vercel production (within the plan)"
+      },
+      "vercel:draft": {
+        "unit": "free",
+        "amount": 0,
+        "label": "Vercel preview (within the plan)"
+      },
+      "cloudflare:production": {
+        "unit": "free",
+        "amount": 0,
+        "label": "Cloudflare Pages deploy (free plan)"
+      },
+      "cloudflare:draft": {
+        "unit": "free",
+        "amount": 0,
+        "label": "Cloudflare Pages preview (free plan)"
+      },
+      "ghpages:production": {
+        "unit": "free",
+        "amount": 0,
+        "label": "GitHub Pages deploy"
+      },
+      "local:check": {
+        "unit": "free",
+        "amount": 0,
+        "label": "Local check / build"
+      }
+    }
+  },
+  "budgets": {
+    "netlifyMinCredits": 50,
+    "warnAtPercent": 80
+  },
+  "usage": {
+    "at": "2026-09-29T07:26:18.543Z",
+    "providers": [
+      {
+        "service": "netlify",
+        "connected": false,
+        "error": "You are not signed in to Netlify",
+        "errorKey": "costs.netlify.notLoggedIn"
+      },
+      {
+        "service": "chatgpt",
+        "connected": null,
+        "note": "ChatGPT has no public API for the subscription limit.",
+        "dashboard": "https://chatgpt.com/#settings"
+      },
+      {
+        "service": "claude",
+        "connected": null,
+        "note": "Claude has no public API for the subscription limit.",
+        "dashboard": "https://claude.ai/settings/usage"
+      },
+      {
+        "service": "spaceship",
+        "connected": false,
+        "note": "Connect Spaceship from “Domains” to track domain expiry.",
+        "dashboard": "https://www.spaceship.com/application/billing/"
+      }
+    ]
+  },
+  "pricesFile": "/tmp/bid-test-EZ4j6h/app/prices.json"
+}

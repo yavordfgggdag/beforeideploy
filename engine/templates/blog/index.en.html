@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="{{LANG}}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{NAME}} — stories, ideas and notes</title>
+  <meta name="description" content="{{DESCRIPTION:A blog about travel, books and the small things that make a day good.}}">
+  <link rel="canonical" href="/">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#fffdf8">
+  <meta property="og:title" content="{{NAME}}">
+  <meta property="og:description" content="{{DESCRIPTION:A blog about travel, books and the small things that make a day good.}}">
+  <meta property="og:image" content="/og.svg">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="top">
+    <div class="wrap">
+      <a class="brand" href="/"><span class="mark"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 5.5A2 2 0 016.5 3.5H19v14H6.5a2 2 0 00-2 2z"/><path d="M4.5 19.5a2 2 0 002 2H19"/></svg></span>{{NAME}}</a>
+      <nav class="nav" aria-label="Main menu"><a href="/#posts">Articles</a><a href="/#about">About</a><a href="/#newsletter">Newsletter</a></nav>
+      
+    </div>
+  </header>
+  <main id="main">
+    <section class="hero center">
+      <div class="wrap">
+        <div>
+          <span class="eyebrow"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 5.5A2 2 0 016.5 3.5H19v14H6.5a2 2 0 00-2 2z"/><path d="M4.5 19.5a2 2 0 002 2H19"/></svg>A new article every Thursday</span>
+          <h1>Stories <em>worth reading</em></h1>
+          <p class="lead">I write about travel, books and the small things that make a day good. No ads, no hurry.</p>
+          <div class="actions">
+          <a class="btn" href="/post.html">Read the latest<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="btn ghost" href="/#newsletter">Subscribe</a>
+          </div>
+        </div>
+        
+      </div>
+    </section>
+    <section class="section" id="posts">
+      <div class="wrap">
+        <div class="head"><h2>Latest articles</h2></div><div class="posts">
+          <a class="post" href="/post.html"><span class="meta"><b>Travel</b><span>26 September</span></span><h3>Three days in the Rhodopes without a phone</h3><p>What happens when you switch everything off and take the trail.</p></a>
+          <a class="post" href="/post.html"><span class="meta"><b>Books</b><span>19 September</span></span><h3>Five books for autumn</h3><p>A short list for long evenings — from novels to essays.</p></a>
+          <a class="post" href="/post.html"><span class="meta"><b>Life</b><span>12 September</span></span><h3>Small morning rituals</h3><p>Why the first 20 minutes decide the rest of the day.</p></a>
+        </div>
+      </div>
+    </section>
+    <section class="section alt" id="about">
+      <div class="wrap">
+        <div class="head"><h2>About</h2></div><div class="prose"><p>A few sentences about who writes here and why. Readers come back to a person, not a website.</p></div>
+      </div>
+    </section>
+    <section class="section" id="newsletter">
+      <div class="wrap">
+        <div class="head"><h2>Newsletter</h2><p>One email on Sunday with the new articles and one recommendation.</p></div><form class="form" name="newsletter" method="POST" data-netlify="true" netlify-honeypot="company" style="max-width:560px">
+          <input type="hidden" name="form-name" value="newsletter">
+          <p class="hp"><label for="f-company">Company</label><input id="f-company" name="company"></p>
+          <label for="f-email">Email<input id="f-email" name="email" type="email" autocomplete="email" required></label>
+          <button class="btn" type="submit">Subscribe</button>
+          <small>No spam. Unsubscribe with one click.</small>
+        </form>
+      </div>
+    </section>
+  </main>
+  <footer class="foot">
+    <div class="wrap">
+      <p>© {{YEAR}} {{NAME}} · All rights reserved.</p>
+      <nav aria-label="Main menu"><a href="/#posts">Articles</a><a href="/#about">About</a><a href="/#newsletter">Newsletter</a><a href="/privacy.html">Privacy</a></nav>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,32 +1,105 @@
-#!/bin/zsh
-# Before I Deploy V6 — engine launcher. Sets up a login-like PATH, then runs the Node engine.
-ENGINE_DIR="${0:A:h}"
+#!/bin/sh
+# Before I Deploy — engine launcher for macOS and Linux (POSIX sh; it also runs under `zsh -f`, which the
+# macOS app and the launchd agent use). It only finds a Node and starts the engine: the PATH every engine
+# process uses is built in Node on all OSes (engine/src/platform/index.mjs buildPath). Windows: bid.cmd.
 
-# PATH captured by install.sh from your real Terminal session
-[ -f "$ENGINE_DIR/env.zsh" ] && source "$ENGINE_DIR/env.zsh"
+# the engine folder, through symlinks to this file
+SELF="$0"
+while [ -h "$SELF" ]; do
+  LINK="$(readlink "$SELF")"
+  case "$LINK" in
+    /*) SELF="$LINK" ;;
+    *) SELF="$(dirname "$SELF")/$LINK" ;;
+  esac
+done
+ENGINE_DIR="$(CDPATH='' cd -- "$(dirname -- "$SELF")" && pwd -P)"
 
-export PATH="/opt/homebrew/bin:/usr/local/bin:$HOME/.volta/bin:$HOME/.bun/bin:$HOME/.local/bin:$HOME/Library/pnpm:$PATH:/usr/bin:/bin:/usr/sbin:/sbin"
-export LANG="en_US.UTF-8" LC_ALL="en_US.UTF-8"
+# PATH captured by install.sh from your real Terminal session: env.sh, or env.zsh from older installs
+# (both are plain `export PATH="…"` lines, so any POSIX shell can read them)
+if [ -f "$ENGINE_DIR/env.sh" ]; then
+  . "$ENGINE_DIR/env.sh"
+elif [ -f "$ENGINE_DIR/env.zsh" ]; then
+  . "$ENGINE_DIR/env.zsh"
+fi
 
-# nvm without the slow nvm.sh: prefer the default alias, else the newest installed version
+UNAME=uname
+[ -x /usr/bin/uname ] && UNAME=/usr/bin/uname
+OS_NAME="$("$UNAME" -s 2>/dev/null)"
+MACHINE="$("$UNAME" -m 2>/dev/null)"
+case "$OS_NAME" in
+  Darwin) OS_KEY=darwin; export LANG="en_US.UTF-8" LC_ALL="en_US.UTF-8" ;;
+  *) OS_KEY=linux ;;
+esac
+# Node's names (process.arch): Linux says aarch64 where the runtime folder says arm64
+case "$MACHINE" in
+  arm64|aarch64) ARCH_KEY=arm64 ;;
+  x86_64|amd64) ARCH_KEY=x64 ;;
+  *) ARCH_KEY="$MACHINE" ;;
+esac
+
+# the verified bundled runtime: runtime/<platform>-<arch> (darwin-arm64, linux-x64 …), or the older
+# macOS folder named after `uname -m` (runtime/arm64, runtime/x86_64)
+BUNDLED_NODE=""
+for CANDIDATE in "$ENGINE_DIR/runtime/$OS_KEY-$ARCH_KEY/bin/node" "$ENGINE_DIR/runtime/$MACHINE/bin/node"; do
+  if [ -z "$BUNDLED_NODE" ] && [ -x "$CANDIDATE" ]; then BUNDLED_NODE="$CANDIDATE"; fi
+done
+if [ -z "${BID_NO_BUNDLED_NODE:-}" ] && [ -n "$BUNDLED_NODE" ]; then
+  export BID_NODE_RUNTIME="bundled"
+  exec "$BUNDLED_NODE" "$ENGINE_DIR/src/bid.mjs" "$@"
+fi
+
+# no bundled runtime: the user's Node — their PATH first, then the usual install places, then nvm
+# (without the slow nvm.sh: the default alias, else the newest installed version). The search PATH is only
+# for finding Node: the engine gets the user's PATH back and builds its own per OS.
+USER_PATH="$PATH"
+PATH="$PATH:$HOME/.volta/bin:$HOME/.asdf/shims:/opt/homebrew/bin:/home/linuxbrew/.linuxbrew/bin:/usr/local/bin:$HOME/.bun/bin:$HOME/.local/bin:$HOME/Library/pnpm:$HOME/.local/share/pnpm:$HOME/.npm-global/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+export PATH
 if ! command -v node >/dev/null 2>&1 && [ -d "$HOME/.nvm/versions/node" ]; then
-  NVM_DEFAULT=""
-  [ -f "$HOME/.nvm/alias/default" ] && NVM_DEFAULT="$(cat "$HOME/.nvm/alias/default")"
+  NVM_VERSIONS="$HOME/.nvm/versions/node"
+  # (command substitution, not a variable: zsh -f does not split unquoted variables)
   NODE_BIN=""
-  if [ -n "$NVM_DEFAULT" ]; then
-    NODE_BIN=( $HOME/.nvm/versions/node/v${NVM_DEFAULT#v}*/bin(N/) )
-    NODE_BIN="${NODE_BIN[-1]}"
+  if [ -f "$HOME/.nvm/alias/default" ]; then
+    NVM_DEFAULT="$(cat "$HOME/.nvm/alias/default")"
+    NVM_DEFAULT="${NVM_DEFAULT#v}"
+    for V in $(ls -1 "$NVM_VERSIONS" 2>/dev/null | grep '^v[0-9]' | sort -t. -k1.2,1n -k2,2n -k3,3n); do
+      case "$V" in "v$NVM_DEFAULT"*) [ -d "$NVM_VERSIONS/$V/bin" ] && NODE_BIN="$NVM_VERSIONS/$V/bin" ;; esac
+    done
   fi
   if [ -z "$NODE_BIN" ]; then
-    NODE_BIN=( $HOME/.nvm/versions/node/*/bin(Nn/) )
-    NODE_BIN="${NODE_BIN[-1]}"
+    for V in $(ls -1 "$NVM_VERSIONS" 2>/dev/null | grep '^v[0-9]' | sort -t. -k1.2,1n -k2,2n -k3,3n); do
+      [ -d "$NVM_VERSIONS/$V/bin" ] && NODE_BIN="$NVM_VERSIONS/$V/bin"
+    done
   fi
-  [ -n "$NODE_BIN" ] && export PATH="$NODE_BIN:$PATH"
+  [ -n "$NODE_BIN" ] && PATH="$NODE_BIN:$PATH" && export PATH
 fi
 
 if ! command -v node >/dev/null 2>&1; then
-  print -r -- '{"type":"result","ok":false,"code":"no_node","error":"Node.js не е намерен. Инсталирай го от nodejs.org или с Homebrew."}'
+  # no Node → no i18n catalog; the two hand-written languages are inlined here
+  case "${BID_LANG:-en}" in
+    bg*) printf '%s\n' '{"type":"result","ok":false,"code":"no_node","key":"engine.noNode","error":"Node.js не е намерен. Инсталирай го от nodejs.org или с Homebrew."}' ;;
+    *) printf '%s\n' '{"type":"result","ok":false,"code":"no_node","key":"engine.noNode","error":"Node.js was not found. Install it from nodejs.org or with Homebrew."}' ;;
+  esac
   exit 127
 fi
 
-exec node "$ENGINE_DIR/src/bid.mjs" "$@"
+# the engine needs Node 18+ (fetch, structuredClone); an older one would fail with a confusing syntax error
+NODE_V="$(node --version 2>/dev/null)"
+NODE_MAJOR="${NODE_V#v}"
+NODE_MAJOR="${NODE_MAJOR%%.*}"
+case "$NODE_MAJOR" in
+  ''|*[!0-9]*) ;;
+  *)
+    if [ "$NODE_MAJOR" -lt 18 ]; then
+      case "${BID_LANG:-en}" in
+        bg*) printf '%s\n' "{\"type\":\"result\",\"ok\":false,\"code\":\"no_node\",\"key\":\"engine.oldNode\",\"error\":\"Node.js $NODE_V е твърде стар — нужна е версия 18 или по-нова.\"}" ;;
+        *) printf '%s\n' "{\"type\":\"result\",\"ok\":false,\"code\":\"no_node\",\"key\":\"engine.oldNode\",\"error\":\"Node.js $NODE_V is too old — version 18 or newer is needed.\"}" ;;
+      esac
+      exit 127
+    fi
+    ;;
+esac
+
+NODE_EXE="$(command -v node)"
+PATH="$USER_PATH"
+export PATH
+exec "$NODE_EXE" "$ENGINE_DIR/src/bid.mjs" "$@"

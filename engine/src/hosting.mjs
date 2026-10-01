@@ -1,11 +1,17 @@
+import { meteredProviderCall } from './meter.mjs';
 // Hosting adapters — Netlify, Vercel, Cloudflare Pages, GitHub Pages behind one interface.
 import fs from 'node:fs';
 import path from 'node:path';
-import { HOME, EngineError, ev, sh, which, runStream, logDir, readJSON, exists, nowISO } from './util.mjs';
+import { HOME, CACHE_DIR, EngineError, ev, sh, which, runStream, logDir, readJSON, exists, nowISO, publishIncludes } from './util.mjs';
+import { stageArtifact } from './staging.mjs';
+import { cliEnv } from './isolation.mjs';
+import { configCandidates } from './platform/index.mjs';
 import { detect } from './detect.mjs';
 import { getState, setState, updateProject, addHistory, findProject } from './store.mjs';
 import { netlifyAuth, netlifyDeploy, deployGuard } from './netlify.mjs';
 import { recordCost } from './costs.mjs';
+import { gitHead } from './git.mjs';
+import { t, msg } from './i18n.mjs';
 
 function fileHas(file, re) {
   try {
@@ -24,8 +30,8 @@ export const PROVIDERS = {
     ssr: true,
     preview: true,
     commercialFree: true,
-    free: 'Безплатен план (кредитна система)',
-    note: 'Production deploy харчи кредити — виж „Разходи“.',
+    free: t('hosting.netlify.free'),
+    note: t('hosting.netlify.note'),
     pricing: 'https://www.netlify.com/pricing/',
   },
   vercel: {
@@ -36,8 +42,8 @@ export const PROVIDERS = {
     ssr: true,
     preview: true,
     commercialFree: false,
-    free: 'Hobby — безплатен, но само за лични/некомерсиални проекти',
-    note: 'За сайтове на клиенти е нужен платен Pro план.',
+    free: t('hosting.vercel.free'),
+    note: t('hosting.vercel.note'),
     pricing: 'https://vercel.com/pricing',
   },
   cloudflare: {
@@ -48,8 +54,8 @@ export const PROVIDERS = {
     ssr: false,
     preview: true,
     commercialFree: true,
-    free: 'Безплатен план за статични сайтове',
-    note: 'Отличен за статични сайтове с много трафик.',
+    free: t('hosting.cloudflare.free'),
+    note: t('hosting.cloudflare.note'),
     pricing: 'https://www.cloudflare.com/plans/developer-platform/',
   },
   ghpages: {
@@ -60,8 +66,8 @@ export const PROVIDERS = {
     ssr: false,
     preview: false,
     commercialFree: true,
-    free: 'Безплатен за публични repo-та (частни изискват платен GitHub)',
-    note: 'Без preview и без сървърни функции; не е за онлайн магазини.',
+    free: t('hosting.ghpages.free'),
+    note: t('hosting.ghpages.note'),
     pricing: 'https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits',
   },
 };
@@ -70,19 +76,12 @@ export const PROVIDERS = {
 
 function vercelAuthed() {
   if (process.env.VERCEL_TOKEN) return true;
-  return [
-    path.join(HOME, 'Library', 'Application Support', 'com.vercel.cli', 'auth.json'),
-    path.join(HOME, '.local', 'share', 'com.vercel.cli', 'auth.json'),
-  ].some((f) => fileHas(f, /"token"\s*:\s*"[^"]+"/));
+  return configCandidates('vercel', { home: HOME }).some((f) => fileHas(f, /"token"\s*:\s*"[^"]+"/));
 }
 
 function wranglerAuthed() {
   if (process.env.CLOUDFLARE_API_TOKEN) return true;
-  return [
-    path.join(HOME, 'Library', 'Preferences', '.wrangler', 'config', 'default.toml'),
-    path.join(HOME, '.wrangler', 'config', 'default.toml'),
-    path.join(HOME, '.config', '.wrangler', 'config', 'default.toml'),
-  ].some((f) => fileHas(f, /oauth_token|api_token/));
+  return configCandidates('wrangler', { home: HOME }).some((f) => fileHas(f, /oauth_token|api_token/));
 }
 
 function ghAuthed() {
@@ -91,7 +90,7 @@ function ghAuthed() {
 
 export function providerStatus(id) {
   const p = PROVIDERS[id];
-  const installed = id === 'netlify' ? !!(which('netlify') || which('npx')) : !!which(p.cli);
+  const installed = id === 'netlify' ? !!which('netlify') : id === 'ghpages' ? !!which('gh') && !!which('gh-pages') : !!which(p.cli);
   const loggedIn =
     id === 'netlify' ? netlifyAuth().loggedIn : id === 'vercel' ? vercelAuthed() : id === 'cloudflare' ? wranglerAuthed() : ghAuthed();
   return { ...p, installed, loggedIn };
@@ -132,11 +131,11 @@ export function advise(project) {
     let compatible = true;
     if (needsServer && !p.ssr) {
       compatible = false;
-      reasons.push(d.ssr ? `${d.framework} със сървърно рендиране не върви тук` : 'Проектът има сървърни функции');
+      reasons.push(d.ssr ? t('hosting.reason.ssr', { framework: d.framework }) : t('hosting.reason.functions'));
     }
-    if (p.id === 'ghpages' && !d.git.remote) reasons.push('Нужно е GitHub repo');
+    if (p.id === 'ghpages' && !d.git.remote) reasons.push(t('hosting.reason.needsRepo'));
     if (p.id === 'ghpages' && ['astro', 'vite'].includes(d.framework))
-      reasons.push('Без собствен домейн сайтът е под /repo-име/ — трябва настройка на base');
+      reasons.push(t('hosting.reason.basePath'));
     if (!p.commercialFree) reasons.push(p.note);
     let score = compatible ? 50 : 0;
     if (compatible && p.commercialFree) score += 20;
@@ -166,9 +165,9 @@ export function advise(project) {
 }
 
 export function setHosting(project, provider) {
-  if (!PROVIDERS[provider]) throw new EngineError(`Непознат хостинг: ${provider}`, 'usage', 2);
+  if (!PROVIDERS[provider]) throw new EngineError(msg('hosting.unknown', { provider }), 'usage', 2);
   updateProject(project.key, { hosting: provider });
-  addHistory({ project: project.key, projectName: project.name, kind: 'hosting', status: 'ok', message: `Хостинг → ${PROVIDERS[provider].name}` });
+  addHistory({ project: project.key, projectName: project.name, kind: 'hosting', status: 'ok', message: t('hosting.history.set', { name: PROVIDERS[provider].name }) });
   return { hosting: provider };
 }
 
@@ -183,54 +182,62 @@ const slugify = (s) =>
     .slice(0, 50) || 'site';
 
 function finishDeploy(project, provider, { prod, url, duration, logFile }) {
-  const record = { url, at: nowISO(), provider };
+  const record = { url, at: nowISO(), provider, sha: gitHead(project.path) };
   setState(project.key, prod ? { lastProd: record } : { lastDraft: record });
   if (prod) updateProject(project.key, { liveUrl: url });
   addHistory({ project: project.key, projectName: project.name, kind: prod ? 'production' : 'draft', status: 'ok', url, duration, log: logFile, message: PROVIDERS[provider].name });
   const cost = recordCost({ project: project.key, projectName: project.name, service: provider, op: prod ? 'production' : 'draft' });
-  ev.step('deploy', { label: prod ? 'Production deploy' : 'Draft preview', category: 'Hosting', status: 'pass', summary: url, duration, log: logFile });
-  ev.notify(prod ? `🚀 ${project.name} е LIVE` : `✅ ${project.name} — Preview`, `${PROVIDERS[provider].name}: ${url}`, url);
+  ev.step('deploy', { label: t(prod ? 'deploy.label.production' : 'deploy.label.draft'), category: 'Hosting', status: 'pass', summary: url, duration, log: logFile });
+  ev.notify(prod ? t('deploy.notify.live', { project: project.name }) : t('hosting.notify.preview', { project: project.name }), `${PROVIDERS[provider].name}: ${url}`, url);
   return { prod, url, provider, duration, cost };
 }
 
-function failDeploy(project, provider, { prod, r, logFile, duration, msg }) {
-  ev.step('deploy', { label: prod ? 'Production deploy' : 'Draft preview', category: 'Hosting', status: 'fail', summary: msg || 'Deploy се провали', details: r?.tail?.slice(-15) || [], log: logFile, duration });
+function failDeploy(project, provider, { prod, r, logFile, duration, reason }) {
+  ev.step('deploy', { label: t(prod ? 'deploy.label.production' : 'deploy.label.draft'), category: 'Hosting', status: 'fail', summary: reason || t('deploy.failed'), details: r?.tail?.slice(-15) || [], log: logFile, duration });
   addHistory({ project: project.key, projectName: project.name, kind: prod ? 'production' : 'draft', status: 'fail', log: logFile, message: PROVIDERS[provider].name });
-  throw new EngineError(`${PROVIDERS[provider].name}: ${msg || 'deploy се провали'}. Виж лога.`, 'deploy_failed');
+  throw new EngineError(msg('hosting.deployFailed', { provider: PROVIDERS[provider].name, reason: reason || t('hosting.deployFailedReason') }), 'deploy_failed');
 }
 
 async function vercelDeploy(project, { prod }) {
   const logFile = path.join(logDir(project.key), `vercel-${prod ? 'prod' : 'draft'}.log`);
   const args = ['deploy', '--yes'];
   if (prod) args.push('--prod');
-  ev.step('deploy', { label: prod ? 'Production deploy' : 'Draft preview', category: 'Hosting', status: 'running', summary: 'Vercel build + upload' });
+  ev.step('deploy', { label: t(prod ? 'deploy.label.production' : 'deploy.label.draft'), category: 'Hosting', status: 'running', summary: 'Vercel build + upload' });
   const t0 = Date.now();
-  const r = await runStream('vercel', args, { cwd: project.path, step: 'deploy', logFile, captureStdout: true, timeout: 20 * 60 * 1000 });
+  // Vercel uploads the source and builds remotely: no local artifact to verify (the result says so)
+  const r = await meteredProviderCall(project, prod ? 'deploy.production' : 'deploy.preview', () => runStream('vercel', args, { cwd: project.path, step: 'deploy', logFile, captureStdout: true, timeout: 20 * 60 * 1000, env: cliEnv() }));
   const duration = (Date.now() - t0) / 1000;
   const url = (r.stdout.match(/https:\/\/[^\s]+\.vercel\.app/g) || []).pop();
   if (r.code !== 0 || !url) return failDeploy(project, 'vercel', { prod, r, logFile, duration });
   return finishDeploy(project, 'vercel', { prod, url, duration, logFile });
 }
 
-async function cloudflareDeploy(project, { prod }) {
+async function cloudflareDeploy(project, { prod, expectedArtifact, artifactCode }) {
   const d = detect(project.path);
-  if (d.ssr || d.hasFunctions) throw new EngineError('Cloudflare Pages тук поддържа само статични сайтове.', 'unsupported');
-  if (!d.publishReady) throw new EngineError(`Няма build в ${d.publishDir}/ — пусни проверката първо.`, 'no_build');
+  if (d.ssr || d.hasFunctions) throw new EngineError(msg('hosting.cloudflare.staticOnly'), 'unsupported');
+  if (!d.publishReady) throw new EngineError(msg('hosting.noBuild', { dir: d.publishDir }), 'no_build');
   const logFile = path.join(logDir(project.key), `cloudflare-${prod ? 'prod' : 'draft'}.log`);
   let name = project.cloudflare?.projectName;
-  ev.step('deploy', { label: prod ? 'Production deploy' : 'Draft preview', category: 'Hosting', status: 'running', summary: 'Cloudflare Pages upload' });
+  ev.step('deploy', { label: t(prod ? 'deploy.label.production' : 'deploy.label.draft'), category: 'Hosting', status: 'running', summary: 'Cloudflare Pages upload' });
   if (!name) {
     name = slugify(project.name === 'ПОРТФОЛИО' ? 'portfolio' : project.name);
-    const c = await runStream('wrangler', ['pages', 'project', 'create', name, '--production-branch=main'], { cwd: project.path, step: 'deploy', logFile, timeout: 120000 });
-    if (c.code !== 0 && !c.tail.join('\n').match(/already exists/i)) return failDeploy(project, 'cloudflare', { prod, r: c, logFile, msg: 'не успях да създам Pages проект' });
+    const c = await runStream('wrangler', ['pages', 'project', 'create', name, '--production-branch=main'], { cwd: project.path, step: 'deploy', logFile, timeout: 120000, env: cliEnv() });
+    if (c.code !== 0 && !c.tail.join('\n').match(/already exists/i)) return failDeploy(project, 'cloudflare', { prod, r: c, logFile, reason: t('hosting.cloudflare.createFailed') });
     updateProject(project.key, { cloudflare: { projectName: name } });
   }
   const t0 = Date.now();
-  const r = await runStream(
-    'wrangler',
-    ['pages', 'deploy', d.publishDir, `--project-name=${name}`, `--branch=${prod ? 'main' : 'preview'}`, '--commit-dirty=true'],
-    { cwd: project.path, step: 'deploy', logFile, captureStdout: true, timeout: 20 * 60 * 1000 }
-  );
+  const staged = await stageArtifact(project, d.publishDir, { expected: expectedArtifact, code: artifactCode });
+  let r;
+  try {
+    r = await meteredProviderCall(project, prod ? 'deploy.production' : 'deploy.preview', () => runStream(
+      'wrangler',
+      ['pages', 'deploy', staged.dir, `--project-name=${name}`, `--branch=${prod ? 'main' : 'preview'}`, '--commit-dirty=true'],
+      { cwd: project.path, step: 'deploy', logFile, captureStdout: true, timeout: 20 * 60 * 1000, env: cliEnv() }
+    ));
+    await staged.verify();
+  } finally {
+    staged.cleanup();
+  }
   const duration = (Date.now() - t0) / 1000;
   const all = `${r.stdout}\n${r.tail.join('\n')}`;
   const url = (all.match(/https:\/\/[^\s]+\.pages\.dev/g) || []).pop();
@@ -238,25 +245,58 @@ async function cloudflareDeploy(project, { prod }) {
   return finishDeploy(project, 'cloudflare', { prod, url: prod ? `https://${name}.pages.dev` : url, duration, logFile });
 }
 
-async function ghPagesDeploy(project, { prod }) {
-  if (!prod) throw new EngineError('GitHub Pages няма preview — направи Local Preview или избери друг хостинг за чернови.', 'unsupported');
+/**
+ * What may be published from a project folder. A build folder (dist/, out/ …) is published as it is; when the
+ * site lives in the project root, a copy without dotfiles, node_modules and tooling goes out instead —
+ * otherwise `.env`, `.git` or keys next to index.html would end up on a public host.
+ */
+export function stagePublicCopy(projectDir, publishDir) {
+  if (publishDir && publishDir !== '.' && publishDir !== './') return publishDir;
+  // unique per call: two projects with the same folder name never share (or wipe) one copy (audit E15)
+  const out = path.join(CACHE_DIR, 'publish', `${path.basename(projectDir).replace(/[^\w.-]/g, '_')}-${process.pid}-${Date.now().toString(36)}`);
+  fs.rmSync(out, { recursive: true, force: true });
+  const copy = (from, to, root) => {
+    fs.mkdirSync(to, { recursive: true });
+    for (const e of fs.readdirSync(from, { withFileTypes: true })) {
+      if (!publishIncludes(e.name, { root })) continue;
+      const a = path.join(from, e.name);
+      const b = path.join(to, e.name);
+      if (e.isDirectory()) copy(a, b, false);
+      else if (e.isFile()) fs.copyFileSync(a, b);
+    }
+  };
+  copy(projectDir, out, true);
+  return out;
+}
+
+async function ghPagesDeploy(project, { prod, expectedArtifact, artifactCode }) {
+  if (!prod) throw new EngineError(msg('hosting.ghpages.noPreview'), 'unsupported');
   const d = detect(project.path);
-  if (d.ssr || d.hasFunctions) throw new EngineError('GitHub Pages е само за статични сайтове.', 'unsupported');
-  if (!d.publishReady) throw new EngineError(`Няма build в ${d.publishDir}/ — пусни проверката първо.`, 'no_build');
+  if (d.ssr || d.hasFunctions) throw new EngineError(msg('hosting.ghpages.staticOnly'), 'unsupported');
+  if (!d.publishReady) throw new EngineError(msg('hosting.noBuild', { dir: d.publishDir }), 'no_build');
   const m = (d.git.githubUrl || '').match(/github\.com\/([^/]+)\/([^/]+)/);
-  if (!m) throw new EngineError('Нужно е GitHub repo (origin).', 'no_remote');
+  if (!m) throw new EngineError(msg('hosting.ghpages.needsRepo'), 'no_remote');
   const [, owner, repo] = m;
   const logFile = path.join(logDir(project.key), 'ghpages.log');
-  ev.step('deploy', { label: 'Production deploy', category: 'Hosting', status: 'running', summary: `gh-pages ← ${d.publishDir}/` });
-  if (!exists(path.join(project.path, d.publishDir, '.nojekyll'))) fs.writeFileSync(path.join(project.path, d.publishDir, '.nojekyll'), '');
+  ev.step('deploy', { label: t('deploy.label.production'), category: 'Hosting', status: 'running', summary: `gh-pages ← ${d.publishDir}/` });
   const t0 = Date.now();
-  const r = await runStream('npx', ['--yes', 'gh-pages', '-d', d.publishDir, '-t', '-m', `Before I Deploy — ${new Date().toISOString()}`], {
-    cwd: project.path,
-    step: 'deploy',
-    logFile,
-    env: { ...process.env, GIT_TERMINAL_PROMPT: '0' },
-    timeout: 10 * 60 * 1000,
-  });
+  // no -t (dotfiles); --nojekyll adds the marker on the gh-pages branch instead of in the user's folder
+  // the installed `gh-pages` CLI only — never `npx --yes gh-pages` (audit E10); Setup installs it on request
+  if (!which('gh-pages')) throw new EngineError(msg('hosting.ghpages.cliMissing'), 'no_cli');
+  const staged = await stageArtifact(project, d.publishDir, { expected: expectedArtifact, code: artifactCode });
+  let r;
+  try {
+    r = await meteredProviderCall(project, 'deploy.production', () => runStream('gh-pages', ['-d', staged.dir, '--nojekyll', '-m', `Before I Deploy — ${new Date().toISOString()}`], {
+      cwd: project.path,
+      step: 'deploy',
+      logFile,
+      env: cliEnv({ GIT_TERMINAL_PROMPT: '0' }),
+      timeout: 10 * 60 * 1000,
+    }));
+    await staged.verify();
+  } finally {
+    staged.cleanup();
+  }
   const duration = (Date.now() - t0) / 1000;
   if (r.code !== 0) return failDeploy(project, 'ghpages', { prod, r, logFile, duration });
   sh('gh', ['api', '-X', 'POST', `repos/${owner}/${repo}/pages`, '-f', 'source[branch]=gh-pages', '-f', 'source[path]=/'], { timeout: 20000 });
@@ -265,19 +305,20 @@ async function ghPagesDeploy(project, { prod }) {
 }
 
 /** Deploys with the project's selected hosting provider. */
-export async function deployProject(project, { prod = false, confirm = null } = {}) {
+export async function deployProject(project, { prod = false, confirm = null, expectedArtifact, artifactCode = 'stale_check', releaseVerified = false } = {}) {
   const provider = (findProject(project.key) || project).hosting || 'netlify';
-  if (provider === 'netlify') return netlifyDeploy(project, { prod, confirm });
-  if (prod && confirm !== 'DEPLOY') throw new EngineError('Production deploy изисква --confirm DEPLOY', 'confirm_required', 2);
-  deployGuard(project);
+  if (provider === 'netlify') return netlifyDeploy(project, { prod, confirm, expectedArtifact, artifactCode, releaseVerified });
+  if (prod && confirm !== 'DEPLOY') throw new EngineError(msg('deploy.confirmRequired'), 'confirm_required', 2);
+  deployGuard(project, { releaseVerified });
   const st = providerStatus(provider);
-  if (!st.installed) throw new EngineError(`${st.name} CLI не е инсталиран — инсталирай го от „Настройка“.`, 'no_cli');
-  if (!st.loggedIn) throw new EngineError(`Не си влязъл в ${st.name}.`, 'not_logged_in', 5);
+  if (!st.installed) throw new EngineError(msg('hosting.cliMissing', { name: st.name }), 'no_cli');
+  if (!st.loggedIn) throw new EngineError(msg('hosting.notLoggedIn', { name: st.name }), 'not_logged_in', 5);
   const p = findProject(project.key) || project;
   if (provider === 'vercel') return vercelDeploy(p, { prod });
-  if (provider === 'cloudflare') return cloudflareDeploy(p, { prod });
-  if (provider === 'ghpages') return ghPagesDeploy(p, { prod });
-  throw new EngineError(`Непознат хостинг: ${provider}`, 'usage', 2);
+  const expected = expectedArtifact === undefined ? getState(p.key).check?.artifact?.hash || null : expectedArtifact;
+  if (provider === 'cloudflare') return cloudflareDeploy(p, { prod, expectedArtifact: expected, artifactCode });
+  if (provider === 'ghpages') return ghPagesDeploy(p, { prod, expectedArtifact: expected, artifactCode });
+  throw new EngineError(msg('hosting.unknown', { provider }), 'usage', 2);
 }
 
 export function hostingReady(project) {

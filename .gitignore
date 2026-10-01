@@ -6,3 +6,17 @@ build/
 *.dmg
 *.log
 .DS_Store
+
+# release artifacts (scripts/release.sh) — uploaded to the release host, not versioned
+releases/
+
+# local test output (install.sh)
+tests/last-run.txt
+tests/rls/last-run.json
+tests/rls/package-lock.json
+
+# bundled Node runtime (scripts/bundle-node.sh) — downloaded at build time, ~110 MB per architecture
+engine/runtime/
+
+# agent worktrees (local only)
+.claude/worktrees/

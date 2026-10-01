@@ -1,0 +1,4 @@
+{
+  "purpose": "the stream opens, sends its first event and then goes silent (idle timeout, not the call timeout)",
+  "stall": true
+}

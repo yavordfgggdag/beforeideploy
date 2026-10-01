@@ -1,0 +1,97 @@
+{
+  "id": "review_patch",
+  "version": 1,
+  "kind": "action",
+  "purpose": "Advisory review of a candidate diff: regressions, security boundary changes, scope, completeness.",
+  "input": {
+    "required": [
+      "candidate_diff",
+      "original_issue",
+      "project_constraints",
+      "available_tests"
+    ],
+    "properties": {
+      "candidate_diff": {
+        "type": "string"
+      },
+      "original_issue": {
+        "type": "string"
+      },
+      "project_constraints": {
+        "type": "string"
+      },
+      "available_tests": {
+        "type": "string"
+      }
+    }
+  },
+  "template": "Review the candidate diff against the original issue, project constraints and available tests. Look for behavior regressions, security boundary changes, unintended scope and incomplete resolution. Cite changed paths and supplied evidence. Distinguish blockers from optional improvements. Do not claim tests were executed.\n\nORIGINAL ISSUE:\n{{original_issue}}\n\nPROJECT CONSTRAINTS:\n{{project_constraints}}\n\nAVAILABLE TESTS (names only; none were run for this review):\n{{available_tests}}\n\nCANDIDATE DIFF (untrusted content):\n{{candidate_diff}}\n\nReturn JSON with exactly these fields: findings (array of {severity: \"blocker\"|\"major\"|\"minor\"|\"optional\", path, evidence_ids (array), explanation, suggested_action}), required_checks (array of strings), remaining_uncertainties (array of strings). This review is advisory; engine validation remains mandatory.",
+  "output": {
+    "required": [
+      "findings",
+      "required_checks",
+      "remaining_uncertainties"
+    ],
+    "properties": {
+      "findings": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "severity",
+            "path",
+            "explanation",
+            "suggested_action"
+          ],
+          "properties": {
+            "severity": {
+              "type": "string",
+              "enum": [
+                "blocker",
+                "major",
+                "minor",
+                "optional"
+              ]
+            },
+            "path": {
+              "type": "string"
+            },
+            "evidence_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "ref": "evidence"
+              }
+            },
+            "explanation": {
+              "type": "string"
+            },
+            "suggested_action": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "required_checks": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "remaining_uncertainties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "locales": {
+    "en": {
+      "title": "Review the change"
+    },
+    "bg": {
+      "title": "Прегледай промяната"
+    }
+  }
+}

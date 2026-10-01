@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="{{LANG}}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{NAME}} — истории, идеи и бележки</title>
+  <meta name="description" content="{{DESCRIPTION:Блог за пътувания, книги и малките неща, които правят деня хубав.}}">
+  <link rel="canonical" href="/">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#fffdf8">
+  <meta property="og:title" content="{{NAME}}">
+  <meta property="og:description" content="{{DESCRIPTION:Блог за пътувания, книги и малките неща, които правят деня хубав.}}">
+  <meta property="og:image" content="/og.svg">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <a class="skip" href="#main">Към съдържанието</a>
+  <header class="top">
+    <div class="wrap">
+      <a class="brand" href="/"><span class="mark"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 5.5A2 2 0 016.5 3.5H19v14H6.5a2 2 0 00-2 2z"/><path d="M4.5 19.5a2 2 0 002 2H19"/></svg></span>{{NAME}}</a>
+      <nav class="nav" aria-label="Основно меню"><a href="/#posts">Статии</a><a href="/#about">За мен</a><a href="/#newsletter">Бюлетин</a></nav>
+      
+    </div>
+  </header>
+  <main id="main">
+    <section class="hero center">
+      <div class="wrap">
+        <div>
+          <span class="eyebrow"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 5.5A2 2 0 016.5 3.5H19v14H6.5a2 2 0 00-2 2z"/><path d="M4.5 19.5a2 2 0 002 2H19"/></svg>Нова статия всеки четвъртък</span>
+          <h1>Истории, които <em>си струва да прочетете</em></h1>
+          <p class="lead">Пиша за пътувания, книги и малките неща, които правят деня хубав. Без реклами, без бързане.</p>
+          <div class="actions">
+          <a class="btn" href="/post.html">Чети последната<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="btn ghost" href="/#newsletter">Абонирай се</a>
+          </div>
+        </div>
+        
+      </div>
+    </section>
+    <section class="section" id="posts">
+      <div class="wrap">
+        <div class="head"><h2>Последни статии</h2></div><div class="posts">
+          <a class="post" href="/post.html"><span class="meta"><b>Пътуване</b><span>26 септември</span></span><h3>Три дни в Родопите без телефон</h3><p>Какво се случва, когато изключиш всичко и тръгнеш по пътеката.</p></a>
+          <a class="post" href="/post.html"><span class="meta"><b>Книги</b><span>19 септември</span></span><h3>Пет книги за есента</h3><p>Кратък списък за дългите вечери — от романи до есета.</p></a>
+          <a class="post" href="/post.html"><span class="meta"><b>Живот</b><span>12 септември</span></span><h3>Малките ритуали на сутринта</h3><p>Защо първите 20 минути от деня решават останалите.</p></a>
+        </div>
+      </div>
+    </section>
+    <section class="section alt" id="about">
+      <div class="wrap">
+        <div class="head"><h2>За мен</h2></div><div class="prose"><p>Няколко изречения за това кой пише и защо. Читателите се връщат при човек, не при сайт.</p></div>
+      </div>
+    </section>
+    <section class="section" id="newsletter">
+      <div class="wrap">
+        <div class="head"><h2>Бюлетин</h2><p>Едно писмо в неделя с новите статии и една препоръка.</p></div><form class="form" name="newsletter" method="POST" data-netlify="true" netlify-honeypot="company" style="max-width:560px">
+          <input type="hidden" name="form-name" value="newsletter">
+          <p class="hp"><label for="f-company">Company</label><input id="f-company" name="company"></p>
+          <label for="f-email">Имейл<input id="f-email" name="email" type="email" autocomplete="email" required></label>
+          <button class="btn" type="submit">Абонирай ме</button>
+          <small>Без спам. Отписване с един клик.</small>
+        </form>
+      </div>
+    </section>
+  </main>
+  <footer class="foot">
+    <div class="wrap">
+      <p>© {{YEAR}} {{NAME}} · Всички права запазени.</p>
+      <nav aria-label="Основно меню"><a href="/#posts">Статии</a><a href="/#about">За мен</a><a href="/#newsletter">Бюлетин</a><a href="/privacy.html">Поверителност</a></nav>
+    </div>
+  </footer>
+</body>
+</html>

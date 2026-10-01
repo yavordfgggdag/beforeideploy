@@ -1,0 +1,66 @@
+# The engine on Linux and Windows (PLAN-UNIFIED §5.4, §13). macOS has engine-macos.yml.
+#
+# Linux runs everything: the full suite twice (bubblewrap isolation where the runner allows it, and with
+# BID_NO_SANDBOX=1), setup and platform tests. Windows runs the cross-platform subset: tests/run.mjs
+# drives engine/bid and `#!/bin/sh` stub CLIs, so it is POSIX-only; tests/platform.mjs exercises the
+# Windows code paths for real there (PATHEXT, .cmd shims through cmd.exe, taskkill, bid.cmd).
+name: engine-cross
+
+on:
+  push:
+    paths:
+      - 'engine/**'
+      - 'tests/**'
+      - 'scripts/**'
+      - '.github/workflows/engine-cross.yml'
+  pull_request:
+    paths:
+      - 'engine/**'
+      - 'tests/**'
+      - 'scripts/**'
+  workflow_dispatch:
+
+jobs:
+  linux:
+    name: engine (ubuntu-latest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Launcher syntax (POSIX sh)
+        run: sh -n engine/bid
+      - name: Platform layer
+        run: node --test tests/platform.mjs
+      - name: Setup and unit suites
+        run: node --test tests/setup-v12.mjs tests/billing-catalog-v12.mjs tests/conversation.mjs tests/answer-stream.mjs
+      - name: Engine suite (isolation as the runner allows)
+        run: node tests/run.mjs
+      - name: Engine suite (BID_NO_SANDBOX=1)
+        run: node tests/run.mjs
+        env:
+          BID_NO_SANDBOX: '1'
+
+  windows:
+    name: engine (windows-latest, cross-platform subset)
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax of every engine module
+        shell: pwsh
+        run: Get-ChildItem engine/src -Recurse -Include *.mjs,*.cjs | ForEach-Object { node --check $_.FullName; if ($LASTEXITCODE) { exit 1 } }
+      - name: Platform layer (real PATHEXT, cmd.exe shims, taskkill, bid.cmd)
+        run: node --test tests/platform.mjs
+      - name: Engine help through bid.cmd
+        shell: cmd
+        run: engine\bid.cmd help
+      # informational until the first green Windows run: these suites were written on POSIX
+      - name: Pure-Node suites
+        continue-on-error: true
+        run: node --test tests/billing-catalog-v12.mjs tests/conversation.mjs tests/answer-stream.mjs

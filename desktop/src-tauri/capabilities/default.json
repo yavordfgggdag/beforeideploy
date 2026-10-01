@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Main window: only our own commands and the folder picker — no shell, no fs, no http.",
+  "windows": ["main"],
+  "permissions": ["core:default", "core:event:default", "dialog:allow-open"]
+}

@@ -1,0 +1,33 @@
+# Engine tests + i18n consistency on every push (Linux is enough: the engine is plain Node).
+name: engine
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  engine:
+    name: node tests/run.mjs + i18n-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # engine/bid is POSIX sh now; zsh is still needed for scripts/*.zsh and to check that `zsh -f bid`
+      # (how the macOS app and launchd start it) parses
+      - name: Install zsh
+        run: sudo apt-get update -q && sudo apt-get install -y -q zsh
+      - name: Syntax of every engine module and shell script (audit R9)
+        run: |
+          set -e
+          find engine/src scripts -name '*.mjs' -o -name '*.cjs' | xargs -n1 node --check
+          sh -n engine/bid
+          for f in engine/bid scripts/*.sh scripts/*.zsh *.command; do zsh -n "$f"; done
+      - name: Engine tests
+        run: node tests/run.mjs
+      - name: i18n check
+        run: node scripts/i18n-check.mjs
+      - name: Error codes documented
+        run: node scripts/error-codes.mjs

@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="{{LANG}}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{NAME}} — автобиография и опит</title>
+  <meta name="description" content="{{DESCRIPTION:Професионален опит, умения и проекти — и как да се свържете за работа.}}">
+  <link rel="canonical" href="/">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#fafafa">
+  <meta property="og:title" content="{{NAME}}">
+  <meta property="og:description" content="{{DESCRIPTION:Професионален опит, умения и проекти — и как да се свържете за работа.}}">
+  <meta property="og:image" content="/og.svg">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <a class="skip" href="#main">Към съдържанието</a>
+  <header class="top">
+    <div class="wrap">
+      <a class="brand" href="/"><span class="mark"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19.5c.6-3.3 3-5 6-5s5.4 1.7 6 5"/><circle cx="17" cy="9.5" r="2.4"/><path d="M16.5 14.6c2.4.2 4 1.8 4.5 4.4"/></svg></span>{{NAME}}</a>
+      <nav class="nav" aria-label="Основно меню"><a href="/#experience">Опит</a><a href="/#skills">Умения</a><a href="/#projects">Проекти</a><a href="/#contact">Контакт</a></nav>
+      <a class="btn" href="mailto:hello@example.com">Свържи се</a>
+    </div>
+  </header>
+  <main id="main">
+    <section class="hero">
+      <div class="wrap">
+        <div>
+          <span class="eyebrow"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg>Отворен за нови възможности</span>
+          <h1>Здравейте, аз съм <em>{{NAME}}</em></h1>
+          <p class="lead">Продуктов мениджър с 8 години опит в софтуерни компании. Превръщам сложни проблеми в прости продукти, които хората обичат.</p>
+          <div class="actions">
+          <a class="btn" href="mailto:hello@example.com">Свържи се<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="btn ghost" href="/#experience">Виж опита</a>
+          </div>
+          <div class="chips" style="margin-top:22px"><span>София / дистанционно</span><span>Български, английски, немски</span></div>
+        </div>
+        
+      </div>
+    </section>
+    <section class="section" id="experience">
+      <div class="wrap">
+        <div class="head"><h2>Опит</h2></div><ol class="timeline">
+          <li><span class="when">2022 — днес</span><h3>Старши продуктов мениджър · Компания А</h3><p>Водя екип от 12 души. Ръст на активните потребители с 40% за година.</p></li>
+          <li><span class="when">2019 — 2022</span><h3>Продуктов мениджър · Компания Б</h3><p>Пуснах мобилното приложение от нулата до 200 000 потребители.</p></li>
+          <li><span class="when">2016 — 2019</span><h3>Бизнес анализатор · Компания В</h3><p>Анализи и процеси за отдела по продажби.</p></li>
+          <li><span class="when">2012 — 2016</span><h3>Бакалавър, Икономика · СУ</h3><p>Дипломна работа за поведенческа икономика.</p></li>
+        </ol>
+      </div>
+    </section>
+    <section class="section alt" id="skills">
+      <div class="wrap">
+        <div class="head"><h2>Умения</h2></div><div class="chips"><span>Продуктова стратегия</span><span>Потребителски проучвания</span><span>Agile / Scrum</span><span>SQL и анализ</span><span>Figma</span><span>Водене на екипи</span><span>Публично говорене</span></div>
+      </div>
+    </section>
+    <section class="section" id="projects">
+      <div class="wrap">
+        <div class="head"><h2>Избрани проекти</h2></div><div class="grid">
+          <article class="card"><div class="badge"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3.5 2 5 5.5 5 9.5l-2.5 3h-5L7 12.5C7 8.5 8.5 5 12 3z"/><circle cx="12" cy="9.5" r="1.6"/><path d="M9.5 15.5L8 20l2.5-1.5M14.5 15.5L16 20l-2.5-1.5"/></svg></div><h3>Мобилно приложение</h3><p>От идея до 200 000 потребители за 18 месеца.</p></article>
+          <article class="card"><div class="badge"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div><h3>Нова ценова политика</h3><p>+18% приходи без загуба на клиенти.</p></article>
+          <article class="card"><div class="badge"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19.5c.6-3.3 3-5 6-5s5.4 1.7 6 5"/><circle cx="17" cy="9.5" r="2.4"/><path d="M16.5 14.6c2.4.2 4 1.8 4.5 4.4"/></svg></div><h3>Програма за менторство</h3><p>30 младши колеги, 8 от тях вече водят екипи.</p></article>
+        </div>
+      </div>
+    </section>
+    <section class="section alt" id="contact">
+      <div class="wrap">
+        <div class="head"><h2>Контакт</h2><p>Пишете ми за роли, проекти или просто за кафе.</p></div><div class="contact">
+          <div class="info">
+            <div class="row"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="M4 7l8 6 8-6"/></svg><div><small>Имейл</small><a href="mailto:hello@example.com">hello@example.com</a></div></div>
+            <div class="row"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6.6 3.5h3l1.5 4-2 1.3a11 11 0 006.1 6.1l1.3-2 4 1.5v3a2 2 0 01-2.1 2A16.5 16.5 0 014.6 5.6a2 2 0 012-2.1z"/></svg><div><small>Телефон</small><a href="tel:+359888000000">+359 888 000 000</a></div></div>
+            <div class="row"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></svg><div><small>LinkedIn</small><a href="https://www.linkedin.com/">linkedin.com/in/…</a></div></div>
+          </div>
+          <form class="form" name="contact" method="POST" data-netlify="true" netlify-honeypot="company">
+            <input type="hidden" name="form-name" value="contact">
+            <p class="hp"><label for="f-company">Company</label><input id="f-company" name="company"></p>
+            <label for="f-name">Име<input id="f-name" name="name" autocomplete="name" required></label>
+            <label for="f-email">Имейл<input id="f-email" name="email" type="email" autocomplete="email" required></label>
+            <label for="f-message">Съобщение<textarea id="f-message" name="message"></textarea></label>
+            <button class="btn" type="submit">Изпрати</button>
+            <small>Отговаряме до един работен ден. Данните се ползват само за отговор.</small>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="foot">
+    <div class="wrap">
+      <p>© {{YEAR}} {{NAME}} · Всички права запазени.</p>
+      <nav aria-label="Основно меню"><a href="/#experience">Опит</a><a href="/#skills">Умения</a><a href="/#projects">Проекти</a><a href="/#contact">Контакт</a><a href="/privacy.html">Поверителност</a></nav>
+    </div>
+  </footer>
+</body>
+</html>

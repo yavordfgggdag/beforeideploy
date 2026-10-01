@@ -1,0 +1,158 @@
+# Builds the app on macOS, installs the engine with three demo projects, opens each main screen and saves a
+# PNG of the window (the app renders itself: -BIDSnapshot). Download the "screenshots" artifact to see the UI.
+name: screenshots
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'App/**'
+      - '.github/workflows/screenshots.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  shots:
+    runs-on: macos-15
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    env:
+      APP_ID: bg.yavor.beforeideploy
+      SUPPORT: ${{ github.workspace }}/../support
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build the app
+        run: zsh scripts/build.sh
+      - name: Install the engine and demo projects
+        run: |
+          set -e
+          ENGINE="$HOME/Library/Application Support/BeforeIDeploy/engine"
+          mkdir -p "$(dirname "$ENGINE")"
+          cp -R engine "$ENGINE"
+          cp -R supabase "$ENGINE/supabase"
+          chmod +x "$ENGINE/bid"
+          echo "export PATH=\"$PATH\"" > "$ENGINE/env.zsh"
+          DEMO="$HOME/Sites"
+          mkdir -p "$DEMO"
+          # 1. a static site that is ready
+          mkdir -p "$DEMO/moyat-sait" && cd "$DEMO/moyat-sait"
+          printf '<!doctype html><title>Моят сайт</title><h1>Здравей</h1>\n' > index.html
+          git init -q && git add -A && git -c user.email=a@b.c -c user.name=demo commit -qm init
+          # 2. a shop whose build fails
+          mkdir -p "$DEMO/online-magazin/src" "$DEMO/online-magazin/node_modules" && cd "$DEMO/online-magazin"
+          printf '{"name":"online-magazin","scripts":{"build":"node src/build.js","lint":"node -e 0","typecheck":"node -e 0"},"devDependencies":{"vite":"^5.0.0"}}\n' > package.json
+          printf 'const total = items.reduce((a, b) => a + b.price, 0)\nconsole.log(total)\n' > src/build.js
+          touch node_modules/.keep
+          git init -q && git add -A && git -c user.email=a@b.c -c user.name=demo commit -qm init
+          # 3. a portfolio with an uncommitted change
+          mkdir -p "$DEMO/portfolio/dist" && cd "$DEMO/portfolio"
+          printf '{"name":"portfolio","scripts":{"build":"node -e \\"require(\x27fs\x27).writeFileSync(\x27dist/index.html\x27,\x27<h1>ok</h1>\x27)\\""}}\n' > package.json
+          mkdir -p node_modules && touch node_modules/.keep
+          git init -q && git add -A && git -c user.email=a@b.c -c user.name=demo commit -qm init
+          echo "<!-- draft -->" > notes.html
+          BID="$ENGINE/bid"
+          for p in moyat-sait online-magazin portfolio; do
+            "$BID" project add --path "$DEMO/$p" > /dev/null
+            BID_LANG=bg "$BID" check --project "$DEMO/$p" > /dev/null || true
+          done
+          "$BID" project list | tail -1 | head -c 600; echo
+      - name: Take screenshots
+        run: |
+          set -e
+          APP="$PWD/build/Before I Deploy.app"
+          OUT="$PWD/screenshots"
+          mkdir -p "$OUT"
+          shoot() { # name, extra args…
+            local name="$1"; shift
+            open -n -W "$APP" --args -BIDSnapshot "$OUT/$name.png" -BIDSnapshotDelay 14 -BIDNoKeychain 1 "$@" &
+            local pid=$!
+            for i in $(seq 1 85); do [ -f "$OUT/$name.png" ] && break; sleep 1; done
+            sleep 1
+            pkill -f "Before I Deploy.app/Contents/MacOS/BeforeIDeploy" || true
+            wait $pid 2>/dev/null || true
+            [ -f "$OUT/$name.png" ] || { echo "Missing screenshot: $name"; return 1; }
+          }
+          # first launch: language picker, then the tour. projects.json would make it look like a V9 upgrade
+          # (which skips both), so it is moved aside for these two shots.
+          LIB="$HOME/Library/Application Support/BeforeIDeploy/projects.json"
+          mv "$LIB" "$LIB.bak"
+          defaults delete "$APP_ID" 2>/dev/null || true
+          shoot 01-language
+          defaults write "$APP_ID" locale -string bg
+          defaults write "$APP_ID" onboarding.tourSeen -bool false
+          shoot 02-tour
+          mv "$LIB.bak" "$LIB"
+          defaults write "$APP_ID" onboarding.tourSeen -bool true
+          defaults write "$APP_ID" offlineMode -bool true
+          defaults write "$APP_ID" appearance -string dark
+          shoot 03-mission-control -BIDScreen overview
+          shoot 04-project -BIDScreen project
+          shoot 05-check-running -BIDScreen project -BIDRunCheck YES
+          shoot 06-costs -BIDScreen costs
+          shoot 07-setup -BIDScreen setup
+          shoot 08-settings -BIDScreen settings
+          shoot 09-command-palette -BIDScreen palette
+          shoot 10-domains -BIDScreen domains
+          defaults write "$APP_ID" locale -string en
+          shoot 11-mission-control-en -BIDScreen overview
+          shoot 12-project-en -BIDScreen project
+          defaults write "$APP_ID" locale -string bg
+          # Minimum supported review size, long names and both system appearances.
+          ENGINE="$HOME/Library/Application Support/BeforeIDeploy/engine"
+          mkdir -p "$HOME/Sites/много-дълго-име-на-онлайн-магазин-за-клиент"
+          printf '<!doctype html><title>Demo</title>' > "$HOME/Sites/много-дълго-име-на-онлайн-магазин-за-клиент/index.html"
+          "$ENGINE/bid" project add --path "$HOME/Sites/много-дълго-име-на-онлайн-магазин-за-клиент" > /dev/null
+          for appearance in light dark; do
+            defaults write "$APP_ID" appearance -string "$appearance"
+            for screen in overview project setup settings domains costs; do
+              shoot "v12-$appearance-$screen-small" -BIDScreen "$screen" -BIDWindowSize 900x640
+            done
+          done
+          for appearance in light dark; do
+            defaults write "$APP_ID" appearance -string "$appearance"
+            for state in empty code proposal quota; do
+              shoot "v12-$appearance-assistant-$state" -BIDScreen assistant -BIDAssistantDemo "$state" -BIDWindowSize 1080x700
+            done
+          done
+          for appearance in light dark; do
+            defaults write "$APP_ID" appearance -string "$appearance"
+            shoot "v12-$appearance-usage-compact" -BIDScreen usage -BIDBillingDemo 1 -BIDWindowSize 900x640
+            for screen in plans usage; do
+              shoot "v12-$appearance-$screen-demo" -BIDScreen "$screen" -BIDBillingDemo 1 -BIDWindowSize 1080x700
+            done
+          done
+          ls -la "$OUT"
+      - name: App and engine logs (decode errors, slow commands)
+        if: always()
+        run: |
+          log show --predicate 'subsystem == "bg.yavor.beforeideploy"' --last 15m --style compact 2>/dev/null | grep -v "^Timestamp" | tail -120 || true
+          tail -n 60 "$HOME/Library/Logs/BeforeIDeploy/engine.log" 2>/dev/null | cut -c1-300 || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots
+          path: screenshots/
+      # Also publish the PNGs on a separate orphan branch <branch>-screenshots (no code, so no CI on it),
+      # so they can be fetched with git where artifact downloads are blocked.
+      - name: Publish to a screenshots branch
+        if: always()
+        run: |
+          set -e
+          [ -d screenshots ] && ls screenshots/*.png >/dev/null 2>&1 || { echo "no screenshots"; exit 0; }
+          BR="${GITHUB_REF_NAME}-screenshots"
+          TMP="$(mktemp -d)"
+          cp screenshots/*.png "$TMP/"
+          cd "$TMP"
+          git init -q -b "$BR"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          printf '# Screenshots of %s\n\nCommit %s, run %s.\n' "$GITHUB_REF_NAME" "$GITHUB_SHA" "$GITHUB_RUN_ID" > README.md
+          git add -A
+          git commit -qm "Screenshots for ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" "$BR"

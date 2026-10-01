@@ -1,0 +1,34 @@
+# Who reviews what. GitHub asks the owner of the changed path for a review on every pull request.
+# The last matching line wins. See CONTRIBUTING.md for the split of work.
+#
+# PARTNER: replace @PARTNER_GITHUB below with your partner's GitHub username (e.g. @ivan-dev),
+# then remove the leading "# " from those lines. Until then everything falls back to the owner.
+
+# Default: the owner reviews everything that has no more specific line.
+*                                   @yavordfgggdag
+
+# --- Owner (yavordfgggdag): macOS and Windows apps ---------------------------------------------
+/App/                               @yavordfgggdag
+/engine/src/platform/darwin.mjs     @yavordfgggdag
+/engine/src/platform/win32.mjs      @yavordfgggdag
+/engine/bid.cmd                     @yavordfgggdag
+/packaging/                         @yavordfgggdag
+
+# --- Partner: Linux app and website ------------------------------------------------------------
+# /engine/src/platform/linux.mjs      @PARTNER_GITHUB
+# /site/                              @PARTNER_GITHUB
+# /scripts/site-build.py              @PARTNER_GITHUB
+# /.github/workflows/site.yml         @PARTNER_GITHUB
+
+# --- Shared: both review (a change here affects every platform) --------------------------------
+# /desktop/                           @yavordfgggdag @PARTNER_GITHUB
+# /web/                               @yavordfgggdag @PARTNER_GITHUB
+# /design/                            @yavordfgggdag @PARTNER_GITHUB
+# /engine/src/platform/index.mjs      @yavordfgggdag @PARTNER_GITHUB
+
+# --- Owner only: money, data and security -------------------------------------------------------
+/supabase/                          @yavordfgggdag
+/engine/src/billing.mjs             @yavordfgggdag
+/engine/src/secrets.mjs             @yavordfgggdag
+/.github/workflows/cloud-deploy.yml @yavordfgggdag
+/.github/CODEOWNERS                 @yavordfgggdag

@@ -1,0 +1,32 @@
+# Engine tests on macOS as well (the product runs there): lsof, zip, Keychain-free paths, CLIs that exist on
+# real Macs. macOS minutes cost more, so this runs only when the engine or its tests change.
+name: engine-macos
+
+on:
+  push:
+    paths:
+      - 'engine/**'
+      - 'tests/**'
+      - 'scripts/**'
+      - '.github/workflows/engine-macos.yml'
+  pull_request:
+    paths:
+      - 'engine/**'
+      - 'tests/**'
+      - 'scripts/**'
+  workflow_dispatch:
+
+jobs:
+  engine:
+    name: node tests/run.mjs (macOS)
+    runs-on: macos-15
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Engine tests
+        run: node tests/run.mjs
+      - name: Platform layer (.command scripts byte-identical, launchd plist, Keychain path untouched)
+        run: node --test tests/platform.mjs tests/setup-v12.mjs

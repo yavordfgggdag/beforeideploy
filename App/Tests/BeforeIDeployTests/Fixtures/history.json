@@ -1,0 +1,577 @@
+[
+  {
+    "ts": "2026-09-29T07:27:22.312Z",
+    "project": "00465ed29464",
+    "projectName": "client-site",
+    "kind": "check",
+    "status": "ok",
+    "message": "Ready to deploy",
+    "duration": 0.067,
+    "log": null
+  },
+  {
+    "ts": "2026-09-29T07:27:01.637Z",
+    "project": "cbff0525327f",
+    "projectName": "vite-app",
+    "kind": "check",
+    "status": "ok",
+    "message": "Ready to deploy",
+    "duration": 0.08,
+    "log": null
+  },
+  {
+    "ts": "2026-09-29T07:27:01.362Z",
+    "project": "cbff0525327f",
+    "projectName": "vite-app",
+    "kind": "hosting",
+    "status": "ok",
+    "message": "Hosting → Netlify"
+  },
+  {
+    "ts": "2026-09-29T07:27:00.632Z",
+    "project": "cbff0525327f",
+    "projectName": "vite-app",
+    "kind": "check",
+    "status": "ok",
+    "message": "1 warnings",
+    "duration": 0.076,
+    "log": null
+  },
+  {
+    "ts": "2026-09-29T07:27:00.357Z",
+    "project": "cbff0525327f",
+    "projectName": "vite-app",
+    "kind": "hosting",
+    "status": "ok",
+    "message": "Hosting → Vercel"
+  },
+  {
+    "ts": "2026-09-29T07:26:48.642Z",
+    "project": "f60ff10f3f04",
+    "projectName": "ai-cloud-app",
+    "kind": "ai-fix",
+    "status": "fail",
+    "message": "production build: You are out of AI credits. They renew on 2026-10-01T00:00:00Z; you can add a pack from “Subscription”."
+  },
+  {
+    "ts": "2026-09-29T07:26:46.822Z",
+    "project": "f60ff10f3f04",
+    "projectName": "ai-cloud-app",
+    "kind": "ai-fix",
+    "status": "ok",
+    "message": "fix: production build",
+    "duration": 0.014
+  },
+  {
+    "ts": "2026-09-29T07:26:45.762Z",
+    "project": "f60ff10f3f04",
+    "projectName": "ai-cloud-app",
+    "kind": "check",
+    "status": "fail",
+    "message": "1 errors",
+    "duration": 0.259,
+    "log": "/tmp/bid-test-EZ4j6h/cache/f60ff10f3f04/build.log"
+  },
+  {
+    "ts": "2026-09-29T07:26:45.163Z",
+    "project": "b0e1b006380f",
+    "projectName": "ai-app",
+    "kind": "ai-undo",
+    "status": "fail",
+    "message": "nothing restored"
+  },
+  {
+    "ts": "2026-09-29T07:26:45.007Z",
+    "project": "b0e1b006380f",
+    "projectName": "ai-app",
+    "kind": "check",
+    "status": "ok",
+    "message": "1 warnings",
+    "duration": 0.279,
+    "log": null
+  },
+  {
+    "ts": "2026-09-29T07:26:44.713Z",
+    "project": "b0e1b006380f",
+    "projectName": "ai-app",
+    "kind": "ai-apply",
+    "status": "ok",
+    "message": "src/app.js"
+  },
+  {
+    "ts": "2026-09-29T07:26:44.169Z",
+    "project": "b0e1b006380f",
+    "projectName": "ai-app",
+    "kind": "ai-undo",
+    "status": "ok",
+    "message": "src/app.js"
+  },
+  {
+    "ts": "2026-09-29T07:26:43.863Z",
+    "project": "b0e1b006380f",
+    "projectName": "ai-app",
+    "kind": "ai-fix",
+    "status": "ok",
+    "message": "explain: production build",
+    "duration": 0.015
+  },
+  {
+    "ts": "2026-09-29T07:26:43.368Z",
+    "project": "b0e1b006380f",
+    "projectName": "ai-app",
+    "kind": "check",
+    "status": "ok",
+    "message": "1 warnings",
+    "duration": 0.312,
+    "log": null
+  },
+  {
+    "ts": "2026-09-29T07:26:42.837Z",
+    "project": "b0e1b006380f",
+    "projectName": "ai-app",
+    "kind": "ai-apply",
+    "status": "ok",
+    "message": "src/app.js"
+  },
+  {
+    "ts": "2026-09-29T07:26:42.347Z",
+    "project": "b0e1b006380f",
+    "projectName": "ai-app",
+    "kind": "ai-fix",
+    "status": "ok",
+    "message": "fix: production build",
+    "duration": 0.015
+  },
+  {
+    "ts": "2026-09-29T07:26:41.607Z",
+    "project": "b0e1b006380f",
+    "projectName": "ai-app",
+    "kind": "check",
+    "status": "fail",
+    "message": "1 errors",
+    "duration": 0.269,
+    "log": "/tmp/bid-test-EZ4j6h/cache/b0e1b006380f/build.log"
+  },
+  {
+    "ts": "2026-09-29T07:26:41.149Z",
+    "project": "f46f4c75d03b",
+    "projectName": "rel-site",
+    "kind": "draft",
+    "status": "ok",
+    "url": "http://127.0.0.1:5082/deploys/dep-7/",
+    "duration": 0.065,
+    "log": "/tmp/bid-test-EZ4j6h/cache/f46f4c75d03b/deploy-draft.log"
+  },
+  {
+    "ts": "2026-09-29T07:26:41.021Z",
+    "project": "f46f4c75d03b",
+    "projectName": "rel-site",
+    "kind": "check",
+    "status": "ok",
+    "message": "1 warnings",
+    "duration": 0.071,
+    "log": null
+  },
+  {
+    "ts": "2026-09-29T07:26:40.003Z",
+    "project": "f46f4c75d03b",
+    "projectName": "rel-site",
+    "kind": "draft",
+    "status": "ok",
+    "url": "http://127.0.0.1:5082/deploys/dep-6/",
+    "duration": 0.05,
+    "log": "/tmp/bid-test-EZ4j6h/cache/f46f4c75d03b/deploy-draft.log"
+  },
+  {
+    "ts": "2026-09-29T07:26:39.892Z",
+    "project": "f46f4c75d03b",
+    "projectName": "rel-site",
+    "kind": "check",
+    "status": "ok",
+    "message": "1 warnings",
+    "duration": 0.065,
+    "log": null
+  },
+  {
+    "ts": "2026-09-29T07:26:39.329Z",
+    "project": "f46f4c75d03b",
+    "projectName": "rel-site",
+    "kind": "draft",
+    "status": "ok",
+    "url": "http://127.0.0.1:5082/deploys/dep-5/",
+    "duration": 0.046,
+    "log": "/tmp/bid-test-EZ4j6h/cache/f46f4c75d03b/deploy-draft.log"
+  },
+  {
+    "ts": "2026-09-29T07:26:39.231Z",
+    "project": "f46f4c75d03b",
+    "projectName": "rel-site",
+    "kind": "check",
+    "status": "ok",
+    "message": "1 warnings",
+    "duration": 0.063,
+    "log": null
+  },
+  {
+    "ts": "2026-09-29T07:26:37.627Z",
+    "project": "f46f4c75d03b",
+    "projectName": "rel-site",
+    "kind": "rollback",
+    "status": "ok",
+    "url": "http://127.0.0.1:5082/",
+    "message": "Rolled back to deploy dep-3"
+  },
+  {
+    "ts": "2026-09-29T07:26:36.834Z",
+    "project": "f46f4c75d03b",
+    "projectName": "rel-site",
+    "kind": "release",
+    "status": "fail",
+    "url": "http://127.0.0.1:5082/",
+    "message": "Published, but production verification failed",
+    "log": "/tmp/bid-test-EZ4j6h/cache/f46f4c75d03b/smoke-production-release-mumcryo2-d0b00c.log"
+  },
+  {
+    "ts": "2026-09-29T07:26:36.822Z",
+    "project": "f46f4c75d03b",
+    "projectName": "rel-site",
+    "kind": "production",
+    "status": "ok",
+    "url": "http://127.0.0.1:5082/",
+    "message": "Published the smoke-tested preview"
+  },
+  {
+    "ts": "2026-09-29T07:26:36.321Z",
+    "project": "f46f4c75d03b",
+    "projectName": "rel-site",
+    "kind": "draft",
+    "status": "ok",
+    "url": "http://127.0.0.1:5082/deploys/dep-4/",
+    "duration": 0.069,
+    "log": "/tmp/bid-test-EZ4j6h/cache/f46f4c75d03b/deploy-draft.log"
+  },
+  {
+    "ts": "2026-09-29T07:26:36.187Z",
+    "project": "f46f4c75d03b",
+    "projectName": "rel-site",
+    "kind": "check",
+    "status": "ok",
+    "message": "1 warnings",
+    "duration": 0.07,
+    "log": null
+  },
+  {
+    "ts": "2026-09-29T07:26:35.938Z",
+    "project": "f46f4c75d03b",
+    "projectName": "rel-site",
+    "kind": "release",
+    "status": "ok",
+    "url": "http://127.0.0.1:5082/",
+    "message": "Release verified on production (by cli)"
+  },
+  {
+    "ts": "2026-09-29T07:26:35.926Z",
+    "project": "f46f4c75d03b",
+    "projectName": "rel-site",
+    "kind": "production",
+    "status": "ok",
+    "url": "http://127.0.0.1:5082/",
+    "message": "Published the smoke-tested preview"
+  },
+  {
+    "ts": "2026-09-29T07:26:35.511Z",
+    "project": "f46f4c75d03b",
+    "projectName": "rel-site",
+    "kind": "draft",
+    "status": "ok",
+    "url": "http://127.0.0.1:5082/deploys/dep-3/",
+    "duration": 0.06,
+    "log": "/tmp/bid-test-EZ4j6h/cache/f46f4c75d03b/deploy-draft.log"
+  },
+  {
+    "ts": "2026-09-29T07:26:35.393Z",
+    "project": "f46f4c75d03b",
+    "projectName": "rel-site",
+    "kind": "check",
+    "status": "ok",
+    "message": "1 warnings",
+    "duration": 0.081,
+    "log": null
+  },
+  {
+    "ts": "2026-09-29T07:26:34.449Z",
+    "project": "f46f4c75d03b",
+    "projectName": "rel-site",
+    "kind": "release",
+    "status": "ok",
+    "url": "http://127.0.0.1:5082/",
+    "message": "Release verified on production (by cli)"
+  },
+  {
+    "ts": "2026-09-29T07:26:34.436Z",
+    "project": "f46f4c75d03b",
+    "projectName": "rel-site",
+    "kind": "production",
+    "status": "ok",
+    "url": "http://127.0.0.1:5082/",
+    "message": "Published the smoke-tested preview"
+  },
+  {
+    "ts": "2026-09-29T07:26:33.815Z",
+    "project": "f46f4c75d03b",
+    "projectName": "rel-site",
+    "kind": "draft",
+    "status": "ok",
+    "url": "http://127.0.0.1:5082/deploys/dep-2/",
+    "duration": 0.06,
+    "log": "/tmp/bid-test-EZ4j6h/cache/f46f4c75d03b/deploy-draft.log"
+  },
+  {
+    "ts": "2026-09-29T07:26:33.690Z",
+    "project": "f46f4c75d03b",
+    "projectName": "rel-site",
+    "kind": "check",
+    "status": "ok",
+    "message": "1 warnings",
+    "duration": 0.06,
+    "log": null
+  },
+  {
+    "ts": "2026-09-29T07:26:32.937Z",
+    "project": "f46f4c75d03b",
+    "projectName": "rel-site",
+    "kind": "draft",
+    "status": "ok",
+    "url": "http://127.0.0.1:5082/deploys/dep-1/",
+    "duration": 0.048,
+    "log": "/tmp/bid-test-EZ4j6h/cache/f46f4c75d03b/deploy-draft.log"
+  },
+  {
+    "ts": "2026-09-29T07:26:32.832Z",
+    "project": "f46f4c75d03b",
+    "projectName": "rel-site",
+    "kind": "check",
+    "status": "ok",
+    "message": "Ready to deploy",
+    "duration": 0.059,
+    "log": null
+  },
+  {
+    "ts": "2026-09-29T07:26:32.559Z",
+    "project": "21aeda1a7778",
+    "projectName": "parallel-app",
+    "kind": "check",
+    "status": "ok",
+    "message": "Ready to deploy",
+    "duration": 1.808,
+    "log": null
+  },
+  {
+    "ts": "2026-09-29T07:25:27.698Z",
+    "project": "3586958198a0",
+    "projectName": "demo-site",
+    "kind": "check",
+    "status": "ok",
+    "message": "1 warnings",
+    "duration": 0.325,
+    "log": null
+  },
+  {
+    "ts": "2026-09-29T07:25:26.040Z",
+    "project": "df0323982dad",
+    "projectName": "leaky-build",
+    "kind": "check",
+    "status": "fail",
+    "message": "2 errors",
+    "duration": 0.335,
+    "log": "/tmp/bid-test-EZ4j6h/cache/df0323982dad/build.log"
+  },
+  {
+    "ts": "2026-09-29T07:25:25.097Z",
+    "project": "168d7c2075d6",
+    "projectName": "static-site",
+    "kind": "commit",
+    "status": "ok",
+    "message": "Cyrillic"
+  },
+  {
+    "ts": "2026-09-29T07:25:24.607Z",
+    "project": "168d7c2075d6",
+    "projectName": "static-site",
+    "kind": "commit",
+    "status": "ok",
+    "message": "only a"
+  },
+  {
+    "ts": "2026-09-29T07:25:24.355Z",
+    "project": "168d7c2075d6",
+    "projectName": "static-site",
+    "kind": "commit",
+    "status": "ok",
+    "message": "Add about page"
+  },
+  {
+    "ts": "2026-09-29T07:25:23.707Z",
+    "project": "f9f20900b50c",
+    "projectName": "no-git",
+    "kind": "fix",
+    "status": "ok",
+    "message": "git.init: Git initialized (branch main)"
+  },
+  {
+    "ts": "2026-09-29T07:25:22.887Z",
+    "project": "0351d153d8f4",
+    "projectName": "secret-in-code",
+    "kind": "check",
+    "status": "fail",
+    "message": "1 errors",
+    "duration": 0.069,
+    "log": null
+  },
+  {
+    "ts": "2026-09-29T07:25:21.985Z",
+    "project": "1b1d7b927872",
+    "projectName": "issues-env",
+    "kind": "check",
+    "status": "ok",
+    "message": "1 warnings",
+    "duration": 0.077,
+    "log": null
+  },
+  {
+    "ts": "2026-09-29T07:25:21.893Z",
+    "project": "1b1d7b927872",
+    "projectName": "issues-env",
+    "kind": "fix",
+    "status": "ok",
+    "message": "env.untrack: Removed from the index: .env. Commit to make it take effect."
+  },
+  {
+    "ts": "2026-09-29T07:25:21.469Z",
+    "project": "1b1d7b927872",
+    "projectName": "issues-env",
+    "kind": "check",
+    "status": "fail",
+    "message": "1 errors",
+    "duration": 0.084,
+    "log": null
+  },
+  {
+    "ts": "2026-09-29T07:25:21.182Z",
+    "project": "11166bf5a034",
+    "projectName": "tracked-env",
+    "kind": "fix",
+    "status": "ok",
+    "message": "env.untrack: Removed from the index: .env. Commit to make it take effect."
+  },
+  {
+    "ts": "2026-09-29T07:25:20.648Z",
+    "project": "11166bf5a034",
+    "projectName": "tracked-env",
+    "kind": "check",
+    "status": "fail",
+    "message": "1 errors",
+    "duration": 0.088,
+    "log": null
+  },
+  {
+    "ts": "2026-09-29T07:25:19.749Z",
+    "project": "47f96688e7b2",
+    "projectName": "changed-after-check",
+    "kind": "check",
+    "status": "ok",
+    "message": "Ready to deploy",
+    "duration": 0.07,
+    "log": null
+  },
+  {
+    "ts": "2026-09-29T07:25:18.669Z",
+    "project": "420e262e548c",
+    "projectName": "failing-build",
+    "kind": "check",
+    "status": "fail",
+    "message": "1 errors",
+    "duration": 0.287,
+    "log": "/tmp/bid-test-EZ4j6h/cache/420e262e548c/build.log"
+  },
+  {
+    "ts": "2026-09-29T07:25:18.211Z",
+    "project": "420e262e548c",
+    "projectName": "failing-build",
+    "kind": "check",
+    "status": "fail",
+    "message": "1 errors",
+    "duration": 0.511,
+    "log": "/tmp/bid-test-EZ4j6h/cache/420e262e548c/build.log"
+  },
+  {
+    "ts": "2026-09-29T07:25:17.521Z",
+    "project": "cbff0525327f",
+    "projectName": "vite-app",
+    "kind": "check",
+    "status": "ok",
+    "message": "Ready to deploy",
+    "duration": 0.546,
+    "log": null
+  },
+  {
+    "ts": "2026-09-29T07:25:16.782Z",
+    "project": "cbff0525327f",
+    "projectName": "vite-app",
+    "kind": "check",
+    "status": "ok",
+    "message": "1 warnings",
+    "duration": 0.093,
+    "log": null
+  },
+  {
+    "ts": "2026-09-29T07:25:16.473Z",
+    "project": "cbff0525327f",
+    "projectName": "vite-app",
+    "kind": "check",
+    "status": "ok",
+    "message": "1 warnings",
+    "duration": 0.548,
+    "log": null
+  },
+  {
+    "ts": "2026-09-29T07:25:15.773Z",
+    "project": "cbff0525327f",
+    "projectName": "vite-app",
+    "kind": "check",
+    "status": "ok",
+    "message": "Ready to deploy",
+    "duration": 0.5,
+    "log": null
+  },
+  {
+    "ts": "2026-09-29T07:25:15.107Z",
+    "project": "cbff0525327f",
+    "projectName": "vite-app",
+    "kind": "check",
+    "status": "ok",
+    "message": "Ready to deploy",
+    "duration": 0.08,
+    "log": null
+  },
+  {
+    "ts": "2026-09-29T07:25:14.866Z",
+    "project": "cbff0525327f",
+    "projectName": "vite-app",
+    "kind": "check",
+    "status": "ok",
+    "message": "Ready to deploy",
+    "duration": 0.548,
+    "log": null
+  },
+  {
+    "ts": "2026-09-29T07:25:14.128Z",
+    "project": "168d7c2075d6",
+    "projectName": "static-site",
+    "kind": "check",
+    "status": "ok",
+    "message": "Ready to deploy",
+    "duration": 0.07,
+    "log": null
+  }
+]

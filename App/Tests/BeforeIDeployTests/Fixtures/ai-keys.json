@@ -1,0 +1,18 @@
+[
+  {
+    "provider": "anthropic",
+    "name": "Anthropic",
+    "connected": true,
+    "hint": "sk-ant-…-123",
+    "savedAt": "2026-09-29T07:26:26.324Z",
+    "console": "https://console.anthropic.com/settings/keys"
+  },
+  {
+    "provider": "openai",
+    "name": "OpenAI",
+    "connected": false,
+    "hint": null,
+    "savedAt": null,
+    "console": "https://platform.openai.com/api-keys"
+  }
+]

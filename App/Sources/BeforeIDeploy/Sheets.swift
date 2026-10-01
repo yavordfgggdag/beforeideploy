@@ -1,130 +1,9 @@
+import AppKit
 import SwiftUI
 
 // MARK: - Shared sheet chrome
 
-struct SheetScaffold<Content: View, Actions: View>: View {
-    let icon: String
-    var iconTint: Color = Theme.accent
-    let title: String
-    var subtitle: String? = nil
-    var width: CGFloat = 520
-    @ViewBuilder var content: Content
-    @ViewBuilder var actions: Actions
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 12) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 11, style: .continuous).fill(iconTint.opacity(0.14))
-                    Image(systemName: icon).font(.system(size: 16, weight: .semibold)).foregroundColor(iconTint)
-                }
-                .frame(width: 38, height: 38)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title).font(.system(size: 17, weight: .bold)).foregroundColor(Theme.text)
-                    if let subtitle { Text(subtitle).font(.system(size: 12)).foregroundColor(Theme.secondary) }
-                }
-                Spacer()
-            }
-            .padding(22)
-
-            content
-                .padding(.horizontal, 22)
-                .padding(.bottom, 18)
-
-            Rectangle().fill(Theme.hairline).frame(height: 1)
-            HStack(spacing: 10) {
-                Spacer()
-                actions
-            }
-            .padding(.horizontal, 22)
-            .padding(.vertical, 14)
-        }
-        .frame(width: width)
-        .background(Theme.panel)
-    }
-}
-
 // MARK: - Production
-
-struct ProductionSheet: View {
-    @EnvironmentObject var model: AppModel
-    @Environment(\.dismiss) private var dismiss
-    @Local private var typed = ""
-
-    var costText: String {
-        if let p = model.costs?.prices.items["netlify:production"] {
-            return p.amount == 0 ? "безплатно" : "~\(CostsView.amount(p.amount)) \(CostsView.unitName(p.unit)) (оценка)"
-        }
-        return "~15 кредита (оценка)"
-    }
-
-    var body: some View {
-        let s = model.status
-        let live = s?.project.netlify?.liveUrl ?? s?.lastProd?.url
-        let warnings = s?.check?.steps.filter { $0.status == "warn" } ?? []
-        SheetScaffold(icon: "paperplane.fill", iconTint: Theme.blocked, title: "Production Deploy",
-                      subtitle: "Това ще обнови LIVE сайта на \(s?.project.name ?? "")") {
-            VStack(alignment: .leading, spacing: 14) {
-                VStack(alignment: .leading, spacing: 8) {
-                    InfoRow(label: "Сайт", value: live.map(Fmt.host) ?? s?.project.netlify?.siteName ?? "—")
-                    InfoRow(label: "Какво се качва", value: s?.detect.ssr == true || s?.detect.hasFunctions == true
-                            ? "Netlify build (framework / functions)"
-                            : "\(s?.detect.publishDir ?? "dist")/ след свеж build")
-                    InfoRow(label: "Branch", value: s?.git.branch ?? "—")
-                    InfoRow(label: "Неприбрани промени", value: "\(s?.git.changedCount ?? 0)",
-                            tint: (s?.git.changedCount ?? 0) > 0 ? Theme.warn : Theme.text)
-                }
-                .padding(14)
-                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.bg))
-
-                HStack(spacing: 10) {
-                    Image(systemName: "creditcard.fill").foregroundColor(Theme.accent)
-                    Text("Цена: \(costText)").font(.system(size: 12.5, weight: .semibold)).foregroundColor(Theme.text)
-                    Spacer()
-                    Button("Разходи") { dismiss(); model.screen = .costs }.bidButton(.ghost, compact: true)
-                }
-                .padding(12)
-                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.accentSoft))
-
-                if !warnings.isEmpty {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Label("\(warnings.count) предупреждение(я) от последната проверка", systemImage: "exclamationmark.triangle.fill")
-                            .font(.system(size: 12.5, weight: .semibold))
-                            .foregroundColor(Theme.warn)
-                        ForEach(warnings) { w in
-                            Text("• \(w.label ?? w.id): \(w.summary ?? "")")
-                                .font(.system(size: 12)).foregroundColor(Theme.secondary)
-                        }
-                    }
-                }
-
-                Text("Преди качването ще мине пълна проверка (Git → Secrets → Lint → Typecheck → Build). При грешка deploy-ът спира. Production може да използва build минути/кредити от Netlify плана ти.")
-                    .font(.system(size: 12))
-                    .foregroundColor(Theme.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("За да продължиш, напиши DEPLOY")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(Theme.text)
-                    BIDTextField(placeholder: "DEPLOY", text: $typed, mono: true)
-                }
-            }
-        } actions: {
-            Button("Отказ") { dismiss() }
-                .bidButton(.secondary)
-                .keyboardShortcut(.cancelAction)
-            Button {
-                dismiss()
-                model.productionDeploy(confirm: typed)
-            } label: {
-                Label("Deploy to Production", systemImage: "paperplane.fill")
-            }
-            .bidButton(.danger)
-            .disabled(typed != "DEPLOY")
-        }
-    }
-}
 
 struct InfoRow: View {
     let label: String
@@ -132,9 +11,9 @@ struct InfoRow: View {
     var tint: Color = Theme.text
     var body: some View {
         HStack {
-            Text(label).font(.system(size: 12)).foregroundColor(Theme.tertiary)
+            Text(label).font(Typo.font(.callout)).foregroundColor(Theme.tertiary)
             Spacer()
-            Text(value).font(.system(size: 12.5, weight: .medium)).foregroundColor(tint).lineLimit(1).truncationMode(.middle)
+            Text(value).font(Typo.font(.body, weight: .medium)).foregroundColor(tint).lineLimit(1).truncationMode(.middle)
         }
     }
 }
@@ -164,57 +43,57 @@ struct NetlifySetupSheet: View {
     }
 
     var body: some View {
-        SheetScaffold(icon: "globe", title: "Свържи с Netlify",
-                      subtitle: "Без `netlify init` — GitHub CI няма да се включи, deploy-ите остават ръчни",
+        SheetScaffold(icon: "globe", title: L("netlify.connectTitle"),
+                      subtitle: L("netlifySetup.subtitle"),
                       width: 580) {
             VStack(alignment: .leading, spacing: 14) {
                 if !loggedIn {
                     HStack {
-                        Text("Първо влез в Netlify.").foregroundColor(Theme.secondary)
+                        Text(L("netlifySetup.signInFirst")).foregroundColor(Theme.secondary)
                         Spacer()
-                        Button("Вход в Netlify") {
+                        Button(L("netlify.signIn")) {
                             dismiss()
                             model.netlifyLogin { model.sheet = .netlifySetup }
                         }
                         .bidButton(.primary)
                     }
                 } else {
-                    SegmentedControl(options: [("Свържи съществуващ", Mode.link), ("Създай нов", Mode.create)], selection: $mode)
+                    SegmentedControl(options: [(L("netlifySetup.linkExisting"), Mode.link), (L("netlifySetup.createNew"), Mode.create)], selection: $mode)
 
                     if loading {
                         HStack(spacing: 8) {
                             Spinner(size: 14)
-                            Text("Зареждам от Netlify… (първия път през npx може да отнеме минута)")
-                                .font(.system(size: 12)).foregroundColor(Theme.secondary)
+                            Text(L("netlifySetup.loading"))
+                                .font(Typo.font(.callout)).foregroundColor(Theme.secondary)
                         }
                         .frame(maxWidth: .infinity, minHeight: 120)
                     } else if let error {
-                        Text(error).foregroundColor(Theme.blocked).font(.system(size: 12.5))
-                        Button("Опитай пак") { Task { await load() } }.bidButton(.secondary, compact: true)
+                        Text(error).foregroundColor(Theme.blocked).font(Typo.font(.body))
+                        Button(L("common.retry")) { Task { await load() } }.bidButton(.secondary, compact: true)
                     } else if mode == .link {
-                        BIDTextField(placeholder: "Търси сайт…", text: $query)
+                        BIDTextField(placeholder: L("netlifySetup.searchSite"), text: $query)
                         ScrollView {
                             VStack(spacing: 4) {
                                 ForEach(filtered) { site in
                                     SiteRow(site: site, selected: chosenSite == site.id)
-                                        .onTapGesture { chosenSite = site.id }
+                                        .tapAction { chosenSite = site.id }
                                 }
                                 if filtered.isEmpty {
-                                    Text("Няма намерени сайтове").foregroundColor(Theme.tertiary).font(.system(size: 12)).padding(20)
+                                    Text(L("netlifySetup.noSites")).foregroundColor(Theme.tertiary).font(Typo.font(.callout)).padding(20)
                                 }
                             }
                         }
                         .frame(height: 240)
-                        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.bg))
+                        .background(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).fill(Theme.bg))
                     } else {
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("Име на сайта").font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                            Text(L("netlifySetup.siteName")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
                             BIDTextField(placeholder: "moyat-sait", text: $newName, mono: true)
-                            Text("\(slug.isEmpty ? "име" : slug).netlify.app").font(.system(size: 11.5, design: .monospaced)).foregroundColor(Theme.tertiary)
+                            Text("\(slug.isEmpty ? L("netlifySetup.namePlaceholder") : slug).netlify.app").font(Typo.font(.callout, design: .monospaced)).foregroundColor(Theme.tertiary)
                         }
                         if teams.count > 1 {
                             VStack(alignment: .leading, spacing: 6) {
-                                Text("Team").font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                                Text(L("netlifySetup.team")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
                                 Menu {
                                     ForEach(teams) { t in Button(t.name ?? t.slug) { team = t.slug } }
                                 } label: {
@@ -223,17 +102,17 @@ struct NetlifySetupSheet: View {
                                 }
                                 .menuStyle(.borderlessButton)
                                 .padding(.horizontal, 12).padding(.vertical, 8)
-                                .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.bg))
+                                .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(Theme.bg))
                             }
                         }
                     }
                 }
             }
         } actions: {
-            Button("Отказ") { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
+            Button(L("common.cancel")) { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
             if loggedIn {
                 if mode == .link {
-                    Button("Свържи") {
+                    Button(L("common.connect")) {
                         guard let id = chosenSite else { return }
                         dismiss()
                         model.netlifyLink(siteId: id)
@@ -241,7 +120,7 @@ struct NetlifySetupSheet: View {
                     .bidButton(.primary)
                     .disabled(chosenSite == nil)
                 } else {
-                    Button("Създай и свържи") {
+                    Button(L("netlifySetup.createAndLink")) {
                         dismiss()
                         model.netlifyCreate(name: slug, team: team.isEmpty ? nil : team)
                     }
@@ -293,39 +172,14 @@ struct SiteRow: View {
             Image(systemName: selected ? "largecircle.fill.circle" : "circle")
                 .foregroundColor(selected ? Theme.accent : Theme.tertiary)
             VStack(alignment: .leading, spacing: 1) {
-                Text(site.name).font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.text)
-                Text(site.url ?? "").font(.system(size: 11)).foregroundColor(Theme.tertiary)
+                Text(site.name).font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.text)
+                Text(site.url ?? "").font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
             }
             Spacer()
         }
         .padding(.horizontal, 12).padding(.vertical, 8)
-        .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(selected ? Theme.elevated : .clear))
+        .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(selected ? Theme.elevated : .clear))
         .contentShape(Rectangle())
-    }
-}
-
-struct SegmentedControl<T: Hashable>: View {
-    let options: [(String, T)]
-    @Binding var selection: T
-    var body: some View {
-        HStack(spacing: 4) {
-            ForEach(options.indices, id: \.self) { i in
-                let opt = options[i]
-                Button {
-                    withAnimation(.easeOut(duration: 0.15)) { selection = opt.1 }
-                } label: {
-                    Text(opt.0)
-                        .font(.system(size: 12.5, weight: .semibold))
-                        .foregroundColor(selection == opt.1 ? Theme.text : Theme.secondary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 7)
-                        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(selection == opt.1 ? Theme.hover : .clear))
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(4)
-        .background(RoundedRectangle(cornerRadius: 11, style: .continuous).fill(Theme.bg))
     }
 }
 
@@ -341,14 +195,14 @@ struct CommitSheet: View {
     var included: [String] { files.map(\.path).filter { !excluded.contains($0) } }
 
     var body: some View {
-        SheetScaffold(icon: "arrow.up.circle.fill", title: "Commit & Push",
+        SheetScaffold(icon: "arrow.up.circle.fill", title: L("run.commitPush"),
                       subtitle: "\(model.status?.git.branch ?? "") → \(Fmt.host(model.status?.git.githubUrl ?? "origin"))",
                       width: 600) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text("\(included.count) от \(files.count) файла").font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
+                    Text(L("commit.filesCount", included.count, files.count)).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
                     Spacer()
-                    Button(excluded.isEmpty ? "Махни всички" : "Избери всички") {
+                    Button(excluded.isEmpty ? L("commit.deselectAll") : L("commit.selectAll")) {
                         excluded = excluded.isEmpty ? Set(files.map(\.path)) : []
                     }
                     .bidButton(.ghost, compact: true)
@@ -360,14 +214,13 @@ struct CommitSheet: View {
                             HStack(spacing: 10) {
                                 Image(systemName: on ? "checkmark.square.fill" : "square")
                                     .foregroundColor(on ? Theme.accent : Theme.tertiary)
-                                Text(f.code).font(.system(size: 10.5, weight: .bold, design: .monospaced)).foregroundColor(Theme.warn).frame(width: 20, alignment: .leading)
-                                Text(f.path).font(.system(size: 12, design: .monospaced)).foregroundColor(on ? Theme.text : Theme.tertiary)
+                                Text(f.code).font(Typo.font(.caption, weight: .bold, design: .monospaced)).foregroundColor(Theme.warn).frame(width: 20, alignment: .leading)
+                                Text(f.path).font(Typo.font(.callout, design: .monospaced)).foregroundColor(on ? Theme.text : Theme.tertiary)
                                     .lineLimit(1).truncationMode(.middle)
                                 Spacer()
                             }
                             .padding(.horizontal, 10).padding(.vertical, 5)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
+                            .tapAction {
                                 if on { excluded.insert(f.path) } else { excluded.remove(f.path) }
                             }
                         }
@@ -375,20 +228,20 @@ struct CommitSheet: View {
                     .padding(6)
                 }
                 .frame(height: 220)
-                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.bg))
+                .background(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).fill(Theme.bg))
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Съобщение").font(.system(size: 12, weight: .semibold)).foregroundColor(Theme.text)
-                    BIDTextField(placeholder: "Какво промени?", text: $message)
+                    Text(L("commit.message")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
+                    BIDTextField(placeholder: L("commit.placeholder"), text: $message)
                 }
                 if model.status?.git.remote == nil {
-                    Label("Няма GitHub remote — ще направя само commit.", systemImage: "info.circle")
-                        .font(.system(size: 12)).foregroundColor(Theme.secondary)
+                    Label(L("commit.noRemote"), systemImage: "info.circle")
+                        .font(Typo.font(.callout)).foregroundColor(Theme.secondary)
                 }
             }
         } actions: {
-            Button("Отказ") { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
-            Button("Само commit") {
+            Button(L("common.cancel")) { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
+            Button(L("commit.commitOnly")) {
                 dismiss()
                 model.commit(message: finalMessage, files: excluded.isEmpty ? nil : included, push: false)
             }
@@ -398,7 +251,7 @@ struct CommitSheet: View {
                 Button {
                     dismiss()
                     model.commit(message: finalMessage, files: excluded.isEmpty ? nil : included, push: true)
-                } label: { Label("Commit & Push", systemImage: "arrow.up") }
+                } label: { Label(L("run.commitPush"), systemImage: "arrow.up") }
                     .bidButton(.primary)
                     .disabled(included.isEmpty)
                     .keyboardShortcut(.defaultAction)
@@ -411,7 +264,7 @@ struct CommitSheet: View {
         if !m.isEmpty { return m }
         let f = DateFormatter()
         f.dateFormat = "dd.MM.yyyy HH:mm"
-        return "Update — \(f.string(from: Date()))"
+        return L("git.defaultMessage", f.string(from: Date()))
     }
 }
 
@@ -423,17 +276,17 @@ struct RemoteSheet: View {
     @Local private var url = ""
 
     var body: some View {
-        SheetScaffold(icon: "link", title: "GitHub remote", subtitle: "Свържи проекта с GitHub repository") {
+        SheetScaffold(icon: "link", title: L("remote.sheetTitle"), subtitle: L("remote.title")) {
             VStack(alignment: .leading, spacing: 10) {
-                Text("1. Създай празно repo в GitHub (без README).\n2. Постави URL-а му тук.")
-                    .font(.system(size: 12.5)).foregroundColor(Theme.secondary)
-                Button { model.open("https://github.com/new") } label: { Label("Отвори github.com/new", systemImage: "arrow.up.right") }
+                Text(L("remote.steps"))
+                    .font(Typo.font(.body)).foregroundColor(Theme.secondary)
+                Button { model.open("https://github.com/new") } label: { Label(L("remote.openNew"), systemImage: "arrow.up.right") }
                     .bidButton(.ghost, compact: true)
                 BIDTextField(placeholder: "https://github.com/user/repo.git", text: $url, mono: true)
             }
         } actions: {
-            Button("Отказ") { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
-            Button("Запази") {
+            Button(L("common.cancel")) { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
+            Button(L("common.save")) {
                 dismiss()
                 model.setRemote(url.trimmingCharacters(in: .whitespaces))
             }
@@ -456,20 +309,20 @@ struct FixConfirmSheet: View {
                       title: fix.title, subtitle: model.status?.project.name) {
             VStack(alignment: .leading, spacing: 12) {
                 Text(fix.description)
-                    .font(.system(size: 13)).foregroundColor(Theme.secondary)
+                    .font(Typo.font(.body)).foregroundColor(Theme.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                 if let p = fix.preview, !p.isEmpty {
                     Text(p)
-                        .font(.system(size: 12, design: .monospaced))
+                        .font(Typo.font(.callout, design: .monospaced))
                         .foregroundColor(Theme.text)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(12)
-                        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.bg))
+                        .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(Theme.bg))
                 }
             }
         } actions: {
-            Button("Отказ") { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
-            Button("Приложи") {
+            Button(L("common.cancel")) { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
+            Button(L("fix.apply")) {
                 dismiss()
                 model.applyFix(fix)
             }
@@ -486,27 +339,29 @@ struct HistorySheet: View {
     @Environment(\.dismiss) private var dismiss
     @Local private var all = false
     @Local private var entries: [HistoryEntry] = []
+    @Local private var loadingHistory = true
+    @Local private var historyError: String?
 
     var body: some View {
-        SheetScaffold(icon: "clock.arrow.circlepath", title: "Deploy история",
-                      subtitle: all ? "Всички проекти" : model.selected?.name, width: 760) {
+        SheetScaffold(icon: "clock.arrow.circlepath", title: L("historySheet.title"),
+                      subtitle: all ? L("common.allProjects") : model.selected?.name, width: 760) {
             VStack(alignment: .leading, spacing: 10) {
-                SegmentedControl(options: [("Този проект", false), ("Всички проекти", true)], selection: $all)
+                SegmentedControl(options: [(L("historySheet.thisProject"), false), (L("common.allProjects"), true)], selection: $all)
                     .frame(width: 320)
                 ScrollView {
                     VStack(spacing: 0) {
-                        ForEach(entries) { e in
-                            HistoryRow(entry: e, showProject: all)
-                        }
-                        if entries.isEmpty {
-                            Text("Няма записи").foregroundColor(Theme.tertiary).padding(30)
+                        if loadingHistory { LoadingState() }
+                        else if let historyError { ErrorState(message: historyError, retry: { Task { await load() } }) }
+                        else { ForEach(entries) { e in HistoryRow(entry: e, showProject: all) } }
+                        if !loadingHistory && historyError == nil && entries.isEmpty {
+                            Text(L("historySheet.empty")).foregroundColor(Theme.tertiary).padding(30)
                         }
                     }
                 }
                 .frame(height: 420)
             }
         } actions: {
-            Button("Затвори") { dismiss() }.bidButton(.primary).keyboardShortcut(.defaultAction)
+            Button(L("common.close")) { dismiss() }.bidButton(.primary).keyboardShortcut(.defaultAction)
         }
         .task(id: all) { await load() }
     }
@@ -514,52 +369,324 @@ struct HistorySheet: View {
     func load() async {
         var args = ["history", "--limit", "200"]
         if !all, let k = model.selectedKey { args += ["--project", k] }
-        entries = (try? await model.engine.call(args, as: [HistoryEntry].self)) ?? []
+        loadingHistory = true; historyError = nil
+        do {
+            let result = try await model.engine.call(args, as: [HistoryEntry].self)
+            guard !Task.isCancelled else { return }; entries = result
+        } catch { guard !Task.isCancelled else { return }; historyError = error.localizedDescription }
+        loadingHistory = false
     }
 }
 
 // MARK: - Settings
 
-struct SettingsSheet: View {
+/// Privacy, Terms, Refund policy and "Contact support" — each only when its link is configured (audit B6/R6).
+struct LegalLinks: View {
     @EnvironmentObject var model: AppModel
-    @Environment(\.dismiss) private var dismiss
-    @AppStorage("autoOpenPreview") private var autoOpenPreview = true
-    @AppStorage("checkOnSelect") private var checkOnSelect = false
-    @AppStorage("notificationsEnabled") private var notificationsEnabled = true
-    @Local private var doctor: DoctorInfo?
-
+    private struct Item: Identifiable {
+        let id: String
+        let url: URL
+    }
     var body: some View {
-        SheetScaffold(icon: "gearshape.fill", title: "Настройки", subtitle: "Before I Deploy V9", width: 600) {
-            VStack(alignment: .leading, spacing: 16) {
-                VStack(alignment: .leading, spacing: 10) {
-                    SectionLabel(text: "Поведение")
-                    ToggleRow(title: "Отваряй preview автоматично", subtitle: "След успешен Draft / Production deploy", isOn: $autoOpenPreview)
-                    ToggleRow(title: "Проверявай при избор на проект", subtitle: "Пуска пълна проверка (с build) щом избереш проект", isOn: $checkOnSelect)
-                    ToggleRow(title: "macOS известия", subtitle: "Когато build / deploy приключи", isOn: $notificationsEnabled)
-                }
-                VStack(alignment: .leading, spacing: 8) {
-                    SectionLabel(text: "Среда")
-                    if let d = doctor {
-                        InfoRow(label: "Engine", value: "v\(d.engine)")
-                        InfoRow(label: "Node", value: d.node.version)
-                        InfoRow(label: "npm", value: d.npm?.version ?? "—")
-                        if let p = d.pnpm { InfoRow(label: "pnpm", value: p.version) }
-                        InfoRow(label: "git", value: d.git?.version ?? "няма", tint: d.git == nil ? Theme.blocked : Theme.text)
-                        InfoRow(label: "Netlify CLI", value: d.netlify?.version ?? (d.npx != nil ? "през npx" : "няма"))
-                        InfoRow(label: "Netlify акаунт", value: d.netlifyAuth.email ?? (d.netlifyAuth.loggedIn ? "влязъл" : "не си влязъл"))
-                        HStack {
-                            Button("Папка с данни") { model.openFile(d.appDir) }.bidButton(.ghost, compact: true)
-                            Button("Логове") { model.openFile(d.cacheDir) }.bidButton(.ghost, compact: true)
-                        }
-                    } else {
-                        HStack { Spinner(size: 12); Text("Проверявам…").foregroundColor(Theme.secondary).font(.system(size: 12)) }
-                    }
+        let l = model.account?.links
+        let items: [(String, URL?)] = [
+            (L("legal.privacy"), l?.privacy.flatMap(URL.init(string:))),
+            (L("legal.terms"), l?.terms.flatMap(URL.init(string:))),
+            (L("legal.refund"), l?.refund.flatMap(URL.init(string:))),
+            (L("legal.contact"), l?.support.flatMap { $0.contains("@") ? URL(string: "mailto:\($0)") : URL(string: $0) }),
+        ]
+        let shown = items.compactMap { title, url in url.map { Item(id: title, url: $0) } }
+        if !shown.isEmpty {
+            HStack(spacing: 14) {
+                ForEach(shown) { item in
+                    Button(item.id) { NSWorkspace.shared.open(item.url) }
+                        .buttonStyle(.plain)
+                        .font(Typo.font(.callout, weight: .medium))
+                        .foregroundColor(Theme.accent)
                 }
             }
-        } actions: {
-            Button("Готово") { dismiss() }.bidButton(.primary).keyboardShortcut(.defaultAction)
         }
-        .task { doctor = try? await model.engine.call(["doctor"], as: DoctorInfo.self) }
+    }
+}
+
+// MARK: - New site from a template (V11.1 Launchpad)
+
+struct NewSiteSheet: View {
+    @EnvironmentObject var model: AppModel
+    @Environment(\.dismiss) private var dismiss
+    @Local private var name = ""
+    @Local private var template = "landing"
+    @Local private var lang = Localization.current.hasPrefix("bg") ? "bg" : "en"
+    @Local private var dir = (NSSearchPathForDirectoriesInDomains(.desktopDirectory, .userDomainMask, true).first ?? NSHomeDirectory())
+    @Local private var busy = false
+    @Local private var error: String?
+
+    var body: some View {
+        SheetScaffold(icon: "plus.square.on.square", iconTint: Theme.accent, title: L("newsite.title"), subtitle: L("newsite.subtitle"), width: 780) {
+            VStack(alignment: .leading, spacing: 14) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(L("newsite.name")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
+                    BIDTextField(placeholder: L("newsite.namePlaceholder"), text: $name)
+                }
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text(L("newsite.template")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
+                        Spacer()
+                        if !model.templates.isEmpty { Text(L("newsite.count", model.templates.count)).font(Typo.font(.caption)).foregroundColor(Theme.tertiary) }
+                    }
+                    if model.templates.isEmpty {
+                        HStack(spacing: 8) { Spinner(size: 12); Text(L("newsite.loading")).font(Typo.font(.callout)).foregroundColor(Theme.tertiary) }
+                    } else {
+                        TemplateGallery(templates: model.templates, selection: $template)
+                    }
+                }
+                HStack(spacing: 14) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(L("newsite.language")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
+                        SegmentedControl(options: [(Localization.nativeName("bg"), "bg"), (Localization.nativeName("en"), "en")], selection: $lang)
+                    }
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(L("newsite.folder")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
+                        HStack(spacing: 8) {
+                            Text((dir as NSString).abbreviatingWithTildeInPath).font(Typo.font(.callout, design: .monospaced)).foregroundColor(Theme.secondary).lineLimit(1).truncationMode(.middle)
+                            Button(L("newsite.chooseFolder")) { pickFolder() }.bidButton(.secondary, compact: true)
+                        }
+                    }
+                }
+                Text(L("newsite.whatYouGet")).font(Typo.font(.callout)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
+                if let error { Label(error, systemImage: "exclamationmark.circle.fill").font(Typo.font(.body)).foregroundColor(Theme.blocked).fixedSize(horizontal: false, vertical: true) }
+            }
+        } actions: {
+            Button(L("common.cancel")) { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
+            Button {
+                busy = true
+                error = nil
+                Task {
+                    let e = await model.createSite(name: name.trimmingCharacters(in: .whitespaces), template: template, dir: dir, lang: lang)
+                    busy = false
+                    if let e { error = e } else { dismiss() }
+                }
+            } label: {
+                HStack { if busy { Spinner(size: 12, color: .white) }; Text(L("newsite.create")) }
+            }
+            .bidButton(.primary)
+            .keyboardShortcut(.defaultAction)
+            .disabled(busy || name.trimmingCharacters(in: .whitespaces).isEmpty || model.templates.isEmpty)
+        }
+        .task { if model.templates.isEmpty { await model.loadTemplates() } }
+    }
+
+    private func pickFolder() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.canCreateDirectories = true
+        panel.prompt = L("newsite.chooseFolder")
+        panel.message = L("newsite.folderMessage")
+        if panel.runModal() == .OK, let u = panel.url { dir = u.path }
+    }
+}
+
+/// The template gallery in the "New site" sheet: category chips over a grid of cards, each with the
+/// template's own accent, so the choice reads like a set of finished designs rather than a list of names.
+struct TemplateGallery: View {
+    let templates: [SiteTemplate]
+    @Binding var selection: String
+    @Local private var category = "all"
+
+    private var categories: [(id: String, title: String)] {
+        var seen = Set<String>()
+        var out: [(String, String)] = [("all", L("newsite.allCategories"))]
+        for t in templates {
+            let id = t.category ?? "other"
+            if seen.insert(id).inserted { out.append((id, t.categoryTitle ?? id)) }
+        }
+        return out
+    }
+
+    private var shown: [SiteTemplate] {
+        category == "all" ? templates : templates.filter { ($0.category ?? "other") == category }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            FlowLayout(spacing: 6, lineSpacing: 6) {
+                ForEach(categories, id: \.id) { c in
+                    let on = category == c.id
+                    Text(c.title)
+                        .font(Typo.font(.callout, weight: on ? .semibold : .regular))
+                        .foregroundColor(on ? .white : Theme.secondary)
+                        .padding(.horizontal, 11).padding(.vertical, 5)
+                        .background(Capsule().fill(on ? Theme.accent : Theme.elevated))
+                        .fixedSize()
+                        .contentShape(Capsule())
+                        .tapAction { withAnimation(.easeOut(duration: 0.15)) { category = c.id } }
+                        .accessibilityAddTraits(on ? [.isButton, .isSelected] : .isButton)
+                }
+            }
+            ScrollView {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 166), spacing: 10, alignment: .top)], spacing: 10) {
+                    ForEach(shown) { t in
+                        TemplateCard(template: t, selected: selection == t.id) { selection = t.id }
+                    }
+                }
+                .padding(2)
+            }
+            .frame(height: 300)
+        }
+    }
+}
+
+private struct TemplateCard: View {
+    let template: SiteTemplate
+    let selected: Bool
+    let action: () -> Void
+
+    private var tint: Color { Color(hexString: template.accent) ?? Theme.accent }
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 8) {
+                ZStack(alignment: .topTrailing) {
+                    RoundedRectangle(cornerRadius: Radius.s, style: .continuous)
+                        .fill(LinearGradient(colors: [tint, tint.opacity(0.55)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                        .frame(height: 58)
+                        .overlay(Image(systemName: template.icon ?? "doc.richtext").font(Typo.font(.title, weight: .semibold)).foregroundColor(.white))
+                    if selected {
+                        Image(systemName: "checkmark.circle.fill").font(Typo.font(.subhead)).foregroundStyle(.white, tint).padding(6)
+                    }
+                }
+                Text(template.title).font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.text).lineLimit(1)
+                Text(template.description).font(Typo.font(.caption)).foregroundColor(Theme.secondary).lineLimit(3).fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                Text(L("newsite.pages", template.pages)).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
+            }
+            .padding(10)
+            .frame(maxWidth: .infinity, minHeight: 176, alignment: .topLeading)
+            .background(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).fill(selected ? tint.opacity(0.14) : Theme.elevated))
+            .overlay(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).strokeBorder(selected ? tint : Color.clear, lineWidth: 1.5))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .lift(radius: Theme.smallRadius, amount: 1.02)
+        .accessibilityLabel(template.title)
+        .accessibilityHint(template.description)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+}
+
+private extension Color {
+    /// "#RRGGBB" from the engine, or nil.
+    init?(hexString: String?) {
+        guard let s = hexString, s.hasPrefix("#"), s.count == 7, let v = UInt32(s.dropFirst(), radix: 16) else { return nil }
+        self.init(hex: v)
+    }
+}
+
+// MARK: - AI key (embedded AI on your own key)
+
+/// One place to connect an Anthropic or OpenAI key: reached from every "AI" button when no key or plan is set.
+struct AIKeysSheet: View {
+    @EnvironmentObject var model: AppModel
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        SheetScaffold(icon: "sparkles", iconTint: Theme.accent, title: L("aikeys.sheetTitle"), subtitle: L("aikeys.sheetSubtitle"), width: 560) {
+            VStack(alignment: .leading, spacing: 12) {
+                AIKeysCard()
+                if model.account?.features?.billingPlans == true, model.account?.loggedIn == true {
+                    HStack(spacing: 8) {
+                        Image(systemName: "creditcard").foregroundColor(Theme.secondary)
+                        Text(L("aikeys.orPlan")).font(Typo.font(.callout)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
+                        Spacer()
+                        Button(L("aikeys.seePlans")) { dismiss(); model.sheet = .plans }.bidButton(.ghost, compact: true)
+                    }
+                }
+                Text(L("aikeys.privacy")).font(Typo.font(.callout)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
+            }
+        } actions: {
+            Button(L("common.done")) { dismiss() }.bidButton(.primary).keyboardShortcut(.defaultAction)
+        }
+    }
+}
+
+// MARK: - Pushover (phone notifications, V11.1)
+
+/// Connects Pushover: the user key from the Pushover dashboard and the API token of an application the user
+/// creates there. The engine verifies the pair with Pushover and keeps it in the Keychain; the app never
+/// writes the keys anywhere and passes them through the environment, not argv.
+struct PushoverSheet: View {
+    @EnvironmentObject var model: AppModel
+    @Environment(\.dismiss) private var dismiss
+    @Local private var user = ""
+    @Local private var token = ""
+    @Local private var busy = false
+
+    var body: some View {
+        SheetScaffold(icon: "iphone.radiowaves.left.and.right", iconTint: Theme.accent, title: L("pushover.title"), subtitle: L("pushover.subtitle"), width: 560) {
+            VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 8) {
+                    StepLine(n: 1, text: L("pushover.step1"))
+                    StepLine(n: 2, text: L("pushover.step2"))
+                    StepLine(n: 3, text: L("pushover.step3"))
+                }
+                HStack(spacing: 8) {
+                    Button { model.open("https://pushover.net/") } label: { Label(L("pushover.openSite"), systemImage: "safari") }.bidButton(.secondary, compact: true)
+                    Button { model.open("https://pushover.net/apps/build") } label: { Label(L("pushover.openBuild"), systemImage: "plus.app") }.bidButton(.ghost, compact: true)
+                }
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(L("pushover.userKey")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
+                    BIDTextField(placeholder: "uQiRzpo4DXghDmr9QzzfQu27cmVRsG", text: $user, mono: true)
+                    Text(L("pushover.token")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
+                    BIDField(placeholder: L("pushover.token"), text: $token, kind: .secure)
+                }
+                Text(L("pushover.keyNote")).font(Typo.font(.callout)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
+            }
+        } actions: {
+            Button(L("common.cancel")) { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
+            Button {
+                busy = true
+                Task {
+                    if await model.connectPushover(user: user, token: token) { dismiss() }
+                    busy = false
+                }
+            } label: {
+                if busy { Spinner(size: 12, color: .white) } else { Text(L("common.connect")) }
+            }
+            .bidButton(.primary)
+            .keyboardShortcut(.defaultAction)
+            .disabled(user.count < 30 || token.count < 30 || busy)
+        }
+    }
+}
+
+// MARK: - Delete account (GDPR, WP5)
+
+struct DeleteAccountSheet: View {
+    @EnvironmentObject var model: AppModel
+    @Environment(\.dismiss) private var dismiss
+    @Local private var confirm = ""
+    @Local private var busy = false
+
+    var body: some View {
+        SheetScaffold(icon: "person.crop.circle.badge.xmark", iconTint: Theme.blocked, title: L("deleteAccount.title"), subtitle: model.account?.email ?? "", width: 520) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(L("deleteAccount.explain")).font(Typo.font(.body)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
+                Text(L("deleteAccount.typeDelete")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
+                BIDTextField(placeholder: "DELETE", text: $confirm, mono: true)
+            }
+        } actions: {
+            Button(L("common.cancel")) { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
+            Button(busy ? L("deleteAccount.deleting") : L("deleteAccount.confirm")) {
+                busy = true
+                Task {
+                    if await model.deleteAccount(confirm: confirm) { dismiss() }
+                    busy = false
+                }
+            }
+            .bidButton(.danger)
+            .disabled(confirm != "DELETE" || busy)
+        }
     }
 }
 
@@ -570,11 +697,12 @@ struct ToggleRow: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.system(size: 13, weight: .medium)).foregroundColor(Theme.text)
-                Text(subtitle).font(.system(size: 11.5)).foregroundColor(Theme.tertiary)
+                Text(title).font(Typo.font(.body, weight: .medium)).foregroundColor(Theme.text)
+                Text(subtitle).font(Typo.font(.callout)).foregroundColor(Theme.tertiary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            Spacer()
-            Toggle("", isOn: $isOn)
+            Spacer(minLength: 16)
+            Toggle(title, isOn: $isOn)
                 .toggleStyle(.switch)
                 .labelsHidden()
                 .tint(Theme.accent)

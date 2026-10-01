@@ -1,0 +1,603 @@
+{
+  "provider": "netlify",
+  "capabilities": {
+    "provider": "netlify",
+    "preview": true,
+    "production": true,
+    "status": true,
+    "logs": true,
+    "domains": true,
+    "rollback": true,
+    "publishArtifact": true
+  },
+  "current": null,
+  "ops": [
+    {
+      "id": "rollback-mumcrzp1-c90bcb",
+      "kind": "rollback",
+      "project": "f46f4c75d03b",
+      "projectName": "rel-site",
+      "provider": "netlify",
+      "actor": "cli",
+      "createdAt": "2026-09-29T07:26:37.430Z",
+      "updatedAt": "2026-09-29T07:26:37.626Z",
+      "state": "succeeded",
+      "stages": [
+        {
+          "id": "promote",
+          "status": "pass",
+          "summary": "http://127.0.0.1:5082/",
+          "startedAt": "2026-09-29T07:26:37.433Z",
+          "finishedAt": "2026-09-29T07:26:37.611Z"
+        },
+        {
+          "id": "verify",
+          "status": "pass",
+          "startedAt": "2026-09-29T07:26:37.612Z",
+          "summary": "1 pages answer correctly on production",
+          "finishedAt": "2026-09-29T07:26:37.625Z"
+        }
+      ],
+      "log": [],
+      "confirmation": {
+        "typed": "ROLLBACK",
+        "at": "2026-09-29T07:26:37.430Z",
+        "by": "cli"
+      },
+      "production": {
+        "previousDeployId": "dep-4",
+        "target": "dep-3",
+        "url": "http://127.0.0.1:5082/",
+        "deployId": "dep-3",
+        "at": "2026-09-29T07:26:37.611Z"
+      },
+      "verify": {
+        "ok": true,
+        "url": "http://127.0.0.1:5082/",
+        "at": "2026-09-29T07:26:37.625Z",
+        "checks": [
+          {
+            "url": "http://127.0.0.1:5082/",
+            "ok": true,
+            "status": 200,
+            "ms": 9,
+            "reason": null
+          }
+        ],
+        "pages": 1
+      }
+    },
+    {
+      "id": "release-mumcryo2-d0b00c",
+      "kind": "release",
+      "project": "f46f4c75d03b",
+      "projectName": "rel-site",
+      "provider": "netlify",
+      "actor": "cli",
+      "createdAt": "2026-09-29T07:26:36.098Z",
+      "updatedAt": "2026-09-29T07:26:36.834Z",
+      "state": "verify_failed",
+      "stages": [
+        {
+          "id": "check",
+          "status": "pass",
+          "startedAt": "2026-09-29T07:26:36.099Z",
+          "summary": "Check passed (1 warnings)",
+          "finishedAt": "2026-09-29T07:26:36.187Z"
+        },
+        {
+          "id": "preview",
+          "status": "pass",
+          "startedAt": "2026-09-29T07:26:36.187Z",
+          "summary": "http://127.0.0.1:5082/deploys/dep-4/",
+          "finishedAt": "2026-09-29T07:26:36.324Z"
+        },
+        {
+          "id": "smoke",
+          "status": "pass",
+          "summary": "1 pages answer correctly",
+          "startedAt": "2026-09-29T07:26:36.327Z",
+          "log": "/tmp/bid-test-EZ4j6h/cache/f46f4c75d03b/smoke-preview-release-mumcryo2-d0b00c.log",
+          "finishedAt": "2026-09-29T07:26:36.341Z"
+        },
+        {
+          "id": "promote",
+          "status": "pass",
+          "startedAt": "2026-09-29T07:26:36.591Z",
+          "summary": "http://127.0.0.1:5082/",
+          "finishedAt": "2026-09-29T07:26:36.823Z"
+        },
+        {
+          "id": "verify",
+          "status": "fail",
+          "summary": "1 page(s) failed on production",
+          "startedAt": "2026-09-29T07:26:36.823Z",
+          "details": [
+            "500 http://127.0.0.1:5082/ http 500"
+          ],
+          "log": "/tmp/bid-test-EZ4j6h/cache/f46f4c75d03b/smoke-production-release-mumcryo2-d0b00c.log",
+          "finishedAt": "2026-09-29T07:26:36.833Z"
+        }
+      ],
+      "log": [],
+      "snapshot": {
+        "fingerprint": "605d4c7ca3d95fdf460d6c22d637c93a115929dd",
+        "artifact": {
+          "hash": "4d1c1b3d93a882ccb3b5c9a31019973139be74ca",
+          "dir": ".",
+          "files": 1,
+          "bytes": 57
+        },
+        "at": "2026-09-29T07:26:36.186Z"
+      },
+      "check": {
+        "at": "2026-09-29T07:26:36.186Z",
+        "status": "warnings",
+        "counts": {
+          "pass": 3,
+          "info": 3,
+          "warn": 1,
+          "fail": 0
+        }
+      },
+      "preview": {
+        "url": "http://127.0.0.1:5082/deploys/dep-4/",
+        "deployId": "dep-4",
+        "at": "2026-09-29T07:26:36.324Z"
+      },
+      "smoke": {
+        "ok": true,
+        "url": "http://127.0.0.1:5082/deploys/dep-4/",
+        "at": "2026-09-29T07:26:36.341Z",
+        "checks": [
+          {
+            "url": "http://127.0.0.1:5082/deploys/dep-4/",
+            "ok": true,
+            "status": 200,
+            "ms": 9,
+            "reason": null
+          }
+        ],
+        "pages": 1,
+        "log": "/tmp/bid-test-EZ4j6h/cache/f46f4c75d03b/smoke-preview-release-mumcryo2-d0b00c.log"
+      },
+      "readyFor": "production",
+      "confirmation": {
+        "typed": "DEPLOY",
+        "at": "2026-09-29T07:26:36.590Z",
+        "by": "cli"
+      },
+      "production": {
+        "previousDeployId": "dep-3",
+        "previousPublishedAt": "2026-09-29T07:26:35.839Z",
+        "url": "http://127.0.0.1:5082/",
+        "deployId": "dep-4",
+        "at": "2026-09-29T07:26:36.821Z",
+        "sha": null
+      },
+      "verify": {
+        "ok": false,
+        "url": "http://127.0.0.1:5082/",
+        "at": "2026-09-29T07:26:36.833Z",
+        "checks": [
+          {
+            "url": "http://127.0.0.1:5082/",
+            "ok": false,
+            "status": 500,
+            "ms": 7,
+            "reason": "http 500"
+          }
+        ],
+        "pages": 1,
+        "log": "/tmp/bid-test-EZ4j6h/cache/f46f4c75d03b/smoke-production-release-mumcryo2-d0b00c.log"
+      },
+      "rollback": {
+        "available": true,
+        "deployId": "dep-3",
+        "restores": "files",
+        "note": "Restores the previously published files. Databases and external services are not touched."
+      }
+    },
+    {
+      "id": "release-mumcry1n-7817f4",
+      "kind": "release",
+      "project": "f46f4c75d03b",
+      "projectName": "rel-site",
+      "provider": "netlify",
+      "actor": "cli",
+      "createdAt": "2026-09-29T07:26:35.291Z",
+      "updatedAt": "2026-09-29T07:26:35.937Z",
+      "state": "succeeded",
+      "stages": [
+        {
+          "id": "check",
+          "status": "pass",
+          "startedAt": "2026-09-29T07:26:35.293Z",
+          "summary": "Check passed (1 warnings)",
+          "finishedAt": "2026-09-29T07:26:35.394Z"
+        },
+        {
+          "id": "preview",
+          "status": "pass",
+          "startedAt": "2026-09-29T07:26:35.395Z",
+          "summary": "http://127.0.0.1:5082/deploys/dep-3/",
+          "finishedAt": "2026-09-29T07:26:35.515Z"
+        },
+        {
+          "id": "smoke",
+          "status": "pass",
+          "summary": "1 pages answer correctly",
+          "startedAt": "2026-09-29T07:26:35.516Z",
+          "log": "/tmp/bid-test-EZ4j6h/cache/f46f4c75d03b/smoke-preview-release-mumcry1n-7817f4.log",
+          "finishedAt": "2026-09-29T07:26:35.526Z"
+        },
+        {
+          "id": "promote",
+          "status": "pass",
+          "startedAt": "2026-09-29T07:26:35.718Z",
+          "summary": "http://127.0.0.1:5082/",
+          "finishedAt": "2026-09-29T07:26:35.926Z"
+        },
+        {
+          "id": "verify",
+          "status": "pass",
+          "summary": "1 pages answer correctly on production",
+          "startedAt": "2026-09-29T07:26:35.927Z",
+          "log": "/tmp/bid-test-EZ4j6h/cache/f46f4c75d03b/smoke-production-release-mumcry1n-7817f4.log",
+          "finishedAt": "2026-09-29T07:26:35.937Z"
+        }
+      ],
+      "log": [],
+      "snapshot": {
+        "fingerprint": "9cbf31f6e12f905c77c23ece8872fa6c04752001",
+        "artifact": {
+          "hash": "acccd5b23b36b9c65dda521622401f50b75efa0e",
+          "dir": ".",
+          "files": 1,
+          "bytes": 57
+        },
+        "at": "2026-09-29T07:26:35.392Z"
+      },
+      "check": {
+        "at": "2026-09-29T07:26:35.392Z",
+        "status": "warnings",
+        "counts": {
+          "pass": 3,
+          "info": 3,
+          "warn": 1,
+          "fail": 0
+        }
+      },
+      "preview": {
+        "url": "http://127.0.0.1:5082/deploys/dep-3/",
+        "deployId": "dep-3",
+        "at": "2026-09-29T07:26:35.515Z"
+      },
+      "smoke": {
+        "ok": true,
+        "url": "http://127.0.0.1:5082/deploys/dep-3/",
+        "at": "2026-09-29T07:26:35.526Z",
+        "checks": [
+          {
+            "url": "http://127.0.0.1:5082/deploys/dep-3/",
+            "ok": true,
+            "status": 200,
+            "ms": 7,
+            "reason": null
+          }
+        ],
+        "pages": 1,
+        "log": "/tmp/bid-test-EZ4j6h/cache/f46f4c75d03b/smoke-preview-release-mumcry1n-7817f4.log"
+      },
+      "readyFor": "production",
+      "confirmation": {
+        "typed": "DEPLOY",
+        "at": "2026-09-29T07:26:35.717Z",
+        "by": "cli"
+      },
+      "production": {
+        "previousDeployId": "dep-2",
+        "previousPublishedAt": "2026-09-29T07:26:34.341Z",
+        "url": "http://127.0.0.1:5082/",
+        "deployId": "dep-3",
+        "at": "2026-09-29T07:26:35.925Z",
+        "sha": null
+      },
+      "verify": {
+        "ok": true,
+        "url": "http://127.0.0.1:5082/",
+        "at": "2026-09-29T07:26:35.936Z",
+        "checks": [
+          {
+            "url": "http://127.0.0.1:5082/",
+            "ok": true,
+            "status": 200,
+            "ms": 6,
+            "reason": null
+          }
+        ],
+        "pages": 1,
+        "log": "/tmp/bid-test-EZ4j6h/cache/f46f4c75d03b/smoke-production-release-mumcry1n-7817f4.log"
+      },
+      "rollback": {
+        "available": true,
+        "deployId": "dep-2",
+        "restores": "files",
+        "note": "Restores the previously published files. Databases and external services are not touched."
+      }
+    },
+    {
+      "id": "release-mumcrwqv-8804d8",
+      "kind": "release",
+      "project": "f46f4c75d03b",
+      "projectName": "rel-site",
+      "provider": "netlify",
+      "actor": "cli",
+      "createdAt": "2026-09-29T07:26:33.607Z",
+      "updatedAt": "2026-09-29T07:26:34.449Z",
+      "state": "succeeded",
+      "stages": [
+        {
+          "id": "check",
+          "status": "pass",
+          "startedAt": "2026-09-29T07:26:33.609Z",
+          "summary": "Check passed (1 warnings)",
+          "finishedAt": "2026-09-29T07:26:33.690Z"
+        },
+        {
+          "id": "preview",
+          "status": "pass",
+          "startedAt": "2026-09-29T07:26:33.691Z",
+          "summary": "http://127.0.0.1:5082/deploys/dep-2/",
+          "finishedAt": "2026-09-29T07:26:33.817Z"
+        },
+        {
+          "id": "smoke",
+          "status": "pass",
+          "summary": "1 pages answer correctly",
+          "startedAt": "2026-09-29T07:26:33.817Z",
+          "log": "/tmp/bid-test-EZ4j6h/cache/f46f4c75d03b/smoke-preview-release-mumcrwqv-8804d8.log",
+          "finishedAt": "2026-09-29T07:26:33.830Z"
+        },
+        {
+          "id": "promote",
+          "status": "pass",
+          "startedAt": "2026-09-29T07:26:34.218Z",
+          "summary": "http://127.0.0.1:5082/",
+          "finishedAt": "2026-09-29T07:26:34.437Z"
+        },
+        {
+          "id": "verify",
+          "status": "pass",
+          "summary": "1 pages answer correctly on production",
+          "startedAt": "2026-09-29T07:26:34.437Z",
+          "log": "/tmp/bid-test-EZ4j6h/cache/f46f4c75d03b/smoke-production-release-mumcrwqv-8804d8.log",
+          "finishedAt": "2026-09-29T07:26:34.448Z"
+        }
+      ],
+      "log": [],
+      "snapshot": {
+        "fingerprint": "255717ee0ad4d5d199df62c854dff6c58a37c47f",
+        "artifact": {
+          "hash": "7984891c26210df9a76c873cb2b29ffdf326de4f",
+          "dir": ".",
+          "files": 1,
+          "bytes": 57
+        },
+        "at": "2026-09-29T07:26:33.689Z"
+      },
+      "check": {
+        "at": "2026-09-29T07:26:33.689Z",
+        "status": "warnings",
+        "counts": {
+          "pass": 3,
+          "info": 3,
+          "warn": 1,
+          "fail": 0
+        }
+      },
+      "preview": {
+        "url": "http://127.0.0.1:5082/deploys/dep-2/",
+        "deployId": "dep-2",
+        "at": "2026-09-29T07:26:33.817Z"
+      },
+      "smoke": {
+        "ok": true,
+        "url": "http://127.0.0.1:5082/deploys/dep-2/",
+        "at": "2026-09-29T07:26:33.830Z",
+        "checks": [
+          {
+            "url": "http://127.0.0.1:5082/deploys/dep-2/",
+            "ok": true,
+            "status": 200,
+            "ms": 9,
+            "reason": null
+          }
+        ],
+        "pages": 1,
+        "log": "/tmp/bid-test-EZ4j6h/cache/f46f4c75d03b/smoke-preview-release-mumcrwqv-8804d8.log"
+      },
+      "readyFor": "production",
+      "confirmation": {
+        "typed": "DEPLOY",
+        "at": "2026-09-29T07:26:34.217Z",
+        "by": "cli"
+      },
+      "production": {
+        "previousDeployId": null,
+        "previousPublishedAt": null,
+        "url": "http://127.0.0.1:5082/",
+        "deployId": "dep-2",
+        "at": "2026-09-29T07:26:34.435Z",
+        "sha": null
+      },
+      "verify": {
+        "ok": true,
+        "url": "http://127.0.0.1:5082/",
+        "at": "2026-09-29T07:26:34.448Z",
+        "checks": [
+          {
+            "url": "http://127.0.0.1:5082/",
+            "ok": true,
+            "status": 200,
+            "ms": 8,
+            "reason": null
+          }
+        ],
+        "pages": 1,
+        "log": "/tmp/bid-test-EZ4j6h/cache/f46f4c75d03b/smoke-production-release-mumcrwqv-8804d8.log"
+      },
+      "rollback": {
+        "available": false,
+        "reason": "no_previous",
+        "restores": null
+      }
+    },
+    {
+      "id": "release-mumcrw3a-bd7e78",
+      "kind": "release",
+      "project": "f46f4c75d03b",
+      "projectName": "rel-site",
+      "provider": "netlify",
+      "actor": "cli",
+      "createdAt": "2026-09-29T07:26:32.759Z",
+      "updatedAt": "2026-09-29T07:26:33.163Z",
+      "state": "stale",
+      "stages": [
+        {
+          "id": "check",
+          "status": "pass",
+          "startedAt": "2026-09-29T07:26:32.760Z",
+          "summary": "Check passed (0 warnings)",
+          "finishedAt": "2026-09-29T07:26:32.832Z"
+        },
+        {
+          "id": "preview",
+          "status": "pass",
+          "startedAt": "2026-09-29T07:26:32.833Z",
+          "summary": "http://127.0.0.1:5082/deploys/dep-1/",
+          "finishedAt": "2026-09-29T07:26:32.939Z"
+        },
+        {
+          "id": "smoke",
+          "status": "pass",
+          "summary": "1 pages answer correctly",
+          "startedAt": "2026-09-29T07:26:32.940Z",
+          "log": "/tmp/bid-test-EZ4j6h/cache/f46f4c75d03b/smoke-preview-release-mumcrw3a-bd7e78.log",
+          "finishedAt": "2026-09-29T07:26:32.953Z"
+        }
+      ],
+      "log": [
+        "2026-09-29T07:26:33.163Z snapshot changed since preview (source)"
+      ],
+      "snapshot": {
+        "fingerprint": "bb9174ac4d8a0888056ee26c384c760a30238c7c",
+        "artifact": {
+          "hash": "cf8f01b264f6b88192f382159e83efb93b172ed3",
+          "dir": ".",
+          "files": 1,
+          "bytes": 46
+        },
+        "at": "2026-09-29T07:26:32.831Z"
+      },
+      "check": {
+        "at": "2026-09-29T07:26:32.831Z",
+        "status": "ready",
+        "counts": {
+          "pass": 4,
+          "info": 3,
+          "warn": 0,
+          "fail": 0
+        }
+      },
+      "preview": {
+        "url": "http://127.0.0.1:5082/deploys/dep-1/",
+        "deployId": "dep-1",
+        "at": "2026-09-29T07:26:32.939Z"
+      },
+      "smoke": {
+        "ok": true,
+        "url": "http://127.0.0.1:5082/deploys/dep-1/",
+        "at": "2026-09-29T07:26:32.952Z",
+        "checks": [
+          {
+            "url": "http://127.0.0.1:5082/deploys/dep-1/",
+            "ok": true,
+            "status": 200,
+            "ms": 8,
+            "reason": null
+          }
+        ],
+        "pages": 1,
+        "log": "/tmp/bid-test-EZ4j6h/cache/f46f4c75d03b/smoke-preview-release-mumcrw3a-bd7e78.log"
+      },
+      "readyFor": "production",
+      "failure": "source_changed"
+    }
+  ],
+  "deploys": [
+    {
+      "id": "dep-4",
+      "state": "ready",
+      "context": "production",
+      "url": "http://127.0.0.1:5082/deploys/dep-4/",
+      "createdAt": "2026-09-29T07:26:36.297Z",
+      "publishedAt": "2026-09-29T07:26:36.716Z",
+      "title": null,
+      "sha": null,
+      "branch": null
+    },
+    {
+      "id": "dep-3",
+      "state": "ready",
+      "context": "production",
+      "url": "http://127.0.0.1:5082/deploys/dep-3/",
+      "createdAt": "2026-09-29T07:26:35.491Z",
+      "publishedAt": "2026-09-29T07:26:37.530Z",
+      "title": null,
+      "sha": null,
+      "branch": null
+    },
+    {
+      "id": "dep-2",
+      "state": "ready",
+      "context": "production",
+      "url": "http://127.0.0.1:5082/deploys/dep-2/",
+      "createdAt": "2026-09-29T07:26:33.791Z",
+      "publishedAt": "2026-09-29T07:26:34.341Z",
+      "title": null,
+      "sha": null,
+      "branch": null
+    },
+    {
+      "id": "dep-1",
+      "state": "ready",
+      "context": "deploy-preview",
+      "url": "http://127.0.0.1:5082/deploys/dep-1/",
+      "createdAt": "2026-09-29T07:26:32.917Z",
+      "publishedAt": null,
+      "title": null,
+      "sha": null,
+      "branch": null
+    }
+  ],
+  "site": {
+    "siteId": "site-rel",
+    "liveUrl": "http://127.0.0.1:5082/",
+    "publishedDeployId": "dep-3",
+    "publishedAt": "2026-09-29T07:26:37.530Z"
+  },
+  "lastProd": {
+    "url": "http://127.0.0.1:5082/",
+    "at": "2026-09-29T07:26:37.612Z",
+    "deployId": "dep-3",
+    "rollback": true
+  },
+  "rollback": {
+    "available": true,
+    "deployId": "dep-4",
+    "restores": "files",
+    "createdAt": "2026-09-29T07:26:36.297Z",
+    "note": "Restores the previously published files. Databases and external services are not touched."
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "configured": true,
+  "url": "http://127.0.0.1:5074",
+  "ref": null,
+  "reachable": true,
+  "auth": {
+    "signupEnabled": true,
+    "emailConfirmRequired": true,
+    "providers": [
+      "github",
+      "email"
+    ]
+  },
+  "tables": {
+    "profiles": true,
+    "settings": true,
+    "subscriptions": true,
+    "credit_ledger": true,
+    "ai_usage": true,
+    "monitor_targets": true
+  },
+  "schemaApplied": true,
+  "tablesMissing": [],
+  "functions": {
+    "account": true,
+    "ai-fix": true,
+    "billing": true,
+    "monitor": true,
+    "admin": true
+  },
+  "functionsMissing": [],
+  "dashboard": {
+    "project": null,
+    "sql": null,
+    "functions": null,
+    "auth": null,
+    "api": null
+  },
+  "checkedAt": "2026-09-29T19:54:06.080Z"
+}

@@ -7,15 +7,12 @@ struct RunOverlay: View {
 
     var headerTint: Color {
         if !session.finished { return Theme.accent }
-        return session.success ? Theme.ready : Theme.blocked
+        if !session.success { return Theme.blocked }
+        return session.steps.contains { $0.status == "warn" } ? Theme.warn : Theme.ready
     }
 
     var body: some View {
-        ZStack {
-            Color.black.opacity(0.55)
-                .ignoresSafeArea()
-                .onTapGesture { if session.finished { close() } }
-
+        ModalShell(size: .xl, height: 600, dismiss: { if session.finished { close() } }) {
             VStack(spacing: 0) {
                 header
                 Rectangle().fill(Theme.hairline).frame(height: 1)
@@ -28,21 +25,12 @@ struct RunOverlay: View {
                 Rectangle().fill(Theme.hairline).frame(height: 1)
                 footer
             }
-            .frame(width: 900, height: 600)
-            .background(
-                RoundedRectangle(cornerRadius: 20, style: .continuous).fill(Theme.panel)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1)
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .shadow(color: .black.opacity(0.5), radius: 40, y: 16)
         }
         .onExitCommand { if session.finished { close() } }
     }
 
     private func close() {
-        withAnimation(.spring(response: 0.3)) { model.run = nil }
+        withAnimation(Motion.spring) { model.run = nil }
     }
 
     // MARK: header
@@ -52,19 +40,20 @@ struct RunOverlay: View {
             ZStack {
                 Circle().fill(headerTint.opacity(0.14)).frame(width: 40, height: 40)
                 if session.finished {
-                    Image(systemName: session.success ? "checkmark" : "xmark")
-                        .font(.system(size: 16, weight: .bold))
+                    Image(systemName: !session.success ? "xmark" : (headerTint == Theme.warn ? "exclamationmark" : "checkmark"))
+                        .font(Typo.font(.headline, weight: .bold))
                         .foregroundColor(headerTint)
                 } else {
-                    Spinner(size: 18)
+                    Orbit(size: 20)
                 }
             }
+
             VStack(alignment: .leading, spacing: 3) {
                 Text(session.finished ? (session.outcomeTitle ?? session.title) : session.title)
-                    .font(.system(size: 17, weight: .bold))
+                    .font(Typo.font(.headline, weight: .bold))
                     .foregroundColor(Theme.text)
                 Text(session.subtitle)
-                    .font(.system(size: 12))
+                    .font(Typo.font(.callout))
                     .foregroundColor(Theme.secondary)
                     .lineLimit(1)
             }
@@ -72,7 +61,7 @@ struct RunOverlay: View {
             TimelineView(.periodic(from: .now, by: 1)) { ctx in
                 let end = session.finishedAt ?? ctx.date
                 Text(Fmt.duration(end.timeIntervalSince(session.startedAt)))
-                    .font(.system(size: 12, design: .monospaced))
+                    .font(Typo.font(.callout, design: .monospaced))
                     .foregroundColor(Theme.tertiary)
             }
         }
@@ -80,10 +69,11 @@ struct RunOverlay: View {
         .padding(.vertical, 16)
         .overlay(alignment: .bottom) {
             GeometryReader { geo in
-                Rectangle()
-                    .fill(headerTint)
+                Capsule()
+                    .fill(LinearGradient(colors: [headerTint.opacity(0.6), headerTint], startPoint: .leading, endPoint: .trailing))
                     .frame(width: geo.size.width * session.progress, height: 2)
-                    .animation(.easeInOut(duration: 0.4), value: session.progress)
+                    .shimmer(active: !session.finished)
+                    .animation(Motion.gentle, value: session.progress)
             }
             .frame(height: 2)
         }
@@ -94,14 +84,24 @@ struct RunOverlay: View {
     private var stepList: some View {
         ScrollView {
             VStack(spacing: 4) {
-                ForEach(session.steps) { s in
+                ForEach(Array(session.steps.enumerated()), id: \.element.id) { i, s in
                     RunStepRow(step: s, selected: session.selectedStep == s.id)
-                        .onTapGesture { session.selectedStep = s.id }
+                        .tapAction { session.selectedStep = s.id }
+
                 }
                 if session.steps.isEmpty {
+                    // a run that finished without steps (nothing to install) must not spin "Starting…" forever
                     HStack(spacing: 8) {
-                        Spinner(size: 12)
-                        Text("Стартирам…").font(.system(size: 12)).foregroundColor(Theme.secondary)
+                        if session.finished && session.success {
+                            Image(systemName: "checkmark.circle.fill").foregroundColor(Theme.ready)
+                            Text(L("overlay.nothingToDo")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
+                        } else if session.finished {
+                            Image(systemName: "xmark.circle.fill").foregroundColor(Theme.blocked)
+                            Text(L("overlay.failedBeforeStart")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
+                        } else {
+                            Spinner(size: 12)
+                            Text(L("overlay.starting")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
+                        }
                     }
                     .padding(.top, 16)
                 }
@@ -124,13 +124,13 @@ struct RunOverlay: View {
             if let s = selected {
                 HStack(spacing: 8) {
                     Image(systemName: Theme.symbol(for: s.status)).foregroundColor(Theme.color(for: s.status))
-                    Text(s.label).font(.system(size: 13, weight: .semibold)).foregroundColor(Theme.text)
+                    Text(s.label).font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.text)
                     if let sum = s.summary {
-                        Text(sum).font(.system(size: 12)).foregroundColor(Theme.secondary).lineLimit(1)
+                        Text(sum).font(Typo.font(.callout)).foregroundColor(Theme.secondary).lineLimit(1)
                     }
                     Spacer()
                     if let log = s.log {
-                        Button("Пълен лог") { model.openFile(log) }.bidButton(.ghost, compact: true)
+                        Button(L("overlay.fullLog")) { model.openFile(log) }.bidButton(.ghost, compact: true)
                     }
                 }
                 .padding(.horizontal, 16)
@@ -141,7 +141,7 @@ struct RunOverlay: View {
                         LazyVStack(alignment: .leading, spacing: 1) {
                             let lines = s.lines.isEmpty ? s.details : s.lines
                             if lines.isEmpty {
-                                Text(s.status == "running" ? "Чакам изход…" : "Няма изход за тази стъпка.")
+                                Text(s.status == "running" ? L("overlay.waitingOutput") : L("overlay.noOutput"))
                                     .foregroundColor(Theme.tertiary)
                             }
                             ForEach(Array(lines.enumerated()), id: \.offset) { i, line in
@@ -158,7 +158,7 @@ struct RunOverlay: View {
                             }
                             Color.clear.frame(height: 1).id("bottom")
                         }
-                        .font(.system(size: 11.5, design: .monospaced))
+                        .font(Typo.font(.callout, design: .monospaced))
                         .textSelection(.enabled)
                         .padding(.horizontal, 16)
                         .padding(.bottom, 12)
@@ -171,11 +171,11 @@ struct RunOverlay: View {
                     }
                 }
                 .background(Theme.bg)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: Radius.m, style: .continuous))
                 .padding(.horizontal, 12)
                 .padding(.bottom, 12)
 
-                if s.status == "fail" || s.status == "warn" {
+                if session.kind != .setup && (s.status == "fail" || s.status == "warn") {
                     AIFixBar(step: s.id)
                         .padding(.horizontal, 16)
                         .padding(.bottom, 12)
@@ -183,10 +183,10 @@ struct RunOverlay: View {
 
                 if session.finished, !s.fixes.isEmpty {
                     HStack {
-                        Text("Има безопасна поправка за тази стъпка").font(.system(size: 12)).foregroundColor(Theme.secondary)
+                        Text(L("overlay.safeFix")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
                         Spacer()
                         ForEach(s.fixes, id: \.self) { f in
-                            Button("Оправи") {
+                            Button(L("common.fix")) {
                                 model.run = nil
                                 model.requestFix(f)
                             }
@@ -218,7 +218,7 @@ struct RunOverlay: View {
             if session.finished {
                 if let m = session.outcomeMessage {
                     Text(m)
-                        .font(.system(size: 12.5))
+                        .font(Typo.font(.body))
                         .foregroundColor(session.success ? Theme.secondary : Theme.blocked)
                         .lineLimit(2)
                         .textSelection(.enabled)
@@ -226,29 +226,32 @@ struct RunOverlay: View {
                 Spacer()
                 if let url = session.resultURL {
                     Button { model.copy(url) } label: { Image(systemName: "doc.on.doc") }
-                        .bidButton(.secondary).help("Копирай URL")
-                    Button { model.open(url) } label: { Label("Отвори", systemImage: "safari") }
+                        .bidButton(.secondary).help(L("common.copyUrl"))
+                    Button { model.open(url) } label: { Label(L("common.open"), systemImage: "safari") }
                         .bidButton(.primary)
                 }
                 if session.kind == .check && session.success && model.status?.detect.netlifyLinked == true {
                     Button {
                         model.run = nil
                         model.draftPreview()
-                    } label: { Label("Draft Preview", systemImage: "eye") }
+                    } label: { Label(L("run.draftPreview"), systemImage: "eye") }
                         .bidButton(.secondary)
                 }
-                Button("Затвори") { close() }
+                if session.kind == .setup && !session.success {
+                    Button(L("setup.retryFailed")) { model.run = nil; model.setupAuto() }.bidButton(.secondary)
+                }
+                Button(L("common.close")) { close() }
                     .bidButton(session.resultURL == nil ? .primary : .secondary)
                     .keyboardShortcut(.defaultAction)
             } else {
-                Text(session.runningStep.map { "\($0.label)…" } ?? "Работи…")
-                    .font(.system(size: 12.5))
+                Text(session.runningStep.map { "\($0.label)…" } ?? L("overlay.working"))
+                    .font(Typo.font(.body))
                     .foregroundColor(Theme.secondary)
                 Spacer()
-                Button("Прекъсни") { session.handle.cancel() }
+                Button(L("overlay.cancel")) { session.handle.cancel() }
                     .bidButton(.danger)
                     .disabled(session.kind == .production && session.runningStep?.id == "deploy")
-                    .help(session.kind == .production ? "Не прекъсвай качването на production" : "Спира процеса")
+                    .help(session.kind == .production ? L("overlay.dontCancelProd") : L("overlay.stopsProcess"))
             }
         }
         .padding(.horizontal, 22)
@@ -264,34 +267,39 @@ struct RunStepRow: View {
         HStack(spacing: 10) {
             ZStack {
                 if step.status == "running" {
-                    Spinner(size: 13)
+                    Orbit(size: 14)
                 } else {
                     Image(systemName: Theme.symbol(for: step.status))
-                        .font(.system(size: 13))
+                        .font(Typo.font(.body))
                         .foregroundColor(Theme.color(for: step.status))
                 }
             }
             .frame(width: 18)
             VStack(alignment: .leading, spacing: 2) {
                 Text(step.label)
-                    .font(.system(size: 12.5, weight: .semibold))
+                    .font(Typo.font(.body, weight: .semibold))
                     .foregroundColor(step.status == "pending" || step.status == "skipped" ? Theme.tertiary : Theme.text)
                 if let s = step.summary {
                     Text(s)
-                        .font(.system(size: 11))
+                        .font(Typo.font(.caption))
                         .foregroundColor(Theme.tertiary)
                         .lineLimit(1)
                 }
             }
             Spacer()
+            if step.cached {
+                Text(L("overlay.cached")).font(Typo.font(.micro, weight: .semibold)).foregroundColor(Theme.tertiary)
+                    .padding(.horizontal, 6).padding(.vertical, 1)
+                    .background(Capsule().fill(Theme.elevated))
+            }
             if let d = step.duration, d >= 1 {
-                Text(Fmt.duration(d)).font(.system(size: 10.5, design: .monospaced)).foregroundColor(Theme.tertiary)
+                Text(Fmt.duration(d)).font(Typo.font(.caption, design: .monospaced)).foregroundColor(Theme.tertiary)
             }
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
         .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
+            RoundedRectangle(cornerRadius: Radius.s, style: .continuous)
                 .fill(selected ? Theme.elevated : .clear)
         )
         .contentShape(Rectangle())

@@ -1,11 +1,13 @@
 // Spaceship — domains, expiry, DNS and one-click “connect domain to Netlify”
 import path from 'node:path';
-import { EngineError, ev, nowISO, readJSON, writeJSON, APP_DIR, runStream, which, extractJSON, HOME } from './util.mjs';
+import { EngineError, ev, nowISO, readJSON, writeJSON, APP_DIR, runStream, which, extractJSON, HOME, fetchT } from './util.mjs';
+import { testEndpoint } from './isolation.mjs';
 import { getSecret, setSecret, deleteSecret } from './secrets.mjs';
 import { detect } from './detect.mjs';
 import { addHistory, updateProject } from './store.mjs';
+import { t, msg } from './i18n.mjs';
 
-const BASE = process.env.BID_SPACESHIP_BASE || 'https://spaceship.dev/api/v1';
+const BASE = testEndpoint('BID_SPACESHIP_BASE') || 'https://spaceship.dev/api/v1';
 const NETLIFY_LB_IP = '75.2.60.5';
 const CACHE = () => path.join(APP_DIR, 'spaceship-cache.json');
 
@@ -13,7 +15,7 @@ export const API_MANAGER_URL = 'https://www.spaceship.com/application/api-manage
 
 function creds() {
   const c = getSecret('spaceship');
-  if (!c?.key || !c?.secret) throw new EngineError('Spaceship не е свързан. Добави API ключ от „Домейни“.', 'not_connected', 6);
+  if (!c?.key || !c?.secret) throw new EngineError(msg('spaceship.notConnected'), 'not_connected', 6);
   return c;
 }
 
@@ -21,20 +23,20 @@ async function api(method, p, body) {
   const c = creds();
   let res;
   try {
-    res = await fetch(BASE + p, {
+    res = await fetchT(BASE + p, {
       method,
       headers: { 'X-API-Key': c.key, 'X-API-Secret': c.secret, 'Content-Type': 'application/json', Accept: 'application/json' },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch (e) {
-    throw new EngineError(`Spaceship не отговаря: ${e.message}`, 'network');
+    throw new EngineError(msg('spaceship.network', { error: e.message }), 'network');
   }
   const text = await res.text();
   let data = null;
   try {
     data = text ? JSON.parse(text) : null;
   } catch {}
-  if (res.status === 401 || res.status === 403) throw new EngineError('Spaceship отказа ключа (провери API key/secret и правата му).', 'unauthorized');
+  if (res.status === 401 || res.status === 403) throw new EngineError(msg('spaceship.unauthorized'), 'unauthorized');
   if (!res.ok) {
     const msg = data?.detail || data?.title || data?.message || text.slice(0, 200) || `HTTP ${res.status}`;
     throw new EngineError(`Spaceship: ${msg}`, 'spaceship_error');
@@ -45,7 +47,7 @@ async function api(method, p, body) {
 export async function spaceshipConnect({ key, secret }) {
   key = key || process.env.BID_SPACESHIP_KEY;
   secret = secret || process.env.BID_SPACESHIP_SECRET;
-  if (!key || !secret) throw new EngineError('Липсват API key и secret.', 'usage', 2);
+  if (!key || !secret) throw new EngineError(msg('spaceship.missingKeys'), 'usage', 2);
   setSecret('spaceship', { key: key.trim(), secret: secret.trim(), savedAt: nowISO() });
   try {
     const d = await spaceshipDomains({ refresh: true });
@@ -98,7 +100,7 @@ export async function spaceshipDomains({ refresh = false } = {}) {
 }
 
 export async function spaceshipDns(domain) {
-  if (!domain || domain === true) throw new EngineError('Липсва --domain', 'usage', 2);
+  if (!domain || domain === true) throw new EngineError(msg('spaceship.missingDomain'), 'usage', 2);
   const r = await api('GET', `/dns/records/${encodeURIComponent(domain)}?take=500&skip=0`);
   const records = (r?.items || []).map((x) => ({
     type: x.type,
@@ -112,18 +114,17 @@ export async function spaceshipDns(domain) {
 
 function netlifyCli() {
   if (which('netlify')) return { cmd: 'netlify', pre: [] };
-  if (which('npx')) return { cmd: 'npx', pre: ['--yes', 'netlify-cli'] };
-  throw new EngineError('Няма Netlify CLI', 'no_cli');
+  throw new EngineError(msg('spaceship.noNetlifyCli'), 'no_cli');
 }
 
 /** Plans (or applies with yes) the DNS + Netlify changes to serve `domain` from the project's Netlify site. */
 export async function connectDomainToNetlify(project, { domain, yes = false }) {
-  if (!domain || domain === true) throw new EngineError('Липсва --domain', 'usage', 2);
+  if (!domain || domain === true) throw new EngineError(msg('spaceship.missingDomain'), 'usage', 2);
   const d = detect(project.path);
-  if (!d.netlifyLinked) throw new EngineError('Проектът не е свързан с Netlify — свържи го първо.', 'not_linked', 4);
+  if (!d.netlifyLinked) throw new EngineError(msg('spaceship.notLinked'), 'not_linked', 4);
   const siteName = project.netlify?.siteName;
   const target = siteName ? `${siteName}.netlify.app` : null;
-  if (!target) throw new EngineError('Не знам името на Netlify сайта — отвори проекта веднъж, за да се синхронизира.', 'no_site');
+  if (!target) throw new EngineError(msg('spaceship.noSite'), 'no_site');
 
   const current = await spaceshipDns(domain);
   const wanted = [
@@ -141,31 +142,36 @@ export async function connectDomainToNetlify(project, { domain, yes = false }) {
     add: wanted.map((w) => ({ type: w.type, name: w.name, value: w.address || w.cname })),
     replace: conflicts.map((c) => ({ type: c.type, name: c.name, value: c.value })),
     netlify: { custom_domain: domain, domain_aliases: [`www.${domain}`] },
-    note: 'Netlify издава SSL сертификат автоматично след като DNS-ът се разпространи (обикновено минути, до няколко часа).',
+    note: t('spaceship.plan.note'),
   };
   if (!yes) return { applied: false, plan };
 
-  ev.step('dns', { label: 'DNS в Spaceship', status: 'running', summary: `${domain} → ${target}` });
-  if (conflicts.length) {
-    const del = conflicts.map((c) => ({ ...c.raw }));
-    await api('DELETE', `/dns/records/${encodeURIComponent(domain)}`, del);
-  }
-  await api('PUT', `/dns/records/${encodeURIComponent(domain)}`, { force: true, items: wanted });
-  ev.step('dns', { label: 'DNS в Spaceship', status: 'pass', summary: `A @ → ${NETLIFY_LB_IP} · CNAME www → ${target}` });
-
-  ev.step('netlify-domain', { label: 'Домейн в Netlify', status: 'running' });
+  // Netlify accepts the domain first: if it refuses, the DNS stays exactly as it was (audit E14)
+  ev.step('netlify-domain', { label: t('spaceship.netlifyDomain.label'), status: 'running' });
   const c = netlifyCli();
   const body = JSON.stringify({ site_id: d.siteId, body: { custom_domain: domain, domain_aliases: [`www.${domain}`] } });
   const r = await runStream(c.cmd, [...c.pre, 'api', 'updateSite', '--data', body], { cwd: HOME, quiet: true, captureStdout: true, timeout: 120000 });
   const site = extractJSON(r.stdout);
   if (r.code !== 0 || !site) {
-    ev.step('netlify-domain', { label: 'Домейн в Netlify', status: 'fail', summary: 'Netlify отказа домейна', details: r.tail.slice(-8) });
-    throw new EngineError('DNS е настроен, но Netlify не прие домейна. Добави го ръчно от Netlify → Domain management.', 'netlify_failed');
+    ev.step('netlify-domain', { label: t('spaceship.netlifyDomain.label'), status: 'fail', summary: t('spaceship.netlifyDomain.rejected'), details: r.tail.slice(-8) });
+    throw new EngineError(msg('spaceship.netlifyRejected'), 'netlify_failed');
   }
-  ev.step('netlify-domain', { label: 'Домейн в Netlify', status: 'pass', summary: `https://${domain}` });
+  ev.step('netlify-domain', { label: t('spaceship.netlifyDomain.label'), status: 'pass', summary: `https://${domain}` });
+  ev.step('dns', { label: t('spaceship.dns.label'), status: 'running', summary: `${domain} → ${target}` });
+  const del = conflicts.map((c) => ({ ...c.raw }));
+  if (del.length) await api('DELETE', `/dns/records/${encodeURIComponent(domain)}`, del);
+  try {
+    await api('PUT', `/dns/records/${encodeURIComponent(domain)}`, { force: true, items: wanted });
+  } catch (e) {
+    // put the old records back rather than leave the domain pointing nowhere
+    if (del.length) await api('PUT', `/dns/records/${encodeURIComponent(domain)}`, { force: true, items: del }).catch(() => {});
+    throw e;
+  }
+  ev.step('dns', { label: t('spaceship.dns.label'), status: 'pass', summary: `A @ → ${NETLIFY_LB_IP} · CNAME www → ${target}` });
+
   updateProject(project.key, { domain, netlify: { liveUrl: `https://${domain}` } });
   addHistory({ project: project.key, projectName: project.name, kind: 'domain', status: 'ok', url: `https://${domain}`, message: `${domain} → ${target}` });
-  ev.notify(`🌐 ${domain}`, `Свързан с ${project.name}. SSL ще се активира автоматично.`, `https://${domain}`);
+  ev.notify(`🌐 ${domain}`, t('spaceship.notify.connected', { project: project.name }), `https://${domain}`);
   return { applied: true, plan };
 }
 
@@ -173,9 +179,9 @@ export function domainAttention(domains) {
   const out = [];
   for (const d of domains || []) {
     if (d.daysLeft !== null && d.daysLeft < 30) {
-      out.push({ key: `domain:${d.name}`, level: d.daysLeft < 7 ? 'fail' : 'warn', text: `${d.name}: изтича след ${d.daysLeft} дни${d.autoRenew ? ' (auto-renew е включен)' : ' — auto-renew е ИЗКЛЮЧЕН'}` });
+      out.push({ key: `domain:${d.name}`, level: d.daysLeft < 7 ? 'fail' : 'warn', text: t(d.autoRenew ? 'spaceship.expiring.autoRenew' : 'spaceship.expiring.noAutoRenew', { name: d.name, days: d.daysLeft }) });
     } else if (!d.autoRenew && d.daysLeft !== null && d.daysLeft < 90) {
-      out.push({ key: `domain:${d.name}`, level: 'info', text: `${d.name}: auto-renew е изключен (изтича след ${d.daysLeft} дни)` });
+      out.push({ key: `domain:${d.name}`, level: 'info', text: t('spaceship.autoRenewOff', { name: d.name, days: d.daysLeft }) });
     }
   }
   return out;

@@ -1,0 +1,35 @@
+{
+  "project": {
+    "key": "81b38e9fcfcf",
+    "path": "/tmp/bid-test-JZ1qhU/new-sites/frizyorski-salon-iva",
+    "name": "Фризьорски салон Ива",
+    "addedAt": "2026-09-30T13:43:28.175Z",
+    "framework": "static",
+    "packageManager": null,
+    "publishDir": ".",
+    "github": null,
+    "netlify": {
+      "siteId": null,
+      "linked": false
+    },
+    "lastOpened": "2026-09-30T13:43:28.175Z",
+    "customName": "Фризьорски салон Ива"
+  },
+  "path": "/tmp/bid-test-JZ1qhU/new-sites/frizyorski-salon-iva",
+  "template": "landing",
+  "lang": "bg",
+  "git": true,
+  "files": [
+    ".gitignore",
+    "404.html",
+    "bid.config.json",
+    "favicon.svg",
+    "index.html",
+    "netlify.toml",
+    "og.svg",
+    "privacy.html",
+    "robots.txt",
+    "sitemap.xml",
+    "styles.css"
+  ]
+}

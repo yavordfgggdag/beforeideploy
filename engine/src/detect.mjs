@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { readJSON, exists, isDir, sh } from './util.mjs';
+import { gitSh } from './gitbin.mjs';
 
 const SSR_FRAMEWORKS = new Set(['next', 'nuxt', 'remix', 'sveltekit']);
 
@@ -72,10 +73,10 @@ export function githubUrlFromRemote(remote) {
 }
 
 export function gitBasics(dir) {
-  const inside = sh('git', ['rev-parse', '--is-inside-work-tree'], { cwd: dir, timeout: 5000 });
+  const inside = gitSh(['rev-parse', '--is-inside-work-tree'], { cwd: dir, timeout: 5000 });
   if (inside.code !== 0 || inside.stdout.trim() !== 'true') return { isRepo: false };
-  const branch = sh('git', ['branch', '--show-current'], { cwd: dir }).stdout.trim() || 'detached HEAD';
-  const remote = sh('git', ['remote', 'get-url', 'origin'], { cwd: dir }).stdout.trim() || null;
+  const branch = gitSh(['branch', '--show-current'], { cwd: dir }).stdout.trim() || 'detached HEAD';
+  const remote = gitSh(['remote', 'get-url', 'origin'], { cwd: dir }).stdout.trim() || null;
   return { isRepo: true, branch, remote, githubUrl: githubUrlFromRemote(remote) };
 }
 

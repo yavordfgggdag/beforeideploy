@@ -1,0 +1,26 @@
+{
+  "purpose": "V13 S5: writes redaction placeholders into a file that never contained them",
+  "response": {
+    "status": "patch",
+    "summary": "Complete the expression.",
+    "base_hashes": {
+      "src/app.js": "{{base:src/app.js}}"
+    },
+    "changes": [
+      {
+        "path": "src/app.js",
+        "action": "replace",
+        "content": "const a = 1;\nconst b = 2;\nconst c = a + b;\nconst contact = '[email]';\nconst apiKey = '[REDACTED]';\nconsole.log(c);\n"
+      }
+    ],
+    "risk": "low",
+    "rationale_evidence_ids": [
+      "E1"
+    ],
+    "verification_plan": [
+      "node src/app.js"
+    ],
+    "rollback_notes": "undo restores the file",
+    "missing_context": []
+  }
+}

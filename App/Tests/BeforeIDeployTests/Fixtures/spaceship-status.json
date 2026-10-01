@@ -1,0 +1,17 @@
+{
+  "connected": true,
+  "at": "2026-09-29T07:26:21.221Z",
+  "domains": [
+    {
+      "name": "moyat-sait.bg",
+      "unicodeName": "moyat-sait.bg",
+      "expirationDate": "2026-10-09T07:26:19.823Z",
+      "daysLeft": 9,
+      "autoRenew": false,
+      "status": "registered",
+      "privacy": null,
+      "dashboard": "https://www.spaceship.com/application/domain-list-application/moyat-sait.bg/"
+    }
+  ],
+  "apiManager": "https://www.spaceship.com/application/api-manager/"
+}

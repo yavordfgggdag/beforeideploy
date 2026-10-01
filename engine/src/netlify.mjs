@@ -1,21 +1,29 @@
+import { meteredProviderCall } from './meter.mjs';
 // Netlify: auth, teams, sites, link/create (NO `netlify init` — never enables CI), manual deploys
 import path from 'node:path';
-import { HOME, EngineError, ev, which, runStream, logDir, readJSON, extractJSON, nowISO } from './util.mjs';
+import { HOME, EngineError, ev, emit, which, runStream, logDir, readJSON, extractJSON, nowISO } from './util.mjs';
 import { detect } from './detect.mjs';
+import { fingerprint } from './checks.mjs';
+import { stageArtifact } from './staging.mjs';
+import { cliEnv } from './isolation.mjs';
+import { configCandidates } from './platform/index.mjs';
 import { getState, setState, updateProject, addHistory } from './store.mjs';
 import { recordCost } from './costs.mjs';
+import { gitHead } from './git.mjs';
+import { t, msg } from './i18n.mjs';
 
 const CHECK_MAX_AGE_MIN = 30;
 
+// Only an installed CLI (Setup installs it with the user's consent). No `npx --yes netlify-cli`: that
+// downloads and runs whatever version is newest at that moment, silently (audit E10).
 export function netlifyCommand() {
   if (which('netlify')) return { cmd: 'netlify', pre: [], label: 'netlify' };
-  if (which('npx')) return { cmd: 'npx', pre: ['--yes', 'netlify-cli'], label: 'npx netlify-cli' };
   return null;
 }
 
 function requireCli() {
   const c = netlifyCommand();
-  if (!c) throw new EngineError('Не намирам Netlify CLI или npx. Инсталирай Node.js или `npm i -g netlify-cli`.', 'no_cli');
+  if (!c) throw new EngineError(msg('netlify.noCli'), 'no_cli');
   return c;
 }
 
@@ -29,6 +37,8 @@ async function nl(project, args, opts = {}) {
     captureStdout: opts.captureStdout,
     timeout: opts.timeout ?? 10 * 60 * 1000,
     quiet: opts.quiet,
+    env: cliEnv(opts.env),
+    onLine: opts.onLine,
   });
 }
 
@@ -37,11 +47,7 @@ async function nl(project, args, opts = {}) {
 export function netlifyAuth() {
   const cli = netlifyCommand();
   if (process.env.NETLIFY_AUTH_TOKEN) return { loggedIn: true, email: null, cli: cli?.label || null, via: 'env' };
-  const candidates = [
-    path.join(HOME, 'Library', 'Preferences', 'netlify', 'config.json'),
-    path.join(HOME, '.config', 'netlify', 'config.json'),
-    path.join(HOME, '.netlify', 'config.json'),
-  ];
+  const candidates = configCandidates('netlify', { home: HOME }); // per OS (platform/index.mjs)
   for (const f of candidates) {
     const cfg = readJSON(f, null);
     if (!cfg?.users) continue;
@@ -51,21 +57,33 @@ export function netlifyAuth() {
   return { loggedIn: false, email: null, cli: cli?.label || null };
 }
 
-export async function netlifyLogin() {
-  ev.step('login', { label: 'Netlify вход', status: 'running', summary: 'Отварям браузъра — потвърди входа там' });
-  const r = await nl(null, ['login'], { step: 'login', timeout: 5 * 60 * 1000 });
+export async function netlifyLogin({ stepId = 'login', manageSteps = true, logFile } = {}) {
+  if (manageSteps) ev.step(stepId, { label: t('netlify.login.label'), status: 'running', summary: t('netlify.login.opening') });
+  let announced = false;
+  // BROWSER=none is netlify-cli's documented off switch (utils/open-browser): it still prints the authorize URL,
+  // which the app opens. 'echo' was taken as an app name by the opener (audit B7).
+  const r = await nl(null, ['login'], { step: stepId, logFile, timeout: 5 * 60 * 1000, env: { BROWSER: 'none' },
+    onLine(line) {
+      const match = line.match(/https:\/\/app\.netlify\.com\/[^\s]+/);
+      if (match && !announced) {
+        announced = true;
+        emit({ type: 'devicecode', service: 'Netlify', code: null, url: match[0], expiresIn: 300 });
+        ev.step(stepId, { status: 'waiting_user', summary: t('netlify.login.opening') });
+      }
+    },
+  });
   const auth = netlifyAuth();
   if (!auth.loggedIn) {
-    ev.step('login', { label: 'Netlify вход', status: 'fail', summary: 'Входът не беше потвърден' });
-    throw new EngineError('Не успях да потвърдя входа в Netlify.', 'login_failed');
+    if (manageSteps) ev.step(stepId, { label: t('netlify.login.label'), status: 'fail', summary: t('netlify.login.notConfirmed') });
+    throw new EngineError(msg('netlify.login.failed'), 'login_failed');
   }
-  ev.step('login', { label: 'Netlify вход', status: 'pass', summary: auth.email || 'Влязъл' });
+  if (manageSteps) ev.step(stepId, { label: t('netlify.login.label'), status: 'pass', summary: auth.email || t('netlify.login.loggedIn') });
   return { ...auth, code: r.code };
 }
 
 function requireAuth() {
   const a = netlifyAuth();
-  if (!a.loggedIn) throw new EngineError('Не си влязъл в Netlify.', 'not_logged_in', 5);
+  if (!a.loggedIn) throw new EngineError(msg('netlify.notLoggedIn'), 'not_logged_in', 5);
   return a;
 }
 
@@ -75,15 +93,15 @@ export async function netlifyTeams() {
   requireAuth();
   const r = await nl(null, ['api', 'listAccountsForUser'], { captureStdout: true, quiet: true, timeout: 120000 });
   const data = extractJSON(r.stdout);
-  if (!Array.isArray(data)) throw new EngineError('Не успях да заредя Netlify teams.', 'netlify_failed');
-  return data.map((t) => ({ slug: t.slug, name: t.name || t.slug })).filter((t) => t.slug);
+  if (!Array.isArray(data)) throw new EngineError(msg('netlify.teamsFailed'), 'netlify_failed');
+  return data.map((team) => ({ slug: team.slug, name: team.name || team.slug })).filter((team) => team.slug);
 }
 
 export async function netlifySites() {
   requireAuth();
   const r = await nl(null, ['sites:list', '--json'], { captureStdout: true, quiet: true, timeout: 120000 });
   const data = extractJSON(r.stdout);
-  if (!Array.isArray(data)) throw new EngineError('Не успях да заредя Netlify проектите.', 'netlify_failed');
+  if (!Array.isArray(data)) throw new EngineError(msg('netlify.sitesFailed'), 'netlify_failed');
   return data
     .map((s) => ({ id: s.id || s.site_id, name: s.name, url: s.ssl_url || s.url || null, adminUrl: s.admin_url || null }))
     .filter((s) => s.id && s.name)
@@ -100,7 +118,7 @@ export async function netlifyInfo(project) {
     timeout: 120000,
   });
   const s = extractJSON(r.stdout);
-  if (!s || !s.id) throw new EngineError('Не успях да прочета Netlify сайта.', 'netlify_failed');
+  if (!s || !s.id) throw new EngineError(msg('netlify.siteFailed'), 'netlify_failed');
   const info = {
     linked: true,
     siteId: s.id,
@@ -119,15 +137,15 @@ export async function netlifyLink(project, { id, name }) {
   const args = ['link'];
   if (id && id !== true) args.push('--id', id);
   else if (name && name !== true) args.push('--name', name);
-  else throw new EngineError('Липсва --id или --name', 'usage', 2);
-  ev.step('link', { label: 'Свързване с Netlify', status: 'running' });
+  else throw new EngineError(msg('netlify.link.missingArgs'), 'usage', 2);
+  ev.step('link', { label: t('netlify.link.label'), status: 'running' });
   const r = await nl(project, args, { step: 'link', timeout: 180000 });
   const d = detect(project.path);
   if (r.code !== 0 || !d.netlifyLinked) {
-    ev.step('link', { label: 'Свързване с Netlify', status: 'fail', summary: r.tail.slice(-1)[0] || 'Неуспешно' });
-    throw new EngineError('Свързването с Netlify се провали.', 'netlify_failed');
+    ev.step('link', { label: t('netlify.link.label'), status: 'fail', summary: r.tail.slice(-1)[0] || t('netlify.failedShort') });
+    throw new EngineError(msg('netlify.link.failed'), 'netlify_failed');
   }
-  ev.step('link', { label: 'Свързване с Netlify', status: 'pass', summary: `Site ID ${d.siteId}` });
+  ev.step('link', { label: t('netlify.link.label'), status: 'pass', summary: `Site ID ${d.siteId}` });
   let info = { linked: true, siteId: d.siteId };
   try {
     info = await netlifyInfo(project);
@@ -138,22 +156,22 @@ export async function netlifyLink(project, { id, name }) {
 
 export async function netlifyCreate(project, { name, team }) {
   requireAuth();
-  if (!name || name === true) throw new EngineError('Липсва име на сайта', 'usage', 2);
+  if (!name || name === true) throw new EngineError(msg('netlify.create.missingName'), 'usage', 2);
   const slug = String(name).toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
   const args = ['sites:create', '--name', slug];
   if (team && team !== true) args.push('--account-slug', team);
-  ev.step('create', { label: `Създавам ${slug}.netlify.app`, status: 'running' });
+  ev.step('create', { label: t('netlify.create.creating', { site: `${slug}.netlify.app` }), status: 'running' });
   const r = await nl(project, args, { step: 'create', timeout: 180000 });
   if (r.code !== 0) {
-    ev.step('create', { label: 'Създаване', status: 'fail', summary: r.tail.slice(-1)[0] || 'Неуспешно', details: r.tail.slice(-8) });
-    throw new EngineError('Netlify не създаде сайта (може името да е заето).', 'netlify_failed');
+    ev.step('create', { label: t('netlify.create.label'), status: 'fail', summary: r.tail.slice(-1)[0] || t('netlify.failedShort'), details: r.tail.slice(-8) });
+    throw new EngineError(msg('netlify.create.failed'), 'netlify_failed');
   }
-  ev.step('create', { label: 'Създаване', status: 'pass', summary: `${slug}.netlify.app` });
+  ev.step('create', { label: t('netlify.create.label'), status: 'pass', summary: `${slug}.netlify.app` });
   let d = detect(project.path);
   if (!d.netlifyLinked) {
     const sites = await netlifySites();
     const site = sites.find((s) => s.name === slug);
-    if (!site) throw new EngineError('Сайтът е създаден, но не го намирам за свързване.', 'netlify_failed');
+    if (!site) throw new EngineError(msg('netlify.create.notFound'), 'netlify_failed');
     return netlifyLink(project, { id: site.id });
   }
   let info = { linked: true, siteId: d.siteId, siteName: slug };
@@ -164,56 +182,131 @@ export async function netlifyCreate(project, { name, team }) {
   return info;
 }
 
+// ---------------------------------------------------------------- API helpers (V11 releases)
+
+/** One Netlify API call through the CLI (`netlify api <method> --data …`); throws netlify_failed on error. */
+export async function netlifyApi(project, method, data, { timeout = 120000 } = {}) {
+  requireAuth();
+  const r = await nl(project, ['api', method, '--data', JSON.stringify(data)], { captureStdout: true, quiet: true, timeout });
+  const j = extractJSON(r.stdout);
+  if (r.code !== 0 || j === null) throw new EngineError(msg('netlify.apiFailed', { method }), 'netlify_failed');
+  return j;
+}
+
+function requireSite(project) {
+  const d = detect(project.path);
+  if (!d.netlifyLinked) throw new EngineError(msg('netlify.notLinked'), 'not_linked', 4);
+  return d.siteId;
+}
+
+const toDeploy = (x) => ({
+  id: x.id,
+  state: x.state || null,
+  context: x.context || null,
+  url: x.deploy_ssl_url || x.deploy_url || x.ssl_url || x.url || null,
+  createdAt: x.created_at || null,
+  publishedAt: x.published_at || null,
+  title: x.title || null,
+  sha: x.commit_ref || null,
+  branch: x.branch || null,
+});
+
+/** Deploys of the linked site, newest first. */
+export async function netlifyDeploys(project, { limit = 20 } = {}) {
+  const siteId = requireSite(project);
+  const list = await netlifyApi(project, 'listSiteDeploys', { site_id: siteId, per_page: limit });
+  return (Array.isArray(list) ? list : []).map(toDeploy);
+}
+
+/** The site as Netlify sees it now: which deploy is published (production) and the live URL. */
+export async function netlifySiteState(project) {
+  const siteId = requireSite(project);
+  const site = await netlifyApi(project, 'getSite', { site_id: siteId });
+  if (!site?.id) throw new EngineError(msg('netlify.siteFailed'), 'netlify_failed');
+  return { siteId: site.id, liveUrl: site.ssl_url || site.url || null, publishedDeployId: site.published_deploy?.id || null, publishedAt: site.published_deploy?.published_at || null };
+}
+
+export async function netlifyGetDeploy(project, deployId) {
+  return toDeploy(await netlifyApi(project, 'getDeploy', { deploy_id: deployId }));
+}
+
+/**
+ * Makes an existing deploy the published one (Netlify "restore"/"publish deploy"). This is how a release
+ * promotes the exact preview that was smoke-tested, and how rollback returns to a previous deploy.
+ */
+export async function netlifyPublishDeploy(project, deployId) {
+  const siteId = requireSite(project);
+  const r = await netlifyApi(project, 'restoreSiteDeploy', { site_id: siteId, deploy_id: deployId });
+  if (!r?.id) throw new EngineError(msg('netlify.publishFailed'), 'netlify_failed');
+  return toDeploy(r);
+}
+
 // ---------------------------------------------------------------- deploy
 
-export function deployGuard(project) {
+export function deployGuard(project, { releaseVerified = false } = {}) {
   const check = getState(project.key).check;
-  if (!check) throw new EngineError('Няма проверка. Пусни „Провери“ преди deploy.', 'needs_check', 3);
+  if (!check) throw new EngineError(msg('deploy.needsCheck'), 'needs_check', 3);
   const age = (Date.now() - Date.parse(check.at)) / 60000;
-  if (age > CHECK_MAX_AGE_MIN) throw new EngineError(`Последната проверка е от преди ${Math.round(age)} мин. Пусни я отново.`, 'stale_check', 3);
-  if (check.status === 'blocked') throw new EngineError('Проектът е BLOCKED — оправи грешките преди deploy.', 'blocked', 3);
+  // an unreadable date counts as stale, never as fresh. A release promote has just re-verified its snapshot
+  // (source, build config, artifact) and uploads a copy that must equal it, so the check's age does not
+  // decide there (WP02, audit E8) — a blocked check or changed code still does.
+  if (!releaseVerified && (!Number.isFinite(age) || age > CHECK_MAX_AGE_MIN)) throw new EngineError(msg('deploy.staleCheck', { minutes: Number.isFinite(age) ? Math.round(age) : '?' }), 'stale_check', 3);
+  if (check.status === 'blocked') throw new EngineError(msg('deploy.blocked'), 'blocked', 3);
+  // the code must still be the code that was checked (audit E7)
+  if (check.fingerprint && fingerprint(project.path, detect(project.path)) !== check.fingerprint) {
+    throw new EngineError(msg('deploy.changedSinceCheck'), 'stale_check', 3);
+  }
   return check;
 }
 
-export async function netlifyDeploy(project, { prod = false, confirm = null } = {}) {
+export async function netlifyDeploy(project, { prod = false, confirm = null, expectedArtifact, artifactCode = 'stale_check', releaseVerified = false } = {}) {
   if (prod && confirm !== 'DEPLOY') {
-    throw new EngineError('Production deploy изисква --confirm DEPLOY', 'confirm_required', 2);
+    throw new EngineError(msg('deploy.confirmRequired'), 'confirm_required', 2);
   }
-  deployGuard(project);
+  deployGuard(project, { releaseVerified });
   requireAuth();
   const d = detect(project.path);
-  if (!d.netlifyLinked) throw new EngineError('Netlify не е свързан за този проект.', 'not_linked', 4);
+  if (!d.netlifyLinked) throw new EngineError(msg('netlify.notLinked'), 'not_linked', 4);
 
-  const label = prod ? 'Production deploy' : 'Draft preview';
+  const label = t(prod ? 'deploy.label.production' : 'deploy.label.draft');
   const stepId = 'deploy';
   const message = `Before I Deploy — ${new Date().toLocaleString('bg-BG')}`;
   const args = ['deploy', '--json', '--message', message];
   const useStatic = !d.ssr && !d.hasFunctions && d.publishReady;
-  if (useStatic) args.push('--no-build', '--dir', d.publishDir);
+  // static sites go out from a staged copy whose manifest is checked against the check / release (staging.mjs)
+  const expected = expectedArtifact === undefined ? getState(project.key).check?.artifact?.hash || null : expectedArtifact;
+  const staged = useStatic ? await stageArtifact(project, d.publishDir, { expected, code: artifactCode }) : null;
+  if (useStatic) args.push('--no-build', '--dir', staged.dir);
   if (prod) args.push('--prod');
 
   ev.step(stepId, {
     label,
     category: 'Hosting',
     status: 'running',
-    summary: useStatic ? `Качвам ${d.publishDir}/` : 'Netlify build + upload',
+    summary: useStatic ? t('netlify.deploy.uploading', { dir: d.publishDir }) : 'Netlify build + upload',
   });
 
   const logFile = path.join(logDir(project.key), prod ? 'deploy-prod.log' : 'deploy-draft.log');
   const t0 = Date.now();
-  const r = await nl(project, args, { step: stepId, logFile, captureStdout: true, timeout: 20 * 60 * 1000 });
+  let r;
+  try {
+    r = await meteredProviderCall(project, prod ? 'deploy.production' : 'deploy.preview', () => nl(project, args, { step: stepId, logFile, captureStdout: true, timeout: 20 * 60 * 1000 }));
+    if (staged) await staged.verify();
+  } finally {
+    staged?.cleanup();
+  }
   const duration = (Date.now() - t0) / 1000;
   const json = extractJSON(r.stdout);
 
   if (r.code !== 0 || !json) {
-    ev.step(stepId, { label, category: 'Hosting', status: 'fail', summary: 'Deploy се провали', details: r.tail.slice(-15), log: logFile, duration });
+    ev.step(stepId, { label, category: 'Hosting', status: 'fail', summary: t('deploy.failed'), details: r.tail.slice(-15), log: logFile, duration });
     addHistory({ project: project.key, projectName: project.name, kind: prod ? 'production' : 'draft', status: 'fail', duration, log: logFile });
-    ev.notify(`❌ ${project.name}`, `${label} се провали`, null);
-    throw new EngineError(`${label} се провали. Виж лога.`, 'deploy_failed');
+    ev.notify(`❌ ${project.name}`, t('deploy.notify.failed', { label }), null);
+    throw new EngineError(msg('deploy.failedSeeLog', { label }), 'deploy_failed');
   }
 
   const url = prod ? json.url || json.deploy_url : json.deploy_url || json.url;
-  const record = { url, at: nowISO(), deployId: json.deploy_id || null, logs: json.logs || null };
+  const record = { url, at: nowISO(), deployId: json.deploy_id || null, logs: json.logs || null, sha: gitHead(project.path) };
   if (prod) {
     setState(project.key, { lastProd: record });
     updateProject(project.key, { netlify: { liveUrl: json.url || url, siteName: json.site_name || undefined } });
@@ -223,6 +316,6 @@ export async function netlifyDeploy(project, { prod = false, confirm = null } = 
   addHistory({ project: project.key, projectName: project.name, kind: prod ? 'production' : 'draft', status: 'ok', url, duration, log: logFile });
   const cost = recordCost({ project: project.key, projectName: project.name, service: 'netlify', op: prod ? 'production' : 'draft', ref: record.deployId });
   ev.step(stepId, { label, category: 'Hosting', status: 'pass', summary: url, duration, log: logFile });
-  ev.notify(prod ? `🚀 ${project.name} е LIVE` : `✅ ${project.name} — Preview е готов`, url, url);
-  return { prod, url, deployId: record.deployId, adminLogs: record.logs, duration, cost };
+  ev.notify(prod ? t('deploy.notify.live', { project: project.name }) : t('deploy.notify.previewReady', { project: project.name }), url, url);
+  return { prod, url, deployId: record.deployId, adminLogs: record.logs, duration, cost, artifact: staged ? { hash: staged.hash, files: staged.files, bytes: staged.bytes } : null };
 }

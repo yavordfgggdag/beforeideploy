@@ -1,0 +1,319 @@
+{
+  "source": "demo",
+  "v": 2,
+  "serverTime": "2026-10-15T12:00:00.000Z",
+  "unit": "credits",
+  "plan": "high",
+  "subscription": {
+    "provider": "demo",
+    "tier": "high",
+    "status": "active",
+    "interval": "month",
+    "renewsAt": "2026-10-16T00:00:00.000Z",
+    "endsAt": null,
+    "manageable": false
+  },
+  "trialAvailable": false,
+  "period": {
+    "start": "2026-09-16T00:00:00.000Z",
+    "end": "2026-10-16T00:00:00.000Z",
+    "renewsAt": "2026-10-16T00:00:00.000Z",
+    "source": "subscription",
+    "debt": 0,
+    "forecastDaysLeft": 9
+  },
+  "included": {
+    "tokens": 300000
+  },
+  "used": {
+    "tokens": 90000,
+    "operations": 46
+  },
+  "reserved": {
+    "tokens": 1000,
+    "operations": 1
+  },
+  "remaining": {
+    "plan": 210000,
+    "purchased": 120000,
+    "total": 330000,
+    "available": 329000
+  },
+  "purchased": {
+    "tokens": 120000,
+    "expires": "12 months after purchase"
+  },
+  "session": {
+    "used": 18500,
+    "cap": 60000,
+    "reserved": 1000,
+    "remaining": 40500,
+    "resetsAt": "2026-10-15T15:00:00.000Z",
+    "windowHours": 5,
+    "capPercent": 20
+  },
+  "weekly": {
+    "used": 62000,
+    "cap": 120000,
+    "reserved": 1000,
+    "remaining": 57000,
+    "resetsAt": "2026-10-17T22:00:00.000Z"
+  },
+  "sites": {
+    "active": 2,
+    "limit": 3,
+    "paused": 0,
+    "items": [
+      {
+        "id": "demo-shop",
+        "projectKey": "demo-shop",
+        "name": "shop.example",
+        "state": "active",
+        "hostingOwner": "user",
+        "credits": 1000
+      },
+      {
+        "id": "demo-studio",
+        "projectKey": "demo-studio",
+        "name": "studio.example",
+        "state": "active",
+        "hostingOwner": "user",
+        "credits": 1000
+      }
+    ]
+  },
+  "packs": [
+    {
+      "id": "demo-pack",
+      "remaining": 120000,
+      "expiresAt": "2027-04-13T12:00:00.000Z"
+    }
+  ],
+  "byAction": [
+    {
+      "action": "ai",
+      "credits": 85500,
+      "operations": 31
+    },
+    {
+      "action": "check",
+      "credits": 500,
+      "operations": 10
+    },
+    {
+      "action": "audit",
+      "credits": 2000,
+      "operations": 5
+    },
+    {
+      "action": "site.day",
+      "credits": 2000,
+      "operations": 2
+    }
+  ],
+  "daily": [
+    {
+      "date": "2026-09-16",
+      "credits": 1200
+    },
+    {
+      "date": "2026-09-17",
+      "credits": 1200
+    },
+    {
+      "date": "2026-09-18",
+      "credits": 1200
+    },
+    {
+      "date": "2026-09-19",
+      "credits": 1200
+    },
+    {
+      "date": "2026-09-20",
+      "credits": 1200
+    },
+    {
+      "date": "2026-09-21",
+      "credits": 1200
+    },
+    {
+      "date": "2026-09-22",
+      "credits": 1200
+    },
+    {
+      "date": "2026-09-23",
+      "credits": 1200
+    },
+    {
+      "date": "2026-09-24",
+      "credits": 1200
+    },
+    {
+      "date": "2026-09-25",
+      "credits": 1200
+    },
+    {
+      "date": "2026-09-26",
+      "credits": 1200
+    },
+    {
+      "date": "2026-09-27",
+      "credits": 1200
+    },
+    {
+      "date": "2026-09-28",
+      "credits": 1200
+    },
+    {
+      "date": "2026-09-29",
+      "credits": 1200
+    },
+    {
+      "date": "2026-09-30",
+      "credits": 1200
+    },
+    {
+      "date": "2026-10-01",
+      "credits": 1200
+    },
+    {
+      "date": "2026-10-02",
+      "credits": 1200
+    },
+    {
+      "date": "2026-10-03",
+      "credits": 1200
+    },
+    {
+      "date": "2026-10-04",
+      "credits": 1200
+    },
+    {
+      "date": "2026-10-05",
+      "credits": 1200
+    },
+    {
+      "date": "2026-10-06",
+      "credits": 1200
+    },
+    {
+      "date": "2026-10-07",
+      "credits": 1200
+    },
+    {
+      "date": "2026-10-08",
+      "credits": 1600
+    },
+    {
+      "date": "2026-10-09",
+      "credits": 8800
+    },
+    {
+      "date": "2026-10-10",
+      "credits": 8800
+    },
+    {
+      "date": "2026-10-11",
+      "credits": 8800
+    },
+    {
+      "date": "2026-10-12",
+      "credits": 8800
+    },
+    {
+      "date": "2026-10-13",
+      "credits": 8800
+    },
+    {
+      "date": "2026-10-14",
+      "credits": 8800
+    },
+    {
+      "date": "2026-10-15",
+      "credits": 9200
+    }
+  ],
+  "byModel": [
+    {
+      "model": "claude-opus-5-5",
+      "tokens": 63000,
+      "operations": 20
+    },
+    {
+      "model": "claude-sonnet-5-5",
+      "tokens": 22500,
+      "operations": 11
+    }
+  ],
+  "limits": {
+    "perMinute": 6,
+    "perHour": 60,
+    "sessionHours": 5,
+    "sessionCapPercent": 20,
+    "sessionCap": 60000,
+    "sessionUsed": 18500
+  },
+  "pricing": {
+    "version": "2026-10",
+    "actions": {
+      "site.day": {
+        "credits": 1000,
+        "window": false
+      },
+      "monitor.fast": {
+        "credits": 500,
+        "window": false
+      },
+      "monitor.path": {
+        "credits": 50,
+        "window": false
+      },
+      "check.run": {
+        "credits": 50,
+        "window": true
+      },
+      "audit.full": {
+        "credits": 400,
+        "window": true
+      },
+      "deploy.preview": {
+        "credits": 150,
+        "window": true
+      },
+      "deploy.production": {
+        "credits": 500,
+        "window": true
+      },
+      "deploy.rollback": {
+        "credits": 0,
+        "window": false
+      },
+      "backup.snapshot": {
+        "credits": 100,
+        "window": true
+      },
+      "ai.fix": {
+        "actual": true,
+        "window": true
+      },
+      "ai.fix.deep": {
+        "actual": true,
+        "window": true
+      },
+      "ai.chat": {
+        "actual": true,
+        "window": true
+      }
+    },
+    "spendOrder": [
+      "oldest-first"
+    ]
+  },
+  "reconciled": {
+    "releasedHolds": 0
+  },
+  "history": {
+    "operations": [],
+    "ledger": []
+  }
+}

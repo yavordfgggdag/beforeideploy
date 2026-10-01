@@ -1,0 +1,27 @@
+{
+  "purpose": "a Bulgarian answer for the BG run",
+  "response": {
+    "summary": "Build-ът се проваля заради синтактична грешка в src/app.js.",
+    "status": "confirmed",
+    "observations": [
+      {
+        "evidence_id": "E1",
+        "finding": "build step failed"
+      }
+    ],
+    "hypotheses": [
+      {
+        "claim": "a + ; has no right operand",
+        "confidence": "high",
+        "evidence_ids": [
+          "E1"
+        ]
+      }
+    ],
+    "impact": "The site cannot be built or deployed.",
+    "next_steps": [
+      "Complete the expression"
+    ],
+    "missing_context": []
+  }
+}

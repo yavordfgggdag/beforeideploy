@@ -1,0 +1,26 @@
+{
+  "purpose": "V13 S5: rewrites a file it only saw redacted",
+  "response": {
+    "status": "patch",
+    "summary": "Complete the expression.",
+    "base_hashes": {
+      "src/contact.js": "{{base:src/contact.js}}"
+    },
+    "changes": [
+      {
+        "path": "src/contact.js",
+        "action": "replace",
+        "content": "export const contact = '[email]';\nexport const config = { apiKey: [REDACTED] };\n"
+      }
+    ],
+    "risk": "low",
+    "rationale_evidence_ids": [
+      "E1"
+    ],
+    "verification_plan": [
+      "node src/app.js"
+    ],
+    "rollback_notes": "undo restores the file",
+    "missing_context": []
+  }
+}

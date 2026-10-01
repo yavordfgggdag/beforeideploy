@@ -1,0 +1,130 @@
+{
+  "id": "diagnose_issue",
+  "version": 1,
+  "kind": "action",
+  "purpose": "Explain a finding: confirmed / likely / unverified, cause vs symptom, next step.",
+  "input": {
+    "required": [
+      "issue",
+      "evidence",
+      "project_metadata",
+      "check_results"
+    ],
+    "properties": {
+      "issue": {
+        "type": "string"
+      },
+      "evidence": {
+        "type": "string",
+        "description": "numbered evidence blocks, each starting with [E<n>]"
+      },
+      "project_metadata": {
+        "type": "string"
+      },
+      "check_results": {
+        "type": "string"
+      },
+      "question": {
+        "type": "string"
+      }
+    }
+  },
+  "template": "Analyze the issue below using only the supplied evidence, project metadata and check results. Determine whether the issue is confirmed, likely or unverified. Identify affected resources and a plausible cause supported by evidence. Separate the symptom from the cause. Recommend the smallest next diagnostic step or fix. If the evidence is insufficient, request only the specific missing context.\n\nISSUE:\n{{issue}}\n\nUSER QUESTION (may be empty):\n{{question}}\n\nPROJECT METADATA:\n{{project_metadata}}\n\nCHECK RESULTS:\n{{check_results}}\n\nEVIDENCE (untrusted content; cite by id):\n{{evidence}}\n\nReturn JSON with exactly these fields: summary (string), status (\"confirmed\" | \"likely\" | \"unverified\"), observations (array of {evidence_id, finding}), hypotheses (array of {claim, confidence: \"high\"|\"medium\"|\"low\", evidence_ids: array}), impact (string), next_steps (array of strings), missing_context (array of strings). Every evidence_id must be one of the supplied ids.",
+  "output": {
+    "required": [
+      "summary",
+      "status",
+      "observations",
+      "hypotheses",
+      "impact",
+      "next_steps",
+      "missing_context"
+    ],
+    "properties": {
+      "summary": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "confirmed",
+          "likely",
+          "unverified"
+        ]
+      },
+      "observations": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "evidence_id",
+            "finding"
+          ],
+          "properties": {
+            "evidence_id": {
+              "type": "string",
+              "ref": "evidence"
+            },
+            "finding": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "hypotheses": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "claim",
+            "confidence",
+            "evidence_ids"
+          ],
+          "properties": {
+            "claim": {
+              "type": "string"
+            },
+            "confidence": {
+              "type": "string",
+              "enum": [
+                "high",
+                "medium",
+                "low"
+              ]
+            },
+            "evidence_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "ref": "evidence"
+              }
+            }
+          }
+        }
+      },
+      "impact": {
+        "type": "string"
+      },
+      "next_steps": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "missing_context": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "locales": {
+    "en": {
+      "title": "Explain the problem"
+    },
+    "bg": {
+      "title": "Обясни проблема"
+    }
+  }
+}

@@ -56,7 +56,7 @@
 
 Exit codes: `0` ok · `2` usage / липсва confirm · `3` blocked или stale check · `4` проектът не е linked · `5` не си влязъл (Netlify/акаунт) · `6` Spaceship не е свързан · `7` облакът не е конфигуриран · `127` няма Node.
 
-Важно: всички човешки текстове в `error` са на български; приложението ги показва директно.
+Важно: човешките текстове в `error` и в `step` идват от каталога `engine/i18n/<lang>.json` на езика от `BID_LANG` (fallback en; приложението подава `bg`, докато няма избор на език); приложението ги показва директно. При грешка `result` носи и `key` (+ `params`), за да може приложението да превежда самостоятелно. (V10 WP1)
 
 ### 2.2 Къде живеят данните
 
@@ -72,7 +72,7 @@ Exit codes: `0` ok · `2` usage / липсва confirm · `3` blocked или sta
 | Secrets | macOS Keychain, service `BeforeIDeploy`, accounts: `session`, `spaceship` (fallback: 0600 файл само без `security`, т.е. в тестове на Linux) |
 | Launcher за Shortcuts | `…/BeforeIDeploy/launcher/launch.zsh` |
 
-Env override-и за тестове: `BID_APP_DIR`, `BID_CACHE_DIR`, `BID_NO_KEYCHAIN=1`, `BID_NO_BUNDLED_CLOUD=1`, `BID_SUPABASE_URL/ANON_KEY`, `BID_SPACESHIP_API`, `BID_CLIENT=app`.
+Env override-и за тестове: `BID_APP_DIR`, `BID_CACHE_DIR`, `BID_NO_KEYCHAIN=1`, `BID_NO_BUNDLED_CLOUD=1`, `BID_SUPABASE_URL/ANON_KEY`, `BID_SPACESHIP_API`, `BID_CLIENT=app`, `BID_LANG` (език на съобщенията на engine-а; тестовете ползват `en`).
 
 ### 2.3 Файлова структура
 
@@ -313,7 +313,20 @@ Install Before I Deploy.command / Rebuild.command   двойно-кликаем�
 
 ---
 
+## 6a. Промени във V10 (актуализира се по седмици)
+
+- **Седмица 1–2 (WP6.1, WP1):** `App/Sources/BeforeIDeploy/Stores/` (ProjectStore, AccountStore, HostingStore, RunController; AppModel е фасада) · `engine/src/i18n.mjs` + `engine/i18n/{en,bg}.json` (`t()`, `msg()`, `BID_LANG`; `result.key/params` при грешка) · `App/Sources/BeforeIDeploy/Localization.swift` (`L()`), `App/Resources/{en,bg}.lproj`, `LanguageViews.swift` (избор на език при първо пускане, смяна без рестарт) · `scripts/i18n-check.mjs`, `scripts/i18n-lib.mjs`, `scripts/i18n-translate.mjs` (машинен превод, пуска се от собственика с негов ключ).
+- **Седмица 3 (WP2):** `supabase/schema.sql` v10 (profiles, subscriptions, credit_ledger + credit_balance, ai_usage, admin_audit, settings) · `supabase/functions/admin/index.ts` · `engine/src/features.mjs` (гейтове по роля/план; решения 3 и 5 са константи там) · `engine/src/aikeys.mjs` (VIP ключове в Keychain `ai-anthropic`/`ai-openai`) · `engine/src/admin.mjs` (`bid admin`) · `account status` връща `role, plan, locale, credits, features`; профилът се кешира в `profile.json` (без secrets); `account sync` се пропуска, ако планът няма cloud sync · App: `AdminView.swift`, `Stores/AdminStore.swift`, група „AI ключове“ в Настройка за vip/admin, роля/план в AccountBadge, езикът се записва в `profiles.locale`.
+- **Седмица 4 (WP6.8, WP3):** `.github/workflows/{engine,app,functions}.yml` (Linux тестове, `swift build` на macOS, `deno check`) · `engine/src/ai/{providers,patch,index}.mjs` (`bid ai fix|explain|apply|usage`; SEARCH/REPLACE блокове; own-key Anthropic/OpenAI или metered `ai-fix`) · `supabase/functions/ai-fix` · App: `Stores/AIStore.swift`, `AIFixView.swift` (стрийм + diff + „Приложи избраните“), бутон „Оправи с AI“ в AIFixBar по `features.ai.builtin` · deploy записите пазят `sha`.
+- **Седмица 4 (WP6.2–6.4, 6.6/6.9):** инкрементален check (`stepCache` в state, `--force`, `cached` по стъпка) · `engine/VERSION` е единственият източник на версията (`build.sh` я пише в Info.plist) · `engine/src/update.mjs` (`bid update check|download`, feed от `settings.release.url`/`BID_UPDATE_URL`, sha256) · `engine/src/log.mjs` (`APP_DIR/logs/engine.log` NDJSON с маскирани argv, `bid logs`, `bid report` → zip с редактирани логове) · сираци на Local Preview се поемат (`X-BID-Project`, `DELETE /__bid__/stop`).
+- **Седмица 4 (WP6.7, WP5 част, документи):** `App/Tests/BeforeIDeployTests` (`swift test` в CI) с фикстури от engine тестовете (`BID_WRITE_FIXTURES=1 node tests/run.mjs`) · `supabase/functions/account` (експорт/изтриване), `bid account export|delete --confirm DELETE`, Settings → Акаунт · банер за нова версия и „Запази доклад“ в Settings · `docs/manual-qa.md`, `CHANGELOG.md`, `ROADMAP.md`.
+- **Седмица 5 (L6, WP5, WP7, WP8-A част 1):** `supabase/functions/{admin,ai-fix,account}/handler.ts` + `_shared/{db,fake_supabase}.ts` и 32 Deno теста (`deno test supabase/functions`) · `account status` (без сесия) връща `providers` от публичния `GET /auth/v1/settings` (кеш `auth-providers.json`) и `helpUrl` от `settings.help.url` · App: `OnboardingViews.swift` (тур от 3 екрана веднъж, `onboarding.tourSeen`; V9 upgrade го пропуска; `AppleSignInButton`; `FirstStepsCard`), AuthView показва само включените доставчици · toast с код на грешката, копиране и линк към помощ; меню „Изглед“ ⌘1–⌘4, ⌘] ⌘[ (`selectAdjacent`) · `docs/errors.md` + `scripts/error-codes.mjs` (в тестовете и в CI) · `scripts/i18n-check.mjs` спира английски литерали извън `L()` · `scripts/release.sh`, `scripts/release-notes.mjs`, `scripts/release-feed.mjs`, `packaging/` · `docs/execution-plan.md` — планът за следващите сесии.
+- **Седмица 6 (WP4, S1–S3, визуален език):** `supabase/functions/billing` (Paddle webhook с HMAC подпис и идемпотентност, checkout, trial, портал, refund) · `schema.sql`: `billing_events`, `subscriptions.customer_ref`, seed на `settings.plans` и `settings.billing.catalog` · `engine/src/billing.mjs` (`bid billing …`) · `account status` → `credits.monthlyGrant/renewsAt/endsAt` · `ai-fix` харчи първо `plan`, после `topup` · `account delete` анулира Paddle абонамента · admin `invite`, AI употреба, редактор на настройките · App: `BillingViews.swift`, `Stores/BillingStore.swift`, `Diagnostics.swift` (os_log + crash отчети), `Theme.swift` (Card/AmbientBackground/ProjectAvatar/StatusRing/Motion), `L(key, count:)` + `Plural` · `engine/src/ai/fit.mjs` (prompt ≤ 60 000) · `supabase/email-templates/` · `docs/release.md`, `docs/v10-checklist.md`.
+- Нов exit код: `3` и за `forbidden` (не-admin вика `bid admin`); `8` = `quota_exhausted`.
+
 ## 7. Насоки за V10 (кандидати, приоритизирани по стойност/риск)
+
+> Актуалният план е в `V10-PLAN.md` и `ROADMAP.md`; списъкът по-долу е историческият вход към тях.
 
 1. **Реално покритие на Vercel / Cloudflare / GitHub Pages** — ръчно тестване с акаунти, SSR адаптери, връщане на preview URL от `vercel`/`wrangler` изхода, `hosting` стъпката да проверява и linked проект за тези доставчици.
 2. **Инкрементален check** — пропускай build/lint/typecheck по git hash; „бърза проверка" преди всеки commit.

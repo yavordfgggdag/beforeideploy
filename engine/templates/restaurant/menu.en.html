@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="{{LANG}}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Menu and prices · {{NAME}}</title>
+  <meta name="description" content="The seasonal menu: starters, mains, desserts and wine.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#faf6ef">
+  <meta property="og:title" content="Menu and prices · {{NAME}}">
+  <meta property="og:description" content="The seasonal menu: starters, mains, desserts and wine.">
+  <meta property="og:image" content="/og.svg">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="top">
+    <div class="wrap">
+      <a class="brand" href="/"><span class="mark"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h11v5a5.5 5.5 0 01-11 0z"/><path d="M16 9.5h1.5a2.5 2.5 0 010 5H16"/><path d="M8 3.5v2M11 3.5v2"/></svg></span>{{NAME}}</a>
+      <nav class="nav" aria-label="Main menu"><a href="/menu.html" aria-current="page">Menu</a><a href="/#about">About</a><a href="/#reviews">Reviews</a><a href="/#contact">Book</a></nav>
+      <a class="btn" href="/#contact">Book a table</a>
+    </div>
+  </header>
+  <main id="main">
+    <section class="pagehead"><div class="wrap"><h1>Menu</h1><p>Seasonal menu. Ask us about allergens — we are happy to help.</p></div></section>
+    <section class="section">
+      <div class="wrap">
+        <div class="menu">
+          <div>
+            <h3>Starters</h3>
+            <div class="dish"><b>Sourdough and butter</b><span class="price">€3</span><small>Baked this morning</small></div>
+            <div class="dish"><b>Roast beetroot salad</b><span class="price">€7</span><small>Goat cheese, walnuts, honey</small></div>
+            <div class="dish"><b>Pumpkin soup</b><span class="price">€5</span><small>Pumpkin seeds, cream</small></div>
+          </div>
+          <div>
+            <h3>Mains</h3>
+            <div class="dish"><b>Rosemary lamb</b><span class="price">€14</span><small>Slow-roasted, potatoes</small></div>
+            <div class="dish"><b>Mushroom risotto</b><span class="price">€11</span><small>Porcini, parmesan</small></div>
+            <div class="dish"><b>Trout fillet</b><span class="price">€12</span><small>Lemon butter, vegetables</small></div>
+          </div>
+          <div>
+            <h3>Desserts</h3>
+            <div class="dish"><b>Chocolate fondant</b><span class="price">€6</span><small>Vanilla ice cream</small></div>
+            <div class="dish"><b>Pumpkin pie our way</b><span class="price">€5</span><small>Cinnamon, walnuts</small></div>
+          </div>
+          <div>
+            <h3>Wine</h3>
+            <div class="dish"><b>Mavrud, glass</b><span class="price">€5</span><small>Plovdiv region</small></div>
+            <div class="dish"><b>Tamyanka, glass</b><span class="price">€4</span><small>Southern Black Sea</small></div>
+            <div class="dish"><b>Bottle of the day</b><span class="price">€19</span><small>Ask your waiter</small></div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="section">
+      <div class="wrap">
+        <div class="cta"><div><h2>Save a table</h2><p>Friday and Saturday evenings fill up — book ahead.</p></div><a class="btn" href="/#contact">Book</a></div>
+      </div>
+    </section>
+  </main>
+  <footer class="foot">
+    <div class="wrap">
+      <p>© {{YEAR}} {{NAME}} · All rights reserved.</p>
+      <nav aria-label="Main menu"><a href="/menu.html">Menu</a><a href="/#about">About</a><a href="/#reviews">Reviews</a><a href="/#contact">Book</a><a href="/privacy.html">Privacy</a></nav>
+    </div>
+  </footer>
+</body>
+</html>

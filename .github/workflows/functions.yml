@@ -1,0 +1,49 @@
+# Type-checks (and later tests) the Supabase Edge Functions with Deno.
+name: functions
+
+on:
+  push:
+    paths:
+      - 'supabase/**'
+      - 'tests/rls/**'
+      - '.github/workflows/functions.yml'
+  pull_request:
+    paths:
+      - 'supabase/**'
+      - 'tests/rls/**'
+      - '.github/workflows/functions.yml'
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: deno check + test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Type check
+        run: |
+          set -e
+          for f in supabase/functions/*/index.ts; do echo "▸ $f"; deno check "$f"; done
+      - name: Tests
+        run: |
+          if ls supabase/functions/*/*_test.ts >/dev/null 2>&1; then deno test --allow-env --allow-net --allow-read supabase/functions; else echo "no function tests yet"; fi
+
+  rls:
+    name: RLS on a real Postgres (PGlite)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install PGlite (dev tooling only — the engine stays dependency-free)
+        working-directory: tests/rls
+        run: npm install --no-audit --no-fund
+      - name: schema.sql loads twice and every RLS policy holds for user A / user B / anonymous / service role
+        working-directory: tests/rls
+        run: node rls.mjs

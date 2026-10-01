@@ -1,0 +1,26 @@
+{
+  "purpose": "a patch that breaks more (deletes the file content): the engine undoes it",
+  "response": {
+    "status": "patch",
+    "summary": "Complete the expression.",
+    "base_hashes": {
+      "src/app.js": "{{base:src/app.js}}"
+    },
+    "changes": [
+      {
+        "path": "src/app.js",
+        "action": "replace",
+        "content": "throw new Error('worse');\nconst c = a + ;\n"
+      }
+    ],
+    "risk": "medium",
+    "rationale_evidence_ids": [
+      "E1"
+    ],
+    "verification_plan": [
+      "node src/app.js"
+    ],
+    "rollback_notes": "undo restores the file",
+    "missing_context": []
+  }
+}

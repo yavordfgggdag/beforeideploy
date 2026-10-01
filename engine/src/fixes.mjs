@@ -2,13 +2,18 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { EngineError, ev, sh, exists, runStream, logDir, which } from './util.mjs';
+import { scriptEnv, isolate } from './isolation.mjs';
 import { detect } from './detect.mjs';
-import { addHistory } from './store.mjs';
+import { addHistory, getState, setState } from './store.mjs';
+import { t, msg } from './i18n.mjs';
+import { siteFilesDir, robotsText, sitemapText, notFoundHtml } from './site.mjs';
+import { findProject } from './store.mjs';
+import { gitBin, gitSh } from './gitbin.mjs';
 
 const BG = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'h', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'sht', ъ: 'a', ь: 'y', ю: 'yu', я: 'ya' };
 
 export function repoSlug(name) {
-  const t = String(name)
+  const slug = String(name)
     .toLowerCase()
     .split('')
     .map((c) => BG[c] ?? c)
@@ -16,7 +21,7 @@ export function repoSlug(name) {
     .replace(/[^a-z0-9._-]+/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
-  return t || 'project';
+  return slug || 'project';
 }
 
 const ESSENTIALS = ['node_modules/', '.env', '.env.*', '!.env.example', '.netlify/', '.DS_Store', '*.log'];
@@ -32,7 +37,7 @@ function missingEssentials(text) {
 }
 
 function trackedEnvFiles(dir) {
-  return sh('git', ['ls-files'], { cwd: dir })
+  return gitSh(['ls-files'], { cwd: dir })
     .stdout.split('\n')
     .filter((f) => /(^|\/)\.env(\.[^/]+)?$/.test(f) && !/\.(example|sample|template|dist|defaults)$/i.test(f));
 }
@@ -40,7 +45,7 @@ function trackedEnvFiles(dir) {
 function envIgnored(dir, isRepo) {
   if (isRepo) {
     // test with a hypothetical path so it works even when no .env exists yet
-    return sh('git', ['check-ignore', '-q', '--no-index', '.env'], { cwd: dir }).code === 0;
+    return gitSh(['check-ignore', '-q', '--no-index', '.env'], { cwd: dir }).code === 0;
   }
   return /^\.env/m.test(gitignoreText(dir) || '');
 }
@@ -53,8 +58,8 @@ export function listFixes(dir) {
   if (gi === null) {
     fixes.push({
       id: 'gitignore.create',
-      title: 'Създай .gitignore',
-      description: 'Проектът няма .gitignore. Ще създам такъв с node_modules, .env файлове, .netlify и системни файлове.',
+      title: t('fix.gitignoreCreate.title'),
+      description: t('fix.gitignoreCreate.description'),
       preview: ESSENTIALS.join('\n'),
       risk: 'safe',
     });
@@ -64,8 +69,8 @@ export function listFixes(dir) {
     if (needsEnv || missing.some((m) => m.startsWith('node_modules') || m.startsWith('.netlify'))) {
       fixes.push({
         id: 'gitignore.env',
-        title: 'Защити .env и служебните папки',
-        description: 'Ще добавя липсващите редове в края на .gitignore. Нищо съществуващо няма да бъде променено.',
+        title: t('fix.gitignoreEnv.title'),
+        description: t('fix.gitignoreEnv.description'),
         preview: missing.join('\n'),
         risk: 'safe',
       });
@@ -77,18 +82,17 @@ export function listFixes(dir) {
     if (tracked.length) {
       fixes.push({
         id: 'env.untrack',
-        title: 'Спри проследяването на .env',
-        description:
-          'Ще махна файловете от Git индекса (git rm --cached) — остават на диска. ВАЖНО: ако вече са качени в GitHub, смени ключовете в тях.',
+        title: t('fix.envUntrack.title'),
+        description: t('fix.envUntrack.description'),
         preview: tracked.join('\n'),
         risk: 'caution',
       });
     }
-  } else if (which('git')) {
+  } else if (gitBin()) {
     fixes.push({
       id: 'git.init',
-      title: 'Инициализирай Git',
-      description: 'Ще изпълня git init -b main (и ще създам .gitignore, ако липсва). Без commit и без remote.',
+      title: t('fix.gitInit.title'),
+      description: t('fix.gitInit.description'),
       preview: 'git init -b main',
       risk: 'safe',
     });
@@ -97,8 +101,8 @@ export function listFixes(dir) {
   if (d.hasPackageJson && !d.hasNodeModules) {
     fixes.push({
       id: 'deps.install',
-      title: 'Инсталирай зависимостите',
-      description: `Ще изпълня ${d.packageManager} install в папката на проекта.`,
+      title: t('fix.deps.title'),
+      description: t('fix.deps.description', { pm: d.packageManager }),
       preview: `${d.packageManager} install`,
       risk: 'safe',
     });
@@ -108,18 +112,34 @@ export function listFixes(dir) {
     const repo = repoSlug(path.basename(dir));
     fixes.push({
       id: 'github.create',
-      title: 'Създай GitHub repo',
-      description: `Ще създам ЧАСТНО repo „${repo}“ в твоя GitHub акаунт, ще го добавя като origin и ще кача кода. Ако няма commit, първо ще направя „Initial commit“.`,
+      title: t('fix.github.title'),
+      description: t('fix.github.description', { repo }),
       preview: `gh repo create ${repo} --private --source . --remote origin --push`,
       risk: 'safe',
     });
   }
 
+  // the files every launched site needs (V11.1); only where the build ships them (static output, public/)
+  if (!d.ssr && d.publishReady) {
+    const out = siteFilesDir(dir, d);
+    const rel = path.relative(dir, out) || '.';
+    const pub = path.resolve(dir, d.publishDir || '.');
+    if (!exists(path.join(pub, 'robots.txt')) && !exists(path.join(out, 'robots.txt'))) {
+      fixes.push({ id: 'site.robots', title: t('fix.siteRobots.title'), description: t('fix.siteRobots.description', { dir: rel }), preview: robotsText(null).trim(), risk: 'safe' });
+    }
+    if (!exists(path.join(pub, 'sitemap.xml')) && !exists(path.join(out, 'sitemap.xml'))) {
+      fixes.push({ id: 'site.sitemap', title: t('fix.siteSitemap.title'), description: t('fix.siteSitemap.description', { dir: rel }), preview: sitemapText(dir, d, null).split('\n').slice(0, 6).join('\n'), risk: 'safe' });
+    }
+    if (!exists(path.join(pub, '404.html')) && !exists(path.join(out, '404.html'))) {
+      fixes.push({ id: 'site.404', title: t('fix.site404.title'), description: t('fix.site404.description', { dir: rel }), preview: `${rel}/404.html`, risk: 'safe' });
+    }
+  }
+
   if (!d.netlifyLinked) {
     fixes.push({
       id: 'netlify.link',
-      title: 'Свържи с Netlify',
-      description: 'Свържи папката със съществуващ Netlify сайт или създай нов (без CI от GitHub).',
+      title: t('fix.netlifyLink.title'),
+      description: t('fix.netlifyLink.description'),
       action: 'ui:netlify-setup',
       risk: 'safe',
     });
@@ -142,8 +162,8 @@ function ensureGitignore(dir) {
   return missing;
 }
 
-export async function applyFix(project, id, { yes = false } = {}) {
-  if (!yes) throw new EngineError('Auto-fix изисква потвърждение (--yes).', 'confirm_required', 2);
+export async function applyFix(project, id, { yes = false, recheck = false } = {}) {
+  if (!yes) throw new EngineError(msg('fix.confirmRequired'), 'confirm_required', 2);
   const dir = project.path;
   const d = detect(dir);
   ev.step('fix', { label: id, status: 'running' });
@@ -153,52 +173,54 @@ export async function applyFix(project, id, { yes = false } = {}) {
     case 'gitignore.create':
     case 'gitignore.env': {
       const added = ensureGitignore(dir);
-      summary = added.length ? `Добавени: ${added.join(', ')}` : '.gitignore вече е наред';
+      summary = added.length ? t('fix.gitignore.added', { files: added.join(', ') }) : t('fix.gitignore.ok');
       break;
     }
     case 'env.untrack': {
       const tracked = trackedEnvFiles(dir);
       ensureGitignore(dir);
       if (tracked.length) {
-        const r = sh('git', ['rm', '--cached', '--quiet', '--', ...tracked], { cwd: dir });
-        if (r.code !== 0) throw new EngineError(r.stderr.trim() || 'git rm --cached се провали', 'fix_failed');
+        const r = gitSh(['rm', '--cached', '--quiet', '--', ...tracked], { cwd: dir });
+        if (r.code !== 0) throw new EngineError(r.stderr.trim() || msg('fix.untrack.failed'), 'fix_failed');
       }
-      summary = `Махнати от индекса: ${tracked.join(', ')}. Направи commit, за да влезе в сила.`;
+      summary = t('fix.untrack.done', { files: tracked.join(', ') });
       break;
     }
     case 'git.init': {
       if (d.git.isRepo) {
-        summary = 'Вече е Git repository';
+        summary = t('fix.gitInit.already');
         break;
       }
       ensureGitignore(dir);
-      let r = sh('git', ['init', '-b', 'main'], { cwd: dir });
-      if (r.code !== 0) r = sh('git', ['init'], { cwd: dir });
-      if (r.code !== 0) throw new EngineError(r.stderr.trim() || 'git init се провали', 'fix_failed');
-      summary = 'Git е инициализиран (branch main)';
+      let r = gitSh(['init', '-b', 'main'], { cwd: dir });
+      if (r.code !== 0) r = gitSh(['init'], { cwd: dir });
+      if (r.code !== 0) throw new EngineError(r.stderr.trim() || msg('fix.gitInit.failed'), 'fix_failed');
+      summary = t('fix.gitInit.done');
       break;
     }
     case 'deps.install': {
       const logFile = path.join(logDir(project.key), 'install.log');
-      const r = await runStream(d.packageManager || 'npm', ['install'], { cwd: dir, step: 'fix', logFile, timeout: 15 * 60 * 1000 });
+      // install runs the project's lifecycle scripts: same isolation as a check (WP01)
+      const [icmd, iargs] = isolate(d.packageManager || 'npm', ['install'], { cwd: dir });
+      const r = await runStream(icmd, iargs, { cwd: dir, step: 'fix', logFile, env: scriptEnv(), timeout: 15 * 60 * 1000, display: `${d.packageManager || 'npm'} install` });
       if (r.code !== 0) {
-        ev.step('fix', { label: id, status: 'fail', summary: 'install се провали', details: r.tail.slice(-15), log: logFile });
-        throw new EngineError('Инсталацията на зависимостите се провали.', 'fix_failed');
+        ev.step('fix', { label: id, status: 'fail', summary: t('fix.deps.stepFailed'), details: r.tail.slice(-15), log: logFile });
+        throw new EngineError(msg('fix.deps.failed'), 'fix_failed');
       }
-      summary = 'Зависимостите са инсталирани';
+      summary = t('fix.deps.done');
       break;
     }
     case 'github.create': {
-      if (!which('gh')) throw new EngineError('Няма GitHub CLI — инсталирай го от „Настройка“.', 'missing_cli');
+      if (!which('gh')) throw new EngineError(msg('fix.github.noCli'), 'missing_cli');
       if (d.git.remote) {
-        summary = 'Вече има origin remote';
+        summary = t('fix.github.hasRemote');
         break;
       }
-      if (sh('git', ['rev-parse', 'HEAD'], { cwd: dir }).code !== 0) {
+      if (gitSh(['rev-parse', 'HEAD'], { cwd: dir }).code !== 0) {
         ensureGitignore(dir);
-        sh('git', ['add', '-A'], { cwd: dir });
-        const c = sh('git', ['commit', '-m', 'Initial commit'], { cwd: dir });
-        if (c.code !== 0) throw new EngineError(c.stderr.trim() || 'Initial commit се провали', 'fix_failed');
+        gitSh(['add', '-A'], { cwd: dir });
+        const c = gitSh(['commit', '-m', 'Initial commit'], { cwd: dir });
+        if (c.code !== 0) throw new EngineError(c.stderr.trim() || msg('fix.github.initialCommitFailed'), 'fix_failed');
       }
       const repo = repoSlug(path.basename(dir));
       const logFile = path.join(logDir(project.key), 'github-create.log');
@@ -209,18 +231,57 @@ export async function applyFix(project, id, { yes = false } = {}) {
         timeout: 180000,
       });
       if (r.code !== 0) {
-        ev.step('fix', { label: id, status: 'fail', summary: 'gh repo create се провали', details: r.tail.slice(-10), log: logFile });
-        throw new EngineError('GitHub repo не беше създадено (може името да е заето).', 'fix_failed');
+        ev.step('fix', { label: id, status: 'fail', summary: t('fix.github.stepFailed'), details: r.tail.slice(-10), log: logFile });
+        throw new EngineError(msg('fix.github.failed'), 'fix_failed');
       }
-      summary = `Създадено частно repo ${repo} и кодът е качен`;
+      summary = t('fix.github.done', { repo });
+      break;
+    }
+    case 'site.robots':
+    case 'site.sitemap':
+    case 'site.404': {
+      const out = siteFilesDir(dir, d);
+      fs.mkdirSync(out, { recursive: true });
+      const proj = findProject(project.key);
+      const liveUrl = proj?.liveUrl || proj?.netlify?.liveUrl || null;
+      const name = id === 'site.robots' ? 'robots.txt' : id === 'site.sitemap' ? 'sitemap.xml' : '404.html';
+      const file = path.join(out, name);
+      if (exists(file)) {
+        summary = t('fix.site.exists', { file: path.relative(dir, file) });
+        break;
+      }
+      const lang = /<html[^>]*\slang\s*=\s*["']?([a-zA-Z-]+)/i.exec((() => { try { return fs.readFileSync(path.join(path.resolve(dir, d.publishDir || '.'), 'index.html'), 'utf8'); } catch { return ''; } })())?.[1] || null;
+      fs.writeFileSync(file, id === 'site.robots' ? robotsText(liveUrl) : id === 'site.sitemap' ? sitemapText(dir, d, liveUrl) : notFoundHtml(lang, project.name));
+      summary = t('fix.site.created', { file: path.relative(dir, file) });
       break;
     }
     case 'netlify.link':
-      throw new EngineError('Свързването с Netlify става от панела Netlify Setup.', 'ui_action');
+      throw new EngineError(msg('fix.netlifyLink.ui'), 'ui_action');
     default:
-      throw new EngineError(`Непознат fix: ${id}`, 'usage', 2);
+      throw new EngineError(msg('fix.unknown', { id }), 'usage', 2);
   }
   ev.step('fix', { label: id, status: 'pass', summary });
   addHistory({ project: project.key, projectName: project.name, kind: 'fix', status: 'ok', message: `${id}: ${summary}` });
-  return { id, summary };
+  const out = { id, summary };
+  if (recheck) out.recheck = await verifyFix(project, id);
+  return out;
+}
+
+/**
+ * Re-runs the checks after a safe fix and compares the issues it targeted (V11): `verified` is true only
+ * when every issue this fix was meant to remove is gone. A run that still fails is reported, never hidden.
+ */
+async function verifyFix(project, id) {
+  const { runChecks } = await import('./checks.mjs');
+  const { deriveIssues, compareIssues, FIX_VERIFIES } = await import('./issues.mjs');
+  const before = deriveIssues(getState(project.key).check).issues;
+  const targets = new Set(before.filter((i) => i.fix?.type === 'safe' && i.fix.id === id).map((i) => i.id));
+  const check = await runChecks(project, { stopOnFail: false });
+  const after = deriveIssues(check).issues;
+  const cmp = compareIssues(before, after, targets);
+  const steps = FIX_VERIFIES[id] || [];
+  const stepsOk = steps.every((sid) => ['pass', 'warn', 'info'].includes(check.steps.find((s) => s.id === sid)?.status));
+  const out = { status: check.status, at: check.at, steps, verified: cmp.verified && stepsOk, resolved: cmp.resolved, unresolved: cmp.unresolved };
+  setState(project.key, { lastRecheck: { kind: 'fix', fix: id, ...out } });
+  return out;
 }

@@ -1,0 +1,60 @@
+# Compiles the macOS app with the Swift toolchain on a macOS runner (the cloud dev environment has no Swift).
+# Runs only when the app or its build script changes — macOS minutes are billed at 10×.
+name: app
+
+on:
+  push:
+    paths:
+      - 'App/**'
+      - 'engine/bid'
+      - 'scripts/build.sh'
+      - '.github/workflows/app.yml'
+      - 'scripts/design-check.mjs'
+  pull_request:
+    paths:
+      - 'App/**'
+      - 'scripts/build.sh'
+      - '.github/workflows/app.yml'
+      - 'scripts/design-check.mjs'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: swift build (release)
+    runs-on: macos-15
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Swift version
+        run: swift --version
+      - name: Build
+        working-directory: App
+        run: swift build -c release 2>&1 | tee ../build.log
+      - name: Tests
+        working-directory: App
+        run: |
+          if [ -d Tests ]; then swift test 2>&1 | tee ../test.log; else echo "no Swift tests yet (WP6.7)"; fi
+      - name: Design System conventions
+        run: node scripts/design-check.mjs
+      - name: Localizations are complete
+        run: node scripts/i18n-check.mjs
+      - name: The .app carries a working engine (audit B1)
+        run: |
+          set -e
+          zsh scripts/build.sh
+          APP="build/Before I Deploy.app"
+          "$APP/Contents/Resources/engine/bid" version | tee /dev/stderr | grep -q '"ok":true'
+          test -f "$APP/Contents/Resources/engine/supabase/schema.sql"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$APP/Contents/Info.plist"
+          codesign --verify --deep "$APP"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build-log
+          path: |
+            build.log
+            test.log
+          if-no-files-found: ignore

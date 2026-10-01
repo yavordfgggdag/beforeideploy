@@ -5,6 +5,13 @@ const path = require('path');
 
 const root = path.resolve(process.argv[2] || '.');
 const port = Number(process.argv[3] || 4173);
+// Project key: every response carries X-BID-Project so the engine can recognise (and adopt) a server it
+// lost track of, and DELETE /__bid__/stop with the matching X-BID-Key shuts it down without a pid.
+const projectKey = process.argv[4] || '';
+// Secret stop token (argv[5]): only the engine that started the server knows it. X-BID-Project stays public
+// (it only identifies the server), so it must never be enough to shut the server down.
+const stopToken = process.env.BID_STOP_TOKEN || '';
+const allowedHosts = new Set([`127.0.0.1:${port}`, `localhost:${port}`, `[::1]:${port}`]);
 
 const types = {
   '.html': 'text/html; charset=utf-8',
@@ -38,15 +45,33 @@ function resolveFile(url) {
   } catch {}
   const target = path.resolve(root, '.' + pathname);
   if (target !== root && !target.startsWith(root + path.sep)) return null;
+  // never serve dotfiles or dot-folders (.env, .git/config …); .well-known is a web standard and allowed
+  const segments = path.relative(root, target).split(path.sep);
+  if (segments.some((seg) => seg.startsWith('.') && seg !== '.well-known')) return null;
   return target;
 }
 
 http
   .createServer((req, res) => {
+    // DNS rebinding: a web page that points its own domain at 127.0.0.1 must not read the project
+    if (!allowedHosts.has(String(req.headers.host || '').toLowerCase())) {
+      res.statusCode = 421;
+      return res.end('Misdirected request');
+    }
+    if (projectKey) res.setHeader('X-BID-Project', projectKey);
+    if (req.method === 'DELETE' && req.url === '/__bid__/stop') {
+      if (!stopToken || req.headers['x-bid-key'] !== stopToken) {
+        res.statusCode = 403;
+        return res.end('Forbidden');
+      }
+      res.end('stopping');
+      setTimeout(() => process.exit(0), 50);
+      return;
+    }
     let file = resolveFile(req.url);
     if (!file) {
-      res.statusCode = 403;
-      return res.end('Forbidden');
+      res.statusCode = 404;
+      return res.end('404');
     }
     try {
       if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, 'index.html');

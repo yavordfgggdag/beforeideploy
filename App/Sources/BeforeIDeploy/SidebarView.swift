@@ -1,7 +1,19 @@
 import SwiftUI
 
+/// The sidebar's selection pill slides between rows (matchedGeometryEffect through the environment).
+struct NavNamespaceKey: EnvironmentKey {
+    static let defaultValue: Namespace.ID? = nil
+}
+extension EnvironmentValues {
+    var navNamespace: Namespace.ID? {
+        get { self[NavNamespaceKey.self] }
+        set { self[NavNamespaceKey.self] = newValue }
+    }
+}
+
 struct SidebarView: View {
     @EnvironmentObject var model: AppModel
+    @Namespace private var navPill
 
     var expiring: Int { model.spaceship?.domains.filter { ($0.daysLeft ?? 999) < 30 }.count ?? 0 }
 
@@ -11,45 +23,67 @@ struct SidebarView: View {
                 AppGlyph(size: 26)
                 VStack(alignment: .leading, spacing: 1) {
                     Text("Before I Deploy")
-                        .font(.system(size: 13.5, weight: .bold))
+                        .font(Typo.font(.subhead, weight: .bold))
                         .foregroundColor(Theme.text)
-                    Text("Project Control Center")
-                        .font(.system(size: 10.5))
+                    Text(L("sidebar.tagline"))
+                        .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                        .font(Typo.font(.caption))
                         .foregroundColor(Theme.tertiary)
                 }
             }
-            .padding(.top, 44)
+            .padding(.top, 16)
             .padding(.horizontal, 18)
-            .padding(.bottom, 22)
+            .padding(.bottom, 16)
 
             VStack(spacing: 2) {
-                NavRow(symbol: "square.grid.2x2.fill", title: "Mission Control", selected: model.screen == .overview) {
+                NavRow(symbol: "square.grid.2x2.fill", title: L("nav.missionControl"), selected: model.screen == .overview, shortcut: "1") {
                     model.screen = .overview
                     Task { await model.loadOverview() }
                 }
-                NavRow(symbol: "network", title: "Домейни", selected: model.screen == .domains,
+                NavRow(symbol: "network", title: L("common.domains"), selected: model.screen == .domains, shortcut: "2",
                        badge: expiring > 0 ? "\(expiring)" : nil) {
                     model.screen = .domains
                     Task { await model.loadSpaceship() }
                 }
-                NavRow(symbol: "creditcard.fill", title: "Разходи & кредити", selected: model.screen == .costs) {
+                NavRow(symbol: "sparkles", title: L("assistant.nav"), selected: model.screen == .assistant, shortcut: "3") {
+                    model.screen = .assistant
+                }
+                NavRow(symbol: "creditcard.fill", title: L("common.costs"), selected: model.screen == .costs, shortcut: "4") {
                     model.screen = .costs
                     Task { await model.loadCosts() }
                 }
-                NavRow(symbol: "wand.and.stars", title: "Настройка", selected: model.screen == .setup,
+                NavRow(symbol: "wand.and.stars", title: L("common.setup"), selected: model.screen == .setup, shortcut: "5",
                        badge: (model.setup?.missingRequired ?? 0) > 0 ? "\(model.setup?.missingRequired ?? 0)" : nil) {
                     model.screen = .setup
                     Task { await model.loadSetup() }
                 }
+                if model.account?.loggedIn == true || model.billingStore.demo {
+                    NavRow(symbol: "gauge.with.dots.needle.33percent", title: L("usage.nav"), selected: model.screen == .usage, shortcut: "6") {
+                        model.screen = .usage
+                        Task { await model.billingStore.loadUsage() }
+                    }
+                }
+                if model.account?.loggedIn == true {
+                    NavRow(symbol: "person.crop.circle.fill", title: L("common.account"), selected: model.screen == .account, shortcut: "7") {
+                        model.screen = .account
+                    }
+                }
+                if model.account?.isAdmin == true {
+                    NavRow(symbol: "person.2.badge.gearshape.fill", title: L("admin.title"), selected: model.screen == .admin, shortcut: "8") {
+                        model.screen = .admin
+                    }
+                }
             }
             .padding(.horizontal, 10)
-            .padding(.bottom, 18)
+            .padding(.bottom, 12)
+            .environment(\.navNamespace, navPill)
+            .animation(Motion.spring, value: model.screen)
 
             HStack {
-                SectionLabel(text: "Проекти")
+                SectionLabel(text: L("common.projects"))
                 Spacer()
                 Text("\(model.projects.count)")
-                    .font(.system(size: 10.5, weight: .semibold))
+                    .font(Typo.font(.caption, weight: .semibold))
                     .foregroundColor(Theme.tertiary)
             }
             .padding(.horizontal, 18)
@@ -59,58 +93,60 @@ struct SidebarView: View {
                 VStack(spacing: 2) {
                     ForEach(model.projects) { p in
                         ProjectRow(project: p, selected: model.screen == .project && p.key == model.selectedKey)
-                            .onTapGesture { Task { await model.select(p.key) } }
+                            .tapAction { Task { await model.select(p.key) } }
                             .contextMenu {
-                                Button("Покажи във Finder") { model.revealInFinder(p.path) }
-                                Button("Отвори в Cursor") { model.openIn(app: ["Cursor", "Visual Studio Code"], path: p.path) }
-                                Button("Отвори в Terminal") { model.openIn(app: ["Terminal"], path: p.path) }
+                                Button(L("common.showInFinder")) { model.revealInFinder(p.path) }
+                                Button(L("sidebar.openInCursor")) { model.openIn(app: ["Cursor", "Visual Studio Code"], path: p.path) }
+                                Button(L("common.openInTerminal")) { model.openIn(app: ["Terminal"], path: p.path) }
                                 Divider()
-                                Button("Премахни от библиотеката") { model.removeProject(p.key) }
+                                Button(L("client.set")) { Task { await model.select(p.key, show: false); model.sheet = .client } }
+                                Divider()
+                                Button(L("sidebar.remove")) { model.removeProject(p.key) }
                             }
                     }
                 }
                 .padding(.horizontal, 10)
             }
-
-            Spacer(minLength: 0)
+            .frame(minHeight: 80)
+            .layoutPriority(1)
 
             VStack(spacing: 8) {
-                Button {
-                    model.addProjectPanel()
-                } label: {
-                    HStack {
-                        Image(systemName: "plus")
-                        Text("Добави проект")
-                        Spacer()
-                        Text("⌘O").foregroundColor(Theme.tertiary).font(.system(size: 11))
-                    }
-                    .frame(maxWidth: .infinity)
+                if let u = model.update, u.available {
+                    Button(L("update.available", u.latest ?? "")) { model.downloadUpdate() }
+                        .bidButton(.secondary, compact: true)
+                        .disabled(model.busy.contains("update"))
                 }
-                .bidButton(.secondary)
-
-                Button { model.showPalette = true } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "magnifyingglass")
-                        Text("Търси или действай…")
-                        Spacer()
-                        Text("⌘K").foregroundColor(Theme.tertiary).font(.system(size: 11))
-                    }
-                    .font(.system(size: 12.5))
-                    .foregroundColor(Theme.secondary)
-                    .padding(.horizontal, 10).padding(.vertical, 7)
-                    .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Theme.panel))
-                }
-                .buttonStyle(.plain)
                 AccountBadge()
-                HStack(spacing: 8) {
-                    SidebarFooterButton(symbol: "clock.arrow.circlepath", title: "История") { model.sheet = .history }
-                    SidebarFooterButton(symbol: "gearshape", title: "Настройки") { model.sheet = .settings }
-                }
+
             }
             .padding(14)
         }
         .frame(maxHeight: .infinity)
         .background(Theme.sidebar)
+    }
+}
+
+/// "New version X" with a Download button (WP6.3). The DMG is verified by the engine and opened by the app.
+struct UpdateBanner: View {
+    @EnvironmentObject var model: AppModel
+    let info: UpdateInfo
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "arrow.down.circle.fill").foregroundColor(Theme.accent)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(L("update.available", info.latest ?? "")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
+                if let n = info.notes?[Localization.current] ?? info.notes?["en"] {
+                    Text(n).font(Typo.font(.caption)).foregroundColor(Theme.tertiary).lineLimit(2)
+                }
+            }
+            Spacer()
+            Button(L("update.download")) { model.downloadUpdate() }
+                .bidButton(.primary, compact: true)
+                .disabled(model.busy.contains("update"))
+        }
+        .padding(10)
+        .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(Theme.accentSoft))
     }
 }
 
@@ -125,11 +161,11 @@ struct SidebarFooterButton: View {
                 Image(systemName: symbol)
                 Text(title)
             }
-            .font(.system(size: 12, weight: .medium))
+            .font(Typo.font(.callout, weight: .medium))
             .foregroundColor(hover ? Theme.text : Theme.secondary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 7)
-            .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(hover ? Theme.elevated : .clear))
+            .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(hover ? Theme.elevated : .clear))
         }
         .buttonStyle(.plain)
         .onHover { hover = $0 }
@@ -147,41 +183,47 @@ struct ProjectRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(selected ? Theme.accentSoft : Theme.elevated)
-                Text(String(project.name.prefix(1)).uppercased())
-                    .font(.system(size: 12.5, weight: .bold))
-                    .foregroundColor(selected ? Theme.accent : Theme.secondary)
-            }
-            .frame(width: 28, height: 28)
+            ProjectAvatar(name: project.name, size: 28, dimmed: project.exists == false)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(project.name)
-                    .font(.system(size: 13, weight: selected ? .semibold : .medium))
+                    .font(Typo.font(.body, weight: selected ? .semibold : .medium))
                     .foregroundColor(project.exists == false ? Theme.tertiary : Theme.text)
                     .lineLimit(1)
-                Text(project.exists == false ? "папката липсва" : (subtitle.isEmpty ? "—" : subtitle))
-                    .font(.system(size: 10.5))
+                Text(project.exists == false ? L("sidebar.folderMissing") : (subtitle.isEmpty ? "—" : subtitle))
+                    .font(Typo.font(.caption))
                     .foregroundColor(Theme.tertiary)
                     .lineLimit(1)
             }
             Spacer(minLength: 4)
-            StatusDot(status: project.lastStatus, size: 7)
+            if project.lastStatus == "blocked" {
+                StatusDot(status: project.lastStatus, size: 7).frame(width: 12, height: 12)
+            } else {
+                StatusDot(status: project.lastStatus, size: 7)
+            }
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 7)
         .background(
-            RoundedRectangle(cornerRadius: 11, style: .continuous)
+            RoundedRectangle(cornerRadius: Radius.m, style: .continuous)
                 .fill(selected ? Theme.elevated : (hover ? Theme.panel : .clear))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: Radius.m, style: .continuous)
+                .strokeBorder(selected ? Theme.edgeHighlight : LinearGradient(colors: [.clear], startPoint: .top, endPoint: .bottom), lineWidth: 1)
         )
         .overlay(alignment: .leading) {
             if selected {
-                Capsule().fill(Theme.accent).frame(width: 3, height: 18).offset(x: -6)
+                Capsule().fill(Theme.accentGradient).frame(width: 3, height: 18).offset(x: -6)
             }
         }
         .contentShape(Rectangle())
+        .scaleEffect(hover && !Motion.reduced ? 1.015 : 1)
         .onHover { hover = $0 }
+        .animation(Motion.quick, value: hover)
+        .animation(Motion.quick, value: selected)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(selected ? [.isSelected, .isButton] : .isButton)
     }
 }
 
@@ -189,39 +231,53 @@ struct NavRow: View {
     let symbol: String
     let title: String
     let selected: Bool
+    var shortcut: String? = nil
     var badge: String? = nil
     let action: () -> Void
     @Local private var hover = false
+    @Environment(\.navNamespace) private var ns
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 10) {
                 Image(systemName: symbol)
-                    .font(.system(size: 12.5, weight: .semibold))
+                    .font(Typo.font(.body, weight: .semibold))
                     .foregroundColor(selected ? Theme.accent : Theme.secondary)
                     .frame(width: 20)
+                    .scaleEffect(hover && !Motion.reduced ? 1.12 : 1)
+                    .rotationEffect(.degrees(hover && !Motion.reduced ? -6 : 0))
                 Text(title)
-                    .font(.system(size: 13, weight: selected ? .semibold : .medium))
+                    .font(Typo.font(.body, weight: selected ? .semibold : .medium))
                     .foregroundColor(selected ? Theme.text : Theme.secondary)
                 Spacer()
                 if let badge {
                     Text(badge)
-                        .font(.system(size: 10.5, weight: .bold))
+                        .font(Typo.font(.caption, weight: .bold))
                         .foregroundColor(.white)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(Capsule().fill(Theme.accent))
+                        .background(Capsule().fill(Theme.accentFill))
                 }
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
-            .background(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(selected ? Theme.accentSoft : (hover ? Theme.panel : .clear))
-            )
+            .background {
+                if selected {
+                    let pill = RoundedRectangle(cornerRadius: Radius.s, style: .continuous)
+                        .fill(LinearGradient(colors: [Theme.accent.opacity(0.28), Theme.accent.opacity(0.10)], startPoint: .leading, endPoint: .trailing))
+                        .overlay(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).strokeBorder(Theme.accent.opacity(0.32), lineWidth: 1))
+                        if let ns { pill.matchedGeometryEffect(id: "nav-pill", in: ns) } else { pill }
+                } else {
+                    RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(hover ? Theme.panel : .clear)
+                }
+            }
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .help(shortcut.map { "\(title) · ⌘\($0)" } ?? title)
         .onHover { hover = $0 }
+        .animation(Motion.quick, value: hover)
+        .animation(Motion.quick, value: selected)
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }

@@ -1,0 +1,168 @@
+{
+  "status": "ready",
+  "at": "2026-09-30T13:43:30.512Z",
+  "counts": {
+    "pass": 7,
+    "info": 1,
+    "warn": 0,
+    "fail": 0
+  },
+  "steps": [
+    {
+      "id": "git",
+      "label": "Git",
+      "category": "Source Control",
+      "details": [
+        "Branch: main",
+        "No origin remote"
+      ],
+      "fixes": [],
+      "duration": 0.014,
+      "status": "pass",
+      "summary": "Clean working tree"
+    },
+    {
+      "id": "secrets",
+      "label": "Secrets",
+      "category": "Security",
+      "details": [],
+      "fixes": [],
+      "duration": 0.016,
+      "status": "pass",
+      "summary": "No secrets found",
+      "findings": []
+    },
+    {
+      "id": "deps",
+      "label": "Dependencies",
+      "category": "Dependencies",
+      "details": [
+        "Node v22.22.2",
+        "Package manager: npm"
+      ],
+      "fixes": [],
+      "duration": 0.019,
+      "status": "pass",
+      "summary": "npm · node_modules is in order"
+    },
+    {
+      "id": "lint",
+      "label": "Lint",
+      "category": "Code Quality",
+      "details": [],
+      "fixes": [],
+      "duration": 0.353,
+      "status": "pass",
+      "summary": "Lint passed",
+      "log": "/tmp/bid-test-JZ1qhU/cache/28fd210718ff/lint.log"
+    },
+    {
+      "id": "typecheck",
+      "label": "Typecheck",
+      "category": "Code Quality",
+      "details": [],
+      "fixes": [],
+      "duration": 0.348,
+      "status": "pass",
+      "summary": "Types are OK",
+      "log": "/tmp/bid-test-JZ1qhU/cache/28fd210718ff/typecheck.log"
+    },
+    {
+      "id": "build",
+      "label": "Build",
+      "category": "Build",
+      "details": [
+        "Output: dist"
+      ],
+      "fixes": [],
+      "duration": 0.178,
+      "status": "pass",
+      "summary": "Production build passed",
+      "log": "/tmp/bid-test-JZ1qhU/cache/28fd210718ff/build.log"
+    },
+    {
+      "id": "site",
+      "label": "Site quality",
+      "category": "Site Quality",
+      "details": [
+        "INFO structure.notFound — No 404 page: a wrong link shows the host's default error page.",
+        "INFO seo.robots — No robots.txt: search engines get no instructions and no sitemap hint.",
+        "INFO seo.sitemap — No sitemap.xml: search engines discover pages slower.",
+        "INFO seo.canonical · index.html — No canonical link.",
+        "INFO seo.og · index.html — No og:title / og:image: shared links show no preview.",
+        "INFO seo.favicon · index.html — No favicon."
+      ],
+      "fixes": [
+        "site.404",
+        "site.robots",
+        "site.sitemap"
+      ],
+      "duration": 0.004,
+      "status": "pass",
+      "summary": "1 page(s) ready for visitors — 6 hint(s) for the launch files (robots, sitemap, 404, favicon).",
+      "findings": [
+        {
+          "rule": "structure.notFound",
+          "severity": "info",
+          "detail": "No 404 page: a wrong link shows the host's default error page.",
+          "fixId": "site.404"
+        },
+        {
+          "rule": "seo.robots",
+          "severity": "info",
+          "detail": "No robots.txt: search engines get no instructions and no sitemap hint.",
+          "fixId": "site.robots"
+        },
+        {
+          "rule": "seo.sitemap",
+          "severity": "info",
+          "detail": "No sitemap.xml: search engines discover pages slower.",
+          "fixId": "site.sitemap"
+        },
+        {
+          "rule": "seo.canonical",
+          "severity": "info",
+          "file": "index.html",
+          "detail": "No canonical link."
+        },
+        {
+          "rule": "seo.og",
+          "severity": "info",
+          "file": "index.html",
+          "detail": "No og:title / og:image: shared links show no preview."
+        },
+        {
+          "rule": "seo.favicon",
+          "severity": "info",
+          "file": "index.html",
+          "detail": "No favicon."
+        }
+      ],
+      "pages": 1
+    },
+    {
+      "id": "hosting",
+      "label": "Hosting",
+      "category": "Hosting",
+      "details": [],
+      "fixes": [
+        "netlify.link"
+      ],
+      "duration": 0.019,
+      "status": "info",
+      "summary": "Netlify is not connected"
+    }
+  ],
+  "duration": 0.641,
+  "cached": [],
+  "fingerprint": "9397b10a54137592aec6baf7559a50423fd37911",
+  "buildConfig": "9ed7c34c013722e8a34a2c9bf45ee30a3207baf4367fae5b6241824db52024c4",
+  "artifact": {
+    "hash": "a3079b731542a6775281421cc423cc9f0e68179eb459a5aa47fc7aa844c961fc",
+    "algo": "sha256",
+    "dir": "dist",
+    "files": 1,
+    "bytes": 199,
+    "manifestFile": "/tmp/bid-test-JZ1qhU/cache/28fd210718ff/artifact-a3079b731542a677.json"
+  }
+}

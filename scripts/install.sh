@@ -1,10 +1,12 @@
 #!/bin/zsh
-# Before I Deploy V6 — installer. Run from Terminal:  zsh ~/Desktop/BeforeIDeploy-V6/scripts/install.sh
+# Before I Deploy — installer from source. Run from Terminal:  zsh scripts/install.sh
 set -euo pipefail
 ROOT="${0:A:h:h}"
 SUPPORT="$HOME/Library/Application Support/BeforeIDeploy"
 ENGINE="$SUPPORT/engine"
-APPS="$HOME/Applications"
+# /Applications, like the DMG (audit R2); ~/Applications only when /Applications is not writable
+APPS="/Applications"
+[[ -w "$APPS" ]] || APPS="$HOME/Applications"
 APP_NAME="Before I Deploy.app"
 exec > >(tee "$ROOT/install.log") 2>&1
 
@@ -13,7 +15,7 @@ ok()   { print -P "  %F{green}✓%f $1"; }
 warn() { print -P "  %F{yellow}!%f $1"; }
 die()  { print -P "  %F{red}✗ $1%f"; exit 1; }
 
-bold "🚀 Before I Deploy V9 — инсталация"
+bold "🚀 Before I Deploy — инсталация"
 echo
 
 bold "1. Проверка на средата"
@@ -30,6 +32,7 @@ bold "2. Engine"
 mkdir -p "$SUPPORT"
 rm -rf "$ENGINE.new"
 cp -R "$ROOT/engine" "$ENGINE.new"
+cp -R "$ROOT/supabase" "$ENGINE.new/supabase"   # schema.sql for `bid cloud schema` (Cloud setup screen)
 rm -rf "$ENGINE"
 mv "$ENGINE.new" "$ENGINE"
 chmod +x "$ENGINE/bid"
@@ -56,6 +59,10 @@ mkdir -p "$APPS"
 osascript -e 'tell application "Before I Deploy" to quit' >/dev/null 2>&1 || true
 rm -rf "$APPS/$APP_NAME"
 cp -R "$ROOT/build/$APP_NAME" "$APPS/$APP_NAME"
+# an older copy in ~/Applications would open instead of the new one
+if [[ "$APPS" == /Applications && -d "$HOME/Applications/$APP_NAME" ]]; then
+  rm -rf "$HOME/Applications/$APP_NAME" && ok "Премахнах старото копие от ~/Applications"
+fi
 /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "$APPS/$APP_NAME" >/dev/null 2>&1 || true
 ok "Инсталирано в $APPS/$APP_NAME"
 echo
@@ -69,4 +76,8 @@ print -r -- "      zsh \"\$HOME/Library/Application Support/BeforeIDeploy/launch
 echo
 
 bold "✅ Готово — отварям Before I Deploy"
-open "$APPS/$APP_NAME"
+# LaunchServices sometimes needs a moment for a freshly copied app (error -600); retry, then say how to open it
+sleep 1
+open "$APPS/$APP_NAME" 2>/dev/null || { sleep 3; open "$APPS/$APP_NAME" 2>/dev/null; } || {
+  warn "Не успях да го отворя автоматично — отвори го от Finder → Applications или с: open \"$APPS/$APP_NAME\""
+}

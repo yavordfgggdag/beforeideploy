@@ -1,0 +1,4 @@
+{
+  "purpose": "the provider never finishes within the call timeout",
+  "delayMs": 2500
+}

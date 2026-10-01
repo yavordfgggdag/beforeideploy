@@ -1,0 +1,20 @@
+{
+  "purpose": "the model asks for more context instead of guessing",
+  "response": {
+    "status": "needs_input",
+    "summary": "Complete the expression.",
+    "base_hashes": {},
+    "changes": [],
+    "risk": "low",
+    "rationale_evidence_ids": [
+      "E1"
+    ],
+    "verification_plan": [
+      "node src/app.js"
+    ],
+    "rollback_notes": "undo restores the file",
+    "missing_context": [
+      "which Node version is targeted"
+    ]
+  }
+}

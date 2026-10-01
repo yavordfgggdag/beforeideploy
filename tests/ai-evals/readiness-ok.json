@@ -1,0 +1,13 @@
+{
+  "purpose": "mirrors the engine gate status",
+  "response": {
+    "summary": "Ready pending the typed confirmation.",
+    "engine_gate_status": "{{engine_status}}",
+    "blockers": [],
+    "warnings": [
+      "1 lint warning"
+    ],
+    "missing_evidence": [],
+    "proposed_next_action": "Run the preview"
+  }
+}

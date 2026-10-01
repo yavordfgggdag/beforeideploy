@@ -1,0 +1,9 @@
+{
+  "name": "before-i-deploy-scripts",
+  "private": true,
+  "type": "module",
+  "description": "Dev tooling only (i18n-translate.mjs). The engine and the app have no npm dependencies.",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0"
+  }
+}

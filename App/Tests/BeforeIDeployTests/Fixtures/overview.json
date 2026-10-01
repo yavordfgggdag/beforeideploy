@@ -1,0 +1,1501 @@
+{
+  "at": "2026-09-29T07:27:22.076Z",
+  "cards": [
+    {
+      "key": "00465ed29464",
+      "name": "client-site",
+      "client": "Bakery Ltd",
+      "path": "/tmp/bid-test-EZ4j6h/client-site",
+      "exists": true,
+      "framework": "static",
+      "hosting": "netlify",
+      "status": null,
+      "checkedAt": null,
+      "failing": [],
+      "liveUrl": null,
+      "lastProd": null,
+      "lastDraft": null,
+      "changed": 0,
+      "branch": "main",
+      "ahead": null,
+      "behind": null,
+      "local": null,
+      "uptime": null,
+      "sslDays": null,
+      "issues": null,
+      "signals": {
+        "check": {
+          "state": "unchecked",
+          "value": null,
+          "at": null,
+          "source": "check",
+          "detail": null
+        },
+        "deploy": {
+          "state": "unchecked",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "uptime": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_live_url"
+        },
+        "ssl": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "backup": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "not_connected"
+        },
+        "domain": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_domain"
+        }
+      },
+      "openIncidents": 0,
+      "nextAction": {
+        "id": "check",
+        "label": "Run a check"
+      }
+    },
+    {
+      "key": "fc2181aa59a4",
+      "name": "monitored-site",
+      "client": null,
+      "path": "/tmp/bid-test-EZ4j6h/monitored-site",
+      "exists": true,
+      "framework": "static",
+      "hosting": "netlify",
+      "status": null,
+      "checkedAt": null,
+      "failing": [],
+      "liveUrl": "http://127.0.0.1:5082/mon/",
+      "lastProd": null,
+      "lastDraft": null,
+      "changed": 0,
+      "branch": "main",
+      "ahead": null,
+      "behind": null,
+      "local": null,
+      "uptime": null,
+      "sslDays": null,
+      "issues": null,
+      "signals": {
+        "check": {
+          "state": "unchecked",
+          "value": null,
+          "at": null,
+          "source": "check",
+          "detail": null
+        },
+        "deploy": {
+          "state": "unchecked",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "uptime": {
+          "state": "healthy",
+          "value": "8 ms",
+          "at": "2026-09-29T07:27:20.411Z",
+          "source": "monitor",
+          "detail": null
+        },
+        "ssl": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "backup": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "not_connected"
+        },
+        "domain": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_domain"
+        }
+      },
+      "openIncidents": 0,
+      "nextAction": {
+        "id": "check",
+        "label": "Run a check"
+      }
+    },
+    {
+      "key": "f449df6f8a71",
+      "name": "dev-app",
+      "client": null,
+      "path": "/tmp/bid-test-EZ4j6h/dev-app",
+      "exists": true,
+      "framework": "node",
+      "hosting": "netlify",
+      "status": null,
+      "checkedAt": null,
+      "failing": [],
+      "liveUrl": null,
+      "lastProd": null,
+      "lastDraft": null,
+      "changed": 0,
+      "branch": "main",
+      "ahead": null,
+      "behind": null,
+      "local": null,
+      "uptime": null,
+      "sslDays": null,
+      "issues": null,
+      "signals": {
+        "check": {
+          "state": "unchecked",
+          "value": null,
+          "at": null,
+          "source": "check",
+          "detail": null
+        },
+        "deploy": {
+          "state": "unchecked",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "uptime": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_live_url"
+        },
+        "ssl": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "backup": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "not_connected"
+        },
+        "domain": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_domain"
+        }
+      },
+      "openIncidents": 0,
+      "nextAction": {
+        "id": "check",
+        "label": "Run a check"
+      }
+    },
+    {
+      "key": "e8a9ed98c9ce",
+      "name": "next-app",
+      "client": null,
+      "path": "/tmp/bid-test-EZ4j6h/next-app",
+      "exists": true,
+      "framework": "next",
+      "hosting": "netlify",
+      "status": null,
+      "checkedAt": null,
+      "failing": [],
+      "liveUrl": null,
+      "lastProd": null,
+      "lastDraft": null,
+      "changed": 0,
+      "branch": "main",
+      "ahead": null,
+      "behind": null,
+      "local": null,
+      "uptime": null,
+      "sslDays": null,
+      "issues": null,
+      "signals": {
+        "check": {
+          "state": "unchecked",
+          "value": null,
+          "at": null,
+          "source": "check",
+          "detail": null
+        },
+        "deploy": {
+          "state": "unchecked",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "uptime": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_live_url"
+        },
+        "ssl": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "backup": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "not_connected"
+        },
+        "domain": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_domain"
+        }
+      },
+      "openIncidents": 0,
+      "nextAction": {
+        "id": "check",
+        "label": "Run a check"
+      }
+    },
+    {
+      "key": "f60ff10f3f04",
+      "name": "ai-cloud-app",
+      "client": null,
+      "path": "/tmp/bid-test-EZ4j6h/ai-cloud-app",
+      "exists": true,
+      "framework": "node",
+      "hosting": "netlify",
+      "status": "blocked",
+      "checkedAt": "2026-09-29T07:26:45.761Z",
+      "failing": [
+        "Build"
+      ],
+      "liveUrl": null,
+      "lastProd": null,
+      "lastDraft": null,
+      "changed": 0,
+      "branch": "main",
+      "ahead": null,
+      "behind": null,
+      "local": null,
+      "uptime": null,
+      "sslDays": null,
+      "issues": {
+        "total": 4,
+        "blocker": 1,
+        "high": 0,
+        "medium": 1,
+        "low": 2,
+        "info": 0,
+        "defects": 1,
+        "recommendations": 3,
+        "signals": 0
+      },
+      "signals": {
+        "check": {
+          "state": "problem",
+          "value": "blocked",
+          "at": "2026-09-29T07:26:45.761Z",
+          "source": "check",
+          "detail": "Build"
+        },
+        "deploy": {
+          "state": "unchecked",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "uptime": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_live_url"
+        },
+        "ssl": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "backup": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "not_connected"
+        },
+        "domain": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_domain"
+        }
+      },
+      "openIncidents": 0,
+      "nextAction": {
+        "id": "fix",
+        "label": "Fix 1 issue(s)"
+      }
+    },
+    {
+      "key": "b0e1b006380f",
+      "name": "ai-app",
+      "client": null,
+      "path": "/tmp/bid-test-EZ4j6h/ai-app",
+      "exists": true,
+      "framework": "node",
+      "hosting": "netlify",
+      "status": "warnings",
+      "checkedAt": "2026-09-29T07:26:45.006Z",
+      "failing": [],
+      "liveUrl": null,
+      "lastProd": null,
+      "lastDraft": null,
+      "changed": 1,
+      "branch": "main",
+      "ahead": null,
+      "behind": null,
+      "local": null,
+      "uptime": null,
+      "sslDays": null,
+      "issues": {
+        "total": 4,
+        "blocker": 0,
+        "high": 1,
+        "medium": 1,
+        "low": 2,
+        "info": 0,
+        "defects": 1,
+        "recommendations": 3,
+        "signals": 0
+      },
+      "signals": {
+        "check": {
+          "state": "healthy",
+          "value": "warnings",
+          "at": "2026-09-29T07:26:45.006Z",
+          "source": "check",
+          "detail": null
+        },
+        "deploy": {
+          "state": "unchecked",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "uptime": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_live_url"
+        },
+        "ssl": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "backup": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "not_connected"
+        },
+        "domain": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_domain"
+        }
+      },
+      "openIncidents": 0,
+      "nextAction": {
+        "id": "connect-hosting",
+        "label": "Connect hosting"
+      }
+    },
+    {
+      "key": "f46f4c75d03b",
+      "name": "rel-site",
+      "client": null,
+      "path": "/tmp/bid-test-EZ4j6h/rel-site",
+      "exists": true,
+      "framework": "static",
+      "hosting": "netlify",
+      "status": "warnings",
+      "checkedAt": "2026-09-29T07:26:41.020Z",
+      "failing": [],
+      "liveUrl": "http://127.0.0.1:5082/",
+      "lastProd": "2026-09-29T07:26:37.612Z",
+      "lastDraft": "2026-09-29T07:26:41.145Z",
+      "changed": 1,
+      "branch": "main",
+      "ahead": null,
+      "behind": null,
+      "local": null,
+      "uptime": null,
+      "sslDays": null,
+      "issues": {
+        "total": 3,
+        "blocker": 0,
+        "high": 0,
+        "medium": 0,
+        "low": 3,
+        "info": 0,
+        "defects": 0,
+        "recommendations": 3,
+        "signals": 0
+      },
+      "signals": {
+        "check": {
+          "state": "healthy",
+          "value": "warnings",
+          "at": "2026-09-29T07:26:41.020Z",
+          "source": "check",
+          "detail": null
+        },
+        "deploy": {
+          "state": "healthy",
+          "value": "dep-3",
+          "at": "2026-09-29T07:26:37.612Z",
+          "source": "engine",
+          "detail": null
+        },
+        "uptime": {
+          "state": "unchecked",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "ssl": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "backup": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "not_connected"
+        },
+        "domain": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_domain"
+        }
+      },
+      "openIncidents": 0,
+      "nextAction": {
+        "id": "none",
+        "label": "Nothing to do"
+      }
+    },
+    {
+      "key": "21aeda1a7778",
+      "name": "parallel-app",
+      "client": null,
+      "path": "/tmp/bid-test-EZ4j6h/parallel-app",
+      "exists": true,
+      "framework": "static",
+      "hosting": "netlify",
+      "status": "ready",
+      "checkedAt": "2026-09-29T07:26:32.558Z",
+      "failing": [],
+      "liveUrl": null,
+      "lastProd": null,
+      "lastDraft": null,
+      "changed": 0,
+      "branch": "main",
+      "ahead": null,
+      "behind": null,
+      "local": null,
+      "uptime": null,
+      "sslDays": null,
+      "issues": {
+        "total": 1,
+        "blocker": 0,
+        "high": 0,
+        "medium": 1,
+        "low": 0,
+        "info": 0,
+        "defects": 0,
+        "recommendations": 1,
+        "signals": 0
+      },
+      "signals": {
+        "check": {
+          "state": "healthy",
+          "value": "ready",
+          "at": "2026-09-29T07:26:32.558Z",
+          "source": "check",
+          "detail": null
+        },
+        "deploy": {
+          "state": "unchecked",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "uptime": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_live_url"
+        },
+        "ssl": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "backup": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "not_connected"
+        },
+        "domain": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_domain"
+        }
+      },
+      "openIncidents": 0,
+      "nextAction": {
+        "id": "connect-hosting",
+        "label": "Connect hosting"
+      }
+    },
+    {
+      "key": "df0323982dad",
+      "name": "leaky-build",
+      "client": null,
+      "path": "/tmp/bid-test-EZ4j6h/leaky-build",
+      "exists": true,
+      "framework": "node",
+      "hosting": "netlify",
+      "status": "blocked",
+      "checkedAt": "2026-09-29T07:25:26.039Z",
+      "failing": [
+        "Secrets",
+        "Build"
+      ],
+      "liveUrl": null,
+      "lastProd": null,
+      "lastDraft": null,
+      "changed": 0,
+      "branch": "main",
+      "ahead": null,
+      "behind": null,
+      "local": null,
+      "uptime": null,
+      "sslDays": null,
+      "issues": {
+        "total": 5,
+        "blocker": 2,
+        "high": 0,
+        "medium": 1,
+        "low": 2,
+        "info": 0,
+        "defects": 2,
+        "recommendations": 3,
+        "signals": 0
+      },
+      "signals": {
+        "check": {
+          "state": "problem",
+          "value": "blocked",
+          "at": "2026-09-29T07:25:26.039Z",
+          "source": "check",
+          "detail": "Secrets, Build"
+        },
+        "deploy": {
+          "state": "unchecked",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "uptime": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_live_url"
+        },
+        "ssl": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "backup": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "not_connected"
+        },
+        "domain": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_domain"
+        }
+      },
+      "openIncidents": 0,
+      "nextAction": {
+        "id": "fix",
+        "label": "Fix 2 issue(s)"
+      }
+    },
+    {
+      "key": "168d7c2075d6",
+      "name": "static-site",
+      "client": null,
+      "path": "/tmp/bid-test-EZ4j6h/static-site",
+      "exists": true,
+      "framework": "static",
+      "hosting": "netlify",
+      "status": "ready",
+      "checkedAt": "2026-09-29T07:25:14.127Z",
+      "failing": [],
+      "liveUrl": null,
+      "lastProd": null,
+      "lastDraft": null,
+      "changed": 2,
+      "branch": "main",
+      "ahead": null,
+      "behind": null,
+      "local": null,
+      "uptime": null,
+      "sslDays": null,
+      "issues": {
+        "total": 3,
+        "blocker": 0,
+        "high": 0,
+        "medium": 1,
+        "low": 2,
+        "info": 0,
+        "defects": 0,
+        "recommendations": 3,
+        "signals": 0
+      },
+      "signals": {
+        "check": {
+          "state": "healthy",
+          "value": "ready",
+          "at": "2026-09-29T07:25:14.127Z",
+          "source": "check",
+          "detail": null
+        },
+        "deploy": {
+          "state": "unchecked",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "uptime": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_live_url"
+        },
+        "ssl": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "backup": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "not_connected"
+        },
+        "domain": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_domain"
+        }
+      },
+      "openIncidents": 0,
+      "nextAction": {
+        "id": "connect-hosting",
+        "label": "Connect hosting"
+      }
+    },
+    {
+      "key": "f9f20900b50c",
+      "name": "no-git",
+      "client": null,
+      "path": "/tmp/bid-test-EZ4j6h/no-git",
+      "exists": true,
+      "framework": "static",
+      "hosting": "netlify",
+      "status": null,
+      "checkedAt": null,
+      "failing": [],
+      "liveUrl": null,
+      "lastProd": null,
+      "lastDraft": null,
+      "changed": 2,
+      "branch": "main",
+      "ahead": null,
+      "behind": null,
+      "local": null,
+      "uptime": null,
+      "sslDays": null,
+      "issues": null,
+      "signals": {
+        "check": {
+          "state": "unchecked",
+          "value": null,
+          "at": null,
+          "source": "check",
+          "detail": null
+        },
+        "deploy": {
+          "state": "unchecked",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "uptime": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_live_url"
+        },
+        "ssl": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "backup": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "not_connected"
+        },
+        "domain": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_domain"
+        }
+      },
+      "openIncidents": 0,
+      "nextAction": {
+        "id": "check",
+        "label": "Run a check"
+      }
+    },
+    {
+      "key": "0351d153d8f4",
+      "name": "secret-in-code",
+      "client": null,
+      "path": "/tmp/bid-test-EZ4j6h/secret-in-code",
+      "exists": true,
+      "framework": "static",
+      "hosting": "netlify",
+      "status": "blocked",
+      "checkedAt": "2026-09-29T07:25:22.886Z",
+      "failing": [
+        "Secrets"
+      ],
+      "liveUrl": null,
+      "lastProd": null,
+      "lastDraft": null,
+      "changed": 0,
+      "branch": "main",
+      "ahead": null,
+      "behind": null,
+      "local": null,
+      "uptime": null,
+      "sslDays": null,
+      "issues": {
+        "total": 4,
+        "blocker": 1,
+        "high": 0,
+        "medium": 1,
+        "low": 2,
+        "info": 0,
+        "defects": 1,
+        "recommendations": 3,
+        "signals": 0
+      },
+      "signals": {
+        "check": {
+          "state": "problem",
+          "value": "blocked",
+          "at": "2026-09-29T07:25:22.886Z",
+          "source": "check",
+          "detail": "Secrets"
+        },
+        "deploy": {
+          "state": "unchecked",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "uptime": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_live_url"
+        },
+        "ssl": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "backup": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "not_connected"
+        },
+        "domain": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_domain"
+        }
+      },
+      "openIncidents": 0,
+      "nextAction": {
+        "id": "fix",
+        "label": "Fix 1 issue(s)"
+      }
+    },
+    {
+      "key": "1b1d7b927872",
+      "name": "issues-env",
+      "client": null,
+      "path": "/tmp/bid-test-EZ4j6h/issues-env",
+      "exists": true,
+      "framework": "static",
+      "hosting": "netlify",
+      "status": "warnings",
+      "checkedAt": "2026-09-29T07:25:21.984Z",
+      "failing": [],
+      "liveUrl": null,
+      "lastProd": null,
+      "lastDraft": null,
+      "changed": 2,
+      "branch": "main",
+      "ahead": null,
+      "behind": null,
+      "local": null,
+      "uptime": null,
+      "sslDays": null,
+      "issues": {
+        "total": 4,
+        "blocker": 0,
+        "high": 0,
+        "medium": 1,
+        "low": 3,
+        "info": 0,
+        "defects": 0,
+        "recommendations": 4,
+        "signals": 0
+      },
+      "signals": {
+        "check": {
+          "state": "healthy",
+          "value": "warnings",
+          "at": "2026-09-29T07:25:21.984Z",
+          "source": "check",
+          "detail": null
+        },
+        "deploy": {
+          "state": "unchecked",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "uptime": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_live_url"
+        },
+        "ssl": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "backup": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "not_connected"
+        },
+        "domain": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_domain"
+        }
+      },
+      "openIncidents": 0,
+      "nextAction": {
+        "id": "connect-hosting",
+        "label": "Connect hosting"
+      }
+    },
+    {
+      "key": "11166bf5a034",
+      "name": "tracked-env",
+      "client": null,
+      "path": "/tmp/bid-test-EZ4j6h/tracked-env",
+      "exists": true,
+      "framework": "static",
+      "hosting": "netlify",
+      "status": "blocked",
+      "checkedAt": "2026-09-29T07:25:20.646Z",
+      "failing": [
+        "Secrets"
+      ],
+      "liveUrl": null,
+      "lastProd": null,
+      "lastDraft": null,
+      "changed": 2,
+      "branch": "main",
+      "ahead": null,
+      "behind": null,
+      "local": null,
+      "uptime": null,
+      "sslDays": null,
+      "issues": {
+        "total": 5,
+        "blocker": 1,
+        "high": 1,
+        "medium": 1,
+        "low": 2,
+        "info": 0,
+        "defects": 1,
+        "recommendations": 4,
+        "signals": 0
+      },
+      "signals": {
+        "check": {
+          "state": "problem",
+          "value": "blocked",
+          "at": "2026-09-29T07:25:20.646Z",
+          "source": "check",
+          "detail": "Secrets"
+        },
+        "deploy": {
+          "state": "unchecked",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "uptime": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_live_url"
+        },
+        "ssl": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "backup": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "not_connected"
+        },
+        "domain": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_domain"
+        }
+      },
+      "openIncidents": 0,
+      "nextAction": {
+        "id": "fix",
+        "label": "Fix 1 issue(s)"
+      }
+    },
+    {
+      "key": "47f96688e7b2",
+      "name": "changed-after-check",
+      "client": null,
+      "path": "/tmp/bid-test-EZ4j6h/changed-after-check",
+      "exists": true,
+      "framework": "static",
+      "hosting": "netlify",
+      "status": "ready",
+      "checkedAt": "2026-09-29T07:25:19.748Z",
+      "failing": [],
+      "liveUrl": null,
+      "lastProd": null,
+      "lastDraft": null,
+      "changed": 1,
+      "branch": "main",
+      "ahead": null,
+      "behind": null,
+      "local": null,
+      "uptime": null,
+      "sslDays": null,
+      "issues": {
+        "total": 3,
+        "blocker": 0,
+        "high": 0,
+        "medium": 1,
+        "low": 2,
+        "info": 0,
+        "defects": 0,
+        "recommendations": 3,
+        "signals": 0
+      },
+      "signals": {
+        "check": {
+          "state": "healthy",
+          "value": "ready",
+          "at": "2026-09-29T07:25:19.748Z",
+          "source": "check",
+          "detail": null
+        },
+        "deploy": {
+          "state": "unchecked",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "uptime": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_live_url"
+        },
+        "ssl": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "backup": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "not_connected"
+        },
+        "domain": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_domain"
+        }
+      },
+      "openIncidents": 0,
+      "nextAction": {
+        "id": "connect-hosting",
+        "label": "Connect hosting"
+      }
+    },
+    {
+      "key": "edee98db9ee3",
+      "name": "fresh",
+      "client": null,
+      "path": "/tmp/bid-test-EZ4j6h/fresh",
+      "exists": true,
+      "framework": "static",
+      "hosting": "netlify",
+      "status": null,
+      "checkedAt": null,
+      "failing": [],
+      "liveUrl": null,
+      "lastProd": null,
+      "lastDraft": null,
+      "changed": 0,
+      "branch": "main",
+      "ahead": null,
+      "behind": null,
+      "local": null,
+      "uptime": null,
+      "sslDays": null,
+      "issues": null,
+      "signals": {
+        "check": {
+          "state": "unchecked",
+          "value": null,
+          "at": null,
+          "source": "check",
+          "detail": null
+        },
+        "deploy": {
+          "state": "unchecked",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "uptime": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_live_url"
+        },
+        "ssl": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "backup": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "not_connected"
+        },
+        "domain": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_domain"
+        }
+      },
+      "openIncidents": 0,
+      "nextAction": {
+        "id": "check",
+        "label": "Run a check"
+      }
+    },
+    {
+      "key": "420e262e548c",
+      "name": "failing-build",
+      "client": null,
+      "path": "/tmp/bid-test-EZ4j6h/failing-build",
+      "exists": true,
+      "framework": "node",
+      "hosting": "netlify",
+      "status": "blocked",
+      "checkedAt": "2026-09-29T07:25:18.668Z",
+      "failing": [
+        "Build"
+      ],
+      "liveUrl": null,
+      "lastProd": null,
+      "lastDraft": null,
+      "changed": 0,
+      "branch": "main",
+      "ahead": null,
+      "behind": null,
+      "local": null,
+      "uptime": null,
+      "sslDays": null,
+      "issues": {
+        "total": 2,
+        "blocker": 1,
+        "high": 0,
+        "medium": 0,
+        "low": 1,
+        "info": 0,
+        "defects": 1,
+        "recommendations": 1,
+        "signals": 0
+      },
+      "signals": {
+        "check": {
+          "state": "problem",
+          "value": "blocked",
+          "at": "2026-09-29T07:25:18.668Z",
+          "source": "check",
+          "detail": "Build"
+        },
+        "deploy": {
+          "state": "unchecked",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "uptime": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_live_url"
+        },
+        "ssl": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "backup": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "not_connected"
+        },
+        "domain": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_domain"
+        }
+      },
+      "openIncidents": 0,
+      "nextAction": {
+        "id": "fix",
+        "label": "Fix 1 issue(s)"
+      }
+    },
+    {
+      "key": "cbff0525327f",
+      "name": "vite-app",
+      "client": null,
+      "path": "/tmp/bid-test-EZ4j6h/vite-app",
+      "exists": true,
+      "framework": "vite",
+      "hosting": "netlify",
+      "status": "ready",
+      "checkedAt": "2026-09-29T07:27:01.635Z",
+      "failing": [],
+      "liveUrl": null,
+      "lastProd": null,
+      "lastDraft": null,
+      "changed": 0,
+      "branch": "main",
+      "ahead": null,
+      "behind": null,
+      "local": null,
+      "uptime": null,
+      "sslDays": null,
+      "issues": {
+        "total": 0,
+        "blocker": 0,
+        "high": 0,
+        "medium": 0,
+        "low": 0,
+        "info": 0,
+        "defects": 0,
+        "recommendations": 0,
+        "signals": 0
+      },
+      "signals": {
+        "check": {
+          "state": "healthy",
+          "value": "ready",
+          "at": "2026-09-29T07:27:01.635Z",
+          "source": "check",
+          "detail": null
+        },
+        "deploy": {
+          "state": "unchecked",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "uptime": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_live_url"
+        },
+        "ssl": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": null
+        },
+        "backup": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "not_connected"
+        },
+        "domain": {
+          "state": "unsupported",
+          "value": null,
+          "at": null,
+          "source": null,
+          "detail": "no_domain"
+        }
+      },
+      "openIncidents": 0,
+      "nextAction": {
+        "id": "connect-hosting",
+        "label": "Connect hosting"
+      }
+    }
+  ],
+  "domains": {
+    "connected": false,
+    "domains": []
+  },
+  "attention": [
+    {
+      "key": "f60ff10f3f04",
+      "level": "fail",
+      "text": "ai-cloud-app: BLOCKED — Build"
+    },
+    {
+      "key": "df0323982dad",
+      "level": "fail",
+      "text": "leaky-build: BLOCKED — Secrets, Build"
+    },
+    {
+      "key": "0351d153d8f4",
+      "level": "fail",
+      "text": "secret-in-code: BLOCKED — Secrets"
+    },
+    {
+      "key": "11166bf5a034",
+      "level": "fail",
+      "text": "tracked-env: BLOCKED — Secrets"
+    },
+    {
+      "key": "420e262e548c",
+      "level": "fail",
+      "text": "failing-build: BLOCKED — Build"
+    },
+    {
+      "key": "00465ed29464",
+      "level": "info",
+      "text": "client-site: not checked yet"
+    },
+    {
+      "key": "fc2181aa59a4",
+      "level": "info",
+      "text": "monitored-site: not checked yet"
+    },
+    {
+      "key": "f449df6f8a71",
+      "level": "info",
+      "text": "dev-app: not checked yet"
+    },
+    {
+      "key": "e8a9ed98c9ce",
+      "level": "info",
+      "text": "next-app: not checked yet"
+    },
+    {
+      "key": "f9f20900b50c",
+      "level": "info",
+      "text": "no-git: not checked yet"
+    },
+    {
+      "key": "edee98db9ee3",
+      "level": "info",
+      "text": "fresh: not checked yet"
+    }
+  ],
+  "totals": {
+    "projects": 18,
+    "ready": 4,
+    "warnings": 3,
+    "blocked": 5,
+    "online": 0,
+    "live": 2
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "configured": true,
+  "loggedIn": true,
+  "id": "u-friend@example.com",
+  "email": "friend@example.com",
+  "name": "Test",
+  "avatar": null,
+  "provider": "email",
+  "role": "normal",
+  "plan": "high",
+  "locale": "en",
+  "aiDisabled": false,
+  "credits": {
+    "balance": 250000,
+    "monthlyGrant": 250000,
+    "renewsAt": "2026-11-01T00:00:00Z",
+    "endsAt": null
+  },
+  "settings": {
+    "plans": {
+      "flash": {
+        "tokens": 100000
+      },
+      "high": {
+        "tokens": 250000
+      },
+      "knight": {
+        "tokens": 1000000
+      }
+    }
+  },
+  "helpUrl": null,
+  "links": {
+    "privacy": null,
+    "terms": null,
+    "refund": null,
+    "support": null,
+    "help": null
+  },
+  "profileStale": false,
+  "schemaMissing": false,
+  "hasOwnKey": false,
+  "features": {
+    "ai.cloud": true,
+    "ai.ownKey": false,
+    "ai.builtin": true,
+    "ai.external": true,
+    "ai.deep": false,
+    "cloud.sync": true,
+    "admin.panel": false,
+    "billing.plans": true,
+    "projects.max": null
+  }
+}

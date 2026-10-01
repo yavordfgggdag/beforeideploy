@@ -1,0 +1,23 @@
+name: web
+on:
+  push:
+    paths: ['web/**', 'design/**', 'scripts/tokens-build.mjs', '.github/workflows/web.yml']
+  pull_request:
+    paths: ['web/**', 'design/**', 'scripts/tokens-build.mjs', '.github/workflows/web.yml']
+  workflow_dispatch:
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: web } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: web/package-lock.json }
+      - run: npm ci --no-audit --no-fund
+      - run: node ../scripts/tokens-build.mjs --check
+      - run: node scripts/i18n-check.mjs
+      - run: npx tsc --noEmit
+      - run: node --experimental-strip-types --test src/lib/*.test.ts
+      - run: npx vite build
+      - uses: actions/upload-artifact@v4
+        with: { name: web-dist, path: web/dist, retention-days: 7 }

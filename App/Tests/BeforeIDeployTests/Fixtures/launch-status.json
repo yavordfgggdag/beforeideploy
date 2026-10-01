@@ -1,0 +1,66 @@
+{
+  "steps": [
+    {
+      "id": "project",
+      "status": "done",
+      "optional": false,
+      "title": "Site folder",
+      "hint": "Added and recognised (static).",
+      "action": null
+    },
+    {
+      "id": "check",
+      "status": "done",
+      "optional": false,
+      "title": "Check",
+      "hint": "Everything passed.",
+      "action": null
+    },
+    {
+      "id": "site",
+      "status": "done",
+      "optional": false,
+      "title": "Ready for visitors",
+      "hint": "1 page(s) with titles, descriptions, working links and the launch files.",
+      "action": null
+    },
+    {
+      "id": "hosting",
+      "status": "todo",
+      "optional": false,
+      "title": "Hosting",
+      "hint": "Connect a host (Netlify is free for a start) — the first deploy creates the site.",
+      "action": "hosting"
+    },
+    {
+      "id": "deploy",
+      "status": "waiting",
+      "optional": false,
+      "title": "Go live",
+      "hint": "Needs a host first.",
+      "action": null
+    },
+    {
+      "id": "domain",
+      "status": "waiting",
+      "optional": true,
+      "title": "Own domain",
+      "hint": "After the first release.",
+      "action": null
+    },
+    {
+      "id": "monitor",
+      "status": "waiting",
+      "optional": true,
+      "title": "Watching",
+      "hint": "After the site is live.",
+      "action": null
+    }
+  ],
+  "done": 3,
+  "total": 7,
+  "requiredDone": 3,
+  "requiredTotal": 5,
+  "next": "hosting",
+  "complete": false
+}
