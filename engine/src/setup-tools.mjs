@@ -194,11 +194,25 @@ export async function installManaged(id, { logFile, run = runStream } = {}) {
   }
 }
 
-/** GitHub's official, checksummed macOS binary; it does not require Homebrew or sudo. */
-export async function installGitHub({ logFile } = {}) {
-  const release = '2.101.0';
-  const arch = process.arch === 'arm64' ? 'arm64' : 'amd64';
-  const filename = `gh_${release}_macOS_${arch}.zip`;
+/**
+ * The pinned GitHub CLI release (audit B6). The sha256 of each archive is part of the source, so a release
+ * asset replaced on the download origin cannot pass: checksums.txt from that same origin is not trusted.
+ * Bump version and hashes together (gh_<v>_checksums.txt, cross-checked by downloading each zip).
+ */
+export const GH_RELEASE = Object.freeze({
+  version: '2.101.0',
+  assets: Object.freeze({
+    'darwin-arm64': { file: 'gh_2.101.0_macOS_arm64.zip', dir: 'gh_2.101.0_macOS_arm64', sha256: 'e4303e39d8f07141c4bad4b99b01079f05029c59b27076e8fbc825c985ecdd8b' },
+    'darwin-x64': { file: 'gh_2.101.0_macOS_amd64.zip', dir: 'gh_2.101.0_macOS_amd64', sha256: 'a6fd66c88e2f07d6e4e058173db341d07dd74d58cf8f19ae668293d2bb614ca3' },
+  }),
+});
+
+/** GitHub's official macOS binary, verified against GH_RELEASE; it does not require Homebrew or sudo. */
+export async function installGitHub({ logFile, platformKey = `${process.platform}-${process.arch}`, fetch = fetchT } = {}) {
+  const release = GH_RELEASE.version;
+  const asset = GH_RELEASE.assets[platformKey];
+  if (!asset) throw new EngineError(msg('setup.notRunnable'), 'not_runnable');
+  const filename = asset.file;
   const base = `https://github.com/cli/cli/releases/download/v${release}`;
   const uuid = crypto.randomUUID();
   const staging = ensureDir(path.join(TOOLS_DIR, `.staging-gh-${uuid}`));
@@ -210,22 +224,26 @@ export async function installGitHub({ logFile } = {}) {
   process.once('exit', cleanup);
   try {
     const download = async (url, max) => {
-      const res = await fetchT(url, { signal: AbortSignal.timeout(180000) }, 10000);
-      if (!res.ok) throw new EngineError(msg('setup.offline'), 'offline');
+      let res;
+      try { res = await fetch(url, { signal: AbortSignal.timeout(180000) }, 10000); }
+      catch { throw new EngineError(msg('setup.offline'), 'offline'); }
+      // the server answered: a 404/403/5xx is a failed install, not a missing network
+      if (!res.ok) throw new EngineError(msg('setup.toolFailed'), 'install_failed');
       const chunks = []; let bytes = 0;
-      for await (const chunk of res.body) {
-        bytes += chunk.length;
-        if (bytes > max) { res.abortController.abort(); throw new EngineError(msg('setup.toolFailed'), 'install_failed'); }
-        chunks.push(chunk);
-      }
+      try {
+        for await (const chunk of res.body) {
+          bytes += chunk.length;
+          if (bytes > max) { res.abortController?.abort(); throw new EngineError(msg('setup.toolFailed'), 'install_failed'); }
+          chunks.push(chunk);
+        }
+      } catch (e) { throw e instanceof EngineError ? e : new EngineError(msg('setup.offline'), 'offline'); }
       return Buffer.concat(chunks);
     };
-    const sums = (await download(`${base}/gh_${release}_checksums.txt`, 1024 * 1024)).toString();
-    const expected = sums.split('\n').find(line => line.trim().split(/\s+/).at(-1) === filename)?.split(/\s+/)[0];
+    const expected = asset.sha256;
     const archive = await download(`${base}/${filename}`, 64 * 1024 * 1024);
-    if (!expected || crypto.createHash('sha256').update(archive).digest('hex') !== expected) throw new EngineError(msg('setup.toolFailed'), 'install_failed');
+    if (crypto.createHash('sha256').update(archive).digest('hex') !== expected) throw new EngineError(msg('setup.toolFailed'), 'install_failed');
     const zip = path.join(staging, 'gh.zip'); fs.writeFileSync(zip, archive);
-    const binary = `gh_${release}_macOS_${arch}/bin/gh`;
+    const binary = `${asset.dir}/bin/gh`;
     const result = await runStream('/usr/bin/unzip', ['-q', zip, binary, '-d', staging], { step: 'gh', logFile, timeout: 30000 });
     if (result.code !== 0) throw new EngineError(msg('setup.toolFailed'), 'install_failed');
     const candidate = path.join(staging, binary);

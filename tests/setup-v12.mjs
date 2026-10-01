@@ -274,3 +274,19 @@ test('B4: every Git spawn in the engine goes through gitbin.mjs', () => {
   walk(src);
   assert.deepEqual(offenders, []);
 });
+
+test('B6: gh archive is checked against the sha256 in source, never against checksums.txt from the same origin', async () => {
+  const { installGitHub, GH_RELEASE } = await import('../engine/src/setup-tools.mjs');
+  for (const key of ['darwin-arm64', 'darwin-x64']) assert.match(GH_RELEASE.assets[key].sha256, /^[0-9a-f]{64}$/);
+  const urls = [];
+  const serve = (status, body) => async url => { urls.push(url); return new Response(body, { status }); };
+  // a replaced asset (and a checksums.txt that would vouch for it) must not install
+  await assert.rejects(() => installGitHub({ platformKey: 'darwin-arm64', fetch: serve(200, 'tampered zip') }), e => e.code === 'install_failed');
+  assert.equal(urls.some(u => /checksums/.test(u)), false, 'checksums.txt is not fetched');
+  assert.deepEqual(urls, [`https://github.com/cli/cli/releases/download/v${GH_RELEASE.version}/${GH_RELEASE.assets['darwin-arm64'].file}`]);
+  // a 404 is a failed install, not "offline"; a network error is offline
+  await assert.rejects(() => installGitHub({ platformKey: 'darwin-x64', fetch: serve(404, 'nope') }), e => e.code === 'install_failed');
+  await assert.rejects(() => installGitHub({ platformKey: 'darwin-x64', fetch: async () => { throw new TypeError('fetch failed'); } }), e => e.code === 'offline');
+  await assert.rejects(() => installGitHub({ platformKey: 'plan9-mips', fetch: serve(200, '') }), e => e.code === 'not_runnable');
+  assert.equal(fs.readdirSync(TOOLS_DIR).some(n => n.startsWith('.staging-gh-')), false);
+});
