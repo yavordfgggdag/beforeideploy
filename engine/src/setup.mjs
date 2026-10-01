@@ -10,8 +10,12 @@ import { cloudDoctor, cloudSetupItems } from './cloud.mjs';
 import { aiKeysStatus } from './aikeys.mjs';
 import { listProjects } from './store.mjs';
 import { cliEnv } from './isolation.mjs';
-import { resolveNpm, TOOL_PACKAGES, installManaged, installGitHub, setupLock, setupPreflight } from './setup-tools.mjs';
+import { resolveNpm, TOOL_PACKAGES, installManaged, installGitHub, setupLock, setupPreflight, GH_RELEASE } from './setup-tools.mjs';
 import { gitAvailable, gitSh } from './gitbin.mjs';
+import { platformOf, terminalLauncher, writeTerminalScript, win32 } from './platform/index.mjs';
+
+// Git without the Command Line Tools dialog exists only on macOS; elsewhere the user installs it (never sudo)
+const GIT_DOWNLOAD = { linux: 'https://git-scm.com/download/linux', win32: 'https://git-scm.com/download/win' };
 
 /** VIP/admin only (docs/PLANS-AND-CREDITS-BG.md): the last profile seen says which role this Mac has. */
 function ownKeyAllowed() {
@@ -33,7 +37,8 @@ const npmInstall = (pkg) => ({ type: 'run', label: t('setup.action.install'), di
 
 export async function setupStatus() {
   const git = gitAvailable({ fresh: true });
-  const commands = ['node', 'git', 'brew', 'netlify', 'gh', 'vercel', 'wrangler', 'codex', 'claude'];
+  const mac = platformOf() === 'darwin';
+  const commands = ['node', 'git', ...(mac ? ['brew'] : []), 'netlify', 'gh', 'vercel', 'wrangler', 'codex', 'claude'];
   const npm = resolveNpm();
   const [pairs, npmVersion, ghToken, gitName, gitEmail] = await Promise.all([
     Promise.all(commands.map(async cmd => {
@@ -76,16 +81,17 @@ export async function setupStatus() {
     url: 'https://nodejs.org/en/download',
   });
   add(t('setup.group.base'), 'npm', 'npm', npmVersion?.code === 0, npmVersion?.code === 0 ? npmVersion.tail[0] : t('setup.npmMissing'));
-  add(t('setup.group.base'), 'git', 'Git', installed('git'), installed('git') ? version('git') : t('setup.git.detail'), {
+  add(t('setup.group.base'), 'git', 'Git', installed('git'), installed('git') ? version('git') : t('setup.git.detail'), mac ? {
     type: 'run',
     label: t('setup.action.install'),
     display: t('setup.cltWaiting'),
-  });
+  } : { type: 'open', label: t('setup.action.download'), url: GIT_DOWNLOAD[platformOf()] });
   const name = installed('git') && gitName?.code === 0 ? gitName.stdout.trim() : '';
   const email = installed('git') && gitEmail?.code === 0 ? gitEmail.stdout.trim() : '';
   add(t('setup.group.base'), 'git-identity', t('setup.identity.label'), !!(name && email), name && email ? `${name} <${email}>` : t('setup.identity.detail'), identityForm());
+  // Homebrew is a macOS helper only (P17)
   const brew = installed('brew');
-  add(t('setup.group.base'), 'brew', 'Homebrew', !!brew, brew ? t('setup.brew.installed') : t('setup.brew.detail'), {
+  if (mac) add(t('setup.group.base'), 'brew', 'Homebrew', !!brew, brew ? t('setup.brew.installed') : t('setup.brew.detail'), {
     type: 'open',
     label: t('setup.action.download'),
     url: 'https://brew.sh',
@@ -107,7 +113,10 @@ export async function setupStatus() {
     'GitHub CLI',
     !!gh,
     gh ? version('gh') : t('setup.gh.detail'),
-    { type: 'run', label: t('setup.action.install'), display: t('setup.managedInstall') }
+    // the pinned, verified download exists for macOS only (setup-tools GH_RELEASE); elsewhere: cli.github.com
+    GH_RELEASE.assets[`${process.platform}-${process.arch}`]
+      ? { type: 'run', label: t('setup.action.install'), display: t('setup.managedInstall') }
+      : { type: 'open', label: t('setup.action.download'), url: 'https://cli.github.com' }
   );
   const ghAuth = gh && ghToken?.code === 0;
   add(t('setup.group.hosting'), 'gh-auth', t('setup.ghAccount.title'), ghAuth, ghAuth ? t('setup.loggedIn') : t('setup.ghAccount.detail'), {
@@ -150,6 +159,7 @@ export async function setupStatus() {
     type: 'terminal',
     label: t('setup.action.login'),
     script: 'codex login',
+    scriptWin: 'call codex login',
   } : null, true);
   const claude = installed('claude');
   add(t('setup.group.ai'), 'claude-code', 'Claude Code', !!claude, claude ? version('claude') : t('setup.claude.detail'), npmInstall('@anthropic-ai/claude-code'), true);
@@ -158,6 +168,7 @@ export async function setupStatus() {
     type: 'terminal',
     label: t('setup.action.login'),
     script: `echo "${t('setup.claudeAuth.script')}"; claude`,
+    scriptWin: `${win32.batchEcho(t('setup.claudeAuth.script'))}\r\ncall claude`,
   } : null, true);
 
   const required = items.filter((i) => !i.optional);
@@ -198,28 +209,30 @@ function setupLog(id) {
   return file;
 }
 
-function writeCommand(name, body) {
-  const file = path.join(setupDir(), `${name}.command`);
-  const envFile = path.join(ENGINE_DIR, 'env.zsh');
-  const q = (v) => `'${String(v).replace(/'/g, `'\\''`)}'`; // a home folder with ' in its name must not break the script
-  fs.writeFileSync(
-    file,
-    `#!/bin/zsh\n# Before I Deploy — ${t('setup.command.title')}\n[ -f ${q(envFile)} ] && source ${q(envFile)}\nclear\n${body}\necho\necho ${q(t('setup.command.done'))}\n`
-  );
-  fs.chmodSync(file, 0o755);
-  return file;
+/**
+ * The terminal script for the steps that need the user (logins): macOS `.command` (zsh, the app opens it),
+ * Linux `.sh`, Windows `.cmd` (platform/index.mjs writeTerminalScript). `launcher` says how to open it.
+ */
+function writeCommand(name, items) {
+  const steps = items.flatMap((i) => [{ echo: `━━━ ${i.title} ━━━` }, { raw: i.action.script, cmd: i.action.scriptWin }, { blank: true }]);
+  const file = writeTerminalScript(path.join(setupDir(), name), {
+    title: t('setup.command.title'),
+    envFile: path.join(ENGINE_DIR, platformOf() === 'win32' ? 'env.cmd' : 'env.zsh'),
+    steps,
+    done: t('setup.command.done'),
+    pause: platformOf() === 'darwin' ? null : t('setup.command.pause'),
+  });
+  const launcher = terminalLauncher(file);
+  return launcher ? { commandFile: file, launcher } : { commandFile: file };
 }
 
 export async function setupTerminal(id) {
   const st = await setupStatus();
   const todo = id === 'all' ? st.items.filter((i) => !i.ok && i.action?.type === 'terminal' && !i.optional) : st.items.filter((i) => i.id === id);
   if (!todo.length) throw new EngineError(msg('setup.terminal.nothing'), 'nothing');
-  const body = todo
-    .filter((i) => i.action?.type === 'terminal')
-    .map((i) => `echo "━━━ ${i.title} ━━━"\n${i.action.script}\necho`)
-    .join('\n');
-  if (!body) throw new EngineError(msg('setup.terminal.notTerminal'), 'usage', 2);
-  return { commandFile: writeCommand(id, body) };
+  const items = todo.filter((i) => i.action?.type === 'terminal');
+  if (!items.length) throw new EngineError(msg('setup.terminal.notTerminal'), 'usage', 2);
+  return writeCommand(id, items);
 }
 
 const DEPENDENCIES = { 'netlify-login': ['netlify-cli'], 'gh-auth': ['gh'], 'git-identity': ['git'], 'vercel-auth': ['vercel'], 'wrangler-auth': ['wrangler'] };

@@ -18,7 +18,8 @@ import http from 'node:http';
 import tls from 'node:tls';
 import crypto from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { APP_DIR, ENGINE_DIR, EngineError, ev, ensureDir, nowISO, readJSON, writeJSON } from './util.mjs';
+import { APP_DIR, ENGINE_DIR, EngineError, ev, ensureDir, nowISO, readJSON, writeJSON, sh, which } from './util.mjs';
+import { platformOf, darwin, linux, win32 } from './platform/index.mjs';
 import { listProjects, getState } from './store.mjs';
 import { spaceshipDomains } from './spaceship.mjs';
 import { t, msg } from './i18n.mjs';
@@ -30,6 +31,10 @@ const INCIDENTS_FILE = () => path.join(APP_DIR, 'incidents.jsonl');
 const SETTINGS_FILE = () => path.join(APP_DIR, 'monitor-settings.json');
 const AGENT_LABEL = 'bg.yavor.beforeideploy.monitor';
 const AGENT_PLIST = () => path.join(os.homedir(), 'Library', 'LaunchAgents', `${AGENT_LABEL}.plist`);
+// the same agent on the other OSes: a systemd --user timer (Linux), a Task Scheduler task (Windows)
+const SYSTEMD_UNIT = 'before-i-deploy-monitor';
+const SYSTEMD_DIR = () => path.join(process.env.XDG_CONFIG_HOME && path.isAbsolute(process.env.XDG_CONFIG_HOME) ? process.env.XDG_CONFIG_HOME : path.join(os.homedir(), '.config'), 'systemd', 'user');
+const WIN_TASK = 'BeforeIDeploy Monitor';
 
 export const DEFAULT_SETTINGS = {
   intervalMin: 10,
@@ -350,7 +355,7 @@ export function monitorStatus() {
   const incidents = readIncidents();
   const agent = agentStatus();
   return {
-    runsOn: 'mac',
+    runsOn: platformOf() === 'darwin' ? 'mac' : 'computer',
     serverSide: false,
     cloud: null,
     maintenance: settings.maintenance,
@@ -413,37 +418,79 @@ export function listIncidents({ limit = 100, project = null } = {}) {
     .reverse();
 }
 
-// ---------------------------------------------------------------- launchd agent (with consent)
+// ---------------------------------------------------------------- background agent (with consent)
+// macOS: launchd agent (unchanged). Linux: systemd --user service + timer. Windows: a Task Scheduler task
+// that starts a hidden wscript launcher. Without the scheduler: not_supported_on_platform.
 
 export function agentStatus() {
-  const plist = AGENT_PLIST();
-  const installed = fs.existsSync(plist);
-  return { installed, plist, label: AGENT_LABEL, note: t('monitor.agent.note') };
+  const os_ = platformOf();
+  if (os_ === 'darwin') {
+    const plist = AGENT_PLIST();
+    const installed = fs.existsSync(plist);
+    return { installed, plist, label: AGENT_LABEL, note: t('monitor.agent.note') };
+  }
+  if (os_ === 'win32') {
+    const file = path.join(APP_DIR, 'monitor-agent.vbs');
+    return { installed: fs.existsSync(file), file, scheduler: 'schtasks', label: WIN_TASK, note: t('monitor.agent.noteComputer') };
+  }
+  const file = path.join(SYSTEMD_DIR(), `${SYSTEMD_UNIT}.timer`);
+  return { installed: fs.existsSync(file), file, scheduler: 'systemd', label: SYSTEMD_UNIT, note: t('monitor.agent.noteComputer') };
 }
+
+const unsupported = () => new EngineError(msg('monitor.agent.unsupported'), 'not_supported_on_platform');
 
 export function agentInstall({ yes = false } = {}) {
   if (!yes) throw new EngineError(msg('monitor.agent.confirm'), 'confirm_required', 2);
-  if (process.platform !== 'darwin') throw new EngineError(msg('monitor.agent.macOnly'), 'unsupported');
   const settings = monitorSettings();
-  const bid = path.join(ENGINE_DIR, 'bid');
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0"><dict>
-  <key>Label</key><string>${AGENT_LABEL}</string>
-  <key>ProgramArguments</key><array><string>/bin/zsh</string><string>${bid}</string><string>monitor</string><string>once</string></array>
-  <key>EnvironmentVariables</key><dict><key>BID_MONITOR_AGENT</key><string>1</string></dict>
-  <key>StartInterval</key><integer>${settings.intervalMin * 60}</integer>
-  <key>RunAtLoad</key><true/>
-  <key>StandardOutPath</key><string>${path.join(APP_DIR, 'monitor-agent.log')}</string>
-  <key>StandardErrorPath</key><string>${path.join(APP_DIR, 'monitor-agent.log')}</string>
-</dict></plist>
-`;
+  const logFile = path.join(APP_DIR, 'monitor-agent.log');
+  const os_ = platformOf();
+  if (os_ === 'linux') {
+    if (!which('systemctl')) throw unsupported();
+    const { service, timer } = linux.systemdUnits({ unit: SYSTEMD_UNIT, bid: path.join(ENGINE_DIR, 'bid'), intervalMin: settings.intervalMin, logFile });
+    ensureDir(SYSTEMD_DIR());
+    fs.writeFileSync(path.join(SYSTEMD_DIR(), `${SYSTEMD_UNIT}.service`), service);
+    fs.writeFileSync(path.join(SYSTEMD_DIR(), `${SYSTEMD_UNIT}.timer`), timer);
+    sh('systemctl', ['--user', 'daemon-reload'], { timeout: 15000 });
+    const r = sh('systemctl', ['--user', 'enable', '--now', `${SYSTEMD_UNIT}.timer`], { timeout: 15000 });
+    if (r.code !== 0) {
+      // no user session bus (a server, a container): leave nothing behind and say so
+      agentRemove();
+      throw unsupported();
+    }
+    return { ...agentStatus(), loaded: true };
+  }
+  if (os_ === 'win32') {
+    const cmdFile = path.join(ensureDir(APP_DIR), 'monitor-agent.cmd');
+    const vbsFile = path.join(APP_DIR, 'monitor-agent.vbs');
+    const files = win32.schedulerFiles({ bid: path.join(ENGINE_DIR, 'bid.cmd'), logFile, cmdFile });
+    fs.writeFileSync(cmdFile, files.cmd);
+    fs.writeFileSync(vbsFile, files.vbs);
+    const r = sh('schtasks', win32.schtasksCreateArgs({ task: WIN_TASK, vbsFile, intervalMin: settings.intervalMin }), { timeout: 15000 });
+    if (r.code !== 0) {
+      agentRemove();
+      throw unsupported();
+    }
+    return { ...agentStatus(), loaded: true };
+  }
+  const xml = darwin.launchdPlist({ label: AGENT_LABEL, bid: path.join(ENGINE_DIR, 'bid'), intervalSec: settings.intervalMin * 60, logFile });
   ensureDir(path.dirname(AGENT_PLIST()));
   fs.writeFileSync(AGENT_PLIST(), xml);
   return { ...agentStatus(), loaded: loadAgent(true) };
 }
 
 export function agentRemove() {
+  const os_ = platformOf();
+  if (os_ === 'linux') {
+    if (which('systemctl')) sh('systemctl', ['--user', 'disable', '--now', `${SYSTEMD_UNIT}.timer`], { timeout: 15000 });
+    for (const ext of ['timer', 'service']) fs.rmSync(path.join(SYSTEMD_DIR(), `${SYSTEMD_UNIT}.${ext}`), { force: true });
+    if (which('systemctl')) sh('systemctl', ['--user', 'daemon-reload'], { timeout: 15000 });
+    return agentStatus();
+  }
+  if (os_ === 'win32') {
+    sh('schtasks', ['/Delete', '/F', '/TN', WIN_TASK], { timeout: 15000 });
+    for (const f of ['monitor-agent.vbs', 'monitor-agent.cmd']) fs.rmSync(path.join(APP_DIR, f), { force: true });
+    return agentStatus();
+  }
   const plist = AGENT_PLIST();
   if (fs.existsSync(plist)) {
     loadAgent(false);

@@ -5,10 +5,11 @@ import path from 'node:path';
 import http from 'node:http';
 import { spawn } from 'node:child_process';
 import { ENGINE_DIR, EngineError, ev, findFreePort, httpAlive, logDir, nowISO, pidAlive, sleep, exists, sh, which } from './util.mjs';
+import { groupOptions, isWindows, killTree } from './platform/index.mjs';
 
 /** Start time of a process as `ps` prints it — with the pid it identifies the process even after pid reuse. */
 function procStart(pid) {
-  if (!pid) return null;
+  if (!pid || isWindows()) return null; // Windows has no ps: the pid alone identifies the server
   const r = sh('ps', ['-o', 'lstart=', '-p', String(pid)]);
   return r.code === 0 ? r.stdout.trim() || null : null;
 }
@@ -166,10 +167,11 @@ export async function localStart(project, { mode = 'auto' } = {}) {
   // a dev server is the project's own code: isolated like a check; the static server is ours and gets the
   // stop token through the environment, never argv (visible in `ps`) or the log header
   const own = p.cmd === process.execPath;
-  const [cmd, args] = own ? [p.cmd, p.args] : isolate(p.cmd, p.args);
+  const [cmd, args] = own ? [p.cmd, p.args] : isolate(p.cmd, p.args, { cwd: project.path });
   const child = spawn(own ? cmd : process.execPath, own ? args : [path.join(ENGINE_DIR, 'src', 'local-runner.cjs'), cmd, ...args], {
     cwd: project.path,
-    detached: true,
+    // its own process group on POSIX (stop takes the whole tree); Windows: no console window, taskkill /T
+    ...groupOptions(),
     stdio: ['ignore', fd, fd],
     env: own ? { ...scriptEnv(), PORT: String(port), HOST: '127.0.0.1', BID_STOP_TOKEN: stopToken } : scriptEnv({ PORT: String(port), HOST: '127.0.0.1', BROWSER: 'none' }),
   });
@@ -201,9 +203,7 @@ export async function localStart(project, { mode = 'auto' } = {}) {
   }
 
   if (!ready) {
-    try {
-      process.kill(-child.pid, 'SIGTERM');
-    } catch {}
+    killTree(child.pid, 'SIGTERM');
     const tail = fs.readFileSync(logFile, 'utf8').trim().split('\n').slice(-20);
     ev.step('local', { label: 'Local Preview', status: 'fail', summary: t('local.stepFailed'), details: tail, log: logFile });
     const lines = tail.filter((l) => l.trim() && !l.startsWith('$') && !l.startsWith('#') && !/^Node\.js v\d/.test(l.trim()));
@@ -245,15 +245,7 @@ export async function localStop(project) {
     setState(project.key, { local: undefined });
     return { running: false, stopped: false };
   }
-  const kill = (sig) => {
-    try {
-      process.kill(-st.pid, sig);
-    } catch {
-      try {
-        process.kill(st.pid, sig);
-      } catch {}
-    }
-  };
+  const kill = (sig) => killTree(st.pid, sig);
   kill('SIGTERM');
   for (let i = 0; i < 20 && pidAlive(st.pid); i++) await sleep(150);
   if (pidAlive(st.pid)) kill('SIGKILL');

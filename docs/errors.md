@@ -69,6 +69,7 @@ quota, 127 Node missing; everything else exits 1.
 | `no_cli` | 1 | The hosting CLI for the selected provider is missing (`netlify`, `vercel`, `wrangler`). | Setup installs it. |
 | `no_build` | 1 | No build output in the publish folder. | Run the check (it builds), or check the framework's output folder. |
 | `unsupported` | 1 | The action is not possible for this project on this hosting (SSR on Cloudflare/GitHub Pages, draft on GitHub Pages…). | Pick a hosting from the advice card that supports the project. |
+| `not_supported_on_platform` | 1 | This operating system has no way to do the action yet: the background monitor agent without launchd (macOS), a systemd user session (Linux) or Task Scheduler (Windows); or an update with no installer for this OS in the release feed. | Keep the app open (it runs the same checks), use cloud monitoring, or install the tool or update from its website. |
 | `deploy_failed` | 1 | The hosting CLI failed during deploy. | The log has the details; usually a build or auth problem. |
 | `release_in_progress` | 3 | Another release (or rollback) of this project is still running in another engine process. | Wait for it, or check Release status: a dead process is detected and its release marked interrupted. |
 | `release_not_ready` | 3 | `release promote`/`cancel` was called for a release that is not awaiting confirmation. | Run `release preview` again; a finished release cannot be promoted twice. |

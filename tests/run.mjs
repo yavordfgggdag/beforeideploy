@@ -19,6 +19,7 @@ const ENV = {
   GIT_COMMITTER_NAME: 'Test',
   GIT_COMMITTER_EMAIL: 'test@example.com',
   HOME: path.join(TMP, 'home'), // isolates Netlify auth lookup
+  XDG_CONFIG_HOME: path.join(TMP, 'home', '.config'), // Linux: never the real systemd --user units or CLI configs
   BID_NO_KEYCHAIN: '1', // never touch the real Keychain in tests
   BID_EVAL_DIR: path.join(ROOT, 'tests', 'ai-evals'), // canned assistant answers for the fake model (mock-spaceship.cjs)
   BID_LAST_AI_REQ: path.join(TMP, 'last-ai-request.json'),
@@ -2331,7 +2332,12 @@ ta('monitor: потвърждава проблем след 2 неуспеха, 
   const inc = bid('monitor', 'incidents');
   assert(inc.data.length === 1 && inc.data[0].status === 'resolved' && inc.data[0].resolvedAt, JSON.stringify(inc.data));
   assert(bid('monitor', 'agent', 'install').result.code === 'confirm_required', 'agent needs --yes');
-  if (process.platform !== 'darwin') assert(bid('monitor', 'agent', 'install', '--yes').result.code === 'unsupported', 'agent is macOS only');
+  if (process.platform !== 'darwin') {
+    // Linux: a systemd --user timer, Windows: Task Scheduler; without a usable scheduler (CI, containers) a clear code
+    const agent = bid('monitor', 'agent', 'install', '--yes');
+    assert(agent.result.ok || agent.result.code === 'not_supported_on_platform', 'agent: scheduler or not_supported_on_platform: ' + JSON.stringify(agent.result));
+    if (agent.result.ok) bid('monitor', 'agent', 'remove');
+  }
 });
 
 t('monitor cloud: status казва честно „никога“ без heartbeat; enable регистрира live URL; статусът обединява инциденти по източник', () => {

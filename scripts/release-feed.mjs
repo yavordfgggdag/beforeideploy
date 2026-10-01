@@ -2,7 +2,11 @@
 // Writes or updates releases/latest.json — the feed `bid update check` reads (engine/src/update.mjs).
 //
 //   node scripts/release-feed.mjs --out releases/latest.json --version 10.1.0 --url https://…/Before-I-Deploy-10.1.0.dmg \
-//        --sha256 <hex> [--min-version 10.0.0] [--channel stable|beta] [--notes notes.json]
+//        --sha256 <hex> [--min-version 10.0.0] [--channel stable|beta] [--notes notes.json] \
+//        [--asset win32-x64-msi=https://…/Before-I-Deploy-10.1.0.msi#<sha256>] [--asset linux-x64-appimage=…#<sha256>] …
+//
+// --url/--sha256 stay the macOS DMG (what older apps read); --asset adds feed v2 installers per OS
+// (keys: darwin-universal, win32-<arch>-msi|msix|exe, linux-<arch>-appimage|deb; engine/src/platform).
 //
 // stable: replaces the top-level entry (keeping an existing `beta` block that is newer);
 // beta:   writes only the `beta` block, the stable entry stays as it is.
@@ -29,8 +33,19 @@ if (!/^[0-9a-f]{64}$/i.test(sha256)) {
   console.error('❌ --sha256 must be a 64-hex digest');
   process.exit(2);
 }
+const assets = {};
+args.forEach((a, i) => {
+  if (a !== '--asset') return;
+  const m = /^([a-z0-9]+-[a-z0-9]+(?:-[a-z]+)?)=(https?:\/\/[^#\s]+)#([0-9a-f]{64})$/i.exec(args[i + 1] || '');
+  if (!m) {
+    console.error(`❌ --asset must look like key=https://…#<sha256>: ${args[i + 1]}`);
+    process.exit(2);
+  }
+  assets[m[1]] = { url: m[2], sha256: m[3].toLowerCase() };
+});
 const notes = notesFile ? JSON.parse(fs.readFileSync(notesFile, 'utf8')).notes ?? JSON.parse(fs.readFileSync(notesFile, 'utf8')) : {};
 const entry = { version, url, sha256: sha256.toLowerCase(), notes, publishedAt: new Date().toISOString() };
+if (Object.keys(assets).length) entry.assets = { 'darwin-universal': { url, sha256: entry.sha256 }, ...assets };
 
 let feed = {};
 if (fs.existsSync(out)) feed = JSON.parse(fs.readFileSync(out, 'utf8'));

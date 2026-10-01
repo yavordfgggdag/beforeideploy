@@ -8,6 +8,7 @@ import { getState } from './store.mjs';
 import { recordCost } from './costs.mjs';
 import { t, msg } from './i18n.mjs';
 import { gitSh } from './gitbin.mjs';
+import { platformOf, terminalLauncher, writeTerminalScript } from './platform/index.mjs';
 
 const STEP_KEYS = { git: 'aifix.step.git', secrets: 'aifix.step.secrets', deps: 'aifix.step.deps', lint: 'aifix.step.lint', typecheck: 'aifix.step.typecheck', build: 'aifix.step.build', hosting: 'aifix.step.hosting', deploy: 'aifix.step.deploy', local: 'aifix.step.local' };
 export const stepName = (id) => (STEP_KEYS[id] ? t(STEP_KEYS[id]) : id);
@@ -163,10 +164,6 @@ export function buildPrompt(project, stepId) {
 
 const URL_LIMIT = 7000;
 
-function shellQuote(s) {
-  return `'${String(s).replace(/'/g, `'\\''`)}'`;
-}
-
 const KNOWN_STEPS = new Set(['all', 'git', 'secrets', 'deps', 'lint', 'typecheck', 'build', 'hosting']);
 
 export function aifix(project, { step, target }) {
@@ -200,22 +197,16 @@ export function aifix(project, { step, target }) {
         'missing_cli'
       );
     }
-    const cmdFile = path.join(dir, `aifix-${tgt}.command`);
-    fs.writeFileSync(
-      cmdFile,
-      [
-        '#!/bin/zsh',
-        `# Before I Deploy — AI Fix (${tgt})`,
-        `[ -f ${shellQuote(path.join(ENGINE_DIR, 'env.zsh'))} ] && source ${shellQuote(path.join(ENGINE_DIR, 'env.zsh'))}`,
-        `cd ${shellQuote(project.path)} || exit 1`,
-        'clear',
-        `echo "🤖 ${bin} — ${t('aifix.command.fixing', { step: stepLabel })}"`,
-        'echo',
-        `${bin} "$(cat ${shellQuote(promptFile)})"`,
-        '',
-      ].join('\n')
-    );
-    fs.chmodSync(cmdFile, 0o755);
+    // macOS `.command` (zsh, the app opens it), Linux `.sh`, Windows `.cmd` (platform/index.mjs)
+    const cmdFile = writeTerminalScript(path.join(dir, `aifix-${tgt}`), {
+      title: `AI Fix (${tgt})`,
+      envFile: path.join(ENGINE_DIR, platformOf() === 'win32' ? 'env.cmd' : 'env.zsh'),
+      cwd: project.path,
+      steps: [{ echo: `🤖 ${bin} — ${t('aifix.command.fixing', { step: stepLabel })}` }, { blank: true }, { runWithFile: [bin, promptFile] }],
+      pause: platformOf() === 'darwin' ? null : t('setup.command.pause'),
+    });
+    const launcher = terminalLauncher(cmdFile);
+    if (launcher) out.launcher = launcher;
     out.commandFile = cmdFile;
   } else if (tgt === 'copy') {
     out.clipboard = true;

@@ -5,6 +5,7 @@ import crypto from 'node:crypto';
 import { APP_DIR, ENGINE_DIR, EngineError, ensureDir, which, sh, runStream, fetchT, readJSON, processHolds, pidAlive, pidStartTime, onChildSpawn, killGroup } from './util.mjs';
 import { msg } from './i18n.mjs';
 import { cliEnv } from './isolation.mjs';
+import { runtimeDirs, runtimeNpmCli } from './platform/index.mjs';
 
 export const TOOLS_DIR = path.join(APP_DIR, 'tools');
 // audit B5: one manifest with exact versions + tarball integrity (tools-manifest.json)
@@ -17,10 +18,12 @@ export { gitAvailable } from './gitbin.mjs'; // kept for callers; the logic live
 export function resolveNpm() {
   const npm = which('npm');
   if (npm) return { cmd: npm, args: [] };
-  const cli = path.resolve(path.dirname(process.execPath), '../lib/node_modules/npm/bin/npm-cli.js');
-  if (fs.existsSync(cli)) return { cmd: process.execPath, args: [cli] };
-  const bundled = path.join(ENGINE_DIR, 'runtime', process.arch === 'x64' ? 'x86_64' : process.arch, 'lib/node_modules/npm/bin/npm-cli.js');
-  return fs.existsSync(bundled) ? { cmd: process.execPath, args: [bundled] } : null;
+  // npm next to the running Node (POSIX: <prefix>/lib/node_modules, Windows: node_modules beside node.exe),
+  // then inside a bundled runtime (runtime/<platform>-<arch>, or the older macOS arm64 / x86_64 folders)
+  const own = path.dirname(process.execPath);
+  const candidates = [runtimeNpmCli(process.platform === 'win32' ? own : path.dirname(own)), ...runtimeDirs(ENGINE_DIR).map((d) => runtimeNpmCli(d))];
+  const cli = candidates.find((c) => fs.existsSync(c));
+  return cli ? { cmd: process.execPath, args: [cli] } : null;
 }
 
 /** Stops the process groups a dead lock owner recorded (npm, gh, unzip left running after a hard kill). */

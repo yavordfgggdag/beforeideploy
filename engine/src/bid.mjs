@@ -455,8 +455,8 @@ async function main() {
       const channel = flags.channel && flags.channel !== true ? flags.channel : 'stable';
       // the app passes its own version: that is what an update replaces (audit B5)
       const current = flags.current && flags.current !== true ? String(flags.current) : VERSION;
-      if (!sub || sub === 'check') return ok(await updateCheck({ current, force: !!flags.force, channel }));
-      if (sub === 'download') return ok(await updateDownload({ current, channel }));
+      if (!sub || sub === 'check') return ok(await updateCheck({ current, force: !!flags.force, channel, format: flags.format === 'deb' ? 'deb' : undefined }));
+      if (sub === 'download') return ok(await updateDownload({ current, channel, format: flags.format === 'deb' ? 'deb' : undefined }));
       throw new EngineError(msg('cli.unknownCommand', { command: `update ${sub}` }), 'usage', 2);
     }
 
