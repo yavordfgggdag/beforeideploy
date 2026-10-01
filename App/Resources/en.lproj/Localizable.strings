@@ -945,7 +945,7 @@
 "run.commit" = "Commit";
 "run.commitPush" = "Commit & Push";
 "run.committed" = "Committed";
-"run.deployBlocked" = "DEPLOY BLOCKED";
+"run.deployBlocked" = "Deploy blocked";
 "run.domainConnected" = "The domain is connected";
 "run.domainConnecting" = "Connecting %@";
 "run.domainSsl" = "The SSL certificate activates automatically (minutes to a few hours).";
@@ -965,8 +965,8 @@
 "run.productionSubtitle" = "%@ · full check → LIVE";
 "run.push" = "Push";
 "run.pushed" = "Pushed to GitHub";
-"run.readyToDeploy" = "READY TO DEPLOY";
-"run.readyWithWarnings" = "READY WITH WARNINGS";
+"run.readyToDeploy" = "Ready to deploy";
+"run.readyWithWarnings" = "Ready with warnings";
 "run.remoteSet" = "Remote set";
 "run.restarted" = "Restarted";
 "run.smartDeploy" = "Smart Deploy";

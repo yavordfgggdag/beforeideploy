@@ -945,7 +945,7 @@
 "run.commit" = "Запис";
 "run.commitPush" = "Запиши и качи";
 "run.committed" = "Промените са записани";
-"run.deployBlocked" = "ПУБЛИКУВАНЕТО Е БЛОКИРАНО";
+"run.deployBlocked" = "Публикуването е блокирано";
 "run.domainConnected" = "Домейнът е свързан";
 "run.domainConnecting" = "Свързване на %@";
 "run.domainSsl" = "SSL сертификатът се активира автоматично (минути до няколко часа).";
@@ -965,8 +965,8 @@
 "run.productionSubtitle" = "%@ · пълна проверка → на живо";
 "run.push" = "Качване";
 "run.pushed" = "Качено в GitHub";
-"run.readyToDeploy" = "ГОТОВ ЗА ПУБЛИКУВАНЕ";
-"run.readyWithWarnings" = "ГОТОВ С ПРЕДУПРЕЖДЕНИЯ";
+"run.readyToDeploy" = "Готов за публикуване";
+"run.readyWithWarnings" = "Готов с предупреждения";
 "run.remoteSet" = "Remote е зададен";
 "run.restarted" = "Рестартиран";
 "run.smartDeploy" = "Умно публикуване";
