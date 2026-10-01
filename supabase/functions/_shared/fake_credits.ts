@@ -106,7 +106,7 @@ export function fakeCreditRpc(db: FakeDb, fn: string, a: Row): Row | null {
     if(rows("bonus_claims").some(c=>c.user_id===user||c.email_hash===a.p_email_hash))return {ok:false,code:"bonus_used"};
     rows("bonus_claims").push({user_id:user,email_hash:a.p_email_hash,claimed_at:iso});
     const credits=(catalog as Row).starterBonus?.credits??60000;
-    return {...fakeCreditRpc(db,"bid_grant",{p_user:user,p_credits:credits,p_source:"bonus_grant",p_ref:`bonus:${user}`,p_granted_at:iso,p_expires_at:new Date(+now+30*86400000).toISOString(),p_now:iso}),code:"bonus_granted"};
+    return {...fakeCreditRpc(db,"bid_grant",{p_user:user,p_credits:credits,p_source:"bonus_grant",p_ref:`bonus:${user}`,p_granted_at:iso,p_expires_at:new Date(+now+30*86400000).toISOString(),p_now:iso}),appliesTo:["ai.fix","ai.fix.deep"]};
   }
   if(fn==="bid_enforce_sites") return {ok:true,paused:0};
   if(fn==="bid_grant") {

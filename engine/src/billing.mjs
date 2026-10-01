@@ -8,6 +8,9 @@
 //   bid billing checkout --pack pack-500k    → { url }
 //   bid billing trial                        starts the one-time trial
 //   bid billing portal                       → { url } (change card, cancel, invoices)
+//   bid billing usage                        plan & usage, contract v3 (release, guards, carried, bonus, packs)
+//   bid billing estimate --credits N [--usage-action ai.fix] → { readyAt, reason } (when N credits can start)
+//   bid billing bonus                        claims the one-time starter bonus
 import path from 'node:path';
 import fs from 'node:fs';
 import { offlineCatalog } from './plans-catalog.mjs';
@@ -16,7 +19,9 @@ import { APP_DIR, readJSON, EngineError, fetchT, throwIfRateLimited } from './ut
 import { cloudConfig, currentSession } from './account.mjs';
 import { msg } from './i18n.mjs';
 
-export const BILLING_ACTIONS = ['catalog', 'status', 'checkout', 'trial', 'portal', 'usage', 'sync', 'confirm-change', 'sites', 'site_activate', 'site_pause', 'estimate', 'meter', 'boost', 'nudge_ack', 'domain_request', 'audit_run', 'report_history'];
+export const BILLING_ACTIONS = ['catalog', 'status', 'checkout', 'trial', 'portal', 'usage', 'sync', 'confirm-change', 'sites', 'site_activate', 'site_pause', 'estimate', 'meter', 'boost', 'nudge_ack', 'domain_request', 'audit_run', 'report_history', 'bonus'];
+/** The usage contract this engine reads (v3 = credit model V3; a superset of v2). */
+export const USAGE_VERSION = 3;
 
 const CODE_KEYS = {
   not_available: 'billing.notAvailable',
@@ -50,8 +55,8 @@ export async function billingCall(action, params = {}, { session, etag, receipt 
   throwIfRateLimited(res, data);
   if (res.status === 401) throw new EngineError(msg('account.notLoggedIn'), 'not_logged_in', 5);
   if (!res.ok) {
-    const meterKeys = { quota_exhausted: 'billing.creditLimit', window_5h: 'billing.windowLimit', window_week: 'billing.windowLimit', site_paused: 'billing.sitePaused', site_limit: 'billing.siteLimit', boost_used: 'billing.boostUsed', boost_unavailable: 'billing.boostUnavailable', meter_unavailable: 'billing.meterUnavailable', domain_wait: 'billing.domainWait', domain_used: 'billing.domainUsed', domain_unavailable: 'billing.domainUnavailable', invalid_domain: 'billing.invalidDomain', hosting_not_ready: 'billing.hostingNotReady' };
-    if (meterKeys[data?.code]) throw Object.assign(new EngineError(msg(meterKeys[data.code]), data.code), { resetsAt: data.resetsAt });
+    const meterKeys = { quota_exhausted: 'billing.creditLimit', window_5h: 'billing.windowLimit', window_week: 'billing.windowLimit', credits_release: 'billing.creditsWait', guard_24h: 'billing.creditsWait', guard_7d: 'billing.creditsWait', pack_rate: 'billing.creditsWait', bonus_used: 'billing.bonusUsed', site_paused: 'billing.sitePaused', site_limit: 'billing.siteLimit', boost_used: 'billing.boostUsed', boost_unavailable: 'billing.boostUnavailable', meter_unavailable: 'billing.meterUnavailable', domain_wait: 'billing.domainWait', domain_used: 'billing.domainUsed', domain_unavailable: 'billing.domainUnavailable', invalid_domain: 'billing.invalidDomain', hosting_not_ready: 'billing.hostingNotReady' };
+    if (meterKeys[data?.code]) throw Object.assign(new EngineError(msg(meterKeys[data.code], { at: data.readyAt ? new Date(data.readyAt).toLocaleString() : '—' }), data.code), { resetsAt: data.resetsAt ?? data.readyAt, readyAt: data.readyAt });
     const key = CODE_KEYS[data?.code];
     if (key) throw new EngineError(msg(key), 'billing_failed');
     throw Object.assign(new EngineError(msg('billing.failed', { status: res.status, detail: data?.error || '' }), 'billing_failed'), { status: res.status });
@@ -81,8 +86,8 @@ export async function billingCommand(sub, flags) {
     const cache = path.join(APP_DIR, 'usage-report.json');
     try {
       const saved = readJSON(cache, null);
-      const own = saved?.userId === session.user?.id && saved?.cloudUrl === cloudConfig()?.url && saved?.report?.v === 2 ? saved : null;
-      const reply = await billingCall('usage', { v: 2 }, { session, etag: own?.etag, receipt: true });
+      const own = saved?.userId === session.user?.id && saved?.cloudUrl === cloudConfig()?.url && saved?.report?.v === USAGE_VERSION ? saved : null;
+      const reply = await billingCall('usage', { v: USAGE_VERSION }, { session, etag: own?.etag, receipt: true });
       const report = reply.notModified ? { ...own.report, stale: false, source: 'cloud', serverTime: new Date().toISOString() } : reply.report;
       // Logout/account switches during a slow request must not repopulate the old account's cache.
       if ((await currentSession())?.user?.id !== session.user?.id || cloudConfig()?.url !== origin) throw new EngineError(msg('account.notLoggedIn'), 'not_logged_in', 5);
@@ -114,6 +119,11 @@ export async function billingCommand(sub, flags) {
     return billingCall('checkout', plan ? { plan, ...(flags.yearly ? { interval: 'year' } : {}) } : { pack });
   }
   const params = {};
+  if (flags.credits != null) {
+    const credits = Number(flags.credits);
+    if (!Number.isSafeInteger(credits) || credits < 0) throw new EngineError(msg('billing.checkoutArgs'), 'usage', 2);
+    params.credits = credits;
+  }
   for (const [flag, field] of Object.entries({ project: 'projectKey', 'site-id': 'siteId', 'hosting-owner': 'hostingOwner', 'usage-action': 'usageAction', 'operation-id': 'operationId', kind: 'kind', 'period-ref': 'periodRef', threshold: 'threshold', domain: 'domain' })) {
     if (flags[flag] != null) {
       if (typeof flags[flag] !== 'string') throw new EngineError(msg('billing.checkoutArgs'), 'usage', 2);

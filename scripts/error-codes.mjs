@@ -98,7 +98,8 @@ for (const f of cloudFiles) {
 }
 
 // Monetary RPCs also return stable, public error codes.
-for (const m of fs.readFileSync(path.join(ROOT,'supabase','credits-v12.sql'),'utf8').matchAll(/'(?:code|legacyCode)'\s*,\s*'([a-z_]+)'/g)) cloud.add(m[1]);
+for (const file of ['credits-v12.sql', 'credits-v13.sql'])
+  for (const m of fs.readFileSync(path.join(ROOT,'supabase',file),'utf8').matchAll(/'(?:code|legacyCode)'\s*,\s*'([a-z_]+)'/g)) cloud.add(m[1]);
 
 // ---- documented
 const docFile = path.join(ROOT, 'docs', 'errors.md');

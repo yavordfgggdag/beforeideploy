@@ -1571,7 +1571,7 @@ begin
  end if;
  insert into bonus_claims(email_hash,user_id,customer_ref,claimed_at) values(p_email_hash,p_user,customer,p_now);
  r:=bid_grant(p_user,(c->>'bonusCredits')::bigint,'bonus_grant','bonus:'||p_user::text,null,p_now,p_now+make_interval(days=>(c->>'bonusDays')::integer),p_now);
- return r||jsonb_build_object('code','bonus_granted','appliesTo',c->'bonusActions');
+ return r||jsonb_build_object('appliesTo',c->'bonusActions');
 end $$;
 
 create or replace function public.bid_grant(p_user uuid,p_credits bigint,p_source text,p_ref text,p_tier text default null,p_granted_at timestamptz default now(),p_expires_at timestamptz default null,p_now timestamptz default now()) returns jsonb

@@ -7,7 +7,19 @@ ADDRESS = "[Registered address]"         # fill before Paddle review
 SUPPORT = "support@beforeideploy.app"    # change if the domain differs
 UPDATED = "1 October 2026"
 CATALOG = json.loads((HERE.parent / "supabase/functions/_shared/plans-catalog.json").read_text())
-PLAN_CARDS = ''.join(f'<div class="card"><h3>{name.title()}</h3><div class="price">€{plan["price"]:.2f} <small>/ month</small></div><ul><li>{plan["credits"]:,} credits a month</li><li>{plan["activeSites"]} active site(s)</li><li>Credits valid {plan["validityMonths"]} month(s)</li><li>€{plan["yearly"]["price"]:.2f} a year — 2 months free</li></ul></div>' for name,plan in CATALOG['plans'].items())
+# Catalog v13: "connected hosting" prices are on sale until features.hostingIncluded is switched on; then the
+# hosting-included V3 prices (each plan's `hostingIncluded` block) are shown instead.
+INCLUDED = CATALOG.get('features', {}).get('hostingIncluded') is True
+def sold(plan):
+    return plan['hostingIncluded'] if INCLUDED and plan.get('hostingIncluded') else plan
+def netlify(plan):
+    h = plan.get('hosting') or {}
+    tier = f'Netlify {h.get("tier", "").title()} ({h.get("credits", 0):,} credits)'
+    return f'{tier} included' if INCLUDED else f'Recommended hosting: {tier}, billed by Netlify to your own team'
+FREE = CATALOG.get('free') or {'credits': 0, 'activeSites': 1}
+FREE_CARD = f'<div class="card"><h3>Free</h3><div class="price">€0</div><ul><li>{FREE["credits"]:,} AI credits a month</li><li>{FREE["activeSites"]} active site</li><li>All checks, deploys, Local Preview, Git and Mission Control</li><li>Hosting on your own free Netlify account</li></ul></div>'
+PLAN_CARDS = ''.join(f'<div class="card"><h3>{name.title()}</h3><div class="price">€{sold(plan)["price"]:.2f} <small>/ month</small></div><ul><li>{plan["credits"]:,} AI credits a month</li><li>{plan["activeSites"]} active site(s)</li><li>{plan.get("cloudMinutes", 0):,} cloud minutes a month</li><li>Unused credits stay valid {plan["validityMonths"]} month(s)</li><li>{netlify(plan)}</li><li>€{sold(plan)["yearly"]["price"]:.2f} a year</li></ul></div>' for name,plan in CATALOG['plans'].items())
+BONUS = (CATALOG.get('starterBonus') or {}).get('credits', 0)
 PACK_PRICES = ', '.join(f'{pack["tokens"]:,} for €{pack["price"]:.2f}' for pack in CATALOG['packs'])
 DRAFT = '<p class="draft">Draft — the seller details in brackets are completed before sales start.</p>'
 
@@ -65,10 +77,13 @@ page("index", "Before I Deploy — check before you publish", f"""
 <section id="pricing">
   <h2>Pricing</h2>
   <div class="grid four">
-    <div class="card"><h3>Free</h3><div class="price">€0</div><p>All checks, deploys, Local Preview, Git and Mission Control. External AI prompts included. Built-in AI requires an eligible plan.</p></div>
+    {FREE_CARD}
     {PLAN_CARDS}
   </div>
-  <p class="note">Extra credits: {PACK_PRICES}, valid 12 months. Prices include VAT where it applies.
+  <p class="note">Each month's AI credits are released gradually over 14 days, so a month's budget cannot run out in
+  the first days. New customers get a one-time starter bonus of {BONUS:,} credits for creating their first site.
+  Active sites, monitoring and backups are part of the plan and never use AI credits.</p>
+  <p class="note">Extra credits: {PACK_PRICES}, valid 12 months, usable at any time. Prices include VAT where it applies.
   Cancel any time; see the <a href="/refund">refund policy</a>.</p>
 </section>
 """)
@@ -129,8 +144,10 @@ publish. Production deploys only happen after you confirm them.</p>
 16 years old, or have a guardian's consent.</p>
 <h2>3. Plans and payment</h2>
 <p>Paid plans (Flash, High, Knight) are subscriptions billed monthly or yearly in advance and renew until
-cancelled. Credits from each plan payment remain valid for 1 month (Flash), 3 months (High), or 10 months (Knight), spent oldest first. Accumulation is capped at monthly credits multiplied by validity. Credit
-packs are valid for 12 months. Our order process is conducted by our online reseller Paddle.com, which is
+cancelled. Each month's included credits are released gradually over 14 days. Credits from each plan payment
+remain valid for 1 month (Flash), 3 months (High), or 10 months (Knight); accumulation is capped at monthly credits
+multiplied by validity. Credits are spent in this order: starter bonus, older plan credits (oldest first), this
+month's credits, then credit packs. Credit packs are valid for 12 months. Our order process is conducted by our online reseller Paddle.com, which is
 the Merchant of Record for all our orders; Paddle provides customer service inquiries and handles returns.
 Prices are shown in the app and on this site and include VAT where it applies.</p>
 <h2>4. Trial</h2>

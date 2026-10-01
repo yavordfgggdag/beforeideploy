@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync, spawn } from 'node:child_process';
-import { DEFAULT_CATALOG, offlineCatalog } from '../engine/src/plans-catalog.mjs';
+import { DEFAULT_CATALOG, offlineCatalog, soldPrices } from '../engine/src/plans-catalog.mjs';
 import { billingDemo } from '../engine/src/billing-demo.mjs';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'bid-catalog-'));
@@ -26,11 +26,26 @@ test('one canonical catalog drives the engine, schema and generated website pric
     assert.ok(html.includes(plan.credits.toLocaleString('en-US')));
   }
   for (const pack of DEFAULT_CATALOG.packs) assert.ok(html.includes(`€${pack.price.toFixed(2)}`));
+  // catalog v13: Free has its own row; connected hosting is on sale until features.hostingIncluded is switched on
+  assert.equal(DEFAULT_CATALOG.version, 'v13');
+  assert.equal(DEFAULT_CATALOG.features.hostingIncluded, false);
+  assert.ok(html.includes(`${DEFAULT_CATALOG.free.credits.toLocaleString('en-US')} AI credits a month`));
+  assert.ok(html.includes('released gradually over 14 days') && html.includes('60,000 credits'));
+  assert.ok(!html.includes('€14.99'), 'hosting-included prices stay hidden while the flag is off');
+});
+test('catalog v13 carries both price sets; the flag decides what is shown', () => {
+  const sold = offlineCatalog();
+  assert.equal(sold.hostingMode, 'connected');
+  assert.deepEqual(sold.plans.map(p => [p.id, p.price, p.yearlyPrice, p.hostingMode]), [['flash', 9.99, 99.9, 'connected'], ['high', 29.99, 299.9, 'connected'], ['knight', 99.99, 999.9, 'connected']]);
+  assert.deepEqual(Object.values(DEFAULT_CATALOG.plans).map(p => [p.hostingIncluded.price, p.hostingIncluded.yearly.price]), [[14.99, 183.9], [29.99, 358.9], [99.99, 1089.9]]);
+  assert.deepEqual(Object.values(DEFAULT_CATALOG.plans).map(p => p.cloudMinutes), [300, 1000, 4000]);
+  assert.deepEqual([sold.free.tokens, sold.free.activeSites, sold.starterBonus.credits, sold.release.hours], [10000, 1, 60000, 336]);
+  assert.deepEqual(soldPrices(DEFAULT_CATALOG.plans.knight, true), { price: 99.99, yearlyPrice: 1089.9, yearlyDomain: true, hostingMode: 'included' });
 });
 test('signed-out/offline catalog keeps all prices visible and disables purchases', async () => {
   const c = await billingCommand('catalog', {});
   assert.equal(c.source, 'offline');
-  assert.deepEqual(c.plans.map(p => [p.tokens, p.activeSites, p.validityMonths]), [[100000,1,1],[300000,3,3],[1000000,10,10]]);
+  assert.deepEqual(c.plans.map(p => [p.tokens, p.activeSites, p.validityMonths]), [[40000,1,1],[100000,3,3],[800000,10,10]]);
   assert.ok([...c.plans, ...c.packs].every(p => p.price > 0 && !p.available));
   assert.equal(offlineCatalog().plans[2].extras.netlifyCredits, false);
   assert.equal(c.pricing.actions["audit.full"].credits,400);
@@ -47,7 +62,15 @@ test('demo reads are consistent and every mutation is refused before network acc
     assert.equal(u.byAction.reduce((sum,a) => sum+a.credits,0), u.used.tokens);
     for (const action of ['checkout','trial','portal','sync','confirm-change']) await assert.rejects(billingCommand(action, { demo: true }), { code: 'demo_read_only' });
     const fixed = billingDemo('usage', new Date('2026-10-15T12:00:00Z'));
-    assert.equal(fixed.period.start, '2026-09-16T00:00:00.000Z');
+    assert.equal(fixed.period.start, '2026-10-10T00:00:00.000Z');
+    // usage contract v3 in the demo: release curve, guards, carried, bonus, packs (credit model V3)
+    assert.equal(fixed.v, 3);
+    assert.equal(fixed.included.budget, 100000);
+    assert.equal(fixed.included.released, Math.floor(100000 * (5.5 * 24) / 336));
+    assert.equal(fixed.included.availableNow, fixed.included.released - fixed.included.spent - fixed.included.held);
+    assert.equal(fixed.reason, 'release');
+    assert.equal(fixed.guards.last7d, fixed.used.tokens);
+    assert.equal(fixed.sites.max, 3);
     assert.equal(fixed.daily.slice(-7).reduce((sum,day)=>sum+day.credits,0),fixed.weekly.used);
     assert.equal(fixed.byModel.reduce((sum,m)=>sum+m.tokens,0),fixed.byAction.find(a=>a.action==='ai').credits);
   } finally { globalThis.fetch = fetchBefore; }
@@ -117,4 +140,24 @@ test('usage watch streams reports and cancellation produces one final result wit
  const code=await new Promise((resolve,reject)=>{const timer=setTimeout(()=>{child.kill('SIGKILL');reject(new Error('watch did not respond'));},5000);child.once('error',reject);child.once('exit',code=>{clearTimeout(timer);resolve(code);});});
  assert.equal(code,130,error);const lines=output.trim().split('\n').map(JSON.parse);
  assert.equal(lines.filter(l=>l.type==='usage').length,1);assert.equal(lines.filter(l=>l.type==='result').length,1);assert.equal(lines.at(-1).code,'cancelled');
+});
+
+test('credit model V3: estimate asks when N credits can start; refusals keep their reason and readyAt', async () => {
+  const { setSecret, deleteSecret } = await import('../engine/src/secrets.mjs');
+  const { setCloudConfig } = await import('../engine/src/account.mjs');
+  setCloudConfig({ url: 'https://receipt-tests.supabase.co', anonKey: 'test-only' });
+  setSecret('session', { accessToken: 'fake', expiresAt: Date.now() + 3600000, user: { id: 'v3-user' } });
+  const previous = globalThis.fetch, bodies = [];
+  try {
+    globalThis.fetch = async (_url, options) => {
+      const body = JSON.parse(options.body); bodies.push(body);
+      if (body.action === 'estimate') return Response.json({ need: body.credits, readyAt: '2026-10-12T08:00:00Z', reason: 'release' });
+      return Response.json({ code: 'guard_24h', reason: 'guard24h', readyAt: '2026-10-11T09:00:00Z' }, { status: 403 });
+    };
+    const est = await billingCommand('estimate', { credits: '37000', 'usage-action': 'ai.fix' });
+    assert.equal(est.readyAt, '2026-10-12T08:00:00Z');
+    assert.deepEqual([bodies[0].credits, bodies[0].usageAction], [37000, 'ai.fix']);
+    await assert.rejects(billingCommand('estimate', { credits: '-5' }), { code: 'usage' });
+    await assert.rejects(billingCommand('meter', { 'usage-action': 'check.run', 'operation-id': 'op-guarded-1', kind: 'reserve' }), e => e.code === 'guard_24h' && e.readyAt === '2026-10-11T09:00:00Z');
+  } finally { globalThis.fetch = previous; deleteSecret('session'); }
 });
