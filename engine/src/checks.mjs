@@ -243,8 +243,8 @@ async function runScript(ctx, stepId, script, okText) {
   const { dir, d, key } = ctx;
   const logFile = path.join(logDir(key), `${stepId}.log`);
   const [cmd, args] = pmRunArgs(d.packageManager, script);
-  // someone else's code: allowlisted environment, sandboxed on macOS (isolation.mjs, WP01)
-  const [icmd, iargs] = isolate(cmd, args);
+  // someone else's code: allowlisted environment, sandboxed on macOS and Linux (isolation.mjs, WP01)
+  const [icmd, iargs] = isolate(cmd, args, { cwd: dir });
   const r = await runStream(icmd, iargs, { cwd: dir, logFile, step: stepId, env: scriptEnv(), timeout: 15 * 60 * 1000, display: `${cmd} ${args.join(' ')}` });
   if (r.code === 0) return { status: 'pass', summary: okText, log: logFile, duration: r.duration };
   return {

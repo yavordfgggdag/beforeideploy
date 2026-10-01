@@ -5,9 +5,12 @@
 //     which can carry BID_PASSWORD, BID_AI_KEY, BID_PUSHOVER_*, NETLIFY_AUTH_TOKEN … No wildcards:
 //     NODE_OPTIONS can load code and npm_config_* can carry registry credentials.
 //   - isolate(): on macOS, `sandbox-exec` with a profile that denies the Keychain services and every file
-//     under the engine's own folders (sessions, secrets fallback, logs, AI history). Network stays open
-//     (installs need it). Where no sandbox exists, the check result says `isolation: "none"` and automatic
-//     runs of changed scripts are refused (checks.mjs, scriptsTrust).
+//     under the engine's own folders (sessions, secrets fallback, logs, AI history). On Linux, bubblewrap
+//     (`bwrap`): the system read-only, the project writable, the engine's folders and the session bus
+//     (Secret Service) hidden. Network stays open (installs need it). The check result reports the level:
+//     "sandbox" (either of those), "basic" (Linux without a working bwrap, Windows: allowlisted environment
+//     only, secrets are not in it) or "none" (BID_NO_SANDBOX=1, macOS without sandbox-exec). Automatic runs
+//     of changed scripts are refused at every level (checks.mjs, scriptsTrust).
 //
 // Hosting CLIs (netlify, vercel, wrangler, gh) are the user's tools with the user's logins: they keep the
 // environment minus the engine's own secrets (cliEnv).
@@ -17,15 +20,20 @@
 // scripts/build.sh) — a stray variable in a shipped app can never send a real key to another host.
 import fs from 'node:fs';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { APP_DIR, CACHE_DIR, ENGINE_DIR, HOME, which } from './util.mjs';
+import { platformOf, linux, runtimeDirs } from './platform/index.mjs';
 
 const SCRIPT_ENV_NAMES = ['PATH', 'HOME', 'USER', 'LOGNAME', 'SHELL', 'LANG', 'LC_ALL', 'LC_CTYPE', 'LC_MESSAGES', 'TMPDIR', 'TERM', 'TZ'];
+// what programs on Windows cannot start without (no secrets among them)
+const WINDOWS_ENV_NAMES = ['SystemRoot', 'SystemDrive', 'windir', 'ComSpec', 'PATHEXT', 'TEMP', 'TMP', 'USERPROFILE', 'USERNAME', 'APPDATA', 'LOCALAPPDATA', 'ProgramData', 'ProgramFiles', 'ProgramFiles(x86)', 'CommonProgramFiles', 'HOMEDRIVE', 'HOMEPATH', 'NUMBER_OF_PROCESSORS', 'PROCESSOR_ARCHITECTURE', 'OS'];
 const NODE_ENVS = new Set(['production', 'development', 'test']);
 
 /** Environment for project scripts: allowlisted names only, plus what the tools need to behave in CI mode. */
 export function scriptEnv(extra = {}) {
   const env = {};
-  for (const k of SCRIPT_ENV_NAMES) if (process.env[k] !== undefined) env[k] = process.env[k];
+  const names = platformOf() === 'win32' ? [...SCRIPT_ENV_NAMES, ...WINDOWS_ENV_NAMES] : SCRIPT_ENV_NAMES;
+  for (const k of names) if (process.env[k] !== undefined) env[k] = process.env[k];
   if (NODE_ENVS.has(process.env.NODE_ENV)) env.NODE_ENV = process.env.NODE_ENV;
   return { ...env, CI: '1', FORCE_COLOR: '0', NO_COLOR: '1', ...extra };
 }
@@ -88,14 +96,52 @@ export function sandboxProfile() {
   ].join('\n');
 }
 
-/** Which isolation project scripts get on this machine. */
-export function isolationLevel() {
-  if (process.env.BID_NO_SANDBOX === '1') return 'none';
-  return process.platform === 'darwin' && which('sandbox-exec') ? 'sandbox' : 'none';
+// ---------------------------------------------------------------- Linux: bubblewrap
+
+/** The session bus lives here; hiding it keeps the Secret Service (and the user's keyring) out of reach. */
+function userRuntimeDir() {
+  const d = process.env.XDG_RUNTIME_DIR || (typeof process.getuid === 'function' ? `/run/user/${process.getuid()}` : null);
+  return d && fs.existsSync(d) ? d : null;
 }
 
-/** Wraps a command for a project script: [cmd, args, level]. */
-export function isolate(cmd, args) {
-  if (isolationLevel() !== 'sandbox') return [cmd, args, 'none'];
+/** bwrap arguments for a project script running in `cwd`. */
+export function bwrapProfile(cwd) {
+  // the package managers' caches must be writable inside a read-only home: create the usual two first
+  for (const d of [path.join(HOME, '.npm'), path.join(HOME, '.cache')]) try { fs.mkdirSync(d, { recursive: true }); } catch {}
+  return linux.bwrapArgs({
+    writable: process.env.TMPDIR ? [process.env.TMPDIR] : [],
+    cwd: cwd ? path.resolve(cwd) : null,
+    home: HOME,
+    denied: [realDir(APP_DIR), realDir(CACHE_DIR), path.join(HOME, '.local', 'share', 'keyrings')].filter((d) => fs.existsSync(d)),
+    // the bundled Node and the managed CLIs may sit inside a hidden folder: programs only, read-only
+    readOnly: [...runtimeDirs(ENGINE_DIR), path.join(APP_DIR, 'tools')],
+    runtimeDir: userRuntimeDir(),
+    exists: fs.existsSync,
+  });
+}
+
+let bwrapWorks = null;
+/** bubblewrap is installed and allowed to create its namespaces here (Ubuntu 24.04 AppArmor, containers…). */
+function bwrapUsable() {
+  if (bwrapWorks !== null) return bwrapWorks;
+  if (!which('bwrap')) return (bwrapWorks = false);
+  const r = spawnSync('bwrap', [...bwrapProfile(null), '--', 'true'], { stdio: 'ignore', timeout: 5000 });
+  return (bwrapWorks = r.status === 0);
+}
+
+/** Which isolation project scripts get on this machine: sandbox | basic | none. */
+export function isolationLevel() {
+  if (process.env.BID_NO_SANDBOX === '1') return 'none';
+  const os = platformOf();
+  if (os === 'darwin') return which('sandbox-exec') ? 'sandbox' : 'none';
+  if (os === 'linux') return bwrapUsable() ? 'sandbox' : 'basic';
+  return 'basic'; // Windows: the allowlisted environment (scriptEnv); no secrets are in it
+}
+
+/** Wraps a command for a project script: [cmd, args, level]. `cwd` is the folder the script may write. */
+export function isolate(cmd, args, { cwd } = {}) {
+  const level = isolationLevel();
+  if (level !== 'sandbox') return [cmd, args, level];
+  if (platformOf() === 'linux') return ['bwrap', [...bwrapProfile(cwd || process.cwd()), '--', cmd, ...args], 'sandbox'];
   return ['sandbox-exec', ['-p', sandboxProfile(), cmd, ...args], 'sandbox'];
 }

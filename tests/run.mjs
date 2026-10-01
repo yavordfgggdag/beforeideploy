@@ -848,7 +848,10 @@ t('WP01 скриптове: build не вижда тайните на engine-а;
     const out = JSON.parse(fs.readFileSync(path.join(dir, 'probe.json'), 'utf8'));
     for (const k of Object.keys(leaky)) assert(out.env[k] === undefined, k + ' must not reach project scripts');
     assert(out.env.CI === '1' && out.env.PATH && out.env.HOME, 'the allowlisted basics are there');
-    assert(r.data.isolation === (process.platform === 'darwin' ? 'sandbox' : 'none'), 'isolation reported: ' + r.data.isolation);
+    // macOS sandbox-exec; Linux bubblewrap when it can run here, else "basic"; Windows "basic"
+    const levels = process.env.BID_NO_SANDBOX === '1' ? ['none'] : process.platform === 'darwin' ? ['sandbox'] : process.platform === 'linux' ? ['sandbox', 'basic'] : ['basic'];
+    assert(levels.includes(r.data.isolation), 'isolation reported: ' + r.data.isolation);
+    if (process.platform === 'linux' && r.data.isolation === 'sandbox') assert(out.appDir !== 'readable', 'bubblewrap hides the engine folder: ' + out.appDir);
     if (mac) {
       assert(out.appDir !== 'readable', 'the sandbox hides the engine folder: ' + out.appDir);
       assert(!String(out.keychain).includes('probe-secret-value'), 'the sandbox blocks the Keychain: ' + out.keychain);

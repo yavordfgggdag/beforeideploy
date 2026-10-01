@@ -99,7 +99,8 @@ WantedBy=timers.target
  * process group. `exists` decides which optional folders are bound.
  */
 export function bwrapArgs({ cwd, home, denied = [], writable = [], readOnly = [], runtimeDir, exists = () => true }) {
-  const a = ['--ro-bind', '/', '/', '--dev', '/dev', '--proc', '/proc', '--tmpfs', '/tmp', '--die-with-parent'];
+  // /tmp stays the real one (tools and tests pass files through it); the engine keeps nothing there
+  const a = ['--ro-bind', '/', '/', '--dev', '/dev', '--unshare-pid', '--proc', '/proc', '--bind', '/tmp', '/tmp', '--die-with-parent'];
   const caches = [`${home}/.npm`, `${home}/.cache`, `${home}/.yarn`, `${home}/.pnpm-store`, `${home}/.local/share/pnpm`, `${home}/.bun`];
   for (const d of [...caches, ...writable]) if (d && exists(d)) a.push('--bind', d, d);
   for (const d of denied) if (d) a.push('--tmpfs', d);
