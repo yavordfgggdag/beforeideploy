@@ -346,9 +346,12 @@ export async function testCredits({db,t,assert,rejects,as}) {
   await db.query("insert into usage_nudges(user_id,period_ref,threshold) values($1,'test','75')",[id]);
   await db.query("insert into domain_orders(user_id,domain,year_ref) values($1,'example.test','2026')",[id]);
   await db.query("insert into netlify_allocations(user_id,period_ref) values($1,'test')",[id]);
+  await db.query("insert into credit_disputes(user_id,adjustment_ref,payment_ref,kind,status) values($1,'sec-adj','security-paid','warning','closed')",[id]);
+  await db.query("insert into admin_notifications(kind,user_id,ref) values('security',$1,'sec')",[id]);
+  assert((await as('authenticated',id,q=>q('select * from admin_notifications'))).rows.length===0,'admin notifications are service-only');
   await db.query("insert into credit_periods(transaction_ref,user_id,tier,interval,monthly_credits,validity_months,starts_at,ends_at) values('security-paid',$1,'high','year',300000,3,$2,$3)",[id,now,later(365)]);
   await rpc('bid_refund',{p_user:id,p_ref:'security-paid',p_adjustment:'security-refund',p_share:0.1,p_now:now});
-  for(const table of ['credit_refunds','credit_periods','credit_accounts','credit_grants','credit_holds','credit_allocations','sites','usage_windows','usage_events','usage_daily','usage_nudges','domain_orders','netlify_allocations']) {
+  for(const table of ['credit_disputes','credit_refunds','credit_periods','credit_accounts','credit_grants','credit_holds','credit_allocations','sites','usage_windows','usage_events','usage_daily','usage_nudges','domain_orders','netlify_allocations']) {
    const mine=await as('authenticated',id,q=>q(`select * from ${table}`)); assert(mine.rows.length>0 && mine.rows.every(r=>r.user_id===id),`${table} own read`);
    assert((await as('anon',null,q=>q(`select * from ${table}`))).rows.length===0,`${table} anon invisible`);
    assert((await as('authenticated',other,q=>q(`select * from ${table} where user_id=$1`,[id]))).rows.length===0,`${table} other tenant invisible`);
@@ -466,5 +469,35 @@ export async function testCredits({db,t,assert,rejects,as}) {
   for(let i=0;i<3;i++) await rpc('bid_refund',{p_user:id,p_ref:'b7-txn',p_adjustment:'b7-adj',p_share:0.5,p_now:now});
   assert((await db.query("select count(*)::int n from credit_ledger where user_id=$1 and reason='payment_refund'",[id])).rows[0].n===1,'one payment_refund marker');
   assert(await balance(id)===150000,'refunded once');
+ });
+
+ await t('B5 chargebacks: suspend entitlements, spent credits owed, admin notified; reverse restores',async()=>{
+  const debtOf=async id=>Number((await db.query('select debt from credit_accounts where user_id=$1',[id])).rows[0].debt);
+  const notes=async(id,kind)=>(await db.query('select * from admin_notifications where user_id=$1 and kind=$2',[id,kind])).rows;
+  const id=await user('high'); await grant(id,300000,'cb-txn','high');
+  await db.query("insert into billing_events(id,type,user_id,ref,payload) values('evt-cb-txn','transaction.completed',$1,'cb-txn',$2)",[id,JSON.stringify({data:{id:'cb-txn',details:{totals:{total:'2999'}}}})]);
+  await db.query("insert into bid_projects(user_id,key,name) values($1,'cb-site','Site')",[id]);
+  assert((await rpc('bid_site_change',{p_user:id,p_project:'cb-site',p_active:true,p_now:now})).ok,'site active');
+  assert((await charge(id,99000,'cb-spend',now,false)).ok,'spent 100k with the site day');
+  const warn=await rpc('bid_v12_apply_adjustment',{p_user:id,p_adjustment:{id:'cbw-1',transaction_id:'cb-txn',action:'chargeback_warning',status:'approved',totals:{total:'2999'}},p_now:now});
+  assert(warn.ok && (await notes(id,'chargeback_warning')).length===1,'warning notifies the owner');
+  assert((await charge(id,100,'cb-after-warning',now,false)).ok,'a warning alone does not suspend');
+  const cb={id:'cb-1',transaction_id:'cb-txn',action:'chargeback',status:'approved',totals:{total:'2999'},currency_code:'EUR'};
+  const r=await rpc('bid_v12_apply_adjustment',{p_user:id,p_adjustment:cb,p_now:later(0,1)});
+  assert(r.ok && r.suspended && r.taken===199900 && r.debt===100100,'remaining credits taken, spent part owed');
+  assert(await debtOf(id)===100100 && await balance(id)===-100100,'debt recorded');
+  assert((await charge(id,100,'cb-suspended-op',later(0,2),false)).code==='account_suspended','no new paid work while disputed');
+  const s=await summary(id,later(0,2)); assert(s.sites.active===0 && s.sites.items[0].pausedReason==='suspended','sites paused (never deleted)');
+  assert((await notes(id,'chargeback')).length===1 && (await notes(id,'chargeback'))[0].payload.debt===100100,'admin notification row');
+  await rpc('bid_v12_apply_adjustment',{p_user:id,p_adjustment:cb,p_now:later(0,3)});
+  await rpc('bid_v12_payment_refunds',{p_user:id,p_ref:'cb-txn',p_now:later(0,3)});
+  assert(await debtOf(id)===100100 && (await notes(id,'chargeback')).length===1,'replays are idempotent');
+  const rev={id:'cbr-1',transaction_id:'cb-txn',action:'chargeback_reverse',status:'approved',totals:{total:'2999'}};
+  const back=await rpc('bid_v12_apply_adjustment',{p_user:id,p_adjustment:rev,p_now:later(1)});
+  assert(back.ok && back.restored===300000 && back.suspended===false,'reverse restores the removed credits');
+  assert(await debtOf(id)===0 && await balance(id)===199900,'debt repaid, balance as before the chargeback');
+  assert((await charge(id,100,'cb-after-reverse',later(1),false)).ok,'entitlements restored');
+  await rpc('bid_v12_apply_adjustment',{p_user:id,p_adjustment:rev,p_now:later(1,1)});
+  assert(await balance(id)===199800 && (await notes(id,'chargeback_reverse')).length===1,'reverse applied once');
  });
 }

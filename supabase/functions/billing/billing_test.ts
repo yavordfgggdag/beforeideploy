@@ -547,3 +547,17 @@ Deno.test("billing: past_due keeps the plan 7 days from the first failed payment
   assert.equal(db.rows("subscriptions")[0].status, "expired");
   assert.equal(db.rows("profiles")[0].plan, "free", "7 days after the failure, not at period_end + 3 days");
 });
+
+Deno.test("billing: a chargeback takes back the transaction's credits once and notifies the owner (B5)", async () => {
+  const { db, handle } = world();
+  await webhook(handle, { event_id: "evt_cb_t", event_type: "transaction.completed", data: { id: "txn_cb", custom_data: { user_id: USER.id }, details: { totals: { total: "499" } }, items: [{ price: { id: "pri_pack" } }] } });
+  const cb = { event_id: "evt_cb", event_type: "adjustment.created", data: { id: "adj_cb", action: "chargeback", status: "approved", transaction_id: "txn_cb", totals: { total: "499" } } };
+  const r = await (await webhook(handle, cb)).json();
+  assert.equal(r.adjustment, "chargeback");
+  assert.equal(r.receipts[0].suspended, true);
+  assert.equal(sum(db.rows("credit_ledger"), "topup"), 0, "pack credits taken back");
+  await webhook(handle, { ...cb, event_id: "evt_cb_again" });
+  assert.equal(db.rows("admin_notifications").filter((n) => n.kind === "chargeback").length, 1, "one notification for the owner");
+  const warn = await (await webhook(handle, { event_id: "evt_cbw", event_type: "adjustment.created", data: { id: "adj_w", action: "chargeback_warning", status: "approved", transaction_id: "txn_cb" } })).json();
+  assert.equal(warn.receipts[0].dispute, "chargeback_warning");
+});

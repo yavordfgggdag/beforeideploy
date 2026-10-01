@@ -11,7 +11,9 @@ import catalogData from "../_shared/plans-catalog.json" with { type: "json" };
 //    subscription.*       → upsert `subscriptions`, set `profiles.plan` (active/trialing/past_due → tier, else free)
 //    transaction.completed → plan price: monthly grant (expires the unused rest of the previous grant);
 //                            pack price: top-up tokens. Idempotent by transaction id as well.
-//    adjustment.* (approved refund) → takes back what is left of that transaction's grant.
+//    adjustment.* (approved refund) → per line item: takes back what is left of that line's lots, spent → debt (B2).
+//    adjustment.* chargeback / chargeback_warning / chargeback_reverse → suspend + debt + owner notification,
+//                          notification only, restore (B5).
 // 2. The engine with the user's JWT, `{ "action": … }`:
 //    catalog  → plans (price, tokens), packs, currency, trial offer
 //    status   → plan, subscription, balances by bucket, renewal date, whether the trial is still available;
@@ -106,6 +108,7 @@ function packForPrice(catalog: Catalog, priceId: string | undefined) {
 
 
 const ACTIVE = ["active", "trialing", "past_due"];
+const CHARGEBACK_ACTIONS = ["chargeback", "chargeback_warning", "chargeback_reverse"];
 
 // ---------------------------------------------------------------- webhook
 
@@ -241,6 +244,15 @@ async function handleWebhook(req: Request, deps: BillingDeps): Promise<Response>
         await creditRpc(db,"bid_v12_payment_refunds",{p_user:userId,p_ref:txn,p_now:now.toISOString()});
         result = duplicate && !granted.length ? { duplicateTransaction: txn } : { transaction: txn, granted };
       }
+    } else if ((type === "adjustment.created" || type === "adjustment.updated") && CHARGEBACK_ACTIONS.includes(String(d.action))) {
+      // B5: chargeback → credits taken back (spent → debt), paid entitlements suspended, owner notified;
+      // chargeback_warning → owner notified; chargeback_reverse → credits and entitlements restored.
+      const txn = String(d.transaction_id ?? "");
+      const receipts: Row[] = [];
+      for (const owner of await adjustmentOwners(db, catalog, txn)) {
+        receipts.push(await creditRpc(db,"bid_v12_apply_adjustment",{p_user:owner,p_adjustment:{...d,id:String(d.id ?? txn)},p_now:now.toISOString()}));
+      }
+      result = { adjustment: d.action, transaction: txn, receipts };
     } else if ((type === "adjustment.created" || type === "adjustment.updated") && d.action === "refund" && d.status === "approved") {
       // A refund is applied per Paddle line item (plan vs pack) by bid_v12_apply_adjustment (B2): it takes
       // what is left of the matching lots and records spent credits as debt. Without line items the

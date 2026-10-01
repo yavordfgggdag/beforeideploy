@@ -557,6 +557,24 @@ create table if not exists public.netlify_allocations (
   included bigint not null default 3000, used bigint not null default 0, overage_credits bigint not null default 0,
   primary key(user_id,period_ref)
 );
+-- B5: Paddle chargebacks. An open chargeback suspends paid entitlements (no new holds, no active sites);
+-- chargeback_reverse restores them. Warnings only notify the owner.
+create table if not exists public.credit_disputes (
+  user_id uuid not null references public.profiles(user_id) on delete cascade,
+  adjustment_ref text not null, payment_ref text not null,
+  kind text not null check(kind in ('warning','chargeback')),
+  status text not null default 'open' check(status in ('open','closed','reversed')),
+  taken bigint not null default 0, debt bigint not null default 0,
+  created_at timestamptz not null default now(), resolved_at timestamptz,
+  primary key(user_id,adjustment_ref)
+);
+-- Rows for the owner/admin to act on (chargebacks, reconciliation warnings). Service role only.
+create table if not exists public.admin_notifications (
+  id bigserial primary key, kind text not null, user_id uuid references public.profiles(user_id) on delete cascade,
+  ref text not null, payload jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(), resolved_at timestamptz, unique(kind,ref)
+);
+alter table public.admin_notifications enable row level security;
 alter table public.subscriptions add column if not exists window_anchor timestamptz;
 -- B6: time of the first failed renewal payment; past_due entitlements last 7 days from it.
 alter table public.subscriptions add column if not exists past_due_since timestamptz;
@@ -567,7 +585,7 @@ alter table public.credit_ledger add column if not exists expires_at timestamptz
 create index if not exists credit_ledger_operation on public.credit_ledger(user_id,operation_id) where operation_id is not null;
 
 do $$ declare t text; begin
-  foreach t in array array['credit_accounts','credit_grants','credit_holds','credit_allocations','sites','usage_windows','usage_events','usage_daily','usage_nudges','domain_orders','netlify_allocations'] loop
+  foreach t in array array['credit_accounts','credit_grants','credit_holds','credit_allocations','sites','usage_windows','usage_events','usage_daily','usage_nudges','domain_orders','netlify_allocations','credit_disputes'] loop
     execute format('alter table public.%I enable row level security',t);
     execute format('drop policy if exists own_read on public.%I',t);
     execute format('create policy own_read on public.%I for select to authenticated using(auth.uid()=user_id)',t);
@@ -703,6 +721,11 @@ end $$;
 
 -- Current tier drives window caps; cancelled users retain their last tier's limits while spending a
 -- remaining grant. Free accounts with only packs use Flash windows; buying packs never raises them.
+create or replace function public.bid_v12_suspended(p_user uuid) returns boolean
+language sql stable security definer set search_path=public,pg_temp as $$
+ select exists(select 1 from credit_disputes where user_id=p_user and kind='chargeback' and status='open');
+$$;
+
 create or replace function public.bid_v12_entitlement(p_user uuid,p_now timestamptz default now()) returns jsonb
 language plpgsql security definer set search_path=public,pg_temp as $$
 declare tier text; conf jsonb; monthly bigint; site_limit integer; anchor timestamptz; trial_end timestamptz;
@@ -711,7 +734,7 @@ begin
  select period_start,period_end into anchor,trial_end from subscriptions where user_id=p_user and provider='trial' and status='trial' and period_end>p_now limit 1;
  if found then
   select coalesce((value#>>'{trial,tokens}')::bigint,50000) into monthly from settings where key='billing.catalog';
-  return jsonb_build_object('plan',tier,'monthly',monthly,'siteLimit',1,'anchor',anchor,'trial',true);
+  return jsonb_build_object('plan',tier,'monthly',monthly,'siteLimit',case when bid_v12_suspended(p_user) then 0 else 1 end,'anchor',anchor,'trial',true,'suspended',bid_v12_suspended(p_user));
  end if;
  select coalesce(window_anchor,(raw->>'started_at')::timestamptz,period_start) into anchor from subscriptions where user_id=p_user and provider='paddle'
  order by (status in ('active','past_due')) desc,updated_at desc limit 1;
@@ -724,7 +747,8 @@ begin
  select value->tier into conf from settings where key='plans';
  monthly:=coalesce((conf->>'tokens')::bigint,100000);
  site_limit:=coalesce(site_limit,(conf->>'max_active_sites')::integer,0);
- return jsonb_build_object('plan',tier,'monthly',monthly,'siteLimit',site_limit,'anchor',anchor,'trial',false);
+ if bid_v12_suspended(p_user) then site_limit:=0; end if;
+ return jsonb_build_object('plan',tier,'monthly',monthly,'siteLimit',site_limit,'anchor',anchor,'trial',false,'suspended',bid_v12_suspended(p_user));
 end $$;
 
 create or replace function public.bid_v12_windows(p_user uuid,p_now timestamptz default now(),p_open boolean default false) returns jsonb
@@ -801,6 +825,7 @@ begin
   if h.action<>p_action or h.credits<>p_credits or h.site_id is distinct from p_site then return jsonb_build_object('ok',false,'code','operation_conflict'); end if;
   return jsonb_build_object('ok',h.status='held','duplicate',true,'holdId',h.id,'code',case when h.status in ('released','orphaned') then 'operation_released' end);
  end if;
+ if p_credits>0 and bid_v12_suspended(p_user) then return jsonb_build_object('ok',false,'code','account_suspended'); end if;
  if p_site is not null and not exists(select 1 from sites where id=p_site and user_id=p_user and (state='active' or p_action='deploy.rollback')) then return jsonb_build_object('ok',false,'code','site_paused'); end if;
  if p_ai_usage is not null and not exists(select 1 from ai_usage where id=p_ai_usage and user_id=p_user) then raise exception 'invalid AI operation'; end if;
  select coalesce(sum(delta),0) into available from credit_ledger where user_id=p_user;
@@ -1012,6 +1037,7 @@ declare txn text:=p_adjustment->>'transaction_id'; adj text:=p_adjustment->>'id'
 begin
  perform bid_v12_lock(p_user);
  if txn is null or adj is null then raise exception 'invalid adjustment'; end if;
+ if p_adjustment->>'action' in ('chargeback','chargeback_warning','chargeback_reverse') then return bid_v12_chargeback(p_user,p_adjustment,p_now); end if;
  if p_adjustment->>'action' is distinct from 'refund' or p_adjustment->>'status' is distinct from 'approved' then return jsonb_build_object('ok',true,'ignored',true); end if;
  if exists(select 1 from credit_refunds where user_id=p_user and payment_ref=txn and (adjustment_ref=adj or starts_with(adjustment_ref,adj||'#'))) then
   for stored in select * from credit_refunds where user_id=p_user and payment_ref=txn and (adjustment_ref=adj or starts_with(adjustment_ref,adj||'#')) order by adjustment_ref loop
@@ -1050,6 +1076,46 @@ begin
  return jsonb_build_object('ok',true,'taken',r->'taken','debt',r->'debt','share',v_share,'lines',jsonb_build_array(jsonb_build_object('scope','all','share',v_share,'taken',r->'taken','debt',r->'debt')));
 end $$;
 
+-- B5: chargeback → the transaction's credits are taken back like a full/partial refund (spent → owed),
+-- paid entitlements are suspended and the owner is notified. chargeback_reverse restores the removed credits
+-- (a 12-month lot that first repays the debt the chargeback created) and lifts the suspension.
+create or replace function public.bid_v12_chargeback(p_user uuid,p_adjustment jsonb,p_now timestamptz default now()) returns jsonb
+language plpgsql security definer set search_path=public,pg_temp as $$
+declare txn text:=p_adjustment->>'transaction_id'; adj text:=p_adjustment->>'id'; act text:=p_adjustment->>'action'; d credit_disputes; r jsonb; restored bigint:=0; n integer:=0;
+begin
+ perform bid_v12_refresh(p_user,p_now);
+ if txn is null or adj is null then raise exception 'invalid adjustment'; end if;
+ if coalesce(p_adjustment->>'status','approved') in ('rejected','pending_approval') then return jsonb_build_object('ok',true,'ignored',true); end if;
+ if act='chargeback_warning' then
+  insert into credit_disputes(user_id,adjustment_ref,payment_ref,kind,created_at) values(p_user,adj,txn,'warning',p_now) on conflict do nothing;
+  insert into admin_notifications(kind,user_id,ref,payload,created_at) values('chargeback_warning',p_user,adj,jsonb_build_object('transaction',txn,'amount',p_adjustment#>'{totals,total}','currency',p_adjustment->>'currency_code'),p_now) on conflict do nothing;
+  return jsonb_build_object('ok',true,'dispute','warning');
+ end if;
+ if act='chargeback' then
+  if exists(select 1 from credit_disputes where user_id=p_user and adjustment_ref=adj) then return jsonb_build_object('ok',true,'duplicate',true); end if;
+  insert into credit_disputes(user_id,adjustment_ref,payment_ref,kind,created_at) values(p_user,adj,txn,'chargeback',p_now) returning * into d;
+  update credit_disputes set status='closed',resolved_at=p_now where user_id=p_user and payment_ref=txn and kind='warning' and status='open';
+  r:=bid_v12_apply_adjustment(p_user,p_adjustment||jsonb_build_object('action','refund','status','approved'),p_now);
+  update credit_disputes set taken=(r->>'taken')::bigint,debt=coalesce((r->>'debt')::bigint,0) where user_id=p_user and adjustment_ref=adj;
+  insert into admin_notifications(kind,user_id,ref,payload,created_at) values('chargeback',p_user,adj,jsonb_build_object('transaction',txn,'amount',p_adjustment#>'{totals,total}','currency',p_adjustment->>'currency_code','taken',r->'taken','debt',r->'debt'),p_now) on conflict do nothing;
+  perform bid_enforce_sites(p_user,p_now);
+  return jsonb_build_object('ok',true,'dispute','chargeback','taken',r->'taken','debt',r->'debt','suspended',true);
+ end if;
+ -- chargeback_reverse: the bank decided for the merchant; every open chargeback of this payment is undone
+ if exists(select 1 from admin_notifications where kind='chargeback_reverse' and ref=adj) then return jsonb_build_object('ok',true,'duplicate',true); end if;
+ for d in select * from credit_disputes where user_id=p_user and payment_ref=txn and kind='chargeback' and status='open' loop
+  if d.taken+d.debt>0 then
+   perform bid_grant(p_user,d.taken+d.debt,'admin_grant','chargeback_reverse:'||d.adjustment_ref,null,p_now,null,p_now);
+  end if;
+  delete from credit_refunds where user_id=p_user and payment_ref=txn and (adjustment_ref=d.adjustment_ref or starts_with(adjustment_ref,d.adjustment_ref||'#'));
+  update credit_disputes set status='reversed',resolved_at=p_now where user_id=p_user and adjustment_ref=d.adjustment_ref;
+  restored:=restored+d.taken+d.debt; n:=n+1;
+ end loop;
+ update credit_periods set refund_share=least(1,coalesce((select sum(share) from credit_refunds where user_id=p_user and payment_ref=txn and scope in ('all','plan')),0)) where user_id=p_user and transaction_ref=txn;
+ insert into admin_notifications(kind,user_id,ref,payload,created_at) values('chargeback_reverse',p_user,adj,jsonb_build_object('transaction',txn,'restored',restored,'disputes',n),p_now) on conflict do nothing;
+ return jsonb_build_object('ok',true,'dispute','reversed','restored',restored,'suspended',bid_v12_suspended(p_user));
+end $$;
+
 -- Verified webhook payloads may arrive out of order; recover adjustments once the owner is known.
 create or replace function public.bid_v12_payment_refunds(p_user uuid,p_ref text,p_now timestamptz default now()) returns jsonb
 language plpgsql security definer set search_path=public,pg_temp as $$
@@ -1057,8 +1123,9 @@ declare r record;
 begin
  perform bid_v12_lock(p_user);
  if exists(select 1 from billing_events where user_id=p_user and type='transaction.completed' and ref=p_ref) then
-  for r in select distinct on (payload#>>'{data,id}') payload from billing_events where type in ('adjustment.created','adjustment.updated')
-   and payload#>>'{data,transaction_id}'=p_ref and payload#>>'{data,action}'='refund' and payload#>>'{data,status}'='approved' order by payload#>>'{data,id}',processed_at desc loop
+  for r in select x.payload from (select distinct on (payload#>>'{data,id}') payload,processed_at from billing_events where type in ('adjustment.created','adjustment.updated')
+   and payload#>>'{data,transaction_id}'=p_ref and payload#>>'{data,action}' in ('refund','chargeback','chargeback_warning','chargeback_reverse')
+   order by payload#>>'{data,id}',processed_at desc) x order by coalesce(x.payload->>'occurred_at',x.payload#>>'{data,created_at}'),x.processed_at loop
    perform bid_v12_apply_adjustment(p_user,r.payload->'data',p_now);
   end loop;
  end if;
@@ -1093,7 +1160,7 @@ begin
   rank:=rank+1;
   if r.migration_grace_until>p_now then continue; end if;
   if rank>lim or debt_at+interval '3 days'<=p_now then
-   update sites set state='paused',paused_at=p_now,paused_reason=case when debt_at+interval '3 days'<=p_now then 'no_credits' else 'plan_limit' end where id=r.id;
+   update sites set state='paused',paused_at=p_now,paused_reason=case when coalesce((ent->>'suspended')::boolean,false) then 'suspended' when debt_at+interval '3 days'<=p_now then 'no_credits' else 'plan_limit' end where id=r.id;
    n:=n+1;
   end if;
  end loop;

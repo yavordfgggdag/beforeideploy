@@ -109,6 +109,13 @@ export function fakeCreditRpc(db: FakeDb, fn: string, a: Row): Row | null {
     return {ok:true,granted:a.p_credits,expiresAt:expires};
   }
   if(fn==="bid_v12_apply_adjustment") { // whole-transaction share only; line items are proved against SQL
+    if(["chargeback","chargeback_warning","chargeback_reverse"].includes(a.p_adjustment.action)) { // suspension/restore: SQL tests
+      const d=a.p_adjustment, kind=d.action;
+      if(rows("admin_notifications").some(n=>n.kind===kind&&n.ref===d.id))return {ok:true,duplicate:true};
+      rows("admin_notifications").push({kind,user_id:user,ref:d.id,payload:{transaction:d.transaction_id},created_at:iso});
+      if(kind!=="chargeback")return {ok:true,dispute:kind};
+      return {...fakeCreditRpc(db,"bid_v12_apply_adjustment",{...a,p_adjustment:{...d,action:"refund",status:"approved"}}),dispute:"chargeback",suspended:true};
+    }
     const d=a.p_adjustment, paid=rows("billing_events").find(e=>e.type==="transaction.completed"&&e.ref===d.transaction_id)?.payload?.data;
     const total=Number(paid?.details?.totals?.total ?? paid?.totals?.total ?? 0), refunded=Number(d.totals?.total ?? 0);
     const share=refunded>0&&total>0?Math.min(1,refunded/total):1;
