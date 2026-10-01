@@ -17,7 +17,7 @@ struct IssuesCard: View {
                         Text(L("issues.blocking", count: c.blocker))
                             .font(Typo.font(.caption, weight: .bold)).foregroundColor(.white)
                             .padding(.horizontal, 7).padding(.vertical, 2)
-                            .background(Capsule().fill(Theme.blocked))
+                            .background(Capsule().fill(Tone.danger.fill))
                     }
                 }
                 Spacer()

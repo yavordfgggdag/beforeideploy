@@ -1215,3 +1215,5 @@
 "common.loading" = "Loading…";
 "common.ready" = "Ready";
 "common.blocked" = "Blocked";
+"field.apiKey" = "API key";
+"field.apiSecret" = "API secret";

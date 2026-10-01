@@ -76,6 +76,8 @@ struct SheetScaffold<Content: View, Actions: View>: View {
 struct Segmented<T: Hashable>: View {
     let options: [(String, T)]
     @Binding var selection: T
+    var icons: [T: String] = [:]
+    var badges: [T: String] = [:]
     var body: some View {
         HStack(spacing: 4) {
             ForEach(options.indices, id: \.self) { i in
@@ -83,8 +85,12 @@ struct Segmented<T: Hashable>: View {
                 Button {
                     withAnimation(Motion.quick) { selection = opt.1 }
                 } label: {
-                    Text(opt.0)
-                        .font(.system(size: 12.5, weight: .semibold))
+                    HStack(spacing: Space.xs) {
+                        if let icon = icons[opt.1] { Image(systemName: icon).accessibilityHidden(true) }
+                        Text(opt.0)
+                        if let badge = badges[opt.1] { Badge(text: badge, tone: selection == opt.1 ? .accent : .neutral, size: .sm) }
+                    }
+                        .font(Typo.font(.body, weight: .semibold))
                         .foregroundColor(selection == opt.1 ? Theme.text : Theme.secondary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 7)

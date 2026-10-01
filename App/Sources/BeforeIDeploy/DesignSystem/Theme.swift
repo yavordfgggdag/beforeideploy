@@ -167,15 +167,7 @@ struct StatusRing: View {
 struct SectionLabel: View {
     let text: String
     var icon: String? = nil
-    var body: some View {
-        HStack(spacing: 6) {
-            if let icon { Image(systemName: icon).font(.system(size: 10, weight: .semibold)) }
-            Text(text.uppercased())
-                .font(.system(size: 10.5, weight: .semibold))
-                .tracking(0.9)
-        }
-        .foregroundColor(Theme.tertiary)
-    }
+    var body: some View { SectionHeader(title: text, icon: icon) }
 }
 
 struct Chip: View {

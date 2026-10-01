@@ -7,12 +7,7 @@ struct PanelHeader: View {
     var trailing: String? = nil
     var body: some View {
         HStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(Typo.font(.callout, weight: .semibold))
-                .foregroundColor(Theme.accent)
-            Text(title)
-                .font(Typo.font(.subhead, weight: .bold))
-                .foregroundColor(Theme.text)
+            SectionHeader(title: title, icon: icon)
             Spacer()
             if let trailing {
                 Text(trailing).font(Typo.font(.callout)).foregroundColor(Theme.secondary)

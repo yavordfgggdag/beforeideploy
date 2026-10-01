@@ -244,21 +244,9 @@ struct UsageBar: View {
     let total: Int
 
     var body: some View {
-        GeometryReader { geo in
-            let t = max(1, Double(total))
-            let w = geo.size.width
-            ZStack(alignment: .leading) {
-                Capsule().fill(Theme.hairline)
-                HStack(spacing: 0) {
-                    Rectangle().fill(Theme.accent).frame(width: w * min(1, Double(used) / t))
-                    Rectangle().fill(Theme.warn).frame(width: w * min(1, Double(reserved) / t))
-                    Spacer(minLength: 0)
-                }
-                .clipShape(Capsule())
-            }
-        }
-        .frame(height: 8)
-        .accessibilityLabel(L("usage.barLabel", Fmt.tokens(used), Fmt.tokens(reserved), Fmt.tokens(total)))
+        Meter(value: Double(used + reserved), total: Double(total), size: 8,
+              label: L("usage.barLabel", Fmt.tokens(used), Fmt.tokens(reserved), Fmt.tokens(total)),
+              segments: [.init(value: Double(used), color: Theme.accent), .init(value: Double(reserved), color: Theme.warn)])
     }
 }
 

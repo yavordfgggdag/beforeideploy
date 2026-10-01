@@ -727,12 +727,7 @@ struct PushoverSheet: View {
                     Text(L("pushover.userKey")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
                     BIDTextField(placeholder: "uQiRzpo4DXghDmr9QzzfQu27cmVRsG", text: $user, mono: true)
                     Text(L("pushover.token")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.text)
-                    SecureField("azGDORePK8gMaC0QOYAMyEEuzJnyUi", text: $token)
-                        .textFieldStyle(.plain)
-                        .font(Typo.font(.body, design: .monospaced))
-                        .padding(.horizontal, 12).padding(.vertical, 9)
-                        .background(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).fill(Theme.bg))
-                        .overlay(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
+                    BIDField(placeholder: L("pushover.token"), text: $token, kind: .secure)
                 }
                 Text(L("pushover.keyNote")).font(Typo.font(.callout)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
             }

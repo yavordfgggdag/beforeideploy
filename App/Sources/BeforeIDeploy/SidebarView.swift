@@ -233,7 +233,7 @@ struct ProjectRow: View {
             }
             Spacer(minLength: 4)
             if project.lastStatus == "blocked" {
-                PulseDot(color: Theme.color(for: project.lastStatus), size: 7).frame(width: 12, height: 12)
+                StatusDot(status: project.lastStatus, size: 7).frame(width: 12, height: 12)
             } else {
                 StatusDot(status: project.lastStatus, size: 7)
             }
@@ -292,7 +292,7 @@ struct NavRow: View {
                         .foregroundColor(.white)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(Capsule().fill(Theme.accent))
+                        .background(Capsule().fill(Theme.accentFill))
                 }
             }
             .padding(.horizontal, 10)

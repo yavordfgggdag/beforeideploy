@@ -138,7 +138,7 @@ struct MonitorCard: View {
                     Button(L("monitor.webhookTest")) { model.testMonitorWebhook() }.bidButton(.ghost, compact: true).disabled(model.busy.contains("monitor-webhook"))
                     Button(L("monitor.webhookRemove")) { model.setMonitorWebhook(nil) }.bidButton(.ghost, compact: true).disabled(model.busy.contains("monitor-webhook"))
                 } else {
-                    TextField(L("monitor.webhookPlaceholder"), text: $webhookDraft).textFieldStyle(.roundedBorder).font(Typo.font(.callout)).frame(maxWidth: 360)
+                    BIDField(placeholder: L("monitor.webhookPlaceholder"), text: $webhookDraft).font(Typo.font(.callout)).frame(maxWidth: 360)
                         .onSubmit { model.setMonitorWebhook(webhookDraft) }
                     Button(L("common.save")) { model.setMonitorWebhook(webhookDraft) }.bidButton(.secondary, compact: true).disabled(webhookDraft.isEmpty || model.busy.contains("monitor-webhook"))
                 }
@@ -254,7 +254,7 @@ struct ClientSheet: View {
         SheetScaffold(icon: "person.crop.rectangle", title: L("client.title"), subtitle: model.status?.project.name ?? "", width: 420) {
             VStack(alignment: .leading, spacing: 8) {
                 Text(L("client.hint")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
-                TextField(L("client.placeholder"), text: $name).textFieldStyle(.roundedBorder)
+                BIDField(placeholder: L("client.placeholder"), text: $name)
                     .onAppear { name = model.status?.project.client ?? "" }
             }
         } actions: {

@@ -1215,3 +1215,5 @@
 "common.loading" = "Зареждане…";
 "common.ready" = "Готово";
 "common.blocked" = "Блокирано";
+"field.apiKey" = "Ключ за API";
+"field.apiSecret" = "Таен ключ за API";

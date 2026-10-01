@@ -171,23 +171,10 @@ struct AuthField: View {
     var secure = false
 
     var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: icon).foregroundColor(Theme.tertiary).frame(width: 18)
-            Group {
-                if secure {
-                    SecureField(placeholder, text: $text)
-                } else {
-                    TextField(placeholder, text: $text)
-                }
-            }
-            .textFieldStyle(.plain)
-            .font(Typo.font(.subhead))
-            .foregroundColor(Theme.text)
+        HStack(spacing: Space.s) {
+            Image(systemName: icon).foregroundColor(Theme.secondary).frame(width: 18).accessibilityHidden(true)
+            BIDField(placeholder: placeholder, text: $text, kind: secure ? .secure : .text)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
-        .background(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).fill(Theme.panel))
-        .overlay(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
     }
 }
 
@@ -376,11 +363,7 @@ struct AccountBadge: View {
                         .font(Typo.font(.callout, weight: .bold)).foregroundColor(.white)
                     // credits ring: what is left of this month's plan tokens
                     if let f = a?.credits?.fraction {
-                        Circle().stroke(Theme.elevated, lineWidth: 2.5).frame(width: 32, height: 32)
-                        Circle().trim(from: 0, to: max(0.02, f))
-                            .stroke(f < 0.1 ? Theme.warn : Theme.ready, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
-                            .rotationEffect(.degrees(-90))
-                            .frame(width: 32, height: 32)
+                    CreditRing(fraction: f, size: 32)
                     }
                 }
                 .frame(width: 32, height: 32)

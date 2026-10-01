@@ -428,7 +428,7 @@ struct NodeMissingView: View {
     }
 }
 
-/// The app mark: graphite squircle with an amber launch arc.
+/// The app mark: a paperplane on a blue rounded tile.
 struct AppGlyph: View {
     var size: CGFloat = 28
     var body: some View {

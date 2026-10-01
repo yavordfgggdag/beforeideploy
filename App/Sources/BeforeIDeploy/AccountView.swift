@@ -69,10 +69,10 @@ struct AccountView: View {
                 }
                 .card()
             }
-            .padding(.horizontal, 32)
-            .padding(.top, 40)
-            .padding(.bottom, 32)
-            .frame(maxWidth: 1000)
+            .padding(.horizontal, Space.page)
+            .padding(.top, Space.top)
+            .padding(.bottom, Space.page)
+            .frame(maxWidth: 1120)
             .frame(maxWidth: .infinity)
         }
         .task { if a?.features?.billingPlans == true || a?.credits?.monthlyGrant != nil { await billing.load() } }
@@ -85,11 +85,7 @@ struct AccountView: View {
                 Text(String((a?.name ?? a?.email ?? "?").prefix(1)).uppercased())
                     .font(Typo.font(.display, weight: .bold, design: .rounded)).foregroundColor(.white)
                 if let f = a?.credits?.fraction {
-                    Circle().stroke(Theme.elevated, lineWidth: 4).frame(width: 76, height: 76)
-                    Circle().trim(from: 0, to: max(0.02, f))
-                        .stroke(f < 0.1 ? Theme.warn : Theme.ready, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                        .rotationEffect(.degrees(-90)).frame(width: 76, height: 76)
-                        .animation(Motion.gentle, value: f)
+                    CreditRing(fraction: f, size: 76)
                 }
             }
             .frame(width: 80, height: 80)

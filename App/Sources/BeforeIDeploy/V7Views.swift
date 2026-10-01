@@ -204,10 +204,10 @@ struct MissionControlView: View {
                         .accessibilityLabel(L("overview.loading"))
                 }
             }
-            .padding(.horizontal, 32)
-            .padding(.top, 40)
-            .padding(.bottom, 32)
-            .frame(maxWidth: 1180)
+            .padding(.horizontal, Space.page)
+            .padding(.top, Space.top)
+            .padding(.bottom, Space.page)
+            .frame(maxWidth: 1120)
             .frame(maxWidth: .infinity)
         }
         .task { await model.loadMonitor() }
@@ -500,10 +500,10 @@ struct CostsView: View {
                         .frame(maxWidth: .infinity, minHeight: 200)
                 }
             }
-            .padding(.horizontal, 32)
-            .padding(.top, 40)
-            .padding(.bottom, 32)
-            .frame(maxWidth: 1180)
+            .padding(.horizontal, Space.page)
+            .padding(.top, Space.top)
+            .padding(.bottom, Space.page)
+            .frame(maxWidth: 1120)
             .frame(maxWidth: .infinity)
         }
         .task { if model.costs == nil { await model.loadCosts() } }
@@ -619,14 +619,7 @@ struct QuotaRow: View {
                 }
             }
             if let inc = quota.included, let used = quota.used, inc > 0 {
-                let frac = min(1, used / inc)
-                GeometryReader { g in
-                    ZStack(alignment: .leading) {
-                        Capsule().fill(Theme.elevated)
-                        Capsule().fill(frac > 0.8 ? Theme.blocked : Theme.accent).frame(width: g.size.width * frac)
-                    }
-                }
-                .frame(height: 5)
+                Meter(value: used, total: inc, thresholds: true, label: quota.label ?? quota.name)
             }
         }
     }
@@ -693,10 +686,10 @@ struct SetupView: View {
                         .frame(maxWidth: .infinity, minHeight: 200)
                 }
             }
-            .padding(.horizontal, 32)
-            .padding(.top, 40)
-            .padding(.bottom, 32)
-            .frame(maxWidth: 1000)
+            .padding(.horizontal, Space.page)
+            .padding(.top, Space.top)
+            .padding(.bottom, Space.page)
+            .frame(maxWidth: 1120)
             .frame(maxWidth: .infinity)
         }
     }

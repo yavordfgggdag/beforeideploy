@@ -138,16 +138,8 @@ struct BalanceCard: View {
                 Text(L("billing.tokensLeft")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
             }
             VStack(alignment: .leading, spacing: 8) {
-                GeometryReader { geo in
-                    HStack(spacing: 2) {
-                        Capsule().fill(Theme.accentGradient)
-                            .frame(width: max(b.plan > 0 ? 6 : 0, geo.size.width * CGFloat(b.plan) / CGFloat(total)))
-                        Capsule().fill(LinearGradient(colors: [Theme.brandViolet, Theme.brandViolet], startPoint: .leading, endPoint: .trailing))
-                            .frame(width: max(b.topup > 0 ? 6 : 0, geo.size.width * CGFloat(b.topup) / CGFloat(total)))
-                        if b.total == 0 { Capsule().fill(Theme.elevated) }
-                    }
-                }
-                .frame(height: 8)
+                Meter(value: Double(b.total), total: Double(total), size: 8,
+                      segments: [.init(value: Double(b.plan), color: Theme.accent), .init(value: Double(b.topup), color: Theme.brandViolet)])
                 HStack(spacing: 14) {
                     Legend(color: Theme.accent, text: L("billing.fromPlan", Fmt.tokens(b.plan)))
                     Legend(color: Theme.brandViolet, text: L("billing.fromPacks", Fmt.tokens(b.topup)))

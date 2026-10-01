@@ -74,10 +74,10 @@ struct AdminView: View {
             }
             .card()
         }
-        .padding(.horizontal, 32)
-        .padding(.top, 40)
-        .padding(.bottom, 32)
-        .frame(maxWidth: 1100)
+        .padding(.horizontal, Space.page)
+        .padding(.top, Space.top)
+        .padding(.bottom, Space.page)
+        .frame(maxWidth: 1120)
         .frame(maxWidth: .infinity)
         .task { await store.load(); await store.loadAudit() }
     }
@@ -311,11 +311,7 @@ struct AIKeyRow: View {
             if status.connected {
                 Button(L("aikeys.remove")) { Task { await model.deleteAIKey(provider: status.provider) } }.bidButton(.ghost, compact: true)
             } else {
-                SecureField(L("aikeys.placeholder"), text: $key)
-                    .textFieldStyle(.plain).font(Typo.font(.callout, design: .monospaced)).foregroundColor(Theme.text)
-                    .padding(.horizontal, 10).padding(.vertical, 7)
-                    .background(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).fill(Theme.bg))
-                    .overlay(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
+                BIDField(placeholder: L("aikeys.placeholder"), text: $key, kind: .secure)
                     .frame(width: 260)
                 if let c = status.console { Button(L("aikeys.getKey")) { model.open(c) }.bidButton(.ghost, compact: true) }
                 Button(busy ? L("aikeys.checking") : L("common.connect")) {

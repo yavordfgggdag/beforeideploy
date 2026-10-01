@@ -28,6 +28,7 @@ struct Badge: View {
 /// Progress and usage share clamping, threshold colours and a spoken value.
 struct Meter: View {
     enum Style { case bar, ring }
+    struct Segment { let value: Double; let color: Color }
     let value: Double
     var total: Double = 1
     var style: Style = .bar
@@ -35,21 +36,35 @@ struct Meter: View {
     var tint: Color? = nil
     var thresholds = false
     var label = ""
+    var segments: [Segment] = []
+    var lineWidth: CGFloat = 4
     private var fraction: Double { total > 0 && value.isFinite && total.isFinite ? min(1, max(0, value / total)) : 0 }
     private var color: Color { tint ?? (thresholds ? (fraction >= 0.95 ? Theme.blocked : fraction >= 0.8 ? Theme.warn : Theme.accent) : Theme.accent) }
     var body: some View {
         Group {
             if style == .ring {
                 ZStack {
-                    Circle().stroke(Theme.elevated, lineWidth: 4)
+                    Circle().stroke(Theme.elevated, lineWidth: lineWidth)
                     Circle().trim(from: 0, to: fraction)
-                        .stroke(color, style: StrokeStyle(lineWidth: 4, lineCap: .round)).rotationEffect(.degrees(-90))
+                        .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)).rotationEffect(.degrees(-90))
                 }.frame(width: size, height: size)
             } else {
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
                         Capsule().fill(Theme.elevated)
-                        Capsule().fill(color).frame(width: geo.size.width * fraction)
+                        if segments.isEmpty {
+                            Capsule().fill(color).frame(width: geo.size.width * fraction)
+                        } else {
+                            HStack(spacing: 0) {
+                                ForEach(segments.indices, id: \.self) { index in
+                                    let before = segments.prefix(index).reduce(0) { $0 + max(0, $1.value) }
+                                    let amount = max(0, min(max(0, segments[index].value), total - before))
+                                    Rectangle().fill(segments[index].color)
+                                        .frame(width: total > 0 ? geo.size.width * amount / total : 0)
+                                }
+                                Spacer(minLength: 0)
+                            }.clipShape(Capsule())
+                        }
                     }
                 }.frame(height: size)
             }
@@ -185,5 +200,14 @@ struct ModalShell<Content: View>: View {
             }.frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .onAppear { accessibilityFocus = true }
+    }
+}
+
+struct CreditRing: View {
+    let fraction: Double
+    var size: CGFloat = 32
+    var body: some View {
+        Meter(value: fraction, style: .ring, size: size, tint: fraction < 0.1 ? Theme.warn : Theme.ready,
+              lineWidth: size < 40 ? 2.5 : 4)
     }
 }

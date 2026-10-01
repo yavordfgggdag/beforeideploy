@@ -106,10 +106,10 @@ struct DomainsView: View {
                     SpaceshipConnectCard()
                 }
             }
-            .padding(.horizontal, 32)
-            .padding(.top, 40)
-            .padding(.bottom, 32)
-            .frame(maxWidth: 1180)
+            .padding(.horizontal, Space.page)
+            .padding(.top, Space.top)
+            .padding(.bottom, Space.page)
+            .frame(maxWidth: 1120)
             .frame(maxWidth: .infinity)
         }
         .task { if model.spaceship == nil { await model.loadSpaceship() } }
@@ -152,7 +152,7 @@ struct DomainRow: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
-        .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(selected ? Theme.accent : (hover ? Theme.elevated : .clear)))
+        .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(selected ? Theme.accentFill : (hover ? Theme.elevated : .clear)))
         .contentShape(Rectangle())
         .onHover { hover = $0 }
     }
@@ -185,13 +185,8 @@ struct SpaceshipConnectCard: View {
             Button { model.open("https://www.spaceship.com/application/api-manager/") } label: { Label(L("spaceship.openApiManager"), systemImage: "safari") }
                 .bidButton(.secondary)
             HStack(spacing: 10) {
-                BIDTextField(placeholder: "API Key", text: $key, mono: true)
-                SecureField("API Secret", text: $secret)
-                    .textFieldStyle(.plain)
-                    .font(Typo.font(.body, design: .monospaced))
-                    .padding(.horizontal, 12).padding(.vertical, 9)
-                    .background(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).fill(Theme.bg))
-                    .overlay(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
+                BIDTextField(placeholder: L("field.apiKey"), text: $key, mono: true)
+                BIDField(placeholder: L("field.apiSecret"), text: $secret, kind: .secure)
                 Button {
                     busy = true
                     Task {
@@ -219,7 +214,7 @@ struct StepLine: View {
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
             Text("\(n)").font(Typo.font(.caption, weight: .bold)).foregroundColor(.white)
-                .frame(width: 20, height: 20).background(Circle().fill(Theme.accent))
+                .frame(width: 20, height: 20).background(Circle().fill(Theme.accentFill))
             Text(text).font(Typo.font(.body)).foregroundColor(Theme.text).fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -229,17 +224,11 @@ struct SpaceshipConnectSheet: View {
     @EnvironmentObject var model: AppModel
     @Environment(\.dismiss) private var dismiss
     var body: some View {
-        VStack(spacing: 0) {
+        SheetScaffold(icon: "globe", title: L("spaceship.connect"), size: .l) {
             SpaceshipConnectCard()
-                .padding(18)
-            HStack {
-                Spacer()
-                Button(L("common.close")) { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
-            }
-            .padding(.horizontal, 22).padding(.bottom, 16)
+        } actions: {
+            Button(L("common.close")) { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction)
         }
-        .frame(width: 640)
-        .background(Theme.panel)
         .onChange(of: model.spaceship?.connected == true) { connected in
             if connected { dismiss() }
         }

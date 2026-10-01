@@ -79,10 +79,10 @@ struct DashboardView: View {
                     HistoryStrip()
                 }
             }
-            .padding(.horizontal, 32)
-            .padding(.top, 40)
-            .padding(.bottom, 32)
-            .frame(maxWidth: 1100)
+            .padding(.horizontal, Space.page)
+            .padding(.top, Space.top)
+            .padding(.bottom, Space.page)
+            .frame(maxWidth: 1120)
             .frame(maxWidth: .infinity)
         }
     }
@@ -108,43 +108,8 @@ struct TabStrip: View {
     @Namespace private var pill
 
     var body: some View {
-        HStack(spacing: 4) {
-            ForEach(ProjectTab.allCases, id: \.self) { t in
-                Button {
-                    withAnimation(Motion.spring) { selection = t }
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: t.icon).font(Typo.font(.callout, weight: .semibold))
-                        Text(t.title).font(Typo.font(.body, weight: .semibold))
-                        if let b = badges[t] {
-                            Text(b)
-                                .font(Typo.font(.micro, weight: .bold))
-                                .foregroundColor(selection == t ? .white : Theme.secondary)
-                                .padding(.horizontal, 5).padding(.vertical, 1)
-                                .background(Capsule().fill(selection == t ? Color.white.opacity(0.25) : Theme.hover))
-                        }
-                    }
-                    .foregroundColor(selection == t ? .white : Theme.secondary)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 7)
-                    .background {
-                        if selection == t {
-                            RoundedRectangle(cornerRadius: Radius.s, style: .continuous)
-                                .fill(Theme.accentGradient)
-                                .elevation(.popover)
-                                .matchedGeometryEffect(id: "tab", in: pill)
-                        }
-                    }
-                    .contentShape(Rectangle())
-                }
-                .accessibilityAddTraits(selection == t ? .isSelected : [])
-                .buttonStyle(.plain)
-            }
-            Spacer()
-        }
-        .padding(4)
-        .background(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).fill(Theme.panel))
-        .overlay(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).strokeBorder(Theme.edgeHighlight, lineWidth: 1))
+        Segmented(options: ProjectTab.allCases.map { ($0.title, $0) }, selection: $selection,
+                  icons: Dictionary(uniqueKeysWithValues: ProjectTab.allCases.map { ($0, $0.icon) }), badges: badges)
     }
 }
 
