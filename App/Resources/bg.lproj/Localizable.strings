@@ -720,6 +720,7 @@
 "monitor.notify.down" = "паднал сайт";
 "monitor.notify.recovered" = "възстановяване";
 "monitor.notify.ssl" = "SSL";
+"monitor.notificationSettings" = "Настройки на известията";
 "monitor.notifyLabel" = "Известявай при";
 "monitor.openIncidents" = "%@ отворени инцидента";
 "monitor.openIncidents.one" = "%@ отворен инцидент";
@@ -1038,10 +1039,10 @@
 "spaceship.step3" = "Копирай API Key и API Secret и ги постави тук.";
 
 "status.blocked" = "БЛОКИРАН";
-"status.deployBlocked" = "ПУБЛИКУВАНЕТО Е БЛОКИРАНО";
+"status.deployBlocked" = "Публикуването е блокирано";
 "status.ready" = "ГОТОВ";
-"status.readyToDeploy" = "ГОТОВ ЗА ПУБЛИКУВАНЕ";
-"status.readyWithWarnings" = "ГОТОВ С ПРЕДУПРЕЖДЕНИЯ";
+"status.readyToDeploy" = "Готов за публикуване";
+"status.readyWithWarnings" = "Готов с предупреждения";
 "status.warnings" = "ПРЕДУПРЕЖДЕНИЯ";
 
 "time.hoursAgo" = "преди %@ ч";
@@ -1123,6 +1124,7 @@
 "usage.reason.topup" = "Покупка на пакет";
 "usage.reason.trial_grant" = "Пробни кредити";
 "usage.sessionFree" = "Free няма AI кредити — избери план, за да започнеш.";
+"usage.rollingWindow" = "Плъзгащ се прозорец — капацитетът се освобождава постепенно, когато старото използване излезе от прозореца.";
 "usage.sessionFresh" = "Нищо не е използвано в тази сесия — часовникът тръгва с първата заявка.";
 "usage.signIn" = "Влез, за да видиш плана и използването.";
 "usage.status.active" = "активен";

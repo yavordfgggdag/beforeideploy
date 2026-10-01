@@ -216,6 +216,8 @@ struct BIDButtonStyle: ButtonStyle {
             fg = Theme.secondary; bg = .clear; border = .clear
         }
         return configuration.label
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
             .font(Typo.font(compact ? .callout : .body, weight: .semibold))
             .foregroundColor(fg)
             .padding(.horizontal, compact ? 10 : 14)

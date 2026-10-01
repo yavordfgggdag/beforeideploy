@@ -720,6 +720,7 @@
 "monitor.notify.down" = "site down";
 "monitor.notify.recovered" = "recovery";
 "monitor.notify.ssl" = "SSL";
+"monitor.notificationSettings" = "Notification settings";
 "monitor.notifyLabel" = "Notify on";
 "monitor.openIncidents" = "%@ open incidents";
 "monitor.openIncidents.one" = "%@ open incident";
@@ -1038,10 +1039,10 @@
 "spaceship.step3" = "Copy the API Key and API Secret and paste them here.";
 
 "status.blocked" = "BLOCKED";
-"status.deployBlocked" = "DEPLOY BLOCKED";
+"status.deployBlocked" = "Deploy blocked";
 "status.ready" = "READY";
-"status.readyToDeploy" = "READY TO DEPLOY";
-"status.readyWithWarnings" = "READY WITH WARNINGS";
+"status.readyToDeploy" = "Ready to deploy";
+"status.readyWithWarnings" = "Ready with warnings";
 "status.warnings" = "WARNINGS";
 
 "time.hoursAgo" = "%@ h ago";
@@ -1123,6 +1124,7 @@
 "usage.reason.topup" = "Pack purchase";
 "usage.reason.trial_grant" = "Trial credits";
 "usage.sessionFree" = "Free has no AI credits — pick a plan to start.";
+"usage.rollingWindow" = "Rolling window — capacity frees up gradually as older use leaves the window.";
 "usage.sessionFresh" = "Nothing used in this session yet — the clock starts with the first request.";
 "usage.signIn" = "Sign in to see your plan and usage.";
 "usage.status.active" = "active";

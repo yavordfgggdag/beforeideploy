@@ -13,6 +13,12 @@ import { isDir, nowISO } from './util.mjs';
 import { spaceshipDomains, domainAttention } from './spaceship.mjs';
 import { t } from './i18n.mjs';
 
+// Step names in the language of this run: a stored check keeps the labels of the language it ran in.
+const stepName = (s) => ({
+  git: t('check.step.git'), secrets: t('check.step.secrets'), deps: t('check.step.deps'), lint: t('check.step.lint'),
+  typecheck: t('check.step.typecheck'), build: t('check.step.build'), site: t('check.step.site'), hosting: t('check.step.hosting'),
+})[s.id] || s.label || s.id;
+
 function ping(url, timeout = 6000) {
   return new Promise((resolve) => {
     let u;
@@ -88,7 +94,7 @@ export async function overview({ network = true } = {}) {
         hosting: p.hosting || 'netlify',
         status: st.check?.status || null,
         checkedAt: st.check?.at || null,
-        failing: (st.check?.steps || []).filter((s) => s.status === 'fail').map((s) => s.label || s.id),
+        failing: (st.check?.steps || []).filter((s) => s.status === 'fail').map((s) => stepName(s)),
         liveUrl: live,
         lastProd: st.lastProd?.at || p.netlify?.lastPublishedAt || null,
         lastDraft: st.lastDraft?.at || null,

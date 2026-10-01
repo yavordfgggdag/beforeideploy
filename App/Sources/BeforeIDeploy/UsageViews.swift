@@ -76,8 +76,8 @@ private struct PlanUsageContent: View {
         }
     }
 
-    private func resetDetail(_ value: String?, rolling: Bool = false) -> String {
-        guard let date = Fmt.date(value) else { return L("usage.sessionFresh") }
+    private func resetDetail(_ value: String?, rolling: Bool = false, used: Int = 0) -> String {
+        guard let date = Fmt.date(value) else { return L(used > 0 ? "usage.rollingWindow" : "usage.sessionFresh") }
         let seconds = max(0, Int(date.timeIntervalSinceNow))
         let duration = DateComponentsFormatter()
         var calendar = Calendar(identifier: .gregorian); calendar.locale = Localization.locale; duration.calendar = calendar
@@ -92,11 +92,11 @@ private struct PlanUsageContent: View {
                 VStack(alignment: .leading, spacing: 22) {
                     if let s = u.session {
                         // usage v3: the two meters are the 24 h / 7-day guards on settled included spend
-                        CreditsMeter(title: L(s.windowHours >= 24 ? "usage.last24h" : "usage.fiveHours"), used: s.used, reserved: s.reserved ?? 0, total: s.cap, detail: resetDetail(s.resetsAt, rolling: u.v != 2))
+                        CreditsMeter(title: L(s.windowHours >= 24 ? "usage.last24h" : "usage.fiveHours"), used: s.used, reserved: s.reserved ?? 0, total: s.cap, detail: resetDetail(s.resetsAt, rolling: u.v != 2, used: s.used))
                     } else { EmptyLine(icon: "timer", text: L("usage.sessionFree")) }
                     Divider()
                     if let w = u.weekly {
-                        CreditsMeter(title: L(u.v == 3 ? "usage.last7d" : "usage.week"), used: w.used, reserved: w.reserved ?? 0, total: w.cap, detail: resetDetail(w.resetsAt))
+                        CreditsMeter(title: L(u.v == 3 ? "usage.last7d" : "usage.week"), used: w.used, reserved: w.reserved ?? 0, total: w.cap, detail: resetDetail(w.resetsAt, used: w.used))
                     } else {
                         HStack { Text(L("usage.week")); Spacer(); Text(L("usage.windowUnavailable")).foregroundColor(Theme.tertiary) }.font(Typo.font(.callout))
                     }
