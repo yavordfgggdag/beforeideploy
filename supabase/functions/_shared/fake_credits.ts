@@ -133,7 +133,7 @@ export function fakeCreditRpc(db: FakeDb, fn: string, a: Row): Row | null {
     const used=recent.reduce((n,u)=>n+Number(u.charged_tokens??0),0);
     const reserved=mine("credit_holds").filter(h=>h.status==="held").reduce((n,h)=>n+h.credits,0);
     if(a.p_counts_window!==false && used+reserved+a.p_credits>cap) return {ok:false,code:"window_5h",legacyCode:"session_cap",windowHours:5,cap,spent:used,resetsAt:new Date(Date.parse(recent[0]?.created_at??iso)+hours*3600000).toISOString()};
-    const h={id:crypto.randomUUID(),user_id:user,operation_id:a.p_operation_id,credits:a.p_credits,action:a.p_action,ai_usage_id:a.p_ai_usage,pricing_version:a.p_pricing_version,status:"held",created_at:iso,expires_at:new Date(+now+900000).toISOString()};
+    const h={id:crypto.randomUUID(),user_id:user,operation_id:a.p_operation_id,credits:a.p_credits,action:a.p_action,ai_usage_id:a.p_ai_usage,pricing_version:a.p_pricing_version,status:"held",created_at:iso,expires_at:new Date(+now+60000*Number(settings["credits.holdTtlMinutes"]?.[a.p_action]??(String(a.p_action).startsWith("deploy.")||a.p_action==="backup.snapshot"?25:15))).toISOString()};
     rows("credit_holds").push(h);ledger(-a.p_credits,"hold","hold",h.id,{operation_id:a.p_operation_id});
     return {ok:true,holdId:h.id,reserved:a.p_credits};
   }

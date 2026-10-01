@@ -374,4 +374,18 @@ export async function testCredits({db,t,assert,rejects,as}) {
   assert(await balance(id)===1100000,'second Flash lot above the Flash cap is limited (new grant only)');
   assert(Number((await db.query("select left_credits from credit_grants where user_id=$1 and ref='knight-paid'",[id])).rows[0].left_credits)===1000000,'cap never trims the older paid lot');
  });
+ await t('B3 holds: a 20-minute deploy keeps its reservation (TTL = task timeout + 5 min), no overlapping debt',async()=>{
+  const id=await user('knight'); await grant(id,10000,'b3-lot','knight');
+  const hold=(op,at)=>rpc('bid_hold',{p_user:id,p_action:'deploy.production',p_credits:9000,p_operation_id:op,p_counts_window:false,p_now:at});
+  assert((await hold('b3-deploy-a',now)).ok,'first deploy reserves');
+  assert((await hold('b3-deploy-b',later(0,16/60))).code==='quota_exhausted','reservation still held at +16 min');
+  assert((await rpc('bid_settle',{p_user:id,p_operation_id:'b3-deploy-a',p_credits:9000,p_now:later(0,21/60)})).ok,'settles after 21 min');
+  assert(Number((await db.query('select debt from credit_accounts where user_id=$1',[id])).rows[0].debt)===0 && await balance(id)===1000,'no debt');
+  assert((await rpc('bid_hold',{p_user:id,p_action:'deploy.preview',p_credits:150,p_operation_id:'b3-orphan',p_counts_window:false,p_now:now})).ok,'preview reserves');
+  assert((await summary(id,later(0,24/60))).reserved.tokens===150,'still reserved before 25 min');
+  assert((await summary(id,later(0,26/60))).reserved.tokens===0,'orphaned after 25 min');
+  const ai=await rpc('bid_hold',{p_user:id,p_action:'ai.fix',p_credits:100,p_operation_id:'b3-ai-hold',p_now:later(1)});
+  const exp=(await db.query("select extract(epoch from expires_at-created_at)::int as ttl from credit_holds where user_id=$1 and operation_id='b3-ai-hold'",[id])).rows[0].ttl;
+  assert(ai.ok && exp===900,'AI keeps the 15-minute TTL');
+ });
 }

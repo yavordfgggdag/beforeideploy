@@ -102,7 +102,6 @@ export async function expireDue(db: DbClient, userId: string, now: Date): Promis
   return plan;
 }
 
-export const HOLD_TTL_MS = 15 * 60_000;
 export async function reconcileHolds(db: DbClient, userId: string, now: Date): Promise<{ released: number; reservedTokens: number; open: number }> {
   const s=await creditStatus(db,userId,now);
   return {released:Number(s.released ?? 0),reservedTokens:Number(s.reservedTokens ?? 0),open:Number(s.open ?? 0)};

@@ -99,6 +99,7 @@ end $$;
 
 insert into public.settings(key,value) values
  ('pricing.actions','{"site.day":{"credits":1000,"window":false},"monitor.fast":{"credits":500,"window":false},"monitor.path":{"credits":50,"window":false},"check.run":{"credits":50,"window":true},"audit.full":{"credits":400,"window":true},"deploy.preview":{"credits":150,"window":true},"deploy.production":{"credits":500,"window":true},"deploy.rollback":{"credits":0,"window":false},"backup.snapshot":{"credits":100,"window":true},"ai.fix":{"actual":true,"window":true},"ai.fix.deep":{"actual":true,"window":true},"ai.chat":{"actual":true,"window":true}}'),
+ ('credits.holdTtlMinutes','{"default":15,"deploy.preview":25,"deploy.production":25,"backup.snapshot":25,"audit.full":15,"check.run":15}'),
  ('billing.graceDays','3'),('features.netlifyCredits','false'),('features.knightDomain','true') on conflict(key) do nothing;
 do $$ begin
  if not exists(select 1 from public.settings where key='credits.migration' and value='2'::jsonb) then
@@ -299,6 +300,14 @@ begin
  return jsonb_build_object('session',session_json,'week',week_json);
 end $$;
 
+-- B3: a reservation must outlive the work it pays for. Provider CLIs time out after 20 minutes
+-- (engine hosting.mjs/netlify.mjs), so deploy holds live 25 minutes; AI calls keep 15 minutes.
+create or replace function public.bid_v12_hold_ttl(p_action text) returns interval
+language sql stable security definer set search_path=public,pg_temp as $$
+ select make_interval(mins=>least(120,greatest(5,coalesce((value->>p_action)::integer,(value->>'default')::integer,15))))
+ from (select coalesce((select value from settings where key='credits.holdTtlMinutes'),'{}'::jsonb) as value) s;
+$$;
+
 create or replace function public.bid_hold(p_user uuid,p_action text,p_credits bigint,p_operation_id text,p_site uuid default null,p_counts_window boolean default true,p_pricing_version text default '2026-10',p_ai_usage uuid default null,p_now timestamptz default now()) returns jsonb
 language plpgsql security definer set search_path=public,pg_temp as $$
 declare h credit_holds; e usage_events; win jsonb; remaining bigint; available bigint; held bigint; take bigint; r record; wh uuid; ww uuid;
@@ -331,7 +340,7 @@ begin
   wh:=(win#>>'{session,id}')::uuid; ww:=(win#>>'{week,id}')::uuid;
  end if;
  insert into credit_holds(user_id,operation_id,action,credits,site_id,counts_in_window,pricing_version,window_5h_id,window_week_id,ai_usage_id,created_at,expires_at)
- values(p_user,p_operation_id,p_action,p_credits,p_site,p_counts_window,p_pricing_version,wh,ww,p_ai_usage,p_now,p_now+interval '15 minutes') returning * into h;
+ values(p_user,p_operation_id,p_action,p_credits,p_site,p_counts_window,p_pricing_version,wh,ww,p_ai_usage,p_now,p_now+bid_v12_hold_ttl(p_action)) returning * into h;
  remaining:=p_credits;
  for r in select * from credit_grants where user_id=p_user and left_credits>0 and expires_at>p_now order by expires_at,granted_at,id loop
   exit when remaining<=0;
