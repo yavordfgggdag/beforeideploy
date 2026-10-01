@@ -173,7 +173,7 @@ await t('subscriptions, ai_usage: own rows only; billing_events, admin_audit, tr
 
 await t('settings: readable by signed-in users, not by anonymous, never writable by clients', async () => {
   const s = await asA((q) => q(`select key from public.settings order by key`));
-  assert(s.rows.map((r) => r.key).join() === 'ai.creditEur,billing.catalog,billing.graceDays,credits.migration,credits.sitesMigrated,features.knightDomain,features.netlifyCredits,plans,pricing.actions,pricing.version', JSON.stringify(s.rows));
+  assert(s.rows.map((r) => r.key).join() === 'ai.creditEur,billing.catalog,billing.graceDays,credits.holdTtlMinutes,credits.migration,credits.sitesMigrated,features.knightDomain,features.netlifyCredits,plans,pricing.actions,pricing.version', JSON.stringify(s.rows));
   assert((await asAnon((q) => q('select key from public.settings'))).rows.length === 0, 'anon');
   await rejects(() => asA((q) => q(`insert into public.settings (key, value) values ('ai.models', '{}')`)), /row-level security/);
   const u = await asA((q) => q(`update public.settings set value = '{}' where key = 'plans'`));
