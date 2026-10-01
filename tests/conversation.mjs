@@ -61,3 +61,23 @@ test('concurrent CLI writers preserve every operation', async () => {
   assert.equal(entries.length, 40);
   assert.equal(new Set(entries.map(e => e.id)).size, 40);
 });
+
+test('patch and undo files under HOME stay absolute so Apply, Review and Undo still find them after a restart', () => {
+  // V13 P0: history redaction rewrote HOME to `~`, so a patch under ~/Library/Caches was saved as `~/Library/…`
+  const home = os.homedir();
+  const patchFile = path.join(home, 'Library', 'Caches', 'BeforeIDeploy', 'site', 'ai-patch-build-1.json');
+  const undoFile = path.join(home, 'Library', 'Application Support', 'BeforeIDeploy', 'undo', 'site', 'ai-undo-1.json');
+  appendHistory('home-paths', { message: `see ${home}/notes and mail me@example.com`, patchFile, request: { patchFile, files: 'src/a.js' },
+    result: historyResult({ output: { summary: 'ok' }, patchFile, files: [{ path: 'src/a.js', diff: `+${home}/x` }], valid: true }) });
+  let entry = assistantHistory({ key: 'home-paths' }).entries[0];
+  assert.equal(entry.patchFile, patchFile);
+  assert.equal(entry.request.patchFile, patchFile);
+  assert.equal(entry.result.patchFile, patchFile);
+  assert(!entry.message.includes(home) && !entry.message.includes('me@example.com'), 'display text is still redacted');
+  assert(!entry.result.files[0].diff.includes(home), 'diff text is still redacted');
+  updateConversationPatch('home-paths', patchFile, { applied: { applied: ['src/a.js'], skipped: [], undoFile }, verified: false });
+  entry = assistantHistory({ key: 'home-paths' }).entries[0];
+  assert.equal(entry.result.applied?.undoFile, undoFile, 'apply state is persisted against the absolute patch path');
+  updateConversationUndo('home-paths', undoFile, ['src/a.js'], []);
+  assert.equal(assistantHistory({ key: 'home-paths' }).entries[0].result.undone, true, 'undo state is persisted against the absolute undo path');
+});

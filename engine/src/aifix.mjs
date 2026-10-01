@@ -35,6 +35,9 @@ const REDACTIONS = [
   [/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, '[email]'],
 ];
 
+/** The placeholders redaction writes (`[REDACTED]`, `[email]` …) — a model answer that reproduces one wrote over a secret it never saw. */
+export const REDACTION_MARKERS = [...new Set(REDACTIONS.flatMap(([, rep]) => rep.match(/\[[A-Za-z_]+\]/g) || []))];
+
 export function redact(text) {
   let out = String(text || '');
   const home = HOME.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

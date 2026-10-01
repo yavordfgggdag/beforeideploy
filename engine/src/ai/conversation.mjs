@@ -5,10 +5,15 @@ import { redact } from '../aifix.mjs';
 
 const directory = () => path.join(APP_DIR, 'chats');
 const file = key => path.join(directory(), `${key}.jsonl`);
-function redacted(value) {
-  if (typeof value === 'string') return redact(value);
-  if (Array.isArray(value)) return value.map(redacted);
-  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([k,v]) => [k, redacted(v)]));
+// Machine references the engine and the app use to find things again after a restart: patch and undo
+// files (absolute, often under HOME), ids and project-relative paths. Redaction is for display text; run
+// over these it turns `/Users/me/Library/…` into `~/Library/…`, and Apply/Review/Undo can no longer find
+// the file (V13 P0). Only string values under these keys are kept verbatim — every other string is redacted.
+const INTERNAL_REFS = new Set(['patchFile', 'undoFile', 'historyId', 'conversation', 'path', 'files', 'issue']);
+function redacted(value, key = null) {
+  if (typeof value === 'string') return key && INTERNAL_REFS.has(key) ? value : redact(value);
+  if (Array.isArray(value)) return value.map((v) => redacted(v));
+  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([k,v]) => [k, redacted(v, k)]));
   return value;
 }
 

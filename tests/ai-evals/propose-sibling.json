@@ -1,0 +1,32 @@
+{
+  "purpose": "V13 S3: rewrites a file next to the listed one that was never selected",
+  "response": {
+    "status": "patch",
+    "summary": "Complete the expression.",
+    "base_hashes": {
+      "src/app.js": "{{base:src/app.js}}",
+      "src/util.js": "{{base:src/util.js}}"
+    },
+    "changes": [
+      {
+        "path": "src/app.js",
+        "action": "replace",
+        "content": "const a = 1;\nconst b = 2;\nconst c = a + b;\nconsole.log(c);\n"
+      },
+      {
+        "path": "src/util.js",
+        "action": "replace",
+        "content": "export const util = () => 'owned';\n"
+      }
+    ],
+    "risk": "low",
+    "rationale_evidence_ids": [
+      "E1"
+    ],
+    "verification_plan": [
+      "node src/app.js"
+    ],
+    "rollback_notes": "undo restores the file",
+    "missing_context": []
+  }
+}
