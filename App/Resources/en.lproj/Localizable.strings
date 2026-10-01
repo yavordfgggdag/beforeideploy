@@ -503,7 +503,7 @@
 
 "engine.emptyResult" = "Empty result";
 "engine.installFailed" = "Could not install the engine: %@";
-"engine.missingAt" = "The engine is not installed: %@. Run install.sh.";
+"engine.missingAt" = "The engine is missing at %@. Reopen the app — it installs the engine on launch. If that does not help, reinstall Before I Deploy.";
 "engine.noResponse" = "The engine did not respond (exit code %@)";
 "engine.noResult" = "No result";
 "engine.nodeBundled" = "%@ (bundled with the app)";

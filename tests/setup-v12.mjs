@@ -362,3 +362,18 @@ test('B8: preflight probes only the hosts the queued steps need; disk only for i
   assert.deepEqual(preflightPlan(['vercel', 'vercel-auth']).urls, ['https://registry.npmjs.org/-/ping', 'https://api.vercel.com']);
   assert.deepEqual(preflightPlan(['git']), { urls: [], disk: false });
 });
+
+test('B12: setup copy matches current behaviour (no npx, no global npm, no install.sh)', () => {
+  for (const lang of ['en', 'bg']) {
+    const engine = JSON.parse(fs.readFileSync(path.join(root, `engine/i18n/${lang}.json`), 'utf8'));
+    for (const key of ['setup.netlifyCli.detail', 'netlify.noCli', 'setup.identity.detail']) {
+      assert.ok(engine[key], `${lang} ${key}`);
+      assert.doesNotMatch(engine[key], /npx|npm i -g|install\.sh/, `${lang} ${key}`);
+    }
+    // the identity is not only "from GitHub": the form works without a GitHub account
+    assert.doesNotMatch(engine['setup.identity.detail'], /^(I will take them from your GitHub account automatically|Ще ги взема автоматично от GitHub акаунта ти)$/);
+    const app = fs.readFileSync(path.join(root, `App/Resources/${lang}.lproj/Localizable.strings`), 'utf8');
+    const missingAt = app.match(/^"engine\.missingAt" = "(.*)";$/m)?.[1];
+    assert.ok(missingAt && missingAt.includes('%@')); assert.doesNotMatch(missingAt, /install\.sh/);
+  }
+});
