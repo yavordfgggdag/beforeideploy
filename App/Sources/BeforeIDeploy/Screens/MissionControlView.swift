@@ -28,12 +28,12 @@ struct MissionControlView: View {
                 }
 
                 if let o = model.overview {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 200), spacing: Space.m)], spacing: Space.m) {
-                        KPITile(value: "\(o.totals.projects)", label: L("common.projectsCaption"), icon: "folder.fill")
-                        KPITile(value: "\(o.totals.ready)", label: L("overview.readyToDeploy"), icon: "checkmark.seal.fill", tint: Theme.ready)
-                        KPITile(value: "\(o.totals.blocked)", label: L("overview.blockedCaption"), icon: "xmark.octagon.fill", tint: o.totals.blocked > 0 ? Theme.blocked : Theme.text)
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 130), spacing: Space.s)], spacing: Space.s) {
+                        KPITile(value: "\(o.totals.projects)", label: L("common.projectsCaption"), icon: "folder.fill", compact: true)
+                        KPITile(value: "\(o.totals.ready)", label: L("overview.readyToDeploy"), icon: "checkmark.seal.fill", tint: Theme.ready, compact: true)
+                        KPITile(value: "\(o.totals.blocked)", label: L("overview.blockedCaption"), icon: "xmark.octagon.fill", tint: o.totals.blocked > 0 ? Theme.blocked : Theme.text, compact: true)
                         KPITile(value: "\(o.totals.online)/\(o.totals.live)", label: L("overview.sitesOnline"), icon: "dot.radiowaves.left.and.right",
-                                tint: o.totals.online < o.totals.live ? Theme.warn : Theme.ready)
+                                tint: o.totals.online < o.totals.live ? Theme.warn : Theme.ready, compact: true)
                     }
 
                     if !o.attention.isEmpty {

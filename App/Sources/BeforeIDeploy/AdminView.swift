@@ -130,9 +130,9 @@ struct AdminUserDetail: View {
                 Text(user.email).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
             }
             HStack(spacing: 10) {
-                KPITile(value: Fmt.tokens(user.balance ?? 0), label: L("admin.creditsBalance"), icon: "bolt.fill", tint: Theme.accent)
-                KPITile(value: user.locale ?? "—", label: L("admin.locale"), icon: "globe")
-                KPITile(value: user.lastAiAt.map { Fmt.relative($0) } ?? "—", label: L("admin.lastAi"), icon: "sparkles")
+                KPITile(value: Fmt.tokens(user.balance ?? 0), label: L("admin.creditsBalance"), icon: "bolt.fill", tint: Theme.accent, compact: true)
+                KPITile(value: user.locale ?? "—", label: L("admin.locale"), icon: "globe", compact: true)
+                KPITile(value: user.lastAiAt.map { Fmt.relative($0) } ?? "—", label: L("admin.lastAi"), icon: "sparkles", compact: true)
             }
 
             SectionLabel(text: L("admin.roleAndPlan"))

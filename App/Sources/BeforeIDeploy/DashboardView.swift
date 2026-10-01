@@ -40,10 +40,10 @@ struct DashboardView: View {
 
                 switch tab {
                 case .overview:
+                    HeroCard(status: status)
                     if let launch = status.launch, !launch.complete {
                         LaunchCard(launch: launch, tab: $tab)
                     }
-                    HeroCard(status: status)
                     IssuesCard(status: status)
                     HealthGrid(status: status)
                     // safe fixes no issue points at (e.g. "create a GitHub repository") keep their own card

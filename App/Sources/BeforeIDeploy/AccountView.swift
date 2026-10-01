@@ -41,8 +41,8 @@ struct AccountView: View {
                             if !s.usage.isEmpty { UsageList(usage: Array(s.usage.prefix(8))) }
                         } else if let c = a?.credits {
                             HStack(spacing: 12) {
-                                KPITile(value: Fmt.tokens(c.balance), label: L("billing.tokensLeft"), icon: "bolt.fill", tint: Theme.accent)
-                                if let g = c.monthlyGrant { KPITile(value: Fmt.tokens(g), label: L("account.monthlyGrant"), icon: "calendar") }
+                                KPITile(value: Fmt.tokens(c.balance), label: L("billing.tokensLeft"), icon: "bolt.fill", tint: Theme.accent, compact: true)
+                                if let g = c.monthlyGrant { KPITile(value: Fmt.tokens(g), label: L("account.monthlyGrant"), icon: "calendar", compact: true) }
                             }
                         }
                     }
