@@ -6,7 +6,7 @@ import catalog from "./plans-catalog.json" with { type: "json" };
 import { addMonths } from "./billing-period.ts";
 
 export function fakeCreditRpc(db: FakeDb, fn: string, a: Row): Row | null {
-  if(!["bid_v12_payment_refunds","bid_record_payment","bid_accrue_periods","bid_scheduler_credits","bid_site_burn","bid_monitor_register","bid_start_trial","bid_upgrade_grant","bid_grant","bid_refund","bid_credit_status","bid_enforce_sites","bid_hold","bid_settle","bid_release"].includes(fn)) return null;
+  if(!["bid_v12_apply_adjustment","bid_v12_payment_refunds","bid_record_payment","bid_accrue_periods","bid_scheduler_credits","bid_site_burn","bid_monitor_register","bid_start_trial","bid_upgrade_grant","bid_grant","bid_refund","bid_credit_status","bid_enforce_sites","bid_hold","bid_settle","bid_release"].includes(fn)) return null;
   const t=db.tables, user=a.p_user, now=new Date(a.p_now ?? db.clock()), iso=now.toISOString();
   const rows=(name:string)=>t[name]??=[];
   const mine=(name:string)=>rows(name).filter(r=>r.user_id===user);
@@ -108,6 +108,20 @@ export function fakeCreditRpc(db: FakeDb, fn: string, a: Row): Row | null {
     ledger(a.p_credits,bucket,a.p_source,a.p_ref,{expires_at:expires,created_at:at.toISOString()});refresh();
     return {ok:true,granted:a.p_credits,expiresAt:expires};
   }
+  if(fn==="bid_v12_apply_adjustment") { // whole-transaction share only; line items are proved against SQL
+    if(["chargeback","chargeback_warning","chargeback_reverse"].includes(a.p_adjustment.action)) { // suspension/restore: SQL tests
+      const d=a.p_adjustment, kind=d.action;
+      if(rows("admin_notifications").some(n=>n.kind===kind&&n.ref===d.id))return {ok:true,duplicate:true};
+      rows("admin_notifications").push({kind,user_id:user,ref:d.id,payload:{transaction:d.transaction_id},created_at:iso});
+      if(kind!=="chargeback")return {ok:true,dispute:kind};
+      return {...fakeCreditRpc(db,"bid_v12_apply_adjustment",{...a,p_adjustment:{...d,action:"refund",status:"approved"}}),dispute:"chargeback",suspended:true};
+    }
+    const d=a.p_adjustment, paid=rows("billing_events").find(e=>e.type==="transaction.completed"&&e.ref===d.transaction_id)?.payload?.data;
+    const total=Number(paid?.details?.totals?.total ?? paid?.totals?.total ?? 0), refunded=Number(d.totals?.total ?? 0);
+    const share=refunded>0&&total>0?Math.min(1,refunded/total):1;
+    const r=fakeCreditRpc(db,"bid_refund",{...a,p_ref:d.transaction_id,p_adjustment:d.id,p_share:share}) as Row;
+    return {ok:true,taken:r.taken,debt:0,share};
+  }
   if(fn==="bid_refund") {
     if(mine("credit_ledger").some(l=>l.reason==="payment_refund"&&l.ref===a.p_adjustment))return {ok:true,taken:0,duplicate:true};
     ledger(0,"plan","payment_refund",a.p_adjustment);
@@ -133,7 +147,7 @@ export function fakeCreditRpc(db: FakeDb, fn: string, a: Row): Row | null {
     const used=recent.reduce((n,u)=>n+Number(u.charged_tokens??0),0);
     const reserved=mine("credit_holds").filter(h=>h.status==="held").reduce((n,h)=>n+h.credits,0);
     if(a.p_counts_window!==false && used+reserved+a.p_credits>cap) return {ok:false,code:"window_5h",legacyCode:"session_cap",windowHours:5,cap,spent:used,resetsAt:new Date(Date.parse(recent[0]?.created_at??iso)+hours*3600000).toISOString()};
-    const h={id:crypto.randomUUID(),user_id:user,operation_id:a.p_operation_id,credits:a.p_credits,action:a.p_action,ai_usage_id:a.p_ai_usage,pricing_version:a.p_pricing_version,status:"held",created_at:iso,expires_at:new Date(+now+900000).toISOString()};
+    const h={id:crypto.randomUUID(),user_id:user,operation_id:a.p_operation_id,credits:a.p_credits,action:a.p_action,ai_usage_id:a.p_ai_usage,pricing_version:a.p_pricing_version,status:"held",created_at:iso,expires_at:new Date(+now+60000*Number(settings["credits.holdTtlMinutes"]?.[a.p_action]??(String(a.p_action).startsWith("deploy.")||a.p_action==="backup.snapshot"?25:15))).toISOString()};
     rows("credit_holds").push(h);ledger(-a.p_credits,"hold","hold",h.id,{operation_id:a.p_operation_id});
     return {ok:true,holdId:h.id,reserved:a.p_credits};
   }

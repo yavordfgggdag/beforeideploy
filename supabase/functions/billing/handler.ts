@@ -11,7 +11,9 @@ import catalogData from "../_shared/plans-catalog.json" with { type: "json" };
 //    subscription.*       → upsert `subscriptions`, set `profiles.plan` (active/trialing/past_due → tier, else free)
 //    transaction.completed → plan price: monthly grant (expires the unused rest of the previous grant);
 //                            pack price: top-up tokens. Idempotent by transaction id as well.
-//    adjustment.* (approved refund) → takes back what is left of that transaction's grant.
+//    adjustment.* (approved refund) → per line item: takes back what is left of that line's lots, spent → debt (B2).
+//    adjustment.* chargeback / chargeback_warning / chargeback_reverse → suspend + debt + owner notification,
+//                          notification only, restore (B5).
 // 2. The engine with the user's JWT, `{ "action": … }`:
 //    catalog  → plans (price, tokens), packs, currency, trial offer
 //    status   → plan, subscription, balances by bucket, renewal date, whether the trial is still available;
@@ -106,6 +108,7 @@ function packForPrice(catalog: Catalog, priceId: string | undefined) {
 
 
 const ACTIVE = ["active", "trialing", "past_due"];
+const CHARGEBACK_ACTIONS = ["chargeback", "chargeback_warning", "chargeback_reverse"];
 
 // ---------------------------------------------------------------- webhook
 
@@ -165,10 +168,13 @@ async function handleWebhook(req: Request, deps: BillingDeps): Promise<Response>
           period_end: d.current_billing_period?.ends_at ?? null,
           cancel_at: d.scheduled_change?.action === "cancel" ? d.scheduled_change.effective_at : (d.canceled_at ?? null),
           event_at: occurredAt,
+          past_due_since: null as string | null,
           raw: d,
           updated_at: now.toISOString(),
         };
         const { data: existing } = await db.from("subscriptions").select("*").eq("provider", "paddle").eq("provider_ref", row.provider_ref).maybeSingle();
+        // B6: the 7-day past_due grace counts from the first failed payment, kept across retries
+        if (row.status === "past_due") row.past_due_since = existing?.status === "past_due" && existing.past_due_since ? existing.past_due_since : occurredAt;
         // Paddle does not promise order: an older event must not undo a newer one (audit C5)
         if (existing?.event_at && new Date(existing.event_at).getTime() > new Date(occurredAt).getTime()) {
           result = { ignored: "older than the stored state", subscription: row.provider_ref };
@@ -238,34 +244,47 @@ async function handleWebhook(req: Request, deps: BillingDeps): Promise<Response>
         await creditRpc(db,"bid_v12_payment_refunds",{p_user:userId,p_ref:txn,p_now:now.toISOString()});
         result = duplicate && !granted.length ? { duplicateTransaction: txn } : { transaction: txn, granted };
       }
-    } else if ((type === "adjustment.created" || type === "adjustment.updated") && d.action === "refund" && d.status === "approved") {
-      // a refund takes back what is left of the tokens that transaction granted (spent tokens stay spent),
-      // in proportion when only part of the payment is refunded (audit C12)
+    } else if ((type === "adjustment.created" || type === "adjustment.updated") && CHARGEBACK_ACTIONS.includes(String(d.action))) {
+      // B5: chargeback → credits taken back (spent → debt), paid entitlements suspended, owner notified;
+      // chargeback_warning → owner notified; chargeback_reverse → credits and entitlements restored.
       const txn = String(d.transaction_id ?? "");
-      const { data: paid } = await db.from("billing_events").select("user_id,payload").eq("type", "transaction.completed").eq("ref", txn).limit(1);
-      const originalEvent = (paid ?? [])[0] as Row | undefined;
-      const original = originalEvent?.payload?.data as Row | undefined;
-      // every ref this transaction can have granted under: the plan (txn) and each pack (txn:price)
-      const refs = [txn, ...catalog.packs.filter((p) => p.paddlePriceId).map((p) => `${txn}:${p.paddlePriceId}`)];
-      const { data: rows } = await db.from("credit_ledger").select("user_id,delta,bucket,reason,ref").in("ref", refs);
-      const granted = (rows ?? []).filter((g: Row) => g.reason === "plan_grant" || g.reason === "topup");
-      const refunded = Number(d.totals?.total ?? 0);
-      const total = Number(original?.details?.totals?.total ?? original?.totals?.total ?? 0);
-      const share = refunded > 0 && total > 0 ? Math.min(1, refunded / total) : 1;
-      const taken: Row[] = [];
-      const users = [...new Set(granted.map((g:Row)=>String(g.user_id)))];
-      if(!users.length && originalEvent?.user_id) users.push(originalEvent.user_id);
-      for (const owner of users) {
-        const receipt=await creditRpc(db,"bid_refund",{p_user:owner,p_ref:txn,p_adjustment:String(d.id ?? txn),p_share:share,p_now:now.toISOString()});
-        if(receipt.taken>0) taken.push({tokens:receipt.taken});
+      const receipts: Row[] = [];
+      for (const owner of await adjustmentOwners(db, catalog, txn)) {
+        receipts.push(await creditRpc(db,"bid_v12_apply_adjustment",{p_user:owner,p_adjustment:{...d,id:String(d.id ?? txn)},p_now:now.toISOString()}));
       }
-      result = { refund: txn, taken, share };
+      result = { adjustment: d.action, transaction: txn, receipts };
+    } else if ((type === "adjustment.created" || type === "adjustment.updated") && d.action === "refund" && d.status === "approved") {
+      // A refund is applied per Paddle line item (plan vs pack) by bid_v12_apply_adjustment (B2): it takes
+      // what is left of the matching lots and records spent credits as debt. Without line items the
+      // refunded share of the whole transaction applies (audit C12).
+      const txn = String(d.transaction_id ?? "");
+      const users = await adjustmentOwners(db, catalog, txn);
+      const taken: Row[] = [];
+      let share: unknown = null, debt = 0;
+      for (const owner of users) {
+        const receipt=await creditRpc(db,"bid_v12_apply_adjustment",{p_user:owner,p_adjustment:{...d,id:String(d.id ?? txn)},p_now:now.toISOString()});
+        if(Number(receipt.taken)>0) taken.push({tokens:Number(receipt.taken)});
+        debt += Number(receipt.debt ?? 0); share = receipt.share ?? share;
+      }
+      result = { refund: txn, taken, share, debt };
     }
     return json(200, { ok: true, ...result });
   } catch (e) {
     await db.from("billing_events").delete().eq("id", eventId); // let Paddle's retry process it again
     return internalError("billing webhook", e);
   }
+}
+
+/** Accounts a Paddle transaction granted credits to: the lots it created, else the stored payment's owner. */
+async function adjustmentOwners(db: DbClient, catalog: Catalog, txn: string): Promise<string[]> {
+  const { data: paid } = await db.from("billing_events").select("user_id").eq("type", "transaction.completed").eq("ref", txn).limit(1);
+  // every ref this transaction can have granted under: the plan (txn) and each pack (txn:price)
+  const refs = [txn, ...catalog.packs.filter((p) => p.paddlePriceId).map((p) => `${txn}:${p.paddlePriceId}`)];
+  const { data: rows } = await db.from("credit_ledger").select("user_id,reason,ref").in("ref", refs);
+  const users = [...new Set((rows ?? []).filter((g: Row) => g.reason === "plan_grant" || g.reason === "topup").map((g: Row) => String(g.user_id)))];
+  const owner = (paid ?? [])[0]?.user_id;
+  if (!users.length && owner) users.push(String(owner));
+  return users;
 }
 
 // ---------------------------------------------------------------- Paddle API
@@ -413,6 +432,7 @@ export function createBillingHandler(deps: BillingDeps): (req: Request) => Promi
               raw: { ...(s.raw ?? {}), billing_cycle: remote.billing_cycle ?? s.raw?.billing_cycle },
               updated_at: now.toISOString(),
             };
+            patch.past_due_since = patch.status === "past_due" ? (s.status === "past_due" && s.past_due_since ? s.past_due_since : now.toISOString()) : null;
             const tier = ((remote.items ?? []) as Row[]).map(i=>tierForPrice(catalog,i.price?.id)).filter((p):p is Plan=>!!p).sort((a,b)=>PAID.indexOf(b)-PAID.indexOf(a))[0];
             if (tier) patch.tier = tier;
             must(await db.from("subscriptions").update(patch).eq("id", s.id));

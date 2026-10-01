@@ -56,14 +56,27 @@ export async function effectiveSubscriptionTier(db: DbClient, userId: string, su
   return pending && pending.to_tier === sub.tier && Date.parse(pending.effective_at)>now.getTime() ? pending.from_tier : sub.tier;
 }
 
+const DAY = 86400_000;
+/** When a subscription row stops granting its tier. Mirrors bid_enforce_sites: an active Paddle subscription
+ * keeps 3 days after period_end (late renewal webhook); past_due keeps 7 days from the FIRST failed payment
+ * (B6), because Paddle moves period_end forward when it creates the renewal even if the payment fails. */
+export function entitlementEndsAt(sub: Row): number | null {
+  if (sub.status === "past_due") {
+    const failed = sub.past_due_since ?? sub.event_at ?? sub.period_end;
+    return failed ? Date.parse(failed) + 7 * DAY : null;
+  }
+  if (!sub.period_end) return null;
+  return Date.parse(sub.period_end) + (sub.provider === "paddle" && sub.status === "active" ? 3 * DAY : 0);
+}
+
 export async function reconcilePlan(db: DbClient, userId: string, now: Date): Promise<string> {
   const {data:subs} = await db.from("subscriptions").select("*").eq("user_id",userId);
   const tiers = ["free","flash","high","knight"];
   let best = "free";
   for (const sub of subs ?? []) {
     if (!["active","trial","past_due"].includes(sub.status)) continue;
-    const grace = sub.provider === "paddle" && sub.status === "active" ? 3*86400_000 : 0;
-    if (sub.period_end && Date.parse(sub.period_end)+grace < now.getTime()) continue;
+    const ends = entitlementEndsAt(sub);
+    if (ends !== null && ends < now.getTime()) continue;
     const tier = await effectiveSubscriptionTier(db,userId,sub,now);
     if (tiers.indexOf(tier)>tiers.indexOf(best)) best=tier;
   }
@@ -89,9 +102,9 @@ export async function expireDue(db: DbClient, userId: string, now: Date): Promis
   const {data:subs} = await db.from("subscriptions").select("*").eq("user_id",userId);
   let changed = false;
   for(const sub of subs ?? []) {
-    if(!sub.period_end || !["active","trial","past_due"].includes(sub.status)) continue;
-    const grace = sub.provider === "paddle" && ["active","past_due"].includes(sub.status) ? 3*86400_000 : 0;
-    if(Date.parse(sub.period_end)+grace>now.getTime()) continue;
+    if(!["active","trial","past_due"].includes(sub.status)) continue;
+    const ends = entitlementEndsAt(sub);
+    if(ends === null || ends>now.getTime()) continue;
     must(await db.from("subscriptions").update({status:"expired",updated_at:now.toISOString()}).eq("id",sub.id));
     changed = true;
   }
@@ -102,7 +115,6 @@ export async function expireDue(db: DbClient, userId: string, now: Date): Promis
   return plan;
 }
 
-export const HOLD_TTL_MS = 15 * 60_000;
 export async function reconcileHolds(db: DbClient, userId: string, now: Date): Promise<{ released: number; reservedTokens: number; open: number }> {
   const s=await creditStatus(db,userId,now);
   return {released:Number(s.released ?? 0),reservedTokens:Number(s.reservedTokens ?? 0),open:Number(s.open ?? 0)};

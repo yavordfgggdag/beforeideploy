@@ -19,7 +19,9 @@ const schema = fs.readFileSync(path.join(ROOT, 'supabase', 'schema.sql'), 'utf8'
 let passed = 0;
 let failed = 0;
 const results = [];
+const only = process.env.RLS_ONLY ? new RegExp(process.env.RLS_ONLY) : null; // dev filter, e.g. RLS_ONLY='B1|refund'
 async function t(name, fn) {
+  if (only && !only.test(name)) return;
   try {
     await fn();
     passed++;
@@ -171,7 +173,7 @@ await t('subscriptions, ai_usage: own rows only; billing_events, admin_audit, tr
 
 await t('settings: readable by signed-in users, not by anonymous, never writable by clients', async () => {
   const s = await asA((q) => q(`select key from public.settings order by key`));
-  assert(s.rows.map((r) => r.key).join() === 'ai.creditEur,billing.catalog,billing.graceDays,credits.migration,credits.sitesMigrated,features.knightDomain,features.netlifyCredits,plans,pricing.actions,pricing.version', JSON.stringify(s.rows));
+  assert(s.rows.map((r) => r.key).join() === 'ai.creditEur,billing.catalog,billing.graceDays,credits.holdTtlMinutes,credits.migration,credits.sitesMigrated,features.knightDomain,features.netlifyCredits,plans,pricing.actions,pricing.version', JSON.stringify(s.rows));
   assert((await asAnon((q) => q('select key from public.settings'))).rows.length === 0, 'anon');
   await rejects(() => asA((q) => q(`insert into public.settings (key, value) values ('ai.models', '{}')`)), /row-level security/);
   const u = await asA((q) => q(`update public.settings set value = '{}' where key = 'plans'`));

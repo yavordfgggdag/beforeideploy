@@ -531,3 +531,33 @@ Deno.test("billing: an interval switch stops before preview, mutation or checkou
  assert.equal(response.status,409);assert.equal((await response.json()).code,"billing_interval_change");
  assert.deepEqual(calls,["GET:/subscriptions/sub_year"]);assert.equal(w.db.rows("billing_changes").length,0);
 });
+
+Deno.test("billing: past_due keeps the plan 7 days from the first failed payment, not until period_end (B6)", async () => {
+  const { db, handle } = world();
+  await webhook(handle, { ...subEvent("evt_pd_a", "active"), occurred_at: "2026-10-01T00:00:00Z" });
+  // the renewal was created (period moved forward) but the payment failed on 10 Oct; Paddle retries later
+  const failed = (id: string, at: string) => ({ ...subEvent(id, "past_due", "pri_high", { current_billing_period: { starts_at: "2026-10-10T00:00:00Z", ends_at: "2026-11-10T00:00:00Z" } }), occurred_at: at });
+  await webhook(handle, failed("evt_pd_1", "2026-10-10T12:00:00Z"));
+  await webhook(handle, failed("evt_pd_2", "2026-10-13T12:00:00Z"));
+  assert.equal(db.rows("subscriptions")[0].past_due_since, "2026-10-10T12:00:00Z", "first failure is kept across retries");
+  const at = (iso: string) => createBillingHandler({ ...fakeDeps(db), paddleApiKey: "k", paddleWebhookSecret: SECRET, paddleApiBase: "x", fetch: globalThis.fetch, now: () => new Date(iso) });
+  await at("2026-10-16T12:00:00Z")(post("billing", { action: "status" }));
+  assert.equal(db.rows("profiles")[0].plan, "high", "within 7 days");
+  await at("2026-10-17T13:00:00Z")(post("billing", { action: "status" }));
+  assert.equal(db.rows("subscriptions")[0].status, "expired");
+  assert.equal(db.rows("profiles")[0].plan, "free", "7 days after the failure, not at period_end + 3 days");
+});
+
+Deno.test("billing: a chargeback takes back the transaction's credits once and notifies the owner (B5)", async () => {
+  const { db, handle } = world();
+  await webhook(handle, { event_id: "evt_cb_t", event_type: "transaction.completed", data: { id: "txn_cb", custom_data: { user_id: USER.id }, details: { totals: { total: "499" } }, items: [{ price: { id: "pri_pack" } }] } });
+  const cb = { event_id: "evt_cb", event_type: "adjustment.created", data: { id: "adj_cb", action: "chargeback", status: "approved", transaction_id: "txn_cb", totals: { total: "499" } } };
+  const r = await (await webhook(handle, cb)).json();
+  assert.equal(r.adjustment, "chargeback");
+  assert.equal(r.receipts[0].suspended, true);
+  assert.equal(sum(db.rows("credit_ledger"), "topup"), 0, "pack credits taken back");
+  await webhook(handle, { ...cb, event_id: "evt_cb_again" });
+  assert.equal(db.rows("admin_notifications").filter((n) => n.kind === "chargeback").length, 1, "one notification for the owner");
+  const warn = await (await webhook(handle, { event_id: "evt_cbw", event_type: "adjustment.created", data: { id: "adj_w", action: "chargeback_warning", status: "approved", transaction_id: "txn_cb" } })).json();
+  assert.equal(warn.receipts[0].dispute, "chargeback_warning");
+});

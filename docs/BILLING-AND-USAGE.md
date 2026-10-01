@@ -14,12 +14,14 @@ providers (Netlify, own AI keys) and marks it as such.
 | **money** (EUR in the catalog) | plan and pack prices in the catalog / checkout; proration and tax from Paddle's checkout; the owner's cost per credit (`ai.creditEur`) | credits |
 | **model tokens** (input / output) | `ai_usage.input_tokens / output_tokens`; the charge is `ceil(model cost in EUR / credit value of the plan)` (`creditsFor` in `ai-fix`) | — |
 
-A credit is a money-backed unit: Flash 100 000 credits = 2.49 € of model cost, High 250 000 = 7.50 €, Knight
-1 000 000 = 30 €. Because the charge follows the model's real price, the plan's credits can never cost the
-owner more than that cap, whatever model or answer length. Plans: Flash 9.99 €, High 29.99 €, Knight 99.99 €
-a month (yearly = 10 months); packs 100k / 500k / 1M credits at 3.99 / 17.99 / 33.99 €; trial 7 days of High
-with 50 000 credits. The rolling **session** (5 h, 20 % of the monthly credits, code `session_cap`) replaces
-the daily cap.
+A credit is a money-backed unit (one rate for every plan, `ai.creditEur` = 0.000025 €): Flash 100 000 credits
+= 2.50 € of model cost, High 300 000 = 7.50 €, Knight 1 000 000 = 25 €. Because the charge follows the model's
+real price, the plan's credits can never cost the owner more than that cap, whatever model or answer length.
+Current catalog (V12.2, `supabase/functions/_shared/plans-catalog.json`): Flash 9.99 €, High 29.99 €, Knight
+99.99 € a month (yearly 99.90 / 299.90 / 999.90 €); packs 100k / 500k / 1M credits at 4.99 / 19.99 / 39.99 €
+(valid 12 months); trial 7 days of High with 50 000 credits. The rolling **session** (5 h, 20 % of the monthly
+credits, code `window_5h`, legacy `session_cap`) and the anchored week (40 %) replace the daily cap.
+The next catalog (V3) is proposed in [PLAN-UNIFIED-BG.md §11.9](PLAN-UNIFIED-BG.md) and is not implemented yet.
 
 ## 2. Ledger (`credit_ledger`)
 
@@ -64,7 +66,9 @@ see §8). **Upgrade**: the new plan's grant replaces the remainder of the old pe
    (`settled ??=`).
 5. A cancelled stream still settles what was received (`status: truncated`) — the product policy is
    "you pay for what the model produced", shown as such in the history.
-6. Crash between 3 and 4 → the hold stays until step 1 of the next request releases it (≤ 15 min).
+6. Crash between 3 and 4 → the hold stays until step 1 of the next request releases it (≤ 15 min for AI).
+   V12 metered holds take their lifetime from `settings.credits.holdTtlMinutes` (deploys and backups 25 min =
+   the provider CLI's 20-minute timeout + 5, AI and checks 15 min).
 
 Concurrency: two parallel requests each insert a hold before checking the balance, so the second one sees the
 first's reservation (test "parallel requests see each other's reservations"). Negative balances are prevented
@@ -104,10 +108,17 @@ Exhausted AI credits never block the project, its history, backups or recovery a
   out-of-order events are ignored when older than the stored `event_at` (audit C5); a failed handler removes
   the claim so Paddle's retry runs it again. Covered: `subscription.created/updated/activated/past_due/
   canceled/paused/resumed`, `transaction.completed` (plan grant or pack), `adjustment.created/updated`
-  (refund / chargeback → `refund` rows, once per adjustment).
+  (approved refund → `grant_refund` per invoice line item: a pack-only refund never touches the plan lot, spent
+  credits are owed and become debt if the balance cannot pay them; `chargeback` → the same take-back plus a
+  suspension of paid entitlements and an `admin_notifications` row; `chargeback_warning` → notification only;
+  `chargeback_reverse` → credits and entitlements restored; all once per adjustment id).
 - **Declined card / cancelled checkout**: no event → nothing changes; the app's "waiting for payment" poll
   ends after 3 minutes without a change.
-- **Past due**: status carried, plan kept for the 3-day grace (`expireDue`), then expired → Free.
+- **Past due**: status carried, plan kept for 7 days from the first failed payment (`subscriptions.past_due_since`,
+  not from `period_end`, which Paddle moves forward), then expired → Free. An active subscription keeps 3 days
+  after `period_end` for a late renewal webhook.
+- **Downgrade**: takes effect at the next period; credits already paid stay until their own expiry. The
+  accumulation cap (monthly × validity) limits only the new grant and counts only lots of the new tier.
 - **Upgrade / downgrade**: the app opens the customer portal (Paddle quotes proration and tax); the resulting
   `subscription.updated` carries the new price id → tier; the plan grant follows the next renewal event.
 - **Manual plans** (`provider: manual`, granted by an admin) outlive Paddle events (audit C15).
