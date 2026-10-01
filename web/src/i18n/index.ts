@@ -5,7 +5,7 @@ export type Lang = 'bg' | 'en';
 const tables: Record<Lang, Record<string, string>> = { bg, en };
 let current: Lang = (() => {
   try { const s = localStorage.getItem('bid.lang'); if (s === 'bg' || s === 'en') return s; } catch { /* storage unavailable */ }
-  return navigator.language?.startsWith('bg') ? 'bg' : 'bg';
+  return 'en'; // English first (global launch); Bulgarian is one click away
 })();
 
 export const getLang = () => current;
@@ -13,7 +13,7 @@ export function setLang(l: Lang) { current = l; try { localStorage.setItem('bid.
 
 /** t('key', {name: 'x'}) — {name} placeholders. Missing keys show the key so the i18n check catches them. */
 export function t(key: string, vars?: Record<string, string | number>): string {
-  const s = tables[current][key] ?? tables.bg[key] ?? key;
+  const s = tables[current][key] ?? tables.en[key] ?? key;
   return vars ? s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m)) : s;
 }
 
