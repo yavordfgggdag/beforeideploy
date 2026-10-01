@@ -27,8 +27,9 @@ export function extraPathDirs(env, home) {
   ];
 }
 
-/** C.UTF-8 exists on every current glibc/musl system; en_US.UTF-8 often is not generated. A user's choice wins. */
-export const locale = (env) => (env.LC_ALL ? {} : { LANG: env.LANG || 'C.UTF-8' });
+/** Forced like macOS (en_US there): tools print English, parseable output. C.UTF-8 exists on every current
+ * glibc/musl system; en_US.UTF-8 is often not generated. */
+export const locale = () => ({ LANG: 'C.UTF-8', LC_ALL: 'C.UTF-8' });
 
 export const legacyRuntimeNames = () => [];
 
