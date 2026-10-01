@@ -120,6 +120,12 @@ jobs:
               shoot "v12-$appearance-assistant-$state" -BIDScreen assistant -BIDAssistantDemo "$state" -BIDWindowSize 1080x700
             done
           done
+          for appearance in light dark; do
+            defaults write "$APP_ID" appearance -string "$appearance"
+            for screen in plans usage; do
+              shoot "v12-$appearance-$screen-demo" -BIDScreen "$screen" -BIDBillingDemo 1 -BIDWindowSize 1080x700
+            done
+          done
           ls -la "$OUT"
       - name: App and engine logs (decode errors, slow commands)
         if: always()

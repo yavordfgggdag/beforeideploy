@@ -1,4 +1,5 @@
 // Token ledger helpers shared by `billing` and `ai-fix` (V10 WP4, hardened after the V10 audit C3/C4/C10).
+import { monthlySlice } from "./billing-period.ts";
 import { type DbClient, isDuplicate, must, type Row } from "./db.ts";
 
 /** Sum of one bucket, computed in Postgres (view credit_bucket_balance) — summing rows here would stop at
@@ -31,7 +32,6 @@ export async function grantPlanTokens(db: DbClient, userId: string, tokens: numb
   return true;
 }
 
-const MONTH_MS = 30.44 * 86400_000;
 
 /**
  * Yearly subscriptions are paid once but grant tokens every month. Month 0 comes with the payment
@@ -41,12 +41,37 @@ const MONTH_MS = 30.44 * 86400_000;
 export async function ensureMonthlyGrant(db: DbClient, userId: string, planTokens: Record<string, { tokens: number }>, now: Date) {
   const { data: subs } = await db.from("subscriptions").select("*").eq("user_id", userId).eq("provider", "paddle");
   const sub = (subs ?? []).find((s: Row) => ["active", "past_due"].includes(s.status) && s.raw?.billing_cycle?.interval === "year");
-  if (!sub?.period_start) return null;
-  const k = Math.floor((now.getTime() - new Date(sub.period_start).getTime()) / MONTH_MS);
+  if (!sub?.period_start || !sub.period_end || now.getTime() >= Date.parse(sub.period_end)) return null;
+  const k = monthlySlice(sub.period_start, sub.period_end, now).month;
   if (k < 1 || k > 11) return null;
-  const tokens = planTokens[sub.tier]?.tokens ?? 0;
-  const granted = await grantPlanTokens(db, userId, tokens, "plan_grant", `${sub.provider_ref}:m${k}`);
+  const tier = await effectiveSubscriptionTier(db,userId,sub,now);
+  const tokens = planTokens[tier]?.tokens ?? 0;
+  const granted = await grantPlanTokens(db, userId, tokens, "plan_grant", `${sub.provider_ref}:${sub.period_start}:m${k}`);
   return granted ? { month: k, tokens } : null;
+}
+
+/** A downgrade changes provider items now, while the paid entitlement lasts to the reviewed renewal. */
+export async function effectiveSubscriptionTier(db: DbClient, userId: string, sub: Row, now: Date): Promise<string> {
+  const {data:changes} = await db.from("billing_changes").select("from_tier,to_tier,effective_at,created_at,status").eq("user_id",userId).eq("provider_ref",sub.provider_ref ?? "").in("status",["applying","applied"]).order("created_at",{ascending:false}).limit(1);
+  const pending = changes?.[0];
+  return pending && pending.to_tier === sub.tier && Date.parse(pending.effective_at)>now.getTime() ? pending.from_tier : sub.tier;
+}
+
+export async function reconcilePlan(db: DbClient, userId: string, now: Date): Promise<string> {
+  const {data:subs} = await db.from("subscriptions").select("*").eq("user_id",userId);
+  const tiers = ["free","flash","high","knight"];
+  let best = "free";
+  for (const sub of subs ?? []) {
+    if (!["active","trial","past_due"].includes(sub.status)) continue;
+    const grace = sub.provider === "paddle" && sub.status === "active" ? 3*86400_000 : 0;
+    if (sub.period_end && Date.parse(sub.period_end)+grace < now.getTime()) continue;
+    const tier = await effectiveSubscriptionTier(db,userId,sub,now);
+    if (tiers.indexOf(tier)>tiers.indexOf(best)) best=tier;
+  }
+  const {data:profile} = await db.from("profiles").select("plan,role").eq("user_id",userId).maybeSingle();
+  if (best === "free" && profile?.role !== "normal") return profile?.plan ?? best;
+  must(await db.from("profiles").update({plan:best}).eq("user_id",userId));
+  return best;
 }
 
 /**
@@ -73,6 +98,9 @@ export async function expireDue(db: DbClient, userId: string, now: Date): Promis
       plan = "free";
     }
   }
+  // A queued downgrade takes effect on time even if its next webhook is delayed.
+  const {data:changes} = await db.from("billing_changes").select("id").eq("user_id",userId).in("status",["applying","applied"]).limit(1);
+  if (changes?.length) return reconcilePlan(db,userId,now);
   return plan;
 }
 

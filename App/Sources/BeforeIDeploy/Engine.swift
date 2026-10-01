@@ -126,6 +126,7 @@ final class EngineClient {
         if env["BID_LANG"] == nil { env["BID_LANG"] = Self.engineLanguage }
         // screenshot / CI runs: never touch the login keychain (`open --args -BIDNoKeychain 1`)
         if Snapshot.argument("BIDNoKeychain") { env["BID_NO_KEYCHAIN"] = "1" }
+        if Snapshot.argument("BIDSnapshot"), Snapshot.argument("BIDBillingDemo") { env["BID_BILLING_DEMO"] = "1" }
         for (k, v) in extra { env[k] = v }
         process.environment = env
 

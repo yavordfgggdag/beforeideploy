@@ -1,10 +1,14 @@
 # Builds the static site pages with one shared header and footer: python3 scripts/site-build.py
 import pathlib
+import json
 HERE = pathlib.Path(__file__).parent.parent / "site"
 SELLER = "[Seller legal name]"          # fill before Paddle review: your legal name or company
 ADDRESS = "[Registered address]"         # fill before Paddle review
 SUPPORT = "support@beforeideploy.app"    # change if the domain differs
-UPDATED = "29 September 2026"
+UPDATED = "1 October 2026"
+CATALOG = json.loads((HERE.parent / "supabase/functions/_shared/plans-catalog.json").read_text())
+PLAN_CARDS = ''.join(f'<div class="card"><h3>{name.title()}</h3><div class="price">€{plan["price"]:.2f} <small>/ month</small></div><ul><li>{plan["credits"]:,} credits a month</li><li>{plan["activeSites"]} active site(s)</li><li>Credits valid {plan["validityMonths"]} month(s)</li><li>€{plan["yearly"]["price"]:.2f} a year — 2 months free</li></ul></div>' for name,plan in CATALOG['plans'].items())
+PACK_PRICES = ', '.join(f'{pack["tokens"]:,} for €{pack["price"]:.2f}' for pack in CATALOG['packs'])
 DRAFT = '<p class="draft">Draft — the seller details in brackets are completed before sales start.</p>'
 
 def page(name, title, body, desc="Check, fix and publish your websites from one Mac app."):
@@ -61,12 +65,10 @@ page("index", "Before I Deploy — check before you publish", f"""
 <section id="pricing">
   <h2>Pricing</h2>
   <div class="grid four">
-    <div class="card"><h3>Free</h3><div class="price">€0</div><p>All checks, deploys, Local Preview, Git and Mission Control. Bring your own AI key.</p></div>
-    <div class="card"><h3>Flash</h3><div class="price">€4.99 <small>/ month</small></div><ul><li>250,000 AI tokens a month</li><li>Built-in AI Fix</li><li>€47.90 a year</li></ul></div>
-    <div class="card"><h3>High</h3><div class="price">€9.99 <small>/ month</small></div><ul><li>1,000,000 AI tokens a month</li><li>7-day free trial</li><li>€95.90 a year</li></ul></div>
-    <div class="card"><h3>Knight</h3><div class="price">€19.99 <small>/ month</small></div><ul><li>2,500,000 AI tokens a month</li><li>Deep fix with the strongest model</li><li>€191.90 a year</li></ul></div>
+    <div class="card"><h3>Free</h3><div class="price">€0</div><p>All checks, deploys, Local Preview, Git and Mission Control. External AI prompts included. Built-in AI requires an eligible plan.</p></div>
+    {PLAN_CARDS}
   </div>
-  <p class="note">Extra tokens: 500,000 for €4.99 or 2,000,000 for €14.99, valid 12 months. Prices include VAT where it applies.
+  <p class="note">Extra credits: {PACK_PRICES}, valid 12 months. Prices include VAT where it applies.
   Cancel any time; see the <a href="/refund">refund policy</a>.</p>
 </section>
 """)
@@ -127,7 +129,7 @@ publish. Production deploys only happen after you confirm them.</p>
 16 years old, or have a guardian's consent.</p>
 <h2>3. Plans and payment</h2>
 <p>Paid plans (Flash, High, Knight) are subscriptions billed monthly or yearly in advance and renew until
-cancelled. Each plan includes a monthly amount of AI tokens; unused plan tokens do not carry over. Token
+cancelled. Credits from each plan payment remain valid for 1 month (Flash), 3 months (High), or 10 months (Knight), spent oldest first. Accumulation is capped at monthly credits multiplied by validity. Credit
 packs are valid for 12 months. Our order process is conducted by our online reseller Paddle.com, which is
 the Merchant of Record for all our orders; Paddle provides customer service inquiries and handles returns.
 Prices are shown in the app and on this site and include VAT where it applies.</p>
@@ -164,7 +166,7 @@ page("refund", "Refund policy — Before I Deploy", f"""
 payment, for any reason. Write to <a href="mailto:{SUPPORT}">{SUPPORT}</a> or reply to your Paddle receipt,
 or use the Paddle link in that receipt.</p>
 <h2>What happens after a refund</h2>
-<p>The unused tokens of that purchase are removed; for a partial refund, the matching share. A refunded
+<p>The unused credits of that purchase are removed; for a partial refund, the matching share. A refunded
 subscription ends.</p>
 <h2>After 14 days</h2>
 <p>You can cancel any time; the plan stays active until the end of the period you paid for and does not

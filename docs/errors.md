@@ -141,3 +141,8 @@ Returned as `code` in the JSON body; the engine maps them to the codes above (`q
 | Code | Meaning | Recovery |
 |---|---|---|
 | `stale_undo` | The requested proposal is no longer the latest undoable change | Review the latest change before undoing it |
+
+| `demo_read_only` | A billing mutation was attempted in demo mode | Exit demo mode before making a purchase |
+
+| `billing_conflict` | 409 | A subscription change is already running, the subscription has a scheduled change, or multiple active subscriptions need reconciliation. | Sync or open the customer portal. |
+| `preview_expired` | 409 | The subscription or the reviewed price changed, or the ten-minute preview expired. | Review the plan again before confirming. |

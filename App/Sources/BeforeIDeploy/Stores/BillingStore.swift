@@ -1,139 +1,182 @@
 import AppKit
 import SwiftUI
 
-/// Plans, credits and checkout (V10 WP4). Payment happens on Paddle's page in the browser; afterwards the
-/// store polls `bid billing status` until the webhook has changed the plan or the balance.
+/// Account-scoped billing. Every asynchronous result is checked against the session generation.
 @MainActor
 final class BillingStore: ObservableObject {
     @Published var catalog: BillingCatalog?
     @Published var status: BillingStatus?
-    @Published var loading = false
-    /// Set while we wait for Paddle's webhook after the browser checkout.
+    @Published var loadingCatalog = false
+    @Published var loadingUsage = false
     @Published var waitingForPayment = false
     @Published var busy: String?
-    /// Plan & usage (V11 RC): what the cloud says, in tokens; nil until loaded or when signed out.
     @Published var usage: UsageReport?
     @Published var usageError: String?
-    /// The cloud's billing function is not deployed yet: plans are simply not available — shown as a quiet note
-    /// where plans would be, never as a red error toast on every screen that loads them.
     @Published var billingUnavailable: String?
-
+    var loading: Bool { loadingCatalog }
+    var demo: Bool { (Snapshot.argument("BIDSnapshot") && Snapshot.argument("BIDBillingDemo")) || ProcessInfo.processInfo.environment["BID_BILLING_DEMO"] == "1" }
+    var canReadUsage: Bool { identity != nil || demo }
     let engine: EngineClient
     weak var feedback: Feedback?
-    /// Called when the plan or balance changed (the facade reloads the account and its feature gates).
     var onChanged: (@MainActor () async -> Void)?
     private var pollTask: Task<Void, Never>?
+    private var identity: String?
+    private var generation = UUID()
 
-    init(engine: EngineClient) {
-        self.engine = engine
+    init(engine: EngineClient) { self.engine = engine }
+
+    func sessionChanged(_ account: AccountState?) {
+        let next = account?.loggedIn == true ? account?.id : nil
+        guard next != identity else { return }
+        reset(); identity = next
+    }
+
+    func reset() {
+        generation = UUID(); pollTask?.cancel(); pollTask = nil
+        identity = nil; catalog = nil; status = nil; usage = nil
+        loadingCatalog = false; loadingUsage = false; busy = nil
+        waitingForPayment = false; usageError = nil; billingUnavailable = nil
     }
 
     func load() async {
-        loading = true
-        defer { loading = false }
+        guard !loadingCatalog else { return }
+        let epoch = generation
+        loadingCatalog = true
+        defer { if epoch == generation { loadingCatalog = false } }
         do {
-            async let c = engine.call(["billing", "catalog"], as: BillingCatalog.self)
-            async let s = engine.call(["billing", "status"], as: BillingStatus.self)
-            catalog = try await c
-            status = try await s
-            billingUnavailable = nil
-        } catch let e as EngineError where e.code == "cloud_function_missing" || e.code == "not_configured" {
-            billingUnavailable = e.localizedDescription
-        } catch { feedback?.show(error) }
+            let result = try await engine.call(["billing", "catalog"], as: BillingCatalog.self)
+            guard epoch == generation, !Task.isCancelled else { return }
+            catalog = result
+            if canReadUsage {
+                let value = try await engine.call(["billing", "status"], as: BillingStatus.self)
+                guard epoch == generation, !Task.isCancelled else { return }
+                status = value; billingUnavailable = nil
+            }
+        } catch {
+            guard epoch == generation else { return }
+            if unavailable(error) { billingUnavailable = error.localizedDescription }
+            else { feedback?.show(error) }
+        }
+    }
+
+    func loadUsage() async {
+        guard canReadUsage, !loadingUsage else { return }
+        let epoch = generation
+        loadingUsage = true
+        defer { if epoch == generation { loadingUsage = false } }
+        do {
+            let report = try await engine.call(["billing", "usage"], as: UsageReport.self)
+            guard epoch == generation, !Task.isCancelled else { return }
+            usage = report; usageError = nil; billingUnavailable = nil
+        } catch {
+            guard epoch == generation, !Task.isCancelled else { return }
+            if unavailable(error) { billingUnavailable = error.localizedDescription; usageError = nil }
+            else { usageError = error.localizedDescription }
+        }
+    }
+
+    /// SwiftUI owns this task's lifetime. Hidden views stop polling; signed-out users make no usage calls.
+    func observeUsage(every seconds: UInt64) async {
+        while !Task.isCancelled {
+            await loadUsage()
+            do { try await Task.sleep(nanoseconds: seconds * 1_000_000_000) } catch { return }
+        }
     }
 
     func checkout(plan: String? = nil, pack: String? = nil, yearly: Bool = false) {
+        guard busy == nil, !demo else { return }
         var args = ["billing", "checkout"]
         if let plan { args += ["--plan", plan] }
         if yearly, plan != nil { args.append("--yearly") }
         if let pack { args += ["--pack", pack] }
-        busy = plan ?? pack
-        Task {
-            defer { busy = nil }
-            do {
-                let r = try await engine.call(args, as: BillingURL.self)
-                guard let url = URL(string: r.url) else { return }
-                NSWorkspace.shared.open(url)
-                waitForPayment()
-            } catch { feedback?.show(error) }
+        let epoch = generation
+        perform(plan ?? pack ?? "checkout") {
+            // Capture a baseline before opening checkout; the first later read is never a false success.
+            let before = try await self.engine.call(["billing", "status"], as: BillingStatus.self)
+            guard epoch == self.generation else { throw CancellationError() }
+            let result = try await self.engine.call(args, as: BillingURL.self)
+            return {
+                self.status = before
+                if let preview = result.preview { await self.confirm(preview, epoch: epoch) }
+                else if let text = result.url, let url = URL(string: text) { NSWorkspace.shared.open(url); self.waitForPayment(before: before) }
+            }
         }
     }
 
+    private func confirm(_ preview: BillingURL.Preview, epoch: UUID) async {
+        guard epoch == generation else { return }
+        let alert = NSAlert()
+        alert.messageText = L("billing.reviewChange", BillingFormat.planName(preview.plan))
+        alert.informativeText = L("billing.reviewAmounts", BillingFormat.money(Double(preview.amount)/100, currency: preview.currency), BillingFormat.money(Double(preview.nextAmount)/100, currency: preview.currency)) + "\n\n" +
+            (preview.downgrade ? L("billing.changeLater", BillingFormat.day(preview.effectiveAt)) : L("billing.changeNow"))
+        alert.addButton(withTitle: L("billing.confirmChange"))
+        alert.addButton(withTitle: L("common.cancel"))
+        guard alert.runModal() == .alertFirstButtonReturn, epoch == generation else { return }
+        do {
+            _ = try await engine.call(["billing", "confirm-change", "--preview-id", preview.id], as: BillingURL.self)
+            guard epoch == generation else { return }
+            await load(); await loadUsage(); await onChanged?()
+            feedback?.flash(L("billing.updated"), error: false)
+        } catch { if epoch == generation { feedback?.show(error) } }
+    }
+
     func startTrial() {
-        busy = "trial"
-        Task {
-            defer { busy = nil }
-            do {
-                status = try await engine.call(["billing", "trial"], as: BillingStatus.self)
-                feedback?.flash(L("billing.trialStarted"), error: false)
-                await onChanged?()
-            } catch { feedback?.show(error) }
+        perform("trial") {
+            let result = try await self.engine.call(["billing", "trial"], as: BillingStatus.self)
+            return { self.status = result; self.feedback?.flash(L("billing.trialStarted"), error: false); await self.loadUsage(); await self.onChanged?() }
         }
     }
 
     func openPortal() {
-        busy = "portal"
-        Task {
-            defer { busy = nil }
-            do {
-                let r = try await engine.call(["billing", "portal"], as: BillingURL.self)
-                if let url = URL(string: r.url) { NSWorkspace.shared.open(url) }
-                waitForPayment()
-            } catch { feedback?.show(error) }
+        perform("portal") {
+            let result = try await self.engine.call(["billing", "portal"], as: BillingURL.self)
+            return { if let text = result.url, let url = URL(string: text) { NSWorkspace.shared.open(url) } }
         }
     }
 
-    /// Polls every 5 s for up to 3 minutes until the plan or the balance differs from before.
-    func waitForPayment() {
-        pollTask?.cancel()
-        let before = status
+    func sync() {
+        perform("sync") {
+            let result = try await self.engine.call(["billing", "sync"], as: BillingSync.self)
+            return { self.status = result.status; self.feedback?.flash(result.synced.isEmpty ? L("usage.syncNothing") : L("usage.synced"), error: false); await self.loadUsage(); await self.onChanged?() }
+        }
+    }
+
+    /// Serialize billing mutations; a second click cannot overwrite the first operation's busy state.
+    private func perform(_ key: String, action: @escaping () async throws -> (@MainActor () async -> Void)) {
+        guard busy == nil, canReadUsage, !demo else { return }
+        let epoch = generation; busy = key
+        Task {
+            defer { if epoch == generation { busy = nil } }
+            do {
+                let apply = try await action()
+                guard epoch == generation else { return }
+                await apply()
+            } catch { if epoch == generation { feedback?.show(error) } }
+        }
+    }
+
+    private func waitForPayment(before: BillingStatus) {
+        stopWaiting()
+        let epoch = generation
         waitingForPayment = true
         pollTask = Task {
-            defer { waitingForPayment = false }
+            defer { if epoch == generation { waitingForPayment = false } }
             for _ in 0..<36 {
-                try? await Task.sleep(nanoseconds: 5_000_000_000)
-                if Task.isCancelled { return }
+                do { try await Task.sleep(nanoseconds: 5_000_000_000) } catch { return }
+                guard epoch == generation, !Task.isCancelled else { return }
                 guard let now = try? await engine.call(["billing", "status"], as: BillingStatus.self) else { continue }
+                guard epoch == generation, !Task.isCancelled else { return }
                 status = now
-                if now.plan != before?.plan || now.balance.total != before?.balance.total || now.subscription != before?.subscription {
+                if now.plan != before.plan || now.balance != before.balance || now.subscription != before.subscription {
                     feedback?.flash(L("billing.updated"), error: false)
-                    await onChanged?()
-                    return
+                    await loadUsage(); await onChanged?(); return
                 }
             }
         }
     }
 
-    /// Loads the server-authoritative usage report (plan, period, included / used / reserved / remaining, history).
-    func loadUsage() async {
-        loading = true
-        defer { loading = false }
-        do {
-            usage = try await engine.call(["billing", "usage"], as: UsageReport.self)
-            usageError = nil
-            if usage != nil && catalog == nil { catalog = try? await engine.call(["billing", "catalog"], as: BillingCatalog.self) }
-        } catch {
-            usageError = error.localizedDescription
-        }
-    }
-
-    /// Recovery after a missed webhook: asks the cloud to re-read the subscription at the provider.
-    func sync() {
-        busy = "sync"
-        Task {
-            defer { busy = nil }
-            do {
-                let r = try await engine.call(["billing", "sync"], as: BillingSync.self)
-                status = r.status
-                feedback?.flash(r.synced.isEmpty ? L("usage.syncNothing") : L("usage.synced"), error: false)
-                await loadUsage()
-                await onChanged?()
-            } catch { feedback?.show(error) }
-        }
-    }
-
-    func stopWaiting() {
-        pollTask?.cancel()
-        waitingForPayment = false
+    func stopWaiting() { pollTask?.cancel(); waitingForPayment = false }
+    private func unavailable(_ error: Error) -> Bool {
+        ["cloud_function_missing", "not_configured"].contains((error as? EngineError)?.code ?? "")
     }
 }

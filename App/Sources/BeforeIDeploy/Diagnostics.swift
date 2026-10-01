@@ -142,6 +142,23 @@ enum Snapshot {
                 }
                 try? await Task.sleep(nanoseconds: 1_000_000_000)
             }
+            if argument("BIDBillingDemo") {
+                let expectsPlans = UserDefaults.standard.string(forKey: "BIDScreen") == "plans"
+                @MainActor func billingReady() -> Bool {
+                    guard AppModel.shared.billingStore.usage?.source == "demo" else { return false }
+                    if expectsPlans {
+                        return AppModel.shared.sheet == .plans && AppModel.shared.billingStore.catalog != nil && NSApp.windows.contains(where: { $0.attachedSheet?.isVisible == true })
+                    }
+                    return AppModel.shared.screen == .usage
+                }
+                let deadline = Date().addingTimeInterval(60)
+                while !billingReady() && Date() < deadline { try? await Task.sleep(nanoseconds: 250_000_000) }
+                guard billingReady() else {
+                    AppLog.ui.error("snapshot: billing fixture did not become ready")
+                    NSApp.terminate(nil); return
+                }
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+            }
             write(to: URL(fileURLWithPath: path))
             NSApp.terminate(nil)
         }

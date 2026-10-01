@@ -4,7 +4,8 @@ import SwiftUI
 /// Supabase account session, offline mode and cloud configuration.
 @MainActor
 final class AccountStore: ObservableObject {
-    @Published var account: AccountState?
+    @Published var account: AccountState? { didSet { onSessionChanged?(account) } }
+    var onSessionChanged: ((AccountState?) -> Void)?
     @Published var accountChecked = false
     /// Why `account status` failed (engine not answering, broken install). Never turned into a silent
     /// anonymous session (WP02, audit A2): RootView shows it with Retry and "continue offline".
@@ -20,6 +21,7 @@ final class AccountStore: ObservableObject {
         didSet { UserDefaults.standard.set(offlineMode, forKey: "offlineMode") }
     }
     /// When this app last opened a sign-in page: a callback without one is not ours (audit A2).
+    private var sessionGeneration = UUID()
     private var oauthStartedAt: Date?
 
     let engine: EngineClient
@@ -38,10 +40,14 @@ final class AccountStore: ObservableObject {
     }
 
     func loadAccount() async {
+        let epoch = sessionGeneration
         do {
-            account = try await engine.call(["account", "status"], as: AccountState.self)
+            let result = try await engine.call(["account", "status"], as: AccountState.self)
+            guard epoch == sessionGeneration else { return }
+            account = result
             accountError = nil
         } catch {
+            guard epoch == sessionGeneration else { return }
             // a failed refresh keeps the last known account; only a first load without one is an error screen
             accountError = error.localizedDescription
         }
@@ -155,6 +161,8 @@ final class AccountStore: ObservableObject {
     }
 
     func logout() {
+        sessionGeneration = UUID()
+        account = nil
         Task {
             _ = try? await engine.run(["account", "logout"])
             offlineMode = false

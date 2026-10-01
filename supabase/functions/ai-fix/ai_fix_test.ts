@@ -131,18 +131,18 @@ Deno.test("ai-fix: 429 after 6 requests in a minute", async () => {
 });
 
 Deno.test("ai-fix: 403 session_cap at 20% of the monthly credits inside the 5-hour session, with the reset time", async () => {
-  // High = 250 000 credits → 50 000 per session; one request 2 h ago spent them all
+  // High = 300 000 credits → 60 000 per session; one request 2 h ago spent them all
   const twoHoursAgo = new Date(Date.now() - 2 * 3600_000).toISOString();
-  const usage = [{ user_id: USER.id, created_at: twoHoursAgo, charged_tokens: 50000 }];
+  const usage = [{ user_id: USER.id, created_at: twoHoursAgo, charged_tokens: 60000 }];
   const res = await world({ usage }).handle(post("ai-fix", PROMPT));
   assert.equal(res.status, 403);
   const j = await res.json();
   assert.equal(j.code, "session_cap");
-  assert.equal(j.cap, 50000);
+  assert.equal(j.cap, 60000);
   assert.equal(j.windowHours, 5);
   assert.equal(j.resetsAt, new Date(new Date(twoHoursAgo).getTime() + 5 * 3600_000).toISOString());
   // the same spend six hours ago is outside the session
-  const old = [{ user_id: USER.id, created_at: new Date(Date.now() - 6 * 3600_000).toISOString(), charged_tokens: 50000 }];
+  const old = [{ user_id: USER.id, created_at: new Date(Date.now() - 6 * 3600_000).toISOString(), charged_tokens: 60000 }];
   assert.equal((await world({ usage: old }).handle(post("ai-fix", PROMPT))).status, 200);
 });
 
@@ -154,7 +154,7 @@ Deno.test("ai-fix: credits follow the model's real price and the plan's rate, so
   // Flash pays Sonnet 5.5 prices at its own rate: 0.024 $ → 0.02208 € → 887 credits at 0.0000249 €
   assert.equal(creditsFor(DEFAULTS, "flash", "claude-sonnet-5-5", 4500, 1500).credits, 887);
   // the whole monthly grant can never cost more than the cap: Flash 100 000 × 0.0000249 = 2.49 €, High 7.50 €, Knight 30 €
-  for (const [plan, cap] of [["flash", 2.49], ["high", 7.5], ["knight", 30]] as const) {
+  for (const [plan, cap] of [["flash", 2.49], ["high", 9], ["knight", 30]] as const) {
     assert.ok(Math.abs(DEFAULTS.plans[plan].tokens * DEFAULTS["ai.creditEur"][plan] - cap) < 1e-6, plan);
   }
   // an answer that produced nothing costs nothing; anything that reached the model costs at least one credit

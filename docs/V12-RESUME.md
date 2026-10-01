@@ -1,6 +1,15 @@
 # V12 continuation checkpoint — 2026-10-01
 
-The owner explicitly paused work because the Mac is shutting down. Resume only when asked.
+The owner resumed on 2026-10-01: “вече сме в нас искам да продължим с плана”. Work is active.
+
+## Latest progress (overrides the older checkpoint details below)
+
+- Phase 3 CI was checked: `999d71f` app/engine/engine-macos/screenshots are green; screenshots reviewed.
+- Phase 4 implementation checkpoint (commit/push in progress): shared catalog and migration, public/offline/demo, Plans/Usage UI and optional models, identity-scoped polling/cache/logout, annual slices/trial base/available, reviewed Paddle PATCH with serialized server changes and deferred downgrade entitlement. No live payments.
+- Latest logs in `../`: `v12-phase4-deno.log` 98 passing; `v12-billing-rls2.log` 12 passing; `v12-phase4-engine.log` 114 passing; `v12-billing-build8.log` successful Swift build; current small plural-label edit to be compiled in CI.
+- Isolated UI review in `../v12-billing-preview/`: `light-usage.png` reviewed, `dark-plans.png` captured scrolled down (fixed scaffold reset afterward), `light-plans-top.png` is INVALID early overview capture. Snapshot readiness now waits for the requested screen/sheet and loaded demo catalog. `light-plans-fixed.png` is the corrected, visually reviewed Plans capture; all four cards fit and prices remain visible.
+- Continue phases 5 and 6 after phase 4 is green. All earlier owner restrictions remain.
+
 
 ## Checkout
 

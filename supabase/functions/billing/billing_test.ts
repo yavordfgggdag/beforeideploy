@@ -91,10 +91,10 @@ Deno.test("billing: a repeated event is processed once", async () => {
   await webhook(handle, txn);
   const again = await (await webhook(handle, txn)).json();
   assert.equal(again.duplicate, true);
-  assert.equal(sum(db.rows("credit_ledger")), 250000);
+  assert.equal(sum(db.rows("credit_ledger")), 300000);
   // same transaction under a new event id (Paddle resends) → still one grant
   await webhook(handle, { ...txn, event_id: "evt_t2" });
-  assert.equal(sum(db.rows("credit_ledger")), 250000);
+  assert.equal(sum(db.rows("credit_ledger")), 300000);
 });
 
 Deno.test("billing: a new period expires the unused rest of the previous grant; packs add top-up", async () => {
@@ -106,7 +106,7 @@ Deno.test("billing: a new period expires the unused rest of the previous grant; 
   await webhook(handle, { event_id: "evt_r", event_type: "transaction.completed", data: { id: "txn_renew", custom_data: { user_id: USER.id }, items: [{ price: { id: "pri_high" } }] } });
   const ledger = db.rows("credit_ledger");
   assert.equal(ledger.find((r) => r.reason === "expiry")?.delta, -600000);
-  assert.equal(sum(ledger, "plan"), 250000, "fresh month, no rollover");
+  assert.equal(sum(ledger, "plan"), 300000, "fresh month, no rollover");
   assert.equal(sum(ledger, "topup"), 200000, "top-up is untouched");
 
   await webhook(handle, { event_id: "evt_p", event_type: "transaction.completed", data: { id: "txn_pack", custom_data: { user_id: USER.id }, items: [{ price: { id: "pri_pack" }, quantity: 2 }] } });
@@ -128,8 +128,8 @@ Deno.test("billing: catalog lists prices, tokens and what is on sale", async () 
   assert.equal(res.status, 200);
   const c = await res.json();
   assert.equal(c.currency, "EUR");
-  assert.deepEqual(c.plans.map((p: Row) => [p.id, p.price, p.tokens, p.available]), [["flash", 4.99, 100000, true], ["high", 9.99, 250000, true], ["knight", 19.99, 1000000, false]]);
-  assert.deepEqual(c.plans.map((p: Row) => [p.yearlyPrice, p.yearlyAvailable]), [[null, false], [95.9, true], [null, false]]);
+  assert.deepEqual(c.plans.map((p: Row) => [p.id, p.price, p.tokens, p.available]), [["flash", 4.99, 100000, true], ["high", 9.99, 300000, true], ["knight", 19.99, 1000000, false]]);
+  assert.deepEqual(c.plans.map((p: Row) => [p.yearlyPrice, p.yearlyAvailable]), [[99.9, false], [95.9, true], [999.9, false]]);
   assert.equal(c.packs[0].id, "pack-500k");
   assert.equal(c.trial.days, 7);
 });
@@ -192,7 +192,7 @@ Deno.test("billing: status shows balances by bucket, renewal and recent usage", 
     ledger: [{ user_id: USER.id, delta: 1000000, bucket: "plan", reason: "plan_grant", ref: "t" }, { user_id: USER.id, delta: -6000, bucket: "plan", reason: "ai_fix", ref: "u" }, { user_id: USER.id, delta: 500000, bucket: "topup", reason: "topup", ref: "p" }],
   });
   const st = await (await handle(post("billing", { action: "status" }))).json();
-  assert.deepEqual(st.balance, { plan: 994000, topup: 500000, total: 1494000 });
+  assert.deepEqual(st.balance, { plan: 994000, topup: 500000, total: 1494000, available: 1494000 });
   assert.equal(st.subscription.renewsAt, "2026-11-10T00:00:00Z");
   assert.equal(st.subscription.manageable, true);
   assert.equal(st.trialAvailable, false, "a paying customer gets no trial");
@@ -239,7 +239,7 @@ Deno.test("billing: a yearly plan grants the monthly tokens every month, once ea
   const yearSub = subEvent("evt_y", "active", "pri_high_year", { billing_cycle: { interval: "year", frequency: 1 }, current_billing_period: { starts_at: "2026-10-10T00:00:00Z", ends_at: "2027-10-10T00:00:00Z" } });
   await webhook(handle, yearSub);
   await webhook(handle, { event_id: "evt_yt", event_type: "transaction.completed", data: { id: "txn_year", custom_data: { user_id: USER.id }, items: [{ price: { id: "pri_high_year" } }] } });
-  assert.equal(sum(db.rows("credit_ledger"), "plan"), 250000, "month 0 with the payment");
+  assert.equal(sum(db.rows("credit_ledger"), "plan"), 300000, "month 0 with the payment");
 
   const at = (iso: string) => createBillingHandler({ ...fakeDeps(db), paddleApiKey: "k", paddleWebhookSecret: SECRET, paddleApiBase: "x", fetch: globalThis.fetch, now: () => new Date(iso) });
   const st0 = await (await at("2026-10-25T00:00:00Z")(post("billing", { action: "status" }))).json();
@@ -249,8 +249,8 @@ Deno.test("billing: a yearly plan grants the monthly tokens every month, once ea
   await at("2026-11-12T00:00:00Z")(post("billing", { action: "status" }));
   await at("2026-11-20T00:00:00Z")(post("billing", { action: "status" }));
   const grants = db.rows("credit_ledger").filter((r) => r.reason === "plan_grant");
-  assert.deepEqual(grants.map((r) => r.ref), ["txn_year", "sub_1:m1"], "month 1 granted once");
-  assert.equal(sum(db.rows("credit_ledger"), "plan"), 250000, "the unused month-0 rest expired");
+  assert.deepEqual(grants.map((r) => r.ref), ["txn_year", "sub_1:2026-10-10T00:00:00Z:m1"], "month 1 granted once");
+  assert.equal(sum(db.rows("credit_ledger"), "plan"), 300000, "the unused month-0 rest expired");
 
   await at("2027-12-01T00:00:00Z")(post("billing", { action: "status" }));
   assert.equal(db.rows("credit_ledger").filter((r) => r.reason === "plan_grant").length, 2, "nothing after the paid year");
@@ -284,7 +284,7 @@ Deno.test("billing: two deliveries of one transaction at the same time grant onc
   const { db, handle } = world();
   const txn = (id: string) => ({ event_id: id, event_type: "transaction.completed", data: { id: "txn_c", custom_data: { user_id: USER.id }, items: [{ price: { id: "pri_high" } }] } });
   await Promise.all([webhook(handle, txn("evt_c1")), webhook(handle, txn("evt_c2")), webhook(handle, txn("evt_c1"))]);
-  assert.equal(sum(db.rows("credit_ledger")), 250000);
+  assert.equal(sum(db.rows("credit_ledger")), 300000);
 });
 
 Deno.test("billing: a proration charge on a plan change does not buy a new month", async () => {
@@ -368,7 +368,7 @@ Deno.test("billing: usage is server-authoritative — period, included / used / 
   assert.equal(u.unit, "credits");
   assert.equal(u.plan, "high");
   assert.deepEqual(u.period, { start: "2026-10-10T00:00:00Z", end: "2026-11-10T00:00:00Z", renewsAt: "2026-11-10T00:00:00Z", source: "subscription" });
-  assert.equal(u.included.tokens, 250000);
+  assert.equal(u.included.tokens, 300000);
   assert.deepEqual(u.used, { tokens: 6000, operations: 1 }, "only settled charges inside the period; u0 is before it");
   assert.deepEqual(u.reserved, { tokens: 30000, operations: 1 }, "the live hold is reserved, the abandoned one was released");
   assert.equal(u.reconciled.releasedHolds, 1);
@@ -377,9 +377,9 @@ Deno.test("billing: usage is server-authoritative — period, included / used / 
   assert.deepEqual(u.remaining, { plan: 994000, purchased: 500000, total: 1494000, available: 1464000 });
   assert.equal(u.purchased.tokens, 500000, "purchased packs are shown apart from the plan tokens");
   assert.equal(u.limits.perMinute, 6);
-  // the 5-hour session: 20 % of 250 000 = 50 000; u1 (three days ago) is outside it, the live hold is not charged yet
-  assert.equal(u.limits.sessionCap, 50000);
-  assert.deepEqual(u.session, { windowHours: 5, capPercent: 20, cap: 50000, used: 0, remaining: 50000, resetsAt: "2026-10-15T16:59:00.000Z" });
+  // the 5-hour session: 20 % of 300 000 = 60 000; u1 (three days ago) is outside it, the live hold is not charged yet
+  assert.equal(u.limits.sessionCap, 60000);
+  assert.deepEqual(u.session, { windowHours: 5, capPercent: 20, cap: 60000, used: 0, remaining: 60000, resetsAt: "2026-10-15T16:59:00.000Z" });
   assert.deepEqual(u.byModel, [{ model: "claude-sonnet-5", tokens: 6000, operations: 1 }]);
   assert.match(u.pricing.version, /^p-[0-9a-f]{12}$/, "a hash of the price table when no explicit version is set");
   assert.deepEqual(u.pricing.spendOrder, ["plan", "topup"]);
@@ -475,4 +475,86 @@ Deno.test("billing (WP04): the schema seed is the same catalog and plan credits 
   };
   assert.deepEqual(seed("billing.catalog"), DEFAULT_CATALOG);
   assert.deepEqual(seed("plans"), DEFAULT_PLAN_TOKENS);
+});
+
+Deno.test("billing: catalog is public and incomplete sales configuration is read-only", async () => {
+  const w = world({ user: null, apiKey: "" });
+  const response = await w.handle(post("billing", { action: "catalog" }));
+  assert.equal(response.status, 200);
+  const c = await response.json();
+  assert.equal(c.source, "cloud");
+  assert.ok(c.plans.every((p: Row) => !p.available && !p.yearlyAvailable));
+  assert.equal(c.plans.find((p: Row) => p.id === "high").activeSites, 3);
+  assert.ok(c.packs.every((p: Row) => !p.available));
+  assert.equal(w.calls.length, 0);
+});
+
+Deno.test("billing: a migrated offer whose provider price differs cannot be sold", async () => {
+  const w = world();
+  w.db.tables.settings = [{ key: "billing.catalog", value: { ...CATALOG, packs: [{ ...CATALOG.packs[0], needsReconciliation: true }] } }];
+  const c = await (await w.handle(post("billing", { action: "catalog" }))).json();
+  assert.equal(c.packs[0].available, false);
+  assert.equal((await w.handle(post("billing", { action: "checkout", pack: "pack-500k" }))).status, 409);
+  assert.equal(w.calls.length, 0);
+});
+
+Deno.test("billing: engine, cloud and generated schema share the approved catalog", async () => {
+  const { DEFAULT_CATALOG, DEFAULT_PLAN_TOKENS } = await import("./handler.ts");
+  const { DEFAULTS } = await import("../ai-fix/handler.ts");
+  const engine = JSON.parse(await Deno.readTextFile(new URL("../../../engine/src/plans-data.json", import.meta.url)));
+  assert.deepEqual(engine, DEFAULT_CATALOG);
+  assert.deepEqual(Object.fromEntries(Object.entries(DEFAULT_PLAN_TOKENS).map(([id,p]) => [id,p.tokens])), Object.fromEntries(Object.entries(DEFAULTS.plans).map(([id,p]) => [id,p.tokens])));
+  assert.deepEqual(engine.packs.map((p: Row) => p.price), [4.99,19.99,39.99]);
+});
+
+Deno.test("billing: trial reports the actual gift and yearly usage is a calendar month slice", async () => {
+  const trial = world();
+  await trial.handle(post("billing", { action: "trial" }));
+  const u = await (await trial.handle(post("billing", { action: "usage" }))).json();
+  assert.equal(u.included.tokens, CATALOG.trial.tokens);
+  assert.equal(u.session.cap, CATALOG.trial.tokens*0.2);
+  const w = world({ plan: "high", now: new Date("2026-03-02T12:00:00Z"), subs: [{ id:"year",user_id:USER.id,provider:"paddle",provider_ref:"sub_year",tier:"high",status:"active",period_start:"2026-01-31T10:00:00Z",period_end:"2027-01-31T10:00:00Z",raw:{billing_cycle:{interval:"year"}} }] });
+  w.db.tables.ai_usage = [
+    { id:"old",user_id:USER.id,created_at:"2026-02-01T10:00:00Z",status:"ok",charged_tokens:2000 },
+    { id:"current",user_id:USER.id,created_at:"2026-03-01T10:00:00Z",status:"ok",charged_tokens:3000 }
+  ];
+  const current = await (await w.handle(post("billing", { action:"usage" }))).json();
+  assert.equal(current.period.start, "2026-02-28T10:00:00.000Z");
+  assert.equal(current.period.end, "2026-03-31T10:00:00.000Z");
+  assert.equal(current.used.tokens, 3000);
+  assert.equal(current.remaining.available, (await (await w.handle(post("billing",{action:"status"}))).json()).balance.available);
+});
+
+Deno.test("billing: yearly month grants do not collide at the following year's renewal", async () => {
+  const { ensureMonthlyGrant } = await import("../_shared/credits.ts");
+  const w = world({ subs:[{id:"year",user_id:USER.id,provider:"paddle",provider_ref:"sub_year",tier:"high",status:"active",period_start:"2026-01-31T10:00:00Z",period_end:"2027-01-31T10:00:00Z",raw:{billing_cycle:{interval:"year"}}}] });
+  assert.ok(await ensureMonthlyGrant(w.db,USER.id,{high:{tokens:300000}},new Date("2026-02-28T10:00:00Z")));
+  assert.equal(await ensureMonthlyGrant(w.db,USER.id,{high:{tokens:300000}},new Date("2026-02-28T10:01:00Z")),null);
+  w.db.tables.subscriptions[0].period_start="2027-01-31T10:00:00Z";
+  w.db.tables.subscriptions[0].period_end="2028-01-31T10:00:00Z";
+  assert.ok(await ensureMonthlyGrant(w.db,USER.id,{high:{tokens:300000}},new Date("2027-02-28T10:00:00Z")));
+});
+
+Deno.test("billing: checkout on an existing plan previews then confirms a PATCH, never another subscription", async () => {
+  const w=world({plan:"flash",subs:[{id:"s1",user_id:USER.id,provider:"paddle",provider_ref:"sub_existing",tier:"flash",status:"active"}]});
+  const calls: {url:string;method:string}[]=[];
+  let remote:Row={id:"sub_existing",status:"active",items:[{price:{id:"pri_flash"},quantity:1}],current_billing_period:{starts_at:"2026-10-01T00:00:00Z",ends_at:"2026-11-01T00:00:00Z"}};
+  const handle=createBillingHandler({...fakeDeps(w.db),paddleApiKey:"test",paddleWebhookSecret:SECRET,paddleApiBase:"https://sandbox-api.paddle.test",now:()=>NOW,fetch:(async(input,init)=>{
+    const url=String(input);const method=init?.method ?? "GET";calls.push({url,method});
+    if(url.endsWith("/preview")) return Response.json({data:{currency_code:"EUR",immediate_transaction:{details:{totals:{grand_total:"1200",currency_code:"EUR"}}},next_transaction:{details:{totals:{grand_total:"2999"}}}}});
+    if(method === "PATCH") remote={...remote,items:[{price:{id:"pri_high"},quantity:1}]};
+    return Response.json({data:remote});
+  }) as typeof fetch});
+  const first=await(await handle(post("billing",{action:"checkout",plan:"high"}))).json();
+  assert.ok(first.preview?.id);
+  assert.equal((await handle(post("billing",{action:"confirm-change",previewId:first.preview.id}))).status,200);
+  assert.equal(calls.filter(c=>c.url.endsWith("/sub_existing") && c.method === "PATCH").length,1);
+  assert.ok(calls.every(c=>!c.url.endsWith("/transactions")));
+});
+
+Deno.test("billing: canceling an old Paddle subscription retains another active paid plan",async()=>{
+  const w=world({plan:"high",subs:[{id:"other",user_id:USER.id,provider:"paddle",provider_ref:"sub_keep",tier:"high",status:"active",period_end:"2026-11-10T00:00:00Z"}]});
+  const r=await(await webhook(w.handle,subEvent("cancel_old","canceled","pri_flash"))).json();
+  assert.equal(r.plan,"high");
+  assert.equal(w.db.rows("profiles")[0].plan,"high");
 });

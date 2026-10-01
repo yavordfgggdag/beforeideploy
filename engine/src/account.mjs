@@ -130,11 +130,10 @@ function hasOwnAiKey() {
  */
 function creditsOf(plan, balance, settingsRows, subs) {
   const settings = Object.fromEntries((Array.isArray(settingsRows) ? settingsRows : []).map((r) => [r.key, r.value]));
-  const monthlyGrant = Number(settings.plans?.[plan]?.tokens ?? 0) || null;
   const active = (Array.isArray(subs) ? subs : []).find((s) => ['active', 'trial', 'past_due'].includes(s.status));
   return {
-    balance: Number(balance?.[0]?.balance ?? 0),
-    monthlyGrant,
+    balance: Math.max(0, Number(balance?.[0]?.balance ?? 0)),
+    monthlyGrant: Number(active?.provider === "trial" ? settings["billing.catalog"]?.trial?.tokens ?? 50000 : settings.plans?.[plan]?.tokens ?? 0) || null,
     renewsAt: active && !active.cancel_at && active.provider !== 'trial' ? active.period_end || null : null,
     endsAt: active ? active.cancel_at || (active.provider === 'trial' ? active.period_end : null) || null : null,
   };
@@ -372,6 +371,9 @@ export async function deleteAccount({ confirm }) {
   try {
     fs.unlinkSync(PROFILE_CACHE());
   } catch {}
+  try {
+    fs.unlinkSync(path.join(APP_DIR, "usage-report.json"));
+  } catch {}
   return { deleted: true, ...(r || {}), loggedIn: false };
 }
 
@@ -385,6 +387,9 @@ export async function logout() {
   deleteSecret('session');
   try {
     fs.unlinkSync(PROFILE_CACHE());
+  } catch {}
+  try {
+    fs.unlinkSync(path.join(APP_DIR, "usage-report.json"));
   } catch {}
   return { configured: !!cloudConfig(), loggedIn: false };
 }

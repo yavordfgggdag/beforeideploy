@@ -1,3 +1,4 @@
+import catalogData from "../_shared/plans-catalog.json" with { type: "json" };
 // Before I Deploy — `ai-fix` Edge Function, request handler (V10 WP3, testable since L6): the metered
 // AI proxy for normal users. The central Anthropic key lives only in Supabase secrets. The engine sends
 // the redacted prompt + the user's JWT; we check role/plan/credits/limits, stream the model's answer
@@ -43,7 +44,7 @@ export const DEFAULTS = {
   // USD per million tokens (input / output) — used for cost_usd bookkeeping only
   "ai.prices": { "claude-haiku-4-5": [1, 5], "claude-sonnet-5-5": [2, 10], "claude-opus-5-5": [4, 20] } as Record<string, [number, number]>,
   // credits per month per plan (the ledger column is still called tokens)
-  plans: { flash: { tokens: 100000 }, high: { tokens: 250000 }, knight: { tokens: 1000000 } } as Record<string, { tokens: number }>,
+  plans: Object.fromEntries(Object.entries(catalogData.plans).map(([id, p]) => [id, { tokens: p.credits }])) as Record<string, { tokens: number }>,
 };
 
 export type Settings = typeof DEFAULTS & Record<string, unknown>;
@@ -172,7 +173,9 @@ export function createAiFixHandler(deps: AiFixDeps): (req: Request) => Promise<R
       await release("rate_limited");
       return json(429, { error: "too many requests", code: "rate_limited" });
     }
-    const monthly = settings.plans[plan]?.tokens ?? 0;
+    const { data: subscriptions } = await db.from("subscriptions").select("provider,status,period_end").eq("user_id", user.id);
+    const trial = (subscriptions ?? []).find((s: Row) => s.provider === "trial" && s.status === "trial" && Date.parse(s.period_end) > t);
+    const monthly = trial ? Number((settings["billing.catalog"] as Row | undefined)?.trial?.tokens ?? catalogData.trial.tokens) : settings.plans[plan]?.tokens ?? 0;
     if (monthly > 0) {
       // the rolling session: what was charged in the last N hours against a share of the monthly credits
       const hours = Number(settings["ai.sessionHours"] ?? 5);

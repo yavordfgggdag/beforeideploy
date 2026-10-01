@@ -159,6 +159,21 @@ node scripts/i18n-check.mjs && node scripts/error-codes.mjs
 | AI chat foundation | implemented / validation in progress | decoded stream, Markdown/code, proposal selection and guarded Undo, batched rendering, per-project sessions, durable history/retry; screenshot and Swift CI pending |
 | AI-22 | partial | selected issue chip; selection remains a native Picker |
 | AI quota / balance | partial | error-specific actions; v2 balance, windows and packs follow in phases 4-5 |
-| Phases 4-6 | pending | separate changes |
+| PU-1–7, PU-14, PU-33, PU-46 | implemented, CI pending | public/offline canonical catalog, read-only demo, generated schema + guarded migration + site; 300k High, V2 packs |
+| PU-8–13, PU-15–18 | implemented UI foundation | Plans: Free + 3 cards, visible prices, yearly savings; Usage: meters, packs, chart, collapsible history; V2 live server summaries follow in phase 5 |
+| PU-19 | implemented, provider sandbox walkthrough pending | reviewed PATCH + server mutation claim; retain add-ons; defer downgrade entitlement locally; cancellation retains another active Paddle subscription |
+| PU-20–22, PU-26, PU-29–32 | implemented | trial base, calendar monthly slices with year-scoped grant IDs, available balance, fractional settings, account-scoped polling/reset and mutation serialization |
+| PU-23–25, PU-34, PU-36–44 | phase 5 | anchored windows, grants/FIFO/expiry/cap, one AI credit rate, server summary/metering/sites/nudges |
+| PU-27–28 | partial | quota actions in chat + AI Fix; localized reset and Boost follow with V2 window contract |
+| PU-47–48 | phase 6 cleanup | recent list identity strengthened; unknown status fallback and glossary still to review |
+| Phases 5-6 | pending | not yet a V12 release |
 
 Проверки: engine 112/112 (включва 7 setup regression scenarios); Deno 87/87; SQL/RLS 10/10; локален `swift build` успешен. `swift test` е блокиран локално от липсващ XCTest в CLT; нужен е macOS CI. Fresh-Mac acceptance и real-provider login не са изпълнени. Числата са за този checkpoint и се обновяват при следващите промени.
+
+
+### Phase 4 verification note — 2026-10-01
+
+Phase 3 CI passed on `999d71f` (app, engine Linux/macOS and screenshots). Its code/proposal/empty/quota screenshots were reviewed.
+Phase 4 local checks so far: Swift build succeeds; 98 Deno tests and 12 SQL/RLS tests pass. The full engine run passed 114/114; macOS XCTest and screenshot CI are still required. Review uses isolated demo data and makes no paid model call or payment.
+
+**Correction to PU-19:** Paddle does not accept a top-level `effective_from` for subscription item updates. That literal fix is skipped as unsupported. The implementation uses `do_not_bill` for the provider item change and a server-only `billing_changes` record to retain the original entitlement until the reviewed period end. Sources: [update subscription](https://developer.paddle.com/api-reference/subscriptions/update-subscription/) and [preview subscription update](https://developer.paddle.com/api-reference/subscriptions/preview-subscription-update/). Real sandbox acceptance remains required, particularly annual/monthly interval changes.

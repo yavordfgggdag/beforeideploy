@@ -32,6 +32,7 @@ struct SheetScaffold<Content: View, Actions: View>: View {
     var subtitle: String? = nil
     var width: CGFloat = SheetSize.m.rawValue
     var size: SheetSize? = nil
+    var scrollResetID: String? = nil
     @ViewBuilder var content: Content
     @ViewBuilder var actions: Actions
 
@@ -54,11 +55,25 @@ struct SheetScaffold<Content: View, Actions: View>: View {
             }
             .padding(22)
 
-            ScrollView {
-                content.frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, Space.xxl).padding(.bottom, Space.xl)
+            Group {
+                if scrollResetID != nil {
+                    ScrollViewReader { proxy in
+                        ScrollView {
+                            content.frame(maxWidth: .infinity, alignment: .leading).id("sheetTop")
+                                .padding(.horizontal, Space.xxl).padding(.bottom, Space.xl)
+                        }
+                        .frame(height: max(240, min(520, (NSApp.keyWindow?.screen?.visibleFrame.height ?? 820) - 240)))
+                        .onAppear { DispatchQueue.main.async { proxy.scrollTo("sheetTop", anchor: .top) } }
+                        .onChange(of: scrollResetID) { _ in DispatchQueue.main.async { proxy.scrollTo("sheetTop", anchor: .top) } }
+                    }
+                } else {
+                    ScrollView {
+                        content.frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, Space.xxl).padding(.bottom, Space.xl)
+                    }
+                    .frame(maxHeight: max(240, min(520, (NSApp.keyWindow?.screen?.visibleFrame.height ?? 820) - 240)))
+                }
             }
-            .frame(maxHeight: max(240, min(520, (NSApp.keyWindow?.screen?.visibleFrame.height ?? 820) - 240)))
 
             Rectangle().fill(Theme.hairline).frame(height: 1)
             HStack(spacing: 10) {

@@ -124,8 +124,10 @@ final class AppModel: ObservableObject, Feedback {
         aiStore.feedback = self
         assistantStore.feedback = self
         assistantStore.onSpend = { [weak self] in await self?.billingStore.loadUsage(); await self?.loadAccount() }
+        accountStore.onSessionChanged = { [weak self] account in self?.billingStore.sessionChanged(account) }
+        aiStore.onSpend = { [weak self] in await self?.billingStore.loadUsage(); await self?.loadAccount() }
         billingStore.feedback = self
-        billingStore.onChanged = { [weak self] in await self?.accountStore.loadAccount() }
+        billingStore.onChanged = { [weak self] in await self?.accountStore.loadAccount(); await self?.billingStore.loadUsage() }
         aiStore.onApplied = { [weak self] in
             guard let self else { return }
             self.aiStore.dismiss()
@@ -861,6 +863,7 @@ final class AppModel: ObservableObject, Feedback {
         guard confirm == "DELETE" else { return false }
         do {
             _ = try await engine.call(["account", "delete", "--confirm", "DELETE"], as: DeleteAccountResult.self)
+            billingStore.reset()
             offlineMode = false
             await loadAccount()
             flash(L("deleteAccount.done"))
@@ -1147,6 +1150,7 @@ final class AppModel: ObservableObject, Feedback {
     /// UserDefaults' argument domain). Used by the screenshot workflow; harmless for everyone else.
     private func openRequestedScreen() async {
         guard Snapshot.argument("BIDScreen"), let name = UserDefaults.standard.string(forKey: "BIDScreen") else { return }
+        if billingStore.demo { await billingStore.loadUsage() }
         switch name {
         case "project": if let first = projects.first { await select(first.key) }
         case "domains": screen = .domains

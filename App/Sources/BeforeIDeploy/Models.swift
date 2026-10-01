@@ -1062,18 +1062,28 @@ struct BillingCatalog: Codable, Hashable {
         var available: Bool
         var yearlyPrice: Double?
         var yearlyAvailable: Bool?
+        var activeSites: Int?
+        var activeSitesMax: Int?
+        var validityMonths: Int?
+        var window5h: Int?
+        var weekly: Int?
+        var extras: [String: Bool]?
     }
     struct Pack: Codable, Hashable, Identifiable {
         var id: String
         var tokens: Int
         var price: Double?
         var available: Bool
+        var validityMonths: Int?
     }
     struct Trial: Codable, Hashable {
         var days: Int
         var plan: String
         var tokens: Int
     }
+    var source: String?
+    var version: String?
+    var taxInclusive: Bool?
     var currency: String
     var plans: [Plan]
     var packs: [Pack]
@@ -1094,6 +1104,7 @@ struct BillingStatus: Codable, Hashable {
         var plan: Int
         var topup: Int
         var total: Int
+        var available: Int?
     }
     struct Usage: Codable, Hashable, Identifiable {
         var at: String
@@ -1101,7 +1112,7 @@ struct BillingStatus: Codable, Hashable {
         var model: String?
         var tokens: Int
         var project: String?
-        var id: String { at + (step ?? "") }
+        var id: String { [at, step ?? "", model ?? "", project ?? "", String(tokens)].joined(separator: "|") }
     }
     var plan: String
     var subscription: Subscription?
@@ -1111,7 +1122,15 @@ struct BillingStatus: Codable, Hashable {
 }
 
 struct BillingURL: Codable, Hashable {
-    var url: String
+    struct Preview: Codable, Hashable {
+        var id: String; var plan: String; var amount: Int; var nextAmount: Int; var currency: String
+        var effectiveAt: String; var expiresAt: String; var downgrade: Bool
+    }
+    var url: String?
+    var changed: Bool?
+    var unchanged: Bool?
+    var effectiveAt: String?
+    var preview: Preview?
 }
 
 
@@ -1389,9 +1408,9 @@ struct UsageReport: Codable {
     struct Tokens: Codable, Hashable { var tokens: Int; var operations: Int? }
     struct Remaining: Codable, Hashable { var plan: Int; var purchased: Int; var total: Int; var available: Int }
     struct Purchased: Codable, Hashable { var tokens: Int; var expires: String? }
-    struct Limits: Codable, Hashable { var perMinute: Int; var perHour: Int; var sessionHours: Int?; var sessionCapPercent: Int?; var sessionCap: Int?; var sessionUsed: Int? }
+    struct Limits: Codable, Hashable { var perMinute: Int; var perHour: Int; var sessionHours: Double?; var sessionCapPercent: Double?; var sessionCap: Int?; var sessionUsed: Int? }
     /// The rolling session (as in Claude): a share of the monthly credits per N hours, with the time it resets.
-    struct Session: Codable, Hashable { var windowHours: Int; var capPercent: Int; var cap: Int; var used: Int; var remaining: Int; var resetsAt: String? }
+    struct Session: Codable, Hashable { var windowHours: Double; var capPercent: Double; var cap: Int; var used: Int; var remaining: Int; var resetsAt: String?; var reserved: Int? }
     struct ModelUsage: Codable, Hashable, Identifiable { var model: String; var tokens: Int; var operations: Int; var id: String { model } }
     struct Pricing: Codable, Hashable { var version: String; var spendOrder: [String]? }
     struct Reconciled: Codable, Hashable { var releasedHolds: Int }
@@ -1419,6 +1438,19 @@ struct UsageReport: Codable {
     }
     struct History: Codable { var operations: [Operation]; var ledger: [LedgerRow] }
 
+    struct Window: Codable { var used: Int; var cap: Int; var remaining: Int; var resetsAt: String?; var reserved: Int? }
+    struct Sites: Codable { var active: Int; var limit: Int; var paused: Int? }
+    struct PackLot: Codable, Identifiable { var id: String; var remaining: Int; var expiresAt: String }
+    struct ActionUsage: Codable, Identifiable { var action: String; var credits: Int; var operations: Int; var id: String { action } }
+    struct DailyUsage: Codable, Identifiable { var date: String; var credits: Int; var id: String { date } }
+    var v: Int?
+    var source: String?
+    var stale: Bool?
+    var weekly: Window?
+    var sites: Sites?
+    var packs: [PackLot]?
+    var byAction: [ActionUsage]?
+    var daily: [DailyUsage]?
     var serverTime: String
     var unit: String
     var plan: String

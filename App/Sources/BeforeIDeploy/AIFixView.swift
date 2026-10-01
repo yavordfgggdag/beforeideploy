@@ -80,6 +80,12 @@ struct AIFixOverlay: View {
                                 .padding(12).frame(maxWidth: .infinity, alignment: .leading)
                                 .background(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).fill(Theme.blocked.opacity(0.1)))
                         }
+                        if ["quota_exhausted", "ai_session_cap", "window_5h", "window_week", "ai_unavailable"].contains(state.errorCode ?? "") {
+                            HStack {
+                                Button(L("usage.buyCredits")) { model.sheet = .plans }.bidButton(.primary, compact: true)
+                                Button(L("usage.upgrade")) { model.sheet = .plans }.bidButton(.secondary, compact: true)
+                            }
+                        }
                         if explanationText.isEmpty && state.running {
                             HStack(spacing: 8) { Spinner(size: 12); Text(L("ai.thinking")).font(Typo.font(.callout)).foregroundColor(Theme.secondary) }
                         } else {

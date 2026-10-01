@@ -798,5 +798,8 @@
   "setup.cltWaiting": "Complete the Command Line Tools installation in the macOS dialog.",
   "setup.identity.enter": "Enter name and email",
   "setup.identity.invalid": "Enter a name and a valid email address.",
-  "ai.undo.stale": "A newer change exists. Refresh the conversation before undoing."
+  "ai.undo.stale": "A newer change exists. Refresh the conversation before undoing.",
+  "billing.demoReadOnly": "Demo mode is for preview only. Purchases and account changes are disabled.",
+  "billing.conflict": "This subscription needs attention. Open Manage subscription or synchronize its status before trying again.",
+  "billing.previewExpired": "The price preview expired or changed. Choose the plan again to review the current amount."
 }
