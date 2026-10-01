@@ -1243,6 +1243,9 @@
 "usage.rollingReset" = "Starts freeing at %@ (in %@)";
 "usage.resetCountdown" = "Resets at %@ (in %@)";
 "usage.fiveHours" = "5 hours";
+"usage.last24h" = "Last 24 hours";
+"usage.last7d" = "Last 7 days";
+"usage.releasedNow" = "%@ of %@ credits released — the rest arrives gradually over 14 days.";
 "usage.week" = "Week";
 "usage.windowUnavailable" = "Not available from this server yet";
 "usage.periodDates" = "%@ – %@";

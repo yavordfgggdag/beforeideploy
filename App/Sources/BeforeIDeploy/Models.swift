@@ -1070,6 +1070,30 @@ struct BillingCatalog: Codable, Hashable {
         var window5h: Int?
         var weekly: Int?
         var extras: [String: Bool]?
+        // catalog v13 (credit model V3) — all optional so older engines/servers still decode
+        var cloudMinutes: Int?
+        var hostingMode: String?
+        var yearlyDomain: Bool?
+        var hosting: Hosting?
+    }
+    /// Recommended (or included) Netlify tier for a plan; `paidBy` is "customer" for connected hosting.
+    struct Hosting: Codable, Hashable {
+        var provider: String?
+        var tier: String?
+        var credits: Int?
+        var paidBy: String?
+    }
+    struct FreePlan: Codable, Hashable {
+        var id: String?
+        var tokens: Int
+        var activeSites: Int?
+        var cloudMinutes: Int?
+        var hosting: Hosting?
+    }
+    struct StarterBonus: Codable, Hashable {
+        var credits: Int
+        var validityDays: Int?
+        var actions: [String]?
     }
     struct Pack: Codable, Hashable, Identifiable {
         var id: String
@@ -1090,6 +1114,10 @@ struct BillingCatalog: Codable, Hashable {
     var plans: [Plan]
     var packs: [Pack]
     var trial: Trial?
+    var free: FreePlan?
+    var starterBonus: StarterBonus?
+    /// "connected" (the customer pays Netlify directly) or "included" (features.hostingIncluded).
+    var hostingMode: String?
 }
 
 struct BillingStatus: Codable, Hashable {
@@ -1409,7 +1437,18 @@ struct PromptInfo: Codable, Identifiable, Hashable {
 
 struct UsageReport: Codable {
     struct Period: Codable, Hashable { var start: String; var end: String; var renewsAt: String?; var source: String; var debt: Int?; var forecastDaysLeft: Double? }
-    struct Tokens: Codable, Hashable { var tokens: Int; var operations: Int? }
+    struct Tokens: Codable, Hashable {
+        var tokens: Int; var operations: Int?
+        // usage v3 `included`: the period budget B released over 14 days (credit model V3)
+        var budget: Int?; var released: Int?; var spent: Int?; var held: Int?; var availableNow: Int?
+        var releaseEndsAt: String?; var periodStart: String?; var periodEnd: String?
+    }
+    /// usage v3: settled included spend in the rolling 24 h / 7 days and its caps (25 % / 50 % of B).
+    struct Guards: Codable, Hashable { var last24h: Int; var cap24h: Int?; var last7d: Int; var cap7d: Int?; var clears24hAt: String?; var clears7dAt: String? }
+    struct CarriedLot: Codable, Hashable, Identifiable { var id: String; var remaining: Int; var expiresAt: String; var grantedAt: String? }
+    struct Bonus: Codable, Hashable { var credits: Int?; var remaining: Int?; var expiresAt: String?; var claimed: Bool? }
+    struct Available: Codable, Hashable { var now: Int; var total: Int }
+    struct CloudMinutes: Codable, Hashable { var included: Int; var used: Int? }
     struct Remaining: Codable, Hashable { var plan: Int; var purchased: Int; var total: Int; var available: Int }
     struct Purchased: Codable, Hashable { var tokens: Int; var expires: String? }
     struct Limits: Codable, Hashable { var perMinute: Int; var perHour: Int; var sessionHours: Double?; var sessionCapPercent: Double?; var sessionCap: Int?; var sessionUsed: Int? }
@@ -1444,7 +1483,7 @@ struct UsageReport: Codable {
     struct History: Codable { var operations: [Operation]; var ledger: [LedgerRow] }
 
     struct Window: Codable { var used: Int; var cap: Int; var remaining: Int; var resetsAt: String?; var reserved: Int?; var boostAvailable: Bool?; var boostUntil: String? }
-    struct Sites: Codable { var active: Int; var limit: Int; var paused: Int?; var items: [Site]? }
+    struct Sites: Codable { var active: Int; var limit: Int; var paused: Int?; var items: [Site]?; var max: Int?; var fairUse: Int? }
     struct Site: Codable, Identifiable { var id: String; var projectKey: String; var name: String; var state: String; var hostingOwner: String?; var pausedReason: String?; var graceUntil: String?; var credits: Int? }
     struct Nudge: Codable { var threshold: Int; var periodRef: String; var kind: String; var target: String? }
     struct PackLot: Codable, Identifiable { var id: String; var remaining: Int; var expiresAt: String }
@@ -1453,6 +1492,13 @@ struct UsageReport: Codable {
     var v: Int?
     var source: String?
     var stale: Bool?
+    // usage v3 (credit model V3); absent from v1/v2 reports
+    var reason: String?
+    var guards: Guards?
+    var carried: [CarriedLot]?
+    var bonus: Bonus?
+    var available: Available?
+    var cloudMinutes: CloudMinutes?
     struct ScheduledChange: Codable { var plan: String; var effectiveAt: String; var siteLimit: Int }
     var scheduledChange: ScheduledChange?
     var nudge: Nudge?

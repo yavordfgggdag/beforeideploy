@@ -16,6 +16,7 @@ export const RATE_LIMITS: Record<string, [number, number]> = {
   "billing.site_activate": [30,60],
   "billing.site_pause": [30,60],
   "billing.boost": [5,60],
+  "billing.bonus": [5,60],
   "billing.domain_request": [5,60],
   "monitor.register": [120, 3600], // an agency registers its whole portfolio at once
   "monitor.test": [10, 60],
