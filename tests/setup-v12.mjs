@@ -118,8 +118,9 @@ test('B1: cancel kills the npm tree at once, cleans staging and reports cancelle
   const npmPid = Number(fs.readFileSync(pidFile, 'utf8').trim());
   const tools = path.join(env.BID_APP_DIR, 'tools');
   assert.ok(fs.readdirSync(tools).some(n => n.startsWith('.staging-')), 'staging exists while installing');
-  const lock = JSON.parse(fs.readFileSync(path.join(env.BID_APP_DIR, 'setup.lock'), 'utf8'));
-  assert.ok((lock.children || []).some(c => c.pid === npmPid), 'lock records the npm child for orphan recovery');
+  const lockFile = path.join(env.BID_APP_DIR, 'setup.lock');
+  const recorded = () => { try { return (JSON.parse(fs.readFileSync(lockFile, 'utf8')).children || []).some(c => c.pid === npmPid); } catch { return false; } };
+  assert.ok(await waitFor(recorded, 5000), 'lock records the npm child for orphan recovery');
   const t0 = Date.now(); child.kill('SIGTERM');
   const code = await Promise.race([exited, sleepMs(7000).then(() => 'timeout')]);
   const took = Date.now() - t0;
@@ -329,4 +330,17 @@ test('B5: exact pins, no install scripts before the integrity check, tampered ta
   assert.deepEqual(calls.map(a => a[0]), ['install', 'rebuild', '--version']);
   assert.ok(calls[1].includes('@anthropic-ai/claude-code'));
   assert.equal(fs.existsSync(link), true);
+});
+
+test('B7: netlify login runs with BROWSER=none and still announces the authorize URL', async () => {
+  const seen = path.join(tmp, 'browser.env');
+  script('netlify', `printf '%s' "$BROWSER" > ${JSON.stringify(seen)}\necho "Opening https://app.netlify.com/authorize?response_type=ticket&ticket=abc"`);
+  const cfg = path.join(process.env.HOME, '.config', 'netlify'); fs.mkdirSync(cfg, { recursive: true });
+  fs.writeFileSync(path.join(cfg, 'config.json'), JSON.stringify({ userId: 'u', users: { u: { email: 'a@b.c', auth: { token: 't' } } } }));
+  // a separate engine process: its NDJSON stdout is the contract (and this runner's stdout carries TAP)
+  const r = spawnSync(process.execPath, [path.join(root, 'engine/src/bid.mjs'), 'netlify', 'login'], { env: { ...process.env, PATH: `${bin}:/usr/bin:/bin` }, encoding: 'utf8', timeout: 30000 });
+  const lines = [r.stdout];
+  assert.equal(fs.readFileSync(seen, 'utf8'), 'none');
+  const code = lines.join('').split('\n').filter(Boolean).map(l => { try { return JSON.parse(l); } catch { return null; } }).find(e => e?.type === 'devicecode');
+  assert.equal(code?.url, 'https://app.netlify.com/authorize?response_type=ticket&ticket=abc');
 });

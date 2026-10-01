@@ -63,7 +63,9 @@ export function netlifyAuth() {
 export async function netlifyLogin({ stepId = 'login', manageSteps = true, logFile } = {}) {
   if (manageSteps) ev.step(stepId, { label: t('netlify.login.label'), status: 'running', summary: t('netlify.login.opening') });
   let announced = false;
-  const r = await nl(null, ['login'], { step: stepId, logFile, timeout: 5 * 60 * 1000, env: { BROWSER: 'echo' },
+  // BROWSER=none is netlify-cli's documented off switch (utils/open-browser): it still prints the authorize URL,
+  // which the app opens. 'echo' was taken as an app name by the opener (audit B7).
+  const r = await nl(null, ['login'], { step: stepId, logFile, timeout: 5 * 60 * 1000, env: { BROWSER: 'none' },
     onLine(line) {
       const match = line.match(/https:\/\/app\.netlify\.com\/[^\s]+/);
       if (match && !announced) {
