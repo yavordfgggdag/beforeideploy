@@ -5,6 +5,12 @@
 //   { "version": "10.1.0", "minVersion": "10.0.0", "url": "https://…/Before-I-Deploy-10.1.0.dmg",
 //     "sha256": "…", "notes": { "en": "…", "bg": "…" }, "publishedAt": "2026-10-01T00:00:00Z",
 //     "beta": { "version": "10.2.0-beta.1", "url": "…", "sha256": "…", "notes": { … } } }
+//
+// Feed v2 adds installers per OS (the top-level url stays the macOS DMG for older apps):
+//   "assets": { "darwin-universal": { "url", "sha256" }, "win32-x64-msi": { … }, "linux-x64-appimage": { … },
+//               "linux-x64-deb": { … } }
+// The engine picks the asset for this OS (platform/index.mjs updateAssetKeys); a v1 feed (no `assets`)
+// keeps working as before. Installing stays with the app shell.
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -12,6 +18,7 @@ import crypto from 'node:crypto';
 import { APP_DIR, EngineError, readJSON, writeJSON, nowISO, ensureDir, fetchT } from './util.mjs';
 import { isProductionBundle } from './isolation.mjs';
 import { msg } from './i18n.mjs';
+import { platformOf, updateAssetKeys, updateFileExt } from './platform/index.mjs';
 
 const CACHE = () => path.join(APP_DIR, 'update-cache.json');
 const CACHE_TTL_MS = 6 * 3600 * 1000;
@@ -44,7 +51,25 @@ export function compareVersions(a, b) {
   return 0;
 }
 
-export async function updateCheck({ current, force = false, channel = 'stable' } = {}) {
+/**
+ * The installer for this OS from a feed entry: { key, url, sha256 } or null. macOS: the top-level url (the DMG),
+ * as always. Elsewhere: the first matching `assets` key; a v1 feed without `assets` still offers its url.
+ */
+export function pickAsset(entry, { platform = process.platform, arch = process.arch, format } = {}) {
+  const assets = entry?.assets && typeof entry.assets === 'object' ? entry.assets : null;
+  if (platformOf(platform) === 'darwin') {
+    if (entry?.url) return { key: 'darwin-universal', url: entry.url, sha256: entry.sha256 || null };
+  } else if (!assets) {
+    return entry?.url ? { key: null, url: entry.url, sha256: entry.sha256 || null } : null;
+  }
+  for (const key of updateAssetKeys({ platform, arch, format })) {
+    const a = assets?.[key];
+    if (a?.url) return { key, url: a.url, sha256: a.sha256 || null };
+  }
+  return null;
+}
+
+export async function updateCheck({ current, force = false, channel = 'stable', format } = {}) {
   const url = updateUrl();
   if (!url) return { current, configured: false, available: false, mandatory: false, channel };
   const cache = readJSON(CACHE(), null);
@@ -61,6 +86,7 @@ export async function updateCheck({ current, force = false, channel = 'stable' }
   const feed = await res.json().catch(() => null);
   if (!feed?.version) throw new EngineError(msg('update.badFeed'), 'update_failed');
   const latest = channel === 'beta' && feed.beta?.version && compareVersions(feed.beta.version, feed.version) > 0 ? feed.beta : feed;
+  const asset = pickAsset(latest, { format });
   const result = {
     current,
     configured: true,
@@ -68,8 +94,9 @@ export async function updateCheck({ current, force = false, channel = 'stable' }
     latest: latest.version,
     available: compareVersions(latest.version, current) > 0,
     mandatory: !!feed.minVersion && compareVersions(feed.minVersion, current) > 0,
-    url: latest.url || null,
-    sha256: latest.sha256 || null,
+    url: asset?.url || null,
+    sha256: asset?.sha256 || null,
+    ...(platformOf() === 'darwin' ? {} : { asset: asset?.key || null }),
     notes: latest.notes || null,
     publishedAt: latest.publishedAt || null,
     checkedAt: nowISO(),
@@ -78,9 +105,10 @@ export async function updateCheck({ current, force = false, channel = 'stable' }
   return result;
 }
 
-/** Downloads the DMG to ~/Downloads and verifies its sha256 (the file is deleted on mismatch). */
-export async function updateDownload({ current, channel = 'stable' } = {}) {
-  const r = await updateCheck({ current, force: true, channel });
+/** Downloads this OS's installer (DMG / MSI / AppImage / deb) to ~/Downloads and verifies its sha256 (the file is deleted on mismatch). */
+export async function updateDownload({ current, channel = 'stable', format } = {}) {
+  const r = await updateCheck({ current, force: true, channel, format });
+  if (r.available && !r.url && platformOf() !== 'darwin') throw new EngineError(msg('update.noAsset', { version: r.latest }), 'not_supported_on_platform');
   if (!r.available || !r.url) throw new EngineError(msg('update.nothing'), 'nothing');
   // a release must be HTTPS and carry its sha256 (plain http only for a local test feed)
   let u;
@@ -106,7 +134,9 @@ export async function updateDownload({ current, channel = 'stable' } = {}) {
   const declared = Number(res.headers.get('content-length') || 0);
   if (declared > max) throw new EngineError(msg('update.tooLarge', { mb: Math.round(max / 1048576) }), 'update_failed');
   const dir = ensureDir(path.join(os.homedir(), 'Downloads'));
-  const file = path.join(dir, `Before I Deploy ${r.latest}.dmg`);
+  // macOS: the DMG as always; a v1 feed elsewhere: the url's own extension; a v2 asset: its kind
+  const ext = platformOf() === 'darwin' ? '.dmg' : r.asset ? updateFileExt(r.asset) : path.extname(new URL(r.url).pathname) || '.bin';
+  const file = path.join(dir, `Before I Deploy ${r.latest}${ext}`);
   const part = `${file}.part`;
   const hash = crypto.createHash('sha256');
   const out = fs.createWriteStream(part);
@@ -140,5 +170,6 @@ export async function updateDownload({ current, channel = 'stable' } = {}) {
     throw new EngineError(msg('update.corrupt'), 'update_corrupt');
   }
   fs.renameSync(part, file);
+  if (file.endsWith('.AppImage')) fs.chmodSync(file, 0o755); // an AppImage runs by itself
   return { path: file, version: r.latest, sha256, bytes, notes: r.notes };
 }

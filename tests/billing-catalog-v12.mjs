@@ -10,7 +10,7 @@ import { DEFAULT_CATALOG, offlineCatalog, soldPrices } from '../engine/src/plans
 import { billingDemo } from '../engine/src/billing-demo.mjs';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'bid-catalog-'));
-Object.assign(process.env, { BID_APP_DIR: tmp, BID_CACHE_DIR: path.join(tmp, 'cache'), BID_NO_KEYCHAIN: '1', BID_NO_BUNDLED_CLOUD: '1' });
+Object.assign(process.env, { BID_APP_DIR: tmp, BID_CACHE_DIR: path.join(tmp, 'cache'), BID_NO_KEYCHAIN: '1', BID_SECRETS_PASSPHRASE: 'test-passphrase', BID_NO_BUNDLED_CLOUD: '1' });
 const { billingCommand } = await import('../engine/src/billing.mjs');
 after(() => fs.rmSync(tmp, { recursive: true, force: true }));
 

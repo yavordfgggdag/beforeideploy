@@ -28,3 +28,5 @@ jobs:
           node-version: 22
       - name: Engine tests
         run: node tests/run.mjs
+      - name: Platform layer (.command scripts byte-identical, launchd plist, Keychain path untouched)
+        run: node --test tests/platform.mjs tests/setup-v12.mjs

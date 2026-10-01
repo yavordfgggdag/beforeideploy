@@ -1,0 +1,3 @@
+# launchers: the POSIX one must keep LF (a CR breaks /bin/sh), cmd.exe wants CRLF
+engine/bid text eol=lf
+*.cmd text eol=crlf

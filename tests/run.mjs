@@ -19,7 +19,9 @@ const ENV = {
   GIT_COMMITTER_NAME: 'Test',
   GIT_COMMITTER_EMAIL: 'test@example.com',
   HOME: path.join(TMP, 'home'), // isolates Netlify auth lookup
+  XDG_CONFIG_HOME: path.join(TMP, 'home', '.config'), // Linux: never the real systemd --user units or CLI configs
   BID_NO_KEYCHAIN: '1', // never touch the real Keychain in tests
+  BID_SECRETS_PASSPHRASE: 'test-passphrase', // Linux/Windows: the encrypted secrets file (no plaintext there)
   BID_EVAL_DIR: path.join(ROOT, 'tests', 'ai-evals'), // canned assistant answers for the fake model (mock-spaceship.cjs)
   BID_LAST_AI_REQ: path.join(TMP, 'last-ai-request.json'),
   BID_NO_BUNDLED_CLOUD: '1', // never talk to the real Supabase in tests
@@ -846,7 +848,10 @@ t('WP01 скриптове: build не вижда тайните на engine-а;
     const out = JSON.parse(fs.readFileSync(path.join(dir, 'probe.json'), 'utf8'));
     for (const k of Object.keys(leaky)) assert(out.env[k] === undefined, k + ' must not reach project scripts');
     assert(out.env.CI === '1' && out.env.PATH && out.env.HOME, 'the allowlisted basics are there');
-    assert(r.data.isolation === (process.platform === 'darwin' ? 'sandbox' : 'none'), 'isolation reported: ' + r.data.isolation);
+    // macOS sandbox-exec; Linux bubblewrap when it can run here, else "basic"; Windows "basic"
+    const levels = process.env.BID_NO_SANDBOX === '1' ? ['none'] : process.platform === 'darwin' ? ['sandbox'] : process.platform === 'linux' ? ['sandbox', 'basic'] : ['basic'];
+    assert(levels.includes(r.data.isolation), 'isolation reported: ' + r.data.isolation);
+    if (process.platform === 'linux' && r.data.isolation === 'sandbox') assert(out.appDir !== 'readable', 'bubblewrap hides the engine folder: ' + out.appDir);
     if (mac) {
       assert(out.appDir !== 'readable', 'the sandbox hides the engine folder: ' + out.appDir);
       assert(!String(out.keychain).includes('probe-secret-value'), 'the sandbox blocks the Keychain: ' + out.keychain);
@@ -1835,7 +1840,8 @@ t('V13 AI история: app/cache папки под HOME — patch/undo път
   const homeEnv = { BID_APP_DIR: path.join(ENV.HOME, 'Library', 'Application Support', 'BeforeIDeploy'), BID_CACHE_DIR: path.join(ENV.HOME, 'Library', 'Caches', 'BeforeIDeploy') };
   const run = (...args) => bidEnv(homeEnv, ...args);
   // the same signed-in account as the rest of the suite (session, cloud config, cached profile)
-  for (const f of ['cloud.json', 'profile.json', path.join('secrets', 'session.json')]) {
+  // the session file: plain on macOS test runs, encrypted (session.enc) on Linux/Windows
+  for (const f of ['cloud.json', 'profile.json', path.join('secrets', 'session.json'), path.join('secrets', 'session.enc')]) {
     const src = path.join(ENV.BID_APP_DIR, f);
     if (!fs.existsSync(src)) continue;
     fs.mkdirSync(path.dirname(path.join(homeEnv.BID_APP_DIR, f)), { recursive: true });
@@ -2331,7 +2337,12 @@ ta('monitor: потвърждава проблем след 2 неуспеха, 
   const inc = bid('monitor', 'incidents');
   assert(inc.data.length === 1 && inc.data[0].status === 'resolved' && inc.data[0].resolvedAt, JSON.stringify(inc.data));
   assert(bid('monitor', 'agent', 'install').result.code === 'confirm_required', 'agent needs --yes');
-  if (process.platform !== 'darwin') assert(bid('monitor', 'agent', 'install', '--yes').result.code === 'unsupported', 'agent is macOS only');
+  if (process.platform !== 'darwin') {
+    // Linux: a systemd --user timer, Windows: Task Scheduler; without a usable scheduler (CI, containers) a clear code
+    const agent = bid('monitor', 'agent', 'install', '--yes');
+    assert(agent.result.ok || agent.result.code === 'not_supported_on_platform', 'agent: scheduler or not_supported_on_platform: ' + JSON.stringify(agent.result));
+    if (agent.result.ok) bid('monitor', 'agent', 'remove');
+  }
 });
 
 t('monitor cloud: status казва честно „никога“ без heartbeat; enable регистрира live URL; статусът обединява инциденти по източник', () => {

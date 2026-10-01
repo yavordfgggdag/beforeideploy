@@ -15,13 +15,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      # engine/bid is a zsh launcher (macOS always has zsh; Ubuntu runners do not)
+      # engine/bid is POSIX sh now; zsh is still needed for scripts/*.zsh and to check that `zsh -f bid`
+      # (how the macOS app and launchd start it) parses
       - name: Install zsh
         run: sudo apt-get update -q && sudo apt-get install -y -q zsh
       - name: Syntax of every engine module and shell script (audit R9)
         run: |
           set -e
           find engine/src scripts -name '*.mjs' -o -name '*.cjs' | xargs -n1 node --check
+          sh -n engine/bid
           for f in engine/bid scripts/*.sh scripts/*.zsh *.command; do zsh -n "$f"; done
       - name: Engine tests
         run: node tests/run.mjs

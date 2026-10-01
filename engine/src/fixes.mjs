@@ -201,7 +201,7 @@ export async function applyFix(project, id, { yes = false, recheck = false } = {
     case 'deps.install': {
       const logFile = path.join(logDir(project.key), 'install.log');
       // install runs the project's lifecycle scripts: same isolation as a check (WP01)
-      const [icmd, iargs] = isolate(d.packageManager || 'npm', ['install']);
+      const [icmd, iargs] = isolate(d.packageManager || 'npm', ['install'], { cwd: dir });
       const r = await runStream(icmd, iargs, { cwd: dir, step: 'fix', logFile, env: scriptEnv(), timeout: 15 * 60 * 1000, display: `${d.packageManager || 'npm'} install` });
       if (r.code !== 0) {
         ev.step('fix', { label: id, status: 'fail', summary: t('fix.deps.stepFailed'), details: r.tail.slice(-15), log: logFile });

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import './platform/boot.mjs'; // first: PATH and locale for every OS (platform/index.mjs)
 import { discardConversationPatch } from './ai/conversation.mjs';
 import { gitAvailable } from './setup-tools.mjs';
 import { readFileSync, existsSync } from 'node:fs';
@@ -11,6 +12,7 @@ import { runChecks } from './checks.mjs';
 import { deriveIssues } from './issues.mjs';
 import { pushoverConnect, pushoverDisconnect, pushoverStatus } from './pushover.mjs';
 import { endpoints, isProductionBundle, isolationLevel } from './isolation.mjs';
+import { secretsBackend } from './secrets.mjs';
 import { monitorOnce, monitorStatus, monitorStatusMerged, listIncidents, setMonitorSettings, agentInstall, agentRemove, maintenanceCommand, notifyTest } from './monitor.mjs';
 import { monitorCloudStatus, monitorCloudEnable, monitorCloudDisable, monitorCloudTest } from './monitor-cloud.mjs';
 import { assistantChat, assistantHistory, assistantReset, assistantSettings, setAssistantSettings, listPrompts } from './ai/assistant.mjs';
@@ -161,6 +163,7 @@ function doctor() {
     endpoints: endpoints(),
     production: isProductionBundle(),
     isolation: isolationLevel(),
+    secrets: secretsBackend(),
   };
 }
 
@@ -454,8 +457,8 @@ async function main() {
       const channel = flags.channel && flags.channel !== true ? flags.channel : 'stable';
       // the app passes its own version: that is what an update replaces (audit B5)
       const current = flags.current && flags.current !== true ? String(flags.current) : VERSION;
-      if (!sub || sub === 'check') return ok(await updateCheck({ current, force: !!flags.force, channel }));
-      if (sub === 'download') return ok(await updateDownload({ current, channel }));
+      if (!sub || sub === 'check') return ok(await updateCheck({ current, force: !!flags.force, channel, format: flags.format === 'deb' ? 'deb' : undefined }));
+      if (sub === 'download') return ok(await updateDownload({ current, channel, format: flags.format === 'deb' ? 'deb' : undefined }));
       throw new EngineError(msg('cli.unknownCommand', { command: `update ${sub}` }), 'usage', 2);
     }
 
