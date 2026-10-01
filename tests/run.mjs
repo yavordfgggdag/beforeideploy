@@ -801,8 +801,15 @@ t('WP01 асистент: файл в корена не отваря целия 
   const base = { status: 'patch', summary: 's', base_hashes: {}, risk: 'low', rationale_evidence_ids: [], verification_plan: ['check'], rollback_notes: 'undo', missing_context: [] };
   const refs = { allowed_paths: new Set(['index.html', 'src/app.js']), allowed_dirs: new Set(['src/']) };
   const ok = (p) => promptsMod.validateOutput(prompt, { ...base, changes: [{ path: p, action: 'create', content: 'x' }] }, refs).ok;
-  assert(ok('index.html') && ok('src/app.js') && ok('src/new.js'), 'allowed file and a new file next to a snapshotted one');
-  for (const bad of ['netlify.toml', 'vite.config.js', 'src/../netlify.toml', '/etc/x', './index.html', 'other/x.js']) assert(!ok(bad), 'must refuse ' + bad);
+  assert(ok('index.html') && ok('src/app.js'), 'the listed files are allowed');
+  // V13 S3: a listed file no longer opens its folder — a sibling or a new file next to it is refused
+  for (const bad of ['src/new.js', 'src/payload.js', 'src/pages/api/x.ts', 'netlify.toml', 'vite.config.js', 'src/../netlify.toml', '/etc/x', './index.html', 'other/x.js']) assert(!ok(bad), 'must refuse ' + bad);
+  // V13 S4: replace/create without content would empty or create a blank file — the schema refuses it
+  for (const action of ['replace', 'create']) {
+    const v = promptsMod.validateOutput(prompt, { ...base, changes: [{ path: 'src/app.js', action }] }, refs);
+    assert(!v.ok && v.errors.some((e) => /content: required/.test(e)), `${action} without content: ` + JSON.stringify(v.errors));
+  }
+  assert(promptsMod.validateOutput(prompt, { ...base, changes: [{ path: 'src/app.js', action: 'delete' }] }, refs).ok, 'delete needs no content');
   // the empty prefix a root file used to add must not help either
   assert(!promptsMod.validateOutput(prompt, { ...base, changes: [{ path: 'netlify.toml', action: 'create', content: 'x' }] }, { ...refs, allowed_dirs: new Set(['', 'src/']) }).ok, 'an empty allowed dir is ignored');
 });
@@ -1651,7 +1658,7 @@ const chat = (dir, ...args) => bid('ai', 'chat', '--project', dir, ...args);
 t('assistant: prompts са версионирани ресурси; диагноза → доказателства със id, валидиран JSON, история с права 0600', () => {
   spawnSync(BID, ['account', 'keys', 'set', '--provider', 'anthropic'], { env: { ...ENV, BID_AI_KEY: 'sk-ant-good-key-123' }, encoding: 'utf8' });
   const prompts = bid('ai', 'prompts');
-  assert(prompts.result.ok && prompts.data.length === 8 && prompts.data.every((p) => p.version === (['ask','diagnose_issue','system'].includes(p.id) ? 2 : 1) && p.title.bg?.title && p.title.en?.title && p.inputs.length), JSON.stringify(prompts.data.map((p) => p.id)));
+  assert(prompts.result.ok && prompts.data.length === 8 && prompts.data.every((p) => p.version === (['ask','diagnose_issue','propose_patch','system'].includes(p.id) ? 2 : 1) && p.title.bg?.title && p.title.en?.title && p.inputs.length), JSON.stringify(prompts.data.map((p) => p.id)));
   assert(prompts.data.map((p) => p.id).join() === 'ask,diagnose_issue,explain_verification,incident_triage,propose_patch,release_readiness,review_patch,system', 'prompt ids');
   bid('project', 'add', '--path', asstApp);
   assert(bid('check', '--project', asstApp).data.status === 'blocked', 'fixture must fail to build');
@@ -1728,7 +1735,7 @@ t('assistant: предложение → patch файл с base hash, риск �
   assert(p.data.risk === 'low' && p.data.files[0].path === 'src/app.js' && p.data.files[0].applicable && p.data.files[0].additions >= 1 && p.data.verificationPlan.length === 1, JSON.stringify(p.data.files));
   assert(fs.readFileSync(path.join(asstApp, 'src/app.js'), 'utf8') === before, 'propose never writes');
   const patch = JSON.parse(fs.readFileSync(p.data.patchFile, 'utf8'));
-  assert(patch.assistant.template === 'propose_patch.v1' && patch.assistant.risk === 'low' && patch.planned[0].diff.includes('+const c = a + b;'), 'patch file carries the diff and the provenance');
+  assert(patch.assistant.template === 'propose_patch.v2' && patch.assistant.risk === 'low' && patch.planned[0].diff.includes('+const c = a + b;'), 'patch file carries the diff and the provenance');
   const out = chat(asstApp, '--action', 'propose', '--issue', issue.id, '--files', 'src/app.js', '--message', '[[eval:propose-outside]]');
   assert(out.result.ok && out.data.valid && out.data.repairs === 1 && out.data.files.every((f) => f.path === 'src/app.js'), 'package.json and ../outside.js were rejected by validation, the repair answer accepted: ' + JSON.stringify(out.data.errors));
   assert(!fs.existsSync(path.join(asstApp, '..', 'outside.js')) && JSON.parse(fs.readFileSync(path.join(asstApp, 'package.json'), 'utf8')).scripts.build, 'nothing outside the scope was touched');

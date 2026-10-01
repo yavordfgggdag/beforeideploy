@@ -93,7 +93,7 @@ export function extractJSON(text) {
 
 /**
  * Validates a model answer against the prompt's output schema (type, required, enum, items, ref).
- * refs: { evidence: Set<string>, allowed_paths: Set<string>, engine_status: string }.
+ * refs: { evidence: Set<string>, allowed_paths: Set<string> (exact paths), engine_status: string }.
  * Returns { ok, errors[] } — never throws for model mistakes.
  */
 export function validateOutput(prompt, value, refs = {}) {
@@ -124,6 +124,10 @@ function check(v, s, at, errors, refs) {
   if (type === 'object') {
     if (!v || typeof v !== 'object' || Array.isArray(v)) return errors.push(`${at}: expected object`);
     for (const r of s.required || []) if (v[r] === undefined) errors.push(`${at}.${r}: required`);
+    // requiredIf: { field: { other: [values] } } — e.g. `content` is required when `action` is replace/create
+    for (const [r, cond] of Object.entries(s.requiredIf || {})) {
+      if (v[r] === undefined && Object.entries(cond).every(([k, vals]) => vals.includes(v[k]))) errors.push(`${at}.${r}: required when ${Object.entries(cond).map(([k, vals]) => `${k} is ${vals.join('|')}`).join(' and ')}`);
+    }
     for (const [k, sub] of Object.entries(s.properties || {})) if (v[k] !== undefined) check(v[k], sub, `${at}.${k}`, errors, refs);
     return;
   }
@@ -137,8 +141,8 @@ function checkRef(v, ref, at, errors, refs) {
     const p = String(v);
     const segs = p.split(/[\\/]+/);
     const malformed = !p || p.startsWith('/') || p.includes('\0') || segs.some((s) => s === '..' || s === '.') || /^[a-zA-Z]:/.test(p);
-    const inDir = refs.allowed_dirs && [...refs.allowed_dirs].some((d) => d && d.endsWith('/') && p.startsWith(d));
-    if (refs.allowed_paths && (malformed || (!refs.allowed_paths.has(p) && !inDir))) errors.push(`${at}: path ${v} is outside the allowed paths`);
+    // exactly the listed files — never "anything in the same folder" (V13 S3)
+    if (refs.allowed_paths && (malformed || !refs.allowed_paths.has(p))) errors.push(`${at}: path ${v} is outside the allowed paths`);
   } else if (ref === 'engine_status') {
     if (refs.engine_status !== undefined && v !== refs.engine_status) errors.push(`${at}: must equal the engine status "${refs.engine_status}" (got "${v}")`);
   }
