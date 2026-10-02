@@ -66,7 +66,9 @@ async function loadPlaywright() {
       // a global install is a directory: ESM needs its entry file
       const entry = mod.startsWith('/') ? path.join(mod, 'index.mjs') : require.resolve(mod);
       if (!fs.existsSync(entry)) continue;
-      return await import(entry);
+      // playwright-core's entry is CommonJS: its exports arrive under `default`
+      const m = await import(entry);
+      if (m.chromium || m.default?.chromium) return m.chromium ? m : m.default;
     } catch {}
   }
   throw new Error('Playwright is not installed: npm i --no-save --prefix scripts playwright-core');
