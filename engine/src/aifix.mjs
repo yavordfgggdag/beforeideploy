@@ -141,6 +141,8 @@ export function buildPrompt(project, stepId) {
   const parts = [];
   parts.push(t(onlyWarnings ? 'aifix.prompt.introWarnings' : 'aifix.prompt.introErrors'));
   const git = d.git.isRepo ? `${d.git.branch}${t(d.git.remote ? 'aifix.prompt.gitRemote' : 'aifix.prompt.gitNoRemote')}` : t('aifix.prompt.gitNoRepo');
+  // who is asking and which buttons they have: the answer must be steps in this app, not developer shorthand
+  parts.push(t('aifix.prompt.aboutApp'));
   parts.push(t('aifix.prompt.environment', { framework: d.framework, pm: d.packageManager || '—', node, publishDir: d.publishDir, git }));
   parts.push(`${t('aifix.prompt.problems')}\n\n${blocks.map((b) => b.text).join('\n\n')}`);
   if (pkg) {

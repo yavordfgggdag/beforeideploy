@@ -664,6 +664,9 @@ t('aifix: prompt с лога, скрити secrets, ChatGPT URL', () => {
   assert(p.includes('production build'), 'step name');
   assert(p.includes('Error in src/app.js'), 'log missing');
   assert(p.includes('src/app.js') && p.includes('const c = a + ;'), 'file context missing');
+  // the answer must come back as steps in this app, for someone who has never programmed
+  assert(p.includes('## About me and Before I Deploy') && p.includes('Open in Terminal') && p.includes('Smart Deploy'), 'app context missing');
+  assert(p.includes('ONE action per step') && p.includes('press **Check**') && p.includes('For developers'), 'simple step-by-step instructions missing');
   assert(!p.includes('abcdef1234567890') && !p.includes('me@example.com') && !p.includes('ABCDEFGHIJKLMNOPQRSTUVWXYZ123456'), 'secret leaked');
   assert(!p.includes(ENV.HOME) && !/\/Users\//.test(p), 'home path leaked');
   assert(r.data.url.startsWith('https://chatgpt.com/?q='), r.data.url.slice(0, 40));
