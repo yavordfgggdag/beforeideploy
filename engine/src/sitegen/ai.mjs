@@ -360,3 +360,167 @@ export async function runPipeline({ brief, recipe, call, models = {}, onStep = (
   const content = mergeContent(recipe, reviewed);
   return { content, plan, usage, styleSuggestion: plan?.styleSuggestion || null, version: PIPELINE_VERSION };
 }
+
+// ---------------------------------------------------------------- edits with words (S4)
+
+/** What one edit may do. Every field is present (null when unused) so the schema stays flat and cacheable. */
+export const EDIT_OPS = ['set_text', 'set_items', 'drop_section', 'add_section', 'style', 'none'];
+
+export const EDIT_SCHEMA = obj({
+  summary: str,
+  ops: {
+    type: 'array',
+    items: obj({
+      op: { type: 'string', enum: EDIT_OPS },
+      page: nstr,
+      section: { anyOf: [{ type: 'integer' }, nul] },
+      field: nstr,
+      value: nstr,
+      items: { anyOf: [rows, nul] },
+      type: nstr,
+      after: { anyOf: [{ type: 'integer' }, nul] },
+      title: nstr,
+      intro: nstr,
+      style: nstr,
+      palette: nstr,
+    }),
+  },
+});
+
+/** Fields an edit may set, per place. Anything else is refused by applyEdits. */
+const PAGE_FIELDS = new Set(['title', 'description']);
+const HERO_FIELDS = new Set(['eyebrow', 'title', 'lead', 'cta', 'cta2', 'cardTitle', 'cardNote']);
+const SECTION_FIELDS = new Set(['title', 'intro', 'h', 'p', 'button', 'send', 'note']);
+const SITE_FIELDS = new Set(['description', 'tagline']);
+const ADDABLE = new Set(['cards', 'steps', 'faq', 'quotes', 'stats', 'prose', 'chips', 'cta', 'pricing', 'gallery']);
+
+export function editPrompt(brief, content, look, say) {
+  return `${briefText(brief)}
+
+The owner wants to change their site. Their words: "${clip(say, 400)}"
+
+The site today (page ids, section indexes and the current texts):
+${recipeText(content)}
+
+Current look: style ${look.style || 'the theme\'s own'}, palette ${look.palette || 'the theme\'s own'}. Styles: calm, bold, elegant. Palettes by style: ${Object.entries(look.palettes || {}).map(([s, p]) => `${s}: ${p.join(', ')}`).join('; ')}.
+
+Translate the request into the smallest list of operations:
+- set_text: page + section index (null for the hero or the page itself) + field + value. Hero fields: eyebrow, title, lead, cta, cta2, cardTitle, cardNote. Section fields: title, intro, h, p, button, send, note. Page fields (section null, no hero field): title, description. Site-wide (page null): description, tagline.
+- set_items: page + section + items (the full list of rows, same column meaning as today).
+- drop_section: page + section.
+- add_section: page + after (section index, -1 = first) + type (cards, steps, faq, quotes, stats, prose, chips, cta, pricing, gallery) + title + intro + items (rows for the type: cards [heading, text]; steps [heading, text]; faq [question, answer]; quotes [quote, who]; stats [number, label]; prose [heading, paragraph]; chips/gallery [caption]; pricing [name, price, one line]; cta [heading, text, button label]).
+- style: style and/or palette.
+- none: when the request cannot be done with these operations (say why in summary).
+Write texts in the site's language, in the owner's voice; invent no facts. Summary: one sentence in the site's language saying what changed.`;
+}
+
+/** A section built from an add_section op: text from the owner (or the model), structure and links from here. */
+function sectionFrom(op, pages) {
+  const items = Array.isArray(op.items) ? op.items.filter(Array.isArray).map((r) => r.map((c) => cut(c, LIMITS.item) || '')) : [];
+  const title = cut(op.title, LIMITS.title);
+  const intro = cut(op.intro, LIMITS.text);
+  const contactHref = pages.contact ? '/contact.html' : '/#contact';
+  const base = { type: op.type, ...(title ? { title } : {}), ...(intro ? { intro } : {}) };
+  switch (op.type) {
+    case 'cards':
+      return { ...base, items: items.slice(0, 8).map((r) => ['spark', r[0] || '', r[1] || '']) };
+    case 'steps':
+    case 'faq':
+    case 'quotes':
+    case 'stats':
+    case 'prose':
+      return { ...base, items: items.slice(0, 12).map((r) => [r[0] || '', r[1] || '']) };
+    case 'chips':
+    case 'gallery':
+      return { ...base, items: items.slice(0, 12).map((r) => r[0] || '') };
+    case 'pricing':
+      return { ...base, items: items.slice(0, 6).map((r) => ({ name: r[0] || '', price: r[1] || '', features: r[2] ? [r[2]] : [], cta: [title || '→', contactHref] })) };
+    case 'cta':
+      return { type: 'cta', h: items[0]?.[0] || title || '', p: items[0]?.[1] || intro || '', button: [items[0]?.[2] || '→', contactHref] };
+    default:
+      return null;
+  }
+}
+
+/**
+ * Applies the ops to a copy of the content. Only words change; links, icons, ids and forms stay. Returns the
+ * new content, the look change (style/palette) and what was applied or refused, in order.
+ */
+export function applyEdits(content, ops) {
+  const out = JSON.parse(JSON.stringify(content));
+  const applied = [];
+  const refused = [];
+  const look = {};
+  const pageOf = (id) => (id && out.pages ? out.pages[id] : null);
+  for (const raw of Array.isArray(ops) ? ops : []) {
+    const op = raw && typeof raw === 'object' ? raw : {};
+    const page = pageOf(op.page);
+    const sections = page?.sections || [];
+    const idx = Number.isInteger(op.section) ? op.section : null;
+    const sec = idx !== null && idx >= 0 && idx < sections.length ? sections[idx] : null;
+    switch (op.op) {
+      case 'set_text': {
+        const v = cut(op.value, op.field === 'lead' ? LIMITS.lead : ['title', 'h'].includes(op.field) ? LIMITS.title : ['cta', 'cta2', 'button', 'send'].includes(op.field) ? LIMITS.label : LIMITS.text);
+        if (!v) { refused.push({ op, why: 'empty value' }); break; }
+        if (!op.page && SITE_FIELDS.has(op.field)) { out[op.field] = v; applied.push(`${op.field}`); break; }
+        if (!page) { refused.push({ op, why: 'unknown page' }); break; }
+        if (sec) {
+          if (!SECTION_FIELDS.has(op.field)) { refused.push({ op, why: 'unknown section field' }); break; }
+          if (op.field === 'button' && Array.isArray(sec.button)) sec.button = [v, sec.button[1]];
+          else if (op.field === 'button' && typeof sec.button === 'string') sec.button = v;
+          else sec[op.field] = v;
+          applied.push(`${op.page}#${idx}.${op.field}`);
+          break;
+        }
+        if (idx === null && page.hero && HERO_FIELDS.has(op.field)) {
+          const h = page.hero;
+          if (op.field === 'cta' || op.field === 'cta2') { if (Array.isArray(h[op.field])) h[op.field] = [v, h[op.field][1]]; else { refused.push({ op, why: 'no such button' }); break; } }
+          else if (op.field === 'cardTitle') { if (h.card) h.card.title = v; else { refused.push({ op, why: 'no card' }); break; } }
+          else if (op.field === 'cardNote') { if (h.card) h.card.note = v; else { refused.push({ op, why: 'no card' }); break; } }
+          else h[op.field] = v;
+          applied.push(`${op.page}.hero.${op.field}`);
+          break;
+        }
+        if (idx === null && PAGE_FIELDS.has(op.field) && op.page !== 'index') { page[op.field] = v; applied.push(`${op.page}.${op.field}`); break; }
+        refused.push({ op, why: 'unknown field' });
+        break;
+      }
+      case 'set_items': {
+        const rowsIn = cutRows(op.items, LIMITS.item);
+        if (!sec || !rowsIn || !rowsIn.length) { refused.push({ op, why: sec ? 'no items' : 'unknown section' }); break; }
+        const merged = mergeSection(sec, { items: rowsIn, plans: sec.type === 'pricing' || sec.type === 'programs' ? rowsIn.map((r) => ({ name: r[0], price: r[1], per: null, featured: null, features: r[2] ? [r[2]] : [], cta: null })) : null, groups: null, posts: null, body: null, title: null, intro: null, h: null, p: null, button: null, send: null, note: null });
+        sections[idx] = merged;
+        applied.push(`${op.page}#${idx}.items`);
+        break;
+      }
+      case 'drop_section': {
+        if (!sec) { refused.push({ op, why: 'unknown section' }); break; }
+        if (['contact', 'form'].includes(sec.type)) { refused.push({ op, why: 'the contact section stays' }); break; }
+        sections.splice(idx, 1);
+        applied.push(`${op.page}#${idx} (${sec.type}) removed`);
+        break;
+      }
+      case 'add_section': {
+        if (!page || !ADDABLE.has(op.type)) { refused.push({ op, why: page ? 'unknown section type' : 'unknown page' }); break; }
+        const s = sectionFrom(op, out.pages);
+        if (!s) { refused.push({ op, why: 'could not build' }); break; }
+        const at = Number.isInteger(op.after) ? Math.max(0, Math.min(sections.length, op.after + 1)) : sections.length;
+        sections.splice(at, 0, s);
+        page.sections = sections;
+        applied.push(`${op.page}#${at} (${op.type}) added`);
+        break;
+      }
+      case 'style': {
+        if (op.style) look.style = op.style;
+        if (op.palette) look.palette = op.palette;
+        if (op.style || op.palette) applied.push(`look: ${[op.style, op.palette].filter(Boolean).join(' / ')}`);
+        else refused.push({ op, why: 'no style or palette' });
+        break;
+      }
+      case 'none':
+      default:
+        refused.push({ op, why: op.op === 'none' ? 'not possible with words' : 'unknown op' });
+    }
+  }
+  return { content: out, look, applied, refused };
+}

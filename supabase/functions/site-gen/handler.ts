@@ -11,9 +11,14 @@ import * as siteAi from "../_shared/site-ai.mjs";
 
 export interface SiteGenBody {
   brief: Row;
-  recipe: Row;
+  /** create: the theme recipe the model rewrites */
+  recipe?: Row;
+  /** edit (S4): the site's current content, its look and the owner's words */
+  content?: Row;
+  look?: Row;
+  say?: string;
   locale?: string;
-  mode?: "create";
+  mode?: "create" | "edit";
   operationId?: string;
 }
 
@@ -106,10 +111,13 @@ export function createSiteGenHandler(deps: SiteGenDeps): (req: Request) => Promi
     const body = await readJson<SiteGenBody>(req);
     if (!body) return json(400, { error: "invalid JSON" });
     const brief = body.brief;
-    const recipe = body.recipe;
+    const edit = body.mode === "edit";
+    const recipe = edit ? body.content : body.recipe;
+    const say = typeof body.say === "string" ? body.say.trim().slice(0, 400) : "";
     if (!brief || typeof brief !== "object" || typeof brief.name !== "string" || !brief.name.trim()) return json(400, { error: "brief.name required" });
-    if (!recipe || typeof recipe !== "object" || !recipe.pages || typeof recipe.pages !== "object" || !(recipe.pages as Row).index) return json(400, { error: "recipe.pages.index required" });
-    const inputChars = JSON.stringify(brief).length + JSON.stringify(recipe).length;
+    if (!recipe || typeof recipe !== "object" || !recipe.pages || typeof recipe.pages !== "object" || !(recipe.pages as Row).index) return json(400, { error: edit ? "content.pages.index required" : "recipe.pages.index required" });
+    if (edit && !say) return json(400, { error: "say required" });
+    const inputChars = JSON.stringify(brief).length + JSON.stringify(recipe).length + say.length;
     if (inputChars > MAX_INPUT_CHARS) return json(413, { error: "brief or recipe too large", code: "too_large" });
 
     // ---- who is asking
@@ -148,14 +156,20 @@ export function createSiteGenHandler(deps: SiteGenDeps): (req: Request) => Promi
     // ---- the hold: worst case of all three steps at their models
     const models = siteModels(settings, plan);
     const estInput = Math.ceil(inputChars / CHARS_PER_TOKEN) + 1500;
-    const estimate = (siteAi.STEPS as string[]).reduce((sum, step) => sum + creditsFor(settings, plan, models[step], estInput + (step === "review" ? STEP_MAX.content : 0), STEP_MAX[step]).credits, 0);
+    // an edit is one short call on the fast model; a creation is the three steps
+    const EDIT_MAX = 6000;
+    const editModel = settings["ai.models"].flash ?? models.content;
+    const estimate = edit
+      ? creditsFor(settings, plan, editModel, estInput, EDIT_MAX).credits
+      : (siteAi.STEPS as string[]).reduce((sum, step) => sum + creditsFor(settings, plan, models[step], estInput + (step === "review" ? STEP_MAX.content : 0), STEP_MAX[step]).credits, 0);
+    const action = edit ? "ai.site.edit" : "ai.site.create";
     const usageIns = must(await db.from("ai_usage").insert({
-      user_id: user.id, project_key: null, step: "site.create", model: models.content, status: "pending", charged_tokens: 0, operation_id: operationId, pricing_version: priceVersion,
+      user_id: user.id, project_key: null, step: edit ? "site.edit" : "site.create", model: edit ? editModel : models.content, status: "pending", charged_tokens: 0, operation_id: operationId, pricing_version: priceVersion,
     }).select("id").maybeSingle());
     const usageId = String((usageIns.data as Row | null)?.id ?? crypto.randomUUID());
     const accountingId = operationId ?? usageId;
     let held: Row;
-    try { held = await creditRpc(db, "bid_hold", { p_user: user.id, p_action: "ai.site.create", p_credits: estimate, p_operation_id: accountingId, p_counts_window: true, p_pricing_version: priceVersion, p_ai_usage: usageId, p_now: now.toISOString() }); }
+    try { held = await creditRpc(db, "bid_hold", { p_user: user.id, p_action: action, p_credits: estimate, p_operation_id: accountingId, p_counts_window: true, p_pricing_version: priceVersion, p_ai_usage: usageId, p_now: now.toISOString() }); }
     catch (error) { await db.from("ai_usage").delete().eq("id", usageId); throw error; }
     if (!held.ok) {
       await db.from("ai_usage").delete().eq("id", usageId);
@@ -197,7 +211,7 @@ export function createSiteGenHandler(deps: SiteGenDeps): (req: Request) => Promi
           input += s.input;
           output += s.output;
         }
-        const receipt = await creditRpc(db, "bid_settle", { p_user: user.id, p_operation_id: accountingId, p_credits: charged, p_ai: { model: models.content, input, output, costUsd, status } });
+        const receipt = await creditRpc(db, "bid_settle", { p_user: user.id, p_operation_id: accountingId, p_credits: charged, p_ai: { model: edit ? editModel : models.content, input, output, costUsd, status } });
         if (!receipt.ok) throw new Error("Credit settlement was not accepted");
         return { charged: Number(receipt.charged), balance: Number(receipt.balance ?? await balanceOf()) };
       })();
@@ -222,6 +236,19 @@ export function createSiteGenHandler(deps: SiteGenDeps): (req: Request) => Promi
               throw e;
             }
           };
+          if (edit) {
+            // S4: the owner's words → a short list of operations; the engine applies them to its document
+            send({ type: "step", id: "edit", status: "running", model: editModel, error: null });
+            const r = await call({ step: "edit", model: editModel, system: siteAi.SYSTEM as string, prompt: (siteAi.editPrompt as (b: Row, c: Row, l: Row, s: string) => string)(brief, recipe, body.look ?? {}, say), schema: siteAi.EDIT_SCHEMA, maxTokens: EDIT_MAX, effort: "low" });
+            const answer = r.json as { ops?: unknown; summary?: unknown } | null;
+            if (!answer || !Array.isArray(answer.ops)) throw Object.assign(new Error("no ops"), { code: "ai_bad_answer" });
+            send({ type: "step", id: "edit", status: "pass", model: r.usage.model, error: null });
+            const billed = await record();
+            send({ type: "result", ops: answer.ops, summary: typeof answer.summary === "string" ? answer.summary : "" });
+            send({ type: "usage", input: r.usage.input, output: r.usage.output, model: r.usage.model, charged: billed.charged, balance: billed.balance, status, steps: [{ model: r.usage.model, input: r.usage.input, output: r.usage.output }] });
+            send({ type: "done", stopReason: status });
+            return;
+          }
           const result = await (siteAi.runPipeline as unknown as (o: Row) => Promise<Row>)({
             brief, recipe, call, models,
             onStep: (id: string, state: string, info: Row) => send({ type: "step", id, status: state, model: info?.model ?? null, error: info?.error ?? null }),

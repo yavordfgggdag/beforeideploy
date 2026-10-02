@@ -1193,7 +1193,8 @@ http.createServer((q,r)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{r.setHea
  if(q.url==='/v1/messages'){if(q.headers['x-api-key']!=='sk-ant-good-key-123'){r.statusCode=401;return r.end('{"type":"error","error":{"message":"invalid x-api-key"}}');}
    const req=b?JSON.parse(b):{};const text=JSON.stringify(req.messages?.at(-1)||'')+' '+(req.system||'');const ev=(o)=>r.write('event: '+o.type+'\\ndata: '+JSON.stringify(o)+'\\n\\n');
    if(req.output_config&&req.output_config.format){const pr=String(req.messages[0].content);let out;
-     if(/Decide for every section/.test(pr))out={tone:'warm',styleSuggestion:'calm',sections:[]};
+     if(/The owner wants to change their site/.test(pr))out={summary:'AI changed the lead',ops:[{op:'set_text',page:'index',section:null,field:'lead',value:'AI lead from the model',items:null,type:null,after:null,title:null,intro:null,style:null,palette:null}]};
+     else if(/Decide for every section/.test(pr))out={tone:'warm',styleSuggestion:'calm',sections:[]};
      else if(/^Review this site/m.test(pr))out=JSON.parse(pr.slice(pr.indexOf('Content:\\n')+9));
      else{const rec=JSON.parse(pr.slice(pr.indexOf('Recipe:\\n')+8));out={description:'AI '+rec.description,tagline:rec.tagline,nav:rec.nav,headerCta:rec.headerCta,pages:rec.pages.map(pg=>({id:pg.id,title:pg.title,description:pg.description,pagehead:pg.pagehead,hero:pg.hero?Object.assign({},pg.hero,{title:'AI *'+String(pg.hero.title).replace(/\\*/g,'')+'*',cardRows:pg.hero.cardRows||null,chips:pg.hero.chips||null}):null,sections:pg.sections.map(sc=>({index:sc.index,keep:sc.type!=='quotes',title:sc.title?'AI '+sc.title:null,intro:sc.intro||null,h:sc.h||null,p:sc.p||null,button:sc.button||null,items:sc.items||null,plans:sc.plans||null,groups:sc.groups||null,posts:sc.posts||null,body:sc.body||null,send:null,note:null}))}))};}
      const txt=JSON.stringify(out);r.setHeader('content-type','text/event-stream');
@@ -1234,6 +1235,10 @@ http.createServer((q,r)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{r.setHea
    if(me.ai_disabled){r.statusCode=403;return r.end('{"error":"disabled","code":"disabled"}');}
    if(me.role==='normal'&&me.plan==='free'){r.statusCode=403;return r.end('{"error":"plan","code":"no_plan"}');}
    const bal=balance(me.user_id);if(bal<=0){r.statusCode=402;return r.end(JSON.stringify({error:'no credits',code:'quota_exhausted',renewsAt:'2026-10-01T00:00:00Z',balance:bal}));}
+   if(j.mode==='edit'){if(!j.brief||!j.content||!j.say){r.statusCode=400;return r.end('{"error":"edit"}');}
+     r.setHeader('content-type','text/event-stream');const send=(o)=>r.write('data: '+JSON.stringify(o)+'\\n\\n');send({type:'step',id:'edit',status:'running',model:'claude-sonnet-5-5'});send({type:'step',id:'edit',status:'pass',model:'claude-sonnet-5-5'});
+     const charged=1500;ledger.push({user_id:me.user_id,delta:-charged,reason:'ai_site'});
+     send({type:'result',ops:[{op:'set_text',page:'index',section:null,field:'lead',value:'Cloud lead: '+j.say}],summary:'cloud edit'});send({type:'usage',input:4000,output:300,model:'claude-sonnet-5-5',charged,balance:balance(me.user_id),status:'ok'});send({type:'done'});return r.end();}
    if(!j.brief||!j.brief.name||!j.recipe||!j.recipe.pages){r.statusCode=400;return r.end('{"error":"brief"}');}
    r.setHeader('content-type','text/event-stream');const send=(o)=>r.write('data: '+JSON.stringify(o)+'\\n\\n');
    for(const st of ['plan','content','review']){send({type:'step',id:st,status:'running',model:'claude-sonnet-5-5'});send({type:'step',id:st,status:'pass',model:'claude-sonnet-5-5'});}
@@ -1720,6 +1725,72 @@ t('sitegen: supabase/functions/_shared/site-ai.mjs е точно копие на
   assert(copy.endsWith(src) && copy.startsWith('// GENERATED'), 'run node scripts/sitegen-sync.mjs');
 });
 
+t('site edit: думи без AI — цвят, стил, по-тъмно, махни секция, ново заглавие; всяка промяна е commit; undo връща; ръчно променен файл не се презаписва без --force', () => {
+  const parent = path.join(TMP, 'edit-sites');
+  fs.mkdirSync(parent, { recursive: true });
+  const made = bidEnv({ BID_LANG: 'bg' }, 'new', 'create', '--template', 'mentor', '--name', 'Ментор Ива', '--dir', parent, '--lang', 'bg');
+  assert(made.result.ok, JSON.stringify(made.result).slice(0, 200));
+  const site = made.data.path;
+  const info = bid('site', 'info', '--project', site).data;
+  assert(info.generated === true && info.theme === 'mentor' && info.edits === 0 && info.modified.length === 0 && info.history[0].kind === 'created', JSON.stringify(info));
+  assert(bid('site', 'info', '--project', staticSite).data.generated === false, 'a hand-made site is not generated');
+  const notGen = bid('site', 'edit', '--project', staticSite, '--say', 'x');
+  assert(notGen.result.code === 'not_generated', JSON.stringify(notGen.result));
+  // a colour: no model, one commit, only styles.css changes
+  const green = bid('site', 'edit', '--project', site, '--say', 'смени цвета на зелено');
+  assert(green.result.ok && green.data.provider === 'local' && green.data.applied.join() === 'look: forest' && green.data.changed.includes('styles.css') && green.data.changed.includes('index.html') && green.data.commit, JSON.stringify(green.result).slice(0, 300)); // the pages carry theme-color and the favicon the accent
+  assert(fs.readFileSync(path.join(site, 'styles.css'), 'utf8').includes('--accent: #1f6b45;'), 'forest palette');
+  // darker: calm has no dark palette → bold + indigo
+  const dark = bid('site', 'edit', '--project', site, '--say', 'направи го по-тъмен');
+  assert(dark.result.ok && dark.data.applied.join() === 'look: bold / lemon', JSON.stringify(dark.data.applied)); // calm has no dark palette → the first dark one of bold
+  const record = JSON.parse(fs.readFileSync(path.join(site, 'bid.site.json'), 'utf8'));
+  assert(record.brief.style === 'bold' && record.brief.palette === 'lemon' && record.history.length === 2 && record.files['index.html'], 'the record follows');
+  // remove reviews + a new title, in one sentence
+  const words = bid('site', 'edit', '--project', site, '--say', 'махни отзивите и смени заглавието на „Уроци по китара“');
+  assert(words.result.ok && words.data.applied.some((a) => a.includes('(quotes) removed')) && words.data.applied.includes('index.hero.title'), JSON.stringify(words.data.applied));
+  const html = fs.readFileSync(path.join(site, 'index.html'), 'utf8');
+  assert(html.includes('<h1>Уроци по китара</h1>') && !html.includes('class="quotes"'), 'rendered');
+  assert(bid('check', '--project', site).data.steps.find((s) => s.id === 'site').status === 'pass', 'still passes the check');
+  // nothing to do
+  const none = bid('site', 'edit', '--project', site, '--say', 'махни отзивите');
+  assert(none.result.code === 'nothing', JSON.stringify(none.result));
+  // history newest first, undo = a revert commit that brings the reviews back
+  const hist = bid('site', 'history', '--project', site).data;
+  assert(hist.length === 4 && hist[0].kind === 'edit' && hist[0].say.startsWith('махни') && hist[3].kind === 'created', JSON.stringify(hist.map((h) => h.kind)));
+  const undo = bid('site', 'undo', '--project', site);
+  assert(undo.result.ok && undo.data.reverted.sha === hist[0].sha, JSON.stringify(undo.result).slice(0, 200));
+  const back = fs.readFileSync(path.join(site, 'index.html'), 'utf8');
+  assert(back.includes('class="quotes"') && !back.includes('Уроци по китара'), 'reverted');
+  assert(bid('site', 'history', '--project', site).data[0].kind === 'undo', 'the undo is in the history');
+  // a hand edit is never overwritten silently
+  fs.appendFileSync(path.join(site, 'index.html'), '\n<!-- my own change -->');
+  git(site, 'commit', '-qam', 'hand edit');
+  const guarded = bid('site', 'edit', '--project', site, '--say', 'смени заглавието на „Пиано“');
+  assert(guarded.result.code === 'site_modified' && guarded.result.key === 'site.edit.modified' && /index\.html/.test(guarded.result.error), JSON.stringify(guarded.result));
+  assert(bid('site', 'info', '--project', site).data.modified.join() === 'index.html', 'info names the file');
+  const lookToo = bid('site', 'edit', '--project', site, '--say', 'make it elegant');
+  assert(lookToo.result.code === 'site_modified', 'a look change rewrites the pages (theme-color), so it is guarded too');
+  const forced = bid('site', 'edit', '--project', site, '--say', 'смени заглавието на „Пиано“', '--force');
+  assert(forced.result.ok && fs.readFileSync(path.join(site, 'index.html'), 'utf8').includes('<h1>Пиано</h1>'), 'forced');
+  const dry = bid('site', 'edit', '--project', site, '--say', 'make it calm', '--dry-run');
+  assert(dry.result.ok && dry.data.dryRun === true && !dry.data.commit, 'dry run');
+  fixture('site-info', bid('site', 'info', '--project', site).data);
+  fixture('site-edit', forced.data);
+});
+
+t('site edit: думи, които моделът разбира — собствен ключ, ops в документа, линковете остават', () => {
+  const parent = path.join(TMP, 'edit-ai');
+  fs.mkdirSync(parent, { recursive: true });
+  spawnSync(BID, ['account', 'keys', 'set', '--provider', 'anthropic'], { env: { ...ENV, BID_AI_KEY: 'sk-ant-good-key-123' }, encoding: 'utf8' });
+  const site = bid('new', 'create', '--template', 'landing', '--name', 'AI Edit Co', '--dir', parent, '--lang', 'en').data.path;
+  const r = bid('site', 'edit', '--project', site, '--say', 'rewrite the opening paragraph so it sounds friendlier', '--provider', 'anthropic');
+  assert(r.result.ok && r.data.provider === 'anthropic' && r.data.applied.join() === 'index.hero.lead' && r.data.summary === 'AI changed the lead', JSON.stringify(r.result).slice(0, 300));
+  assert(r.events.some((e) => e.type === 'step' && e.id === 'site.edit' && e.status === 'pass'), 'progress');
+  const html = fs.readFileSync(path.join(site, 'index.html'), 'utf8');
+  assert(html.includes('AI lead from the model') && html.includes('href="/#contact"'), 'the words changed, the links did not');
+  assert(JSON.stringify(bid('costs').data).includes('site.edit'), 'cost entry');
+});
+
 t('new content: собствен ключ — план → съдържание → ревю, думите на модела в рецептата, линковете остават; preview/generate с --content', () => {
   const parent = path.join(TMP, 'ai-sites');
   fs.mkdirSync(parent, { recursive: true });
@@ -2163,10 +2234,14 @@ t('ai: cloud път — план, кредити, quota_exhausted → exit 8, fr
   assert(site.events.filter((e) => e.type === 'step' && e.id === 'site.content').length === 2, 'progress from the function');
   assert(JSON.parse(fs.readFileSync(site.data.contentFile, 'utf8')).content.pages.index.hero.title === 'AI *cloud*', 'the function\'s content');
   assert(bid('account', 'status').data.credits.balance === 232000, 'balance after the site');
+  const cloudSite = bid('new', 'create', '--template', 'landing', '--name', 'Cloud Edit', '--dir', path.join(TMP, 'ai-sites'), '--lang', 'en').data.path;
+  const edit = bid('site', 'edit', '--project', cloudSite, '--say', 'make the opening friendlier');
+  assert(edit.result.ok && edit.data.provider === 'cloud' && edit.data.usage.charged === 1500 && fs.readFileSync(path.join(cloudSite, 'index.html'), 'utf8').includes('Cloud lead: make the opening friendlier'), JSON.stringify(edit.result).slice(0, 300));
+  assert(bid('account', 'status').data.credits.balance === 230500, 'balance after the edit');
   const own = bid('ai', 'fix', '--project', cloudApp, '--step', 'build', '--provider', 'anthropic');
   assert(own.result.code === 'ai_unavailable' && own.result.key === 'ai.unavailable.ownKeyRole', JSON.stringify(own.result));
   login('yavor@example.com', 'supersecret1');
-  bid('admin', 'grant_credits', '--user', 'u-friend@example.com', '--delta', '-232000', '--reason', 'test');
+  bid('admin', 'grant_credits', '--user', 'u-friend@example.com', '--delta', '-230500', '--reason', 'test');
   login('friend@example.com', 'supersecret2');
   const out = bid('ai', 'fix', '--project', cloudApp, '--step', 'build');
   assert(out.code === 8 && out.result.code === 'quota_exhausted' && out.result.key === 'ai.quotaExhausted', JSON.stringify(out.result) + ' exit=' + out.code);

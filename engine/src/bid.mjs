@@ -44,6 +44,7 @@ import { launchStatus } from './launch.mjs';
 import { createSite, listTemplates } from './newsite.mjs';
 import { generateSite, previewSite } from './sitegen/generate.mjs';
 import { siteContent, readContentArg } from './sitegen/aicontent.mjs';
+import { editSite, undoSite, siteHistory, siteInfo } from './sitegen/edit.mjs';
 import { loadTheme, validateTheme } from './sitegen/themes.mjs';
 import { STYLES, paletteIds } from './sitegen/tokens.mjs';
 
@@ -102,6 +103,8 @@ const HELP = `Before I Deploy engine ${VERSION}
   bid new list | styles | check | create --template ID --name N --dir PARENT [--lang bg|en] [--description D] [--style calm|bold|elegant --palette P]
   bid new generate --brief brief.json --dir PARENT [--content c.json | --ai] | preview --brief brief.json [--content c.json]
   bid new content --brief brief.json [--provider cloud|anthropic]     the AI writes the texts (plan → content → review) into a content file
+  bid site info | history | undo --project P                           a generated site: what it is, the edits, revert the last one
+  bid site edit --project P --say "make it darker" [--force --dry-run --provider cloud|anthropic]   change the site with words (one commit each)
   bid monitor once [--project P] | status [--no-network] | incidents [--limit N] | settings --json '{…}' | agent install --yes | agent remove
   bid monitor cloud status | enable [--project P] [--interval N] [--paths /a,/b] | disable [--project P] | test --project P
   bid monitor maintenance add --from ISO --to ISO [--project P] [--note T] | list | clear · bid monitor notify test
@@ -251,6 +254,15 @@ async function main() {
         return ok(generateSite({ brief, dir: flags.dir, content }));
       }
       throw new EngineError(msg('cli.unknownCommand', { command: `new ${sub}` }), 'usage', 2);
+    }
+
+    case 'site': {
+      const p = proj();
+      if (sub === 'info' || !sub) return ok(siteInfo(p));
+      if (sub === 'history') return ok(siteHistory(p));
+      if (sub === 'undo') return ok(undoSite(p));
+      if (sub === 'edit') return ok(await editSite(p, { say: flags.say, provider: flags.provider && flags.provider !== true ? String(flags.provider) : null, force: !!flags.force, dryRun: !!flags['dry-run'] }));
+      throw new EngineError(msg('cli.unknownCommand', { command: `site ${sub}` }), 'usage', 2);
     }
 
     case 'detect':

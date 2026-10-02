@@ -41,7 +41,7 @@ export function readContentArg(value) {
 
 // ---------------------------------------------------------------- own key: the steps run here
 
-function ownKeyCall(provider) {
+export function ownKeyCall(provider) {
   return async ({ model, system, prompt, schema, maxTokens, effort }) => {
     let text = '';
     const usage = { input: 0, output: 0, model };

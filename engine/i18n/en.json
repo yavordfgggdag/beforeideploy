@@ -842,5 +842,15 @@
   "setup.identity.detailGitHub": "I can take them from your GitHub profile",
   "setup.identity.useForm": "Enter your name and email in Setup (no GitHub sign-in needed).",
   "setup.integrity": "The downloaded {name} does not match the pinned version and checksum. Nothing was installed.",
-  "aifix.prompt.aboutApp": "## About me and Before I Deploy\nI am not a programmer. I use a Mac app called **Before I Deploy** that checks my website before it goes live, and my project is open in it. In the app I have:\n- the **Check** button: it checks the whole site again (green = good, red = still broken);\n- three small buttons at the top right of the project: a folder (**Show in Finder**), `</>` (**Open in Cursor / VS Code**) and a terminal (**Open in Terminal**, it opens already inside my project folder);\n- the **Changes** tab: it shows every file I changed;\n- **Smart Deploy**: it publishes the site, and only after the check is green.\nDo not tell me to publish with commands: I publish only with Smart Deploy."
+  "aifix.prompt.aboutApp": "## About me and Before I Deploy\nI am not a programmer. I use a Mac app called **Before I Deploy** that checks my website before it goes live, and my project is open in it. In the app I have:\n- the **Check** button: it checks the whole site again (green = good, red = still broken);\n- three small buttons at the top right of the project: a folder (**Show in Finder**), `</>` (**Open in Cursor / VS Code**) and a terminal (**Open in Terminal**, it opens already inside my project folder);\n- the **Changes** tab: it shows every file I changed;\n- **Smart Deploy**: it publishes the site, and only after the check is green.\nDo not tell me to publish with commands: I publish only with Smart Deploy.",
+  "site.edit.missingSay": "Say what to change: --say \"make it darker\".",
+  "site.edit.notGenerated": "This project was not created by the Site Builder, so it cannot be changed with words. Edit the files, or create a new site.",
+  "site.edit.step": "Understanding the request",
+  "site.edit.nothing": "Nothing to change: {why}",
+  "site.edit.modified": "These files were changed by hand since the site was generated: {files}. Keep your changes (nothing happens), or run again with --force to replace them.",
+  "site.edit.noGit": "This site has no Git history, so there is nothing to undo.",
+  "site.edit.nothingToUndo": "There is no edit to undo.",
+  "site.edit.dirty": "There are unsaved changes in the site folder. Commit or discard them first, then undo.",
+  "site.edit.undoFailed": "The undo did not go through: {error}",
+  "site.edit.sameResult": "the site already looks like that"
 }

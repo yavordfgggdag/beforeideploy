@@ -142,6 +142,7 @@ struct RootView: View {
                 case .plans: PlansSheet()
                 case .aiKeys: AIKeysSheet()
                 case .newSite: SiteBuilderSheet()
+                case .siteEdit: SiteEditSheet()
                 case .pushover: PushoverSheet()
                 case .gitIdentity: GitIdentitySheet()
                 }

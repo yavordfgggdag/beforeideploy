@@ -32,6 +32,7 @@ function sse(events: Row[]): string {
 /** The fake model answers each step with schema-shaped JSON built from the prompt, like a careful writer would. */
 function answerFor(body: Row): string {
   const prompt = String(body.messages[0].content);
+  if (/The owner wants to change their site/.test(prompt)) return JSON.stringify({ summary: "Промених увода.", ops: [{ op: "set_text", page: "index", section: null, field: "lead", value: "Нов увод от модела.", items: null, type: null, after: null, title: null, intro: null, style: null, palette: null }] });
   if (/Decide for every section/.test(prompt)) return JSON.stringify({ tone: "warm and concrete", styleSuggestion: "calm", sections: [{ page: "index", index: 1, keep: false, note: "no reviews in the brief" }] });
   if (/^Review this site/m.test(prompt)) return prompt.slice(prompt.indexOf("Content:\n") + 9);
   const recipe = JSON.parse(prompt.slice(prompt.indexOf("Recipe:\n") + 8));
@@ -183,4 +184,25 @@ Deno.test("site-gen: 402 without credits, 429 over the rate limit", async () => 
   const r = await busy.handle(post("site-gen", BODY));
   assert.equal(r.status, 429);
   assert.equal(busy.up.calls.length, 0);
+});
+
+Deno.test("site-gen: edit mode — one call on the fast model, ops back, billed under ai.site.edit", async () => {
+  const { db, handle, up } = world({ plan: "high" });
+  const ev = await events(await handle(post("site-gen", { mode: "edit", brief: BRIEF, content: RECIPE, look: { style: "calm", palette: null, palettes: { calm: ["sand"] } }, say: "направи увода по-приятелски", operationId: "op-edit-0001" })));
+  assert.equal(up.calls.length, 1);
+  assert.equal(up.calls[0].body.model, "claude-sonnet-5-5", "the fast model, whatever the plan");
+  assert.equal(up.calls[0].body.max_tokens, 6000);
+  assert.ok(/направи увода по-приятелски/.test(up.calls[0].body.messages[0].content));
+  const result = ev.find((e) => e.type === "result")!;
+  assert.equal(result.summary, "Промених увода.");
+  assert.equal((result.ops as Row[])[0].field, "lead");
+  const usage = ev.find((e) => e.type === "usage")!;
+  assert.equal(usage.charged, creditsFor(DEFAULTS, "high", "claude-sonnet-5-5", 3000, 1200).credits);
+  assert.equal(db.rows("usage_events")[0].action, "ai.site.edit");
+  assert.equal(db.rows("ai_usage")[0].step, "site.edit");
+  // without the words, or without content: 400 and no model call
+  const bad = world();
+  assert.equal((await bad.handle(post("site-gen", { mode: "edit", brief: BRIEF, content: RECIPE }))).status, 400);
+  assert.equal((await bad.handle(post("site-gen", { mode: "edit", brief: BRIEF, say: "x" }))).status, 400);
+  assert.equal(bad.up.calls.length, 0);
 });

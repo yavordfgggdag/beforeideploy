@@ -123,10 +123,30 @@ bonus covers). The result is a content file (`bid.site-content/1`) in the cache;
 The wizard: the "Write the texts with AI" toggle on step 2 (on when the account can use the built-in AI), the
 three steps as a progress strip on step 3, the charge after; an AI failure keeps the sample texts and says why.
 
+## Editing with words (S4)
+
+`bid site edit --project P --say "…"` changes `bid.site.json` and re-renders; HTML is never patched by hand.
+
+- **Without a model** (`localEdit`, bg + en): a colour word → the palette of the current style (`зелено` → forest,
+  `корал` → coral …), a style word (`спокоен`, `bold`, `елегантен`), `по-тъмно` / `lighter` → the dark or light palette
+  of the style (or the nearest style that has one), `махни отзивите` / `remove the stats` → `drop_section`, a new
+  title in quotes → the hero title. A request the words recognise but that changes nothing ends as `nothing`.
+- **With a model** (own key: the fast model; cloud: `site-gen` mode `edit`, action `ai.site.edit`): the owner's
+  words + the current content → a short list of ops in `EDIT_SCHEMA` (`set_text`, `set_items`, `drop_section`,
+  `add_section`, `style`, `none`). `applyEdits()` applies them: only words change; links, icons, ids, forms and
+  the contact section stay; an added section is built here from the type and the rows.
+- **Hand edits are safe**: `bid.site.json` keeps a hash per rendered file; a change that would overwrite a file
+  the owner edited by hand is refused (`site_modified`, the files named) unless `--force`.
+- **Every edit is one commit** (`Site: <the words>`); `bid site history` lists them, `bid site undo` reverts the
+  last with a new commit; `bid site info` tells the app whether a project is a generated site.
+- The app: "Edit the site…" on the project screen (generated sites only) → the site from its folder, the field,
+  example chips, the applied / refused summary, the charge, the history with Undo.
+
 ## Tests
 
 `node tests/run.mjs` — the `new:` tests create every theme in both languages and every style, run the
 quality check, and verify escaping, links, photos, contacts and `bid.site.json`; `new content:` runs the AI
 pipeline against the fake model (own key and cloud) and checks that links and contacts never come from it.
 `deno test supabase/functions` — `site-gen` with a fake model: steps, models per plan, merging, billing,
-duplicates, failures.
+duplicates, failures, edit mode. `site edit:` in the engine suite covers the local words, the model path,
+the hand-edit guard, history and undo.

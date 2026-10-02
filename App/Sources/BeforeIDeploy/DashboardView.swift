@@ -314,6 +314,17 @@ struct HeroCard: View {
                 .bidButton(.secondary)
                 .help(L("dashboard.checkHelp"))
 
+                if FileManager.default.fileExists(atPath: (status.project.path as NSString).appendingPathComponent("bid.site.json")) {
+                    // Site Builder S4: a generated site is changed with words, never by hand
+                    Button {
+                        model.sheet = .siteEdit
+                    } label: {
+                        Label(L("siteedit.button"), systemImage: "text.bubble")
+                    }
+                    .bidButton(.secondary)
+                    .help(L("siteedit.buttonHelp"))
+                }
+
                 Button {
                     model.smartDeploy()
                 } label: {

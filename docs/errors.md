@@ -43,6 +43,10 @@ quota, 127 Node missing; everything else exits 1.
 | `ai_session_cap` | 1 | The rolling 5-hour session used its share of the monthly credits (20 %). | Wait for the reset time in the message, buy a pack or change the plan; the external buttons stay free. |
 | `ai_failed` | 1 | The AI provider returned an error or an unusable stream. | Retry; if it repeats, the support report has the response. |
 | `ai_bad_answer` | 1 | The AI returned site texts that do not match the schema (Site Builder). | Try again; the plan step is tolerant, the content step is not. |
+| `not_generated` | 1 | `bid site edit/undo` on a project the Site Builder did not create (no `bid.site.json`). | Edit the files, or create a new site. |
+| `site_modified` | 1 | A site edit would overwrite files changed by hand since the site was generated; the message lists them. | Keep the hand edits (nothing happened), or run again with `--force`. |
+| `dirty` | 1 | `bid site undo` with uncommitted changes in the site folder. | Commit or discard them, then undo. |
+| `git_missing` | 1 | `bid site undo` on a site without a Git history. | Nothing to revert; edit with words again instead. |
 | `ai_refused` | 1 | The model declined to answer (safety refusal). | Rephrase by fixing the prompt's log manually, or use an external assistant. |
 | `bad_patch` | 1 | The saved AI answer does not belong to this project or has no applicable file changes. | Run AI Fix again; apply only from the panel it produced. |
 | `fix_failed` | 1 | An automatic fix (git init, untrack secrets, deps install, GitHub repo…) failed. | The message has the command output; fix by hand and check again. |

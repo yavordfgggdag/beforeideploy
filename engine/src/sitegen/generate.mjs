@@ -11,8 +11,9 @@ import { loadTheme } from './themes.mjs';
 import { normalizeBrief, applyBrief, applyImages } from './brief.mjs';
 import { resolveTokens } from './tokens.mjs';
 import { renderSite } from './render.mjs';
+import crypto from 'node:crypto';
 
-const SITE_TEXT = {
+export const SITE_TEXT = {
   bg: { description: 'newsite.defaultDescription.bg', privacyTitle: 'newsite.privacy.title.bg', privacyText: 'newsite.privacy.text.bg', home: 'newsite.home.bg', notFoundTitle: 'newsite.notFound.title.bg', notFoundText: 'newsite.notFound.text.bg' },
   en: { description: 'newsite.defaultDescription.en', privacyTitle: 'newsite.privacy.title.en', privacyText: 'newsite.privacy.text.en', home: 'newsite.home.en', notFoundTitle: 'newsite.notFound.title.en', notFoundText: 'newsite.notFound.text.en' },
 };
@@ -85,7 +86,9 @@ export function generateSite({ brief: input, dir, content = null }) {
     files = renderSite(site, pageContent);
     for (const [name, body] of Object.entries(files)) fs.writeFileSync(path.join(target, name), body);
     // the source of truth for "change it with words" (S4): brief + resolved look + the content that was rendered
-    const record = { schema: 'bid.site/1', createdAt: new Date().toISOString(), engine: 'sitegen/1', theme: theme.id, brief: { ...brief, photos: images.map((im) => ({ file: im.file, alt: im.alt, caption: im.caption })) }, tokens, content: pageContent };
+    // file hashes: `bid site edit` refuses to overwrite a file the owner changed by hand (S4)
+    const hashes = Object.fromEntries(Object.entries(files).map(([name, body]) => [name, crypto.createHash('sha256').update(body).digest('hex').slice(0, 16)]));
+    const record = { schema: 'bid.site/1', createdAt: new Date().toISOString(), engine: 'sitegen/1', theme: theme.id, brief: { ...brief, photos: images.map((im) => ({ file: im.file, alt: im.alt, caption: im.caption })) }, tokens, content: pageContent, files: hashes, history: [] };
     fs.writeFileSync(path.join(target, 'bid.site.json'), JSON.stringify(record, null, 2) + '\n');
   } catch (e) {
     fs.rmSync(target, { recursive: true, force: true });

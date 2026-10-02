@@ -871,6 +871,30 @@
 "newsite.ai.toggleHint" = "Three steps — plan, write, check — in your language, from what you typed. Nothing invented: no fake reviews or numbers. About 10,000–20,000 credits per site.";
 "newsite.ai.written" = "Texts written by AI";
 
+"siteedit.applied.one" = "%@ change applied";
+"siteedit.applied.other" = "%@ changes applied";
+"siteedit.apply" = "Apply";
+"siteedit.button" = "Edit the site…";
+"siteedit.buttonHelp" = "Change this site with words: a colour, a style, a section, a text. Every change is one commit you can undo.";
+"siteedit.costHint" = "Colours, styles, removing a section and a new title are free; other requests use the AI (≈ 1,000–3,000 credits).";
+"siteedit.example.calm" = "make it calm and green";
+"siteedit.example.darker" = "make it darker";
+"siteedit.example.prices" = "add a section with prices";
+"siteedit.example.reviews" = "remove the reviews";
+"siteedit.example.title" = "change the title to \"…\"";
+"siteedit.handEdited" = "%@ files edited by hand";
+"siteedit.history" = "Changes";
+"siteedit.localOnlyHint" = "Without a plan or an AI key: colours, styles, removing a section and a new title in quotes.";
+"siteedit.noHistory" = "No changes yet";
+"siteedit.placeholder" = "e.g. make it darker · remove the reviews · add a section with prices: single session 60 €, program 450 €";
+"siteedit.refused" = "Not done: %@";
+"siteedit.replaceAnyway" = "Replace my hand edits";
+"siteedit.say" = "What to change";
+"siteedit.subtitle" = "Say what to change; the site is rebuilt and the change saved";
+"siteedit.title" = "Edit the site";
+"siteedit.undo" = "Undo the last";
+"siteedit.undone" = "The last change is undone";
+
 "node.missing.body" = "Before I Deploy checks and builds your projects with Node.js (version 18 or newer). Install it from nodejs.org or with Homebrew, then press Check again.";
 "node.missing.download" = "Download Node.js";
 "node.missing.recheck" = "Check again";

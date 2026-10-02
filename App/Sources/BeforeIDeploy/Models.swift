@@ -233,6 +233,39 @@ struct SiteContentResult: Codable {
     var duration: Double?
 }
 
+/// `bid site info` — a generated site (Site Builder S4): what it is, hand-edited files, the last edits.
+struct SiteInfo: Codable {
+    struct Entry: Codable, Identifiable {
+        var sha: String?
+        var say: String
+        var at: String?
+        var kind: String
+        var id: String { (sha ?? "") + say + (at ?? "") }
+    }
+    var generated: Bool
+    var theme: String?
+    var lang: String?
+    var style: String?
+    var palette: String?
+    var pages: [String]?
+    var edits: Int?
+    var modified: [String]?
+    var history: [Entry]?
+}
+
+/// `bid site edit` — what the words changed.
+struct SiteEditResult: Codable {
+    var applied: [String]
+    var refused: [String]
+    var summary: String
+    var provider: String
+    var usage: SiteContentResult.Usage?
+    var changed: [String]
+    var removed: [String]
+    var dryRun: Bool
+    var commit: String?
+}
+
 /// The brief (`bid.site-brief/1`): what the owner told the "New site" wizard. Sent to the engine as JSON.
 struct SiteBrief: Codable, Hashable {
     struct Service: Codable, Hashable, Identifiable {

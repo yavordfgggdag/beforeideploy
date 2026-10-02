@@ -5,7 +5,7 @@ import SwiftUI
 enum Screen: Hashable { case overview, project, domains, costs, setup, admin, account, assistant, usage }
 
 enum SheetKind: Identifiable {
-    case production, netlifySetup, commit, history, settings, remote, spaceshipConnect, connectDomain, deleteAccount, plans, release, rollback, client, aiKeys, newSite, pushover, gitIdentity
+    case production, netlifySetup, commit, history, settings, remote, spaceshipConnect, connectDomain, deleteAccount, plans, release, rollback, client, aiKeys, newSite, pushover, gitIdentity, siteEdit
     var id: Int { hashValue }
 }
 
@@ -498,6 +498,28 @@ final class AppModel: ObservableObject, Feedback {
         try await engine.call(["new", "content", "--brief", brief.json()], as: SiteContentResult.self, timeout: 600) { e in
             if e.type == "step" { onStep(e) }
         }
+    }
+
+    // MARK: - Site Builder S4: change a generated site with words
+
+    func siteInfo(_ project: Project) async -> SiteInfo? {
+        try? await engine.call(["site", "info", "--project", project.key], as: SiteInfo.self, timeout: 30)
+    }
+
+    /// `bid site edit`: the words become a commit; progress arrives as `step` events when a model is needed.
+    func siteEdit(_ project: Project, say: String, force: Bool = false, onStep: @escaping @MainActor (EngineEvent) -> Void) async throws -> SiteEditResult {
+        var args = ["site", "edit", "--project", project.key, "--say", say]
+        if force { args.append("--force") }
+        let r = try await engine.call(args, as: SiteEditResult.self, timeout: 300) { e in if e.type == "step" { onStep(e) } }
+        await refreshStatus(quiet: true)
+        return r
+    }
+
+    /// `bid site undo`: reverts the last edit with a new commit.
+    func siteUndo(_ project: Project) async throws {
+        struct Undo: Decodable { var commit: String? }
+        _ = try await engine.call(["site", "undo", "--project", project.key], as: Undo.self, timeout: 60)
+        await refreshStatus(quiet: true)
     }
 
     /// Creates the site from the brief, adds it to the library and opens it. Returns an error message, or nil.

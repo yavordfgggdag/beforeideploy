@@ -1,0 +1,28 @@
+{
+  "generated": true,
+  "theme": "mentor",
+  "lang": "bg",
+  "style": "calm",
+  "palette": "forest",
+  "pages": [
+    "index",
+    "about",
+    "contact"
+  ],
+  "edits": 1,
+  "modified": [],
+  "history": [
+    {
+      "sha": "622522c",
+      "say": "смени цвета на зелено",
+      "at": "2026-10-02T19:28:56+00:00",
+      "kind": "edit"
+    },
+    {
+      "sha": "af41a91",
+      "say": "New site: Ива (mentor)",
+      "at": "2026-10-02T19:28:56+00:00",
+      "kind": "created"
+    }
+  ]
+}
