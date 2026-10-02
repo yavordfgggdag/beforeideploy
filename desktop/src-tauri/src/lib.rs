@@ -15,9 +15,12 @@ use tauri::{AppHandle, Emitter, Manager, State};
 pub const ENGINE_COMMANDS: &[&str] = &[
     "account", "ai", "aifix", "audit", "backup", "billing", "budget", "check", "cloud", "costs", "demo", "deploy",
     "detect", "doctor", "features", "fix", "git", "history", "hosting", "issues", "launch", "local", "logs",
-    "monitor", "netlify", "new", "overview", "prices", "project", "release", "report", "setup", "smart",
+    "monitor", "netlify", "new", "overview", "prices", "project", "release", "report", "setup", "site", "smart",
     "spaceship", "status", "update", "usage", "version",
 ];
+
+/// Languages the engine's messages come in (BID_LANG); anything else falls back to English.
+pub const LANGS: &[&str] = &["bg", "en"];
 
 /// Keychain accounts the UI may read/write (service "BeforeIDeploy"); never arbitrary names.
 pub const SECRET_ACCOUNTS: &[&str] = &["anthropic", "openai", "netlify", "spaceship", "pushover", "session"];
@@ -79,11 +82,13 @@ pub fn node_bin(engine: &Path) -> PathBuf {
 }
 
 /// Runs the engine and calls `on_event` for every NDJSON line; returns the final result object.
-pub fn run_engine(engine: &Path, args: &[String], slot: Option<&Arc<Mutex<Option<Arc<Mutex<Child>>>>>>, mut on_event: impl FnMut(Value)) -> Result<Value, String> {
+pub fn run_engine(engine: &Path, args: &[String], lang: Option<&str>, slot: Option<&Arc<Mutex<Option<Arc<Mutex<Child>>>>>>, mut on_event: impl FnMut(Value)) -> Result<Value, String> {
     validate_args(args)?;
     let mut cmd = Command::new(node_bin(engine));
     cmd.arg(engine.join("src").join("bid.mjs")).args(args).stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped());
     cmd.env("BID_CLIENT", "desktop");
+    // the UI's language becomes the engine's (its messages are what the owner reads); unknown → English
+    cmd.env("BID_LANG", lang.filter(|l| LANGS.contains(l)).unwrap_or("en"));
     let mut child = cmd.spawn().map_err(|e| format!("could not start the engine: {e}"))?;
     let stdout = child.stdout.take().ok_or("no engine output")?;
     let child = Arc::new(Mutex::new(child));
@@ -107,13 +112,13 @@ pub fn run_engine(engine: &Path, args: &[String], slot: Option<&Arc<Mutex<Option
 }
 
 #[tauri::command]
-async fn engine_run(app: AppHandle, running: State<'_, Running>, request_id: String, args: Vec<String>) -> Result<Value, String> {
+async fn engine_run(app: AppHandle, running: State<'_, Running>, request_id: String, args: Vec<String>, lang: Option<String>) -> Result<Value, String> {
     validate_args(&args)?;
     let engine = engine_dir(app.path().resource_dir().ok()).ok_or("engine not found")?;
     let slot: Arc<Mutex<Option<Arc<Mutex<Child>>>>> = Arc::new(Mutex::new(None));
     let (app2, rid, slot2) = (app.clone(), request_id.clone(), slot.clone());
     let task = tauri::async_runtime::spawn_blocking(move || {
-        run_engine(&engine, &args, Some(&slot2), |event| {
+        run_engine(&engine, &args, lang.as_deref(), Some(&slot2), |event| {
             let _ = app2.emit("engine://event", EngineEvent { request_id: rid.clone(), event });
         })
     });
@@ -128,6 +133,40 @@ async fn engine_run(app: AppHandle, running: State<'_, Running>, request_id: Str
     let out = task.await.map_err(|e| e.to_string())?;
     running.0.lock().unwrap().remove(&request_id);
     out
+}
+
+/// A theme's picture for the "New site" picker (Site Builder S5/S6): engine/themes/<id>/preview.jpg as a data
+/// URL. The id is validated here, so the web view can never name another file; a theme without a picture → Ok(None).
+pub fn theme_preview_data(engine: &Path, id: &str) -> Result<Option<String>, String> {
+    if id.is_empty() || id.len() > 40 || !id.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-') {
+        return Err(format!("bad theme id: {id}"));
+    }
+    let file = engine.join("themes").join(id).join("preview.jpg");
+    match std::fs::read(&file) {
+        Ok(bytes) => Ok(Some(format!("data:image/jpeg;base64,{}", base64(&bytes)))),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
+/// Standard base64 (no dependency for one picture).
+fn base64(bytes: &[u8]) -> String {
+    const T: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut out = String::with_capacity((bytes.len() + 2) / 3 * 4);
+    for chunk in bytes.chunks(3) {
+        let n = (chunk[0] as u32) << 16 | (*chunk.get(1).unwrap_or(&0) as u32) << 8 | *chunk.get(2).unwrap_or(&0) as u32;
+        out.push(T[(n >> 18 & 63) as usize] as char);
+        out.push(T[(n >> 12 & 63) as usize] as char);
+        out.push(if chunk.len() > 1 { T[(n >> 6 & 63) as usize] as char } else { '=' });
+        out.push(if chunk.len() > 2 { T[(n & 63) as usize] as char } else { '=' });
+    }
+    out
+}
+
+#[tauri::command]
+fn theme_preview(app: AppHandle, id: String) -> Result<Option<String>, String> {
+    let engine = engine_dir(app.path().resource_dir().ok()).ok_or("engine not found")?;
+    theme_preview_data(&engine, &id)
 }
 
 #[tauri::command]
@@ -173,7 +212,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .manage(Running::default())
-        .invoke_handler(tauri::generate_handler![engine_run, engine_cancel, secret_set, secret_exists, secret_delete])
+        .invoke_handler(tauri::generate_handler![engine_run, engine_cancel, theme_preview, secret_set, secret_exists, secret_delete])
         .run(tauri::generate_context!())
         .expect("error while running Before I Deploy");
 }
@@ -202,8 +241,38 @@ mod tests {
     fn runs_the_engine_and_returns_the_result() {
         let engine = engine_dir(None).expect("engine next to the sources");
         let mut events = 0;
-        let r = run_engine(&engine, &["version".into()], None, |_| events += 1).expect("engine ran");
+        let r = run_engine(&engine, &["version".into()], None, None, |_| events += 1).expect("engine ran");
         assert_eq!(r.get("ok").and_then(Value::as_bool), Some(true), "{r}");
         assert!(events >= 1);
+    }
+
+    #[test]
+    fn site_builder_commands_are_allowed() {
+        assert!(validate_args(&["new".into(), "list".into()]).is_ok());
+        assert!(validate_args(&["site".into(), "edit".into(), "--project".into(), "x".into(), "--say".into(), "darker".into()]).is_ok());
+    }
+
+    #[test]
+    fn engine_messages_follow_the_ui_language() {
+        let engine = engine_dir(None).expect("engine next to the sources");
+        // an unknown template: the error text comes in the requested language, anything unknown falls back to English
+        let bg = run_engine(&engine, &["new".into(), "create".into(), "--template".into(), "nope".into(), "--name".into(), "X".into(), "--dir".into(), "/nonexistent".into()], Some("bg"), None, |_| {}).expect("engine ran");
+        let en = run_engine(&engine, &["new".into(), "create".into(), "--template".into(), "nope".into(), "--name".into(), "X".into(), "--dir".into(), "/nonexistent".into()], Some("xx"), None, |_| {}).expect("engine ran");
+        assert_eq!(bg.get("code").and_then(Value::as_str), Some("usage"), "{bg}");
+        assert!(bg["error"].as_str().unwrap().contains("Непознат"), "{bg}");
+        assert!(en["error"].as_str().unwrap().contains("Unknown"), "{en}");
+    }
+
+    #[test]
+    fn theme_pictures_are_read_by_validated_id_only() {
+        let engine = engine_dir(None).expect("engine next to the sources");
+        assert!(theme_preview_data(&engine, "../bid").is_err());
+        assert!(theme_preview_data(&engine, "").is_err());
+        assert_eq!(theme_preview_data(&engine, "no-such-theme").unwrap(), None);
+        let mentor = theme_preview_data(&engine, "mentor").unwrap().expect("mentor has a picture");
+        assert!(mentor.starts_with("data:image/jpeg;base64,/9j/"), "{}", &mentor[..40]);
+        assert_eq!(base64(b"Man"), "TWFu");
+        assert_eq!(base64(b"Ma"), "TWE=");
+        assert_eq!(base64(b"M"), "TQ==");
     }
 }

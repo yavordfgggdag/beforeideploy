@@ -12,6 +12,7 @@ struct SiteEditSheet: View {
     @Local private var say = ""
     @Local private var busy = false
     @Local private var error: String?
+    @Local private var errorCode: String?
     @Local private var modifiedFiles: [String] = []
     @Local private var last: SiteEditResult?
     @Local private var steps: [String] = []
@@ -55,6 +56,10 @@ struct SiteEditSheet: View {
                             Label(error, systemImage: "exclamationmark.circle.fill").font(Typo.font(.callout)).foregroundColor(Theme.blocked).fixedSize(horizontal: false, vertical: true)
                             if !modifiedFiles.isEmpty {
                                 Button(L("siteedit.replaceAnyway")) { apply(force: true) }.bidButton(.danger, compact: true)
+                            }
+                            // out of credits / released later: the same buttons every AI feature shows (S6)
+                            if let code = errorCode, ["quota_exhausted", "credits_release", "guard_24h", "guard_7d", "pack_rate", "ai_session_cap", "ai_unavailable"].contains(code) {
+                                CreditQuotaActions(store: model.billingStore, code: code)
                             }
                         }
                     }
@@ -149,6 +154,7 @@ struct SiteEditSheet: View {
         guard !words.isEmpty else { return }
         busy = true
         error = nil
+        errorCode = nil
         modifiedFiles = []
         steps = []
         Task {
@@ -162,6 +168,7 @@ struct SiteEditSheet: View {
                 model.flash(r.summary.isEmpty ? L("siteedit.applied", count: r.applied.count) : r.summary)
             } catch {
                 self.error = error.localizedDescription
+                errorCode = (error as? EngineError)?.code
                 // the engine refused to overwrite hand-edited files; the owner may replace them on purpose
                 if let e = error as? EngineError, case .failed(_, let code) = e, code == "site_modified" { modifiedFiles = ["modified"] }
             }

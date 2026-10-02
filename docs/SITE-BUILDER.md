@@ -181,12 +181,38 @@ three steps as a progress strip on step 3, the charge after; an AI failure keeps
    `node scripts/theme-shots.mjs <id>` locally with Chrome installed). Without it the card shows the accent
    gradient and the engine tests fail.
 
+## The shared UI and the desktop shell (S6)
+
+The same three steps, on the same engine commands, in `web/src/screens/CreateSite.tsx` — the UI the Tauri apps
+(macOS, Windows, Linux) and later the web app share:
+
+- `web/src/lib/engine.ts` is the bridge: inside the desktop shell `window.__TAURI__` (`withGlobalTauri`) runs
+  `engine_run` (`bid <args>`, NDJSON events as `engine://event`, the final result as the call's value), reads a
+  theme's picture through `theme_preview` (validated id, data URL), and opens the OS pickers for photos and the
+  folder. The UI's language travels as `BID_LANG`, so the engine's messages come in the owner's language. In a
+  plain browser `hasEngine()` is false and the screen says the desktop app is needed — it never pretends.
+- `web/src/lib/sitebuilder.ts` is pure: the brief (`bid.site-brief/1`) as the engine reads it, the theme ranking
+  for "Something else" (the same rules as the Mac app and `bid new suggest`), `inlinePreview()` (one page of a
+  rendered site as a document for an `<iframe srcdoc>`: stylesheet inlined, illustrations as data URLs, internal
+  links rewritten so the screen shows the page they point to), and `errorKey()` — the plain-words message for an
+  engine code: out of credits, credits released later, no network, timeout, not signed in, AI unavailable, rate
+  limited, cloud not deployed, folder exists, hand-edited files. Tested under `node --test`.
+- The flow: theme (pictures, categories, search, "Something else") → about you (name, offer, audience, services,
+  contacts, style × palette, light/dark/auto, photos, language, folder, the AI toggle with its price) → look and
+  save (`new content` with its three steps when the AI is on, `new preview` in the iframe, computer/phone,
+  `new generate`) → done: the folder, Git, "change it with words" (`site edit`, the examples, the applied/refused
+  summary, hand-edit guard with "Replace my hand edits", history, undo).
+- `desktop/src-tauri/src/lib.rs`: `site` joins the command allowlist; `engine_run` takes `lang`; `theme_preview`
+  reads only `engine/themes/<id>/preview.jpg` for a validated id. `cargo test` covers the allowlist, the language
+  and the picture guard against the real engine.
+
 ## Tests
 
 `node tests/run.mjs` — the `new:` tests create every theme in both languages and every style, run the
 quality check, and verify escaping, links, photos, contacts and `bid.site.json`; `new content:` runs the AI
 pipeline against the fake model (own key and cloud) and checks that links and contacts never come from it.
-`deno test supabase/functions` — `site-gen` with a fake model: steps, models per plan, merging, billing,
-duplicates, failures, edit mode. `site edit:` in the engine suite covers the local words, the model path,
+`cd web && npm test` — the pure Site Builder helpers of the shared UI; `cd desktop/src-tauri && cargo test` — the
+desktop shell against the real engine. `deno test supabase/functions` — `site-gen` with a fake model: steps,
+models per plan, merging, billing, duplicates, failures, edit mode. `site edit:` in the engine suite covers the local words, the model path,
 the hand-edit guard, history and undo. `new S5:` covers the pictures and their freshness, suggestions in both
 languages, the three schemes, the illustration files and the scheme words.

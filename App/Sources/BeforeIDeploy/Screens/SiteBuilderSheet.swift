@@ -30,6 +30,7 @@ final class SiteBuilderDraft: ObservableObject {
     @Published var aiSteps: [AIStep] = []
     @Published var aiRunning = false
     @Published var aiError: String?
+    @Published var aiErrorCode: String?
     @Published var aiUsage: SiteContentResult.Usage?
 
     struct AIStep: Identifiable, Equatable {
@@ -200,6 +201,7 @@ struct SiteBuilderSheet: View {
         let key = draft.previewKey
         draft.aiRunning = true
         draft.aiError = nil
+        draft.aiErrorCode = nil
         draft.aiSteps = []
         var brief = draft.brief
         brief.photos = []
@@ -215,7 +217,10 @@ struct SiteBuilderSheet: View {
             draft.aiUsage = r.usage
             if draft.brief.style == nil, let s = r.styleSuggestion { draft.brief.style = s }
         } catch {
-            if !Task.isCancelled { draft.aiError = error.localizedDescription }
+            if !Task.isCancelled {
+                draft.aiError = error.localizedDescription
+                draft.aiErrorCode = (error as? EngineError)?.code
+            }
         }
         draft.aiRunning = false
     }
@@ -724,6 +729,7 @@ private struct PreviewStep: View {
 
 /// S3: the three AI steps as the engine reports them, then what it cost; an error keeps the sample texts.
 private struct AIProgress: View {
+    @EnvironmentObject var model: AppModel
     @ObservedObject var draft: SiteBuilderDraft
     var body: some View {
         HStack(spacing: 14) {
@@ -737,8 +743,12 @@ private struct AIProgress: View {
                 }
             }
             if let e = draft.aiError {
-                Label(e, systemImage: "exclamationmark.circle.fill").font(Typo.font(.caption)).foregroundColor(Theme.blocked).lineLimit(2)
+                Label(e, systemImage: "exclamationmark.circle.fill").font(Typo.font(.caption)).foregroundColor(Theme.blocked).lineLimit(3)
                 Text(L("newsite.ai.fallback")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
+                // out of credits / released later: the same buttons every AI feature shows (S6)
+                if let code = draft.aiErrorCode, ["quota_exhausted", "credits_release", "guard_24h", "guard_7d", "pack_rate", "ai_session_cap", "ai_unavailable"].contains(code) {
+                    CreditQuotaActions(store: model.billingStore, code: code)
+                }
             } else if !draft.aiRunning, draft.aiContentCurrent {
                 Text(draft.aiUsage?.charged != nil ? L("newsite.ai.charged", draft.aiUsage?.charged ?? 0) : L("newsite.ai.written")).font(Typo.font(.caption)).foregroundColor(Theme.ready)
             }
