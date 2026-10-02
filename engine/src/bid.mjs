@@ -230,7 +230,7 @@ async function main() {
 
     case 'new': {
       if (sub === 'list' || !sub) return ok(listTemplates());
-      if (sub === 'styles') return ok(Object.fromEntries(Object.keys(STYLES).map((id) => [id, { head: STYLES[id].head, radius: STYLES[id].radius, palettes: paletteIds(id) }])));
+      if (sub === 'styles') return ok(Object.fromEntries(Object.keys(STYLES).map((id) => [id, { head: STYLES[id].head, radius: STYLES[id].radius, palettes: paletteIds(id).map((p) => ({ id: p, dark: !!STYLES[id].palettes[p].dark, bg: STYLES[id].palettes[p].bg, accent: STYLES[id].palettes[p].accent, accent2: STYLES[id].palettes[p].accent2 })) }])));
       if (sub === 'check') return ok(listTemplates().map((th) => ({ id: th.id, errors: validateTheme(loadTheme(th.id)) })));
       if (sub === 'create') {
         if (flags.style || flags.palette) return ok(generateSite({ brief: { theme: flags.template, name: flags.name, lang: flags.lang, description: flags.description, style: flags.style, palette: flags.palette }, dir: flags.dir }));

@@ -502,10 +502,11 @@ t('new: brief → сайт по дизайн на човека (услуги, к
   assert(unknown.result.code === 'usage', 'bad theme id');
   // every theme renders in every style and still passes the quality check
   const styles = bid('new', 'styles').data;
-  assert(Object.keys(styles).join() === 'calm,bold,elegant' && styles.calm.palettes.length === 4, JSON.stringify(styles));
+  assert(Object.keys(styles).join() === 'calm,bold,elegant' && styles.calm.palettes.length === 4 && styles.bold.palettes.every((p) => p.id && /^#/.test(p.accent) && /^#/.test(p.bg)), JSON.stringify(styles));
+  fixture('new-styles', styles);
   for (const theme of bid('new', 'list').data) {
     for (const [style, info] of Object.entries(styles)) {
-      const c = bid('new', 'create', '--template', theme.id, '--name', `${theme.id} ${style}`, '--dir', parent, '--lang', 'en', '--style', style, '--palette', info.palettes[theme.id.length % info.palettes.length]);
+      const c = bid('new', 'create', '--template', theme.id, '--name', `${theme.id} ${style}`, '--dir', parent, '--lang', 'en', '--style', style, '--palette', info.palettes[theme.id.length % info.palettes.length].id);
       assert(c.result.ok, `${theme.id}/${style}: ${JSON.stringify(c.result).slice(0, 200)}`);
       const s = bid('check', '--project', c.data.path).data.steps.find((x) => x.id === 'site');
       assert(s.status === 'pass', `${theme.id}/${style}: ${JSON.stringify(s.details)}`);
@@ -514,6 +515,7 @@ t('new: brief → сайт по дизайн на човека (услуги, к
   const check = bid('new', 'check').data;
   assert(check.length >= 21 && check.every((x) => x.errors.length === 0), JSON.stringify(check.filter((x) => x.errors.length)));
   fixture('new-brief', { brief, result: r.data });
+  fixture('new-list', bid('new', 'list').data);
 });
 
 t('check: vite app — build създава dist, статус ready', () => {

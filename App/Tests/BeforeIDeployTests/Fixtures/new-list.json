@@ -1,0 +1,361 @@
+[
+  {
+    "id": "mentor",
+    "title": "Mentor site",
+    "description": "For mentors, coaches and consultants: who you help, your programs with prices, how it works, reviews and a booking form.",
+    "pages": 5,
+    "category": "personal",
+    "categoryTitle": "Personal",
+    "icon": "person.wave.2",
+    "accent": "#2f6f5e",
+    "featured": true,
+    "style": "calm",
+    "questions": [
+      "offer",
+      "audience",
+      "services",
+      "photos",
+      "contacts"
+    ]
+  },
+  {
+    "id": "landing",
+    "title": "Business landing",
+    "description": "Services, process, reviews and a contact form on one page — for any small business.",
+    "pages": 3,
+    "category": "business",
+    "categoryTitle": "Business",
+    "icon": "sparkles.rectangle.stack",
+    "accent": "#5b8cff",
+    "featured": true,
+    "style": "bold",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ]
+  },
+  {
+    "id": "services",
+    "title": "Trades & repairs",
+    "description": "Services, a price list, projects and a booking form — for handymen, cleaners and installers.",
+    "pages": 4,
+    "category": "business",
+    "categoryTitle": "Business",
+    "icon": "wrench.and.screwdriver",
+    "accent": "#ea580c",
+    "featured": true,
+    "style": "calm",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ]
+  },
+  {
+    "id": "portfolio",
+    "title": "Portfolio",
+    "description": "Selected work, services, about and a project enquiry form — for designers and studios.",
+    "pages": 5,
+    "category": "personal",
+    "categoryTitle": "Personal",
+    "icon": "rectangle.3.group",
+    "accent": "#ff5a36",
+    "featured": true,
+    "style": "calm",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ]
+  },
+  {
+    "id": "restaurant",
+    "title": "Restaurant & café",
+    "description": "Menu with prices, atmosphere, reviews and table booking.",
+    "pages": 4,
+    "category": "food",
+    "categoryTitle": "Food & stays",
+    "icon": "fork.knife",
+    "accent": "#b4532a",
+    "featured": true,
+    "style": "elegant",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ]
+  },
+  {
+    "id": "course",
+    "title": "Online course",
+    "description": "Program, teacher, pricing and enrolment for a course or school.",
+    "pages": 3,
+    "category": "community",
+    "categoryTitle": "Events & causes",
+    "icon": "graduationcap",
+    "accent": "#16a34a",
+    "featured": true,
+    "style": "calm",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ]
+  },
+  {
+    "id": "salon",
+    "title": "Beauty salon",
+    "description": "Services, price list, team and online appointment booking.",
+    "pages": 4,
+    "category": "beauty",
+    "categoryTitle": "Beauty & health",
+    "icon": "scissors",
+    "accent": "#c0265e",
+    "featured": true,
+    "style": "elegant",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ]
+  },
+  {
+    "id": "shop",
+    "title": "Shop showcase",
+    "description": "Products with prices, how to order and reviews — orders by form, no online payments.",
+    "pages": 4,
+    "category": "commerce",
+    "categoryTitle": "Shops & property",
+    "icon": "bag",
+    "accent": "#7c3aed",
+    "featured": true,
+    "style": "calm",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ]
+  },
+  {
+    "id": "saas",
+    "title": "Software / SaaS",
+    "description": "Features, pricing plans, FAQ and a free-trial sign-up.",
+    "pages": 4,
+    "category": "tech",
+    "categoryTitle": "Tech & apps",
+    "icon": "cloud",
+    "accent": "#6366f1",
+    "featured": true,
+    "style": "bold",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ]
+  },
+  {
+    "id": "event",
+    "title": "Event & conference",
+    "description": "Schedule, speakers, tickets and FAQ — with an early-bird countdown card.",
+    "pages": 3,
+    "category": "community",
+    "categoryTitle": "Events & causes",
+    "icon": "ticket",
+    "accent": "#f43f5e",
+    "featured": true,
+    "style": "bold",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ]
+  },
+  {
+    "id": "blog",
+    "title": "Blog",
+    "description": "Article list, a sample article and a newsletter sign-up.",
+    "pages": 4,
+    "category": "personal",
+    "categoryTitle": "Personal",
+    "icon": "text.book.closed",
+    "accent": "#c2410c",
+    "featured": true,
+    "style": "elegant",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ]
+  },
+  {
+    "id": "comingsoon",
+    "title": "Coming soon",
+    "description": "A launch page with an email sign-up while the real site is being built.",
+    "pages": 3,
+    "category": "business",
+    "categoryTitle": "Business",
+    "icon": "hourglass",
+    "accent": "#a855f7",
+    "featured": true,
+    "style": "bold",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ]
+  },
+  {
+    "id": "app",
+    "title": "Mobile app",
+    "description": "A launch page for an app: features, how it works, reviews and download.",
+    "pages": 3,
+    "category": "tech",
+    "categoryTitle": "Tech & apps",
+    "icon": "iphone",
+    "accent": "#2563eb",
+    "featured": false,
+    "style": "calm",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ]
+  },
+  {
+    "id": "clinic",
+    "title": "Clinic & dentist",
+    "description": "Services, doctors, FAQ and appointment requests — calm and trustworthy.",
+    "pages": 4,
+    "category": "beauty",
+    "categoryTitle": "Beauty & health",
+    "icon": "cross.case",
+    "accent": "#0284c7",
+    "featured": false,
+    "style": "calm",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ]
+  },
+  {
+    "id": "fitness",
+    "title": "Gym & coach",
+    "description": "Programs, weekly schedule, memberships and a free-session sign-up.",
+    "pages": 3,
+    "category": "beauty",
+    "categoryTitle": "Beauty & health",
+    "icon": "figure.run",
+    "accent": "#65a30d",
+    "featured": false,
+    "style": "bold",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ]
+  },
+  {
+    "id": "hotel",
+    "title": "Hotel & guesthouse",
+    "description": "Rooms and rates, amenities, gallery and an availability request.",
+    "pages": 4,
+    "category": "food",
+    "categoryTitle": "Food & stays",
+    "icon": "bed.double",
+    "accent": "#0f766e",
+    "featured": false,
+    "style": "elegant",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ]
+  },
+  {
+    "id": "linkinbio",
+    "title": "Link in bio",
+    "description": "All your profiles and links on one beautiful page.",
+    "pages": 3,
+    "category": "personal",
+    "categoryTitle": "Personal",
+    "icon": "link",
+    "accent": "#f43f5e",
+    "featured": false,
+    "style": "bold",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ]
+  },
+  {
+    "id": "nonprofit",
+    "title": "Cause & nonprofit",
+    "description": "Mission, impact, ways to donate or volunteer, and stories.",
+    "pages": 3,
+    "category": "community",
+    "categoryTitle": "Events & causes",
+    "icon": "hands.sparkles",
+    "accent": "#15803d",
+    "featured": false,
+    "style": "calm",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ]
+  },
+  {
+    "id": "realestate",
+    "title": "Real estate",
+    "description": "Listings for sale and rent, services and a free valuation form.",
+    "pages": 4,
+    "category": "commerce",
+    "categoryTitle": "Shops & property",
+    "icon": "building.2",
+    "accent": "#1e40af",
+    "featured": false,
+    "style": "elegant",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ]
+  },
+  {
+    "id": "resume",
+    "title": "CV / résumé",
+    "description": "Experience timeline, skills, projects and contact — your personal page.",
+    "pages": 3,
+    "category": "personal",
+    "categoryTitle": "Personal",
+    "icon": "person.text.rectangle",
+    "accent": "#0f766e",
+    "featured": false,
+    "style": "calm",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ]
+  },
+  {
+    "id": "wedding",
+    "title": "Wedding",
+    "description": "The invitation, your story, the plan for the day and an RSVP form.",
+    "pages": 3,
+    "category": "community",
+    "categoryTitle": "Events & causes",
+    "icon": "heart",
+    "accent": "#a47148",
+    "featured": false,
+    "style": "elegant",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ]
+  }
+]

@@ -478,10 +478,21 @@ final class AppModel: ObservableObject, Feedback {
         templates = (try? await engine.call(["new", "list"], as: [SiteTemplate].self)) ?? []
     }
 
-    /// Creates a site from a template, adds it to the library and opens it. Returns an error message, or nil.
-    func createSite(name: String, template: String, dir: String, lang: String) async -> String? {
+    @Published var siteStyles: [String: SiteStyle] = [:]
+
+    func loadSiteStyles() async {
+        siteStyles = (try? await engine.call(["new", "styles"], as: [String: SiteStyle].self)) ?? [:]
+    }
+
+    /// Renders the brief in memory (Site Builder S2): file name → text, nothing written to disk.
+    func previewSite(_ brief: SiteBrief) async throws -> [String: String] {
+        try await engine.call(["new", "preview", "--brief", brief.json()], as: [String: String].self, timeout: 60)
+    }
+
+    /// Creates the site from the brief, adds it to the library and opens it. Returns an error message, or nil.
+    func generateSite(_ brief: SiteBrief, dir: String) async -> String? {
         do {
-            let r = try await engine.call(["new", "create", "--template", template, "--name", name, "--dir", dir, "--lang", lang], as: NewSiteResult.self)
+            let r = try await engine.call(["new", "generate", "--brief", brief.json(), "--dir", dir], as: NewSiteResult.self)
             await projectStore.loadProjects()
             flash(L("newsite.created", r.project.name))
             await select(r.project.key)
@@ -1166,6 +1177,7 @@ final class AppModel: ObservableObject, Feedback {
         case "usage": screen = .usage
         case "admin": screen = .admin
         case "plans": sheet = .plans
+        case "newsite": sheet = .newSite
         case "settings": SettingsWindow.open()
         case "palette": showPalette = true
         default: screen = .overview

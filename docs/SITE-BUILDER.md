@@ -84,6 +84,21 @@ site passes the `site` check step on its first run in both languages and in all 
 Adding a section type: a renderer in `render.mjs` (escape every value), its CSS in `css.mjs`, the name in
 `SECTION_TYPES`, and a test in `tests/run.mjs`.
 
+## The Mac wizard (S2)
+
+`App/Sources/BeforeIDeploy/Screens/SiteBuilderSheet.swift` — `SiteBuilderSheet` (sheet `.newSite`), one
+`SiteBuilderDraft` object for the three steps:
+
+1. `ThemeStep` — the featured themes, category chips, a search in the owner's words (ranks by title and
+   description), "More" for the rest; the right pane renders `bid new preview` for the selected theme.
+2. `DetailsStep` — the brief: name (required), what you offer, who it is for, services (name, price, one line),
+   contacts, style × palette (`bid new styles`), photos (drop zone or picker, paths only), language, folder.
+3. `PreviewStep` — `bid new preview` of the full brief in a `WKWebView` (stylesheet inlined, page links stay
+   inside the preview), computer or phone width; "Save" runs `bid new generate` and opens the project.
+
+Screenshots: `open "Before I Deploy.app" --args -BIDScreen newsite -BIDSiteBuilderStep theme|details|preview`
+fills a demo brief (`newsite.demo.*`) so every step renders with content; the screenshots workflow takes all three.
+
 ## Tests
 
 `node tests/run.mjs` — the `new:` tests create every theme in both languages and every style, run the

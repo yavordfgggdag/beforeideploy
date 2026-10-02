@@ -182,9 +182,27 @@ struct SiteTemplate: Codable, Hashable, Identifiable {
     var categoryTitle: String?
     var icon: String?
     var accent: String?
+    /// Site Builder (S2): the first screen shows the featured themes, the rest sit under "More".
+    var featured: Bool?
+    var style: String?
+    var questions: [String]?
 }
 
-/// `bid new create` — the site that was just created.
+/// `bid new styles` — a style (type, shapes) and the four palettes that suit it.
+struct SiteStyle: Codable, Hashable {
+    struct Palette: Codable, Hashable, Identifiable {
+        var id: String
+        var dark: Bool
+        var bg: String
+        var accent: String
+        var accent2: String
+    }
+    var head: String
+    var radius: Double
+    var palettes: [Palette]
+}
+
+/// `bid new create` / `bid new generate` — the site that was just created.
 struct NewSiteResult: Codable {
     var project: Project
     var path: String
@@ -192,6 +210,53 @@ struct NewSiteResult: Codable {
     var lang: String
     var git: Bool
     var files: [String]
+    var theme: String?
+    var style: String?
+    var palette: String?
+}
+
+/// The brief (`bid.site-brief/1`): what the owner told the "New site" wizard. Sent to the engine as JSON.
+struct SiteBrief: Codable, Hashable {
+    struct Service: Codable, Hashable, Identifiable {
+        var id = UUID()
+        var name = ""
+        var price = ""
+        var text = ""
+        enum CodingKeys: String, CodingKey { case name, price, text }
+    }
+    struct Contacts: Codable, Hashable {
+        var email = ""
+        var phone = ""
+        var instagram = ""
+        var address = ""
+        var website = ""
+    }
+    struct Photo: Codable, Hashable, Identifiable {
+        var path: String
+        var alt = ""
+        var id: String { path }
+        enum CodingKeys: String, CodingKey { case path, alt }
+    }
+    var schema = "bid.site-brief/1"
+    var theme = "mentor"
+    var lang = "en"
+    var name = ""
+    var description = ""
+    var offer = ""
+    var audience = ""
+    var services: [Service] = []
+    var contacts = Contacts()
+    var photos: [Photo] = []
+    var style: String?
+    var palette: String?
+
+    /// The JSON the engine reads (`--brief '{…}'`); empty services are left out.
+    func json() -> String {
+        var copy = self
+        copy.services = services.filter { !$0.name.trimmingCharacters(in: .whitespaces).isEmpty }
+        let data = (try? JSONEncoder().encode(copy)) ?? Data("{}".utf8)
+        return String(decoding: data, as: UTF8.self)
+    }
 }
 
 struct HostingInfo: Codable, Hashable {
