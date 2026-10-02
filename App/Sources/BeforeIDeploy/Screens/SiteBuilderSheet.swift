@@ -102,9 +102,9 @@ struct SiteBuilderSheet: View {
     private var header: some View {
         HStack(spacing: 12) {
             ZStack {
-                RoundedRectangle(cornerRadius: 11, style: .continuous).fill(Theme.accent.opacity(0.14))
-                RoundedRectangle(cornerRadius: 11, style: .continuous).strokeBorder(Theme.accent.opacity(0.22), lineWidth: 1)
-                Image(systemName: "sparkles.rectangle.stack").font(.system(size: 16, weight: .semibold)).foregroundColor(Theme.accent)
+                RoundedRectangle(cornerRadius: Radius.m, style: .continuous).fill(Theme.accent.opacity(0.14))
+                RoundedRectangle(cornerRadius: Radius.m, style: .continuous).strokeBorder(Theme.accent.opacity(0.22), lineWidth: 1)
+                Image(systemName: "sparkles.rectangle.stack").font(Typo.icon(size: 16, weight: .semibold)).foregroundColor(Theme.accent)
             }
             .frame(width: 38, height: 38)
             .accessibilityHidden(true)
