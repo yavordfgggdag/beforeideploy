@@ -263,6 +263,12 @@ t('i18n: всеки ключ в engine/src съществува в катало�
     for (const m of text.matchAll(/\b(?:t|msg)\(\s*'([a-zA-Z0-9_.]+)'/g)) used.add(m[1]);
     for (const m of text.matchAll(/'([a-z]+(?:\.[a-zA-Z0-9_]+)+)'/g)) if (m[1] in en) used.add(m[1]);
   }
+  // a theme names its picker texts by key (engine/themes/<id>/theme.json: titleKey, descriptionKey)
+  const themes = path.join(ROOT, 'engine', 'themes');
+  for (const d of fs.readdirSync(themes)) {
+    const th = JSON.parse(fs.readFileSync(path.join(themes, d, 'theme.json'), 'utf8'));
+    for (const k of [th.titleKey, th.descriptionKey]) if (k) used.add(k);
+  }
   const unknown = [...used].filter((k) => /^[a-z]+\.[a-zA-Z]/.test(k) && !(k in en) && !/\.(mjs|cjs|json|log|md|command|html|zsh)$/.test(k));
   assert(!unknown.length, `not in catalog: ${unknown.join(', ')}`);
   const unused = Object.keys(en).filter((k) => k !== '_meta' && !used.has(k));
@@ -413,7 +419,7 @@ t('launch: чеклистът извежда следващата стъпка �
 
 t('new: шаблонът създава сайт, който минава проверката на качеството от първия път', () => {
   const list = bid('new', 'list').data;
-  assert(list.length >= 20 && list[0].id === 'landing' && ['restaurant', 'salon', 'saas', 'wedding', 'linkinbio', 'portfolio'].every((id) => list.some((x) => x.id === id)), JSON.stringify(list.map((x) => x.id)));
+  assert(list.length >= 21 && list[0].id === 'mentor' && list[1].id === 'landing' && ['restaurant', 'salon', 'saas', 'wedding', 'linkinbio', 'portfolio'].every((id) => list.some((x) => x.id === id)), JSON.stringify(list.map((x) => x.id)));
   assert(list.every((x) => x.title && x.title !== x.id && x.description && x.pages >= 3 && x.category !== 'other' && x.categoryTitle && x.icon && /^#[0-9a-f]{6}$/i.test(x.accent)), JSON.stringify(list.find((x) => !x.categoryTitle || x.pages < 3)));
   const parent = path.join(TMP, 'new-sites');
   fs.mkdirSync(parent, { recursive: true });
@@ -450,6 +456,64 @@ t('new: шаблонът създава сайт, който минава про
   const described = bid('new', 'create', '--template', 'restaurant', '--name', 'Моето бистро', '--dir', parent, '--description', 'Бистро с домашна храна');
   assert(fs.readFileSync(path.join(described.data.path, 'index.html'), 'utf8').includes('content="Бистро с домашна храна"'), 'own description wins over the template default');
   fixture('new-site', r.data);
+});
+
+t('new: brief → сайт по дизайн на човека (услуги, контакти, снимка, стил), без AI; всичко е escape-нато', () => {
+  const parent = path.join(TMP, 'brief-sites');
+  fs.mkdirSync(parent, { recursive: true });
+  // a tiny but real PNG so the photo path is exercised end to end
+  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64');
+  fs.writeFileSync(path.join(parent, 'me.png'), png);
+  const brief = {
+    schema: 'bid.site-brief/1', theme: 'mentor', lang: 'bg', name: 'Иван <script>alert(1)</script>', description: 'Коучинг за "предприемачи" & екипи',
+    offer: 'Помагам на хора да стартират бизнес без излишен стрес.', audience: 'за начинаещи предприемачи',
+    services: [{ name: 'Единична сесия', price: '100 лв.', text: '60 минути онлайн' }, { name: 'Програма', price: '700 лв.', text: '6 сесии за 3 месеца' }, { name: 'Безплатен разговор' }],
+    contacts: { email: 'ivan@example.com', phone: '+359 888 123 456', instagram: '@ivan.mentor', address: 'София', website: 'https://ivan.example' },
+    photos: [{ path: path.join(parent, 'me.png'), alt: 'Иван в офиса' }, { path: path.join(parent, 'me.png'), caption: 'Сесия' }],
+    style: 'bold', palette: 'coral',
+  };
+  fs.writeFileSync(path.join(parent, 'brief.json'), JSON.stringify(brief));
+  const bad = bid('new', 'generate', '--dir', parent);
+  assert(bad.result.code === 'usage', 'brief required');
+  const r = bid('new', 'generate', '--brief', path.join(parent, 'brief.json'), '--dir', parent);
+  assert(r.result.ok && r.data.theme === 'mentor' && r.data.style === 'bold' && r.data.palette === 'coral' && r.data.git === true, JSON.stringify(r.result).slice(0, 300));
+  const site = r.data.path;
+  const index = fs.readFileSync(path.join(site, 'index.html'), 'utf8');
+  assert(!index.includes('<script>') && index.includes('&lt;script&gt;alert(1)&lt;/script&gt;'), 'name is escaped');
+  assert(index.includes('content="Коучинг за &quot;предприемачи&quot; &amp; екипи"'), 'description is escaped: ' + (index.match(/<meta name="description"[^>]*>/) || [])[0]);
+  assert(index.includes('Помагам на хора да стартират бизнес') && index.includes('за начинаещи предприемачи'), 'offer and audience land in the hero');
+  assert(index.includes('<em>там, където искате</em>'), 'emphasis in the title survives escaping');
+  assert(index.includes('<h3>Единична сесия</h3>') && index.includes('100 лв.') && index.includes('700 лв.') && index.includes('Безплатен разговор'), 'services → cards and programs');
+  assert(index.includes('src="/images/photo-1.png"') && index.includes('alt="Иван в офиса"') && !index.includes('card-art'), 'first photo replaces the hero card');
+  const contact = fs.readFileSync(path.join(site, 'contact.html'), 'utf8');
+  assert(contact.includes('href="mailto:ivan@example.com"') && contact.includes('href="tel:+359888123456"') && contact.includes('href="https://instagram.com/ivan.mentor"') && contact.includes('ivan.example') && contact.includes('София'), 'contacts rows');
+  assert(!contact.includes('hello@example.com'), 'sample contacts are gone');
+  const css = fs.readFileSync(path.join(site, 'styles.css'), 'utf8');
+  assert(css.includes('--accent: #ff5a36;') && css.includes('--radius: 10px;'), 'bold/coral tokens in the stylesheet');
+  const record = JSON.parse(fs.readFileSync(path.join(site, 'bid.site.json'), 'utf8'));
+  assert(record.schema === 'bid.site/1' && record.theme === 'mentor' && record.brief.photos.length === 2 && record.brief.photos[0].file === 'images/photo-1.png' && record.content.pages.index.hero.image.src === '/images/photo-1.png' && !record.brief.photos[0].path, 'bid.site.json is the source of truth without local paths');
+  assert(fs.existsSync(path.join(site, 'images', 'photo-2.png')), 'second photo copied');
+  const chk = bid('check', '--project', site).data.steps.find((s) => s.id === 'site');
+  assert(chk.status === 'pass', JSON.stringify(chk.details));
+  // unsafe links never reach the page; unknown style/palette/theme are refused or ignored, never passed through
+  const p = bid('new', 'preview', '--brief', JSON.stringify({ name: 'X', theme: 'landing', lang: 'en', contacts: { website: 'javascript:alert(1)', email: 'not an email' }, style: 'weird', palette: 'neon' }));
+  assert(p.result.ok && !p.data['index.html'].includes('javascript:') && p.data['index.html'].includes('hello@example.com') && p.data['styles.css'].includes('--accent: #5b8cff;'), 'preview keeps the theme look and drops unsafe input');
+  const unknown = bid('new', 'preview', '--brief', JSON.stringify({ name: 'X', theme: '../../etc' }));
+  assert(unknown.result.code === 'usage', 'bad theme id');
+  // every theme renders in every style and still passes the quality check
+  const styles = bid('new', 'styles').data;
+  assert(Object.keys(styles).join() === 'calm,bold,elegant' && styles.calm.palettes.length === 4, JSON.stringify(styles));
+  for (const theme of bid('new', 'list').data) {
+    for (const [style, info] of Object.entries(styles)) {
+      const c = bid('new', 'create', '--template', theme.id, '--name', `${theme.id} ${style}`, '--dir', parent, '--lang', 'en', '--style', style, '--palette', info.palettes[theme.id.length % info.palettes.length]);
+      assert(c.result.ok, `${theme.id}/${style}: ${JSON.stringify(c.result).slice(0, 200)}`);
+      const s = bid('check', '--project', c.data.path).data.steps.find((x) => x.id === 'site');
+      assert(s.status === 'pass', `${theme.id}/${style}: ${JSON.stringify(s.details)}`);
+    }
+  }
+  const check = bid('new', 'check').data;
+  assert(check.length >= 21 && check.every((x) => x.errors.length === 0), JSON.stringify(check.filter((x) => x.errors.length)));
+  fixture('new-brief', { brief, result: r.data });
 });
 
 t('check: vite app — build създава dist, статус ready', () => {

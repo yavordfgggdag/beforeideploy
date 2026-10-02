@@ -1,0 +1,475 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "fitness",
+  "category": "beauty",
+  "icon": "figure.run",
+  "accent": "#65a30d",
+  "mark": "bolt",
+  "featured": false,
+  "titleKey": "newsite.template.fitness.title",
+  "descriptionKey": "newsite.template.fitness.description",
+  "style": "bold",
+  "tokens": {
+    "dark": true,
+    "bg": "#0c0d0c",
+    "bg2": "#131513",
+    "surface": "#181b18",
+    "text": "#eef0f7",
+    "muted": "#a3abc2",
+    "line": "rgba(255,255,255,.09)",
+    "accent": "#a3e635",
+    "accent2": "#22c55e",
+    "onAccent": "#0c0d0c",
+    "font": "sans",
+    "radius": 14
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "lang": {
+    "bg": {
+      "tagline": "фитнес и персонални тренировки",
+      "description": "Групови и персонални тренировки, хранителни планове и първа тренировка безплатно.",
+      "nav": [
+        [
+          "Програми",
+          "/#programs"
+        ],
+        [
+          "График",
+          "/#schedule"
+        ],
+        [
+          "Карти",
+          "/#plans"
+        ],
+        [
+          "Контакт",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Безплатна тренировка",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Първата тренировка е безплатна",
+            "eyebrowIcon": "bolt",
+            "title": "По-силен *всяка седмица*",
+            "lead": "Персонални и групови тренировки с треньори, които следят напредъка ви — и хранителен план, който се спазва лесно.",
+            "cta": [
+              "Запиши се",
+              "/#contact"
+            ],
+            "cta2": [
+              "Виж картите",
+              "/#plans"
+            ],
+            "card": {
+              "icon": "chart",
+              "title": "Напредък за 12 седмици",
+              "rows": [
+                [
+                  "Сила",
+                  "+32%"
+                ],
+                [
+                  "Издръжливост",
+                  "+45%"
+                ],
+                [
+                  "Тренировки",
+                  "36 от 36"
+                ]
+              ],
+              "note": "Примерен резултат от програма „Старт“."
+            }
+          },
+          "sections": [
+            {
+              "type": "cards",
+              "id": "programs",
+              "title": "Програми",
+              "items": [
+                [
+                  "bolt",
+                  "Сила",
+                  "Основни движения, правилна техника, реален прогрес."
+                ],
+                [
+                  "heart",
+                  "Кардио и HIIT",
+                  "Кратки, интензивни тренировки за издръжливост."
+                ],
+                [
+                  "users",
+                  "Групови",
+                  "Мотивация в малки групи до 10 души."
+                ],
+                [
+                  "leaf",
+                  "Хранене",
+                  "План, съобразен с вкуса и графика ви."
+                ]
+              ]
+            },
+            {
+              "type": "timeline",
+              "id": "schedule",
+              "alt": true,
+              "title": "Седмичен график",
+              "items": [
+                [
+                  "Пон, Ср, Пет · 7:00",
+                  "Сила — сутрешна група",
+                  "Основни упражнения с щанга и дъмбели."
+                ],
+                [
+                  "Вт, Чет · 18:30",
+                  "HIIT",
+                  "40 минути, които горят."
+                ],
+                [
+                  "Събота · 10:00",
+                  "Мобилност и стречинг",
+                  "Възстановяване за цялата седмица."
+                ]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "plans",
+              "title": "Карти",
+              "items": [
+                {
+                  "name": "Месечна",
+                  "price": "70 лв.",
+                  "per": "/ месец",
+                  "features": [
+                    "Неограничен достъп",
+                    "Групови тренировки",
+                    "Начален фитнес тест"
+                  ],
+                  "cta": [
+                    "Избери",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Персонална",
+                  "price": "240 лв.",
+                  "per": "/ 8 трен.",
+                  "featured": "Най-бърз резултат",
+                  "features": [
+                    "Треньор само за вас",
+                    "Хранителен план",
+                    "Седмично проследяване"
+                  ],
+                  "cta": [
+                    "Избери",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Годишна",
+                  "price": "690 лв.",
+                  "per": "/ година",
+                  "features": [
+                    "Два месеца подарък",
+                    "Замразяване до 30 дни",
+                    "Карта за гост"
+                  ],
+                  "cta": [
+                    "Избери",
+                    "/#contact"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Запиши безплатна тренировка",
+              "intro": "Кажете ни целта си — ще подберем треньор и час.",
+              "formName": "trial",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Адрес",
+                  "ул. „Витоша“ 1, София"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "goal",
+                  "label": "Цел",
+                  "options": [
+                    "Отслабване",
+                    "Сила",
+                    "Издръжливост",
+                    "Здраве и стойка"
+                  ]
+                }
+              ],
+              "messageLabel": "Нещо, което да знаем (по избор)",
+              "send": "Запиши ме",
+              "hoursTitle": "Работно време",
+              "hours": [
+                [
+                  "Понеделник – петък",
+                  "6:30 – 22:00"
+                ],
+                [
+                  "Събота",
+                  "8:00 – 20:00"
+                ],
+                [
+                  "Неделя",
+                  "9:00 – 18:00"
+                ]
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "en": {
+      "tagline": "gym and personal training",
+      "description": "Group and personal training, nutrition plans and a free first session.",
+      "nav": [
+        [
+          "Programs",
+          "/#programs"
+        ],
+        [
+          "Schedule",
+          "/#schedule"
+        ],
+        [
+          "Memberships",
+          "/#plans"
+        ],
+        [
+          "Contact",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Free session",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Your first session is free",
+            "eyebrowIcon": "bolt",
+            "title": "Stronger *every week*",
+            "lead": "Personal and group training with coaches who track your progress — plus a nutrition plan that is easy to stick to.",
+            "cta": [
+              "Join now",
+              "/#contact"
+            ],
+            "cta2": [
+              "See memberships",
+              "/#plans"
+            ],
+            "card": {
+              "icon": "chart",
+              "title": "Progress in 12 weeks",
+              "rows": [
+                [
+                  "Strength",
+                  "+32%"
+                ],
+                [
+                  "Endurance",
+                  "+45%"
+                ],
+                [
+                  "Sessions",
+                  "36 of 36"
+                ]
+              ],
+              "note": "Sample result from the “Start” program."
+            }
+          },
+          "sections": [
+            {
+              "type": "cards",
+              "id": "programs",
+              "title": "Programs",
+              "items": [
+                [
+                  "bolt",
+                  "Strength",
+                  "Core lifts, proper technique, real progress."
+                ],
+                [
+                  "heart",
+                  "Cardio and HIIT",
+                  "Short, intense sessions for endurance."
+                ],
+                [
+                  "users",
+                  "Small groups",
+                  "Motivation in groups of up to 10."
+                ],
+                [
+                  "leaf",
+                  "Nutrition",
+                  "A plan that fits your taste and schedule."
+                ]
+              ]
+            },
+            {
+              "type": "timeline",
+              "id": "schedule",
+              "alt": true,
+              "title": "Weekly schedule",
+              "items": [
+                [
+                  "Mon, Wed, Fri · 7:00",
+                  "Strength — morning group",
+                  "Barbell and dumbbell fundamentals."
+                ],
+                [
+                  "Tue, Thu · 18:30",
+                  "HIIT",
+                  "40 minutes that burn."
+                ],
+                [
+                  "Saturday · 10:00",
+                  "Mobility and stretching",
+                  "Recovery for the whole week."
+                ]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "plans",
+              "title": "Memberships",
+              "items": [
+                {
+                  "name": "Monthly",
+                  "price": "€35",
+                  "per": "/ month",
+                  "features": [
+                    "Unlimited access",
+                    "Group classes",
+                    "Starting fitness test"
+                  ],
+                  "cta": [
+                    "Choose",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Personal",
+                  "price": "€120",
+                  "per": "/ 8 sessions",
+                  "featured": "Fastest results",
+                  "features": [
+                    "A coach just for you",
+                    "Nutrition plan",
+                    "Weekly check-ins"
+                  ],
+                  "cta": [
+                    "Choose",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Yearly",
+                  "price": "€345",
+                  "per": "/ year",
+                  "features": [
+                    "Two months free",
+                    "Freeze up to 30 days",
+                    "Guest pass"
+                  ],
+                  "cta": [
+                    "Choose",
+                    "/#contact"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Book a free session",
+              "intro": "Tell us your goal — we match you with a coach and a time.",
+              "formName": "trial",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Address",
+                  "1 Vitosha St, Sofia"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "goal",
+                  "label": "Goal",
+                  "options": [
+                    "Lose weight",
+                    "Strength",
+                    "Endurance",
+                    "Health and posture"
+                  ]
+                }
+              ],
+              "messageLabel": "Anything we should know (optional)",
+              "send": "Book me in",
+              "hoursTitle": "Opening hours",
+              "hours": [
+                [
+                  "Monday – Friday",
+                  "6:30 – 22:00"
+                ],
+                [
+                  "Saturday",
+                  "8:00 – 20:00"
+                ],
+                [
+                  "Sunday",
+                  "9:00 – 18:00"
+                ]
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

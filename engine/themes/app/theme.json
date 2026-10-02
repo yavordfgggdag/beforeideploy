@@ -1,0 +1,347 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "app",
+  "category": "tech",
+  "icon": "iphone",
+  "accent": "#2563eb",
+  "mark": "play",
+  "featured": false,
+  "titleKey": "newsite.template.app.title",
+  "descriptionKey": "newsite.template.app.description",
+  "style": "calm",
+  "tokens": {
+    "dark": false,
+    "bg": "#f7f8ff",
+    "bg2": "#eef0fd",
+    "surface": "#ffffff",
+    "text": "#141633",
+    "muted": "#555a7a",
+    "line": "rgba(15,23,42,.10)",
+    "accent": "#2563eb",
+    "accent2": "#7c3aed",
+    "font": "rounded",
+    "radius": 22,
+    "tilt": -3
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "lang": {
+    "bg": {
+      "tagline": "мобилно приложение",
+      "description": "Приложението, което подрежда деня ви. Безплатно за iPhone и Android.",
+      "nav": [
+        [
+          "Функции",
+          "/#features"
+        ],
+        [
+          "Как работи",
+          "/#how"
+        ],
+        [
+          "Отзиви",
+          "/#reviews"
+        ],
+        [
+          "Въпроси",
+          "/#faq"
+        ]
+      ],
+      "headerCta": [
+        "Изтегли",
+        "/#download"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "№1 в „Продуктивност“ тази седмица",
+            "eyebrowIcon": "star",
+            "title": "Денят ви, *подреден*",
+            "lead": "Задачи, навици и напомняния в едно красиво приложение. Синхронизира се между телефона, таблета и компютъра.",
+            "cta": [
+              "Изтегли безплатно",
+              "/#download"
+            ],
+            "cta2": [
+              "Как работи",
+              "/#how"
+            ],
+            "card": {
+              "icon": "check",
+              "title": "Днес",
+              "rows": [
+                [
+                  "Разходка 30 мин.",
+                  "✓"
+                ],
+                [
+                  "Среща с екипа",
+                  "10:00"
+                ],
+                [
+                  "Вода: 6 от 8 чаши",
+                  "75%"
+                ]
+              ],
+              "note": "Добро утро! Имате 3 задачи за днес."
+            }
+          },
+          "sections": [
+            {
+              "type": "cards",
+              "id": "features",
+              "title": "Какво може",
+              "items": [
+                [
+                  "check",
+                  "Задачи",
+                  "Бързо добавяне с глас и умни списъци."
+                ],
+                [
+                  "heart",
+                  "Навици",
+                  "Серии, които ви мотивират всеки ден."
+                ],
+                [
+                  "clock",
+                  "Напомняния",
+                  "В точния момент и на точното място."
+                ],
+                [
+                  "shield",
+                  "Поверителност",
+                  "Данните ви са криптирани и остават ваши."
+                ]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "how",
+              "alt": true,
+              "title": "Как работи",
+              "items": [
+                [
+                  "Изтеглете",
+                  "Безплатно от App Store или Google Play."
+                ],
+                [
+                  "Изберете цел",
+                  "Приложението предлага начален план."
+                ],
+                [
+                  "Следете напредъка",
+                  "Седмичен отчет всяка неделя."
+                ]
+              ]
+            },
+            {
+              "type": "quotes",
+              "id": "reviews",
+              "title": "Потребителите казват",
+              "items": [
+                [
+                  "„Първото приложение за навици, което не изтрих след седмица.“",
+                  "★ App Store"
+                ],
+                [
+                  "„Красиво и бързо. Гласовото добавяне е магия.“",
+                  "★ Google Play"
+                ],
+                [
+                  "„Цялото семейство го ползва за общите задачи.“",
+                  "★ App Store"
+                ]
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "alt": true,
+              "title": "Въпроси",
+              "items": [
+                [
+                  "Безплатно ли е?",
+                  "Да. Pro версията добавя теми, споделени списъци и статистика."
+                ],
+                [
+                  "Работи ли офлайн?",
+                  "Да — синхронизира се, когато има връзка."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "id": "download",
+              "h": "Изтеглете днес",
+              "p": "Безплатно за iPhone и Android. Pro — 30 дни безплатно.",
+              "button": [
+                "Изтегли за iPhone и Android",
+                "mailto:hello@example.com"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "en": {
+      "tagline": "mobile app",
+      "description": "The app that organises your day. Free for iPhone and Android.",
+      "nav": [
+        [
+          "Features",
+          "/#features"
+        ],
+        [
+          "How it works",
+          "/#how"
+        ],
+        [
+          "Reviews",
+          "/#reviews"
+        ],
+        [
+          "FAQ",
+          "/#faq"
+        ]
+      ],
+      "headerCta": [
+        "Download",
+        "/#download"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "#1 in Productivity this week",
+            "eyebrowIcon": "star",
+            "title": "Your day, *sorted*",
+            "lead": "Tasks, habits and reminders in one beautiful app. Syncs between your phone, tablet and computer.",
+            "cta": [
+              "Download free",
+              "/#download"
+            ],
+            "cta2": [
+              "How it works",
+              "/#how"
+            ],
+            "card": {
+              "icon": "check",
+              "title": "Today",
+              "rows": [
+                [
+                  "30 min walk",
+                  "✓"
+                ],
+                [
+                  "Team meeting",
+                  "10:00"
+                ],
+                [
+                  "Water: 6 of 8 glasses",
+                  "75%"
+                ]
+              ],
+              "note": "Good morning! You have 3 tasks today."
+            }
+          },
+          "sections": [
+            {
+              "type": "cards",
+              "id": "features",
+              "title": "What it does",
+              "items": [
+                [
+                  "check",
+                  "Tasks",
+                  "Quick voice capture and smart lists."
+                ],
+                [
+                  "heart",
+                  "Habits",
+                  "Streaks that keep you going every day."
+                ],
+                [
+                  "clock",
+                  "Reminders",
+                  "At the right time and the right place."
+                ],
+                [
+                  "shield",
+                  "Privacy",
+                  "Your data is encrypted and stays yours."
+                ]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "how",
+              "alt": true,
+              "title": "How it works",
+              "items": [
+                [
+                  "Download",
+                  "Free on the App Store or Google Play."
+                ],
+                [
+                  "Pick a goal",
+                  "The app suggests a starting plan."
+                ],
+                [
+                  "Track progress",
+                  "A weekly report every Sunday."
+                ]
+              ]
+            },
+            {
+              "type": "quotes",
+              "id": "reviews",
+              "title": "Users say",
+              "items": [
+                [
+                  "“The first habit app I did not delete after a week.”",
+                  "★ App Store"
+                ],
+                [
+                  "“Beautiful and fast. Voice capture is magic.”",
+                  "★ Google Play"
+                ],
+                [
+                  "“The whole family uses it for shared chores.”",
+                  "★ App Store"
+                ]
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "alt": true,
+              "title": "FAQ",
+              "items": [
+                [
+                  "Is it free?",
+                  "Yes. Pro adds themes, shared lists and statistics."
+                ],
+                [
+                  "Does it work offline?",
+                  "Yes — it syncs when you are back online."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "id": "download",
+              "h": "Download today",
+              "p": "Free for iPhone and Android. Pro is free for 30 days.",
+              "button": [
+                "Get it for iPhone and Android",
+                "mailto:hello@example.com"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

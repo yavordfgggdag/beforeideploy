@@ -1,0 +1,328 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "wedding",
+  "category": "community",
+  "icon": "heart",
+  "accent": "#a47148",
+  "mark": "ring",
+  "featured": false,
+  "titleKey": "newsite.template.wedding.title",
+  "descriptionKey": "newsite.template.wedding.description",
+  "style": "elegant",
+  "tokens": {
+    "dark": false,
+    "bg": "#fbf8f3",
+    "bg2": "#f4ede3",
+    "surface": "#fffdf9",
+    "text": "#3b2f2a",
+    "muted": "#6f625a",
+    "line": "rgba(15,23,42,.10)",
+    "accent": "#a47148",
+    "accent2": "#d4a373",
+    "font": "serif",
+    "head": "serif",
+    "radius": 20,
+    "tilt": 0
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "lang": {
+    "bg": {
+      "tagline": "нашата сватба",
+      "description": "Поканата, програмата на деня и потвърждение за присъствие.",
+      "nav": [
+        [
+          "Историята",
+          "/#story"
+        ],
+        [
+          "Програма",
+          "/#day"
+        ],
+        [
+          "Потвърди",
+          "/#rsvp"
+        ]
+      ],
+      "headerCta": [
+        "Потвърди присъствие",
+        "/#rsvp"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "center": true,
+            "eyebrow": "12 юни 2027 · Пловдив",
+            "eyebrowIcon": "heart",
+            "title": "Женим се! *Ела с нас*",
+            "lead": "Ще се радваме да споделим най-хубавия ни ден с вас. Тук ще намерите програмата, мястото и формата за потвърждение.",
+            "cta": [
+              "Потвърди присъствие",
+              "/#rsvp"
+            ],
+            "cta2": [
+              "Програмата",
+              "/#day"
+            ]
+          },
+          "sections": [
+            {
+              "type": "timeline",
+              "id": "story",
+              "title": "Нашата история",
+              "items": [
+                [
+                  "2019",
+                  "Запознаване",
+                  "На рожден ден на общ приятел — и спор за най-хубавия филм."
+                ],
+                [
+                  "2022",
+                  "Първото пътуване",
+                  "Две седмици в Италия и една изгубена карта."
+                ],
+                [
+                  "2026",
+                  "Годежът",
+                  "На покрива, с изглед към тепетата."
+                ]
+              ]
+            },
+            {
+              "type": "timeline",
+              "id": "day",
+              "alt": true,
+              "title": "Програма на деня",
+              "items": [
+                [
+                  "16:00",
+                  "Църковен ритуал",
+                  "Храм „Св. Св. Константин и Елена“."
+                ],
+                [
+                  "17:30",
+                  "Граждански ритуал",
+                  "В градината на ресторанта."
+                ],
+                [
+                  "19:00",
+                  "Вечеря и празник",
+                  "Музика, танци и много обич — до сутринта."
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "title": "Полезно",
+              "items": [
+                [
+                  "pin",
+                  "Място",
+                  "Ресторант „Примерен“, ул. „Примерна“ 1, Пловдив."
+                ],
+                [
+                  "home",
+                  "Настаняване",
+                  "Имаме договорени стаи в хотел наблизо — пишете ни."
+                ],
+                [
+                  "gift",
+                  "Подаръци",
+                  "Най-големият подарък е да сте с нас."
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "rsvp",
+              "alt": true,
+              "title": "Потвърди присъствие",
+              "intro": "Моля, потвърдете до 1 май.",
+              "formName": "rsvp",
+              "rows": [
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "attending",
+                  "label": "Ще дойдете ли?",
+                  "options": [
+                    "Да, с радост",
+                    "За съжаление, не"
+                  ]
+                },
+                {
+                  "id": "guests",
+                  "label": "Брой гости",
+                  "options": [
+                    "1",
+                    "2",
+                    "3",
+                    "4"
+                  ]
+                }
+              ],
+              "messageLabel": "Хранителни предпочитания или пожелание",
+              "send": "Потвърди"
+            }
+          ]
+        }
+      }
+    },
+    "en": {
+      "tagline": "our wedding",
+      "description": "The invitation, the plan for the day and an RSVP.",
+      "nav": [
+        [
+          "Our story",
+          "/#story"
+        ],
+        [
+          "The day",
+          "/#day"
+        ],
+        [
+          "RSVP",
+          "/#rsvp"
+        ]
+      ],
+      "headerCta": [
+        "RSVP",
+        "/#rsvp"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "center": true,
+            "eyebrow": "12 June 2027 · Plovdiv",
+            "eyebrowIcon": "heart",
+            "title": "We’re getting married! *Join us*",
+            "lead": "We would love to share our happiest day with you. Here you will find the plan, the venue and the RSVP form.",
+            "cta": [
+              "RSVP",
+              "/#rsvp"
+            ],
+            "cta2": [
+              "The day",
+              "/#day"
+            ]
+          },
+          "sections": [
+            {
+              "type": "timeline",
+              "id": "story",
+              "title": "Our story",
+              "items": [
+                [
+                  "2019",
+                  "We met",
+                  "At a friend’s birthday — and argued about the best film ever."
+                ],
+                [
+                  "2022",
+                  "First trip",
+                  "Two weeks in Italy and one lost map."
+                ],
+                [
+                  "2026",
+                  "The proposal",
+                  "On a rooftop overlooking the hills."
+                ]
+              ]
+            },
+            {
+              "type": "timeline",
+              "id": "day",
+              "alt": true,
+              "title": "The day",
+              "items": [
+                [
+                  "16:00",
+                  "Church ceremony",
+                  "St Constantine and Helena church."
+                ],
+                [
+                  "17:30",
+                  "Civil ceremony",
+                  "In the restaurant garden."
+                ],
+                [
+                  "19:00",
+                  "Dinner and party",
+                  "Music, dancing and lots of love — until morning."
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "title": "Good to know",
+              "items": [
+                [
+                  "pin",
+                  "Venue",
+                  "Primeren Restaurant, 1 Primerna St, Plovdiv."
+                ],
+                [
+                  "home",
+                  "Where to stay",
+                  "We have rooms reserved at a hotel nearby — just ask."
+                ],
+                [
+                  "gift",
+                  "Gifts",
+                  "Your presence is the greatest gift."
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "rsvp",
+              "alt": true,
+              "title": "RSVP",
+              "intro": "Please reply by 1 May.",
+              "formName": "rsvp",
+              "rows": [
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "attending",
+                  "label": "Will you come?",
+                  "options": [
+                    "Yes, with joy",
+                    "Sadly, no"
+                  ]
+                },
+                {
+                  "id": "guests",
+                  "label": "Guests",
+                  "options": [
+                    "1",
+                    "2",
+                    "3",
+                    "4"
+                  ]
+                }
+              ],
+              "messageLabel": "Dietary needs or a wish",
+              "send": "Send RSVP"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

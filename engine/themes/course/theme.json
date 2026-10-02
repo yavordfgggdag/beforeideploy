@@ -1,0 +1,426 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "course",
+  "category": "community",
+  "icon": "graduationcap",
+  "accent": "#16a34a",
+  "mark": "book",
+  "featured": true,
+  "titleKey": "newsite.template.course.title",
+  "descriptionKey": "newsite.template.course.description",
+  "style": "calm",
+  "tokens": {
+    "dark": false,
+    "bg": "#f7f8fc",
+    "bg2": "#eaf4f0",
+    "surface": "#ffffff",
+    "text": "#11212d",
+    "muted": "#4c5e6b",
+    "line": "rgba(15,23,42,.10)",
+    "accent": "#16a34a",
+    "accent2": "#0ea5e9",
+    "font": "rounded",
+    "radius": 18
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "lang": {
+    "bg": {
+      "tagline": "онлайн курс и школа",
+      "description": "Практичен онлайн курс с ментор, домашни и сертификат. Първият урок е безплатен.",
+      "nav": [
+        [
+          "Програма",
+          "/#program"
+        ],
+        [
+          "Преподавател",
+          "/#teacher"
+        ],
+        [
+          "Цени",
+          "/#plans"
+        ],
+        [
+          "Въпроси",
+          "/#faq"
+        ]
+      ],
+      "headerCta": [
+        "Запиши се",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Нов поток от 3 ноември",
+            "eyebrowIcon": "calendar",
+            "title": "Научете нещо ново *за 8 седмици*",
+            "lead": "Практичен онлайн курс с живи срещи, ментор и истински проект в портфолиото. Първият урок е безплатен.",
+            "cta": [
+              "Запиши се",
+              "/#contact"
+            ],
+            "cta2": [
+              "Програмата",
+              "/#program"
+            ],
+            "card": {
+              "icon": "book",
+              "title": "Какво получавате",
+              "rows": [
+                [
+                  "Видео уроци",
+                  "32"
+                ],
+                [
+                  "Живи срещи",
+                  "8"
+                ],
+                [
+                  "Сертификат",
+                  "✓"
+                ]
+              ],
+              "note": "Достъп до материалите завинаги."
+            }
+          },
+          "sections": [
+            {
+              "type": "timeline",
+              "id": "program",
+              "title": "Програма",
+              "items": [
+                [
+                  "Седмици 1–2",
+                  "Основи",
+                  "Понятията и инструментите, без които не може."
+                ],
+                [
+                  "Седмици 3–5",
+                  "Практика",
+                  "Всяка седмица — малък проект с обратна връзка."
+                ],
+                [
+                  "Седмици 6–8",
+                  "Финален проект",
+                  "Ваш собствен проект, който показвате в портфолио."
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "teacher",
+              "alt": true,
+              "title": "Преподавател",
+              "items": [
+                [
+                  "users",
+                  "Десислава Маринова",
+                  "10 години в индустрията, над 2 000 обучени студенти."
+                ],
+                [
+                  "star",
+                  "4,9 от 5",
+                  "Средна оценка от над 600 отзива."
+                ],
+                [
+                  "heart",
+                  "Малки групи",
+                  "До 20 души — всеки получава внимание."
+                ]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "plans",
+              "title": "Цени",
+              "items": [
+                {
+                  "name": "Самостоятелно",
+                  "price": "149 €",
+                  "features": [
+                    "Всички видео уроци",
+                    "Упражнения",
+                    "Сертификат"
+                  ],
+                  "cta": [
+                    "Запиши се",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "С ментор",
+                  "price": "349 €",
+                  "featured": "Препоръчан",
+                  "features": [
+                    "Всичко от „Самостоятелно“",
+                    "8 живи срещи",
+                    "Преглед на всеки проект"
+                  ],
+                  "cta": [
+                    "Запиши се",
+                    "/#contact"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "alt": true,
+              "title": "Въпроси",
+              "items": [
+                [
+                  "Нужен ли е опит?",
+                  "Не — започваме от нулата."
+                ],
+                [
+                  "Колко време седмично?",
+                  "Около 4–6 часа, в удобно за вас време."
+                ],
+                [
+                  "Ако не ми хареса?",
+                  "Връщаме парите до 14 дни след началото."
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "title": "Запиши се",
+              "intro": "Оставете имейл — ще получите безплатния първи урок веднага.",
+              "formName": "enroll",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "plan",
+                  "label": "План",
+                  "options": [
+                    "Самостоятелно",
+                    "С ментор"
+                  ]
+                }
+              ],
+              "messageLabel": "Въпрос (по избор)",
+              "send": "Запиши ме"
+            }
+          ]
+        }
+      }
+    },
+    "en": {
+      "tagline": "online course and school",
+      "description": "A practical online course with a mentor, homework and a certificate. The first lesson is free.",
+      "nav": [
+        [
+          "Program",
+          "/#program"
+        ],
+        [
+          "Teacher",
+          "/#teacher"
+        ],
+        [
+          "Pricing",
+          "/#plans"
+        ],
+        [
+          "FAQ",
+          "/#faq"
+        ]
+      ],
+      "headerCta": [
+        "Enrol",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Next cohort starts 3 November",
+            "eyebrowIcon": "calendar",
+            "title": "Learn something new *in 8 weeks*",
+            "lead": "A practical online course with live sessions, a mentor and a real project for your portfolio. The first lesson is free.",
+            "cta": [
+              "Enrol",
+              "/#contact"
+            ],
+            "cta2": [
+              "The program",
+              "/#program"
+            ],
+            "card": {
+              "icon": "book",
+              "title": "What you get",
+              "rows": [
+                [
+                  "Video lessons",
+                  "32"
+                ],
+                [
+                  "Live sessions",
+                  "8"
+                ],
+                [
+                  "Certificate",
+                  "✓"
+                ]
+              ],
+              "note": "Lifetime access to the materials."
+            }
+          },
+          "sections": [
+            {
+              "type": "timeline",
+              "id": "program",
+              "title": "Program",
+              "items": [
+                [
+                  "Weeks 1–2",
+                  "Foundations",
+                  "The concepts and tools you cannot do without."
+                ],
+                [
+                  "Weeks 3–5",
+                  "Practice",
+                  "A small project with feedback every week."
+                ],
+                [
+                  "Weeks 6–8",
+                  "Final project",
+                  "Your own project to show in your portfolio."
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "teacher",
+              "alt": true,
+              "title": "Your teacher",
+              "items": [
+                [
+                  "users",
+                  "Desislava Marinova",
+                  "10 years in the industry, over 2,000 students taught."
+                ],
+                [
+                  "star",
+                  "4.9 out of 5",
+                  "Average rating from over 600 reviews."
+                ],
+                [
+                  "heart",
+                  "Small groups",
+                  "Up to 20 people — everyone gets attention."
+                ]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "plans",
+              "title": "Pricing",
+              "items": [
+                {
+                  "name": "Self-paced",
+                  "price": "€149",
+                  "features": [
+                    "All video lessons",
+                    "Exercises",
+                    "Certificate"
+                  ],
+                  "cta": [
+                    "Enrol",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "With a mentor",
+                  "price": "€349",
+                  "featured": "Recommended",
+                  "features": [
+                    "Everything in Self-paced",
+                    "8 live sessions",
+                    "Review of every project"
+                  ],
+                  "cta": [
+                    "Enrol",
+                    "/#contact"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "alt": true,
+              "title": "FAQ",
+              "items": [
+                [
+                  "Do I need experience?",
+                  "No — we start from zero."
+                ],
+                [
+                  "How much time per week?",
+                  "About 4–6 hours, whenever suits you."
+                ],
+                [
+                  "What if I do not like it?",
+                  "Full refund within 14 days of the start."
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "title": "Enrol",
+              "intro": "Leave your email — the free first lesson arrives right away.",
+              "formName": "enroll",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "plan",
+                  "label": "Plan",
+                  "options": [
+                    "Self-paced",
+                    "With a mentor"
+                  ]
+                }
+              ],
+              "messageLabel": "Question (optional)",
+              "send": "Enrol me"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,626 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "services",
+  "category": "business",
+  "icon": "wrench.and.screwdriver",
+  "accent": "#ea580c",
+  "mark": "tools",
+  "featured": true,
+  "titleKey": "newsite.template.services.title",
+  "descriptionKey": "newsite.template.services.description",
+  "style": "calm",
+  "tokens": {
+    "dark": false,
+    "bg": "#fbfaf7",
+    "bg2": "#f3efe7",
+    "surface": "#ffffff",
+    "text": "#1c1917",
+    "muted": "#57534e",
+    "line": "rgba(15,23,42,.10)",
+    "accent": "#ea580c",
+    "accent2": "#f59e0b"
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "lang": {
+    "bg": {
+      "tagline": "ремонти и майсторски услуги",
+      "description": "Ремонти, монтаж и поддръжка на дома и офиса — с ясна цена и гаранция.",
+      "nav": [
+        [
+          "Услуги",
+          "/#services"
+        ],
+        [
+          "Цени",
+          "/prices.html"
+        ],
+        [
+          "Проекти",
+          "/#projects"
+        ],
+        [
+          "Контакт",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Обади се",
+        "tel:+359888000000"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Идваме още днес в София",
+            "eyebrowIcon": "clock",
+            "title": "Майстори, които *идват навреме*",
+            "lead": "ВиК, ел. инсталации, боядисване и дребни ремонти. Оглед и оферта без ангажимент, гаранция на всяка работа.",
+            "cta": [
+              "Заяви оглед",
+              "/#contact"
+            ],
+            "cta2": [
+              "Виж цените",
+              "/prices.html"
+            ],
+            "card": {
+              "icon": "tools",
+              "title": "Най-търсени днес",
+              "rows": [
+                [
+                  "Смяна на смесител",
+                  "от 45 лв."
+                ],
+                [
+                  "Контакт / ключ",
+                  "от 25 лв."
+                ],
+                [
+                  "Боядисване (м²)",
+                  "от 6 лв."
+                ]
+              ],
+              "note": "Цената е с труд, без материали."
+            }
+          },
+          "sections": [
+            {
+              "type": "cards",
+              "id": "services",
+              "title": "Услуги",
+              "intro": "Всичко за дома и офиса от един екип.",
+              "items": [
+                [
+                  "tools",
+                  "ВиК",
+                  "Течове, смесители, бойлери, отпушване."
+                ],
+                [
+                  "bolt",
+                  "Електро",
+                  "Контакти, осветление, табла, проверка на инсталацията."
+                ],
+                [
+                  "home",
+                  "Боядисване",
+                  "Шпакловка, латекс, декоративни покрития."
+                ],
+                [
+                  "key",
+                  "Монтаж",
+                  "Мебели, врати, щори, телевизори на стена."
+                ]
+              ]
+            },
+            {
+              "type": "gallery",
+              "id": "projects",
+              "alt": true,
+              "title": "Последни проекти",
+              "intro": "Сменете плочките с ваши снимки „преди и след“.",
+              "items": [
+                "Баня, Лозенец",
+                "Кухня, Младост",
+                "Офис, Център",
+                "Детска стая, Бояна",
+                "Тераса, Витоша",
+                "Антре, Изток"
+              ]
+            },
+            {
+              "type": "steps",
+              "title": "Как протича",
+              "items": [
+                [
+                  "Обаждане",
+                  "Описвате проблема, уговаряме час."
+                ],
+                [
+                  "Оглед",
+                  "Идваме, преценяваме и казваме цената на място."
+                ],
+                [
+                  "Ремонт",
+                  "Работим чисто и в срок."
+                ],
+                [
+                  "Гаранция",
+                  "Получавате протокол и 12 месеца гаранция."
+                ]
+              ]
+            },
+            {
+              "type": "faq",
+              "alt": true,
+              "title": "Чести въпроси",
+              "items": [
+                [
+                  "Колко струва огледът?",
+                  "В рамките на града огледът е безплатен, ако приемете офертата."
+                ],
+                [
+                  "Осигурявате ли материали?",
+                  "Да — купуваме ги по ваш избор и прилагаме касовите бележки."
+                ],
+                [
+                  "Работите ли в събота?",
+                  "Да, до 14:00. Спешни случаи — и в неделя."
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "title": "Заяви оглед",
+              "intro": "Опишете какво трябва да се направи — връщаме обаждане до час.",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Адрес",
+                  "ул. „Витоша“ 1, София"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "service",
+                  "label": "Услуга",
+                  "options": [
+                    "ВиК",
+                    "Електро",
+                    "Боядисване",
+                    "Монтаж",
+                    "Друго"
+                  ]
+                }
+              ],
+              "messageLabel": "Какво трябва да се направи",
+              "send": "Изпрати заявка",
+              "hoursTitle": "Работно време",
+              "hours": [
+                [
+                  "Понеделник – петък",
+                  "8:00 – 19:00"
+                ],
+                [
+                  "Събота",
+                  "9:00 – 14:00"
+                ],
+                [
+                  "Неделя",
+                  "само спешни"
+                ]
+              ]
+            }
+          ]
+        },
+        "prices": {
+          "title": "Цени и услуги",
+          "description": "Ориентировъчни цени за ремонти, монтаж и поддръжка — с включен труд.",
+          "pagehead": [
+            "Цени",
+            "Ориентировъчни цени с включен труд. Точната цена казваме след оглед."
+          ],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "ВиК",
+                  "items": [
+                    [
+                      "Смяна на смесител",
+                      "Демонтаж и монтаж, без материали",
+                      "45 лв."
+                    ],
+                    [
+                      "Отпушване на канал",
+                      "С машина до 10 м",
+                      "60 лв."
+                    ],
+                    [
+                      "Монтаж на бойлер",
+                      "До 80 л, със свързване",
+                      "90 лв."
+                    ]
+                  ]
+                },
+                {
+                  "name": "Електро",
+                  "items": [
+                    [
+                      "Контакт или ключ",
+                      "Смяна на съществуващ",
+                      "25 лв."
+                    ],
+                    [
+                      "Осветително тяло",
+                      "Монтаж и свързване",
+                      "35 лв."
+                    ],
+                    [
+                      "Проверка на инсталация",
+                      "С протокол",
+                      "80 лв."
+                    ]
+                  ]
+                },
+                {
+                  "name": "Боядисване",
+                  "items": [
+                    [
+                      "Латекс, две ръце",
+                      "На м², с покривни материали",
+                      "6 лв."
+                    ],
+                    [
+                      "Шпакловка",
+                      "На м², две ръце",
+                      "9 лв."
+                    ]
+                  ]
+                },
+                {
+                  "name": "Монтаж",
+                  "items": [
+                    [
+                      "Телевизор на стена",
+                      "До 65 инча",
+                      "50 лв."
+                    ],
+                    [
+                      "Сглобяване на мебел",
+                      "На час",
+                      "30 лв."
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Не намирате услугата?",
+              "p": "Обадете се — правим и неща, които ги няма в списъка.",
+              "button": [
+                "Обади се",
+                "tel:+359888000000"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "en": {
+      "tagline": "home repairs and handyman services",
+      "description": "Repairs, installation and maintenance for homes and offices — clear prices and a warranty.",
+      "nav": [
+        [
+          "Services",
+          "/#services"
+        ],
+        [
+          "Prices",
+          "/prices.html"
+        ],
+        [
+          "Projects",
+          "/#projects"
+        ],
+        [
+          "Contact",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Call us",
+        "tel:+359888000000"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Same-day visits in the city",
+            "eyebrowIcon": "clock",
+            "title": "Handymen who *show up on time*",
+            "lead": "Plumbing, electrics, painting and small repairs. Free inspection and quote, and a warranty on every job.",
+            "cta": [
+              "Book a visit",
+              "/#contact"
+            ],
+            "cta2": [
+              "See prices",
+              "/prices.html"
+            ],
+            "card": {
+              "icon": "tools",
+              "title": "Most requested today",
+              "rows": [
+                [
+                  "New tap",
+                  "from €25"
+                ],
+                [
+                  "Socket / switch",
+                  "from €15"
+                ],
+                [
+                  "Painting (m²)",
+                  "from €3"
+                ]
+              ],
+              "note": "Labour only, materials extra."
+            }
+          },
+          "sections": [
+            {
+              "type": "cards",
+              "id": "services",
+              "title": "Services",
+              "intro": "Everything for your home and office from one team.",
+              "items": [
+                [
+                  "tools",
+                  "Plumbing",
+                  "Leaks, taps, water heaters, drains."
+                ],
+                [
+                  "bolt",
+                  "Electrics",
+                  "Sockets, lighting, panels, safety checks."
+                ],
+                [
+                  "home",
+                  "Painting",
+                  "Filling, emulsion, decorative finishes."
+                ],
+                [
+                  "key",
+                  "Installation",
+                  "Furniture, doors, blinds, wall-mounted TVs."
+                ]
+              ]
+            },
+            {
+              "type": "gallery",
+              "id": "projects",
+              "alt": true,
+              "title": "Recent projects",
+              "intro": "Replace the tiles with your own before-and-after photos.",
+              "items": [
+                "Bathroom, Lozenets",
+                "Kitchen, Mladost",
+                "Office, City centre",
+                "Kids room, Boyana",
+                "Terrace, Vitosha",
+                "Hallway, Iztok"
+              ]
+            },
+            {
+              "type": "steps",
+              "title": "How it works",
+              "items": [
+                [
+                  "Call",
+                  "Describe the problem, we book a time."
+                ],
+                [
+                  "Inspection",
+                  "We come, assess and price it on the spot."
+                ],
+                [
+                  "Repair",
+                  "Clean, on-time work."
+                ],
+                [
+                  "Warranty",
+                  "You get a report and a 12-month warranty."
+                ]
+              ]
+            },
+            {
+              "type": "faq",
+              "alt": true,
+              "title": "FAQ",
+              "items": [
+                [
+                  "How much is an inspection?",
+                  "Within the city it is free if you accept the quote."
+                ],
+                [
+                  "Do you supply materials?",
+                  "Yes — we buy what you choose and hand over the receipts."
+                ],
+                [
+                  "Do you work on Saturdays?",
+                  "Yes, until 14:00. Emergencies on Sundays too."
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "title": "Book a visit",
+              "intro": "Tell us what needs doing — we call back within an hour.",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Address",
+                  "1 Vitosha St, Sofia"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "service",
+                  "label": "Service",
+                  "options": [
+                    "Plumbing",
+                    "Electrics",
+                    "Painting",
+                    "Installation",
+                    "Other"
+                  ]
+                }
+              ],
+              "messageLabel": "What needs doing",
+              "send": "Send request",
+              "hoursTitle": "Opening hours",
+              "hours": [
+                [
+                  "Monday – Friday",
+                  "8:00 – 19:00"
+                ],
+                [
+                  "Saturday",
+                  "9:00 – 14:00"
+                ],
+                [
+                  "Sunday",
+                  "emergencies only"
+                ]
+              ]
+            }
+          ]
+        },
+        "prices": {
+          "title": "Prices and services",
+          "description": "Guide prices for repairs, installation and maintenance, labour included.",
+          "pagehead": [
+            "Prices",
+            "Guide prices, labour included. We confirm the exact price after an inspection."
+          ],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Plumbing",
+                  "items": [
+                    [
+                      "New tap",
+                      "Remove and fit, materials extra",
+                      "€25"
+                    ],
+                    [
+                      "Drain unblocking",
+                      "Machine, up to 10 m",
+                      "€30"
+                    ],
+                    [
+                      "Water heater",
+                      "Up to 80 l, connected",
+                      "€45"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Electrics",
+                  "items": [
+                    [
+                      "Socket or switch",
+                      "Replace existing",
+                      "€15"
+                    ],
+                    [
+                      "Light fitting",
+                      "Fit and connect",
+                      "€20"
+                    ],
+                    [
+                      "Installation check",
+                      "With a report",
+                      "€40"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Painting",
+                  "items": [
+                    [
+                      "Emulsion, two coats",
+                      "Per m², covers included",
+                      "€3"
+                    ],
+                    [
+                      "Filling",
+                      "Per m², two coats",
+                      "€5"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Installation",
+                  "items": [
+                    [
+                      "TV wall mount",
+                      "Up to 65 inch",
+                      "€25"
+                    ],
+                    [
+                      "Furniture assembly",
+                      "Per hour",
+                      "€15"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Can’t find the service?",
+              "p": "Call us — we do plenty of things that are not on the list.",
+              "button": [
+                "Call us",
+                "tel:+359888000000"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

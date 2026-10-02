@@ -1,0 +1,158 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "comingsoon",
+  "category": "business",
+  "icon": "hourglass",
+  "accent": "#a855f7",
+  "mark": "rocket",
+  "featured": true,
+  "titleKey": "newsite.template.comingsoon.title",
+  "descriptionKey": "newsite.template.comingsoon.description",
+  "style": "bold",
+  "tokens": {
+    "dark": true,
+    "bg": "#0a0a12",
+    "bg2": "#11111c",
+    "surface": "#15152a",
+    "text": "#eef0f7",
+    "muted": "#a3abc2",
+    "line": "rgba(255,255,255,.09)",
+    "accent": "#a855f7",
+    "accent2": "#ec4899"
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "lang": {
+    "bg": {
+      "tagline": "скоро отваряме",
+      "description": "Нещо ново идва скоро. Оставете имейл и ще ви пишем първи.",
+      "nav": [
+        [
+          "Какво идва",
+          "/#what"
+        ],
+        [
+          "Абонирай се",
+          "/#notify"
+        ]
+      ],
+      "headerCta": null,
+      "pages": {
+        "index": {
+          "hero": {
+            "center": true,
+            "eyebrow": "Стартираме тази есен",
+            "eyebrowIcon": "rocket",
+            "title": "Нещо ново *идва скоро*",
+            "lead": "Работим по последните детайли. Оставете имейл — ще ви пишем веднъж, в деня на старта, с отстъпка за първите 100.",
+            "cta": [
+              "Искам покана",
+              "/#notify"
+            ]
+          },
+          "sections": [
+            {
+              "type": "cards",
+              "id": "what",
+              "title": "Какво да очаквате",
+              "items": [
+                [
+                  "spark",
+                  "Нов подход",
+                  "Едно изречение за това какво ще е различното."
+                ],
+                [
+                  "heart",
+                  "Направено с грижа",
+                  "Защо го правите и за кого."
+                ],
+                [
+                  "gift",
+                  "Подарък за първите",
+                  "Отстъпка или бонус за абонатите."
+                ]
+              ]
+            },
+            {
+              "type": "form",
+              "id": "notify",
+              "alt": true,
+              "title": "Бъдете първи",
+              "intro": "Един имейл в деня на старта. Без спам.",
+              "formName": "notify",
+              "button": "Абонирай ме",
+              "note": "Можете да се отпишете с един клик."
+            }
+          ]
+        }
+      }
+    },
+    "en": {
+      "tagline": "launching soon",
+      "description": "Something new is coming soon. Leave your email and hear about it first.",
+      "nav": [
+        [
+          "What’s coming",
+          "/#what"
+        ],
+        [
+          "Get notified",
+          "/#notify"
+        ]
+      ],
+      "headerCta": null,
+      "pages": {
+        "index": {
+          "hero": {
+            "center": true,
+            "eyebrow": "Launching this autumn",
+            "eyebrowIcon": "rocket",
+            "title": "Something new is *coming soon*",
+            "lead": "We are polishing the last details. Leave your email — we write once, on launch day, with a discount for the first 100.",
+            "cta": [
+              "Get an invite",
+              "/#notify"
+            ]
+          },
+          "sections": [
+            {
+              "type": "cards",
+              "id": "what",
+              "title": "What to expect",
+              "items": [
+                [
+                  "spark",
+                  "A fresh approach",
+                  "One sentence on what will be different."
+                ],
+                [
+                  "heart",
+                  "Made with care",
+                  "Why you are building it and for whom."
+                ],
+                [
+                  "gift",
+                  "A gift for early birds",
+                  "A discount or bonus for subscribers."
+                ]
+              ]
+            },
+            {
+              "type": "form",
+              "id": "notify",
+              "alt": true,
+              "title": "Be the first",
+              "intro": "One email on launch day. No spam.",
+              "formName": "notify",
+              "button": "Notify me",
+              "note": "Unsubscribe with one click."
+            }
+          ]
+        }
+      }
+    }
+  }
+}

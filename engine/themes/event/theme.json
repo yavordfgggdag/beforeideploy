@@ -1,0 +1,537 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "event",
+  "category": "community",
+  "icon": "ticket",
+  "accent": "#f43f5e",
+  "mark": "mic",
+  "featured": true,
+  "titleKey": "newsite.template.event.title",
+  "descriptionKey": "newsite.template.event.description",
+  "style": "bold",
+  "tokens": {
+    "dark": true,
+    "bg": "#0b1020",
+    "bg2": "#10172b",
+    "surface": "#151d36",
+    "text": "#eef0f7",
+    "muted": "#a3abc2",
+    "line": "rgba(255,255,255,.09)",
+    "accent": "#f43f5e",
+    "accent2": "#8b5cf6",
+    "radius": 16
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "lang": {
+    "bg": {
+      "tagline": "конференция 2026",
+      "description": "Един ден, 20 лектори и 500 участници. Вземете билет, докато има ранни цени.",
+      "nav": [
+        [
+          "Програма",
+          "/#schedule"
+        ],
+        [
+          "Лектори",
+          "/#speakers"
+        ],
+        [
+          "Билети",
+          "/#tickets"
+        ],
+        [
+          "Въпроси",
+          "/#faq"
+        ]
+      ],
+      "headerCta": [
+        "Вземи билет",
+        "/#tickets"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "14 ноември · София",
+            "eyebrowIcon": "calendar",
+            "title": "Един ден, който *променя посоката*",
+            "lead": "20 лектори, 3 сцени и 500 души, които правят интересни неща. Лекции, работилници и много разговори.",
+            "cta": [
+              "Вземи билет",
+              "/#tickets"
+            ],
+            "cta2": [
+              "Програмата",
+              "/#schedule"
+            ],
+            "card": {
+              "icon": "calendar",
+              "title": "Ранни билети",
+              "rows": [
+                [
+                  "Остават",
+                  "87 от 200"
+                ],
+                [
+                  "Цена",
+                  "89 € → 129 €"
+                ],
+                [
+                  "До",
+                  "31 октомври"
+                ]
+              ],
+              "note": "Цената се вдига след ранния период."
+            }
+          },
+          "sections": [
+            {
+              "type": "stats",
+              "items": [
+                [
+                  "20",
+                  "лектори"
+                ],
+                [
+                  "3",
+                  "сцени"
+                ],
+                [
+                  "500",
+                  "участници"
+                ],
+                [
+                  "12",
+                  "работилници"
+                ]
+              ]
+            },
+            {
+              "type": "timeline",
+              "id": "schedule",
+              "alt": true,
+              "title": "Програма",
+              "items": [
+                [
+                  "9:00",
+                  "Регистрация и кафе",
+                  "Вземете бадж и намерете познати."
+                ],
+                [
+                  "10:00",
+                  "Откриване",
+                  "Защо сме тук и какво следва."
+                ],
+                [
+                  "11:00",
+                  "Лекции на три сцени",
+                  "Технологии, дизайн и бизнес."
+                ],
+                [
+                  "14:00",
+                  "Работилници",
+                  "Практика в малки групи."
+                ],
+                [
+                  "18:00",
+                  "Парти",
+                  "Музика, храна и нетуъркинг."
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "speakers",
+              "title": "Лектори",
+              "intro": "Сменете с имената и снимките на лекторите.",
+              "items": [
+                [
+                  "mic",
+                  "Анна Георгиева",
+                  "Продуктов директор · за растежа без хаос."
+                ],
+                [
+                  "mic",
+                  "Иван Петков",
+                  "Основател · от гараж до 100 служители."
+                ],
+                [
+                  "mic",
+                  "Мария Стоянова",
+                  "Дизайнер · как се прави продукт, който се обича."
+                ]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "tickets",
+              "alt": true,
+              "title": "Билети",
+              "items": [
+                {
+                  "name": "Стандартен",
+                  "price": "89 €",
+                  "per": "ранна цена",
+                  "features": [
+                    "Всички лекции",
+                    "Обяд и кафе",
+                    "Записи след събитието"
+                  ],
+                  "cta": [
+                    "Купи",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "VIP",
+                  "price": "199 €",
+                  "per": "ранна цена",
+                  "featured": "Ограничени",
+                  "features": [
+                    "Всичко от стандартния",
+                    "Вечеря с лекторите",
+                    "Места на първите редове"
+                  ],
+                  "cta": [
+                    "Купи",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Екип (5+)",
+                  "price": "75 €",
+                  "per": "/ човек",
+                  "features": [
+                    "Отстъпка за групи",
+                    "Една фактура",
+                    "Лого на стената на партньорите"
+                  ],
+                  "cta": [
+                    "Запитване",
+                    "/#contact"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Въпроси",
+              "items": [
+                [
+                  "Мога ли да върна билета?",
+                  "Да, до 14 дни преди събитието — или да го прехвърлите на колега."
+                ],
+                [
+                  "Ще има ли записи?",
+                  "Да, всички лекции се записват и се пращат на участниците."
+                ],
+                [
+                  "Къде е?",
+                  "В конгресен център в центъра на София, на 5 минути от метро."
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Билети и партньорства",
+              "intro": "Пишете ни за групови билети, спонсорство или участие като лектор.",
+              "formName": "tickets",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Адрес",
+                  "ул. „Витоша“ 1, София"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "ticket",
+                  "label": "Билет",
+                  "options": [
+                    "Стандартен",
+                    "VIP",
+                    "Екип (5+)",
+                    "Партньорство"
+                  ]
+                }
+              ],
+              "messageLabel": "Съобщение",
+              "send": "Изпрати"
+            }
+          ]
+        }
+      }
+    },
+    "en": {
+      "tagline": "conference 2026",
+      "description": "One day, 20 speakers and 500 attendees. Get your ticket while early prices last.",
+      "nav": [
+        [
+          "Schedule",
+          "/#schedule"
+        ],
+        [
+          "Speakers",
+          "/#speakers"
+        ],
+        [
+          "Tickets",
+          "/#tickets"
+        ],
+        [
+          "FAQ",
+          "/#faq"
+        ]
+      ],
+      "headerCta": [
+        "Get a ticket",
+        "/#tickets"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "14 November · Sofia",
+            "eyebrowIcon": "calendar",
+            "title": "One day that *changes direction*",
+            "lead": "20 speakers, 3 stages and 500 people doing interesting things. Talks, workshops and plenty of conversations.",
+            "cta": [
+              "Get a ticket",
+              "/#tickets"
+            ],
+            "cta2": [
+              "The schedule",
+              "/#schedule"
+            ],
+            "card": {
+              "icon": "calendar",
+              "title": "Early-bird tickets",
+              "rows": [
+                [
+                  "Left",
+                  "87 of 200"
+                ],
+                [
+                  "Price",
+                  "€89 → €129"
+                ],
+                [
+                  "Until",
+                  "31 October"
+                ]
+              ],
+              "note": "The price goes up after the early period."
+            }
+          },
+          "sections": [
+            {
+              "type": "stats",
+              "items": [
+                [
+                  "20",
+                  "speakers"
+                ],
+                [
+                  "3",
+                  "stages"
+                ],
+                [
+                  "500",
+                  "attendees"
+                ],
+                [
+                  "12",
+                  "workshops"
+                ]
+              ]
+            },
+            {
+              "type": "timeline",
+              "id": "schedule",
+              "alt": true,
+              "title": "Schedule",
+              "items": [
+                [
+                  "9:00",
+                  "Registration and coffee",
+                  "Pick up your badge and find friends."
+                ],
+                [
+                  "10:00",
+                  "Opening",
+                  "Why we are here and what comes next."
+                ],
+                [
+                  "11:00",
+                  "Talks on three stages",
+                  "Tech, design and business."
+                ],
+                [
+                  "14:00",
+                  "Workshops",
+                  "Hands-on in small groups."
+                ],
+                [
+                  "18:00",
+                  "Party",
+                  "Music, food and networking."
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "speakers",
+              "title": "Speakers",
+              "intro": "Replace with your speakers’ names and photos.",
+              "items": [
+                [
+                  "mic",
+                  "Anna Georgieva",
+                  "Chief product officer · growth without chaos."
+                ],
+                [
+                  "mic",
+                  "Ivan Petkov",
+                  "Founder · from a garage to 100 people."
+                ],
+                [
+                  "mic",
+                  "Maria Stoyanova",
+                  "Designer · building products people love."
+                ]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "tickets",
+              "alt": true,
+              "title": "Tickets",
+              "items": [
+                {
+                  "name": "Standard",
+                  "price": "€89",
+                  "per": "early bird",
+                  "features": [
+                    "All talks",
+                    "Lunch and coffee",
+                    "Recordings afterwards"
+                  ],
+                  "cta": [
+                    "Buy",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "VIP",
+                  "price": "€199",
+                  "per": "early bird",
+                  "featured": "Limited",
+                  "features": [
+                    "Everything in Standard",
+                    "Dinner with the speakers",
+                    "Front-row seats"
+                  ],
+                  "cta": [
+                    "Buy",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Team (5+)",
+                  "price": "€75",
+                  "per": "/ person",
+                  "features": [
+                    "Group discount",
+                    "One invoice",
+                    "Logo on the partners wall"
+                  ],
+                  "cta": [
+                    "Enquire",
+                    "/#contact"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "FAQ",
+              "items": [
+                [
+                  "Can I get a refund?",
+                  "Yes, up to 14 days before the event — or transfer it to a colleague."
+                ],
+                [
+                  "Will there be recordings?",
+                  "Yes, every talk is recorded and sent to attendees."
+                ],
+                [
+                  "Where is it?",
+                  "A congress centre in central Sofia, 5 minutes from the metro."
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Tickets and partnerships",
+              "intro": "Write to us about group tickets, sponsorship or speaking.",
+              "formName": "tickets",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Address",
+                  "1 Vitosha St, Sofia"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "ticket",
+                  "label": "Ticket",
+                  "options": [
+                    "Standard",
+                    "VIP",
+                    "Team (5+)",
+                    "Partnership"
+                  ]
+                }
+              ],
+              "messageLabel": "Message",
+              "send": "Send"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

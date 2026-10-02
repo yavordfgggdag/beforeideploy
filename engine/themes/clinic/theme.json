@@ -1,0 +1,510 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "clinic",
+  "category": "beauty",
+  "icon": "cross.case",
+  "accent": "#0284c7",
+  "mark": "tooth",
+  "featured": false,
+  "titleKey": "newsite.template.clinic.title",
+  "descriptionKey": "newsite.template.clinic.description",
+  "style": "calm",
+  "tokens": {
+    "dark": false,
+    "bg": "#f6fafd",
+    "bg2": "#eaf3f9",
+    "surface": "#ffffff",
+    "text": "#0f2436",
+    "muted": "#4f6475",
+    "line": "rgba(15,23,42,.10)",
+    "accent": "#0284c7",
+    "accent2": "#06b6d4",
+    "font": "rounded",
+    "radius": 18
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "lang": {
+    "bg": {
+      "tagline": "дентален и медицински център",
+      "description": "Профилактика, лечение и естетика с модерна апаратура. Запишете час онлайн.",
+      "nav": [
+        [
+          "Услуги",
+          "/#services"
+        ],
+        [
+          "Лекари",
+          "/team.html"
+        ],
+        [
+          "Въпроси",
+          "/#faq"
+        ],
+        [
+          "Час",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Запиши час",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Приемаме нови пациенти",
+            "eyebrowIcon": "shield",
+            "title": "Грижа, която *не боли*",
+            "lead": "Профилактика, лечение и естетична дентална медицина с внимание към всеки детайл — и към вашето спокойствие.",
+            "cta": [
+              "Запиши час",
+              "/#contact"
+            ],
+            "cta2": [
+              "Нашите лекари",
+              "/team.html"
+            ],
+            "card": {
+              "icon": "calendar",
+              "title": "Най-близки свободни часове",
+              "rows": [
+                [
+                  "Утре, 9:30",
+                  "Преглед"
+                ],
+                [
+                  "Утре, 15:00",
+                  "Почистване"
+                ],
+                [
+                  "Петък, 11:00",
+                  "Консултация"
+                ]
+              ],
+              "note": "Работим с НЗОК и частни фондове."
+            }
+          },
+          "sections": [
+            {
+              "type": "cards",
+              "id": "services",
+              "title": "Услуги",
+              "items": [
+                [
+                  "shield",
+                  "Профилактика",
+                  "Преглед, почистване на зъбен камък, полиране."
+                ],
+                [
+                  "tooth",
+                  "Лечение",
+                  "Пломби, ендодонтия, лечение на венци."
+                ],
+                [
+                  "star",
+                  "Естетика",
+                  "Избелване, фасети, невидими шини."
+                ],
+                [
+                  "users",
+                  "Детска дентална медицина",
+                  "Спокоен първи преглед и профилактика за децата."
+                ]
+              ]
+            },
+            {
+              "type": "stats",
+              "alt": true,
+              "items": [
+                [
+                  "15 000+",
+                  "доволни пациенти"
+                ],
+                [
+                  "9",
+                  "специалисти"
+                ],
+                [
+                  "1 ден",
+                  "до първи преглед"
+                ],
+                [
+                  "0 лв.",
+                  "консултация за деца"
+                ]
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Чести въпроси",
+              "items": [
+                [
+                  "Работите ли с НЗОК?",
+                  "Да — за прегледи и част от лечението. Кажете ни при записване."
+                ],
+                [
+                  "Боли ли?",
+                  "Използваме съвременна локална анестезия. Повечето процедури са напълно безболезнени."
+                ],
+                [
+                  "Може ли на изплащане?",
+                  "Да, за лечения над 500 лв. — без оскъпяване."
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Запиши час",
+              "intro": "Ще ви се обадим, за да потвърдим часа.",
+              "formName": "appointment",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Адрес",
+                  "ул. „Витоша“ 1, София"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "phone",
+                  "label": "Телефон",
+                  "type": "tel"
+                },
+                {
+                  "id": "reason",
+                  "label": "Повод",
+                  "options": [
+                    "Преглед",
+                    "Болка",
+                    "Почистване",
+                    "Естетика",
+                    "Друго"
+                  ]
+                }
+              ],
+              "messageLabel": "Кратко описание (по избор)",
+              "send": "Запиши час",
+              "hoursTitle": "Работно време",
+              "hours": [
+                [
+                  "Понеделник – петък",
+                  "8:00 – 20:00"
+                ],
+                [
+                  "Събота",
+                  "9:00 – 14:00"
+                ],
+                [
+                  "Неделя",
+                  "затворено"
+                ]
+              ]
+            }
+          ]
+        },
+        "team": {
+          "title": "Нашите лекари",
+          "description": "Запознайте се с лекарите и специалистите в центъра.",
+          "pagehead": [
+            "Нашите лекари",
+            "Специалисти с дългогодишен опит и постоянно обучение."
+          ],
+          "sections": [
+            {
+              "type": "cards",
+              "items": [
+                [
+                  "tooth",
+                  "Д-р Анна Николова",
+                  "Главен лекар, естетична дентална медицина. 18 години опит."
+                ],
+                [
+                  "shield",
+                  "Д-р Петър Стоянов",
+                  "Ендодонтия и микроскопско лечение на канали."
+                ],
+                [
+                  "users",
+                  "Д-р Елица Василева",
+                  "Детска дентална медицина — търпение и усмивки."
+                ],
+                [
+                  "star",
+                  "Д-р Мартин Колев",
+                  "Имплантология и хирургия."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Първи преглед?",
+              "p": "Запишете се — ще ви разкажем за плана и цената, преди да започнем.",
+              "button": [
+                "Запиши час",
+                "/#contact"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "en": {
+      "tagline": "dental and medical centre",
+      "description": "Prevention, treatment and aesthetics with modern equipment. Book online.",
+      "nav": [
+        [
+          "Services",
+          "/#services"
+        ],
+        [
+          "Doctors",
+          "/team.html"
+        ],
+        [
+          "FAQ",
+          "/#faq"
+        ],
+        [
+          "Book",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Book a visit",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Accepting new patients",
+            "eyebrowIcon": "shield",
+            "title": "Care that *doesn’t hurt*",
+            "lead": "Prevention, treatment and cosmetic dentistry with attention to every detail — and to your peace of mind.",
+            "cta": [
+              "Book a visit",
+              "/#contact"
+            ],
+            "cta2": [
+              "Our doctors",
+              "/team.html"
+            ],
+            "card": {
+              "icon": "calendar",
+              "title": "Next free slots",
+              "rows": [
+                [
+                  "Tomorrow, 9:30",
+                  "Check-up"
+                ],
+                [
+                  "Tomorrow, 15:00",
+                  "Cleaning"
+                ],
+                [
+                  "Friday, 11:00",
+                  "Consultation"
+                ]
+              ],
+              "note": "We work with major insurers."
+            }
+          },
+          "sections": [
+            {
+              "type": "cards",
+              "id": "services",
+              "title": "Services",
+              "items": [
+                [
+                  "shield",
+                  "Prevention",
+                  "Check-up, scaling and polishing."
+                ],
+                [
+                  "tooth",
+                  "Treatment",
+                  "Fillings, root canals, gum treatment."
+                ],
+                [
+                  "star",
+                  "Aesthetics",
+                  "Whitening, veneers, clear aligners."
+                ],
+                [
+                  "users",
+                  "Children’s dentistry",
+                  "A calm first visit and prevention for kids."
+                ]
+              ]
+            },
+            {
+              "type": "stats",
+              "alt": true,
+              "items": [
+                [
+                  "15,000+",
+                  "happy patients"
+                ],
+                [
+                  "9",
+                  "specialists"
+                ],
+                [
+                  "1 day",
+                  "to your first visit"
+                ],
+                [
+                  "Free",
+                  "consultation for kids"
+                ]
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "FAQ",
+              "items": [
+                [
+                  "Do you accept insurance?",
+                  "Yes — for check-ups and much of the treatment. Tell us when you book."
+                ],
+                [
+                  "Will it hurt?",
+                  "We use modern local anaesthesia. Most procedures are completely painless."
+                ],
+                [
+                  "Can I pay in instalments?",
+                  "Yes, for treatment over €250 — at no extra cost."
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Book a visit",
+              "intro": "We will call you to confirm the time.",
+              "formName": "appointment",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Address",
+                  "1 Vitosha St, Sofia"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "phone",
+                  "label": "Phone",
+                  "type": "tel"
+                },
+                {
+                  "id": "reason",
+                  "label": "Reason",
+                  "options": [
+                    "Check-up",
+                    "Pain",
+                    "Cleaning",
+                    "Aesthetics",
+                    "Other"
+                  ]
+                }
+              ],
+              "messageLabel": "Short description (optional)",
+              "send": "Book a visit",
+              "hoursTitle": "Opening hours",
+              "hours": [
+                [
+                  "Monday – Friday",
+                  "8:00 – 20:00"
+                ],
+                [
+                  "Saturday",
+                  "9:00 – 14:00"
+                ],
+                [
+                  "Sunday",
+                  "closed"
+                ]
+              ]
+            }
+          ]
+        },
+        "team": {
+          "title": "Our doctors",
+          "description": "Meet the doctors and specialists at the centre.",
+          "pagehead": [
+            "Our doctors",
+            "Specialists with years of experience and ongoing training."
+          ],
+          "sections": [
+            {
+              "type": "cards",
+              "items": [
+                [
+                  "tooth",
+                  "Dr Anna Nikolova",
+                  "Head doctor, cosmetic dentistry. 18 years of experience."
+                ],
+                [
+                  "shield",
+                  "Dr Peter Stoyanov",
+                  "Endodontics and microscope root-canal treatment."
+                ],
+                [
+                  "users",
+                  "Dr Elitsa Vasileva",
+                  "Children’s dentistry — patience and smiles."
+                ],
+                [
+                  "star",
+                  "Dr Martin Kolev",
+                  "Implants and oral surgery."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "First visit?",
+              "p": "Book now — we explain the plan and the price before we start.",
+              "button": [
+                "Book a visit",
+                "/#contact"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

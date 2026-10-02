@@ -1,0 +1,486 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "portfolio",
+  "category": "personal",
+  "icon": "rectangle.3.group",
+  "accent": "#ff5a36",
+  "mark": "camera",
+  "featured": true,
+  "titleKey": "newsite.template.portfolio.title",
+  "descriptionKey": "newsite.template.portfolio.description",
+  "style": "calm",
+  "tokens": {
+    "dark": false,
+    "bg": "#fafaf8",
+    "bg2": "#f1f0ec",
+    "surface": "#ffffff",
+    "text": "#141414",
+    "muted": "#5c5c5c",
+    "line": "rgba(15,23,42,.10)",
+    "accent": "#ff5a36",
+    "accent2": "#ff9f1c",
+    "radius": 12,
+    "tilt": 0
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "lang": {
+    "bg": {
+      "tagline": "дизайн и визуални истории",
+      "description": "Портфолио с избрани проекти, процес на работа и контакт за нови поръчки.",
+      "nav": [
+        [
+          "Работи",
+          "/work.html"
+        ],
+        [
+          "За мен",
+          "/about.html"
+        ],
+        [
+          "Контакт",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Нов проект",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Свободен за проекти от ноември",
+            "eyebrowIcon": "spark",
+            "title": "Създавам визия, *която продава*",
+            "lead": "Бранд идентичност, уеб дизайн и фотография за малки бизнеси и смели идеи.",
+            "cta": [
+              "Виж работите",
+              "/work.html"
+            ],
+            "cta2": [
+              "Нов проект",
+              "/#contact"
+            ]
+          },
+          "sections": [
+            {
+              "type": "gallery",
+              "title": "Избрани проекти",
+              "intro": "Сменете плочките с корици на проектите си.",
+              "items": [
+                "Кафе „Зрънце“ — бранд",
+                "Studio North — уебсайт",
+                "Винарна „Хълм“ — етикети",
+                "Ателие „Лен“ — фотография",
+                "Фестивал „Звук“ — плакати",
+                "Приложение „Ден“ — UI"
+              ]
+            },
+            {
+              "type": "cards",
+              "alt": true,
+              "title": "Услуги",
+              "items": [
+                [
+                  "spark",
+                  "Бранд идентичност",
+                  "Лого, цветове, шрифтове и правила за употреба."
+                ],
+                [
+                  "globe",
+                  "Уеб дизайн",
+                  "Сайтове, които изглеждат добре и носят запитвания."
+                ],
+                [
+                  "camera",
+                  "Фотография",
+                  "Продукти, хора и пространства."
+                ]
+              ]
+            },
+            {
+              "type": "quotes",
+              "title": "Клиентите казват",
+              "items": [
+                [
+                  "„Разбра бизнеса ни по-добре от нас самите.“",
+                  "Мила, кафе „Зрънце“"
+                ],
+                [
+                  "„Сайтът удвои запитванията за два месеца.“",
+                  "Studio North"
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Да работим заедно",
+              "intro": "Разкажете за проекта — отговарям до два дни.",
+              "formName": "project",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "budget",
+                  "label": "Бюджет",
+                  "options": [
+                    "до 1 000 €",
+                    "1 000 – 3 000 €",
+                    "3 000 – 8 000 €",
+                    "над 8 000 €"
+                  ]
+                }
+              ],
+              "messageLabel": "За проекта",
+              "send": "Изпрати"
+            }
+          ]
+        },
+        "work": {
+          "title": "Работи и проекти",
+          "description": "Избрани проекти: бранд идентичност, уеб дизайн и фотография.",
+          "pagehead": [
+            "Работи",
+            "Всеки проект започва с въпрос — ето как отговорихме."
+          ],
+          "sections": [
+            {
+              "type": "posts",
+              "items": [
+                {
+                  "tag": "Бранд",
+                  "date": "2026",
+                  "h": "Кафе „Зрънце“",
+                  "p": "Нова идентичност за квартално кафе — от логото до чашите.",
+                  "href": "/#contact"
+                },
+                {
+                  "tag": "Уеб",
+                  "date": "2026",
+                  "h": "Studio North",
+                  "p": "Сайт за архитектурно студио, който удвои запитванията.",
+                  "href": "/#contact"
+                },
+                {
+                  "tag": "Опаковка",
+                  "date": "2025",
+                  "h": "Винарна „Хълм“",
+                  "p": "Серия етикети, вдъхновени от терените на лозята.",
+                  "href": "/#contact"
+                },
+                {
+                  "tag": "Фото",
+                  "date": "2025",
+                  "h": "Ателие „Лен“",
+                  "p": "Продуктова фотография за онлайн каталог.",
+                  "href": "/#contact"
+                }
+              ]
+            }
+          ]
+        },
+        "about": {
+          "title": "За мен и процеса",
+          "description": "Кой стои зад портфолиото, как работя и с какви инструменти.",
+          "pagehead": [
+            "За мен",
+            "Дизайнер с 10 години опит в агенции и с малки бизнеси."
+          ],
+          "sections": [
+            {
+              "type": "prose",
+              "items": [
+                [
+                  "",
+                  "Разкажете с няколко изречения кой сте, какво обичате да правите и защо клиентите работят с вас. Истинското име и снимка изграждат доверие."
+                ],
+                [
+                  "Как работя",
+                  "Започвам с разговор и кратко проучване, после предлагам две посоки, избираме една и я довеждаме до край. Без изненади в цената."
+                ]
+              ]
+            },
+            {
+              "type": "timeline",
+              "alt": true,
+              "title": "Опит",
+              "items": [
+                [
+                  "2021 — днес",
+                  "Свободна практика",
+                  "Бранд и уеб за над 60 клиента."
+                ],
+                [
+                  "2017 — 2021",
+                  "Арт директор, агенция",
+                  "Кампании за национални марки."
+                ],
+                [
+                  "2015 — 2017",
+                  "Дизайнер",
+                  "Печат, опаковки и илюстрация."
+                ]
+              ]
+            },
+            {
+              "type": "chips",
+              "title": "Инструменти",
+              "items": [
+                "Figma",
+                "Illustrator",
+                "Photoshop",
+                "Lightroom",
+                "Webflow",
+                "HTML и CSS"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "en": {
+      "tagline": "design and visual stories",
+      "description": "A portfolio of selected projects, the process and a way to start a new one.",
+      "nav": [
+        [
+          "Work",
+          "/work.html"
+        ],
+        [
+          "About",
+          "/about.html"
+        ],
+        [
+          "Contact",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "New project",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Available for projects from November",
+            "eyebrowIcon": "spark",
+            "title": "I create visuals *that sell*",
+            "lead": "Brand identity, web design and photography for small businesses and bold ideas.",
+            "cta": [
+              "See the work",
+              "/work.html"
+            ],
+            "cta2": [
+              "New project",
+              "/#contact"
+            ]
+          },
+          "sections": [
+            {
+              "type": "gallery",
+              "title": "Selected projects",
+              "intro": "Replace the tiles with your project covers.",
+              "items": [
+                "Zrantse Coffee — brand",
+                "Studio North — website",
+                "Halm Winery — labels",
+                "Len Atelier — photography",
+                "Zvuk Festival — posters",
+                "Den App — UI"
+              ]
+            },
+            {
+              "type": "cards",
+              "alt": true,
+              "title": "Services",
+              "items": [
+                [
+                  "spark",
+                  "Brand identity",
+                  "Logo, colours, typefaces and usage rules."
+                ],
+                [
+                  "globe",
+                  "Web design",
+                  "Sites that look good and bring enquiries."
+                ],
+                [
+                  "camera",
+                  "Photography",
+                  "Products, people and spaces."
+                ]
+              ]
+            },
+            {
+              "type": "quotes",
+              "title": "Clients say",
+              "items": [
+                [
+                  "“Understood our business better than we did.”",
+                  "Mila, Zrantse Coffee"
+                ],
+                [
+                  "“The site doubled our enquiries in two months.”",
+                  "Studio North"
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Let’s work together",
+              "intro": "Tell me about the project — I reply within two days.",
+              "formName": "project",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "budget",
+                  "label": "Budget",
+                  "options": [
+                    "up to €1,000",
+                    "€1,000 – €3,000",
+                    "€3,000 – €8,000",
+                    "over €8,000"
+                  ]
+                }
+              ],
+              "messageLabel": "About the project",
+              "send": "Send"
+            }
+          ]
+        },
+        "work": {
+          "title": "Work and projects",
+          "description": "Selected projects: brand identity, web design and photography.",
+          "pagehead": [
+            "Work",
+            "Every project starts with a question — here is how we answered."
+          ],
+          "sections": [
+            {
+              "type": "posts",
+              "items": [
+                {
+                  "tag": "Brand",
+                  "date": "2026",
+                  "h": "Zrantse Coffee",
+                  "p": "A new identity for a neighbourhood café — from logo to cups.",
+                  "href": "/#contact"
+                },
+                {
+                  "tag": "Web",
+                  "date": "2026",
+                  "h": "Studio North",
+                  "p": "A site for an architecture studio that doubled enquiries.",
+                  "href": "/#contact"
+                },
+                {
+                  "tag": "Packaging",
+                  "date": "2025",
+                  "h": "Halm Winery",
+                  "p": "A label series inspired by the vineyard terrain.",
+                  "href": "/#contact"
+                },
+                {
+                  "tag": "Photo",
+                  "date": "2025",
+                  "h": "Len Atelier",
+                  "p": "Product photography for an online catalogue.",
+                  "href": "/#contact"
+                }
+              ]
+            }
+          ]
+        },
+        "about": {
+          "title": "About me and the process",
+          "description": "Who is behind the portfolio, how I work and with which tools.",
+          "pagehead": [
+            "About",
+            "A designer with 10 years in agencies and with small businesses."
+          ],
+          "sections": [
+            {
+              "type": "prose",
+              "items": [
+                [
+                  "",
+                  "Say in a few sentences who you are, what you love doing and why clients work with you. A real name and photo build trust."
+                ],
+                [
+                  "How I work",
+                  "I start with a conversation and a short research phase, propose two directions, we pick one and take it all the way. No surprises in the price."
+                ]
+              ]
+            },
+            {
+              "type": "timeline",
+              "alt": true,
+              "title": "Experience",
+              "items": [
+                [
+                  "2021 — now",
+                  "Freelance",
+                  "Brand and web for over 60 clients."
+                ],
+                [
+                  "2017 — 2021",
+                  "Art director, agency",
+                  "Campaigns for national brands."
+                ],
+                [
+                  "2015 — 2017",
+                  "Designer",
+                  "Print, packaging and illustration."
+                ]
+              ]
+            },
+            {
+              "type": "chips",
+              "title": "Tools",
+              "items": [
+                "Figma",
+                "Illustrator",
+                "Photoshop",
+                "Lightroom",
+                "Webflow",
+                "HTML and CSS"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

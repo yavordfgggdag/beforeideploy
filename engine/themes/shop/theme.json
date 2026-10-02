@@ -1,0 +1,548 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "shop",
+  "category": "commerce",
+  "icon": "bag",
+  "accent": "#7c3aed",
+  "mark": "bag",
+  "featured": true,
+  "titleKey": "newsite.template.shop.title",
+  "descriptionKey": "newsite.template.shop.description",
+  "style": "calm",
+  "tokens": {
+    "dark": false,
+    "bg": "#fbfaf9",
+    "bg2": "#f3f0fa",
+    "surface": "#ffffff",
+    "text": "#1d1530",
+    "muted": "#5f5873",
+    "line": "rgba(15,23,42,.10)",
+    "accent": "#7c3aed",
+    "accent2": "#db2777",
+    "font": "rounded",
+    "radius": 20
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "lang": {
+    "bg": {
+      "tagline": "ръчно изработени неща с характер",
+      "description": "Малък магазин за ръчно изработени подаръци. Поръчка с един имейл, доставка до 2 дни.",
+      "nav": [
+        [
+          "Продукти",
+          "/products.html"
+        ],
+        [
+          "Как се поръчва",
+          "/#how"
+        ],
+        [
+          "Отзиви",
+          "/#reviews"
+        ],
+        [
+          "Контакт",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Поръчай",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Безплатна доставка над 60 лв.",
+            "eyebrowIcon": "gift",
+            "title": "Подаръци, които *се помнят*",
+            "lead": "Свещи, керамика и текстил, изработени на ръка в малки серии. Всеки предмет е единствен по рода си.",
+            "cta": [
+              "Разгледай продуктите",
+              "/products.html"
+            ],
+            "cta2": [
+              "Как се поръчва",
+              "/#how"
+            ],
+            "card": {
+              "icon": "bag",
+              "title": "Най-продавани",
+              "rows": [
+                [
+                  "Свещ „Лавандула“",
+                  "24 лв."
+                ],
+                [
+                  "Керамична чаша",
+                  "32 лв."
+                ],
+                [
+                  "Ленена торба",
+                  "28 лв."
+                ]
+              ],
+              "note": "Наличност: обновена днес."
+            }
+          },
+          "sections": [
+            {
+              "type": "gallery",
+              "title": "Колекции",
+              "intro": "Сменете плочките със снимки на продуктите.",
+              "items": [
+                "Свещи",
+                "Керамика",
+                "Текстил",
+                "Подаръчни комплекти"
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "how",
+              "alt": true,
+              "title": "Как се поръчва",
+              "items": [
+                [
+                  "Избирате",
+                  "Разглеждате продуктите и ни пишете кои искате."
+                ],
+                [
+                  "Потвърждаваме",
+                  "До няколко часа — с наличност и обща цена."
+                ],
+                [
+                  "Изпращаме",
+                  "С куриер до офис или адрес, до 2 работни дни."
+                ],
+                [
+                  "Плащате",
+                  "С наложен платеж или по банков път."
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "title": "Защо при нас",
+              "items": [
+                [
+                  "hand",
+                  "Ръчна изработка",
+                  "Правим всичко в ателието си в Пловдив."
+                ],
+                [
+                  "leaf",
+                  "Естествени материали",
+                  "Соев восък, глина, лен и памук."
+                ],
+                [
+                  "gift",
+                  "Подаръчна опаковка",
+                  "Безплатно, с картичка по ваш текст."
+                ]
+              ]
+            },
+            {
+              "type": "quotes",
+              "id": "reviews",
+              "alt": true,
+              "title": "Отзиви",
+              "items": [
+                [
+                  "„Свещта ухае невероятно, а опаковката беше като подарък сама по себе си.“",
+                  "Габриела"
+                ],
+                [
+                  "„Поръчах чаши за цялото семейство — всички са различни и прекрасни.“",
+                  "Николай"
+                ],
+                [
+                  "„Бърза доставка и много мил подход.“",
+                  "Теодора"
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "title": "Поръчка и въпроси",
+              "intro": "Напишете кои продукти искате и адрес за доставка.",
+              "formName": "order",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ]
+              ],
+              "messageLabel": "Продукти и адрес за доставка",
+              "send": "Изпрати поръчка"
+            }
+          ]
+        },
+        "products": {
+          "title": "Продукти и цени",
+          "description": "Всички продукти: свещи, керамика, текстил и подаръчни комплекти с цени.",
+          "pagehead": [
+            "Продукти",
+            "Цените са с ДДС. Доставка 6 лв., безплатна над 60 лв."
+          ],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Свещи",
+                  "items": [
+                    [
+                      "„Лавандула“",
+                      "Соев восък, 200 г, 40 ч. горене",
+                      "24 лв."
+                    ],
+                    [
+                      "„Горски плодове“",
+                      "Соев восък, 200 г",
+                      "24 лв."
+                    ],
+                    [
+                      "Комплект от три",
+                      "Мини свещи, 3 × 80 г",
+                      "36 лв."
+                    ]
+                  ]
+                },
+                {
+                  "name": "Керамика",
+                  "items": [
+                    [
+                      "Чаша за кафе",
+                      "Ръчно глазирана, 300 мл",
+                      "32 лв."
+                    ],
+                    [
+                      "Купичка",
+                      "Ø 14 см",
+                      "28 лв."
+                    ],
+                    [
+                      "Ваза",
+                      "Височина 22 см",
+                      "58 лв."
+                    ]
+                  ]
+                },
+                {
+                  "name": "Текстил",
+                  "items": [
+                    [
+                      "Ленена торба",
+                      "С дълги дръжки",
+                      "28 лв."
+                    ],
+                    [
+                      "Кухненска кърпа",
+                      "Лен, 50 × 70 см",
+                      "18 лв."
+                    ]
+                  ]
+                },
+                {
+                  "name": "Подаръчни комплекти",
+                  "items": [
+                    [
+                      "„Уютна вечер“",
+                      "Свещ, чаша, чай",
+                      "69 лв."
+                    ],
+                    [
+                      "„За дома“",
+                      "Ваза, кърпа, свещ",
+                      "95 лв."
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Искате нещо по поръчка?",
+              "p": "Правим персонализирани подаръци за сватби и фирми.",
+              "button": [
+                "Пишете ни",
+                "/#contact"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "en": {
+      "tagline": "handmade things with character",
+      "description": "A small shop for handmade gifts. Order with one email, delivered within 2 days.",
+      "nav": [
+        [
+          "Products",
+          "/products.html"
+        ],
+        [
+          "How to order",
+          "/#how"
+        ],
+        [
+          "Reviews",
+          "/#reviews"
+        ],
+        [
+          "Contact",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Order",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Free delivery over €30",
+            "eyebrowIcon": "gift",
+            "title": "Gifts people *remember*",
+            "lead": "Candles, ceramics and textiles made by hand in small batches. Every piece is one of a kind.",
+            "cta": [
+              "Browse products",
+              "/products.html"
+            ],
+            "cta2": [
+              "How to order",
+              "/#how"
+            ],
+            "card": {
+              "icon": "bag",
+              "title": "Best sellers",
+              "rows": [
+                [
+                  "“Lavender” candle",
+                  "€12"
+                ],
+                [
+                  "Ceramic mug",
+                  "€16"
+                ],
+                [
+                  "Linen tote",
+                  "€14"
+                ]
+              ],
+              "note": "Stock: updated today."
+            }
+          },
+          "sections": [
+            {
+              "type": "gallery",
+              "title": "Collections",
+              "intro": "Replace the tiles with product photos.",
+              "items": [
+                "Candles",
+                "Ceramics",
+                "Textiles",
+                "Gift sets"
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "how",
+              "alt": true,
+              "title": "How to order",
+              "items": [
+                [
+                  "Choose",
+                  "Browse and tell us what you would like."
+                ],
+                [
+                  "Confirm",
+                  "Within hours — stock and total price."
+                ],
+                [
+                  "Ship",
+                  "By courier to a locker or your door in 2 working days."
+                ],
+                [
+                  "Pay",
+                  "Cash on delivery or bank transfer."
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "title": "Why us",
+              "items": [
+                [
+                  "hand",
+                  "Handmade",
+                  "Everything is made in our Plovdiv studio."
+                ],
+                [
+                  "leaf",
+                  "Natural materials",
+                  "Soy wax, clay, linen and cotton."
+                ],
+                [
+                  "gift",
+                  "Gift wrapping",
+                  "Free, with a card in your words."
+                ]
+              ]
+            },
+            {
+              "type": "quotes",
+              "id": "reviews",
+              "alt": true,
+              "title": "Reviews",
+              "items": [
+                [
+                  "“The candle smells amazing and the packaging felt like a gift itself.”",
+                  "Gabriela"
+                ],
+                [
+                  "“Mugs for the whole family — all different and all lovely.”",
+                  "Nikolay"
+                ],
+                [
+                  "“Fast delivery and such a kind approach.”",
+                  "Teodora"
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "title": "Orders and questions",
+              "intro": "Tell us which products you want and where to deliver.",
+              "formName": "order",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ]
+              ],
+              "messageLabel": "Products and delivery address",
+              "send": "Send order"
+            }
+          ]
+        },
+        "products": {
+          "title": "Products and prices",
+          "description": "All products: candles, ceramics, textiles and gift sets with prices.",
+          "pagehead": [
+            "Products",
+            "Prices include VAT. Delivery €3, free over €30."
+          ],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Candles",
+                  "items": [
+                    [
+                      "“Lavender”",
+                      "Soy wax, 200 g, 40 h burn",
+                      "€12"
+                    ],
+                    [
+                      "“Forest berries”",
+                      "Soy wax, 200 g",
+                      "€12"
+                    ],
+                    [
+                      "Set of three",
+                      "Mini candles, 3 × 80 g",
+                      "€18"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Ceramics",
+                  "items": [
+                    [
+                      "Coffee mug",
+                      "Hand-glazed, 300 ml",
+                      "€16"
+                    ],
+                    [
+                      "Bowl",
+                      "Ø 14 cm",
+                      "€14"
+                    ],
+                    [
+                      "Vase",
+                      "22 cm tall",
+                      "€29"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Textiles",
+                  "items": [
+                    [
+                      "Linen tote",
+                      "Long handles",
+                      "€14"
+                    ],
+                    [
+                      "Tea towel",
+                      "Linen, 50 × 70 cm",
+                      "€9"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Gift sets",
+                  "items": [
+                    [
+                      "“Cosy evening”",
+                      "Candle, mug, tea",
+                      "€35"
+                    ],
+                    [
+                      "“For the home”",
+                      "Vase, towel, candle",
+                      "€48"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Want something custom?",
+              "p": "We make personalised gifts for weddings and companies.",
+              "button": [
+                "Write to us",
+                "/#contact"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

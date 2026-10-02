@@ -1,0 +1,252 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "blog",
+  "category": "personal",
+  "icon": "text.book.closed",
+  "accent": "#c2410c",
+  "mark": "book",
+  "featured": true,
+  "titleKey": "newsite.template.blog.title",
+  "descriptionKey": "newsite.template.blog.description",
+  "style": "elegant",
+  "tokens": {
+    "dark": false,
+    "bg": "#fffdf8",
+    "bg2": "#f7f1e6",
+    "surface": "#ffffff",
+    "text": "#221a12",
+    "muted": "#65584a",
+    "line": "rgba(15,23,42,.10)",
+    "accent": "#c2410c",
+    "accent2": "#ea580c",
+    "font": "serif",
+    "head": "serif",
+    "radius": 12,
+    "tilt": 0
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "lang": {
+    "bg": {
+      "tagline": "истории, идеи и бележки",
+      "description": "Блог за пътувания, книги и малките неща, които правят деня хубав.",
+      "nav": [
+        [
+          "Статии",
+          "/#posts"
+        ],
+        [
+          "За мен",
+          "/#about"
+        ],
+        [
+          "Бюлетин",
+          "/#newsletter"
+        ]
+      ],
+      "headerCta": null,
+      "pages": {
+        "index": {
+          "hero": {
+            "center": true,
+            "eyebrow": "Нова статия всеки четвъртък",
+            "eyebrowIcon": "book",
+            "title": "Истории, които *си струва да прочетете*",
+            "lead": "Пиша за пътувания, книги и малките неща, които правят деня хубав. Без реклами, без бързане.",
+            "cta": [
+              "Чети последната",
+              "/post.html"
+            ],
+            "cta2": [
+              "Абонирай се",
+              "/#newsletter"
+            ]
+          },
+          "sections": [
+            {
+              "type": "posts",
+              "id": "posts",
+              "title": "Последни статии",
+              "items": [
+                {
+                  "tag": "Пътуване",
+                  "date": "26 септември",
+                  "h": "Три дни в Родопите без телефон",
+                  "p": "Какво се случва, когато изключиш всичко и тръгнеш по пътеката.",
+                  "href": "/post.html"
+                },
+                {
+                  "tag": "Книги",
+                  "date": "19 септември",
+                  "h": "Пет книги за есента",
+                  "p": "Кратък списък за дългите вечери — от романи до есета.",
+                  "href": "/post.html"
+                },
+                {
+                  "tag": "Живот",
+                  "date": "12 септември",
+                  "h": "Малките ритуали на сутринта",
+                  "p": "Защо първите 20 минути от деня решават останалите.",
+                  "href": "/post.html"
+                }
+              ]
+            },
+            {
+              "type": "prose",
+              "id": "about",
+              "alt": true,
+              "title": "За мен",
+              "items": [
+                [
+                  "",
+                  "Няколко изречения за това кой пише и защо. Читателите се връщат при човек, не при сайт."
+                ]
+              ]
+            },
+            {
+              "type": "form",
+              "id": "newsletter",
+              "title": "Бюлетин",
+              "intro": "Едно писмо в неделя с новите статии и една препоръка.",
+              "formName": "newsletter",
+              "button": "Абонирай ме",
+              "note": "Без спам. Отписване с един клик."
+            }
+          ]
+        },
+        "post": {
+          "title": "Три дни в Родопите без телефон",
+          "description": "Какво се случва, когато изключиш всичко и тръгнеш по пътеката — пътепис от Родопите.",
+          "sections": [
+            {
+              "type": "article",
+              "tag": "Пътуване · 26 септември",
+              "h": "Три дни в Родопите без телефон",
+              "back": "Всички статии",
+              "body": [
+                "Това е примерна статия — заменете я със свой текст. Първият абзац е обещание: защо читателят да продължи.",
+                "## Първи ден",
+                "Разкажете какво се случи, какво видяхте, кого срещнахте. Кратки абзаци се четат по-лесно на телефон.",
+                "> Най-хубавите пътеки са тези, които не са на картата.",
+                "## Какво научих",
+                "Завършете с една мисъл, която читателят ще запомни — и покана да прочете следващата статия."
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "en": {
+      "tagline": "stories, ideas and notes",
+      "description": "A blog about travel, books and the small things that make a day good.",
+      "nav": [
+        [
+          "Articles",
+          "/#posts"
+        ],
+        [
+          "About",
+          "/#about"
+        ],
+        [
+          "Newsletter",
+          "/#newsletter"
+        ]
+      ],
+      "headerCta": null,
+      "pages": {
+        "index": {
+          "hero": {
+            "center": true,
+            "eyebrow": "A new article every Thursday",
+            "eyebrowIcon": "book",
+            "title": "Stories *worth reading*",
+            "lead": "I write about travel, books and the small things that make a day good. No ads, no hurry.",
+            "cta": [
+              "Read the latest",
+              "/post.html"
+            ],
+            "cta2": [
+              "Subscribe",
+              "/#newsletter"
+            ]
+          },
+          "sections": [
+            {
+              "type": "posts",
+              "id": "posts",
+              "title": "Latest articles",
+              "items": [
+                {
+                  "tag": "Travel",
+                  "date": "26 September",
+                  "h": "Three days in the Rhodopes without a phone",
+                  "p": "What happens when you switch everything off and take the trail.",
+                  "href": "/post.html"
+                },
+                {
+                  "tag": "Books",
+                  "date": "19 September",
+                  "h": "Five books for autumn",
+                  "p": "A short list for long evenings — from novels to essays.",
+                  "href": "/post.html"
+                },
+                {
+                  "tag": "Life",
+                  "date": "12 September",
+                  "h": "Small morning rituals",
+                  "p": "Why the first 20 minutes decide the rest of the day.",
+                  "href": "/post.html"
+                }
+              ]
+            },
+            {
+              "type": "prose",
+              "id": "about",
+              "alt": true,
+              "title": "About",
+              "items": [
+                [
+                  "",
+                  "A few sentences about who writes here and why. Readers come back to a person, not a website."
+                ]
+              ]
+            },
+            {
+              "type": "form",
+              "id": "newsletter",
+              "title": "Newsletter",
+              "intro": "One email on Sunday with the new articles and one recommendation.",
+              "formName": "newsletter",
+              "button": "Subscribe",
+              "note": "No spam. Unsubscribe with one click."
+            }
+          ]
+        },
+        "post": {
+          "title": "Three days in the Rhodopes without a phone",
+          "description": "What happens when you switch everything off and take the trail — a travel story.",
+          "sections": [
+            {
+              "type": "article",
+              "tag": "Travel · 26 September",
+              "h": "Three days in the Rhodopes without a phone",
+              "back": "All articles",
+              "body": [
+                "This is a sample article — replace it with your own. The first paragraph is a promise: why the reader should keep going.",
+                "## Day one",
+                "Tell what happened, what you saw, who you met. Short paragraphs read better on a phone.",
+                "> The best trails are the ones that are not on the map.",
+                "## What I learned",
+                "End with one thought the reader will remember — and an invitation to the next article."
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,538 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "hotel",
+  "category": "food",
+  "icon": "bed.double",
+  "accent": "#0f766e",
+  "mark": "bed",
+  "featured": false,
+  "titleKey": "newsite.template.hotel.title",
+  "descriptionKey": "newsite.template.hotel.description",
+  "style": "elegant",
+  "tokens": {
+    "dark": false,
+    "bg": "#f7f5f0",
+    "bg2": "#eeebe3",
+    "surface": "#ffffff",
+    "text": "#1f2a28",
+    "muted": "#5d6966",
+    "line": "rgba(15,23,42,.10)",
+    "accent": "#0f766e",
+    "accent2": "#14b8a6",
+    "head": "serif",
+    "radius": 16
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "lang": {
+    "bg": {
+      "tagline": "къща за гости в планината",
+      "description": "Уютни стаи, домашна закуска и гледка към планината. Резервирайте директно — най-добра цена.",
+      "nav": [
+        [
+          "Стаи",
+          "/rooms.html"
+        ],
+        [
+          "Удобства",
+          "/#amenities"
+        ],
+        [
+          "Отзиви",
+          "/#reviews"
+        ],
+        [
+          "Контакт",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Провери наличност",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Директна резервация = най-добра цена",
+            "eyebrowIcon": "star",
+            "title": "Тишина, гора и *закуска с изглед*",
+            "lead": "Осем стаи в сърцето на планината, на 10 минути от ски пистите и на две крачки от горските пътеки.",
+            "cta": [
+              "Провери наличност",
+              "/#contact"
+            ],
+            "cta2": [
+              "Разгледай стаите",
+              "/rooms.html"
+            ],
+            "card": {
+              "icon": "bed",
+              "title": "Свободни този уикенд",
+              "rows": [
+                [
+                  "Двойна стая",
+                  "от 120 лв."
+                ],
+                [
+                  "Семеен апартамент",
+                  "от 190 лв."
+                ],
+                [
+                  "Студио с камина",
+                  "от 160 лв."
+                ]
+              ],
+              "note": "Цената е за нощувка със закуска."
+            }
+          },
+          "sections": [
+            {
+              "type": "cards",
+              "id": "amenities",
+              "title": "Удобства",
+              "items": [
+                [
+                  "cup",
+                  "Домашна закуска",
+                  "Баница, мед от съседа и прясно кафе до 10:30."
+                ],
+                [
+                  "leaf",
+                  "СПА и сауна",
+                  "Финландска сауна и джакузи с гледка."
+                ],
+                [
+                  "pin",
+                  "Паркинг и Wi-Fi",
+                  "Безплатни за всички гости."
+                ],
+                [
+                  "heart",
+                  "Домашни любимци",
+                  "Добре дошли в избрани стаи."
+                ]
+              ]
+            },
+            {
+              "type": "gallery",
+              "alt": true,
+              "title": "Галерия",
+              "intro": "Заменете плочките с ваши снимки — стаите, двора, гледката.",
+              "items": [
+                "Гледка от терасата",
+                "Двойна стая",
+                "Трапезарията",
+                "Сауната",
+                "Градината",
+                "Зимата при нас"
+              ]
+            },
+            {
+              "type": "quotes",
+              "id": "reviews",
+              "title": "Гостите за нас",
+              "items": [
+                [
+                  "„Най-тихото място, на което сме спали. Закуската е легенда.“",
+                  "Петя и Иван, Booking"
+                ],
+                [
+                  "„Чисто, топло, домакините са невероятни хора.“",
+                  "Даниел, Google"
+                ],
+                [
+                  "„Ще се върнем с децата през лятото.“",
+                  "Росица, Facebook"
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "title": "Проверка на наличност",
+              "intro": "Пишете дати и брой гости — отговаряме до 2 часа.",
+              "formName": "booking",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Адрес",
+                  "с. Примерно, общ. Банско"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "checkin",
+                  "label": "Настаняване",
+                  "type": "date"
+                },
+                {
+                  "id": "checkout",
+                  "label": "Напускане",
+                  "type": "date"
+                },
+                {
+                  "id": "guests",
+                  "label": "Гости",
+                  "options": [
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5+"
+                  ]
+                }
+              ],
+              "messageLabel": "Пожелания",
+              "send": "Провери наличност"
+            }
+          ]
+        },
+        "rooms": {
+          "title": "Стаи и цени",
+          "description": "Двойни стаи, студия и семейни апартаменти с цени за нощувка със закуска.",
+          "pagehead": [
+            "Стаи и цени",
+            "Всички стаи са с баня, закуска и достъп до СПА зоната."
+          ],
+          "sections": [
+            {
+              "type": "pricing",
+              "items": [
+                {
+                  "name": "Двойна стая",
+                  "price": "120 лв.",
+                  "per": "/ нощ",
+                  "features": [
+                    "До 2 гости",
+                    "Балкон с изглед",
+                    "Закуска включена"
+                  ],
+                  "cta": [
+                    "Запитване",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Студио с камина",
+                  "price": "160 лв.",
+                  "per": "/ нощ",
+                  "featured": "Най-търсено",
+                  "features": [
+                    "До 2 гости",
+                    "Камина и кът за сядане",
+                    "Закуска и СПА"
+                  ],
+                  "cta": [
+                    "Запитване",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Семеен апартамент",
+                  "price": "190 лв.",
+                  "per": "/ нощ",
+                  "features": [
+                    "До 4 гости",
+                    "Две спални",
+                    "Кухненски бокс"
+                  ],
+                  "cta": [
+                    "Запитване",
+                    "/#contact"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "faq",
+              "alt": true,
+              "title": "Условия",
+              "items": [
+                [
+                  "Кога е настаняването?",
+                  "От 14:00, напускане до 11:00. При възможност — гъвкаво."
+                ],
+                [
+                  "Какво е капарото?",
+                  "30% при потвърждение, остатъкът — на място."
+                ],
+                [
+                  "Мога ли да откажа?",
+                  "Безплатно до 7 дни преди пристигане."
+                ]
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "en": {
+      "tagline": "mountain guesthouse",
+      "description": "Cosy rooms, homemade breakfast and mountain views. Book direct for the best rate.",
+      "nav": [
+        [
+          "Rooms",
+          "/rooms.html"
+        ],
+        [
+          "Amenities",
+          "/#amenities"
+        ],
+        [
+          "Reviews",
+          "/#reviews"
+        ],
+        [
+          "Contact",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Check availability",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Book direct for the best rate",
+            "eyebrowIcon": "star",
+            "title": "Quiet, forest and *breakfast with a view*",
+            "lead": "Eight rooms in the heart of the mountains, ten minutes from the ski slopes and steps from the forest trails.",
+            "cta": [
+              "Check availability",
+              "/#contact"
+            ],
+            "cta2": [
+              "See the rooms",
+              "/rooms.html"
+            ],
+            "card": {
+              "icon": "bed",
+              "title": "Free this weekend",
+              "rows": [
+                [
+                  "Double room",
+                  "from €60"
+                ],
+                [
+                  "Family suite",
+                  "from €95"
+                ],
+                [
+                  "Studio with fireplace",
+                  "from €80"
+                ]
+              ],
+              "note": "Per night, breakfast included."
+            }
+          },
+          "sections": [
+            {
+              "type": "cards",
+              "id": "amenities",
+              "title": "Amenities",
+              "items": [
+                [
+                  "cup",
+                  "Homemade breakfast",
+                  "Fresh pastry, local honey and coffee until 10:30."
+                ],
+                [
+                  "leaf",
+                  "Spa and sauna",
+                  "Finnish sauna and a hot tub with a view."
+                ],
+                [
+                  "pin",
+                  "Parking and Wi-Fi",
+                  "Free for every guest."
+                ],
+                [
+                  "heart",
+                  "Pets welcome",
+                  "In selected rooms."
+                ]
+              ]
+            },
+            {
+              "type": "gallery",
+              "alt": true,
+              "title": "Gallery",
+              "intro": "Replace the tiles with your photos — rooms, garden, the view.",
+              "items": [
+                "View from the terrace",
+                "Double room",
+                "Dining room",
+                "The sauna",
+                "The garden",
+                "Winter with us"
+              ]
+            },
+            {
+              "type": "quotes",
+              "id": "reviews",
+              "title": "Guests about us",
+              "items": [
+                [
+                  "“The quietest place we have ever slept. Breakfast is legendary.”",
+                  "Petya & Ivan, Booking"
+                ],
+                [
+                  "“Clean, warm, and the hosts are wonderful people.”",
+                  "Daniel, Google"
+                ],
+                [
+                  "“We will be back with the kids in summer.”",
+                  "Rositsa, Facebook"
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "title": "Check availability",
+              "intro": "Send your dates and number of guests — we reply within 2 hours.",
+              "formName": "booking",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Address",
+                  "Primerno village, Bansko"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "checkin",
+                  "label": "Check-in",
+                  "type": "date"
+                },
+                {
+                  "id": "checkout",
+                  "label": "Check-out",
+                  "type": "date"
+                },
+                {
+                  "id": "guests",
+                  "label": "Guests",
+                  "options": [
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5+"
+                  ]
+                }
+              ],
+              "messageLabel": "Requests",
+              "send": "Check availability"
+            }
+          ]
+        },
+        "rooms": {
+          "title": "Rooms and rates",
+          "description": "Double rooms, studios and family suites with nightly rates including breakfast.",
+          "pagehead": [
+            "Rooms and rates",
+            "Every room has a private bathroom, breakfast and spa access."
+          ],
+          "sections": [
+            {
+              "type": "pricing",
+              "items": [
+                {
+                  "name": "Double room",
+                  "price": "€60",
+                  "per": "/ night",
+                  "features": [
+                    "Up to 2 guests",
+                    "Balcony with a view",
+                    "Breakfast included"
+                  ],
+                  "cta": [
+                    "Enquire",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Studio with fireplace",
+                  "price": "€80",
+                  "per": "/ night",
+                  "featured": "Most booked",
+                  "features": [
+                    "Up to 2 guests",
+                    "Fireplace and lounge",
+                    "Breakfast and spa"
+                  ],
+                  "cta": [
+                    "Enquire",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Family suite",
+                  "price": "€95",
+                  "per": "/ night",
+                  "features": [
+                    "Up to 4 guests",
+                    "Two bedrooms",
+                    "Kitchenette"
+                  ],
+                  "cta": [
+                    "Enquire",
+                    "/#contact"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "faq",
+              "alt": true,
+              "title": "Policies",
+              "items": [
+                [
+                  "When is check-in?",
+                  "From 14:00, check-out by 11:00. Flexible when we can."
+                ],
+                [
+                  "Is there a deposit?",
+                  "30% on confirmation, the rest on arrival."
+                ],
+                [
+                  "Can I cancel?",
+                  "Free up to 7 days before arrival."
+                ]
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

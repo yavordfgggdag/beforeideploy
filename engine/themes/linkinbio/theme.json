@@ -1,0 +1,138 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "linkinbio",
+  "category": "personal",
+  "icon": "link",
+  "accent": "#f43f5e",
+  "mark": "link",
+  "featured": false,
+  "titleKey": "newsite.template.linkinbio.title",
+  "descriptionKey": "newsite.template.linkinbio.description",
+  "style": "bold",
+  "tokens": {
+    "dark": true,
+    "bg": "#120f1f",
+    "bg2": "#1a1630",
+    "surface": "#1e1a36",
+    "text": "#eef0f7",
+    "muted": "#a3abc2",
+    "line": "rgba(255,255,255,.09)",
+    "accent": "#f43f5e",
+    "accent2": "#f59e0b",
+    "font": "rounded",
+    "radius": 18
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "lang": {
+    "bg": {
+      "tagline": "всички линкове на едно място",
+      "description": "Всички профили, продукти и връзки на едно място.",
+      "nav": [
+        [
+          "Линкове",
+          "/#main"
+        ],
+        [
+          "Контакт",
+          "mailto:hello@example.com"
+        ]
+      ],
+      "headerCta": null,
+      "pages": {
+        "index": {
+          "hero": {
+            "center": true,
+            "avatar": "★",
+            "title": "{{NAME}}",
+            "lead": "Създател на съдържание · пътувания, храна и добро настроение",
+            "links": [
+              [
+                "play",
+                "Най-новото видео",
+                "https://www.youtube.com/"
+              ],
+              [
+                "camera",
+                "Instagram",
+                "https://www.instagram.com/"
+              ],
+              [
+                "music",
+                "Подкаст",
+                "https://open.spotify.com/"
+              ],
+              [
+                "bag",
+                "Моят магазин",
+                "mailto:hello@example.com"
+              ],
+              [
+                "mail",
+                "За сътрудничество",
+                "mailto:hello@example.com"
+              ]
+            ]
+          },
+          "sections": []
+        }
+      }
+    },
+    "en": {
+      "tagline": "all my links in one place",
+      "description": "Every profile, product and link in one place.",
+      "nav": [
+        [
+          "Links",
+          "/#main"
+        ],
+        [
+          "Contact",
+          "mailto:hello@example.com"
+        ]
+      ],
+      "headerCta": null,
+      "pages": {
+        "index": {
+          "hero": {
+            "center": true,
+            "avatar": "★",
+            "title": "{{NAME}}",
+            "lead": "Creator · travel, food and good vibes",
+            "links": [
+              [
+                "play",
+                "Latest video",
+                "https://www.youtube.com/"
+              ],
+              [
+                "camera",
+                "Instagram",
+                "https://www.instagram.com/"
+              ],
+              [
+                "music",
+                "Podcast",
+                "https://open.spotify.com/"
+              ],
+              [
+                "bag",
+                "My shop",
+                "mailto:hello@example.com"
+              ],
+              [
+                "mail",
+                "Work with me",
+                "mailto:hello@example.com"
+              ]
+            ]
+          },
+          "sections": []
+        }
+      }
+    }
+  }
+}

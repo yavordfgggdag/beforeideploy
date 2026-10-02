@@ -1,0 +1,433 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "nonprofit",
+  "category": "community",
+  "icon": "hands.sparkles",
+  "accent": "#15803d",
+  "mark": "heart",
+  "featured": false,
+  "titleKey": "newsite.template.nonprofit.title",
+  "descriptionKey": "newsite.template.nonprofit.description",
+  "style": "calm",
+  "tokens": {
+    "dark": false,
+    "bg": "#f7faf6",
+    "bg2": "#ebf3e8",
+    "surface": "#ffffff",
+    "text": "#15251a",
+    "muted": "#4f6353",
+    "line": "rgba(15,23,42,.10)",
+    "accent": "#15803d",
+    "accent2": "#65a30d",
+    "radius": 18
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "lang": {
+    "bg": {
+      "tagline": "кауза, която променя",
+      "description": "Помагаме на деца от малките населени места да учат и мечтаят. Включете се като дарител или доброволец.",
+      "nav": [
+        [
+          "Мисия",
+          "/#mission"
+        ],
+        [
+          "Резултати",
+          "/#impact"
+        ],
+        [
+          "Включи се",
+          "/#help"
+        ],
+        [
+          "Контакт",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Дари",
+        "/#help"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Всяко дарение отива директно за каузата",
+            "eyebrowIcon": "heart",
+            "title": "Заедно даваме *шанс на всяко дете*",
+            "lead": "Осигуряваме книги, наставници и стипендии за деца от малките населени места. 100% от даренията отиват за програмите.",
+            "cta": [
+              "Дари сега",
+              "/#help"
+            ],
+            "cta2": [
+              "Нашата мисия",
+              "/#mission"
+            ],
+            "card": {
+              "icon": "heart",
+              "title": "Кампания „Книга за всеки“",
+              "rows": [
+                [
+                  "Събрани",
+                  "18 400 лв."
+                ],
+                [
+                  "Цел",
+                  "25 000 лв."
+                ],
+                [
+                  "Дарители",
+                  "612"
+                ]
+              ],
+              "note": "Остават 18 дни."
+            }
+          },
+          "sections": [
+            {
+              "type": "cards",
+              "id": "mission",
+              "title": "Нашата мисия",
+              "items": [
+                [
+                  "book",
+                  "Образование",
+                  "Библиотеки и учебни материали за 40 училища."
+                ],
+                [
+                  "users",
+                  "Наставници",
+                  "Доброволци, които учат с децата всяка седмица."
+                ],
+                [
+                  "star",
+                  "Стипендии",
+                  "Подкрепа за талантливи ученици до университета."
+                ]
+              ]
+            },
+            {
+              "type": "stats",
+              "id": "impact",
+              "alt": true,
+              "items": [
+                [
+                  "3 200",
+                  "деца в програмите"
+                ],
+                [
+                  "40",
+                  "училища"
+                ],
+                [
+                  "180",
+                  "доброволци"
+                ],
+                [
+                  "100%",
+                  "от даренията за каузата"
+                ]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "help",
+              "title": "Как да помогнете",
+              "items": [
+                {
+                  "name": "Еднократно",
+                  "price": "20 лв.",
+                  "per": "или повече",
+                  "features": [
+                    "Книги за един клас",
+                    "Благодарствено писмо",
+                    "Годишен отчет"
+                  ],
+                  "cta": [
+                    "Дари",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Месечно",
+                  "price": "10 лв.",
+                  "per": "/ месец",
+                  "featured": "Най-голям ефект",
+                  "features": [
+                    "Постоянен наставник за едно дете",
+                    "Новини от програмата",
+                    "Отказ по всяко време"
+                  ],
+                  "cta": [
+                    "Стани дарител",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Доброволец",
+                  "price": "2 ч.",
+                  "per": "/ седмица",
+                  "features": [
+                    "Онлайн или на място",
+                    "Обучение и подкрепа",
+                    "Удостоверение"
+                  ],
+                  "cta": [
+                    "Включи се",
+                    "/#contact"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "quotes",
+              "alt": true,
+              "title": "Истории",
+              "items": [
+                [
+                  "„Благодарение на наставника си влязох в университет.“",
+                  "Мартин, бивш стипендиант"
+                ],
+                [
+                  "„Два часа седмично, които ми дават повече, отколкото давам.“",
+                  "Яна, доброволец"
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "title": "Контакт",
+              "intro": "Пишете ни за дарения, партньорства или доброволчество.",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "shield",
+                  "Банкова сметка",
+                  "BG00 BANK 0000 0000 0000 00"
+                ]
+              ],
+              "send": "Изпрати"
+            }
+          ]
+        }
+      }
+    },
+    "en": {
+      "tagline": "a cause that makes a difference",
+      "description": "We help children from small towns learn and dream. Join as a donor or volunteer.",
+      "nav": [
+        [
+          "Mission",
+          "/#mission"
+        ],
+        [
+          "Impact",
+          "/#impact"
+        ],
+        [
+          "Get involved",
+          "/#help"
+        ],
+        [
+          "Contact",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Donate",
+        "/#help"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Every donation goes straight to the cause",
+            "eyebrowIcon": "heart",
+            "title": "Together we give *every child a chance*",
+            "lead": "We provide books, mentors and scholarships for children in small towns. 100% of donations fund the programs.",
+            "cta": [
+              "Donate now",
+              "/#help"
+            ],
+            "cta2": [
+              "Our mission",
+              "/#mission"
+            ],
+            "card": {
+              "icon": "heart",
+              "title": "“A book for everyone” campaign",
+              "rows": [
+                [
+                  "Raised",
+                  "€9,400"
+                ],
+                [
+                  "Goal",
+                  "€12,500"
+                ],
+                [
+                  "Donors",
+                  "612"
+                ]
+              ],
+              "note": "18 days left."
+            }
+          },
+          "sections": [
+            {
+              "type": "cards",
+              "id": "mission",
+              "title": "Our mission",
+              "items": [
+                [
+                  "book",
+                  "Education",
+                  "Libraries and learning materials for 40 schools."
+                ],
+                [
+                  "users",
+                  "Mentors",
+                  "Volunteers who study with children every week."
+                ],
+                [
+                  "star",
+                  "Scholarships",
+                  "Support for talented students all the way to university."
+                ]
+              ]
+            },
+            {
+              "type": "stats",
+              "id": "impact",
+              "alt": true,
+              "items": [
+                [
+                  "3,200",
+                  "children in our programs"
+                ],
+                [
+                  "40",
+                  "schools"
+                ],
+                [
+                  "180",
+                  "volunteers"
+                ],
+                [
+                  "100%",
+                  "of donations to the cause"
+                ]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "help",
+              "title": "How you can help",
+              "items": [
+                {
+                  "name": "One-off",
+                  "price": "€10",
+                  "per": "or more",
+                  "features": [
+                    "Books for one class",
+                    "A thank-you letter",
+                    "Annual report"
+                  ],
+                  "cta": [
+                    "Donate",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Monthly",
+                  "price": "€5",
+                  "per": "/ month",
+                  "featured": "Biggest impact",
+                  "features": [
+                    "A steady mentor for one child",
+                    "Program news",
+                    "Cancel any time"
+                  ],
+                  "cta": [
+                    "Become a donor",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Volunteer",
+                  "price": "2 h",
+                  "per": "/ week",
+                  "features": [
+                    "Online or in person",
+                    "Training and support",
+                    "Certificate"
+                  ],
+                  "cta": [
+                    "Get involved",
+                    "/#contact"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "quotes",
+              "alt": true,
+              "title": "Stories",
+              "items": [
+                [
+                  "“Thanks to my mentor I got into university.”",
+                  "Martin, former scholar"
+                ],
+                [
+                  "“Two hours a week that give me more than I give.”",
+                  "Yana, volunteer"
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "title": "Contact",
+              "intro": "Write to us about donations, partnerships or volunteering.",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "shield",
+                  "Bank account",
+                  "BG00 BANK 0000 0000 0000 00"
+                ]
+              ],
+              "send": "Send"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

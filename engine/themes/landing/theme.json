@@ -1,0 +1,434 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "landing",
+  "category": "business",
+  "icon": "sparkles.rectangle.stack",
+  "accent": "#5b8cff",
+  "mark": "bolt",
+  "featured": true,
+  "titleKey": "newsite.template.landing.title",
+  "descriptionKey": "newsite.template.landing.description",
+  "style": "bold",
+  "tokens": {
+    "dark": true,
+    "bg": "#0b0f1a",
+    "bg2": "#10172a",
+    "surface": "#131b2f",
+    "text": "#eef0f7",
+    "muted": "#a3abc2",
+    "line": "rgba(255,255,255,.09)",
+    "accent": "#5b8cff",
+    "accent2": "#a26bff"
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "lang": {
+    "bg": {
+      "tagline": "услуги, на които можете да разчитате",
+      "description": "Какво правим, как работим и как да се свържете с нас.",
+      "nav": [
+        [
+          "Услуги",
+          "/#services"
+        ],
+        [
+          "Как работим",
+          "/#process"
+        ],
+        [
+          "Отзиви",
+          "/#reviews"
+        ],
+        [
+          "Контакт",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Запитване",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Нови клиенти този месец",
+            "title": "Решаваме проблема ви *бързо и честно*",
+            "lead": "Кажете ни какво ви трябва — ще получите ясна оферта до 24 часа, срок, който спазваме, и човек, който вдига телефона.",
+            "cta": [
+              "Поискай оферта",
+              "/#contact"
+            ],
+            "cta2": [
+              "Виж услугите",
+              "/#services"
+            ],
+            "card": {
+              "icon": "shield",
+              "title": "Защо клиентите остават",
+              "rows": [
+                [
+                  "Отговор",
+                  "до 24 ч."
+                ],
+                [
+                  "Спазени срокове",
+                  "98%"
+                ],
+                [
+                  "Гаранция",
+                  "12 месеца"
+                ]
+              ],
+              "note": "Числата са пример — сменете ги с вашите."
+            }
+          },
+          "sections": [
+            {
+              "type": "cards",
+              "id": "services",
+              "title": "Какво правим",
+              "intro": "Три неща, които правим най-добре. Опишете ги с думите на клиента, не с жаргона на бранша.",
+              "items": [
+                [
+                  "spark",
+                  "Консултация",
+                  "Разбираме задачата, преди да дадем цена. Първият разговор е безплатен."
+                ],
+                [
+                  "tools",
+                  "Изпълнение",
+                  "Работим по ясен план с междинни срокове и снимки на напредъка."
+                ],
+                [
+                  "shield",
+                  "Поддръжка",
+                  "След края оставаме на линия — гаранция и бърза реакция при нужда."
+                ]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "process",
+              "alt": true,
+              "title": "Как работим",
+              "intro": "Без изненади: знаете какво следва на всяка стъпка.",
+              "items": [
+                [
+                  "Разговор",
+                  "Разказвате какво ви трябва — по телефона или на място."
+                ],
+                [
+                  "Оферта",
+                  "До 24 часа получавате цена и срок в писмен вид."
+                ],
+                [
+                  "Работа",
+                  "Изпълняваме и ви държим в течение."
+                ],
+                [
+                  "Предаване",
+                  "Проверяваме заедно и получавате гаранция."
+                ]
+              ]
+            },
+            {
+              "type": "stats",
+              "items": [
+                [
+                  "12+",
+                  "години опит"
+                ],
+                [
+                  "850",
+                  "завършени проекта"
+                ],
+                [
+                  "4.9/5",
+                  "средна оценка"
+                ],
+                [
+                  "24 ч.",
+                  "време за отговор"
+                ]
+              ]
+            },
+            {
+              "type": "quotes",
+              "id": "reviews",
+              "title": "Какво казват клиентите",
+              "items": [
+                [
+                  "„Дойдоха точно когато казаха и оставиха всичко чисто. Препоръчвам.“",
+                  "Мария Петрова, София"
+                ],
+                [
+                  "„Офертата беше ясна, нямаше скрити разходи. Второ поръчване вече.“",
+                  "Георги Иванов, Пловдив"
+                ],
+                [
+                  "„Бърз отговор и истински човек отсреща — рядкост.“",
+                  "Елена Димитрова, Варна"
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Готови ли сте да започнем?",
+              "p": "Пишете ни днес — отговаряме в рамките на един работен ден.",
+              "button": [
+                "Свържи се с нас",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Контакт",
+              "intro": "Разкажете ни накратко за задачата.",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Адрес",
+                  "ул. „Витоша“ 1, София"
+                ]
+              ],
+              "hoursTitle": "Работно време",
+              "hours": [
+                [
+                  "Понеделник – петък",
+                  "9:00 – 18:00"
+                ],
+                [
+                  "Събота",
+                  "10:00 – 14:00"
+                ],
+                [
+                  "Неделя",
+                  "почивен ден"
+                ]
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "en": {
+      "tagline": "services you can rely on",
+      "description": "What we do, how we work and how to reach us.",
+      "nav": [
+        [
+          "Services",
+          "/#services"
+        ],
+        [
+          "Process",
+          "/#process"
+        ],
+        [
+          "Reviews",
+          "/#reviews"
+        ],
+        [
+          "Contact",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Get a quote",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Taking new clients this month",
+            "title": "We solve your problem *fast and fairly*",
+            "lead": "Tell us what you need — you get a clear quote within 24 hours, a deadline we keep, and a person who answers the phone.",
+            "cta": [
+              "Get a quote",
+              "/#contact"
+            ],
+            "cta2": [
+              "See services",
+              "/#services"
+            ],
+            "card": {
+              "icon": "shield",
+              "title": "Why clients stay",
+              "rows": [
+                [
+                  "Reply",
+                  "within 24h"
+                ],
+                [
+                  "Deadlines met",
+                  "98%"
+                ],
+                [
+                  "Warranty",
+                  "12 months"
+                ]
+              ],
+              "note": "Sample numbers — replace them with yours."
+            }
+          },
+          "sections": [
+            {
+              "type": "cards",
+              "id": "services",
+              "title": "What we do",
+              "intro": "The three things we do best. Describe them in your client’s words, not industry jargon.",
+              "items": [
+                [
+                  "spark",
+                  "Consulting",
+                  "We understand the job before we price it. The first call is free."
+                ],
+                [
+                  "tools",
+                  "Delivery",
+                  "A clear plan with milestones and progress photos."
+                ],
+                [
+                  "shield",
+                  "Support",
+                  "We stay on call after the job — warranty and a fast response."
+                ]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "process",
+              "alt": true,
+              "title": "How we work",
+              "intro": "No surprises: you always know what comes next.",
+              "items": [
+                [
+                  "Talk",
+                  "Tell us what you need — by phone or on site."
+                ],
+                [
+                  "Quote",
+                  "Within 24 hours you get a written price and deadline."
+                ],
+                [
+                  "Work",
+                  "We deliver and keep you posted."
+                ],
+                [
+                  "Handover",
+                  "We check it together and you get a warranty."
+                ]
+              ]
+            },
+            {
+              "type": "stats",
+              "items": [
+                [
+                  "12+",
+                  "years of experience"
+                ],
+                [
+                  "850",
+                  "projects delivered"
+                ],
+                [
+                  "4.9/5",
+                  "average rating"
+                ],
+                [
+                  "24h",
+                  "response time"
+                ]
+              ]
+            },
+            {
+              "type": "quotes",
+              "id": "reviews",
+              "title": "What clients say",
+              "items": [
+                [
+                  "“They arrived exactly on time and left everything clean. Recommended.”",
+                  "Maria Petrova, Sofia"
+                ],
+                [
+                  "“A clear quote with no hidden costs. Already our second order.”",
+                  "George Ivanov, Plovdiv"
+                ],
+                [
+                  "“Fast replies and a real person on the other end — rare.”",
+                  "Elena Dimitrova, Varna"
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Ready to start?",
+              "p": "Write to us today — we answer within one working day.",
+              "button": [
+                "Contact us",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Contact",
+              "intro": "Tell us briefly about the job.",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Address",
+                  "1 Vitosha St, Sofia"
+                ]
+              ],
+              "hoursTitle": "Opening hours",
+              "hours": [
+                [
+                  "Monday – Friday",
+                  "9:00 – 18:00"
+                ],
+                [
+                  "Saturday",
+                  "10:00 – 14:00"
+                ],
+                [
+                  "Sunday",
+                  "closed"
+                ]
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

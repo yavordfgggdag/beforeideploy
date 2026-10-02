@@ -1,0 +1,316 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "resume",
+  "category": "personal",
+  "icon": "person.text.rectangle",
+  "accent": "#0f766e",
+  "mark": "users",
+  "featured": false,
+  "titleKey": "newsite.template.resume.title",
+  "descriptionKey": "newsite.template.resume.description",
+  "style": "calm",
+  "tokens": {
+    "dark": false,
+    "bg": "#fafafa",
+    "bg2": "#f1f3f4",
+    "surface": "#ffffff",
+    "text": "#18181b",
+    "muted": "#52525b",
+    "line": "rgba(15,23,42,.10)",
+    "accent": "#0f766e",
+    "accent2": "#0891b2",
+    "radius": 14,
+    "tilt": 0
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "lang": {
+    "bg": {
+      "tagline": "автобиография и опит",
+      "description": "Професионален опит, умения и проекти — и как да се свържете за работа.",
+      "nav": [
+        [
+          "Опит",
+          "/#experience"
+        ],
+        [
+          "Умения",
+          "/#skills"
+        ],
+        [
+          "Проекти",
+          "/#projects"
+        ],
+        [
+          "Контакт",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Свържи се",
+        "mailto:hello@example.com"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Отворен за нови възможности",
+            "eyebrowIcon": "spark",
+            "title": "Здравейте, аз съм *{{NAME}}*",
+            "lead": "Продуктов мениджър с 8 години опит в софтуерни компании. Превръщам сложни проблеми в прости продукти, които хората обичат.",
+            "cta": [
+              "Свържи се",
+              "mailto:hello@example.com"
+            ],
+            "cta2": [
+              "Виж опита",
+              "/#experience"
+            ],
+            "chips": [
+              "София / дистанционно",
+              "Български, английски, немски"
+            ]
+          },
+          "sections": [
+            {
+              "type": "timeline",
+              "id": "experience",
+              "title": "Опит",
+              "items": [
+                [
+                  "2022 — днес",
+                  "Старши продуктов мениджър · Компания А",
+                  "Водя екип от 12 души. Ръст на активните потребители с 40% за година."
+                ],
+                [
+                  "2019 — 2022",
+                  "Продуктов мениджър · Компания Б",
+                  "Пуснах мобилното приложение от нулата до 200 000 потребители."
+                ],
+                [
+                  "2016 — 2019",
+                  "Бизнес анализатор · Компания В",
+                  "Анализи и процеси за отдела по продажби."
+                ],
+                [
+                  "2012 — 2016",
+                  "Бакалавър, Икономика · СУ",
+                  "Дипломна работа за поведенческа икономика."
+                ]
+              ]
+            },
+            {
+              "type": "chips",
+              "id": "skills",
+              "alt": true,
+              "title": "Умения",
+              "items": [
+                "Продуктова стратегия",
+                "Потребителски проучвания",
+                "Agile / Scrum",
+                "SQL и анализ",
+                "Figma",
+                "Водене на екипи",
+                "Публично говорене"
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "projects",
+              "title": "Избрани проекти",
+              "items": [
+                [
+                  "rocket",
+                  "Мобилно приложение",
+                  "От идея до 200 000 потребители за 18 месеца."
+                ],
+                [
+                  "chart",
+                  "Нова ценова политика",
+                  "+18% приходи без загуба на клиенти."
+                ],
+                [
+                  "users",
+                  "Програма за менторство",
+                  "30 младши колеги, 8 от тях вече водят екипи."
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Контакт",
+              "intro": "Пишете ми за роли, проекти или просто за кафе.",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "link",
+                  "LinkedIn",
+                  "linkedin.com/in/…",
+                  "https://www.linkedin.com/"
+                ]
+              ],
+              "send": "Изпрати"
+            }
+          ]
+        }
+      }
+    },
+    "en": {
+      "tagline": "résumé and experience",
+      "description": "Professional experience, skills and projects — and how to get in touch about work.",
+      "nav": [
+        [
+          "Experience",
+          "/#experience"
+        ],
+        [
+          "Skills",
+          "/#skills"
+        ],
+        [
+          "Projects",
+          "/#projects"
+        ],
+        [
+          "Contact",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Get in touch",
+        "mailto:hello@example.com"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Open to new opportunities",
+            "eyebrowIcon": "spark",
+            "title": "Hi, I’m *{{NAME}}*",
+            "lead": "A product manager with 8 years at software companies. I turn complex problems into simple products people love.",
+            "cta": [
+              "Get in touch",
+              "mailto:hello@example.com"
+            ],
+            "cta2": [
+              "See experience",
+              "/#experience"
+            ],
+            "chips": [
+              "Sofia / remote",
+              "Bulgarian, English, German"
+            ]
+          },
+          "sections": [
+            {
+              "type": "timeline",
+              "id": "experience",
+              "title": "Experience",
+              "items": [
+                [
+                  "2022 — now",
+                  "Senior Product Manager · Company A",
+                  "Leading a team of 12. Active users up 40% in a year."
+                ],
+                [
+                  "2019 — 2022",
+                  "Product Manager · Company B",
+                  "Launched the mobile app from zero to 200,000 users."
+                ],
+                [
+                  "2016 — 2019",
+                  "Business Analyst · Company C",
+                  "Analysis and processes for the sales department."
+                ],
+                [
+                  "2012 — 2016",
+                  "BSc Economics · Sofia University",
+                  "Thesis on behavioural economics."
+                ]
+              ]
+            },
+            {
+              "type": "chips",
+              "id": "skills",
+              "alt": true,
+              "title": "Skills",
+              "items": [
+                "Product strategy",
+                "User research",
+                "Agile / Scrum",
+                "SQL and analytics",
+                "Figma",
+                "Team leadership",
+                "Public speaking"
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "projects",
+              "title": "Selected projects",
+              "items": [
+                [
+                  "rocket",
+                  "Mobile app",
+                  "From idea to 200,000 users in 18 months."
+                ],
+                [
+                  "chart",
+                  "New pricing",
+                  "+18% revenue with no customer loss."
+                ],
+                [
+                  "users",
+                  "Mentoring program",
+                  "30 junior colleagues, 8 of them now lead teams."
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Contact",
+              "intro": "Write to me about roles, projects or just a coffee.",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "link",
+                  "LinkedIn",
+                  "linkedin.com/in/…",
+                  "https://www.linkedin.com/"
+                ]
+              ],
+              "send": "Send"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

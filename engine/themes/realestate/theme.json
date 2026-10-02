@@ -1,0 +1,512 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "realestate",
+  "category": "commerce",
+  "icon": "building.2",
+  "accent": "#1e40af",
+  "mark": "home",
+  "featured": false,
+  "titleKey": "newsite.template.realestate.title",
+  "descriptionKey": "newsite.template.realestate.description",
+  "style": "elegant",
+  "tokens": {
+    "dark": false,
+    "bg": "#f6f7f9",
+    "bg2": "#eceff4",
+    "surface": "#ffffff",
+    "text": "#0f172a",
+    "muted": "#526074",
+    "line": "rgba(15,23,42,.10)",
+    "accent": "#1e40af",
+    "accent2": "#3b82f6",
+    "head": "serif",
+    "radius": 14
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "lang": {
+    "bg": {
+      "tagline": "агенция за недвижими имоти",
+      "description": "Продажба и наем на жилища и офиси. Безплатна оценка на имота ви до 48 часа.",
+      "nav": [
+        [
+          "Имоти",
+          "/listings.html"
+        ],
+        [
+          "Услуги",
+          "/#services"
+        ],
+        [
+          "Отзиви",
+          "/#reviews"
+        ],
+        [
+          "Контакт",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Безплатна оценка",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Над 300 сделки миналата година",
+            "eyebrowIcon": "home",
+            "title": "Вашият следващ дом *е тук*",
+            "lead": "Купуваме, продаваме и отдаваме под наем с прозрачни условия, проверени документи и брокер, който е на ваша страна.",
+            "cta": [
+              "Виж имотите",
+              "/listings.html"
+            ],
+            "cta2": [
+              "Оцени моя имот",
+              "/#contact"
+            ],
+            "card": {
+              "icon": "home",
+              "title": "Нови оферти",
+              "rows": [
+                [
+                  "2-стаен, Лозенец",
+                  "189 000 €"
+                ],
+                [
+                  "3-стаен, Бояна",
+                  "320 000 €"
+                ],
+                [
+                  "Офис, Център",
+                  "1 400 €/мес."
+                ]
+              ],
+              "note": "Цените са ориентировъчни."
+            }
+          },
+          "sections": [
+            {
+              "type": "cards",
+              "id": "services",
+              "title": "С какво помагаме",
+              "items": [
+                [
+                  "home",
+                  "Продажба",
+                  "Оценка, професионални снимки, огледи и договаряне."
+                ],
+                [
+                  "key",
+                  "Покупка",
+                  "Подбор по вашите критерии и проверка на документите."
+                ],
+                [
+                  "calendar",
+                  "Наем",
+                  "Наематели с проверена история и договор, който ви пази."
+                ],
+                [
+                  "shield",
+                  "Правна помощ",
+                  "Нотариус, ипотека и прехвърляне — от един човек."
+                ]
+              ]
+            },
+            {
+              "type": "stats",
+              "alt": true,
+              "items": [
+                [
+                  "300+",
+                  "сделки за година"
+                ],
+                [
+                  "21 дни",
+                  "средно до продажба"
+                ],
+                [
+                  "0 лв.",
+                  "комисиона за купувача"
+                ],
+                [
+                  "4.9/5",
+                  "оценка на клиентите"
+                ]
+              ]
+            },
+            {
+              "type": "quotes",
+              "id": "reviews",
+              "title": "Клиентите за нас",
+              "items": [
+                [
+                  "„Продадохме апартамента за три седмици, на по-добра цена от очакваното.“",
+                  "Семейство Тодорови"
+                ],
+                [
+                  "„Всички документи бяха проверени, преди да кажем „да“. Спокойствие.“",
+                  "Александър"
+                ],
+                [
+                  "„Намериха ни офис точно по изискванията.“",
+                  "Studio North"
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Безплатна оценка",
+              "intro": "Кажете ни за имота — ще получите пазарна оценка до 48 часа.",
+              "formName": "valuation",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Адрес",
+                  "ул. „Витоша“ 1, София"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "type",
+                  "label": "Вид имот",
+                  "options": [
+                    "Апартамент",
+                    "Къща",
+                    "Офис",
+                    "Парцел"
+                  ]
+                },
+                {
+                  "id": "area",
+                  "label": "Квартал / град"
+                }
+              ],
+              "messageLabel": "Площ, етаж и състояние",
+              "send": "Поискай оценка"
+            }
+          ]
+        },
+        "listings": {
+          "title": "Имоти за продажба и наем",
+          "description": "Актуални оферти за апартаменти, къщи и офиси за продажба и под наем.",
+          "pagehead": [
+            "Имоти",
+            "Актуални оферти. Попитайте за имоти, които още не са публикувани."
+          ],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Продажба",
+                  "items": [
+                    [
+                      "2-стаен, Лозенец",
+                      "68 м², ет. 4, южно изложение",
+                      "189 000 €"
+                    ],
+                    [
+                      "3-стаен, Бояна",
+                      "112 м², градина, паркомясто",
+                      "320 000 €"
+                    ],
+                    [
+                      "Къща, Панчарево",
+                      "180 м², двор 600 м²",
+                      "420 000 €"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Наем",
+                  "items": [
+                    [
+                      "1-стаен, Център",
+                      "Обзаведен, до метро",
+                      "650 €/мес."
+                    ],
+                    [
+                      "Офис, Център",
+                      "120 м², 8 работни места",
+                      "1 400 €/мес."
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "gallery",
+              "alt": true,
+              "title": "Снимки",
+              "intro": "Заменете с реални снимки на имотите.",
+              "items": [
+                "Лозенец — дневна",
+                "Бояна — градина",
+                "Панчарево — фасада",
+                "Център — офис"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "en": {
+      "tagline": "real estate agency",
+      "description": "Homes and offices for sale and rent. A free valuation of your property within 48 hours.",
+      "nav": [
+        [
+          "Listings",
+          "/listings.html"
+        ],
+        [
+          "Services",
+          "/#services"
+        ],
+        [
+          "Reviews",
+          "/#reviews"
+        ],
+        [
+          "Contact",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Free valuation",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Over 300 deals last year",
+            "eyebrowIcon": "home",
+            "title": "Your next home *is here*",
+            "lead": "We buy, sell and let with clear terms, verified paperwork and an agent who is on your side.",
+            "cta": [
+              "See listings",
+              "/listings.html"
+            ],
+            "cta2": [
+              "Value my property",
+              "/#contact"
+            ],
+            "card": {
+              "icon": "home",
+              "title": "New listings",
+              "rows": [
+                [
+                  "2-bed, Lozenets",
+                  "€189,000"
+                ],
+                [
+                  "3-bed, Boyana",
+                  "€320,000"
+                ],
+                [
+                  "Office, Centre",
+                  "€1,400/mo"
+                ]
+              ],
+              "note": "Prices are indicative."
+            }
+          },
+          "sections": [
+            {
+              "type": "cards",
+              "id": "services",
+              "title": "How we help",
+              "items": [
+                [
+                  "home",
+                  "Selling",
+                  "Valuation, professional photos, viewings and negotiation."
+                ],
+                [
+                  "key",
+                  "Buying",
+                  "Shortlists that match your needs and checked paperwork."
+                ],
+                [
+                  "calendar",
+                  "Letting",
+                  "Vetted tenants and a contract that protects you."
+                ],
+                [
+                  "shield",
+                  "Legal help",
+                  "Notary, mortgage and transfer — one person handles it."
+                ]
+              ]
+            },
+            {
+              "type": "stats",
+              "alt": true,
+              "items": [
+                [
+                  "300+",
+                  "deals a year"
+                ],
+                [
+                  "21 days",
+                  "average time to sell"
+                ],
+                [
+                  "€0",
+                  "buyer commission"
+                ],
+                [
+                  "4.9/5",
+                  "client rating"
+                ]
+              ]
+            },
+            {
+              "type": "quotes",
+              "id": "reviews",
+              "title": "Clients about us",
+              "items": [
+                [
+                  "“We sold our flat in three weeks, above what we expected.”",
+                  "The Todorov family"
+                ],
+                [
+                  "“Every document was checked before we said yes. Peace of mind.”",
+                  "Alexander"
+                ],
+                [
+                  "“They found us an office that ticked every box.”",
+                  "Studio North"
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Free valuation",
+              "intro": "Tell us about the property — a market valuation within 48 hours.",
+              "formName": "valuation",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Address",
+                  "1 Vitosha St, Sofia"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "type",
+                  "label": "Property type",
+                  "options": [
+                    "Apartment",
+                    "House",
+                    "Office",
+                    "Land"
+                  ]
+                },
+                {
+                  "id": "area",
+                  "label": "Area / city"
+                }
+              ],
+              "messageLabel": "Size, floor and condition",
+              "send": "Request a valuation"
+            }
+          ]
+        },
+        "listings": {
+          "title": "Properties for sale and rent",
+          "description": "Current apartments, houses and offices for sale and to let.",
+          "pagehead": [
+            "Listings",
+            "Current offers. Ask about properties that are not published yet."
+          ],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "For sale",
+                  "items": [
+                    [
+                      "2-bed, Lozenets",
+                      "68 m², 4th floor, south facing",
+                      "€189,000"
+                    ],
+                    [
+                      "3-bed, Boyana",
+                      "112 m², garden, parking",
+                      "€320,000"
+                    ],
+                    [
+                      "House, Pancharevo",
+                      "180 m², 600 m² plot",
+                      "€420,000"
+                    ]
+                  ]
+                },
+                {
+                  "name": "To let",
+                  "items": [
+                    [
+                      "Studio, Centre",
+                      "Furnished, next to the metro",
+                      "€650/mo"
+                    ],
+                    [
+                      "Office, Centre",
+                      "120 m², 8 desks",
+                      "€1,400/mo"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "gallery",
+              "alt": true,
+              "title": "Photos",
+              "intro": "Replace with real photos of the properties.",
+              "items": [
+                "Lozenets — living room",
+                "Boyana — garden",
+                "Pancharevo — front",
+                "Centre — office"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

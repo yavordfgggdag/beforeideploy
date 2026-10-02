@@ -34,7 +34,7 @@ SwiftUI app ──(NDJSON over stdout)──▶ engine `bid` (Node, zero deps, b
 | `util.mjs` (`publishIncludes`, `pidStartTime`, `processHolds`) | shared publish filter; lock liveness |
 | `site.mjs` (`scanSite`, `siteConfig`, fixes helpers) | 11.1: the `site` check step — SEO / content / a11y / assets / launch files over the publish output, `bid.config.json` overrides, the text of the three safe fixes |
 | `launch.mjs` (`launchStatus`) | 11.1: the launch checklist inside `status` and `bid launch` |
-| `newsite.mjs` + `engine/templates/*` | 11.1: `bid new list / create` — curated static templates that pass the check on the first run; build.sh copies `templates` into the bundle |
+| `newsite.mjs` + `sitegen/` + `engine/themes/*` | 11.1 / S1: `bid new list / create / generate` — sites are rendered from theme recipes (`theme.json`) with the owner's details, every string escaped; build.sh copies `themes` into the bundle (`docs/SITE-BUILDER.md`) |
 | `cloud.mjs` (`cloudDoctor`, `cloudSetupItems`) | probes the bundled project (health, auth options, tables, functions) → `bid cloud doctor`, the first group of `bid setup status`, the "Check the cloud" line on the sign-in screen |
 
 ### New cloud pieces
