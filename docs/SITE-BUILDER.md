@@ -153,8 +153,9 @@ three steps as a progress strip on step 3, the charge after; an AI failure keeps
   with Chromium through Playwright (`playwright-core`, dev tooling only — the engine stays dependency-free) and
   records the theme.json fingerprint in `engine/themes/previews.json`; `bid new check` reports `present`,
   `stale` or `missing`, and the engine tests fail on anything but `present`. The **theme-previews** workflow
-  (Actions → Run workflow) renders the stale ones on macOS — the fonts the Mac app's users see — and commits the
-  pictures to the branch, so a theme change is followed by one click, not by a tool chain on every machine.
+  runs on every push that touches a theme, the renderer or the script (and by hand): it renders all of them on
+  macOS — the fonts the Mac app's users see — and commits the pictures to the branch, so after a theme change a
+  `git pull` brings the pictures; no tool chain is needed on any machine.
 - **"Something else".** The last card of the picker: the owner describes the site in their words; the themes are
   ranked by `keywords.bg` / `keywords.en`, title and description (`bid new suggest --say "…"`, no model; the app
   ranks the same way offline). Nothing close → start from the business landing, every text changes later.
@@ -176,8 +177,9 @@ three steps as a progress strip on step 3, the charge after; an AI failure keeps
    `questions`, and the recipe in `lang.bg` and `lang.en` with the same page ids.
 2. `engine/i18n/bg.json` and `en.json` — `newsite.template.<id>.title` and `.description`.
 3. `bid new check` must list no errors for it; `node tests/run.mjs` creates it in both languages and all styles.
-4. Run the **theme-previews** workflow (or `node scripts/theme-shots.mjs <id>` with Chrome installed) — the
-   picture lands in the picker; without it the card shows the accent gradient and the engine tests fail.
+4. Push — the **theme-previews** workflow renders the picture on macOS and commits it; `git pull` to get it (or
+   `node scripts/theme-shots.mjs <id>` locally with Chrome installed). Without it the card shows the accent
+   gradient and the engine tests fail.
 
 ## Tests
 

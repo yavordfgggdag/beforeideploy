@@ -112,8 +112,8 @@ node scripts/i18n-check.mjs && node scripts/error-codes.mjs
 ```
 
 CI: `engine.yml` (Linux), `engine-macos.yml`, `app.yml` (build + tests + bundled engine check), `functions.yml`
-(deno check + test + the RLS job). By hand: `theme-previews.yml` renders the theme pictures on macOS and commits
-them after a theme changes (`docs/SITE-BUILDER.md`, S5).
+(deno check + test + the RLS job). `theme-previews.yml` renders the theme pictures on macOS and commits them
+when a theme changes (`docs/SITE-BUILDER.md`, S5).
 
 ## 6. Known limits at handoff
 

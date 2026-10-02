@@ -1,22 +1,25 @@
 # Site Builder S5: the pictures of the themes in the "New site" picker (engine/themes/<id>/preview.jpg).
-# Run it by hand after a theme changes: it renders every stale theme on macOS (the fonts the Mac app's users
-# see), commits the pictures to the branch it was started from and uploads them as an artifact. The engine
-# tests fail when a picture is missing or older than its theme.json, so this cannot be forgotten.
+# Runs when a theme, the renderer or this tooling changes (and by hand): it renders every theme on macOS (the
+# fonts the Mac app's users see), commits the pictures to the branch and uploads them as an artifact — so after
+# a push, `git pull` brings the pictures. The engine tests fail when a picture is missing or older than its
+# theme.json, so a theme cannot ship without one. Its own commit touches only pictures, so it never loops.
 name: theme-previews
 
 on:
   workflow_dispatch:
-    inputs:
-      all:
-        description: Redraw every theme, not only the stale ones
-        type: boolean
-        default: false
+  push:
+    paths:
+      - 'engine/themes/*/theme.json'
+      - 'engine/src/sitegen/**'
+      - 'scripts/theme-shots.mjs'
+      - '.github/workflows/theme-previews.yml'
 
 permissions:
   contents: write
 
 jobs:
   previews:
+    if: github.actor != 'github-actions[bot]'
     runs-on: macos-15
     timeout-minutes: 20
     defaults:
@@ -30,7 +33,7 @@ jobs:
       - name: Playwright (drives the runner's Chrome; nothing is downloaded)
         run: npm i --no-save --no-audit --no-fund --prefix scripts playwright-core
       - name: Render the previews
-        run: node scripts/theme-shots.mjs ${{ inputs.all && '--all' || '' }}
+        run: node scripts/theme-shots.mjs --all
       - name: Previews are current
         run: node scripts/theme-shots.mjs --check
       - uses: actions/upload-artifact@v4
