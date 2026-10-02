@@ -21,6 +21,21 @@ final class SiteBuilderDraft: ObservableObject {
     @Published var loadingPreview = false
     @Published var busy = false
     @Published var error: String?
+    // S3: the AI writes the texts — on by default when the account can use it; the content file follows the brief
+    @Published var useAI = false
+    @Published var contentFile: String?
+    @Published var contentKey = ""
+    @Published var aiSteps: [AIStep] = []
+    @Published var aiRunning = false
+    @Published var aiError: String?
+    @Published var aiUsage: SiteContentResult.Usage?
+
+    struct AIStep: Identifiable, Equatable {
+        var id: String
+        var label: String
+        var status: String
+        var summary: String
+    }
 
     init() {
         brief.services = [SiteBrief.Service()]
@@ -41,6 +56,9 @@ final class SiteBuilderDraft: ObservableObject {
     }
 
     var nameOK: Bool { !brief.name.trimmingCharacters(in: .whitespaces).isEmpty }
+
+    /// The AI content is for this brief; a changed brief needs a new one.
+    var aiContentCurrent: Bool { contentFile != nil && contentKey == previewKey }
 
     /// A key that changes whenever the preview would: the brief without photos (the preview never shows them).
     var previewKey: String {
@@ -91,10 +109,12 @@ struct SiteBuilderSheet: View {
             if model.templates.isEmpty { await model.loadTemplates() }
             if model.siteStyles.isEmpty { await model.loadSiteStyles() }
             if draft.brief.style == nil, let t = model.templates.first(where: { $0.id == draft.brief.theme }) { draft.brief.style = t.style }
+            draft.useAI = model.aiReady && !Snapshot.argument("BIDSnapshot")
         }
-        .task(id: draft.previewKey + (draft.step == .theme ? "theme" : "full")) {
+        .task(id: draft.previewKey + (draft.step == .theme ? "theme" : "full") + (draft.useAI ? "ai" : "")) {
             // the preview follows the theme on step 1 and the whole brief on step 3; step 2 renders nothing
             guard draft.step != .details, !model.templates.isEmpty || draft.step == .preview else { return }
+            if draft.step == .preview, draft.useAI, !draft.aiContentCurrent { await writeWithAI() }
             await loadPreview()
         }
     }
@@ -140,7 +160,7 @@ struct SiteBuilderSheet: View {
                 Button(L("newsite.continue")) { withAnimation(Motion.quick) { draft.step = .details } }
                     .bidButton(.primary).keyboardShortcut(.defaultAction).disabled(model.templates.isEmpty)
             case .details:
-                Text(L("newsite.free")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
+                Text(draft.useAI ? L("newsite.ai.cost") : L("newsite.free")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
                 Button(L("newsite.show")) { withAnimation(Motion.quick) { draft.step = .preview } }
                     .bidButton(.primary).keyboardShortcut(.defaultAction).disabled(!draft.nameOK)
             case .preview:
@@ -165,12 +185,37 @@ struct SiteBuilderSheet: View {
         draft.loadingPreview = true
         draft.previewError = nil
         do {
-            let files = try await model.previewSite(brief)
+            let files = try await model.previewSite(brief, contentFile: draft.step == .preview && draft.useAI && draft.aiContentCurrent ? draft.contentFile : nil)
             if !Task.isCancelled { draft.preview = files }
         } catch {
             if !Task.isCancelled { draft.previewError = error.localizedDescription }
         }
         draft.loadingPreview = false
+    }
+
+    /// S3: the three AI steps, shown as they run; a failure leaves the sample texts in place and says why.
+    private func writeWithAI() async {
+        let key = draft.previewKey
+        draft.aiRunning = true
+        draft.aiError = nil
+        draft.aiSteps = []
+        var brief = draft.brief
+        brief.photos = []
+        do {
+            let r = try await model.siteContent(brief) { e in
+                guard let id = e.string("id") else { return }
+                let step = SiteBuilderDraft.AIStep(id: id, label: e.string("label") ?? id, status: e.string("status") ?? "", summary: e.string("summary") ?? "")
+                if let i = draft.aiSteps.firstIndex(where: { $0.id == id }) { draft.aiSteps[i] = step } else { draft.aiSteps.append(step) }
+            }
+            guard !Task.isCancelled else { return }
+            draft.contentFile = r.contentFile
+            draft.contentKey = key
+            draft.aiUsage = r.usage
+            if draft.brief.style == nil, let s = r.styleSuggestion { draft.brief.style = s }
+        } catch {
+            if !Task.isCancelled { draft.aiError = error.localizedDescription }
+        }
+        draft.aiRunning = false
     }
 
     private func save() {
@@ -179,7 +224,7 @@ struct SiteBuilderSheet: View {
         var brief = draft.brief
         brief.name = brief.name.trimmingCharacters(in: .whitespaces)
         Task {
-            let e = await model.generateSite(brief, dir: draft.dir)
+            let e = await model.generateSite(brief, dir: draft.dir, contentFile: draft.useAI && draft.aiContentCurrent ? draft.contentFile : nil)
             draft.busy = false
             if let e { draft.error = e } else { dismiss() }
         }
@@ -336,6 +381,7 @@ private struct DetailsStep: View {
                 }
                 .frame(maxWidth: .infinity)
                 VStack(alignment: .leading, spacing: 16) {
+                    AIToggle(draft: draft)
                     field(L("newsite.style"), hint: L("newsite.styleHint")) { StylePicker(draft: draft, styles: model.siteStyles) }
                     field(L("newsite.photos"), hint: L("newsite.photosHint")) { PhotosEditor(photos: $draft.brief.photos) }
                     field(L("newsite.language")) {
@@ -477,6 +523,29 @@ private struct StylePicker: View {
     }
 }
 
+/// S3: "Write the texts with AI" — on when the account can use the built-in AI (plan or own key); otherwise a
+/// short line says what is needed, with the same button every AI feature uses.
+private struct AIToggle: View {
+    @EnvironmentObject var model: AppModel
+    @ObservedObject var draft: SiteBuilderDraft
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "sparkles").font(Typo.font(.headline)).foregroundColor(draft.useAI && model.aiReady ? Theme.accent : Theme.secondary).padding(.top, 2).accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 4) {
+                Toggle(isOn: $draft.useAI) { Text(L("newsite.ai.toggle")).font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.text) }
+                    .toggleStyle(.switch).disabled(!model.aiReady)
+                Text(model.aiReady ? L("newsite.ai.toggleHint") : L("newsite.ai.needsPlan")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
+                if !model.aiReady {
+                    Button(L("aikeys.sheetTitle")) { model.aiUnavailableAction() }.bidButton(.secondary, compact: true)
+                }
+            }
+        }
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).fill(draft.useAI && model.aiReady ? Theme.accent.opacity(0.08) : Theme.elevated))
+        .overlay(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).strokeBorder(draft.useAI && model.aiReady ? Theme.accent.opacity(0.5) : Theme.hairline, lineWidth: 1))
+    }
+}
+
 /// Photos: drop them on the zone or pick them; thumbnails with a remove button. Paths only — the engine copies
 /// and resizes the files when the site is saved.
 private struct PhotosEditor: View {
@@ -566,8 +635,36 @@ private struct PreviewStep: View {
                 SegmentedControl(options: [(L("newsite.desktop"), false), (L("newsite.phone"), true)], selection: $draft.phone, icons: [false: "desktopcomputer", true: "iphone"]).frame(width: 220)
             }
             .padding(.horizontal, 22).padding(.vertical, 10)
+            if draft.useAI { AIProgress(draft: draft) }
             SitePreviewPane(draft: draft, caption: nil)
         }
+    }
+}
+
+/// S3: the three AI steps as the engine reports them, then what it cost; an error keeps the sample texts.
+private struct AIProgress: View {
+    @ObservedObject var draft: SiteBuilderDraft
+    var body: some View {
+        HStack(spacing: 14) {
+            Image(systemName: "sparkles").foregroundColor(Theme.accent).accessibilityHidden(true)
+            if draft.aiRunning || !draft.aiSteps.isEmpty {
+                ForEach(draft.aiSteps) { s in
+                    HStack(spacing: 5) {
+                        if s.status == "running" { Spinner(size: 10) } else { StatusDot(status: s.status == "pass" ? "ready" : s.status == "warn" ? "warn" : "blocked", size: 7) }
+                        Text(s.label).font(Typo.font(.caption, weight: s.status == "running" ? .semibold : .regular)).foregroundColor(s.status == "running" ? Theme.text : Theme.secondary)
+                    }
+                }
+            }
+            if let e = draft.aiError {
+                Label(e, systemImage: "exclamationmark.circle.fill").font(Typo.font(.caption)).foregroundColor(Theme.blocked).lineLimit(2)
+                Text(L("newsite.ai.fallback")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
+            } else if !draft.aiRunning, draft.aiContentCurrent {
+                Text(draft.aiUsage?.charged != nil ? L("newsite.ai.charged", draft.aiUsage?.charged ?? 0) : L("newsite.ai.written")).font(Typo.font(.caption)).foregroundColor(Theme.ready)
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 22).padding(.bottom, 8)
+        .accessibilityElement(children: .combine)
     }
 }
 

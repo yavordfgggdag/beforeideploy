@@ -88,11 +88,13 @@ const parseJSON = (s) => {
 
 // ---------------------------------------------------------------- Anthropic (own key)
 
-async function* anthropic({ key, model, system, messages, maxTokens = 8000, effort = 'medium', signal, idleMs }) {
+async function* anthropic({ key, model, system, messages, maxTokens = 8000, effort = 'medium', format = null, signal, idleMs }) {
   const body = { model, max_tokens: maxTokens, system, messages, stream: true };
   // effort is not accepted by the Haiku 4.5 family; the other current models take it in output_config and run
   // adaptive thinking on their own (Opus 5.5 cannot switch it off — effort is the only depth control)
   if (effort && !/haiku/i.test(model)) body.output_config = { effort };
+  // structured outputs (Site Builder): the answer is JSON that matches the schema
+  if (format) body.output_config = { ...(body.output_config || {}), format: { type: 'json_schema', schema: format } };
   const base = { 'x-api-key': key, 'anthropic-version': '2023-06-01' };
   // A declined request is re-run server-side on Anthropic's recommended fallback model (beta).
   let res = await post(`${ANTHROPIC_API()}/v1/messages`, { ...base, 'anthropic-beta': 'server-side-fallback-2026-07-01' }, { ...body, fallbacks: 'default' }, signal);

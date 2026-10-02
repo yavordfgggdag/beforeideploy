@@ -99,7 +99,34 @@ Adding a section type: a renderer in `render.mjs` (escape every value), its CSS 
 Screenshots: `open "Before I Deploy.app" --args -BIDScreen newsite -BIDSiteBuilderStep theme|details|preview`
 fills a demo brief (`newsite.demo.*`) so every step renders with content; the screenshots workflow takes all three.
 
+## The AI (S3)
+
+`engine/src/sitegen/ai.mjs` is the whole pipeline — pure ESM, no imports — and `supabase/functions/_shared/site-ai.mjs`
+is its byte-identical copy (`node scripts/sitegen-sync.mjs`; a test fails when they differ). Three steps:
+
+| Step | Model | Input → output |
+| --- | --- | --- |
+| plan | Haiku 4.5 (`ai.models.explain`) | brief + recipe outline → which sections stay, the tone, a style suggestion |
+| content | the plan's model (`ai.models[plan]`: Sonnet 5.5 on Flash, Opus 5.5 on High/Knight) | brief + recipe → every text, in a fixed JSON schema (structured outputs) |
+| review | Haiku 4.5 | brief + content → the same content with invented facts removed and lengths cut |
+
+The model writes words only. `mergeContent()` puts them into the recipe: hrefs, icons, section ids, form fields,
+contact rows and photos never come from the model, and a `keep: false` section is dropped unless it is the
+contact / CTA / form. The system prompt forbids invented reviews, numbers, names and prices.
+
+Two hosts run the same code: `bid new content` on the owner's Anthropic key (steps run in the engine,
+`engine/src/sitegen/aicontent.mjs`), or the metered `site-gen` Edge Function (steps run there; one hold for the
+worst case of all three steps, one settlement with the real tokens under `ai.site.create`, which the starter
+bonus covers). The result is a content file (`bid.site-content/1`) in the cache; `bid new preview --content` and
+`bid new generate --content` take it, so the AI runs once per site.
+
+The wizard: the "Write the texts with AI" toggle on step 2 (on when the account can use the built-in AI), the
+three steps as a progress strip on step 3, the charge after; an AI failure keeps the sample texts and says why.
+
 ## Tests
 
 `node tests/run.mjs` — the `new:` tests create every theme in both languages and every style, run the
-quality check, and verify escaping, links, photos, contacts and `bid.site.json`.
+quality check, and verify escaping, links, photos, contacts and `bid.site.json`; `new content:` runs the AI
+pipeline against the fake model (own key and cloud) and checks that links and contacts never come from it.
+`deno test supabase/functions` — `site-gen` with a fake model: steps, models per plan, merging, billing,
+duplicates, failures.

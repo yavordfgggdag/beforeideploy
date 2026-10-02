@@ -43,6 +43,7 @@ import { t, msg } from './i18n.mjs';
 import { launchStatus } from './launch.mjs';
 import { createSite, listTemplates } from './newsite.mjs';
 import { generateSite, previewSite } from './sitegen/generate.mjs';
+import { siteContent, readContentArg } from './sitegen/aicontent.mjs';
 import { loadTheme, validateTheme } from './sitegen/themes.mjs';
 import { STYLES, paletteIds } from './sitegen/tokens.mjs';
 
@@ -99,7 +100,8 @@ const HELP = `Before I Deploy engine ${VERSION}
   bid issues  --project P          prioritized issues from the last check (severity, evidence, fix, verification)
   bid launch  --project P          launch checklist: folder → check → site quality → hosting → deploy → domain → monitoring
   bid new list | styles | check | create --template ID --name N --dir PARENT [--lang bg|en] [--description D] [--style calm|bold|elegant --palette P]
-  bid new generate --brief brief.json --dir PARENT | preview --brief brief.json      a site from a brief (bid.site-brief/1)
+  bid new generate --brief brief.json --dir PARENT [--content c.json | --ai] | preview --brief brief.json [--content c.json]
+  bid new content --brief brief.json [--provider cloud|anthropic]     the AI writes the texts (plan → content → review) into a content file
   bid monitor once [--project P] | status [--no-network] | incidents [--limit N] | settings --json '{…}' | agent install --yes | agent remove
   bid monitor cloud status | enable [--project P] [--interval N] [--paths /a,/b] | disable [--project P] | test --project P
   bid monitor maintenance add --from ISO --to ISO [--project P] [--note T] | list | clear · bid monitor notify test
@@ -236,13 +238,17 @@ async function main() {
         if (flags.style || flags.palette) return ok(generateSite({ brief: { theme: flags.template, name: flags.name, lang: flags.lang, description: flags.description, style: flags.style, palette: flags.palette }, dir: flags.dir }));
         return ok(createSite({ template: flags.template, name: flags.name, dir: flags.dir, lang: flags.lang, description: flags.description }));
       }
-      if (sub === 'generate' || sub === 'preview') {
+      if (sub === 'generate' || sub === 'preview' || sub === 'content') {
         // the brief: a JSON file (the app writes one next to its form) or inline JSON
         const raw = flags.brief && flags.brief !== true ? String(flags.brief) : '';
         const brief = raw.trim().startsWith('{') ? JSON.parse(raw) : readJSON(raw, null);
         if (!brief) throw new EngineError(msg('newsite.missingBrief'), 'usage', 2);
-        if (sub === 'preview') return ok(previewSite(brief));
-        return ok(generateSite({ brief, dir: flags.dir }));
+        if (sub === 'content') return ok(await siteContent({ brief, provider: flags.provider && flags.provider !== true ? String(flags.provider) : null }));
+        // ready content (the AI path, `bid new content`) replaces the theme's sample texts
+        let content = readContentArg(flags.content);
+        if (sub === 'generate' && flags.ai && !content) content = readContentArg((await siteContent({ brief, provider: flags.provider && flags.provider !== true ? String(flags.provider) : null })).contentFile);
+        if (sub === 'preview') return ok(previewSite(brief, content));
+        return ok(generateSite({ brief, dir: flags.dir, content }));
       }
       throw new EngineError(msg('cli.unknownCommand', { command: `new ${sub}` }), 'usage', 2);
     }

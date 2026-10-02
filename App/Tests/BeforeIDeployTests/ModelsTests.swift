@@ -85,6 +85,13 @@ final class ModelsTests: XCTestCase {
         XCTAssertNil((json["services"] as? [[String: Any]])?.first?["id"], "the row id is UI state, not brief data")
         XCTAssertEqual((json["photos"] as? [[String: Any]])?.first?["path"] as? String, "/tmp/me.jpg")
         XCTAssertEqual(json["palette"] as? String, "coral")
+        // S3: the AI's content file and what it cost
+        let c = try Fixtures.decode("new-content", as: SiteContentResult.self)
+        XCTAssertTrue(c.contentFile.hasSuffix(".json"))
+        XCTAssertEqual(c.provider, "cloud")
+        XCTAssertEqual(c.usage.charged, 12000)
+        XCTAssertEqual(c.styleSuggestion, "calm")
+        XCTAssertEqual(c.pages.first, "index")
         let s = try Fixtures.decode("site-step", as: StepResult.self)
         XCTAssertEqual(s.id, "site")
         XCTAssertEqual(s.status, "fail")

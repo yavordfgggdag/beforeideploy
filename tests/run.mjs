@@ -1192,6 +1192,12 @@ http.createServer((q,r)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{r.setHea
  if(q.url.startsWith('/v1/models')){if(q.headers['x-api-key']!=='sk-ant-good-key-123'){r.statusCode=401;return r.end('{}');}return r.end('{"data":[]}');}
  if(q.url==='/v1/messages'){if(q.headers['x-api-key']!=='sk-ant-good-key-123'){r.statusCode=401;return r.end('{"type":"error","error":{"message":"invalid x-api-key"}}');}
    const req=b?JSON.parse(b):{};const text=JSON.stringify(req.messages?.at(-1)||'')+' '+(req.system||'');const ev=(o)=>r.write('event: '+o.type+'\\ndata: '+JSON.stringify(o)+'\\n\\n');
+   if(req.output_config&&req.output_config.format){const pr=String(req.messages[0].content);let out;
+     if(/Decide for every section/.test(pr))out={tone:'warm',styleSuggestion:'calm',sections:[]};
+     else if(/^Review this site/m.test(pr))out=JSON.parse(pr.slice(pr.indexOf('Content:\\n')+9));
+     else{const rec=JSON.parse(pr.slice(pr.indexOf('Recipe:\\n')+8));out={description:'AI '+rec.description,tagline:rec.tagline,nav:rec.nav,headerCta:rec.headerCta,pages:rec.pages.map(pg=>({id:pg.id,title:pg.title,description:pg.description,pagehead:pg.pagehead,hero:pg.hero?Object.assign({},pg.hero,{title:'AI *'+String(pg.hero.title).replace(/\\*/g,'')+'*',cardRows:pg.hero.cardRows||null,chips:pg.hero.chips||null}):null,sections:pg.sections.map(sc=>({index:sc.index,keep:sc.type!=='quotes',title:sc.title?'AI '+sc.title:null,intro:sc.intro||null,h:sc.h||null,p:sc.p||null,button:sc.button||null,items:sc.items||null,plans:sc.plans||null,groups:sc.groups||null,posts:sc.posts||null,body:sc.body||null,send:null,note:null}))}))};}
+     const txt=JSON.stringify(out);r.setHeader('content-type','text/event-stream');
+     ev({type:'message_start',message:{model:req.model,usage:{input_tokens:3000,output_tokens:1}}});ev({type:'content_block_delta',index:0,delta:{type:'text_delta',text:txt.slice(0,50)}});ev({type:'content_block_delta',index:0,delta:{type:'text_delta',text:txt.slice(50)}});ev({type:'message_delta',delta:{stop_reason:'end_turn'},usage:{output_tokens:1200}});ev({type:'message_stop'});return r.end();}
    const em=/\\[\\[eval:([a-z0-9-]+)\\]\\]/.exec(text);let parts=ANSWER_PARTS;
    if(em){const sc=evalScenario(em[1],text);if(process.env.BID_LAST_AI_REQ)fs.writeFileSync(process.env.BID_LAST_AI_REQ,JSON.stringify({scenario:em[1],system:req.system,messages:req.messages}));
      if(sc.status){r.statusCode=sc.status;return r.end(JSON.stringify({type:'error',error:{message:sc.error||'x'}}));}
@@ -1224,6 +1230,16 @@ http.createServer((q,r)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{r.setHea
    for(const part of ANSWER_PARTS)send({type:'delta',text:part});
    const charged=6000*(j.deep?5:1);ledger.push({user_id:me.user_id,delta:-charged,reason:'ai_fix'});
    send({type:'usage',input:4500,output:1500,model:'claude-sonnet-5',charged:charged,balance:balance(me.user_id)});send({type:'done'});return r.end();}
+ if(q.url==='/functions/v1/site-gen'){const me=caller(q);if(!me){r.statusCode=401;return r.end('{"error":"no session"}');}
+   if(me.ai_disabled){r.statusCode=403;return r.end('{"error":"disabled","code":"disabled"}');}
+   if(me.role==='normal'&&me.plan==='free'){r.statusCode=403;return r.end('{"error":"plan","code":"no_plan"}');}
+   const bal=balance(me.user_id);if(bal<=0){r.statusCode=402;return r.end(JSON.stringify({error:'no credits',code:'quota_exhausted',renewsAt:'2026-10-01T00:00:00Z',balance:bal}));}
+   if(!j.brief||!j.brief.name||!j.recipe||!j.recipe.pages){r.statusCode=400;return r.end('{"error":"brief"}');}
+   r.setHeader('content-type','text/event-stream');const send=(o)=>r.write('data: '+JSON.stringify(o)+'\\n\\n');
+   for(const st of ['plan','content','review']){send({type:'step',id:st,status:'running',model:'claude-sonnet-5-5'});send({type:'step',id:st,status:'pass',model:'claude-sonnet-5-5'});}
+   const content=JSON.parse(JSON.stringify(j.recipe));content.description='AI '+content.description;if(content.pages.index&&content.pages.index.hero)content.pages.index.hero.title='AI *cloud*';
+   const charged=12000;ledger.push({user_id:me.user_id,delta:-charged,reason:'ai_site'});
+   send({type:'result',content,plan:null,styleSuggestion:'calm',version:'site-ai/1'});send({type:'usage',input:9000,output:3600,model:'claude-sonnet-5-5',charged,balance:balance(me.user_id),status:'ok'});send({type:'done'});return r.end();}
  if(q.url==='/functions/v1/monitor'){const me=caller(q);if(!me){r.statusCode=401;return r.end('{"error":"no session"}');}
    monTargets[me.user_id]=monTargets[me.user_id]||{};const mine=monTargets[me.user_id];
    if(j.action==='register'){if(!/^https?:\\/\\/[a-z0-9.-]+\\.[a-z]+/i.test(j.url)&&!/^http:\\/\\/127\\.0\\.0\\.1/.test(j.url)){r.statusCode=400;return r.end('{"error":"x","code":"url_rejected","reason":"hostname"}');}
@@ -1698,6 +1714,47 @@ t('ai: собствен ключ → patch, прилагане само с --yes
   bid('account', 'keys', 'delete', '--provider', 'anthropic');
 });
 
+t('sitegen: supabase/functions/_shared/site-ai.mjs е точно копие на engine/src/sitegen/ai.mjs (scripts/sitegen-sync.mjs)', () => {
+  const src = fs.readFileSync(path.join(ROOT, 'engine', 'src', 'sitegen', 'ai.mjs'), 'utf8');
+  const copy = fs.readFileSync(path.join(ROOT, 'supabase', 'functions', '_shared', 'site-ai.mjs'), 'utf8');
+  assert(copy.endsWith(src) && copy.startsWith('// GENERATED'), 'run node scripts/sitegen-sync.mjs');
+});
+
+t('new content: собствен ключ — план → съдържание → ревю, думите на модела в рецептата, линковете остават; preview/generate с --content', () => {
+  const parent = path.join(TMP, 'ai-sites');
+  fs.mkdirSync(parent, { recursive: true });
+  const brief = { theme: 'mentor', lang: 'bg', name: 'Ива Петрова', offer: 'Помагам на хора да сменят посоката.', services: [{ name: 'Единична сесия', price: '120 лв.', text: '60 минути' }], contacts: { email: 'iva@example.com', phone: '+359 888 000 000' } };
+  spawnSync(BID, ['account', 'keys', 'set', '--provider', 'anthropic'], { env: { ...ENV, BID_AI_KEY: 'sk-ant-good-key-123' }, encoding: 'utf8' });
+  const r = bid('new', 'content', '--brief', JSON.stringify(brief), '--provider', 'anthropic');
+  assert(r.result.ok, JSON.stringify(r.result).slice(0, 300));
+  assert(r.data.provider === 'anthropic' && r.data.contentFile.endsWith('.json') && r.data.pages.includes('index') && r.data.styleSuggestion === 'calm', JSON.stringify(r.data).slice(0, 300));
+  const steps = r.events.filter((e) => e.type === 'step').map((e) => `${e.id}:${e.status}`);
+  assert(steps.join(',') === 'site.plan:running,site.plan:pass,site.content:running,site.content:pass,site.review:running,site.review:pass', steps.join(','));
+  assert(r.data.usage.input === 9000 && r.data.usage.output === 3600 && r.data.usage.steps.content.model === 'claude-sonnet-5-5' && r.data.usage.steps.plan.model === 'claude-haiku-4-5', JSON.stringify(r.data.usage));
+  const saved = JSON.parse(fs.readFileSync(r.data.contentFile, 'utf8'));
+  assert(saved.schema === 'bid.site-content/1' && saved.content.description.startsWith('AI '), 'the model\'s description');
+  const idx = saved.content.pages.index;
+  assert(idx.hero.title.startsWith('AI *') && idx.hero.cta[1] === '/contact.html', 'hero words from the model, link from the recipe');
+  assert(!idx.sections.some((x) => x.type === 'quotes') && idx.sections.some((x) => x.type === 'programs' || x.type === 'pricing'), 'the dropped reviews are gone, the programs stay: ' + idx.sections.map((x) => x.type));
+  const rows = saved.content.pages.contact.sections.find((x) => x.type === 'contact').rows;
+  assert(rows.some((x) => x[3] === 'mailto:iva@example.com') && rows.some((x) => x[3] === 'tel:+359888000000'), 'the owner\'s contacts, never the model\'s');
+  // the content file flows into preview and generate
+  const p = bid('new', 'preview', '--brief', JSON.stringify(brief), '--content', r.data.contentFile);
+  assert(p.result.ok && p.data['index.html'].includes('AI <em>') && p.data['contact.html'].includes('mailto:iva@example.com'), 'preview renders the AI content: ' + JSON.stringify(p.result).slice(0, 200) + ' ' + ((p.data && p.data['index.html']) || '').match(/<h1>[^<]*(<em>[^<]*<\/em>)?[^<]*<\/h1>/)?.[0]);
+  const g = bid('new', 'generate', '--brief', JSON.stringify(brief), '--dir', parent, '--content', r.data.contentFile);
+  assert(g.result.ok, JSON.stringify(g.result).slice(0, 200));
+  const html = fs.readFileSync(path.join(g.data.path, 'index.html'), 'utf8');
+  assert(html.includes('AI <em>') && !html.includes('<script>') && !html.includes('{{'), 'generated from the AI content');
+  const record = JSON.parse(fs.readFileSync(path.join(g.data.path, 'bid.site.json'), 'utf8'));
+  assert(record.content.pages.index.hero.title.startsWith('AI *'), 'bid.site.json keeps the AI content');
+  assert(bid('check', '--project', g.data.path).data.steps.find((x) => x.id === 'site').status === 'pass', 'the AI site passes the check');
+  const bad = bid('new', 'generate', '--brief', JSON.stringify(brief), '--dir', parent, '--content', path.join(parent, 'nope.json'));
+  assert(bad.result.code === 'usage' && bad.result.key === 'newsite.badContent', JSON.stringify(bad.result));
+  // the cost ledger knows about it
+  const costs = bid('costs');
+  assert(JSON.stringify(costs.data).includes('site.create'), 'cost entry');
+});
+
 t('ai: undo връща файловете от последната поправка; повторното прилагане с --recheck доказва резултата', () => {
   const undo = bid('ai', 'undo', '--project', aiApp, '--yes');
   assert(undo.result.ok && undo.data.restored.join() === 'src/app.js', JSON.stringify(undo.result));
@@ -2100,10 +2157,16 @@ t('ai: cloud път — план, кредити, quota_exhausted → exit 8, fr
   assert(fix.data.provider === 'cloud' && fix.data.usage.charged === 6000 && fix.data.usage.balance === 244000, JSON.stringify(fix.data.usage));
   assert(bid('account', 'status').data.credits.balance === 244000, 'balance after fix');
   assert(fix.data.files.find((x) => x.path === 'src/app.js').applicable, 'cloud patch');
+  // Site Builder: the texts come from the metered site-gen function, charged once
+  const site = bid('new', 'content', '--brief', JSON.stringify({ theme: 'landing', lang: 'en', name: 'Cloud Co', offer: 'We fix roofs.' }));
+  assert(site.result.ok && site.data.provider === 'cloud' && site.data.usage.charged === 12000 && site.data.usage.balance === 232000, JSON.stringify(site.result).slice(0, 300));
+  assert(site.events.filter((e) => e.type === 'step' && e.id === 'site.content').length === 2, 'progress from the function');
+  assert(JSON.parse(fs.readFileSync(site.data.contentFile, 'utf8')).content.pages.index.hero.title === 'AI *cloud*', 'the function\'s content');
+  assert(bid('account', 'status').data.credits.balance === 232000, 'balance after the site');
   const own = bid('ai', 'fix', '--project', cloudApp, '--step', 'build', '--provider', 'anthropic');
   assert(own.result.code === 'ai_unavailable' && own.result.key === 'ai.unavailable.ownKeyRole', JSON.stringify(own.result));
   login('yavor@example.com', 'supersecret1');
-  bid('admin', 'grant_credits', '--user', 'u-friend@example.com', '--delta', '-244000', '--reason', 'test');
+  bid('admin', 'grant_credits', '--user', 'u-friend@example.com', '--delta', '-232000', '--reason', 'test');
   login('friend@example.com', 'supersecret2');
   const out = bid('ai', 'fix', '--project', cloudApp, '--step', 'build');
   assert(out.code === 8 && out.result.code === 'quota_exhausted' && out.result.key === 'ai.quotaExhausted', JSON.stringify(out.result) + ' exit=' + out.code);

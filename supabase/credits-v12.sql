@@ -124,7 +124,7 @@ do $$ declare t text; begin
 end $$;
 
 insert into public.settings(key,value) values
- ('pricing.actions','{"site.day":{"credits":0,"window":false},"monitor.fast":{"credits":500,"window":false},"monitor.path":{"credits":50,"window":false},"check.run":{"credits":50,"window":true},"audit.full":{"credits":400,"window":true},"deploy.preview":{"credits":150,"window":true},"deploy.production":{"credits":500,"window":true},"deploy.rollback":{"credits":0,"window":false},"backup.snapshot":{"credits":100,"window":true},"ai.fix":{"actual":true,"window":true},"ai.fix.deep":{"actual":true,"window":true},"ai.chat":{"actual":true,"window":true}}'),
+ ('pricing.actions','{"site.day":{"credits":0,"window":false},"monitor.fast":{"credits":500,"window":false},"monitor.path":{"credits":50,"window":false},"check.run":{"credits":50,"window":true},"audit.full":{"credits":400,"window":true},"deploy.preview":{"credits":150,"window":true},"deploy.production":{"credits":500,"window":true},"deploy.rollback":{"credits":0,"window":false},"backup.snapshot":{"credits":100,"window":true},"ai.fix":{"actual":true,"window":true},"ai.fix.deep":{"actual":true,"window":true},"ai.chat":{"actual":true,"window":true},"ai.site.create":{"actual":true,"window":true},"ai.site.edit":{"actual":true,"window":true}}'),
  ('credits.holdTtlMinutes','{"default":15,"deploy.preview":25,"deploy.production":25,"backup.snapshot":25,"audit.full":15,"check.run":15}'),
  ('billing.graceDays','3'),('features.netlifyCredits','false'),('features.knightDomain','true') on conflict(key) do nothing;
 do $$ begin

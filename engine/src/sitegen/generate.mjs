@@ -8,7 +8,7 @@ import { repoSlug } from '../fixes.mjs';
 import { t, msg } from '../i18n.mjs';
 import { gitBin, gitSh } from '../gitbin.mjs';
 import { loadTheme } from './themes.mjs';
-import { normalizeBrief, applyBrief } from './brief.mjs';
+import { normalizeBrief, applyBrief, applyImages } from './brief.mjs';
 import { resolveTokens } from './tokens.mjs';
 import { renderSite } from './render.mjs';
 
@@ -69,7 +69,7 @@ export function generateSite({ brief: input, dir, content = null }) {
   let files;
   try {
     const images = placePhotos(brief.photos, target);
-    const pageContent = content || applyBrief(theme, brief, images);
+    const pageContent = content ? applyImages(JSON.parse(JSON.stringify(content)), images, brief) : applyBrief(theme, brief, images);
     const site = {
       name: brief.name,
       lang: brief.lang,
@@ -106,12 +106,12 @@ export function generateSite({ brief: input, dir, content = null }) {
 }
 
 /** Renders without touching the disk — for previews and tests. */
-export function previewSite(input) {
+export function previewSite(input, content = null) {
   const brief = normalizeBrief(input);
   const theme = loadTheme(brief.theme);
   if (!theme) throw new EngineError(msg('newsite.unknownTemplate', { template: brief.theme }), 'usage', 2);
   const text = SITE_TEXT[brief.lang];
-  const pageContent = applyBrief(theme, brief, []);
+  const pageContent = content || applyBrief(theme, brief, []);
   return renderSite(
     { name: brief.name, lang: brief.lang, mark: theme.mark, tokens: resolveTokens(theme.tokens, { style: brief.style, palette: brief.palette }), description: brief.description || t(text.description, { name: brief.name }), privacyTitle: t(text.privacyTitle), privacyText: t(text.privacyText), home: t(text.home), notFoundTitle: t(text.notFoundTitle), notFoundText: t(text.notFoundText) },
     pageContent,

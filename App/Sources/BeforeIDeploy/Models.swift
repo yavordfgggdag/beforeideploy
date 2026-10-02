@@ -215,6 +215,24 @@ struct NewSiteResult: Codable {
     var palette: String?
 }
 
+/// `bid new content` — the AI wrote the site's texts into a content file (Site Builder S3).
+struct SiteContentResult: Codable {
+    struct Usage: Codable {
+        var input: Int?
+        var output: Int?
+        var charged: Int?
+        var balance: Int?
+        var model: String?
+    }
+    var contentFile: String
+    var provider: String
+    var model: String?
+    var usage: Usage
+    var styleSuggestion: String?
+    var pages: [String]
+    var duration: Double?
+}
+
 /// The brief (`bid.site-brief/1`): what the owner told the "New site" wizard. Sent to the engine as JSON.
 struct SiteBrief: Codable, Hashable {
     struct Service: Codable, Hashable, Identifiable {

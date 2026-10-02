@@ -42,6 +42,7 @@ quota, 127 Node missing; everything else exits 1.
 | `ai_rate_limited` | 1 | Too many AI requests in a minute or hour (cloud limit, or the provider's). | Wait a minute and retry. |
 | `ai_session_cap` | 1 | The rolling 5-hour session used its share of the monthly credits (20 %). | Wait for the reset time in the message, buy a pack or change the plan; the external buttons stay free. |
 | `ai_failed` | 1 | The AI provider returned an error or an unusable stream. | Retry; if it repeats, the support report has the response. |
+| `ai_bad_answer` | 1 | The AI returned site texts that do not match the schema (Site Builder). | Try again; the plan step is tolerant, the content step is not. |
 | `ai_refused` | 1 | The model declined to answer (safety refusal). | Rephrase by fixing the prompt's log manually, or use an external assistant. |
 | `bad_patch` | 1 | The saved AI answer does not belong to this project or has no applicable file changes. | Run AI Fix again; apply only from the panel it produced. |
 | `fix_failed` | 1 | An automatic fix (git init, untrack secrets, deps install, GitHub repo…) failed. | The message has the command output; fix by hand and check again. |
@@ -105,6 +106,10 @@ Returned as `code` in the JSON body; the engine maps them to the codes above (`q
 | `no_plan` | 403 | Normal user on the Free plan asked for cloud AI. |
 | `forbidden` | 403 | Admin function called by a non-admin. |
 | `quota_exhausted` | 402 | No credits left. |
+| `too_large` | 413 | The brief or theme recipe sent to `site-gen` is over 120 000 characters. |
+| `refused` | — (SSE error) | The model declined the site brief (safety); nothing usable was written. |
+| `truncated` | — (SSE error) | The model ran out of room before finishing the site texts. |
+| `ai_bad_answer` | — (SSE error) | The content step returned JSON that is not usable site content. |
 | `account_suspended` | 402 | The account is suspended after a payment chargeback; no new paid work until it is reversed or repaid. Sites are paused, never deleted. |
 | `bad_secret` | 401 | `monitor` scheduler call without the `x-monitor-secret` that matches `MONITOR_CRON_SECRET` (V11 RC). |
 | `url_rejected` | 400 | `monitor register`: the URL is not a public http(s) hostname (`reason`: scheme, ip_literal, local_host, credentials_in_url, port, hostname, invalid_url). |

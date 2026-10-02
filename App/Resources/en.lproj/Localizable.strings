@@ -863,6 +863,13 @@
 "newsite.style.elegant" = "Elegant";
 "newsite.style.elegant.hint" = "Premium, quiet, photos lead";
 "newsite.styleHint" = "The feel of the site. The theme comes with its own; pick another and a colour if you like.";
+"newsite.ai.charged" = "Texts written · %@ credits";
+"newsite.ai.cost" = "AI writes the texts · ≈ 10,000–20,000 credits · about a minute";
+"newsite.ai.fallback" = "The site below uses the theme’s sample texts.";
+"newsite.ai.needsPlan" = "Needs a plan or your own Anthropic key. Without it the site uses the theme’s sample texts, which you can change later.";
+"newsite.ai.toggle" = "Write the texts with AI";
+"newsite.ai.toggleHint" = "Three steps — plan, write, check — in your language, from what you typed. Nothing invented: no fake reviews or numbers. About 10,000–20,000 credits per site.";
+"newsite.ai.written" = "Texts written by AI";
 
 "node.missing.body" = "Before I Deploy checks and builds your projects with Node.js (version 18 or newer). Install it from nodejs.org or with Homebrew, then press Check again.";
 "node.missing.download" = "Download Node.js";

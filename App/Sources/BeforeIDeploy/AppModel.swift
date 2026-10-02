@@ -485,14 +485,27 @@ final class AppModel: ObservableObject, Feedback {
     }
 
     /// Renders the brief in memory (Site Builder S2): file name → text, nothing written to disk.
-    func previewSite(_ brief: SiteBrief) async throws -> [String: String] {
-        try await engine.call(["new", "preview", "--brief", brief.json()], as: [String: String].self, timeout: 60)
+    /// `contentFile` (S3): the AI's texts from `siteContent`, instead of the theme's sample texts.
+    func previewSite(_ brief: SiteBrief, contentFile: String? = nil) async throws -> [String: String] {
+        var args = ["new", "preview", "--brief", brief.json()]
+        if let contentFile { args += ["--content", contentFile] }
+        return try await engine.call(args, as: [String: String].self, timeout: 60)
+    }
+
+    /// The AI writes the site's texts (plan → content → review); progress arrives as `step` events. Nothing is
+    /// written to the site folder — the result is a content file for `previewSite` / `generateSite`.
+    func siteContent(_ brief: SiteBrief, onStep: @escaping @MainActor (EngineEvent) -> Void) async throws -> SiteContentResult {
+        try await engine.call(["new", "content", "--brief", brief.json()], as: SiteContentResult.self, timeout: 600) { e in
+            if e.type == "step" { onStep(e) }
+        }
     }
 
     /// Creates the site from the brief, adds it to the library and opens it. Returns an error message, or nil.
-    func generateSite(_ brief: SiteBrief, dir: String) async -> String? {
+    func generateSite(_ brief: SiteBrief, dir: String, contentFile: String? = nil) async -> String? {
         do {
-            let r = try await engine.call(["new", "generate", "--brief", brief.json(), "--dir", dir], as: NewSiteResult.self)
+            var args = ["new", "generate", "--brief", brief.json(), "--dir", dir]
+            if let contentFile { args += ["--content", contentFile] }
+            let r = try await engine.call(args, as: NewSiteResult.self)
             await projectStore.loadProjects()
             flash(L("newsite.created", r.project.name))
             await select(r.project.key)

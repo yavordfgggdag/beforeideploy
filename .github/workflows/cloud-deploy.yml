@@ -16,7 +16,7 @@ on:
         type: boolean
         default: true
       deploy_functions:
-        description: "Deploy the Edge Functions (account, ai-fix, billing, monitor, admin)"
+        description: "Deploy the Edge Functions (account, ai-fix, site-gen, billing, monitor, admin)"
         type: boolean
         default: true
       disable_email_confirmation:
@@ -78,7 +78,7 @@ jobs:
       - name: Deploy the Edge Functions
         if: ${{ inputs.deploy_functions }}
         run: |
-          supabase functions deploy admin ai-fix account --project-ref "$PROJECT_REF"
+          supabase functions deploy admin ai-fix account site-gen --project-ref "$PROJECT_REF"
           supabase functions deploy billing --no-verify-jwt --project-ref "$PROJECT_REF"
           supabase functions deploy monitor --no-verify-jwt --project-ref "$PROJECT_REF"
 

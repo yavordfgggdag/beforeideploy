@@ -110,25 +110,32 @@ export function applyBrief(theme, brief, images = []) {
     }
   }
 
-  // photos → the hero (first photo) and the galleries (the rest, or all when there is no hero art)
-  if (images.length) {
-    const hero = c.pages.index?.hero;
-    let rest = images;
-    if (hero && !hero.center) {
-      hero.image = { src: `/${images[0].file}`, alt: images[0].alt || brief.name };
-      delete hero.card;
-      rest = images.slice(1);
-    } else if (hero?.avatar !== undefined) {
-      hero.avatar = { src: `/${images[0].file}`, alt: images[0].alt || brief.name };
-      rest = images.slice(1);
-    }
-    const galleries = sectionsOf('gallery');
-    if (rest.length && galleries.length) galleries[0].items = rest.map((im, i) => ({ src: `/${im.file}`, alt: im.alt || `${brief.name} — ${labels.photo} ${i + 1}`, caption: im.caption }));
-  }
+  applyImages(c, images, brief);
 
   // the owner's own words where they gave them
   if (brief.description) c.description = brief.description;
   if (brief.offer && c.pages.index?.hero) c.pages.index.hero.lead = brief.offer.slice(0, 280);
   if (brief.audience && c.pages.index?.hero?.eyebrow) c.pages.index.hero.eyebrow = brief.audience.slice(0, 60);
+  return c;
+}
+
+/** The copied photos into the content: the first in the hero (or the avatar), the rest in the first gallery. */
+export function applyImages(c, images = [], brief = {}) {
+  if (!images.length) return c;
+  const L = LABELS[brief.lang] ? brief.lang : 'en';
+  const labels = LABELS[L];
+  const pages = Object.values(c.pages || {});
+  const hero = c.pages?.index?.hero;
+  let rest = images;
+  if (hero && !hero.center) {
+    hero.image = { src: `/${images[0].file}`, alt: images[0].alt || brief.name };
+    delete hero.card;
+    rest = images.slice(1);
+  } else if (hero?.avatar !== undefined) {
+    hero.avatar = { src: `/${images[0].file}`, alt: images[0].alt || brief.name };
+    rest = images.slice(1);
+  }
+  const galleries = pages.flatMap((p) => (p.sections || []).filter((s) => s.type === 'gallery'));
+  if (rest.length && galleries.length) galleries[0].items = rest.map((im, i) => ({ src: `/${im.file}`, alt: im.alt || `${brief.name} — ${labels.photo} ${i + 1}`, caption: im.caption }));
   return c;
 }
