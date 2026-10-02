@@ -5,9 +5,38 @@
   "icon": "hands.sparkles",
   "accent": "#15803d",
   "mark": "heart",
+  "art": "leaves",
+  "sample": {
+    "name": "Green Sofia"
+  },
   "featured": false,
   "titleKey": "newsite.template.nonprofit.title",
   "descriptionKey": "newsite.template.nonprofit.description",
+  "keywords": {
+    "en": [
+      "nonprofit",
+      "charity",
+      "ngo",
+      "foundation",
+      "cause",
+      "volunteers",
+      "donate",
+      "community",
+      "association",
+      "campaign"
+    ],
+    "bg": [
+      "неправителствена",
+      "благотворителност",
+      "фондация",
+      "кауза",
+      "доброволци",
+      "дарение",
+      "общност",
+      "сдружение",
+      "кампания"
+    ]
+  },
   "style": "calm",
   "tokens": {
     "dark": false,

@@ -1,0 +1,48 @@
+# Site Builder S5: the pictures of the themes in the "New site" picker (engine/themes/<id>/preview.jpg).
+# Run it by hand after a theme changes: it renders every stale theme on macOS (the fonts the Mac app's users
+# see), commits the pictures to the branch it was started from and uploads them as an artifact. The engine
+# tests fail when a picture is missing or older than its theme.json, so this cannot be forgotten.
+name: theme-previews
+
+on:
+  workflow_dispatch:
+    inputs:
+      all:
+        description: Redraw every theme, not only the stale ones
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  previews:
+    runs-on: macos-15
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Playwright (drives the runner's Chrome; nothing is downloaded)
+        run: npm i --no-save --no-audit --no-fund --prefix scripts playwright-core
+      - name: Render the previews
+        run: node scripts/theme-shots.mjs ${{ inputs.all && '--all' || '' }}
+      - name: Previews are current
+        run: node scripts/theme-shots.mjs --check
+      - uses: actions/upload-artifact@v4
+        with:
+          name: theme-previews
+          path: engine/themes/*/preview.jpg
+      - name: Commit the pictures
+        run: |
+          set -e
+          git add engine/themes/*/preview.jpg engine/themes/previews.json
+          if git diff --cached --quiet; then echo "nothing changed"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -qm "Theme previews: rendered on macOS"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

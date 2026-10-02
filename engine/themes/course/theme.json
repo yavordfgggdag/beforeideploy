@@ -5,9 +5,40 @@
   "icon": "graduationcap",
   "accent": "#16a34a",
   "mark": "book",
+  "art": "orbit",
+  "sample": {
+    "name": "Learn to Code"
+  },
   "featured": true,
   "titleKey": "newsite.template.course.title",
   "descriptionKey": "newsite.template.course.description",
+  "keywords": {
+    "en": [
+      "course",
+      "online course",
+      "training",
+      "workshop",
+      "school",
+      "lessons",
+      "teacher",
+      "tutor",
+      "academy",
+      "curriculum",
+      "students"
+    ],
+    "bg": [
+      "курс",
+      "онлайн курс",
+      "обучение",
+      "уъркшоп",
+      "училище",
+      "уроци",
+      "учител",
+      "академия",
+      "ученици",
+      "студенти"
+    ]
+  },
   "style": "calm",
   "tokens": {
     "dark": false,

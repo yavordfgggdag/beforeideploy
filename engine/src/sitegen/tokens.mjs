@@ -57,12 +57,78 @@ export const STYLES = {
 
 export const STYLE_IDS = Object.keys(STYLES);
 export const paletteIds = (style) => Object.keys(STYLES[style]?.palettes || {});
+/** How the site follows the visitor's system: `auto` (light palette by day, its dark twin at night), `light`, `dark`. */
+export const SCHEMES = ['auto', 'light', 'dark'];
+
+// ---------------------------------------------------------------- colour maths (S5: dark twins, readable text on the accent)
+
+const COLOR = /^(#[0-9a-f]{3,8}|rgba?\([\d .,%]+\)|hsla?\([\d .,%]+\))$/i;
+export function hexToRgb(hex) {
+  const m = /^#([0-9a-f]{3,8})$/i.exec(String(hex || '').trim());
+  if (!m) return null;
+  let h = m[1];
+  if (h.length === 3 || h.length === 4) h = [...h].map((c) => c + c).join('');
+  if (h.length < 6) return null;
+  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+}
+const clamp = (v) => Math.max(0, Math.min(255, Math.round(v)));
+export const rgbToHex = ([r, g, b]) => '#' + [r, g, b].map((v) => clamp(v).toString(16).padStart(2, '0')).join('');
+/** Relative luminance (WCAG), 0 = black, 1 = white; 0.5 for anything that is not a hex colour. */
+export function luminance(hex) {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return 0.5;
+  const [r, g, b] = rgb.map((v) => {
+    const c = v / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+/** `t` of the way from colour a to colour b (hex in, hex out). */
+export function mix(a, b, t) {
+  const x = hexToRgb(a);
+  const y = hexToRgb(b);
+  if (!x || !y) return a;
+  return rgbToHex(x.map((v, i) => v + (y[i] - v) * t));
+}
+/** The accent lifted until it reads on a dark background (keeps the hue; black becomes a light grey). */
+function liftForDark(hex) {
+  let c = hex;
+  for (let i = 0; i < 8 && luminance(c) < 0.18; i++) c = mix(c, '#ffffff', 0.22);
+  return c;
+}
+
+/** Text colour on the accent: white on a deep accent, near-black on a light one (lemon, cyan, champagne). */
+export const onAccentFor = (accent) => (luminance(accent) > 0.4 ? '#0b0b0f' : '#ffffff');
+
+/**
+ * The dark twin of a light palette: a near-black tinted with the accent, lifted surfaces, light text, the
+ * accents raised until they read. A palette that is dark already is returned unchanged.
+ */
+export function darkOf(th) {
+  if (th.dark) return th;
+  const accent = liftForDark(th.accent);
+  const accent2 = liftForDark(th.accent2);
+  const bg = mix('#0d0f14', th.accent, 0.08);
+  return {
+    ...th,
+    dark: true,
+    bg,
+    bg2: mix(bg, '#ffffff', 0.045),
+    surface: mix(bg, '#ffffff', 0.07),
+    text: '#eef0f7',
+    muted: '#a3abc2',
+    line: 'rgba(255,255,255,.10)',
+    accent,
+    accent2,
+    onAccent: onAccentFor(accent),
+  };
+}
 
 /**
  * The tokens for a site: the theme's own look, then an explicit style (type + shapes) and palette (colours)
  * from the brief. Unknown names are ignored, never passed through.
  */
-export function resolveTokens(themeTokens = {}, { style = null, palette = null } = {}) {
+export function resolveTokens(themeTokens = {}, { style = null, palette = null, scheme = null } = {}) {
   let out = { ...themeTokens };
   const st = STYLES[style];
   if (st) {
@@ -71,8 +137,8 @@ export function resolveTokens(themeTokens = {}, { style = null, palette = null }
     if (pal) out = { ...out, ...pal };
   }
   const safe = (v, re, d) => (typeof v === 'string' && re.test(v) ? v : d);
-  const COLOR = /^(#[0-9a-f]{3,8}|rgba?\([\d .,%]+\)|hsla?\([\d .,%]+\))$/i;
-  return {
+  const accent = safe(out.accent, COLOR, '#5b8cff');
+  let tokens = {
     dark: !!out.dark,
     bg: safe(out.bg, COLOR, '#ffffff'),
     bg2: safe(out.bg2, COLOR, '#f4f4f5'),
@@ -80,13 +146,17 @@ export function resolveTokens(themeTokens = {}, { style = null, palette = null }
     text: safe(out.text, COLOR, '#111111'),
     muted: safe(out.muted, COLOR, '#555555'),
     line: safe(out.line, COLOR, 'rgba(15,23,42,.10)'),
-    accent: safe(out.accent, COLOR, '#5b8cff'),
+    accent,
     accent2: safe(out.accent2, COLOR, '#a26bff'),
-    onAccent: safe(out.onAccent, COLOR, '#ffffff'),
+    onAccent: safe(out.onAccent, COLOR, onAccentFor(accent)),
     head: FONTS[out.head] ? out.head : FONTS[out.font] ? out.font : 'sans',
     font: FONTS[out.font] ? out.font : 'sans',
     radius: Number.isFinite(+out.radius) ? Math.max(0, Math.min(32, +out.radius)) : 18,
     headWeight: Number.isFinite(+out.headWeight) ? +out.headWeight : out.head === 'serif' ? 600 : 750,
     tilt: Number.isFinite(+out.tilt) ? +out.tilt : 1.5,
+    scheme: SCHEMES.includes(scheme) ? scheme : SCHEMES.includes(out.scheme) ? out.scheme : 'auto',
   };
+  // "dark" = the dark twin all the time; "auto" keeps the light look and lets the stylesheet add the twin at night
+  if (tokens.scheme === 'dark' && !tokens.dark) tokens = { ...darkOf(tokens), scheme: 'dark' };
+  return tokens;
 }

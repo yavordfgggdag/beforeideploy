@@ -72,6 +72,9 @@ final class ModelsTests: XCTestCase {
         XCTAssertEqual(themes.first?.id, "mentor")
         XCTAssertTrue(themes.filter { $0.featured ?? false }.count >= 10)
         XCTAssertTrue(themes.allSatisfy { $0.style != nil && $0.accent?.hasPrefix("#") == true })
+        // S5: pictures, motifs and the words "something else" matches against
+        XCTAssertTrue(themes.allSatisfy { ($0.keywords?.count ?? 0) >= 3 && $0.art != nil && !($0.sample ?? "").isEmpty })
+        XCTAssertTrue(themes.first?.preview?.hasSuffix("preview.jpg") ?? false)
         let styles = try Fixtures.decode("new-styles", as: [String: SiteStyle].self)
         XCTAssertEqual(Set(styles.keys), ["calm", "bold", "elegant"])
         XCTAssertEqual(styles["calm"]?.palettes.count, 4)
@@ -81,6 +84,7 @@ final class ModelsTests: XCTestCase {
         brief.photos = [SiteBrief.Photo(path: "/tmp/me.jpg", alt: "me")]
         let json = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(brief.json().utf8)) as? [String: Any])
         XCTAssertEqual(json["schema"] as? String, "bid.site-brief/1")
+        XCTAssertEqual(json["scheme"] as? String, "auto")
         XCTAssertEqual((json["services"] as? [[String: Any]])?.count, 1, "empty service rows are left out")
         XCTAssertNil((json["services"] as? [[String: Any]])?.first?["id"], "the row id is UI state, not brief data")
         XCTAssertEqual((json["photos"] as? [[String: Any]])?.first?["path"] as? String, "/tmp/me.jpg")

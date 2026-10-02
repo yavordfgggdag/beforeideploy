@@ -5,9 +5,41 @@
   "icon": "fork.knife",
   "accent": "#b4532a",
   "mark": "cup",
+  "art": "leaves",
+  "sample": {
+    "name": "Bistro Lipa"
+  },
   "featured": true,
   "titleKey": "newsite.template.restaurant.title",
   "descriptionKey": "newsite.template.restaurant.description",
+  "keywords": {
+    "en": [
+      "restaurant",
+      "bistro",
+      "cafe",
+      "bar",
+      "menu",
+      "food",
+      "kitchen",
+      "pizza",
+      "sushi",
+      "dinner",
+      "reservation"
+    ],
+    "bg": [
+      "ресторант",
+      "бистро",
+      "кафе",
+      "бар",
+      "меню",
+      "храна",
+      "кухня",
+      "пица",
+      "вечеря",
+      "резервация",
+      "механа"
+    ]
+  },
   "style": "elegant",
   "tokens": {
     "dark": false,

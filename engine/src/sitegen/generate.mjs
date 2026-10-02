@@ -2,7 +2,7 @@
 // on macOS with the built-in `sips`), `bid.site.json` (the source of truth for later edits), Git, the library.
 import fs from 'node:fs';
 import path from 'node:path';
-import { EngineError, sh, which, exists, isDir } from '../util.mjs';
+import { EngineError, sh, which, exists, isDir, ensureDir } from '../util.mjs';
 import { upsertProject } from '../store.mjs';
 import { repoSlug } from '../fixes.mjs';
 import { t, msg } from '../i18n.mjs';
@@ -65,7 +65,7 @@ export function generateSite({ brief: input, dir, content = null }) {
   if (exists(target)) throw new EngineError(msg('newsite.exists', { path: target }), 'exists');
 
   const text = SITE_TEXT[brief.lang];
-  const tokens = resolveTokens(theme.tokens, { style: brief.style, palette: brief.palette });
+  const tokens = resolveTokens(theme.tokens, { style: brief.style, palette: brief.palette, scheme: brief.scheme });
   fs.mkdirSync(target, { recursive: true });
   let files;
   try {
@@ -75,6 +75,7 @@ export function generateSite({ brief: input, dir, content = null }) {
       name: brief.name,
       lang: brief.lang,
       mark: theme.mark,
+      art: theme.art,
       tokens,
       description: brief.description || (content ? pageContent.description : '') || t(text.description, { name: brief.name }),
       privacyTitle: t(text.privacyTitle),
@@ -84,7 +85,7 @@ export function generateSite({ brief: input, dir, content = null }) {
       notFoundText: t(text.notFoundText),
     };
     files = renderSite(site, pageContent);
-    for (const [name, body] of Object.entries(files)) fs.writeFileSync(path.join(target, name), body);
+    for (const [name, body] of Object.entries(files)) writeSiteFile(target, name, body);
     // the source of truth for "change it with words" (S4): brief + resolved look + the content that was rendered
     // file hashes: `bid site edit` refuses to overwrite a file the owner changed by hand (S4)
     const hashes = Object.fromEntries(Object.entries(files).map(([name, body]) => [name, crypto.createHash('sha256').update(body).digest('hex').slice(0, 16)]));
@@ -108,6 +109,13 @@ export function generateSite({ brief: input, dir, content = null }) {
   return { project, path: target, template: theme.id, theme: theme.id, lang: brief.lang, style: brief.style || theme.style || null, palette: brief.palette, git, files: fs.readdirSync(target).filter((f) => f !== '.git').sort() };
 }
 
+/** Writes one rendered file, creating its folder (`art/…`) when needed. */
+export function writeSiteFile(dir, name, body) {
+  const p = path.join(dir, name);
+  ensureDir(path.dirname(p));
+  fs.writeFileSync(p, body);
+}
+
 /** Renders without touching the disk — for previews and tests. */
 export function previewSite(input, content = null) {
   const brief = normalizeBrief(input);
@@ -116,7 +124,7 @@ export function previewSite(input, content = null) {
   const text = SITE_TEXT[brief.lang];
   const pageContent = content || applyBrief(theme, brief, []);
   return renderSite(
-    { name: brief.name, lang: brief.lang, mark: theme.mark, tokens: resolveTokens(theme.tokens, { style: brief.style, palette: brief.palette }), description: brief.description || t(text.description, { name: brief.name }), privacyTitle: t(text.privacyTitle), privacyText: t(text.privacyText), home: t(text.home), notFoundTitle: t(text.notFoundTitle), notFoundText: t(text.notFoundText) },
+    { name: brief.name, lang: brief.lang, mark: theme.mark, art: theme.art, tokens: resolveTokens(theme.tokens, { style: brief.style, palette: brief.palette, scheme: brief.scheme }), description: brief.description || t(text.description, { name: brief.name }), privacyTitle: t(text.privacyTitle), privacyText: t(text.privacyText), home: t(text.home), notFoundTitle: t(text.notFoundTitle), notFoundText: t(text.notFoundText) },
     pageContent,
   );
 }

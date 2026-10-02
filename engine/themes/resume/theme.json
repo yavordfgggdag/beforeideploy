@@ -5,9 +5,38 @@
   "icon": "person.text.rectangle",
   "accent": "#0f766e",
   "mark": "users",
+  "art": "rings",
+  "sample": {
+    "name": "Georgi Ivanov"
+  },
   "featured": false,
   "titleKey": "newsite.template.resume.title",
   "descriptionKey": "newsite.template.resume.description",
+  "keywords": {
+    "en": [
+      "resume",
+      "cv",
+      "job",
+      "career",
+      "skills",
+      "experience",
+      "developer",
+      "engineer",
+      "hire me",
+      "personal"
+    ],
+    "bg": [
+      "автобиография",
+      "cv",
+      "работа",
+      "кариера",
+      "умения",
+      "опит",
+      "разработчик",
+      "инженер",
+      "лично"
+    ]
+  },
   "style": "calm",
   "tokens": {
     "dark": false,

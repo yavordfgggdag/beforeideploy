@@ -2,9 +2,11 @@
 // tokens, and sample content in every language (the no-AI path fills it with the owner's own details).
 import fs from 'node:fs';
 import path from 'node:path';
-import { ENGINE_DIR, readJSON, isDir } from '../util.mjs';
+import crypto from 'node:crypto';
+import { ENGINE_DIR, readJSON, isDir, exists } from '../util.mjs';
 import { t } from '../i18n.mjs';
 import { LANGS, SECTION_TYPES } from './render.mjs';
+import { MOTIFS } from './art.mjs';
 
 export const THEMES_DIR = () => path.join(ENGINE_DIR, 'themes');
 const CATEGORY_TEXT = {
@@ -53,8 +55,63 @@ export function listThemes() {
       featured: !!th.featured,
       style: th.style || 'calm',
       questions: Array.isArray(th.questions) ? th.questions : [],
+      // S5: the picture in the picker (made by scripts/theme-shots.mjs), the motif of its illustrations, the words
+      // "something else" matches against, and the name the preview was rendered with
+      preview: previewPath(th.id),
+      art: MOTIFS.includes(th.art) ? th.art : 'blobs',
+      keywords: keywordsOf(th),
+      sample: th.sample?.name || '',
     }))
     .sort((a, b) => (ORDER.indexOf(a.id) + 1 || 999) - (ORDER.indexOf(b.id) + 1 || 999) || a.id.localeCompare(b.id));
+}
+
+const previewPath = (id) => {
+  const p = path.join(THEMES_DIR(), id, 'preview.jpg');
+  return exists(p) ? p : null;
+};
+const keywordsOf = (th) => [...new Set(LANGS.flatMap((l) => (Array.isArray(th.keywords?.[l]) ? th.keywords[l] : [])).map((k) => String(k).toLowerCase().trim()).filter(Boolean))];
+
+/** The theme.json fingerprint a preview was made from: `bid new check` says when the picture is stale. */
+export const themeHash = (id) => {
+  const p = path.join(THEMES_DIR(), id, 'theme.json');
+  return exists(p) ? crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex').slice(0, 16) : null;
+};
+export const PREVIEWS_FILE = () => path.join(THEMES_DIR(), 'previews.json');
+
+/** `present` / `stale` (theme.json changed since the picture) / `missing` for one theme's preview. */
+export function previewStatus(id) {
+  if (!previewPath(id)) return 'missing';
+  const made = readJSON(PREVIEWS_FILE(), {})?.themes?.[id];
+  return made && made.hash === themeHash(id) ? 'present' : 'stale';
+}
+
+const norm = (s) => String(s || '').toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, ' ');
+
+/**
+ * "Something else": the themes closest to the owner's words, best first — keywords, title and description in both
+ * languages. `[]` when nothing matches at all (the app then starts from `landing`).
+ */
+export function suggestThemes(say, { limit = 3 } = {}) {
+  const text = ` ${norm(say).replace(/\s+/g, ' ').trim()} `;
+  if (text.trim().length < 2) return [];
+  const words = text.trim().split(' ').filter((w) => w.length > 2);
+  const scored = [];
+  for (const th of listThemes()) {
+    let score = 0;
+    for (const k of th.keywords) {
+      if (text.includes(` ${k} `)) score += k.includes(' ') ? 6 : 4; // a whole keyword
+      else if (words.some((w) => (w.length > 3 && k.startsWith(w.slice(0, Math.max(4, w.length - 2)))) || (k.length > 3 && w.startsWith(k.slice(0, Math.max(4, k.length - 2)))))) score += 2; // a stem
+    }
+    const title = norm(th.title);
+    const desc = norm(th.description);
+    for (const w of words) {
+      if (` ${title} `.includes(` ${w} `)) score += 3;
+      else if (desc.includes(w)) score += 1;
+    }
+    if (th.id === say) score += 10;
+    if (score > 0) scored.push({ id: th.id, score, title: th.title, description: th.description, preview: th.preview });
+  }
+  return scored.sort((a, b) => b.score - a.score || a.id.localeCompare(b.id)).slice(0, limit);
 }
 
 /** Problems in a theme file (used by the tests and by `bid new themes --check`); [] when it is sound. */
@@ -75,5 +132,9 @@ export function validateTheme(th) {
     }
   }
   if (JSON.stringify(Object.keys(th.lang.bg?.pages || {})) !== JSON.stringify(Object.keys(th.lang.en?.pages || {}))) errors.push('bg and en must have the same pages');
+  // S5: what the gallery and "something else" need from a theme
+  if (th.art !== undefined && !MOTIFS.includes(th.art)) errors.push(`art must be one of ${MOTIFS.join(', ')}`);
+  for (const l of LANGS) if (!Array.isArray(th.keywords?.[l]) || th.keywords[l].filter((k) => typeof k === 'string' && k.trim()).length < 3) errors.push(`keywords.${l}: at least three words for "something else"`);
+  if (!th.sample?.name || typeof th.sample.name !== 'string') errors.push('sample.name: the name the preview picture is rendered with');
   return errors;
 }

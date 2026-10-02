@@ -5,9 +5,37 @@
   "icon": "bag",
   "accent": "#7c3aed",
   "mark": "bag",
+  "art": "confetti",
+  "sample": {
+    "name": "Handmade by Lina"
+  },
   "featured": true,
   "titleKey": "newsite.template.shop.title",
   "descriptionKey": "newsite.template.shop.description",
+  "keywords": {
+    "en": [
+      "shop",
+      "store",
+      "products",
+      "handmade",
+      "ecommerce",
+      "sell",
+      "catalog",
+      "boutique",
+      "crafts",
+      "order"
+    ],
+    "bg": [
+      "магазин",
+      "продукти",
+      "ръчна изработка",
+      "онлайн магазин",
+      "продажба",
+      "каталог",
+      "бутик",
+      "поръчка"
+    ]
+  },
   "style": "calm",
   "tokens": {
     "dark": false,

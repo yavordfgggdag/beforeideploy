@@ -5,9 +5,41 @@
   "icon": "scissors",
   "accent": "#c0265e",
   "mark": "scissors",
+  "art": "leaves",
+  "sample": {
+    "name": "Salon Mira"
+  },
   "featured": true,
   "titleKey": "newsite.template.salon.title",
   "descriptionKey": "newsite.template.salon.description",
+  "keywords": {
+    "en": [
+      "salon",
+      "hair",
+      "hairdresser",
+      "barber",
+      "nails",
+      "beauty",
+      "spa",
+      "massage",
+      "lashes",
+      "makeup",
+      "prices"
+    ],
+    "bg": [
+      "салон",
+      "коса",
+      "фризьор",
+      "бръснар",
+      "нокти",
+      "маникюр",
+      "красота",
+      "спа",
+      "масаж",
+      "мигли",
+      "грим"
+    ]
+  },
   "style": "elegant",
   "tokens": {
     "dark": false,

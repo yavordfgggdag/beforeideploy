@@ -5,9 +5,39 @@
   "icon": "sparkles.rectangle.stack",
   "accent": "#5b8cff",
   "mark": "bolt",
+  "art": "grid",
+  "sample": {
+    "name": "Northline"
+  },
   "featured": true,
   "titleKey": "newsite.template.landing.title",
   "descriptionKey": "newsite.template.landing.description",
+  "keywords": {
+    "en": [
+      "business",
+      "company",
+      "services",
+      "agency",
+      "landing",
+      "firm",
+      "office",
+      "b2b",
+      "consultancy",
+      "local business",
+      "studio"
+    ],
+    "bg": [
+      "бизнес",
+      "фирма",
+      "услуги",
+      "агенция",
+      "лендинг",
+      "компания",
+      "офис",
+      "студио",
+      "малък бизнес"
+    ]
+  },
   "style": "bold",
   "tokens": {
     "dark": true,

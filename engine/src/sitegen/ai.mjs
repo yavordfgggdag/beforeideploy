@@ -383,6 +383,7 @@ export const EDIT_SCHEMA = obj({
       intro: nstr,
       style: nstr,
       palette: nstr,
+      scheme: nstr,
     }),
   },
 });
@@ -402,14 +403,14 @@ The owner wants to change their site. Their words: "${clip(say, 400)}"
 The site today (page ids, section indexes and the current texts):
 ${recipeText(content)}
 
-Current look: style ${look.style || 'the theme\'s own'}, palette ${look.palette || 'the theme\'s own'}. Styles: calm, bold, elegant. Palettes by style: ${Object.entries(look.palettes || {}).map(([s, p]) => `${s}: ${p.join(', ')}`).join('; ')}.
+Current look: style ${look.style || 'the theme\'s own'}, palette ${look.palette || 'the theme\'s own'}, colour scheme ${look.scheme || 'auto'}. Styles: calm, bold, elegant. Palettes by style: ${Object.entries(look.palettes || {}).map(([s, p]) => `${s}: ${p.join(', ')}`).join('; ')}. Schemes: auto (light by day, dark at night, following the visitor's system), light, dark.
 
 Translate the request into the smallest list of operations:
 - set_text: page + section index (null for the hero or the page itself) + field + value. Hero fields: eyebrow, title, lead, cta, cta2, cardTitle, cardNote. Section fields: title, intro, h, p, button, send, note. Page fields (section null, no hero field): title, description. Site-wide (page null): description, tagline.
 - set_items: page + section + items (the full list of rows, same column meaning as today).
 - drop_section: page + section.
 - add_section: page + after (section index, -1 = first) + type (cards, steps, faq, quotes, stats, prose, chips, cta, pricing, gallery) + title + intro + items (rows for the type: cards [heading, text]; steps [heading, text]; faq [question, answer]; quotes [quote, who]; stats [number, label]; prose [heading, paragraph]; chips/gallery [caption]; pricing [name, price, one line]; cta [heading, text, button label]).
-- style: style and/or palette.
+- style: style and/or palette and/or scheme (auto, light, dark).
 - none: when the request cannot be done with these operations (say why in summary).
 Write texts in the site's language, in the owner's voice; invent no facts. Summary: one sentence in the site's language saying what changed.`;
 }
@@ -513,8 +514,9 @@ export function applyEdits(content, ops) {
       case 'style': {
         if (op.style) look.style = op.style;
         if (op.palette) look.palette = op.palette;
-        if (op.style || op.palette) applied.push(`look: ${[op.style, op.palette].filter(Boolean).join(' / ')}`);
-        else refused.push({ op, why: 'no style or palette' });
+        if (['auto', 'light', 'dark'].includes(op.scheme)) look.scheme = op.scheme;
+        if (op.style || op.palette || look.scheme) applied.push(`look: ${[op.style, op.palette, look.scheme].filter(Boolean).join(' / ')}`);
+        else refused.push({ op, why: 'no style, palette or scheme' });
         break;
       }
       case 'none':

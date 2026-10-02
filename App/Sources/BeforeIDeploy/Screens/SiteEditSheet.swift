@@ -22,7 +22,7 @@ struct SiteEditSheet: View {
     private var project: Project? { model.status?.project }
     private var sheetWidth: CGFloat { min(1080, (NSApp.keyWindow?.screen?.visibleFrame.width ?? 1280) - 80) }
     private var sheetHeight: CGFloat { min(720, (NSApp.keyWindow?.screen?.visibleFrame.height ?? 900) - 120) }
-    private let examples = ["siteedit.example.darker", "siteedit.example.reviews", "siteedit.example.prices", "siteedit.example.title", "siteedit.example.calm"]
+    private let examples = ["siteedit.example.darkMode", "siteedit.example.darker", "siteedit.example.reviews", "siteedit.example.prices", "siteedit.example.title", "siteedit.example.calm"]
 
     var body: some View {
         VStack(spacing: 0) {

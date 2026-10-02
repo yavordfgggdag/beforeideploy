@@ -14,6 +14,8 @@ final class SiteBuilderDraft: ObservableObject {
     @Published var query = ""
     @Published var category = "all"
     @Published var showAll = false
+    /// S5 "Something else": the owner describes the site in their words; the closest themes come first.
+    @Published var describing = false
     @Published var dir = NSSearchPathForDirectoriesInDomains(.desktopDirectory, .userDomainMask, true).first ?? NSHomeDirectory()
     @Published var phone = false
     @Published var preview: [String: String] = [:]
@@ -255,7 +257,12 @@ private struct ThemeStep: View {
             let words = q.split(separator: " ").map(String.init)
             list = list.map { t -> (SiteTemplate, Int) in
                 let hay = (t.title + " " + t.description + " " + (t.categoryTitle ?? "")).lowercased()
-                return (t, words.reduce(0) { $0 + (hay.contains($1) ? 1 : 0) })
+                let keys = (t.keywords ?? []).map { $0.lowercased() }
+                return (t, words.reduce(0) { score, w in
+                    // a keyword hit (S5) weighs more than a word in the description; stems match both ways
+                    let kw = keys.contains { k in k == w || (w.count > 3 && k.hasPrefix(w)) || (k.count > 3 && w.hasPrefix(k)) }
+                    return score + (kw ? 3 : 0) + (hay.contains(w) ? 1 : 0)
+                })
             }
             .filter { $0.1 > 0 }
             .sorted { $0.1 > $1.1 }
@@ -269,7 +276,21 @@ private struct ThemeStep: View {
     var body: some View {
         HStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 12) {
-                BIDField(placeholder: L("newsite.describePlaceholder"), text: $draft.query, kind: .search)
+                BIDField(placeholder: L(draft.describing ? "newsite.other.describe" : "newsite.describePlaceholder"), text: $draft.query, kind: .search)
+                if draft.describing {
+                    // S5 "Something else": the words rank the themes; nothing close → start from the business landing
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: "sparkles").font(Typo.font(.subhead)).foregroundColor(Theme.accent)
+                        Text(L("newsite.other.hint")).font(Typo.font(.caption)).foregroundColor(Theme.secondary).fixedSize(horizontal: false, vertical: true)
+                        Spacer(minLength: 0)
+                        Button(L("newsite.other.fallback")) {
+                            withAnimation(Motion.quick) { pick(model.templates.first { $0.id == "landing" }); draft.describing = false; draft.query = "" }
+                        }
+                        .bidButton(.secondary, compact: true)
+                    }
+                    .padding(10)
+                    .background(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).fill(Theme.elevated))
+                }
                 FlowLayout(spacing: 6, lineSpacing: 6) {
                     ForEach(categories, id: \.id) { c in
                         let on = draft.category == c.id
@@ -291,11 +312,10 @@ private struct ThemeStep: View {
                     ScrollView {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 10, alignment: .top)], spacing: 10) {
                             ForEach(shown) { t in
-                                ThemeCard(template: t, selected: draft.brief.theme == t.id) {
-                                    draft.brief.theme = t.id
-                                    draft.brief.style = t.style
-                                    draft.brief.palette = nil
-                                }
+                                ThemeCard(template: t, selected: draft.brief.theme == t.id) { pick(t) }
+                            }
+                            if draft.query.isEmpty, draft.category == "all", !draft.describing {
+                                OtherCard { withAnimation(Motion.quick) { draft.describing = true; draft.showAll = true } }
                             }
                         }
                         .padding(2)
@@ -313,6 +333,52 @@ private struct ThemeStep: View {
             SitePreviewPane(draft: draft, caption: L("newsite.previewTheme"))
         }
     }
+
+    private func pick(_ t: SiteTemplate?) {
+        guard let t else { return }
+        draft.brief.theme = t.id
+        draft.brief.style = t.style
+        draft.brief.palette = nil
+    }
+}
+
+/// S5: the pictures of the themes (engine/themes/<id>/preview.jpg), read once per path.
+private enum ThemePreviews {
+    private static var cache: [String: NSImage] = [:]
+    static func image(_ path: String?) -> NSImage? {
+        guard let path else { return nil }
+        if let im = cache[path] { return im }
+        guard let im = NSImage(contentsOfFile: path) else { return nil }
+        cache[path] = im
+        return im
+    }
+}
+
+/// "Something else": the last card of the picker — describe the site, get the closest themes.
+private struct OtherCard: View {
+    let action: () -> Void
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 8) {
+                RoundedRectangle(cornerRadius: Radius.s, style: .continuous)
+                    .strokeBorder(style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
+                    .foregroundColor(Theme.hairline)
+                    .frame(height: 96)
+                    .overlay(Image(systemName: "sparkles").font(Typo.font(.title, weight: .semibold)).foregroundColor(Theme.accent))
+                Text(L("newsite.other.title")).font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.text).lineLimit(1)
+                Text(L("newsite.other.subtitle")).font(Typo.font(.caption)).foregroundColor(Theme.secondary).lineLimit(3).fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+            }
+            .padding(10)
+            .frame(maxWidth: .infinity, minHeight: 200, alignment: .topLeading)
+            .background(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).fill(Theme.elevated))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .lift(radius: Theme.smallRadius, amount: 1.02)
+        .accessibilityLabel(L("newsite.other.title"))
+        .accessibilityHint(L("newsite.other.subtitle"))
+    }
 }
 
 private struct ThemeCard: View {
@@ -325,10 +391,18 @@ private struct ThemeCard: View {
         Button(action: action) {
             VStack(alignment: .leading, spacing: 8) {
                 ZStack(alignment: .topTrailing) {
-                    RoundedRectangle(cornerRadius: Radius.s, style: .continuous)
-                        .fill(LinearGradient(colors: [tint, tint.opacity(0.55)], startPoint: .topLeading, endPoint: .bottomTrailing))
-                        .frame(height: 54)
-                        .overlay(Image(systemName: template.icon ?? "doc.richtext").font(Typo.font(.title, weight: .semibold)).foregroundColor(.white))
+                    // S5: the theme's own picture (the first screen of a sample site); the gradient until one exists
+                    if let im = ThemePreviews.image(template.preview) {
+                        Image(nsImage: im).resizable().aspectRatio(contentMode: .fill)
+                            .frame(maxWidth: .infinity).frame(height: 96).clipped()
+                            .clipShape(RoundedRectangle(cornerRadius: Radius.s, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: Radius.s, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
+                    } else {
+                        RoundedRectangle(cornerRadius: Radius.s, style: .continuous)
+                            .fill(LinearGradient(colors: [tint, tint.opacity(0.55)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                            .frame(height: 96)
+                            .overlay(Image(systemName: template.icon ?? "doc.richtext").font(Typo.font(.title, weight: .semibold)).foregroundColor(.white))
+                    }
                     if selected {
                         Image(systemName: "checkmark.circle.fill").font(Typo.font(.subhead)).foregroundStyle(.white, tint).padding(6)
                     }
@@ -339,7 +413,7 @@ private struct ThemeCard: View {
                 Text(L("newsite.pages", template.pages)).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
             }
             .padding(10)
-            .frame(maxWidth: .infinity, minHeight: 164, alignment: .topLeading)
+            .frame(maxWidth: .infinity, minHeight: 200, alignment: .topLeading)
             .background(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).fill(selected ? tint.opacity(0.14) : Theme.elevated))
             .overlay(RoundedRectangle(cornerRadius: Theme.smallRadius, style: .continuous).strokeBorder(selected ? tint : Color.clear, lineWidth: 1.5))
             .contentShape(Rectangle())
@@ -519,6 +593,13 @@ private struct StylePicker: View {
                     Spacer()
                 }
             }
+            // S5: light by day and dark at night (the visitor's system), or one look pinned
+            HStack(spacing: 8) {
+                Text(L("newsite.scheme")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
+                SegmentedControl(options: [(L("newsite.scheme.auto"), "auto"), (L("newsite.scheme.light"), "light"), (L("newsite.scheme.dark"), "dark")], selection: $draft.brief.scheme)
+                    .accessibilityLabel(L("newsite.scheme"))
+            }
+            Text(L("newsite.schemeHint")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
         }
     }
 }
@@ -728,7 +809,11 @@ private struct WebPreview: NSViewRepresentable {
             guard let html = files[name] else { return }
             page = name
             let css = files["styles.css"] ?? ""
-            let inlined = html.replacingOccurrences(of: "<link rel=\"stylesheet\" href=\"/styles.css\">", with: "<style>\(css)</style>")
+            var inlined = html.replacingOccurrences(of: "<link rel=\"stylesheet\" href=\"/styles.css\">", with: "<style>\(css)</style>")
+            // S5: the illustrations are files of the site; the preview has no server, so they ride along as data URLs
+            for (name, svg) in files where name.hasPrefix("art/") && name.hasSuffix(".svg") {
+                inlined = inlined.replacingOccurrences(of: "src=\"/\(name)\"", with: "src=\"data:image/svg+xml;base64,\(Data(svg.utf8).base64EncodedString())\"")
+            }
             view.loadHTMLString(inlined, baseURL: WebPreview.base)
         }
 

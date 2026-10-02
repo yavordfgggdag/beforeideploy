@@ -5,9 +5,37 @@
   "icon": "text.book.closed",
   "accent": "#c2410c",
   "mark": "book",
+  "art": "waves",
+  "sample": {
+    "name": "Notes by Ana"
+  },
   "featured": true,
   "titleKey": "newsite.template.blog.title",
   "descriptionKey": "newsite.template.blog.description",
+  "keywords": {
+    "en": [
+      "blog",
+      "writer",
+      "articles",
+      "newsletter",
+      "journal",
+      "posts",
+      "author",
+      "magazine",
+      "personal site"
+    ],
+    "bg": [
+      "блог",
+      "писател",
+      "статии",
+      "бюлетин",
+      "дневник",
+      "публикации",
+      "автор",
+      "списание",
+      "личен сайт"
+    ]
+  },
   "style": "elegant",
   "tokens": {
     "dark": false,

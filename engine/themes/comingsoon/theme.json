@@ -5,9 +5,33 @@
   "icon": "hourglass",
   "accent": "#a855f7",
   "mark": "rocket",
+  "art": "orbit",
+  "sample": {
+    "name": "Launching soon"
+  },
   "featured": true,
   "titleKey": "newsite.template.comingsoon.title",
   "descriptionKey": "newsite.template.comingsoon.description",
+  "keywords": {
+    "en": [
+      "coming soon",
+      "launch",
+      "waitlist",
+      "teaser",
+      "pre-launch",
+      "signup",
+      "countdown",
+      "new product"
+    ],
+    "bg": [
+      "очаквайте скоро",
+      "старт",
+      "списък с чакащи",
+      "тийзър",
+      "предварителна регистрация",
+      "нов продукт"
+    ]
+  },
   "style": "bold",
   "tokens": {
     "dark": true,

@@ -3,7 +3,7 @@
 // photos. With AI (S3) the same brief is the input of the content step; the result lands in the same shape.
 import { EngineError } from '../util.mjs';
 import { msg } from '../i18n.mjs';
-import { STYLE_IDS, paletteIds } from './tokens.mjs';
+import { STYLE_IDS, SCHEMES, paletteIds } from './tokens.mjs';
 import { LANGS } from './render.mjs';
 
 export const BRIEF_SCHEMA = 'bid.site-brief/1';
@@ -19,6 +19,8 @@ export function normalizeBrief(input = {}) {
   const lang = LANGS.includes(b.lang) ? b.lang : 'en';
   const style = STYLE_IDS.includes(b.style) ? b.style : null;
   const palette = style && paletteIds(style).includes(b.palette) ? b.palette : null;
+  // S5: light by day and its dark twin at night (auto), or one look pinned
+  const scheme = SCHEMES.includes(b.scheme) ? b.scheme : 'auto';
   const services = (Array.isArray(b.services) ? b.services : [])
     .map((s) => (typeof s === 'string' ? { name: s } : s && typeof s === 'object' ? s : null))
     .filter((s) => s && str(s.name, 80))
@@ -50,6 +52,7 @@ export function normalizeBrief(input = {}) {
     photos,
     style,
     palette,
+    scheme,
   };
 }
 

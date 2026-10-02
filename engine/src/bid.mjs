@@ -45,7 +45,7 @@ import { createSite, listTemplates } from './newsite.mjs';
 import { generateSite, previewSite } from './sitegen/generate.mjs';
 import { siteContent, readContentArg } from './sitegen/aicontent.mjs';
 import { editSite, undoSite, siteHistory, siteInfo } from './sitegen/edit.mjs';
-import { loadTheme, validateTheme } from './sitegen/themes.mjs';
+import { loadTheme, validateTheme, previewStatus, suggestThemes } from './sitegen/themes.mjs';
 import { STYLES, paletteIds } from './sitegen/tokens.mjs';
 
 // engine/VERSION is the single source of the product version (build.sh writes it into Info.plist)
@@ -236,7 +236,9 @@ async function main() {
     case 'new': {
       if (sub === 'list' || !sub) return ok(listTemplates());
       if (sub === 'styles') return ok(Object.fromEntries(Object.keys(STYLES).map((id) => [id, { head: STYLES[id].head, radius: STYLES[id].radius, palettes: paletteIds(id).map((p) => ({ id: p, dark: !!STYLES[id].palettes[p].dark, bg: STYLES[id].palettes[p].bg, accent: STYLES[id].palettes[p].accent, accent2: STYLES[id].palettes[p].accent2 })) }])));
-      if (sub === 'check') return ok(listTemplates().map((th) => ({ id: th.id, errors: validateTheme(loadTheme(th.id)) })));
+      if (sub === 'check') return ok(listTemplates().map((th) => ({ id: th.id, errors: validateTheme(loadTheme(th.id)), preview: previewStatus(th.id) })));
+      // S5 "something else": the closest themes to the owner's words (no model)
+      if (sub === 'suggest') return ok(suggestThemes(flags.say && flags.say !== true ? String(flags.say) : '', { limit: Number(flags.limit) || 3 }));
       if (sub === 'create') {
         if (flags.style || flags.palette) return ok(generateSite({ brief: { theme: flags.template, name: flags.name, lang: flags.lang, description: flags.description, style: flags.style, palette: flags.palette }, dir: flags.dir }));
         return ok(createSite({ template: flags.template, name: flags.name, dir: flags.dir, lang: flags.lang, description: flags.description }));

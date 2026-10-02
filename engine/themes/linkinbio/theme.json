@@ -5,9 +5,36 @@
   "icon": "link",
   "accent": "#f43f5e",
   "mark": "link",
+  "art": "confetti",
+  "sample": {
+    "name": "Mila"
+  },
   "featured": false,
   "titleKey": "newsite.template.linkinbio.title",
   "descriptionKey": "newsite.template.linkinbio.description",
+  "keywords": {
+    "en": [
+      "link in bio",
+      "links",
+      "instagram",
+      "tiktok",
+      "creator",
+      "influencer",
+      "youtube",
+      "social",
+      "one page"
+    ],
+    "bg": [
+      "линк в био",
+      "линкове",
+      "инстаграм",
+      "тикток",
+      "създател",
+      "инфлуенсър",
+      "ютуб",
+      "социални"
+    ]
+  },
   "style": "bold",
   "tokens": {
     "dark": true,

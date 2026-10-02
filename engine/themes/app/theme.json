@@ -5,9 +5,33 @@
   "icon": "iphone",
   "accent": "#2563eb",
   "mark": "play",
+  "art": "grid",
+  "sample": {
+    "name": "Pocket Budget"
+  },
   "featured": false,
   "titleKey": "newsite.template.app.title",
   "descriptionKey": "newsite.template.app.description",
+  "keywords": {
+    "en": [
+      "mobile app",
+      "ios",
+      "android",
+      "app store",
+      "download",
+      "features",
+      "screenshots",
+      "game"
+    ],
+    "bg": [
+      "мобилно приложение",
+      "ios",
+      "android",
+      "изтегли",
+      "функции",
+      "игра"
+    ]
+  },
   "style": "calm",
   "tokens": {
     "dark": false,

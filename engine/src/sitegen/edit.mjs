@@ -14,11 +14,11 @@ import { ownKey } from '../aikeys.mjs';
 import { recordCost } from '../costs.mjs';
 import { gitBin, gitSh } from '../gitbin.mjs';
 import { loadTheme } from './themes.mjs';
-import { resolveTokens, STYLES, STYLE_IDS, paletteIds } from './tokens.mjs';
+import { resolveTokens, STYLES, STYLE_IDS, SCHEMES, paletteIds } from './tokens.mjs';
 import { renderSite } from './render.mjs';
 import { applyEdits, EDIT_SCHEMA, SYSTEM, editPrompt } from './ai.mjs';
 import { ownKeyCall } from './aicontent.mjs';
-import { SITE_TEXT } from './generate.mjs';
+import { SITE_TEXT, writeSiteFile } from './generate.mjs';
 
 const RECORD = 'bid.site.json';
 const COMMIT_PREFIX = 'Site: ';
@@ -36,7 +36,7 @@ export function siteInfo(project) {
   const r = siteRecord(project.path);
   if (!r) return { generated: false };
   const modified = modifiedFiles(project.path, r);
-  return { generated: true, theme: r.theme, lang: r.brief?.lang || 'en', style: r.brief?.style || null, palette: r.brief?.palette || null, pages: Object.keys(r.content.pages), edits: (r.history || []).length, modified, history: siteHistory(project).slice(0, 10) };
+  return { generated: true, theme: r.theme, lang: r.brief?.lang || 'en', style: r.brief?.style || null, palette: r.brief?.palette || null, scheme: r.brief?.scheme || 'auto', pages: Object.keys(r.content.pages), edits: (r.history || []).length, modified, history: siteHistory(project).slice(0, 10) };
 }
 
 /** Files the owner (or a developer) changed by hand since the site was rendered. */
@@ -69,6 +69,9 @@ const PALETTE_WORDS = {
 const STYLE_WORDS = { calm: ['спокоен', 'спокойн', 'топъл', 'топло', 'calm', 'warm', 'soft'], bold: ['смел', 'ярък', 'енергич', 'bold', 'energetic', 'loud'], elegant: ['елегант', 'премиум', 'луксоз', 'elegant', 'premium', 'luxury'] };
 const DARK_WORDS = ['тъмн', 'тъмен', 'dark', 'darker', 'night'];
 const LIGHT_WORDS = ['светл', 'светъл', 'light', 'lighter', 'brighter'];
+// S5: "dark mode" / "light mode" / "follow the system" = the colour scheme, not a darker palette
+const SCHEME_WORDS = ['режим', 'mode', 'theme', 'тема', 'система', 'system', 'автомат', 'auto', 'нощ', 'night'];
+const AUTO_WORDS = ['автомат', 'auto', 'система', 'system', 'според', 'follow'];
 const SECTION_WORDS = {
   quotes: ['отзив', 'review', 'testimonial'],
   stats: ['статистик', 'числа', 'цифри', 'stats', 'numbers'],
@@ -97,6 +100,8 @@ export function localEdit(say, record) {
   const wantPalette = Object.keys(PALETTE_WORDS).find((id) => has(text, PALETTE_WORDS[id]) && paletteIds(styleForPalette).includes(id));
   if (wantStyle || wantPalette) {
     ops.push({ op: 'style', style: wantStyle || null, palette: wantPalette || null });
+  } else if ((has(text, DARK_WORDS) || has(text, LIGHT_WORDS)) && has(text, SCHEME_WORDS)) {
+    ops.push({ op: 'style', scheme: has(text, AUTO_WORDS) ? 'auto' : has(text, DARK_WORDS) ? 'dark' : 'light' });
   } else if (has(text, DARK_WORDS) || has(text, LIGHT_WORDS)) {
     // darker / lighter: the dark or light palette of the current style, else the nearest style that has one
     const dark = has(text, DARK_WORDS);
@@ -196,6 +201,7 @@ function renderRecord(record, theme) {
     name: record.brief.name,
     lang: record.brief.lang,
     mark: theme.mark,
+    art: theme.art,
     tokens: record.tokens,
     description: record.brief.description || record.content.description || t(text.description, { name: record.brief.name }),
     privacyTitle: t(text.privacyTitle),
@@ -253,7 +259,8 @@ export async function editSite(project, { say, provider = null, force = false, d
     } else refused.push({ op: { op: 'style', palette: look.palette }, why: 'unknown palette for this style' });
   }
   if (look.style && !look.palette && look.style !== record.brief.style) next.brief.palette = null;
-  next.tokens = resolveTokens(theme.tokens, { style: next.brief.style, palette: next.brief.palette });
+  if (look.scheme && SCHEMES.includes(look.scheme)) next.brief.scheme = look.scheme;
+  next.tokens = resolveTokens(theme.tokens, { style: next.brief.style, palette: next.brief.palette, scheme: next.brief.scheme });
 
   // 3. render and find what changes; refuse to overwrite hand-edited files unless forced
   const files = renderRecord(next, theme);
@@ -265,7 +272,7 @@ export async function editSite(project, { say, provider = null, force = false, d
   if (modified.length && !force) throw Object.assign(new EngineError(msg('site.edit.modified', { files: modified.join(', ') }), 'site_modified'), { modified, applied, summary });
   const result = { applied, refused: refused.map((r) => r.why), summary, provider: provider_, usage, changed, removed, dryRun: !!dryRun, duration: (Date.now() - t0) / 1000 };
   if (dryRun) return result;
-  for (const name of changed) fs.writeFileSync(path.join(dir, name), files[name]);
+  for (const name of changed) writeSiteFile(dir, name, files[name]);
   for (const name of removed) fs.rmSync(path.join(dir, name), { force: true });
   next.files = Object.fromEntries(Object.entries(files).map(([name, body]) => [name, hashOf(body)]));
   next.history.push({ at: new Date().toISOString(), say: words, applied, provider: provider_ });

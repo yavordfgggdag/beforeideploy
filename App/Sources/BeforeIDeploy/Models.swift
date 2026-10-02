@@ -186,6 +186,11 @@ struct SiteTemplate: Codable, Hashable, Identifiable {
     var featured: Bool?
     var style: String?
     var questions: [String]?
+    /// Site Builder (S5): the picture in the picker, the illustration motif, the words "something else" matches.
+    var preview: String?
+    var art: String?
+    var keywords: [String]?
+    var sample: String?
 }
 
 /// `bid new styles` — a style (type, shapes) and the four palettes that suit it.
@@ -247,6 +252,7 @@ struct SiteInfo: Codable {
     var lang: String?
     var style: String?
     var palette: String?
+    var scheme: String?
     var pages: [String]?
     var edits: Int?
     var modified: [String]?
@@ -300,6 +306,8 @@ struct SiteBrief: Codable, Hashable {
     var photos: [Photo] = []
     var style: String?
     var palette: String?
+    /// S5: `auto` (light by day, its dark twin at night), `light` or `dark`.
+    var scheme = "auto"
 
     /// The JSON the engine reads (`--brief '{…}'`); empty services are left out.
     func json() -> String {

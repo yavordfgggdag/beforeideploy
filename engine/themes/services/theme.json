@@ -5,9 +5,40 @@
   "icon": "wrench.and.screwdriver",
   "accent": "#ea580c",
   "mark": "tools",
+  "art": "peaks",
+  "sample": {
+    "name": "Dimitrov & Sons"
+  },
   "featured": true,
   "titleKey": "newsite.template.services.title",
   "descriptionKey": "newsite.template.services.description",
+  "keywords": {
+    "en": [
+      "plumber",
+      "electrician",
+      "repairs",
+      "cleaning",
+      "handyman",
+      "builder",
+      "renovation",
+      "trades",
+      "craftsman",
+      "prices",
+      "service"
+    ],
+    "bg": [
+      "водопроводчик",
+      "електротехник",
+      "ремонти",
+      "почистване",
+      "майстор",
+      "строител",
+      "ремонт",
+      "занаят",
+      "ценоразпис",
+      "услуга"
+    ]
+  },
   "style": "calm",
   "tokens": {
     "dark": false,

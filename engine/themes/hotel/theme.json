@@ -5,9 +5,38 @@
   "icon": "bed.double",
   "accent": "#0f766e",
   "mark": "bed",
+  "art": "waves",
+  "sample": {
+    "name": "Villa Rosa"
+  },
   "featured": false,
   "titleKey": "newsite.template.hotel.title",
   "descriptionKey": "newsite.template.hotel.description",
+  "keywords": {
+    "en": [
+      "hotel",
+      "guest house",
+      "rooms",
+      "villa",
+      "apartment",
+      "airbnb",
+      "stay",
+      "booking",
+      "bed and breakfast",
+      "resort"
+    ],
+    "bg": [
+      "хотел",
+      "къща за гости",
+      "стаи",
+      "вила",
+      "апартамент",
+      "настаняване",
+      "резервации",
+      "нощувка",
+      "курорт"
+    ]
+  },
   "style": "elegant",
   "tokens": {
     "dark": false,

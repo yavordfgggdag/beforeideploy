@@ -5,9 +5,39 @@
   "icon": "figure.run",
   "accent": "#65a30d",
   "mark": "bolt",
+  "art": "peaks",
+  "sample": {
+    "name": "Iron Yard"
+  },
   "featured": false,
   "titleKey": "newsite.template.fitness.title",
   "descriptionKey": "newsite.template.fitness.description",
+  "keywords": {
+    "en": [
+      "fitness",
+      "gym",
+      "trainer",
+      "personal trainer",
+      "yoga",
+      "pilates",
+      "crossfit",
+      "classes",
+      "membership",
+      "sport"
+    ],
+    "bg": [
+      "фитнес",
+      "зала",
+      "треньор",
+      "личен треньор",
+      "йога",
+      "пилатес",
+      "кросфит",
+      "класове",
+      "членство",
+      "спорт"
+    ]
+  },
   "style": "bold",
   "tokens": {
     "dark": true,

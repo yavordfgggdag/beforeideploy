@@ -821,6 +821,11 @@
 "newsite.offerPlaceholder" = "напр. Помагам на хора да стартират бизнес без стрес.";
 "newsite.optional" = "по избор";
 "newsite.otherTheme" = "Опитай друга тема";
+"newsite.other.title" = "Нещо друго";
+"newsite.other.subtitle" = "Опиши сайта с няколко думи — предлагаме най-близката тема.";
+"newsite.other.describe" = "Опиши сайта си с няколко думи…";
+"newsite.other.hint" = "Най-близките теми са първи. Всеки текст, цвят и секция се сменят после.";
+"newsite.other.fallback" = "Започни от Бизнес лендинг";
 "newsite.palette" = "Цвят";
 "newsite.palette.bordeaux" = "Бордо";
 "newsite.palette.champagne" = "Шампанско";
@@ -855,6 +860,11 @@
 "newsite.step.preview" = "Виж и запази";
 "newsite.step.theme" = "Избери тема";
 "newsite.stepOf" = "Стъпка %@ от %@ · %@";
+"newsite.scheme" = "Светло / тъмно";
+"newsite.scheme.auto" = "Автоматично";
+"newsite.scheme.light" = "Светло";
+"newsite.scheme.dark" = "Тъмно";
+"newsite.schemeHint" = "Автоматично следва системата на посетителя: твоите цветове денем, подходящ тъмен вид нощем.";
 "newsite.style" = "Стил";
 "newsite.style.bold" = "Смел";
 "newsite.style.bold.hint" = "Енергия, големи букви, един ярък акцент";
@@ -879,6 +889,7 @@
 "siteedit.costHint" = "Цветове, стилове, махане на секция и ново заглавие са безплатни; останалото ползва AI (≈ 1 000–3 000 кредита).";
 "siteedit.example.calm" = "направи го спокоен и зелен";
 "siteedit.example.darker" = "направи го по-тъмен";
+"siteedit.example.darkMode" = "включи тъмен режим";
 "siteedit.example.prices" = "добави секция с цени";
 "siteedit.example.reviews" = "махни отзивите";
 "siteedit.example.title" = "смени заглавието на „…“";

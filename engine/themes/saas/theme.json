@@ -5,9 +5,37 @@
   "icon": "cloud",
   "accent": "#6366f1",
   "mark": "chart",
+  "art": "orbit",
+  "sample": {
+    "name": "Flowdeck"
+  },
   "featured": true,
   "titleKey": "newsite.template.saas.title",
   "descriptionKey": "newsite.template.saas.description",
+  "keywords": {
+    "en": [
+      "saas",
+      "software",
+      "startup",
+      "app",
+      "product",
+      "pricing",
+      "subscription",
+      "tool",
+      "platform",
+      "api"
+    ],
+    "bg": [
+      "софтуер",
+      "стартъп",
+      "приложение",
+      "продукт",
+      "абонамент",
+      "платформа",
+      "инструмент",
+      "цени"
+    ]
+  },
   "style": "bold",
   "tokens": {
     "dark": true,

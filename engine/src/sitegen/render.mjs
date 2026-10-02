@@ -3,6 +3,7 @@
 // survives is `*…*` → <em> in headings, icon *names* (icons.mjs) and links with a safe scheme.
 import { ICONS, icon } from './icons.mjs';
 import { stylesheet } from './css.mjs';
+import { art, MOTIFS } from './art.mjs';
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 /** Escaped text with `*words*` turned into <em>words</em> — the one bit of emphasis headings may carry. */
@@ -84,6 +85,12 @@ ${index ? '  <link rel="canonical" href="/">\n' : ''}  <link rel="icon" href="/f
 
 const img = (im, extra = '') => (im && typeof im.src === 'string' ? `<img src="${href(im.src)}" alt="${esc(im.alt || '')}"${im.width ? ` width="${+im.width}"` : ''}${im.height ? ` height="${+im.height}"` : ''}${extra}>` : '');
 
+/** An illustration file the page uses (S5); rendered at the end of renderSite in the site's colours. */
+const useArt = (site, name) => {
+  site.artFiles.add(name);
+  return `/art/${name}.svg`;
+};
+
 function hero(h, site) {
   const art = h.image
     ? `<div class="hero-photo">${img(h.image)}</div>`
@@ -92,7 +99,10 @@ function hero(h, site) {
           <h3>${ico(h.card.icon || 'spark')}${esc(h.card.title)}</h3>
           <ul>${list(h.card.rows).map(([a, b]) => `<li><span>${esc(a)}</span><span>${esc(b)}</span></li>`).join('')}</ul>${h.card.note ? `\n          <p class="note">${esc(h.card.note)}</p>` : ''}
         </div>`
-      : '';
+      : h.avatar !== undefined || h.links
+        ? ''
+        : // no photo yet: an illustration in the site's colours — beside the text, or a band under a centred hero
+          `<div class="hero-art${h.center ? ' wide' : ''}"><img src="${useArt(site, h.center ? 'band' : 'hero')}" alt="" width="${h.center ? 1600 : 800}" height="${h.center ? 700 : 1000}"></div>`;
   const buttons = [h.cta ? `<a class="btn" href="${href(h.cta[1])}">${esc(h.cta[0])}${ico('arrow')}</a>` : '', h.cta2 ? `<a class="btn ghost" href="${href(h.cta2[1])}">${esc(h.cta2[0])}</a>` : ''].filter(Boolean).join('\n          ');
   const avatar = h.avatar ? `<div class="avatar" aria-hidden="true">${typeof h.avatar === 'object' ? img(h.avatar) : esc(h.avatar)}</div>\n        ` : '';
   const after = h.links ? `\n        <nav class="links" aria-label="${site.common.links}">${list(h.links).map(([ic, label, h2]) => `<a href="${href(h2)}">${ico(ic)}${esc(label)}${ico('arrow', 'go')}</a>`).join('')}</nav>` : '';
@@ -169,7 +179,7 @@ function section(s, site) {
       break;
     case 'gallery':
       // an item is a caption (gradient tile) or { src, alt, caption } (a photo)
-      inner = `<div class="gallery">${list(s.items).map((c) => (c && typeof c === 'object' && c.src ? `<figure class="tile">${img(c, ' loading="lazy"')}${c.caption ? `<figcaption>${esc(c.caption)}</figcaption>` : ''}</figure>` : `<div class="tile"><span>${esc(c)}</span></div>`)).join('')}</div>`;
+      inner = `<div class="gallery">${list(s.items).map((c, i) => (c && typeof c === 'object' && c.src ? `<figure class="tile">${img(c, ' loading="lazy"')}${c.caption ? `<figcaption>${esc(c.caption)}</figcaption>` : ''}</figure>` : `<div class="tile"><img class="art" src="${useArt(site, `tile-${(i % 6) + 1}`)}" alt="" width="800" height="600" loading="lazy"><span>${esc(c)}</span></div>`)).join('')}</div>`;
       break;
     case 'posts':
       inner = `<div class="posts">${list(s.items).map((p) => `
@@ -188,7 +198,7 @@ function section(s, site) {
       inner = `<div class="prose">${list(s.items).map(([h, p]) => `${h ? `<h2>${esc(h)}</h2>` : ''}<p>${esc(p)}</p>`).join('')}</div>`;
       break;
     case 'story':
-      inner = `<div class="story"><div class="prose">${list(s.items).map(([h, p]) => `${h ? `<h2>${esc(h)}</h2>` : ''}<p>${esc(p)}</p>`).join('')}</div>${s.image ? `<div class="photo">${img(s.image, ' loading="lazy"')}</div>` : ''}</div>`;
+      inner = `<div class="story"><div class="prose">${list(s.items).map(([h, p]) => `${h ? `<h2>${esc(h)}</h2>` : ''}<p>${esc(p)}</p>`).join('')}</div><div class="photo">${s.image ? img(s.image, ' loading="lazy"') : `<img src="${useArt(site, 'story')}" alt="" width="800" height="1000" loading="lazy">`}</div></div>`;
       break;
     case 'cta':
       return `    <section class="section"${id(s.id) ? ` id="${id(s.id)}"` : ''}>
@@ -331,13 +341,13 @@ const NETLIFY = `[build]
 const GITIGNORE = `.DS_Store\n.netlify/\n.env\n.env.*\n!.env.example\n*.log\nnode_modules/\n`;
 
 /**
- * `site` = { name, lang, mark, tokens, description?, privacyTitle, privacyText, home, notFoundTitle, notFoundText }
+ * `site` = { name, lang, mark, art?, tokens, description?, privacyTitle, privacyText, home, notFoundTitle, notFoundText }
  * `content` = one language of a theme: { tagline, description, nav, headerCta, pages: { index: {…}, … } }
  * Returns the files of the finished site, path → text.
  */
 export function renderSite(site, content) {
   const lang = LANGS.includes(site.lang) ? site.lang : 'en';
-  const s = { ...site, lang, year: site.year || String(new Date().getFullYear()), common: COMMON[lang], mark: ICONS[site.mark] ? site.mark : 'spark' };
+  const s = { ...site, lang, year: site.year || String(new Date().getFullYear()), common: COMMON[lang], mark: ICONS[site.mark] ? site.mark : 'spark', art: MOTIFS.includes(site.art) ? site.art : 'blobs', artFiles: new Set() };
   const files = {};
   const pageIds = Object.keys(content.pages || {});
   if (!pageIds.includes('index')) throw new Error('content has no index page');
@@ -355,5 +365,10 @@ export function renderSite(site, content) {
   files['netlify.toml'] = NETLIFY;
   files['.gitignore'] = GITIGNORE;
   files['bid.config.json'] = '{\n  "site": { "budgets": { "imageKB": 500 } }\n}\n';
+  // the illustrations the pages asked for (S5), drawn in the site's colours from the site's name
+  for (const name of [...s.artFiles].sort()) {
+    const tile = name.startsWith('tile-');
+    files[`art/${name}.svg`] = art({ motif: s.art, tokens: s.tokens, seed: `${s.name}:${name}`, w: name === 'band' ? 1600 : 800, h: name === 'band' ? 700 : tile ? 600 : 1000, tone: tile ? 'tile' : 'panel' });
+  }
   return files;
 }

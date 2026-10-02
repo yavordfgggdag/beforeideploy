@@ -5,9 +5,35 @@
   "icon": "heart",
   "accent": "#a47148",
   "mark": "ring",
+  "art": "leaves",
+  "sample": {
+    "name": "Maria & Petar"
+  },
   "featured": false,
   "titleKey": "newsite.template.wedding.title",
   "descriptionKey": "newsite.template.wedding.description",
+  "keywords": {
+    "en": [
+      "wedding",
+      "invitation",
+      "rsvp",
+      "couple",
+      "ceremony",
+      "celebration",
+      "anniversary",
+      "save the date"
+    ],
+    "bg": [
+      "сватба",
+      "покана",
+      "потвърждение",
+      "двойка",
+      "церемония",
+      "празник",
+      "годишнина",
+      "запазете датата"
+    ]
+  },
   "style": "elegant",
   "tokens": {
     "dark": false,

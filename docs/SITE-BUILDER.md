@@ -1,4 +1,4 @@
-# Site Builder — how sites are made (S1: the generator)
+# Site Builder — how sites are made
 
 The plan: https://claude.ai/code/artifact/1d0f168b-e02f-46da-a8d1-a1926fac17a1 (packages S1–S6). This file is the
 developer side of S1: where the code is, how a theme is written, how to add a section, how to test.
@@ -32,6 +32,7 @@ bid new check                      validates every theme.json
 bid new create --template mentor --name "Ива" --dir ~/Sites [--lang bg|en] [--description D] [--style bold --palette coral]
 bid new generate --brief brief.json --dir ~/Sites
 bid new preview  --brief brief.json          renders in memory (no files) — for previews and tests
+bid new suggest  --say "…"                   the closest themes to the owner's words (S5)
 ```
 
 A brief:
@@ -68,6 +69,9 @@ document and re-renders; the HTML is never patched by hand.
 | `mark` | the brand icon (a name from `icons.mjs`) |
 | `style`, `tokens` | the look the theme was designed with (`tokens.mjs` shape); a brief may override |
 | `questions` | which form fields matter for this theme (`offer`, `audience`, `services`, `photos`, `contacts`) |
+| `art` | the illustration motif (S5): `blobs` `waves` `grid` `orbit` `leaves` `peaks` `rings` `confetti` |
+| `sample.name` | the name the preview picture is rendered with |
+| `keywords.bg`, `keywords.en` | what "something else" matches: three or more words people would type |
 | `lang.bg`, `lang.en` | `tagline`, `description`, `nav`, `headerCta`, `pages` — the same page ids in both languages |
 
 A page: `{ "title", "description", "pagehead": [h1, lead], "hero": {…}, "sections": [ … ] }` (`index` has no
@@ -142,6 +146,39 @@ three steps as a progress strip on step 3, the charge after; an AI failure keeps
 - The app: "Edit the site…" on the project screen (generated sites only) → the site from its folder, the field,
   example chips, the applied / refused summary, the charge, the history with Undo.
 
+## Beauty and themes (S5)
+
+- **Pictures in the picker.** `engine/themes/<id>/preview.jpg` is the first screen of a sample site (the theme's
+  `sample.name`, English, its own look) at 1280×800. `node scripts/theme-shots.mjs [id|--all|--check]` renders them
+  with Chromium through Playwright (`playwright-core`, dev tooling only — the engine stays dependency-free) and
+  records the theme.json fingerprint in `engine/themes/previews.json`; `bid new check` reports `present`,
+  `stale` or `missing`, and the engine tests fail on anything but `present`. The **theme-previews** workflow
+  (Actions → Run workflow) renders the stale ones on macOS — the fonts the Mac app's users see — and commits the
+  pictures to the branch, so a theme change is followed by one click, not by a tool chain on every machine.
+- **"Something else".** The last card of the picker: the owner describes the site in their words; the themes are
+  ranked by `keywords.bg` / `keywords.en`, title and description (`bid new suggest --say "…"`, no model; the app
+  ranks the same way offline). Nothing close → start from the business landing, every text changes later.
+- **Light and dark.** `scheme` in the brief: `auto` (default — the palette by day, its dark twin at night via
+  `prefers-color-scheme`), `light`, `dark`. `tokens.mjs` `darkOf()` makes the twin: a near-black tinted with the
+  accent, lifted surfaces, light text, accents raised until they read. Text on the accent is computed from its
+  luminance (`onAccentFor`), so a lemon or cyan button gets dark text. With words: "switch on dark mode", "light
+  mode", "follow the system" change the scheme; "darker" still picks a dark palette as in S4.
+- **Illustrations.** `art.mjs` draws SVG in the site's colours from a seed (the site's name): eight motifs
+  (`blobs waves grid orbit leaves peaks rings confetti`), one per theme (`art` in theme.json). They go where a photo
+  would: the hero panel when the theme has no card (`art/hero.svg`), a band under a centred hero (`art/band.svg`),
+  the story picture (`art/story.svg`) and the gallery tiles (`art/tile-1…6.svg`). Files of the site, so the owner
+  can replace them; a photo from the brief still wins. The Mac preview inlines them as data URLs.
+
+### Adding a theme (the partner's checklist)
+
+1. `engine/themes/<id>/theme.json` — copy the closest theme; keep `schema`, set `id`, `category`, `icon`, `accent`,
+   `mark`, `art`, `sample.name`, `keywords.bg/en` (three or more words people would type), `style`, `tokens`,
+   `questions`, and the recipe in `lang.bg` and `lang.en` with the same page ids.
+2. `engine/i18n/bg.json` and `en.json` — `newsite.template.<id>.title` and `.description`.
+3. `bid new check` must list no errors for it; `node tests/run.mjs` creates it in both languages and all styles.
+4. Run the **theme-previews** workflow (or `node scripts/theme-shots.mjs <id>` with Chrome installed) — the
+   picture lands in the picker; without it the card shows the accent gradient and the engine tests fail.
+
 ## Tests
 
 `node tests/run.mjs` — the `new:` tests create every theme in both languages and every style, run the
@@ -149,4 +186,5 @@ quality check, and verify escaping, links, photos, contacts and `bid.site.json`;
 pipeline against the fake model (own key and cloud) and checks that links and contacts never come from it.
 `deno test supabase/functions` — `site-gen` with a fake model: steps, models per plan, merging, billing,
 duplicates, failures, edit mode. `site edit:` in the engine suite covers the local words, the model path,
-the hand-edit guard, history and undo.
+the hand-edit guard, history and undo. `new S5:` covers the pictures and their freshness, suggestions in both
+languages, the three schemes, the illustration files and the scheme words.

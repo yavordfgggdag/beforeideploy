@@ -265,7 +265,7 @@ t('i18n: всеки ключ в engine/src съществува в катало�
   }
   // a theme names its picker texts by key (engine/themes/<id>/theme.json: titleKey, descriptionKey)
   const themes = path.join(ROOT, 'engine', 'themes');
-  for (const d of fs.readdirSync(themes)) {
+  for (const d of fs.readdirSync(themes, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name)) {
     const th = JSON.parse(fs.readFileSync(path.join(themes, d, 'theme.json'), 'utf8'));
     for (const k of [th.titleKey, th.descriptionKey]) if (k) used.add(k);
   }
@@ -516,6 +516,62 @@ t('new: brief → сайт по дизайн на човека (услуги, к
   assert(check.length >= 21 && check.every((x) => x.errors.length === 0), JSON.stringify(check.filter((x) => x.errors.length)));
   fixture('new-brief', { brief, result: r.data });
   fixture('new-list', bid('new', 'list').data);
+});
+
+t('new S5: превю-снимки и ключови думи за всяка тема, „Нещо друго“ предлага най-близката тема, светло/тъмно/авто, илюстрации по палитра', () => {
+  const list = bid('new', 'list').data;
+  for (const th of list) {
+    assert(th.preview && fs.existsSync(th.preview) && th.preview.endsWith(`${th.id}/preview.jpg`), `${th.id}: preview picture`);
+    assert(th.keywords.length >= 3 && th.art && th.sample, `${th.id}: keywords/art/sample`);
+  }
+  // the pictures are current (scripts/theme-shots.mjs records the theme.json each was rendered from)
+  const check = bid('new', 'check').data;
+  assert(check.every((x) => x.preview === 'present'), 'stale or missing previews — run node scripts/theme-shots.mjs: ' + JSON.stringify(check.filter((x) => x.preview !== 'present').map((x) => [x.id, x.preview])));
+  const shots = spawnSync(process.execPath, [path.join(ROOT, 'scripts', 'theme-shots.mjs'), '--check'], { encoding: 'utf8' });
+  assert(shots.status === 0, shots.stderr);
+  // "something else": the owner's words → the closest themes, in both languages; nonsense → nothing (the app starts from landing)
+  assert(bid('new', 'suggest', '--say', 'фризьорски салон в София').data[0].id === 'salon', 'bg keywords');
+  assert(bid('new', 'suggest', '--say', 'an online course for designers').data[0].id === 'course', 'en keywords');
+  assert(bid('new', 'suggest', '--say', 'I sell handmade candles').data[0].id === 'shop', 'stems');
+  assert(bid('new', 'suggest', '--say', 'xyzzy').data.length === 0, 'no match → []');
+  // colour scheme: auto = the light look plus its dark twin at night; dark pins the twin; light pins the day look
+  const css = (brief) => bid('new', 'preview', '--brief', JSON.stringify({ name: 'Studio North', theme: 'portfolio', lang: 'en', ...brief })).data['styles.css'];
+  const auto = css({});
+  assert(auto.includes('color-scheme: light dark') && auto.includes('@media (prefers-color-scheme: dark)') && auto.includes('--text: #eef0f7;'), 'auto: the twin is in a media query');
+  const dark = css({ scheme: 'dark' });
+  assert(dark.includes('color-scheme: dark;') && !dark.includes('prefers-color-scheme') && /:root \{\n  --bg: #[0-9a-f]{6};\n  --bg-2: #[0-9a-f]{6};[\s\S]*--text: #eef0f7;/.test(dark), 'dark: the twin is the root');
+  const light = css({ scheme: 'light' });
+  assert(light.includes('color-scheme: light;') && !light.includes('prefers-color-scheme'), 'light: no twin');
+  // a palette that is dark already stays as it is; text on a bright accent is dark, never white on yellow
+  const lemon = css({ style: 'bold', palette: 'lemon' });
+  assert(lemon.includes('color-scheme: dark;') && lemon.includes('--on-accent: #0b0b0f;') && !lemon.includes('prefers-color-scheme'), 'lemon');
+  // illustrations: the hero without a photo, the centred hero's band, the story picture, the gallery tiles — files in the site's colours
+  const portfolio = bid('new', 'preview', '--brief', JSON.stringify({ name: 'Studio North', theme: 'portfolio', lang: 'en' })).data;
+  assert(portfolio['index.html'].includes('class="hero-art"><img src="/art/hero.svg"') && portfolio['art/hero.svg'].startsWith('<svg') && portfolio['art/hero.svg'].includes('#ff5a36'), 'hero art in the accent');
+  assert(portfolio['index.html'].includes('<img class="art" src="/art/tile-1.svg"') && portfolio['art/tile-6.svg'], 'gallery tiles');
+  const wedding = bid('new', 'preview', '--brief', JSON.stringify({ name: 'M & P', theme: 'wedding', lang: 'bg' })).data;
+  assert(wedding['index.html'].includes('class="hero-art wide"><img src="/art/band.svg"') && wedding['art/band.svg'].includes('viewBox="0 0 1600 700"'), 'band under a centred hero');
+  const mentor = bid('new', 'preview', '--brief', JSON.stringify({ name: 'Iva', theme: 'mentor', lang: 'en' })).data;
+  assert(mentor['about.html'].includes('src="/art/story.svg"') && mentor['art/story.svg'] && !mentor['art/hero.svg'], 'story picture; the hero has a card so no hero art');
+  assert(mentor['art/story.svg'] === bid('new', 'preview', '--brief', JSON.stringify({ name: 'Iva', theme: 'mentor', lang: 'en' })).data['art/story.svg'], 'deterministic: same site, same picture');
+  // a site on disk: the art folder is written and the quality check passes; a photo replaces the hero art
+  const parent = path.join(TMP, 's5-sites');
+  fs.mkdirSync(parent, { recursive: true });
+  const r = bid('new', 'generate', '--brief', JSON.stringify({ name: 'Studio North', theme: 'portfolio', lang: 'en', scheme: 'dark' }), '--dir', parent);
+  assert(r.result.ok && fs.existsSync(path.join(r.data.path, 'art', 'hero.svg')) && fs.existsSync(path.join(r.data.path, 'art', 'tile-3.svg')), JSON.stringify(r.result).slice(0, 200));
+  const record = JSON.parse(fs.readFileSync(path.join(r.data.path, 'bid.site.json'), 'utf8'));
+  assert(record.brief.scheme === 'dark' && record.tokens.dark === true && record.files['art/hero.svg'], 'scheme and art files in the record');
+  assert(bid('check', '--project', r.data.path).data.steps.find((s) => s.id === 'site').status === 'pass', 'site check passes with art files');
+  // words: "dark mode" / "light mode" / "auto" change the scheme, not the palette; "darker" still picks a dark palette
+  const e1 = bid('site', 'edit', '--project', r.data.path, '--say', 'switch on light mode');
+  assert(e1.result.ok && e1.data.applied.includes('look: light') && e1.data.provider === 'local', JSON.stringify(e1.result).slice(0, 300));
+  assert(JSON.parse(fs.readFileSync(path.join(r.data.path, 'bid.site.json'), 'utf8')).brief.scheme === 'light' && fs.readFileSync(path.join(r.data.path, 'styles.css'), 'utf8').includes('color-scheme: light;'), 'light pinned');
+  const e2 = bid('site', 'edit', '--project', r.data.path, '--say', 'нека следва системата — тъмно през нощта');
+  assert(e2.result.ok && e2.data.applied.includes('look: auto'), JSON.stringify(e2.result).slice(0, 300));
+  assert(fs.readFileSync(path.join(r.data.path, 'styles.css'), 'utf8').includes('prefers-color-scheme: dark'), 'auto again');
+  const e3 = bid('site', 'edit', '--project', r.data.path, '--say', 'включи тъмен режим');
+  assert(e3.result.ok && e3.data.applied.includes('look: dark') && !e3.data.applied.some((a) => a.includes('lemon')), JSON.stringify(e3.result).slice(0, 300));
+  assert(git(r.data.path, 'log', '--oneline').split('\n').filter(Boolean).length === 4, 'three edits, three commits');
 });
 
 t('check: vite app — build създава dist, статус ready', () => {

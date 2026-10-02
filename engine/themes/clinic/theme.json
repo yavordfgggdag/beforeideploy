@@ -5,9 +5,40 @@
   "icon": "cross.case",
   "accent": "#0284c7",
   "mark": "tooth",
+  "art": "rings",
+  "sample": {
+    "name": "Dental Clinic Vita"
+  },
   "featured": false,
   "titleKey": "newsite.template.clinic.title",
   "descriptionKey": "newsite.template.clinic.description",
+  "keywords": {
+    "en": [
+      "clinic",
+      "dentist",
+      "doctor",
+      "medical",
+      "dental",
+      "physiotherapy",
+      "vet",
+      "veterinary",
+      "health",
+      "appointment",
+      "team"
+    ],
+    "bg": [
+      "клиника",
+      "зъболекар",
+      "лекар",
+      "медицински",
+      "дентален",
+      "физиотерапия",
+      "ветеринар",
+      "здраве",
+      "час",
+      "екип"
+    ]
+  },
   "style": "calm",
   "tokens": {
     "dark": false,

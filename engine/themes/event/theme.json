@@ -5,9 +5,38 @@
   "icon": "ticket",
   "accent": "#f43f5e",
   "mark": "mic",
+  "art": "confetti",
+  "sample": {
+    "name": "Sofia Design Week"
+  },
   "featured": true,
   "titleKey": "newsite.template.event.title",
   "descriptionKey": "newsite.template.event.description",
+  "keywords": {
+    "en": [
+      "event",
+      "conference",
+      "festival",
+      "meetup",
+      "concert",
+      "tickets",
+      "schedule",
+      "speakers",
+      "workshop day",
+      "party"
+    ],
+    "bg": [
+      "събитие",
+      "конференция",
+      "фестивал",
+      "среща",
+      "концерт",
+      "билети",
+      "програма",
+      "лектори",
+      "парти"
+    ]
+  },
   "style": "bold",
   "tokens": {
     "dark": true,

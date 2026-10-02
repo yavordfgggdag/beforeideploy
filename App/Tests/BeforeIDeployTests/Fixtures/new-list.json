@@ -16,7 +16,34 @@
       "services",
       "photos",
       "contacts"
-    ]
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/mentor/preview.jpg",
+    "art": "blobs",
+    "keywords": [
+      "ментор",
+      "коуч",
+      "коучинг",
+      "консултант",
+      "консултации",
+      "терапевт",
+      "психолог",
+      "съветник",
+      "сесии",
+      "програми",
+      "личен бранд",
+      "mentor",
+      "coach",
+      "coaching",
+      "consultant",
+      "consulting",
+      "therapist",
+      "psychologist",
+      "advisor",
+      "sessions",
+      "programs",
+      "personal brand"
+    ],
+    "sample": "Iva Petrova"
   },
   {
     "id": "landing",
@@ -33,7 +60,32 @@
       "services",
       "contacts",
       "photos"
-    ]
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/landing/preview.jpg",
+    "art": "grid",
+    "keywords": [
+      "бизнес",
+      "фирма",
+      "услуги",
+      "агенция",
+      "лендинг",
+      "компания",
+      "офис",
+      "студио",
+      "малък бизнес",
+      "business",
+      "company",
+      "services",
+      "agency",
+      "landing",
+      "firm",
+      "office",
+      "b2b",
+      "consultancy",
+      "local business",
+      "studio"
+    ],
+    "sample": "Northline"
   },
   {
     "id": "services",
@@ -50,7 +102,33 @@
       "services",
       "contacts",
       "photos"
-    ]
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/services/preview.jpg",
+    "art": "peaks",
+    "keywords": [
+      "водопроводчик",
+      "електротехник",
+      "ремонти",
+      "почистване",
+      "майстор",
+      "строител",
+      "ремонт",
+      "занаят",
+      "ценоразпис",
+      "услуга",
+      "plumber",
+      "electrician",
+      "repairs",
+      "cleaning",
+      "handyman",
+      "builder",
+      "renovation",
+      "trades",
+      "craftsman",
+      "prices",
+      "service"
+    ],
+    "sample": "Dimitrov & Sons"
   },
   {
     "id": "portfolio",
@@ -67,7 +145,31 @@
       "services",
       "contacts",
       "photos"
-    ]
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/portfolio/preview.jpg",
+    "art": "rings",
+    "keywords": [
+      "портфолио",
+      "дизайнер",
+      "фотограф",
+      "илюстратор",
+      "архитект",
+      "творец",
+      "фрийланс",
+      "проекти",
+      "галерия",
+      "portfolio",
+      "designer",
+      "photographer",
+      "illustrator",
+      "architect",
+      "creative",
+      "freelancer",
+      "work",
+      "projects",
+      "gallery"
+    ],
+    "sample": "Studio North"
   },
   {
     "id": "restaurant",
@@ -84,7 +186,34 @@
       "services",
       "contacts",
       "photos"
-    ]
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/restaurant/preview.jpg",
+    "art": "leaves",
+    "keywords": [
+      "ресторант",
+      "бистро",
+      "кафе",
+      "бар",
+      "меню",
+      "храна",
+      "кухня",
+      "пица",
+      "вечеря",
+      "резервация",
+      "механа",
+      "restaurant",
+      "bistro",
+      "cafe",
+      "bar",
+      "menu",
+      "food",
+      "kitchen",
+      "pizza",
+      "sushi",
+      "dinner",
+      "reservation"
+    ],
+    "sample": "Bistro Lipa"
   },
   {
     "id": "course",
@@ -101,7 +230,33 @@
       "services",
       "contacts",
       "photos"
-    ]
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/course/preview.jpg",
+    "art": "orbit",
+    "keywords": [
+      "курс",
+      "онлайн курс",
+      "обучение",
+      "уъркшоп",
+      "училище",
+      "уроци",
+      "учител",
+      "академия",
+      "ученици",
+      "студенти",
+      "course",
+      "online course",
+      "training",
+      "workshop",
+      "school",
+      "lessons",
+      "teacher",
+      "tutor",
+      "academy",
+      "curriculum",
+      "students"
+    ],
+    "sample": "Learn to Code"
   },
   {
     "id": "salon",
@@ -118,7 +273,34 @@
       "services",
       "contacts",
       "photos"
-    ]
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/salon/preview.jpg",
+    "art": "leaves",
+    "keywords": [
+      "салон",
+      "коса",
+      "фризьор",
+      "бръснар",
+      "нокти",
+      "маникюр",
+      "красота",
+      "спа",
+      "масаж",
+      "мигли",
+      "грим",
+      "salon",
+      "hair",
+      "hairdresser",
+      "barber",
+      "nails",
+      "beauty",
+      "spa",
+      "massage",
+      "lashes",
+      "makeup",
+      "prices"
+    ],
+    "sample": "Salon Mira"
   },
   {
     "id": "shop",
@@ -135,7 +317,30 @@
       "services",
       "contacts",
       "photos"
-    ]
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/shop/preview.jpg",
+    "art": "confetti",
+    "keywords": [
+      "магазин",
+      "продукти",
+      "ръчна изработка",
+      "онлайн магазин",
+      "продажба",
+      "каталог",
+      "бутик",
+      "поръчка",
+      "shop",
+      "store",
+      "products",
+      "handmade",
+      "ecommerce",
+      "sell",
+      "catalog",
+      "boutique",
+      "crafts",
+      "order"
+    ],
+    "sample": "Handmade by Lina"
   },
   {
     "id": "saas",
@@ -152,7 +357,30 @@
       "services",
       "contacts",
       "photos"
-    ]
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/saas/preview.jpg",
+    "art": "orbit",
+    "keywords": [
+      "софтуер",
+      "стартъп",
+      "приложение",
+      "продукт",
+      "абонамент",
+      "платформа",
+      "инструмент",
+      "цени",
+      "saas",
+      "software",
+      "startup",
+      "app",
+      "product",
+      "pricing",
+      "subscription",
+      "tool",
+      "platform",
+      "api"
+    ],
+    "sample": "Flowdeck"
   },
   {
     "id": "event",
@@ -169,7 +397,31 @@
       "services",
       "contacts",
       "photos"
-    ]
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/event/preview.jpg",
+    "art": "confetti",
+    "keywords": [
+      "събитие",
+      "конференция",
+      "фестивал",
+      "среща",
+      "концерт",
+      "билети",
+      "програма",
+      "лектори",
+      "парти",
+      "event",
+      "conference",
+      "festival",
+      "meetup",
+      "concert",
+      "tickets",
+      "schedule",
+      "speakers",
+      "workshop day",
+      "party"
+    ],
+    "sample": "Sofia Design Week"
   },
   {
     "id": "blog",
@@ -186,7 +438,30 @@
       "services",
       "contacts",
       "photos"
-    ]
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/blog/preview.jpg",
+    "art": "waves",
+    "keywords": [
+      "блог",
+      "писател",
+      "статии",
+      "бюлетин",
+      "дневник",
+      "публикации",
+      "автор",
+      "списание",
+      "личен сайт",
+      "blog",
+      "writer",
+      "articles",
+      "newsletter",
+      "journal",
+      "posts",
+      "author",
+      "magazine",
+      "personal site"
+    ],
+    "sample": "Notes by Ana"
   },
   {
     "id": "comingsoon",
@@ -203,7 +478,26 @@
       "services",
       "contacts",
       "photos"
-    ]
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/comingsoon/preview.jpg",
+    "art": "orbit",
+    "keywords": [
+      "очаквайте скоро",
+      "старт",
+      "списък с чакащи",
+      "тийзър",
+      "предварителна регистрация",
+      "нов продукт",
+      "coming soon",
+      "launch",
+      "waitlist",
+      "teaser",
+      "pre-launch",
+      "signup",
+      "countdown",
+      "new product"
+    ],
+    "sample": "Launching soon"
   },
   {
     "id": "app",
@@ -220,7 +514,24 @@
       "services",
       "contacts",
       "photos"
-    ]
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/app/preview.jpg",
+    "art": "grid",
+    "keywords": [
+      "мобилно приложение",
+      "ios",
+      "android",
+      "изтегли",
+      "функции",
+      "игра",
+      "mobile app",
+      "app store",
+      "download",
+      "features",
+      "screenshots",
+      "game"
+    ],
+    "sample": "Pocket Budget"
   },
   {
     "id": "clinic",
@@ -237,7 +548,33 @@
       "services",
       "contacts",
       "photos"
-    ]
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/clinic/preview.jpg",
+    "art": "rings",
+    "keywords": [
+      "клиника",
+      "зъболекар",
+      "лекар",
+      "медицински",
+      "дентален",
+      "физиотерапия",
+      "ветеринар",
+      "здраве",
+      "час",
+      "екип",
+      "clinic",
+      "dentist",
+      "doctor",
+      "medical",
+      "dental",
+      "physiotherapy",
+      "vet",
+      "veterinary",
+      "health",
+      "appointment",
+      "team"
+    ],
+    "sample": "Dental Clinic Vita"
   },
   {
     "id": "fitness",
@@ -254,7 +591,32 @@
       "services",
       "contacts",
       "photos"
-    ]
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/fitness/preview.jpg",
+    "art": "peaks",
+    "keywords": [
+      "фитнес",
+      "зала",
+      "треньор",
+      "личен треньор",
+      "йога",
+      "пилатес",
+      "кросфит",
+      "класове",
+      "членство",
+      "спорт",
+      "fitness",
+      "gym",
+      "trainer",
+      "personal trainer",
+      "yoga",
+      "pilates",
+      "crossfit",
+      "classes",
+      "membership",
+      "sport"
+    ],
+    "sample": "Iron Yard"
   },
   {
     "id": "hotel",
@@ -271,7 +633,31 @@
       "services",
       "contacts",
       "photos"
-    ]
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/hotel/preview.jpg",
+    "art": "waves",
+    "keywords": [
+      "хотел",
+      "къща за гости",
+      "стаи",
+      "вила",
+      "апартамент",
+      "настаняване",
+      "резервации",
+      "нощувка",
+      "курорт",
+      "hotel",
+      "guest house",
+      "rooms",
+      "villa",
+      "apartment",
+      "airbnb",
+      "stay",
+      "booking",
+      "bed and breakfast",
+      "resort"
+    ],
+    "sample": "Villa Rosa"
   },
   {
     "id": "linkinbio",
@@ -288,7 +674,29 @@
       "services",
       "contacts",
       "photos"
-    ]
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/linkinbio/preview.jpg",
+    "art": "confetti",
+    "keywords": [
+      "линк в био",
+      "линкове",
+      "инстаграм",
+      "тикток",
+      "създател",
+      "инфлуенсър",
+      "ютуб",
+      "социални",
+      "link in bio",
+      "links",
+      "instagram",
+      "tiktok",
+      "creator",
+      "influencer",
+      "youtube",
+      "social",
+      "one page"
+    ],
+    "sample": "Mila"
   },
   {
     "id": "nonprofit",
@@ -305,7 +713,31 @@
       "services",
       "contacts",
       "photos"
-    ]
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/nonprofit/preview.jpg",
+    "art": "leaves",
+    "keywords": [
+      "неправителствена",
+      "благотворителност",
+      "фондация",
+      "кауза",
+      "доброволци",
+      "дарение",
+      "общност",
+      "сдружение",
+      "кампания",
+      "nonprofit",
+      "charity",
+      "ngo",
+      "foundation",
+      "cause",
+      "volunteers",
+      "donate",
+      "community",
+      "association",
+      "campaign"
+    ],
+    "sample": "Green Sofia"
   },
   {
     "id": "realestate",
@@ -322,7 +754,32 @@
       "services",
       "contacts",
       "photos"
-    ]
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/realestate/preview.jpg",
+    "art": "grid",
+    "keywords": [
+      "недвижими имоти",
+      "имоти",
+      "апартаменти",
+      "къщи",
+      "брокер",
+      "агент",
+      "обяви",
+      "наем",
+      "покупка",
+      "парцел",
+      "real estate",
+      "property",
+      "apartments",
+      "houses",
+      "broker",
+      "agent",
+      "listings",
+      "rent",
+      "buy",
+      "land"
+    ],
+    "sample": "Primus Estates"
   },
   {
     "id": "resume",
@@ -339,7 +796,30 @@
       "services",
       "contacts",
       "photos"
-    ]
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/resume/preview.jpg",
+    "art": "rings",
+    "keywords": [
+      "автобиография",
+      "cv",
+      "работа",
+      "кариера",
+      "умения",
+      "опит",
+      "разработчик",
+      "инженер",
+      "лично",
+      "resume",
+      "job",
+      "career",
+      "skills",
+      "experience",
+      "developer",
+      "engineer",
+      "hire me",
+      "personal"
+    ],
+    "sample": "Georgi Ivanov"
   },
   {
     "id": "wedding",
@@ -356,6 +836,27 @@
       "services",
       "contacts",
       "photos"
-    ]
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/wedding/preview.jpg",
+    "art": "leaves",
+    "keywords": [
+      "сватба",
+      "покана",
+      "потвърждение",
+      "двойка",
+      "церемония",
+      "празник",
+      "годишнина",
+      "запазете датата",
+      "wedding",
+      "invitation",
+      "rsvp",
+      "couple",
+      "ceremony",
+      "celebration",
+      "anniversary",
+      "save the date"
+    ],
+    "sample": "Maria & Petar"
   }
 ]

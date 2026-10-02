@@ -5,9 +5,38 @@
   "icon": "rectangle.3.group",
   "accent": "#ff5a36",
   "mark": "camera",
+  "art": "rings",
+  "sample": {
+    "name": "Studio North"
+  },
   "featured": true,
   "titleKey": "newsite.template.portfolio.title",
   "descriptionKey": "newsite.template.portfolio.description",
+  "keywords": {
+    "en": [
+      "portfolio",
+      "designer",
+      "photographer",
+      "illustrator",
+      "architect",
+      "creative",
+      "freelancer",
+      "work",
+      "projects",
+      "gallery"
+    ],
+    "bg": [
+      "портфолио",
+      "дизайнер",
+      "фотограф",
+      "илюстратор",
+      "архитект",
+      "творец",
+      "фрийланс",
+      "проекти",
+      "галерия"
+    ]
+  },
   "style": "calm",
   "tokens": {
     "dark": false,

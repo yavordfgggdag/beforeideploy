@@ -821,6 +821,11 @@
 "newsite.offerPlaceholder" = "e.g. I help people start a business without the stress.";
 "newsite.optional" = "optional";
 "newsite.otherTheme" = "Try another theme";
+"newsite.other.title" = "Something else";
+"newsite.other.subtitle" = "Describe your site in a few words — we suggest the closest theme.";
+"newsite.other.describe" = "Describe your site in a few words…";
+"newsite.other.hint" = "The closest themes come first. Every text, colour and section can be changed later.";
+"newsite.other.fallback" = "Start from Business landing";
 "newsite.palette" = "Colour";
 "newsite.palette.bordeaux" = "Bordeaux";
 "newsite.palette.champagne" = "Champagne";
@@ -855,6 +860,11 @@
 "newsite.step.preview" = "Look and save";
 "newsite.step.theme" = "Pick a theme";
 "newsite.stepOf" = "Step %@ of %@ · %@";
+"newsite.scheme" = "Light / dark";
+"newsite.scheme.auto" = "Auto";
+"newsite.scheme.light" = "Light";
+"newsite.scheme.dark" = "Dark";
+"newsite.schemeHint" = "Auto follows the visitor’s system: your colours by day, a matching dark look at night.";
 "newsite.style" = "Style";
 "newsite.style.bold" = "Bold";
 "newsite.style.bold.hint" = "Energy, big type, one bright accent";
@@ -879,6 +889,7 @@
 "siteedit.costHint" = "Colours, styles, removing a section and a new title are free; other requests use the AI (≈ 1,000–3,000 credits).";
 "siteedit.example.calm" = "make it calm and green";
 "siteedit.example.darker" = "make it darker";
+"siteedit.example.darkMode" = "switch on dark mode";
 "siteedit.example.prices" = "add a section with prices";
 "siteedit.example.reviews" = "remove the reviews";
 "siteedit.example.title" = "change the title to \"…\"";
