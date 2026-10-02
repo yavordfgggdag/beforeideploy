@@ -222,7 +222,7 @@ export function createSiteGenHandler(deps: SiteGenDeps): (req: Request) => Promi
               throw e;
             }
           };
-          const result = await (siteAi.runPipeline as (o: Row) => Promise<Row>)({
+          const result = await (siteAi.runPipeline as unknown as (o: Row) => Promise<Row>)({
             brief, recipe, call, models,
             onStep: (id: string, state: string, info: Row) => send({ type: "step", id, status: state, model: info?.model ?? null, error: info?.error ?? null }),
           });
