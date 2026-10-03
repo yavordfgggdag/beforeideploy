@@ -6,6 +6,7 @@
   "accent": "#f43f5e",
   "mark": "link",
   "art": "confetti",
+  "schemaOrg": "Person",
   "sample": {
     "name": "Mila"
   },

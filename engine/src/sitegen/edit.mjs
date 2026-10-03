@@ -203,7 +203,7 @@ function renderRecord(record, theme) {
     name: record.brief.name,
     lang: record.brief.lang,
     mark: theme.mark,
-    art: theme.art,
+    art: theme.art, schema: theme.schemaOrg,
     tokens: record.tokens,
     description: record.brief.description || record.content.description || t(text.description, { name: record.brief.name }),
     privacyTitle: t(text.privacyTitle),

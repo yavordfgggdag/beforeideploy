@@ -6,6 +6,7 @@
   "accent": "#16a34a",
   "mark": "book",
   "art": "orbit",
+  "schemaOrg": "EducationalOrganization",
   "sample": {
     "name": "Learn to Code"
   },

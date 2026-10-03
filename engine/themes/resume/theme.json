@@ -6,6 +6,7 @@
   "accent": "#0f766e",
   "mark": "users",
   "art": "rings",
+  "schemaOrg": "Person",
   "sample": {
     "name": "Georgi Ivanov"
   },

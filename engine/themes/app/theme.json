@@ -6,6 +6,7 @@
   "accent": "#2563eb",
   "mark": "play",
   "art": "grid",
+  "schemaOrg": "Organization",
   "sample": {
     "name": "Pocket Budget"
   },

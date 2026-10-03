@@ -115,7 +115,7 @@ function describeSection(s) {
   if (s.h) d.h = s.h;
   if (s.p) d.p = s.p;
   if (Array.isArray(s.button)) d.button = s.button[0];
-  if (Array.isArray(s.items)) d.items = s.items.map((it) => (Array.isArray(it) ? (s.type === 'cards' ? it.slice(1) : it) : typeof it === 'object' && it ? [it.name || it.h || '', it.price || it.p || ''] : [String(it)]));
+  if (Array.isArray(s.items)) d.items = s.items.map((it) => (Array.isArray(it) ? (s.type === 'cards' || s.type === 'trust' ? it.slice(1) : it) : typeof it === 'object' && it ? [it.name || it.h || '', it.price || it.p || ''] : [String(it)]));
   if (s.type === 'pricing' || s.type === 'programs') d.plans = (s.items || []).map((p) => ({ name: p.name, price: p.price, per: p.per || null, featured: p.featured || null, features: p.features || [], cta: Array.isArray(p.cta) ? p.cta[0] : null }));
   if (s.type === 'menu') d.groups = (s.groups || []).map((g) => ({ name: g.name, items: g.items || [] }));
   if (s.type === 'posts') d.posts = (s.items || []).map((p) => ({ tag: p.tag, date: p.date, h: p.h, p: p.p }));
@@ -157,7 +157,7 @@ export function contentPrompt(brief, recipe, plan) {
   return `${briefText(brief)}
 ${plan?.tone ? `\nTone: ${clip(plan.tone, 200)}` : ''}
 
-Rewrite every text of this recipe for this owner. Keep the structure; mark a section keep: false only when it must go${kept ? ` (these stay: ${kept.join(', ')})` : ''}. Lists keep their number of items unless the brief gives a different number of services. Prices and service names come from the brief verbatim. The "items" rows keep their column meaning (for cards: [heading, text]; steps: [heading, text]; quotes: [quote, who]; faq: [question, answer]; stats: [number, label]; prose/story: [heading, paragraph]; chips/gallery: [caption]).
+Rewrite every text of this recipe for this owner. Keep the structure; mark a section keep: false only when it must go${kept ? ` (these stay: ${kept.join(', ')})` : ''}. Lists keep their number of items unless the brief gives a different number of services. Prices and service names come from the brief verbatim. The "items" rows keep their column meaning (for cards: [heading, text]; steps: [heading, text]; quotes: [quote, who]; faq: [question, answer]; stats: [number, label]; prose/story: [heading, paragraph]; chips/gallery: [caption]; trust: [one short promise]; split: [heading, paragraph, up to four bullets]).
 
 Recipe:
 ${recipeText(recipe)}`;
@@ -241,6 +241,8 @@ function mergeSection(base, ai) {
     s.items = aiRows.slice(0, count).map((r, i) => {
       const o = old[i] ?? old[old.length - 1];
       if (type === 'cards' || type === 'audience') return [Array.isArray(o) ? o[0] : 'spark', r[0] || '', r[1] || ''];
+      if (type === 'trust') return [Array.isArray(o) ? o[0] : 'check', r[0] || ''];
+      if (type === 'split') return [r[0] || '', r[1] || '', ...r.slice(2, 6)].filter((c, j) => j < 2 || c); // title, text, up to four bullets
       if (type === 'chips' || type === 'gallery') return r[0] || '';
       if (Array.isArray(o)) return o.map((cell, j) => r[j] ?? (j < r.length ? '' : cell));
       return r;
@@ -393,7 +395,7 @@ const PAGE_FIELDS = new Set(['title', 'description']);
 const HERO_FIELDS = new Set(['eyebrow', 'title', 'lead', 'cta', 'cta2', 'cardTitle', 'cardNote']);
 const SECTION_FIELDS = new Set(['title', 'intro', 'h', 'p', 'button', 'send', 'note']);
 const SITE_FIELDS = new Set(['description', 'tagline']);
-const ADDABLE = new Set(['cards', 'steps', 'faq', 'quotes', 'stats', 'prose', 'chips', 'cta', 'pricing', 'gallery']);
+const ADDABLE = new Set(['cards', 'steps', 'faq', 'quotes', 'stats', 'prose', 'chips', 'cta', 'pricing', 'gallery', 'trust', 'split']);
 
 export function editPrompt(brief, content, look, say) {
   return `${briefText(brief)}
@@ -409,7 +411,7 @@ Translate the request into the smallest list of operations:
 - set_text: page + section index (null for the hero or the page itself) + field + value. Hero fields: eyebrow, title, lead, cta, cta2, cardTitle, cardNote. Section fields: title, intro, h, p, button, send, note. Page fields (section null, no hero field): title, description. Site-wide (page null): description, tagline.
 - set_items: page + section + items (the full list of rows, same column meaning as today).
 - drop_section: page + section.
-- add_section: page + after (section index, -1 = first) + type (cards, steps, faq, quotes, stats, prose, chips, cta, pricing, gallery) + title + intro + items (rows for the type: cards [heading, text]; steps [heading, text]; faq [question, answer]; quotes [quote, who]; stats [number, label]; prose [heading, paragraph]; chips/gallery [caption]; pricing [name, price, one line]; cta [heading, text, button label]).
+- add_section: page + after (section index, -1 = first) + type (cards, steps, faq, quotes, stats, prose, chips, cta, pricing, gallery, trust, split) + title + intro + items (rows for the type: cards [heading, text]; steps [heading, text]; faq [question, answer]; quotes [quote, who]; stats [number, label]; prose [heading, paragraph]; chips/gallery [caption]; trust [one short promise]; split [heading, paragraph, up to four bullets]; pricing [name, price, one line]; cta [heading, text, button label]).
 - style: style and/or palette and/or scheme (auto, light, dark).
 - none: when the request cannot be done with these operations (say why in summary).
 Write texts in the site's language, in the owner's voice; invent no facts. Summary: one sentence in the site's language saying what changed.`;
@@ -425,6 +427,10 @@ function sectionFrom(op, pages) {
   switch (op.type) {
     case 'cards':
       return { ...base, items: items.slice(0, 8).map((r) => ['spark', r[0] || '', r[1] || '']) };
+    case 'trust':
+      return { ...base, items: items.slice(0, 6).map((r) => ['check', r[0] || '']) };
+    case 'split':
+      return { ...base, items: items.slice(0, 4).map((r) => [r[0] || '', r[1] || '', ...r.slice(2, 6).filter(Boolean)]) };
     case 'steps':
     case 'faq':
     case 'quotes':

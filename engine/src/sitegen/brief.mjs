@@ -96,7 +96,8 @@ export function applyBrief(theme, brief, images = []) {
   const rows = [];
   if (brief.contacts.email) rows.push(['mail', labels.email, brief.contacts.email, `mailto:${brief.contacts.email}`]);
   if (brief.contacts.phone) rows.push(['phone', labels.phone, brief.contacts.phone, `tel:${brief.contacts.phone.replace(/[^\d+]/g, '')}`]);
-  if (brief.contacts.address) rows.push(['pin', labels.address, brief.contacts.address]);
+  // the address opens the map (a plain https link — nothing is embedded, so nothing tracks the visitor)
+  if (brief.contacts.address) rows.push(['pin', labels.address, brief.contacts.address, `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(brief.contacts.address)}`]);
   if (brief.contacts.instagram) rows.push(['instagram', labels.instagram, `@${brief.contacts.instagram}`, `https://instagram.com/${brief.contacts.instagram}`]);
   if (brief.contacts.website) rows.push(['globe', labels.website, brief.contacts.website.replace(/^https?:\/\//i, ''), brief.contacts.website]);
   if (rows.length) {

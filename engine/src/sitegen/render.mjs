@@ -43,12 +43,14 @@ const PRIVACY = {
 function header(site, c, pagePath) {
   const nav = list(c.nav).map(([label, h]) => `<a href="${href(h)}"${h === pagePath ? ' aria-current="page"' : ''}>${esc(label)}</a>`).join('');
   const cta = c.headerCta ? `<a class="btn" href="${href(c.headerCta[1])}">${esc(c.headerCta[0])}</a>` : '';
+  // on a phone the links live in a menu that opens under the header — plain <details>, so it needs no script
+  const menu = nav ? `<details class="mnav"><summary aria-label="${site.common.menu}">${ico('menu', 'ico i-open')}${ico('close', 'ico i-close')}</summary><nav class="mnav-panel" aria-label="${site.common.menu}">${nav}${cta ? cta.replace('class="btn"', 'class="btn mnav-cta"') : ''}</nav></details>` : '';
   return `  <a class="skip" href="#main">${site.common.skip}</a>
   <header class="top">
     <div class="wrap">
       <a class="brand" href="/"><span class="mark">${ico(site.mark)}</span>${esc(site.name)}</a>
       <nav class="nav" aria-label="${site.common.menu}">${nav}</nav>
-      ${cta}
+      ${cta}${menu}
     </div>
   </header>`;
 }
@@ -63,7 +65,7 @@ function footer(site, c) {
   </footer>`;
 }
 
-function head(site, { title, description, index }) {
+function head(site, { title, description, index, jsonLd = '' }) {
   return `<!doctype html>
 <html lang="${site.lang}">
 <head>
@@ -77,7 +79,12 @@ ${index ? '  <link rel="canonical" href="/">\n' : ''}  <link rel="icon" href="/f
   <meta property="og:description" content="${esc(description)}">
   <meta property="og:image" content="/og.svg">
   <meta property="og:type" content="website">
-  <link rel="stylesheet" href="/styles.css">
+  <meta property="og:site_name" content="${esc(site.name)}">
+  <meta property="og:locale" content="${site.lang === 'bg' ? 'bg_BG' : 'en_GB'}">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="${esc(index ? site.name : title)}">
+  <meta name="twitter:description" content="${esc(description)}">
+  <link rel="stylesheet" href="/styles.css">${jsonLd ? `\n  <script type="application/ld+json">${jsonLd}</script>` : ''}
 </head>
 <body>
 `;
@@ -125,7 +132,7 @@ const sectionHead = (s) => (s.title ? `<div class="head"><h2>${rich(s.title)}</h
 const ALIAS = { audience: 'cards', programs: 'pricing', story: 'story', booking: 'cta', hours: 'contact' };
 
 /** The section types a theme or the AI may ask for. */
-export const SECTION_TYPES = ['cards', 'stats', 'menu', 'pricing', 'steps', 'timeline', 'quotes', 'gallery', 'posts', 'faq', 'chips', 'prose', 'story', 'cta', 'contact', 'form', 'article', ...Object.keys(ALIAS)];
+export const SECTION_TYPES = ['cards', 'stats', 'menu', 'pricing', 'steps', 'timeline', 'quotes', 'gallery', 'posts', 'faq', 'chips', 'prose', 'story', 'cta', 'contact', 'form', 'article', 'trust', 'split', ...Object.keys(ALIAS)];
 
 function section(s, site) {
   const C = site.common;
@@ -194,6 +201,17 @@ function section(s, site) {
     case 'chips':
       inner = `<div class="chips">${list(s.items).map((c) => `<span>${esc(c)}</span>`).join('')}</div>`;
       break;
+    case 'trust':
+      // a slim strip of short promises with icons — rows are [icon, text]
+      return `    <section class="trust-band"${id(s.id) ? ` id="${id(s.id)}"` : ''} aria-label="${esc(s.title || '')}">
+      <div class="wrap"><ul class="trust">${list(s.items).map(([ic, text]) => `<li>${ico(ic)}<span>${esc(text)}</span></li>`).join('')}</ul></div>
+    </section>`;
+    case 'split':
+      // feature rows: text on one side, an illustration on the other, alternating — rows are [title, text, ...bullets]
+      inner = `<div class="splits">${list(s.items).map(([h, p, ...bullets], i) => `
+          <div class="split${i % 2 ? ' rev' : ''}"><div class="split-text"><h3>${esc(h)}</h3>${p ? `<p>${esc(p)}</p>` : ''}${bullets.filter(Boolean).length ? `<ul>${bullets.filter(Boolean).map((b) => `<li>${ico('check')}<span>${esc(b)}</span></li>`).join('')}</ul>` : ''}</div><div class="split-art"><img src="${useArt(site, `split-${(i % 4) + 1}`)}" alt="" width="800" height="600" loading="lazy"></div></div>`).join('')}
+        </div>`;
+      break;
     case 'prose':
       inner = `<div class="prose">${list(s.items).map(([h, p]) => `${h ? `<h2>${esc(h)}</h2>` : ''}<p>${esc(p)}</p>`).join('')}</div>`;
       break;
@@ -258,6 +276,33 @@ function section(s, site) {
   return open + inner + close;
 }
 
+/**
+ * schema.org data for the home page, built only from what the site itself shows: the name, the description, the
+ * contact rows and the opening hours. Search engines use it for the knowledge panel and rich results. `<` is
+ * escaped so the JSON can never close its own <script>.
+ */
+export function structuredData(site, c) {
+  const rows = Object.values(c.pages || {}).flatMap((p) => list(p.sections).filter((x) => (ALIAS[x.type] || x.type) === 'contact'));
+  const contact = rows.flatMap((x) => list(x.rows));
+  const by = (icon) => contact.find((r) => r[0] === icon);
+  const email = by('mail')?.[2];
+  const phone = by('phone')?.[2];
+  const address = by('pin')?.[2];
+  const same = [by('instagram')?.[3], by('globe')?.[3]].filter((u) => typeof u === 'string' && /^https?:\/\//.test(u));
+  const data = {
+    '@context': 'https://schema.org',
+    '@type': /^[A-Za-z]{3,40}$/.test(site.schema || '') ? site.schema : 'Organization',
+    name: site.name,
+    description: site.description || c.description,
+    inLanguage: site.lang,
+    ...(email ? { email } : {}),
+    ...(phone ? { telephone: phone } : {}),
+    ...(address ? { address: { '@type': 'PostalAddress', streetAddress: address } } : {}),
+    ...(same.length ? { sameAs: same } : {}),
+  };
+  return JSON.stringify(data).replace(/</g, '\\u003c');
+}
+
 function page(site, c, pid) {
   const p = c.pages[pid];
   const index = pid === 'index';
@@ -267,7 +312,7 @@ function page(site, c, pid) {
   if (p.hero) body.push(hero(p.hero, site));
   if (p.pagehead) body.push(`    <section class="pagehead"><div class="wrap"><h1>${rich(pair(p.pagehead)[0])}</h1><p>${esc(pair(p.pagehead)[1])}</p></div></section>`);
   for (const s of list(p.sections)) body.push(section(s, site));
-  return `${head(site, { title, description, index })}${header(site, c, index ? '/' : `/${pid}.html`)}
+  return `${head(site, { title, description, index, jsonLd: index ? structuredData(site, c) : '' })}${header(site, c, index ? '/' : `/${pid}.html`)}
   <main id="main">
 ${body.join('\n')}
   </main>
@@ -317,10 +362,10 @@ function notFound(site) {
 `;
 }
 
-const favicon = (site) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${site.tokens.accent}"/><stop offset="1" stop-color="${site.tokens.accent2}"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="url(#g)"/><g transform="translate(14 14) scale(1.5)" fill="none" stroke="${site.tokens.onAccent}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[site.mark] || ICONS.spark}</g></svg>
+const favicon = (site) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${site.tokens.accentSolid || site.tokens.accent}"/><stop offset="1" stop-color="${site.tokens.accent2Solid || site.tokens.accent2}"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="url(#g)"/><g transform="translate(14 14) scale(1.5)" fill="none" stroke="${site.tokens.onAccent}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[site.mark] || ICONS.spark}</g></svg>
 `;
 
-const og = (site, c) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${site.tokens.accent}"/><stop offset="1" stop-color="${site.tokens.accent2}"/></linearGradient><radialGradient id="r" cx="0.85" cy="0.15" r="0.7"><stop offset="0" stop-color="${site.tokens.accent}" stop-opacity="0.35"/><stop offset="1" stop-color="${site.tokens.accent}" stop-opacity="0"/></radialGradient></defs><rect width="1200" height="630" fill="${site.tokens.bg}"/><rect width="1200" height="630" fill="url(#r)"/><rect x="80" y="90" width="96" height="96" rx="26" fill="url(#g)"/><g transform="translate(104 114) scale(2)" fill="none" stroke="${site.tokens.onAccent}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[site.mark] || ICONS.spark}</g><text x="80" y="360" font-family="system-ui,-apple-system,sans-serif" font-size="84" font-weight="800" fill="${site.tokens.text}">${esc(site.name)}</text><text x="80" y="440" font-family="system-ui,-apple-system,sans-serif" font-size="38" fill="${site.tokens.muted}">${esc(c.tagline)}</text><rect x="80" y="500" width="160" height="8" rx="4" fill="url(#g)"/></svg>
+const og = (site, c) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${site.tokens.accentSolid || site.tokens.accent}"/><stop offset="1" stop-color="${site.tokens.accent2}"/></linearGradient><radialGradient id="r" cx="0.85" cy="0.15" r="0.7"><stop offset="0" stop-color="${site.tokens.accent}" stop-opacity="0.35"/><stop offset="1" stop-color="${site.tokens.accent}" stop-opacity="0"/></radialGradient></defs><rect width="1200" height="630" fill="${site.tokens.bg}"/><rect width="1200" height="630" fill="url(#r)"/><rect x="80" y="90" width="96" height="96" rx="26" fill="url(#g)"/><g transform="translate(104 114) scale(2)" fill="none" stroke="${site.tokens.onAccent}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[site.mark] || ICONS.spark}</g><text x="80" y="360" font-family="system-ui,-apple-system,sans-serif" font-size="84" font-weight="800" fill="${site.tokens.text}">${esc(site.name)}</text><text x="80" y="440" font-family="system-ui,-apple-system,sans-serif" font-size="38" fill="${site.tokens.muted}">${esc(c.tagline)}</text><rect x="80" y="500" width="160" height="8" rx="4" fill="url(#g)"/></svg>
 `;
 
 const NETLIFY = `[build]
@@ -368,7 +413,8 @@ export function renderSite(site, content) {
   // the illustrations the pages asked for (S5), drawn in the site's colours from the site's name
   for (const name of [...s.artFiles].sort()) {
     const tile = name.startsWith('tile-');
-    files[`art/${name}.svg`] = art({ motif: s.art, tokens: s.tokens, seed: `${s.name}:${name}`, w: name === 'band' ? 1600 : 800, h: name === 'band' ? 700 : tile ? 600 : 1000, tone: tile ? 'tile' : 'panel' });
+    const wide = name.startsWith('split-');
+    files[`art/${name}.svg`] = art({ motif: s.art, tokens: s.tokens, seed: `${s.name}:${name}`, w: name === 'band' ? 1600 : 800, h: name === 'band' ? 700 : tile || wide ? 600 : 1000, tone: tile ? 'tile' : 'panel' });
   }
   return files;
 }

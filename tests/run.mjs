@@ -68,7 +68,10 @@ function fixture(name, data) {
 }
 
 const asyncTests = [];
+// BID_TEST_ONLY="new S7" runs only the tests whose name contains that text (for working on one area; CI runs them all)
+const ONLY = process.env.BID_TEST_ONLY || '';
 function t(name, fn) {
+  if (ONLY && !name.includes(ONLY)) return;
   try {
     fn();
     passed++;
@@ -516,6 +519,66 @@ t('new: brief → сайт по дизайн на човека (услуги, к
   assert(check.length >= 21 && check.every((x) => x.errors.length === 0), JSON.stringify(check.filter((x) => x.errors.length)));
   fixture('new-brief', { brief, result: r.data });
   fixture('new-list', bid('new', 'list').data);
+});
+
+ta('new S7: достъпност AA за всяка палитра, тъмен близнак и тема; мобилно меню; JSON-LD; нови секции; връзка към карта', async () => {
+  const { STYLES, resolveTokens, darkOf, auditTokens, contrast } = await import(path.join(ROOT, 'engine', 'src', 'sitegen', 'tokens.mjs'));
+  // every palette of every style, its dark twin and the pinned dark look: all text, icon and button pairings pass WCAG AA
+  const failures = [];
+  for (const [sid, st] of Object.entries(STYLES)) {
+    for (const pid of Object.keys(st.palettes)) {
+      for (const scheme of ['auto', 'light', 'dark']) {
+        const tk = resolveTokens({}, { style: sid, palette: pid, scheme });
+        for (const f of auditTokens(tk)) failures.push(`${sid}/${pid}/${scheme}: ${f}`);
+        if (scheme === 'auto' && !tk.dark) for (const f of auditTokens(darkOf(tk))) failures.push(`${sid}/${pid}/twin: ${f}`);
+      }
+    }
+  }
+  assert(!failures.length, failures.join('\n'));
+  // the themes' own looks too (the default of every theme, and as a pinned dark look)
+  for (const th of bid('new', 'list').data) {
+    const theme = JSON.parse(fs.readFileSync(path.join(ROOT, 'engine', 'themes', th.id, 'theme.json'), 'utf8'));
+    for (const scheme of ['auto', 'dark']) {
+      const bad = auditTokens(resolveTokens(theme.tokens, { scheme }));
+      assert(!bad.length, `${th.id}/${scheme}: ${bad.join(' | ')}`);
+    }
+  }
+  assert(contrast('#000000', '#ffffff') > 20.9 && contrast('#777777', '#777777') === 1, 'contrast maths');
+  // the stylesheet keeps text-bearing colours on the accessible tokens
+  const css = bid('new', 'preview', '--brief', JSON.stringify({ name: 'Ива', theme: 'salon', lang: 'bg' })).data['styles.css'];
+  assert(css.includes('--accent-text:') && css.includes('--grad:') && css.includes('--grad-text:') && css.includes('a { color: var(--accent-text)'), 'accessible tokens in the stylesheet');
+  assert(!/\.btn \{[^}]*linear-gradient\(135deg, var\(--accent\), var\(--accent-2\)\)/.test(css), 'buttons use the solid gradient');
+  // an old site (record tokens without the derived ones) still renders with accessible colours
+  const { stylesheet } = await import(path.join(ROOT, 'engine', 'src', 'sitegen', 'css.mjs'));
+  const old = stylesheet({ dark: false, bg: '#ffffff', bg2: '#f4f4f5', surface: '#ffffff', text: '#111111', muted: '#555555', line: 'rgba(0,0,0,.1)', accent: '#ff5a36', accent2: '#ffb347', onAccent: '#ffffff', head: 'sans', font: 'sans', radius: 12, headWeight: 700, tilt: 0, scheme: 'light' });
+  assert(!old.includes('undefined') && old.includes('--on-accent: #0b0b0f;'), 'tokens derived for an old record');
+
+  // a phone gets a menu (a <details>, no script); the restaurant's menu section keeps its own class
+  const html = bid('new', 'preview', '--brief', JSON.stringify({ name: 'Бистро', theme: 'restaurant', lang: 'bg' })).data;
+  assert(html['index.html'].includes('<details class="mnav">') && html['index.html'].includes('class="mnav-panel"') && !html['index.html'].includes('<script src'), 'mobile menu without script');
+  assert(html['styles.css'].includes('.mnav { display: none;') && html['styles.css'].includes('.mnav { display: block; }') && html['styles.css'].includes('.menu { display: grid;'), 'menu css');
+  // structured data: valid JSON, only what the site shows, the closing tag cannot be forged
+  const brief = { name: 'Салон </script><b>x', theme: 'salon', lang: 'bg', contacts: { email: 'iva@example.com', phone: '+359 888 111 222', address: 'София, ул. Витоша 1', instagram: 'iva.salon' } };
+  const sal = bid('new', 'preview', '--brief', JSON.stringify(brief)).data;
+  const ld = /<script type="application\/ld\+json">(.*?)<\/script>/s.exec(sal['index.html']);
+  assert(ld && !ld[1].includes('<'), 'JSON-LD present and < escaped');
+  const data = JSON.parse(ld[1]);
+  assert(data['@type'] === 'BeautySalon' && data.email === 'iva@example.com' && data.telephone === '+359 888 111 222' && data.address.streetAddress === 'София, ул. Витоша 1' && data.sameAs[0] === 'https://instagram.com/iva.salon' && data.inLanguage === 'bg' && !('openingHours' in data), JSON.stringify(data));
+  assert((sal['index.html'].match(/<script type="application\/ld\+json">/g) || []).length === 1 && !sal['prices.html'].includes('ld+json'), 'JSON-LD on the home page only');
+  assert(sal['index.html'].includes('og:locale" content="bg_BG"') && sal['index.html'].includes('twitter:card') && sal['index.html'].includes('og:site_name'), 'social meta');
+  assert(sal['index.html'].includes('href="https://www.google.com/maps/search/?api=1&amp;query=%D0%A1%D0%BE%D1%84%D0%B8%D1%8F'), 'the address opens the map');
+  // trust and split sections render, escape and use the art
+  const { renderSite } = await import(path.join(ROOT, 'engine', 'src', 'sitegen', 'render.mjs'));
+  const { loadTheme } = await import(path.join(ROOT, 'engine', 'src', 'sitegen', 'themes.mjs'));
+  const { applyBrief, normalizeBrief } = await import(path.join(ROOT, 'engine', 'src', 'sitegen', 'brief.mjs'));
+  const content = applyBrief(loadTheme('mentor'), normalizeBrief({ name: 'Ив', theme: 'mentor', lang: 'en' }), []);
+  content.pages.index.sections.splice(1, 0,
+    { type: 'trust', items: [['check', 'Free <b>call</b>'], ['clock', 'Reply in 24h']] },
+    { type: 'split', title: 'How', items: [['One', 'Text one.', 'Bullet A', 'Bullet B'], ['Two', 'Text two.']] });
+  const files = renderSite({ name: 'Ив', lang: 'en', mark: 'compass', art: 'blobs', schema: 'Person', tokens: resolveTokens({}, { style: 'calm', palette: 'sand' }), description: 'd', privacyTitle: 'p', privacyText: 'p', home: 'h', notFoundTitle: 'n', notFoundText: 'n' }, content);
+  const idx = files['index.html'];
+  assert(idx.includes('<ul class="trust">') && idx.includes('Free &lt;b&gt;call&lt;/b&gt;') && !idx.includes('<b>call'), 'trust strip, escaped');
+  assert(idx.includes('class="split"') && idx.includes('class="split rev"') && idx.includes('<li>') && idx.includes('src="/art/split-1.svg"') && files['art/split-2.svg'] && files['art/split-2.svg'].includes('viewBox="0 0 800 600"'), 'feature rows with art');
 });
 
 t('new S5: превю-снимки и ключови думи за всяка тема, „Нещо друго“ предлага най-близката тема, светло/тъмно/авто, илюстрации по палитра', () => {
@@ -2486,6 +2549,7 @@ async function httpGet(url) {
 }
 
 function ta(name, fn) {
+  if (ONLY && !name.includes(ONLY)) return;
   asyncTests.push([name, fn]);
 }
 

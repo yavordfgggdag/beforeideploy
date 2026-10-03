@@ -93,12 +93,74 @@ export function mix(a, b, t) {
 /** The accent lifted until it reads on a dark background (keeps the hue; black becomes a light grey). */
 function liftForDark(hex) {
   let c = hex;
-  for (let i = 0; i < 8 && luminance(c) < 0.18; i++) c = mix(c, '#ffffff', 0.22);
+  for (let i = 0; i < 12 && luminance(c) < 0.2; i++) c = mix(c, '#ffffff', 0.18);
   return c;
 }
 
 /** Text colour on the accent: white on a deep accent, near-black on a light one (lemon, cyan, champagne). */
 export const onAccentFor = (accent) => (luminance(accent) > 0.4 ? '#0b0b0f' : '#ffffff');
+
+// ---------------------------------------------------------------- accessibility (WCAG 2.2 AA), decided once, here
+
+/** WCAG contrast ratio of two colours, 1 … 21. */
+export function contrast(a, b) {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+const worst = (color, others) => Math.min(...others.map((o) => contrast(color, o)));
+/**
+ * Moves `color` toward `target` in small steps until it reads on every colour of `others` (at least `min`).
+ * A mix is not linear in luminance, so when the steps run out it takes the target itself rather than ship a miss.
+ */
+function readable(color, others, min, target) {
+  let c = color;
+  for (let i = 0; i < 40 && worst(c, others) < min; i++) c = mix(c, target, 0.08);
+  return worst(c, others) >= min ? c : target;
+}
+
+export const AA = { text: 4.5, large: 3 };
+
+/**
+ * What the stylesheet needs on top of the raw palette so that every text and icon passes AA, on any palette:
+ *   accentText   the accent as a text/icon colour on the page, the soft panels and the tinted badges
+ *   accent2Text  the second accent as the end of a gradient headline (large text, 3:1)
+ *   accentSolid  the accent as the start of a button/banner gradient that carries text
+ *   accent2Solid the second accent as the end of that gradient
+ *   onAccent     white or near-black, whichever reads on both ends of that gradient
+ * The raw accent and accent2 stay as designed (art, glows, borders); only text-bearing uses go through these.
+ */
+export function deriveTokens(t) {
+  const dark = !!t.dark;
+  const pull = dark ? '#ffffff' : '#000000';
+  const panels = [t.bg, t.bg2, t.surface, mix(t.bg, t.accent, 0.16), mix(t.surface, t.accent, 0.16)];
+  const accentText = readable(t.accent, panels, AA.text + 0.1, pull);
+  const accent2Text = readable(t.accent2, [t.bg, t.bg2, t.surface], AA.large + 0.2, pull);
+  // the colour on a button: white if the accent is deep enough to take it after a small nudge, else near-black.
+  // The first stop is nudged until the text reads on it (toward black under white text, toward white under dark text);
+  // the second stop eases toward the first when it must, so the gradient stays a gradient.
+  const solids = (on) => {
+    const accentSolid = readable(t.accent, [on], AA.text + 0.1, on === '#ffffff' ? '#000000' : '#ffffff');
+    return { on, accentSolid, accent2Solid: readable(t.accent2, [on], AA.text + 0.1, accentSolid), raw: contrast(on, t.accent) };
+  };
+  const [onWhite, onInk] = [solids('#ffffff'), solids('#0b0b0f')];
+  // on a dark page the lifted, light accent takes dark text; a deep accent on a light page takes white after a small nudge
+  const pick = onWhite.raw >= (dark ? AA.text : 3.2) || onWhite.raw >= onInk.raw ? onWhite : onInk;
+  return { ...t, accentText, accent2Text, accentSolid: pick.accentSolid, accent2Solid: pick.accent2Solid, onAccent: pick.on };
+}
+
+/** Every text/icon pairing the stylesheet makes, with its minimum; `[]` when all pass. Used by the tests and `bid new check`. */
+export function auditTokens(t) {
+  const d = t.accentText ? t : deriveTokens(t);
+  const checks = [
+    ['text on page', d.text, d.bg, AA.text], ['text on panel', d.text, d.bg2, AA.text], ['text on card', d.text, d.surface, AA.text],
+    ['muted on page', d.muted, d.bg, AA.text], ['muted on panel', d.muted, d.bg2, AA.text], ['muted on card', d.muted, d.surface, AA.text],
+    ['accent text on page', d.accentText, d.bg, AA.text], ['accent text on panel', d.accentText, d.bg2, AA.text], ['accent text on card', d.accentText, d.surface, AA.text],
+    ['accent text on badge', d.accentText, mix(d.bg, d.accent, 0.14), AA.text],
+    ['headline gradient end on page', d.accent2Text, d.bg, AA.large], ['headline gradient end on panel', d.accent2Text, d.bg2, AA.large],
+    ['button text on accent', d.onAccent, d.accentSolid, AA.text], ['button text on gradient end', d.onAccent, d.accent2Solid, AA.text],
+  ];
+  return checks.filter(([, a, b, min]) => contrast(a, b) < min).map(([what, a, b, min]) => `${what}: ${contrast(a, b).toFixed(2)} < ${min}`);
+}
 
 /**
  * The dark twin of a light palette: a near-black tinted with the accent, lifted surfaces, light text, the
@@ -109,7 +171,7 @@ export function darkOf(th) {
   const accent = liftForDark(th.accent);
   const accent2 = liftForDark(th.accent2);
   const bg = mix('#0d0f14', th.accent, 0.08);
-  return {
+  return deriveTokens({
     ...th,
     dark: true,
     bg,
@@ -120,8 +182,7 @@ export function darkOf(th) {
     line: 'rgba(255,255,255,.10)',
     accent,
     accent2,
-    onAccent: onAccentFor(accent),
-  };
+  });
 }
 
 /**
@@ -158,5 +219,5 @@ export function resolveTokens(themeTokens = {}, { style = null, palette = null, 
   };
   // "dark" = the dark twin all the time; "auto" keeps the light look and lets the stylesheet add the twin at night
   if (tokens.scheme === 'dark' && !tokens.dark) tokens = { ...darkOf(tokens), scheme: 'dark' };
-  return tokens;
+  return deriveTokens(tokens);
 }

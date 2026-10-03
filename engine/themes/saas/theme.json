@@ -6,6 +6,7 @@
   "accent": "#6366f1",
   "mark": "chart",
   "art": "orbit",
+  "schemaOrg": "Organization",
   "sample": {
     "name": "Flowdeck"
   },

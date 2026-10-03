@@ -2,109 +2,109 @@
   "version": 1,
   "themes": {
     "app": {
-      "hash": "d6122a0fae39043b",
-      "at": "2026-10-02",
-      "bytes": 60915
+      "hash": "fdbdb1d93f305705",
+      "at": "2026-10-03",
+      "bytes": 62133
     },
     "blog": {
-      "hash": "ec7498ad72848796",
-      "at": "2026-10-02",
-      "bytes": 49570
+      "hash": "1f892673dda024fb",
+      "at": "2026-10-03",
+      "bytes": 47162
     },
     "clinic": {
-      "hash": "8ce114c54672efcf",
-      "at": "2026-10-02",
-      "bytes": 60819
+      "hash": "08e53913c2d73744",
+      "at": "2026-10-03",
+      "bytes": 65072
     },
     "comingsoon": {
-      "hash": "0bb0871f003f71c8",
-      "at": "2026-10-02",
-      "bytes": 50636
+      "hash": "71e5f8ee48ea957c",
+      "at": "2026-10-03",
+      "bytes": 52651
     },
     "course": {
-      "hash": "d67aa2d41d7a7636",
-      "at": "2026-10-02",
-      "bytes": 62260
+      "hash": "aea862de53e5f79e",
+      "at": "2026-10-03",
+      "bytes": 64112
     },
     "event": {
-      "hash": "a77f2f7eff04146b",
-      "at": "2026-10-02",
-      "bytes": 60783
+      "hash": "ae22a1ae3ce68453",
+      "at": "2026-10-03",
+      "bytes": 60014
     },
     "fitness": {
-      "hash": "05caaecc12ffa1c4",
-      "at": "2026-10-02",
-      "bytes": 59283
+      "hash": "3f41f946a0cb5d09",
+      "at": "2026-10-03",
+      "bytes": 58904
     },
     "hotel": {
-      "hash": "5bd4741995e1eb19",
-      "at": "2026-10-02",
-      "bytes": 68763
+      "hash": "779cd86d1690466f",
+      "at": "2026-10-03",
+      "bytes": 66432
     },
     "landing": {
-      "hash": "d2c9825e7c2a2d1a",
-      "at": "2026-10-02",
-      "bytes": 62438
+      "hash": "91cb8f868600a1fe",
+      "at": "2026-10-03",
+      "bytes": 62614
     },
     "linkinbio": {
-      "hash": "1bc875209a2c914e",
-      "at": "2026-10-02",
-      "bytes": 28115
+      "hash": "8f5e9e60e7a3bba3",
+      "at": "2026-10-03",
+      "bytes": 29966
     },
     "mentor": {
-      "hash": "8c47a88bce46495f",
-      "at": "2026-10-02",
-      "bytes": 65810
+      "hash": "809a301d7d6d9311",
+      "at": "2026-10-03",
+      "bytes": 63507
     },
     "nonprofit": {
-      "hash": "a5b9d40b0fa63a22",
-      "at": "2026-10-02",
-      "bytes": 66056
+      "hash": "d79c5dc1b73c03c0",
+      "at": "2026-10-03",
+      "bytes": 66264
     },
     "portfolio": {
-      "hash": "c3334115b17d2019",
-      "at": "2026-10-02",
-      "bytes": 57834
+      "hash": "df84767aed5e0b99",
+      "at": "2026-10-03",
+      "bytes": 59273
     },
     "realestate": {
-      "hash": "9eff0d8e9299e68b",
-      "at": "2026-10-02",
-      "bytes": 62059
+      "hash": "fd62346cfd8bee74",
+      "at": "2026-10-03",
+      "bytes": 59667
     },
     "restaurant": {
-      "hash": "cb8789c41407234a",
-      "at": "2026-10-02",
-      "bytes": 67029
+      "hash": "a8aec6c1d98a8234",
+      "at": "2026-10-03",
+      "bytes": 63920
     },
     "resume": {
-      "hash": "4309d18723aa05db",
-      "at": "2026-10-02",
-      "bytes": 63837
+      "hash": "dd02625b45e4b705",
+      "at": "2026-10-03",
+      "bytes": 64286
     },
     "saas": {
-      "hash": "0d0062513d9d632e",
-      "at": "2026-10-02",
-      "bytes": 59039
+      "hash": "53b4302f5761dc9d",
+      "at": "2026-10-03",
+      "bytes": 58582
     },
     "salon": {
-      "hash": "c54c7bb6cd3c5202",
-      "at": "2026-10-02",
-      "bytes": 53108
+      "hash": "2329dc3c4a9d793d",
+      "at": "2026-10-03",
+      "bytes": 52223
     },
     "services": {
-      "hash": "6c8bde1c012f9019",
-      "at": "2026-10-02",
-      "bytes": 63427
+      "hash": "5ec34de76b9676f5",
+      "at": "2026-10-03",
+      "bytes": 63809
     },
     "shop": {
-      "hash": "801c41414f9751c8",
-      "at": "2026-10-02",
-      "bytes": 60008
+      "hash": "0d510be7eb373240",
+      "at": "2026-10-03",
+      "bytes": 64022
     },
     "wedding": {
-      "hash": "8e25a6a4c306bf41",
-      "at": "2026-10-02",
-      "bytes": 48434
+      "hash": "158d9e6d8841cf03",
+      "at": "2026-10-03",
+      "bytes": 46015
     }
   }
 }

@@ -75,7 +75,7 @@ export function generateSite({ brief: input, dir, content = null }) {
       name: brief.name,
       lang: brief.lang,
       mark: theme.mark,
-      art: theme.art,
+      art: theme.art, schema: theme.schemaOrg,
       tokens,
       description: brief.description || (content ? pageContent.description : '') || t(text.description, { name: brief.name }),
       privacyTitle: t(text.privacyTitle),
@@ -124,7 +124,7 @@ export function previewSite(input, content = null) {
   const text = SITE_TEXT[brief.lang];
   const pageContent = content || applyBrief(theme, brief, []);
   return renderSite(
-    { name: brief.name, lang: brief.lang, mark: theme.mark, art: theme.art, tokens: resolveTokens(theme.tokens, { style: brief.style, palette: brief.palette, scheme: brief.scheme }), description: brief.description || t(text.description, { name: brief.name }), privacyTitle: t(text.privacyTitle), privacyText: t(text.privacyText), home: t(text.home), notFoundTitle: t(text.notFoundTitle), notFoundText: t(text.notFoundText) },
+    { name: brief.name, lang: brief.lang, mark: theme.mark, art: theme.art, schema: theme.schemaOrg, tokens: resolveTokens(theme.tokens, { style: brief.style, palette: brief.palette, scheme: brief.scheme }), description: brief.description || t(text.description, { name: brief.name }), privacyTitle: t(text.privacyTitle), privacyText: t(text.privacyText), home: t(text.home), notFoundTitle: t(text.notFoundTitle), notFoundText: t(text.notFoundText) },
     pageContent,
   );
 }
