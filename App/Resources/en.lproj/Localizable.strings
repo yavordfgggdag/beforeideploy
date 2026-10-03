@@ -1517,3 +1517,6 @@
 "newsite.chat.auto" = "Auto — pick the model for me";
 "newsite.chat.building" = "Building your site…";
 "newsite.chat.manual" = "I would rather pick a theme myself";
+"siteedit.page" = "Page";
+"siteedit.tablet" = "Tablet";
+"siteedit.pageHome" = "Home";

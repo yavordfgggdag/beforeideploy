@@ -1517,3 +1517,6 @@
 "newsite.chat.auto" = "Auto — сам избирам модела";
 "newsite.chat.building" = "Правя сайта…";
 "newsite.chat.manual" = "Предпочитам да избера тема сам";
+"siteedit.page" = "Страница";
+"siteedit.tablet" = "Таблет";
+"siteedit.pageHome" = "Начало";

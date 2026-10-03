@@ -17,7 +17,8 @@ struct SiteEditSheet: View {
     @Local private var last: SiteEditResult?
     @Local private var steps: [String] = []
     @Local private var info: SiteInfo?
-    @Local private var phone = false
+    @Local private var device = "desktop"
+    @Local private var page = "index"
     @Local private var reloadToken = 0
 
     private var project: Project? { model.status?.project }
@@ -100,14 +101,26 @@ struct SiteEditSheet: View {
                 ZStack(alignment: .topTrailing) {
                     Theme.bg
                     if let project {
-                        SiteFolderPreview(folder: project.path, token: reloadToken)
-                            .frame(maxWidth: phone ? 390 : .infinity)
-                            .clipShape(RoundedRectangle(cornerRadius: phone ? Radius.l : 0, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: phone ? Radius.l : 0, style: .continuous).strokeBorder(phone ? Theme.hairline : Color.clear, lineWidth: 1))
-                            .padding(phone ? 14 : 0)
+                        let framed = device != "desktop"
+                        SiteFolderPreview(folder: project.path, file: pageFile, token: reloadToken)
+                            .frame(maxWidth: device == "phone" ? 390 : device == "tablet" ? 768 : .infinity)
+                            .clipShape(RoundedRectangle(cornerRadius: framed ? Radius.l : 0, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: framed ? Radius.l : 0, style: .continuous).strokeBorder(framed ? Theme.hairline : Color.clear, lineWidth: 1))
+                            .padding(framed ? 14 : 0)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .padding(.top, 44)
                     }
-                    SegmentedControl(options: [(L("newsite.desktop"), false), (L("newsite.phone"), true)], selection: $phone, icons: [false: "desktopcomputer", true: "iphone"]).frame(width: 200).padding(10)
+                    HStack(spacing: 10) {
+                        if let pages = info?.pages, pages.count > 1 {
+                            Menu {
+                                ForEach(pages, id: \.self) { p in Button(pageTitle(p)) { page = p } }
+                            } label: { Label(pageTitle(page), systemImage: "doc.text") }
+                                .menuStyle(.borderlessButton).fixedSize()
+                                .accessibilityLabel(L("siteedit.page"))
+                        }
+                        SegmentedControl(options: [(L("newsite.desktop"), "desktop"), (L("siteedit.tablet"), "tablet"), (L("newsite.phone"), "phone")], selection: $device, icons: ["desktop": "desktopcomputer", "tablet": "ipad", "phone": "iphone"]).fixedSize()
+                    }
+                    .padding(10)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -142,6 +155,11 @@ struct SiteEditSheet: View {
         }
         .padding(.horizontal, 22).padding(.vertical, 16)
     }
+
+    /// `index` is index.html; every other page is <id>.html (sitegen/render.mjs).
+    private var pageFile: String { page == "index" ? "index.html" : "\(page).html" }
+
+    private func pageTitle(_ id: String) -> String { id == "index" ? L("siteedit.pageHome") : id.prefix(1).uppercased() + id.dropFirst() }
 
     private func loadInfo() async {
         guard let project else { return }
@@ -221,6 +239,7 @@ private struct SayField: View {
 /// The site as it is on disk: `index.html` from the project folder, reloaded when `token` changes.
 private struct SiteFolderPreview: NSViewRepresentable {
     let folder: String
+    var file = "index.html"
     let token: Int
 
     func makeCoordinator() -> Coordinator { Coordinator() }
@@ -232,12 +251,12 @@ private struct SiteFolderPreview: NSViewRepresentable {
     }
 
     func updateNSView(_ view: WKWebView, context: Context) {
-        let key = "\(folder)#\(token)"
+        let key = "\(folder)/\(file)#\(token)"
         guard context.coordinator.loaded != key else { return }
         context.coordinator.loaded = key
         let dir = URL(fileURLWithPath: folder, isDirectory: true)
         // a changed token reloads from disk; WebKit may otherwise serve the cached page
-        view.loadFileURL(dir.appendingPathComponent("index.html"), allowingReadAccessTo: dir)
+        view.loadFileURL(dir.appendingPathComponent(file), allowingReadAccessTo: dir)
     }
 
     final class Coordinator { var loaded = "" }

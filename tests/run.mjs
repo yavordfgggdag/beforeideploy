@@ -2045,6 +2045,11 @@ ta('site chat (v2): от едно съобщение — въпроси с от�
   function listThemeIds() { return JSON.parse(fs.readFileSync(path.join(ROOT, 'engine', 'themes', 'mentor', 'theme.json'), 'utf8')) && fs.readdirSync(path.join(ROOT, 'engine', 'themes')).filter((d) => fs.existsSync(path.join(ROOT, 'engine', 'themes', d, 'theme.json'))); }
 });
 
+t('builder: регистърът на изискванията (260 реда, F001–F260) е актуален и нито един ред не е „налично и тествано“ без доказателство', () => {
+  const r = spawnSync(process.execPath, [path.join(ROOT, 'scripts', 'builder-registry.mjs'), '--check'], { encoding: 'utf8' });
+  assert(r.status === 0, (r.stdout + r.stderr).slice(0, 300));
+});
+
 t('sitegen: supabase/functions/_shared/site-ai.mjs е точно копие на engine/src/sitegen/ai.mjs (scripts/sitegen-sync.mjs)', () => {
   const src = fs.readFileSync(path.join(ROOT, 'engine', 'src', 'sitegen', 'ai.mjs'), 'utf8');
   const copy = fs.readFileSync(path.join(ROOT, 'supabase', 'functions', '_shared', 'site-ai.mjs'), 'utf8');
