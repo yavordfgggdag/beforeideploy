@@ -3,7 +3,7 @@
 | Function | Who calls it | Purpose |
 |---|---|---|
 | `admin` | `bid admin <action>` (Admin panel) | role-gated user/plan/credit management, written to `admin_audit` |
-| `ai-fix` | `bid ai fix` for normal users on a plan | metered AI proxy: plan/credits/rate checks, streams the model, bills real tokens |
+| `ai-fix` | `bid ai fix` for normal users on a plan | metered AI proxy: plan/credits/rate checks, streams the model (Claude or Codex — `_shared/engines.ts`, the owner's choice per request), bills real tokens |
 | `site-gen` | `bid new content` (the New site wizard) | Site Builder S3: writes a site's texts in three steps (plan → content → review, `_shared/site-ai.mjs` = a copy of `engine/src/sitegen/ai.mjs`), structured JSON only, bills every step once under `ai.site.create` |
 | `account` | `bid account export` / `bid account delete` | GDPR export of the caller's rows; account deletion (cancels the Paddle subscription first) |
 | `billing` | `bid billing …` and Paddle webhooks | catalog, status, **usage** (server-authoritative Plan & usage), **sync** (recovery after a missed webhook), checkout, trial, customer portal; subscription / grant / refund webhooks |

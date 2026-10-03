@@ -39,6 +39,7 @@ quota, 127 Node missing; everything else exits 1.
 | `aikey_failed` | 1 | Storing or checking an AI key in the Keychain failed. | Retry; if Keychain prompts appear, allow BeforeIDeploy. |
 | `unauthorized` | 1 | The provider rejected the credentials (AI key, Spaceship key). | Re-enter the key; for Spaceship also check the API secret. |
 | `ai_unavailable` | 1 | Built-in AI Fix is not available for this account: no plan, no own key for the role, or AI disabled. | VIP/admin: add an Anthropic or OpenAI key in Setup; normal users: a plan (WP4); the external AI buttons always work. |
+| `engine_unavailable` | 1 | The cloud AI engine the owner chose (Claude or Codex) has no key on the cloud project. | Owner: add the engine's key in Supabase → Edge Functions → Secrets and redeploy (cloud-deploy); users: pick the other engine in the assistant settings. |
 | `ai_rate_limited` | 1 | Too many AI requests in a minute or hour (cloud limit, or the provider's). | Wait a minute and retry. |
 | `ai_session_cap` | 1 | The rolling 5-hour session used its share of the monthly credits (20 %). | Wait for the reset time in the message, buy a pack or change the plan; the external buttons stay free. |
 | `ai_failed` | 1 | The AI provider returned an error or an unusable stream. | Retry; if it repeats, the support report has the response. |

@@ -118,7 +118,9 @@ The model writes words only. `mergeContent()` puts them into the recipe: hrefs, 
 contact rows and photos never come from the model, and a `keep: false` section is dropped unless it is the
 contact / CTA / form. The system prompt forbids invented reviews, numbers, names and prices.
 
-Two hosts run the same code: `bid new content` on the owner's Anthropic key (steps run in the engine,
+The cloud answers with the engine the owner chose — Claude (default) or Codex (`bid ai settings --json '{"cloudEngine":"codex"}'`,
+the assistant settings on the Mac, Settings in the shared UI); `site-gen` maps the three steps to that engine's models per
+plan (`ai.models` / `ai.modelsCodex`) and bills them the same way. Two hosts run the same code: `bid new content` on the owner's Anthropic key (steps run in the engine,
 `engine/src/sitegen/aicontent.mjs`), or the metered `site-gen` Edge Function (steps run there; one hold for the
 worst case of all three steps, one settlement with the real tokens under `ai.site.create`, which the starter
 bonus covers). The result is a content file (`bid.site-content/1`) in the cache; `bid new preview --content` and

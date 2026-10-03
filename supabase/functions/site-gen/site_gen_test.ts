@@ -206,3 +206,68 @@ Deno.test("site-gen: edit mode — one call on the fast model, ops back, billed 
   assert.equal((await bad.handle(post("site-gen", { mode: "edit", brief: BRIEF, say: "x" }))).status, 400);
   assert.equal(bad.up.calls.length, 0);
 });
+
+// ---------------------------------------------------------------- the Codex engine (OpenAI) for the site texts
+
+function fakeOpenAI(opts: { truncate?: boolean } = {}) {
+  const calls: { url: string; headers: Record<string, string>; body: Row }[] = [];
+  const f = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const body = JSON.parse(String(init?.body));
+    calls.push({ url: String(input), headers: (init?.headers ?? {}) as Record<string, string>, body });
+    // the same answers as the Claude fake, from the user message of the chat-completions body
+    const text = answerFor({ ...body, messages: [{ content: (body.messages as Row[]).find((m) => m.role === "user")!.content }] });
+    const chunks = [
+      { model: body.model, choices: [{ index: 0, delta: { role: "assistant", content: text.slice(0, 20) }, finish_reason: null }] },
+      { model: body.model, choices: [{ index: 0, delta: { content: text.slice(20) }, finish_reason: null }] },
+      { model: body.model, choices: [{ index: 0, delta: {}, finish_reason: opts.truncate ? "length" : "stop" }] },
+      { model: body.model, choices: [], usage: { prompt_tokens: 3000, completion_tokens: 1200 } },
+    ];
+    return new Response(chunks.map((c) => `data: ${JSON.stringify(c)}\n\n`).join("") + "data: [DONE]\n\n", { status: 200, headers: { "content-type": "text/event-stream" } });
+  }) as unknown as typeof fetch;
+  return { fetch: f, calls };
+}
+
+function codexWorld(o: { plan?: Plan; openaiKey?: string; truncate?: boolean } = {}) {
+  const db = new FakeDb({
+    profiles: [{ user_id: USER.id, email: USER.email, role: "normal", plan: o.plan ?? "high", ai_disabled: false }],
+    ai_usage: [], credit_ledger: [{ user_id: USER.id, delta: 100000, bucket: "plan", reason: "plan_grant", ref: "t0" }], settings: [], subscriptions: [],
+  }, USER);
+  const up = fakeOpenAI({ truncate: o.truncate });
+  const handle = createSiteGenHandler({ ...fakeDeps(db), anthropicKey: "sk-ant-test", anthropicBase: "https://anthropic.local", openaiKey: o.openaiKey ?? "sk-openai-test", openaiBase: "https://openai.local", fetch: up.fetch });
+  return { db, handle, up };
+}
+
+Deno.test("site-gen: engine codex → three steps on OpenAI with JSON-schema answers, billed once at the Codex prices", async () => {
+  const { handle, up, db } = codexWorld({ plan: "high" });
+  const ev = await events(await handle(post("site-gen", { ...BODY, engine: "codex" })));
+  assert.equal(up.calls.length, 3);
+  assert.ok(up.calls.every((c) => c.url.startsWith("https://openai.local/v1/chat/completions")));
+  assert.ok(up.calls.every((c) => c.headers.authorization === "Bearer sk-openai-test"));
+  assert.ok(up.calls.every((c) => (c.body.response_format as Row)?.type === "json_schema"), "structured output on every step");
+  assert.deepEqual(up.calls.map((c) => c.body.model), ["gpt-5-mini", "gpt-5", "gpt-5-mini"], "cheap plan/review, the plan's Codex model for the writing");
+  const result = ev.find((e) => e.type === "result")!;
+  assert.equal((result.content as Row).description, "AI описание");
+  const usage = ev.find((e) => e.type === "usage")!;
+  assert.equal(usage.model, "gpt-5");
+  assert.equal(usage.charged, creditsFor(DEFAULTS, "high", "gpt-5-mini", 3000, 1200).credits * 2 + creditsFor(DEFAULTS, "high", "gpt-5", 3000, 1200).credits);
+  assert.equal((db.tables.ai_usage[0] as Row).status, "ok");
+  assert.deepEqual(siteModels(DEFAULTS, "flash", "codex"), { plan: "gpt-5-mini", content: "gpt-5-mini", review: "gpt-5-mini", edit: "gpt-5-mini" });
+});
+
+Deno.test("site-gen: engine codex without a key → 503 engine_unavailable before any hold", async () => {
+  const { handle, up, db } = codexWorld({ openaiKey: "" });
+  const res = await handle(post("site-gen", { ...BODY, engine: "codex" }));
+  assert.equal(res.status, 503);
+  assert.equal((await res.json()).code, "engine_unavailable");
+  assert.equal(up.calls.length, 0);
+  assert.equal(db.tables.ai_usage.length, 0);
+});
+
+Deno.test("site-gen: engine codex edit mode → one chat-completions call, ops back", async () => {
+  const { handle, up } = codexWorld();
+  const ev = await events(await handle(post("site-gen", { mode: "edit", brief: BRIEF, content: RECIPE, look: { style: "calm" }, say: "смени увода", operationId: "op-codex-edit-1", engine: "codex" })));
+  assert.equal(up.calls.length, 1);
+  assert.equal(up.calls[0].body.model, "gpt-5-mini", "the fast Codex model for an edit");
+  const result = ev.find((e) => e.type === "result")!;
+  assert.equal((result.ops as Row[])[0].op, "set_text");
+});

@@ -1545,6 +1545,8 @@ struct AssistantSettings: Codable, Hashable {
     var maxFileChars: Int?
     var maxFiles: Int?
     var callTimeoutMs: Int?
+    /// Which AI answers through the cloud: `claude` (default) or `codex`.
+    var cloudEngine: String?
 }
 
 struct PromptInfo: Codable, Identifiable, Hashable {

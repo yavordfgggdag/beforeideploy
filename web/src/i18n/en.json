@@ -273,5 +273,8 @@
   "err.cloudMissing": "The cloud is not set up for this account yet ({detail}). The owner deploys it with the cloud-deploy workflow.",
   "err.exists": "A folder with this name already exists there. Pick another name or folder.",
   "err.handEdited": "Some files were edited by hand since the site was made, so this change was not written over them.",
-  "err.noEngine": "Creating and changing sites runs on the engine inside the desktop app (macOS, Windows, Linux). Download it and open this page there."
+  "err.noEngine": "Creating and changing sites runs on the engine inside the desktop app (macOS, Windows, Linux). Download it and open this page there.",
+  "settings.ai": "Built-in AI",
+  "settings.engine": "Cloud AI engine",
+  "settings.engineHint": "Which AI answers through the built-in cloud service: fixes, the assistant and the Site Builder. Own keys are not affected."
 }

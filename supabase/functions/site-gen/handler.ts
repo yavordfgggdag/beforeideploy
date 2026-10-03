@@ -6,6 +6,7 @@
 import { callerOf, type DbClient, json, must, readJson, type Row } from "../_shared/db.ts";
 import { creditRpc, creditStatus, ensureMonthlyGrant, expireDue, pricingVersion, reconcileHolds } from "../_shared/credits.ts";
 import { type AiFixDeps, creditsFor, loadSettings, type Plan, type Role, type Settings } from "../ai-fix/handler.ts";
+import { type CloudEngine, engineConfigured, engineOf, modelsFor, parseStreamEvent, sseData, upstreamRequest } from "../_shared/engines.ts";
 // deno-lint-ignore no-explicit-any
 import * as siteAi from "../_shared/site-ai.mjs";
 
@@ -20,6 +21,8 @@ export interface SiteGenBody {
   locale?: string;
   mode?: "create" | "edit";
   operationId?: string;
+  /** Claude (default) or Codex — the owner's choice (_shared/engines.ts) */
+  engine?: CloudEngine;
 }
 
 export type SiteGenDeps = AiFixDeps;
@@ -31,73 +34,39 @@ const MAX_INPUT_CHARS = 120_000;
 const STEP_MAX = siteAi.STEP_MAX_TOKENS as Record<string, number>;
 
 /** Models per step for this plan: the cheap steps on the explain model, the writing on the plan's model. */
-export function siteModels(settings: Settings, plan: Plan): Record<string, string> {
-  const m = settings["ai.models"];
-  const cheap = m.explain ?? "claude-haiku-4-5";
-  return { plan: cheap, content: m[plan] ?? m.high, review: cheap };
+export function siteModels(settings: Settings, plan: Plan, engine: CloudEngine = "claude"): Record<string, string> {
+  const m = modelsFor(settings, engine);
+  const cheap = m.explain ?? (engine === "codex" ? "gpt-5-mini" : "claude-haiku-4-5");
+  return { plan: cheap, content: m[plan] ?? m.high, review: cheap, edit: m.flash ?? m[plan] ?? m.high };
 }
 
 interface StepUsage { input: number; output: number; model: string }
 
-/** One step against the Messages API: structured output, streamed so the connection stays alive, text joined. */
-async function callModel(deps: SiteGenDeps, signal: AbortSignal, p: { model: string; system: string; prompt: string; schema: unknown; maxTokens: number; effort: string }): Promise<{ json: unknown; usage: StepUsage; stop: string | null }> {
-  const body: Record<string, unknown> = {
-    model: p.model,
-    max_tokens: p.maxTokens,
-    system: p.system,
-    messages: [{ role: "user", content: p.prompt }],
-    stream: true,
-    output_config: { format: { type: "json_schema", schema: p.schema }, ...(/haiku/i.test(p.model) ? {} : { effort: p.effort }) },
-  };
-  const res = await deps.fetch(`${deps.anthropicBase}/v1/messages`, {
-    method: "POST",
-    headers: { "content-type": "application/json", "x-api-key": deps.anthropicKey, "anthropic-version": "2023-06-01" },
-    body: JSON.stringify(body),
-    signal,
-  });
+/** One step against the engine's API: structured output, streamed so the connection stays alive, text joined. */
+async function callModel(deps: SiteGenDeps, engine: CloudEngine, signal: AbortSignal, p: { model: string; system: string; prompt: string; schema: unknown; maxTokens: number; effort: string }): Promise<{ json: unknown; usage: StepUsage; stop: string | null }> {
+  const up = upstreamRequest(deps, engine, { model: p.model, system: p.system, prompt: p.prompt, maxTokens: p.maxTokens, effort: p.effort, schema: p.schema });
+  const res = await deps.fetch(up.url, { method: "POST", headers: up.headers, body: JSON.stringify(up.body), signal });
   if (!res.ok || !res.body) {
     const text = await res.text().catch(() => "");
     throw Object.assign(new Error(`model request failed (${res.status}) ${text.slice(0, 200)}`), { code: "upstream", status: res.status });
   }
-  const decoder = new TextDecoder();
-  const reader = res.body.getReader();
-  let buf = "";
   let text = "";
   const usage: StepUsage = { input: 0, output: 0, model: p.model };
   let stop: string | null = null;
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    buf += decoder.decode(value, { stream: true }).replace(/\r\n/g, "\n");
-    let idx;
-    while ((idx = buf.indexOf("\n\n")) !== -1) {
-      const raw = buf.slice(0, idx);
-      buf = buf.slice(idx + 2);
-      const data = raw.split("\n").filter((l) => l.startsWith("data:")).map((l) => l.slice(5).trim()).join("\n");
-      if (!data) continue;
-      let j: Record<string, unknown>;
-      try { j = JSON.parse(data); } catch { continue; }
-      const type = j.type as string;
-      if (type === "message_start") {
-        const m = j.message as { usage?: { input_tokens?: number }; model?: string };
-        usage.input = m.usage?.input_tokens ?? 0;
-        usage.model = m.model ?? p.model;
-      } else if (type === "content_block_delta") {
-        const d = j.delta as { type?: string; text?: string };
-        if (d.type === "text_delta" && d.text) text += d.text;
-      } else if (type === "message_delta") {
-        const u = j.usage as { output_tokens?: number } | undefined;
-        if (u?.output_tokens != null) usage.output = u.output_tokens;
-        stop = (j.delta as { stop_reason?: string })?.stop_reason ?? stop;
-      } else if (type === "error") {
-        throw Object.assign(new Error("the model reported an error"), { code: "model_error" });
-      }
+  for await (const j of sseData(res.body)) {
+    for (const ev of parseStreamEvent(engine, j)) {
+      if (ev.model) usage.model = ev.model;
+      if (ev.input != null) usage.input = ev.input;
+      if (ev.output != null) usage.output = ev.output;
+      if (ev.text) text += ev.text;
+      if (ev.stop === "error") throw Object.assign(new Error("the model reported an error"), { code: "model_error" });
+      if (ev.stop) stop = ev.stop;
     }
   }
   if (!usage.output) usage.output = Math.ceil(text.length / CHARS_PER_TOKEN);
   // tokens the model produced are billed even when the answer is unusable: the error carries the usage
-  if (stop === "refusal") throw Object.assign(new Error("the model declined this brief"), { code: "refused", usage });
-  if (stop === "max_tokens") throw Object.assign(new Error("the answer did not fit"), { code: "truncated", usage });
+  if (stop === "refused") throw Object.assign(new Error("the model declined this brief"), { code: "refused", usage });
+  if (stop === "truncated") throw Object.assign(new Error("the answer did not fit"), { code: "truncated", usage });
   let parsed: unknown = null;
   try { parsed = JSON.parse(text); } catch { throw Object.assign(new Error("the model did not return JSON"), { code: "ai_bad_answer", usage }); }
   return { json: parsed, usage, stop };
@@ -110,6 +79,8 @@ export function createSiteGenHandler(deps: SiteGenDeps): (req: Request) => Promi
     if (!deps.anthropicKey) return json(500, { error: "ANTHROPIC_API_KEY is not configured", code: "not_configured" });
     const body = await readJson<SiteGenBody>(req);
     if (!body) return json(400, { error: "invalid JSON" });
+    const engine = engineOf(body.engine);
+    if (!engineConfigured(deps, engine)) return json(503, { error: `the ${engine} engine is not configured on this cloud`, code: "engine_unavailable", engine });
     const brief = body.brief;
     const edit = body.mode === "edit";
     const recipe = edit ? body.content : body.recipe;
@@ -154,11 +125,11 @@ export function createSiteGenHandler(deps: SiteGenDeps): (req: Request) => Promi
     if (balance <= 0) return json(402, { error: "no credits left", code: "quota_exhausted", renewsAt, balance });
 
     // ---- the hold: worst case of all three steps at their models
-    const models = siteModels(settings, plan);
+    const models = siteModels(settings, plan, engine);
     const estInput = Math.ceil(inputChars / CHARS_PER_TOKEN) + 1500;
     // an edit is one short call on the fast model; a creation is the three steps
     const EDIT_MAX = 6000;
-    const editModel = settings["ai.models"].flash ?? models.content;
+    const editModel = models.edit;
     const estimate = edit
       ? creditsFor(settings, plan, editModel, estInput, EDIT_MAX).credits
       : (siteAi.STEPS as string[]).reduce((sum, step) => sum + creditsFor(settings, plan, models[step], estInput + (step === "review" ? STEP_MAX.content : 0), STEP_MAX[step]).credits, 0);
@@ -227,7 +198,7 @@ export function createSiteGenHandler(deps: SiteGenDeps): (req: Request) => Promi
         try {
           const call = async (p: { step: string; model: string; system: string; prompt: string; schema: unknown; maxTokens: number; effort: string }) => {
             try {
-              const r = await callModel(deps, signal, p);
+              const r = await callModel(deps, engine, signal, p);
               steps.push(r.usage);
               return { json: r.json, usage: r.usage };
             } catch (e) {

@@ -1283,14 +1283,16 @@ http.createServer((q,r)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{r.setHea
    if(me.role==='normal'&&me.plan==='free'){r.statusCode=403;return r.end('{"error":"plan","code":"no_plan"}');}
    const bal=balance(me.user_id);if(bal<=0){r.statusCode=402;return r.end(JSON.stringify({error:'no credits',code:'quota_exhausted',renewsAt:'2026-10-01T00:00:00Z',balance:bal}));}
    if(!j.prompt||j.prompt.length>60000){r.statusCode=413;return r.end('{"error":"prompt"}');}
+   if(j.engine==='codex'&&flag('nocodex')){r.statusCode=503;return r.end('{"error":"the codex engine is not configured on this cloud","code":"engine_unavailable","engine":"codex"}');}
    r.setHeader('content-type','text/event-stream');const send=(o)=>r.write('data: '+JSON.stringify(o)+'\\n\\n');
    for(const part of ANSWER_PARTS)send({type:'delta',text:part});
    const charged=6000*(j.deep?5:1);ledger.push({user_id:me.user_id,delta:-charged,reason:'ai_fix'});
-   send({type:'usage',input:4500,output:1500,model:'claude-sonnet-5',charged:charged,balance:balance(me.user_id)});send({type:'done'});return r.end();}
+   send({type:'usage',input:4500,output:1500,model:j.engine==='codex'?'gpt-5':'claude-sonnet-5',charged:charged,balance:balance(me.user_id)});send({type:'done'});return r.end();}
  if(q.url==='/functions/v1/site-gen'){const me=caller(q);if(!me){r.statusCode=401;return r.end('{"error":"no session"}');}
    if(me.ai_disabled){r.statusCode=403;return r.end('{"error":"disabled","code":"disabled"}');}
    if(me.role==='normal'&&me.plan==='free'){r.statusCode=403;return r.end('{"error":"plan","code":"no_plan"}');}
    const bal=balance(me.user_id);if(bal<=0){r.statusCode=402;return r.end(JSON.stringify({error:'no credits',code:'quota_exhausted',renewsAt:'2026-10-01T00:00:00Z',balance:bal}));}
+   if(j.engine==='codex'&&flag('nocodex')){r.statusCode=503;return r.end('{"error":"the codex engine is not configured on this cloud","code":"engine_unavailable","engine":"codex"}');}
    if(j.mode==='edit'){if(!j.brief||!j.content||!j.say){r.statusCode=400;return r.end('{"error":"edit"}');}
      r.setHeader('content-type','text/event-stream');const send=(o)=>r.write('data: '+JSON.stringify(o)+'\\n\\n');send({type:'step',id:'edit',status:'running',model:'claude-sonnet-5-5'});send({type:'step',id:'edit',status:'pass',model:'claude-sonnet-5-5'});
      const charged=1500;ledger.push({user_id:me.user_id,delta:-charged,reason:'ai_site'});
@@ -2296,6 +2298,22 @@ t('ai: cloud път — план, кредити, quota_exhausted → exit 8, fr
   assert(bid('account', 'status').data.credits.balance === 230500, 'balance after the edit');
   const own = bid('ai', 'fix', '--project', cloudApp, '--step', 'build', '--provider', 'anthropic');
   assert(own.result.code === 'ai_unavailable' && own.result.key === 'ai.unavailable.ownKeyRole', JSON.stringify(own.result));
+  // the cloud AI engine: Claude unless the owner picks Codex; the choice rides every cloud call (ai-fix and site-gen)
+  assert(bid('ai', 'settings').data.cloudEngine === 'claude', 'Claude by default');
+  assert(bid('ai', 'settings', '--json', '{"cloudEngine":"gemini"}').data.cloudEngine === 'claude', 'unknown engines fall back to Claude');
+  assert(bid('ai', 'settings', '--json', '{"cloudEngine":"codex"}').data.cloudEngine === 'codex', 'Codex chosen');
+  const codex = bid('ai', 'fix', '--project', cloudApp, '--step', 'build');
+  assert(codex.result.ok && codex.data.usage.model === 'gpt-5', 'the function answered with the Codex model: ' + JSON.stringify(codex.result).slice(0, 200));
+  const codexEdit = bid('site', 'edit', '--project', cloudSite, '--say', 'make the opening even friendlier');
+  assert(codexEdit.result.ok && codexEdit.data.provider === 'cloud', JSON.stringify(codexEdit.result).slice(0, 200));
+  fs.writeFileSync(FAKE_NETLIFY + '.nocodex', '1');
+  const noCodex = bid('ai', 'fix', '--project', cloudApp, '--step', 'build');
+  assert(noCodex.result.code === 'engine_unavailable' && noCodex.result.key === 'ai.engineUnavailable' && noCodex.result.error.includes('codex'), JSON.stringify(noCodex.result).slice(0, 300));
+  const noCodexSite = bid('new', 'content', '--brief', JSON.stringify({ theme: 'landing', lang: 'en', name: 'Codex Co', offer: 'We fix roofs.' }));
+  assert(noCodexSite.result.code === 'engine_unavailable', JSON.stringify(noCodexSite.result).slice(0, 200));
+  fs.rmSync(FAKE_NETLIFY + '.nocodex', { force: true });
+  bid('ai', 'settings', '--json', '{"cloudEngine":"claude"}');
+  assert(bid('ai', 'fix', '--project', cloudApp, '--step', 'build').data.usage.model === 'claude-sonnet-5', 'back on Claude');
   login('yavor@example.com', 'supersecret1');
   bid('admin', 'grant_credits', '--user', 'u-friend@example.com', '--delta', '-230500', '--reason', 'test');
   login('friend@example.com', 'supersecret2');

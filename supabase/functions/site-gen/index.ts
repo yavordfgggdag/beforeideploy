@@ -16,5 +16,8 @@ Deno.serve(createSiteGenHandler({
   service: () => createClient(url, serviceKey, { auth: { persistSession: false } }) as unknown as DbClient,
   anthropicKey: Deno.env.get("ANTHROPIC_API_KEY") ?? "",
   anthropicBase: Deno.env.get("ANTHROPIC_API_BASE") ?? "https://api.anthropic.com",
+  // Codex (OpenAI): optional; the owner picks the engine in the app
+  openaiKey: Deno.env.get("CODEX_API_KEY") ?? Deno.env.get("OPENAI_API_KEY") ?? "",
+  openaiBase: Deno.env.get("OPENAI_API_BASE") ?? "https://api.openai.com",
   fetch: globalThis.fetch,
 }));

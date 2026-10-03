@@ -9,6 +9,7 @@ import { CACHE_DIR, EngineError, ensureDir, ev, fetchT } from '../util.mjs';
 import { t, msg, currentLang } from '../i18n.mjs';
 import { accountStatus, cloudConfig, currentSession } from '../account.mjs';
 import { chooseProvider, stream, sseEvents } from '../ai/providers.mjs';
+import { cloudEngine } from '../ai/assistant.mjs';
 import { ownKey } from '../aikeys.mjs';
 import { recordCost } from '../costs.mjs';
 import { loadTheme } from './themes.mjs';
@@ -76,7 +77,7 @@ async function cloudContent({ brief, recipe, onStep }) {
     res = await fetchT(`${c.url}/functions/v1/site-gen`, {
       method: 'POST',
       headers: { apikey: c.anonKey, Authorization: `Bearer ${s.accessToken}`, 'Content-Type': 'application/json', Accept: 'text/event-stream' },
-      body: JSON.stringify({ brief, recipe, locale: currentLang(), operationId: crypto.randomUUID() }),
+      body: JSON.stringify({ brief, recipe, locale: currentLang(), operationId: crypto.randomUUID(), engine: cloudEngine() }),
     }, Number(process.env.BID_AI_CONNECT_MS) || 60000);
   } catch (e) {
     throw new EngineError(msg('ai.network', { error: e.message }), 'network');
@@ -84,6 +85,7 @@ async function cloudContent({ brief, recipe, onStep }) {
   if (!res.ok) {
     const j = (await res.json().catch(() => null)) || {};
     if (res.status === 404 && j.code === 'NOT_FOUND') throw new EngineError(msg('cloud.functionMissing', { name: 'site-gen' }), 'cloud_function_missing');
+    if (j.code === 'engine_unavailable') throw new EngineError(msg('ai.engineUnavailable', { engine: j.engine || cloudEngine() }), 'engine_unavailable');
     if (res.status === 402) throw new EngineError(msg('ai.quotaExhausted', { renewsAt: j.renewsAt || '—' }), 'quota_exhausted', 8);
     if (res.status === 403 && ['credits_release', 'guard_24h', 'guard_7d', 'pack_rate'].includes(j.code)) {
       const at = j.readyAt ? new Date(j.readyAt).toLocaleString() : '—';

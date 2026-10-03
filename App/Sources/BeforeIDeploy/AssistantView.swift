@@ -327,11 +327,18 @@ struct AssistantSettingsSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Local private var budget = 60000
     @Local private var timeout = 120
+    @Local private var engine = "claude"
     @Local private var saving = false
 
     var body: some View {
         SheetScaffold(icon: "slider.horizontal.3", title: L("assistant.settings"), width: 460) {
             VStack(alignment: .leading, spacing: Space.l) {
+                // the cloud AI answers with Claude or Codex — the owner's choice; own keys (VIP/admin) are unaffected
+                VStack(alignment: .leading, spacing: Space.xs) {
+                    SegmentedControl(options: [(L("assistant.engine.claude"), "claude"), (L("assistant.engine.codex"), "codex")], selection: $engine)
+                        .accessibilityLabel(L("assistant.engine"))
+                    Text(L("assistant.engineHint")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary).fixedSize(horizontal: false, vertical: true)
+                }
                 Picker(L("assistant.operationBudget"), selection: $budget) {
                     ForEach(Array(Set([20000, 60000, 120000, 250000, budget])).sorted(), id: \.self) { value in Text(Fmt.tokens(value)).tag(value) }
                 }
@@ -342,13 +349,13 @@ struct AssistantSettingsSheet: View {
                 Text(L("assistant.neverList")).font(Typo.font(.caption)).foregroundColor(Theme.tertiary)
             }
             .onAppear {
-                if let settings = model.assistantStore.settings { budget = settings.maxTokensPerOperation; timeout = (settings.callTimeoutMs ?? 120000) / 1000 }
+                if let settings = model.assistantStore.settings { budget = settings.maxTokensPerOperation; timeout = (settings.callTimeoutMs ?? 120000) / 1000; engine = settings.cloudEngine ?? "claude" }
             }
         } actions: {
             Button(L("common.cancel")) { dismiss() }.bidButton(.secondary).keyboardShortcut(.cancelAction).disabled(saving)
             Button(L("common.save")) {
-                var settings = model.assistantStore.settings ?? AssistantSettings(autoApplyLowRisk: false, maxIterations: 3, maxTokensPerOperation: 60000, maxContextChars: nil, maxFileChars: nil, maxFiles: nil, callTimeoutMs: nil)
-                settings.maxTokensPerOperation = budget; settings.callTimeoutMs = timeout * 1000
+                var settings = model.assistantStore.settings ?? AssistantSettings(autoApplyLowRisk: false, maxIterations: 3, maxTokensPerOperation: 60000, maxContextChars: nil, maxFileChars: nil, maxFiles: nil, callTimeoutMs: nil, cloudEngine: nil)
+                settings.maxTokensPerOperation = budget; settings.callTimeoutMs = timeout * 1000; settings.cloudEngine = engine
                 saving = true
                 Task { if await model.assistantStore.save(settings) { dismiss() }; saving = false }
             }.bidButton(.primary).keyboardShortcut(.defaultAction).disabled(saving)

@@ -17,7 +17,7 @@ export interface AdminDeps extends Deps {
 
 /** Settings an admin may change (audit C14); anything else is a typo or an attempt to plant data. */
 export const SETTINGS_KEYS = [
-  "pricing.actions", "pricing.version", "features.knightDomain", "features.netlifyCredits", "features.hostingIncluded", "billing.catalog", "plans", "ai.models", "ai.creditEur", "ai.usdToEur", "ai.sessionHours", "ai.sessionCapPercent", "ai.rate", "ai.promptMaxChars", "ai.prices",
+  "pricing.actions", "pricing.version", "features.knightDomain", "features.netlifyCredits", "features.hostingIncluded", "billing.catalog", "plans", "ai.models", "ai.modelsCodex", "ai.creditEur", "ai.usdToEur", "ai.sessionHours", "ai.sessionCapPercent", "ai.rate", "ai.promptMaxChars", "ai.prices",
   "release.url", "help.url", "legal.privacy", "legal.terms", "legal.refund", "support.email",
 ];
 

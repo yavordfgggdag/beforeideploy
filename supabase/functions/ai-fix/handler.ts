@@ -5,6 +5,7 @@ import catalogData from "../_shared/plans-catalog.json" with { type: "json" };
 // back as normalized SSE ({type: delta|usage|done|error}) and bill the real token counts to credit_ledger.
 import { callerOf, type DbClient, type Deps, json, must, readJson, type Row } from "../_shared/db.ts";
 import { creditRpc, creditStatus, ensureMonthlyGrant, expireDue, pricingVersion, reconcileHolds } from "../_shared/credits.ts";
+import { type CloudEngine, DEFAULT_CODEX_MODELS, DEFAULT_CODEX_PRICES, engineConfigured, engineOf, modelsFor, parseStreamEvent, sseData, upstreamRequest } from "../_shared/engines.ts";
 
 export type Plan = "free" | "flash" | "high" | "knight";
 export type Role = "normal" | "vip" | "admin";
@@ -20,12 +21,17 @@ export interface AiFixBody {
   mode?: "fix" | "explain" | "assistant";
   /** Client-generated id of the logical operation: a retry with the same id never bills twice (V11 RC). */
   operationId?: string;
+  /** Which AI answers: Claude (default) or Codex — the owner's choice in the app (_shared/engines.ts). */
+  engine?: CloudEngine;
 }
 
 export interface AiFixDeps extends Deps {
   now?: () => Date;
   anthropicKey: string;
   anthropicBase: string;
+  /** Codex (OpenAI) — optional; without a key the engine `codex` is refused with `engine_unavailable` */
+  openaiKey?: string;
+  openaiBase?: string;
   fetch: typeof globalThis.fetch;
 }
 
@@ -33,6 +39,8 @@ export interface AiFixDeps extends Deps {
 export const DEFAULTS = {
   // model per plan (docs/PLANS-AND-CREDITS-BG.md §1); `explain` is the cheap model for explanations, `deep` the Knight-only deep fix
   "ai.models": { flash: "claude-sonnet-5-5", high: "claude-opus-5-5", knight: "claude-opus-5-5", deep: "claude-opus-5-5", explain: "claude-haiku-4-5" } as Record<string, string>,
+  // the same per plan when the owner picks Codex
+  "ai.modelsCodex": DEFAULT_CODEX_MODELS,
   // One EUR rate for all V2 plans; legacy admin objects remain readable during migration.
   "ai.creditEur": 0.000025 as number | Record<string, number>,
   "pricing.version": "2026-10",
@@ -43,7 +51,7 @@ export const DEFAULTS = {
   "ai.promptMaxChars": 60000,
   "ai.rate": { perMinute: 6, perHour: 60 },
   // USD per million tokens (input / output) — used for cost_usd bookkeeping only
-  "ai.prices": { "claude-haiku-4-5": [1, 5], "claude-sonnet-5-5": [2, 10], "claude-opus-5-5": [4, 20] } as Record<string, [number, number]>,
+  "ai.prices": { "claude-haiku-4-5": [1, 5], "claude-sonnet-5-5": [2, 10], "claude-opus-5-5": [4, 20], ...DEFAULT_CODEX_PRICES } as Record<string, [number, number]>,
   // credits per month per plan (the ledger column is still called tokens)
   plans: Object.fromEntries([["free", catalogData.free], ...Object.entries(catalogData.plans)].map(([id, p]) => [id, { tokens: (p as { credits: number }).credits }])) as Record<string, { tokens: number }>,
 };
@@ -63,8 +71,8 @@ export async function loadSettings(db: DbClient): Promise<Settings> {
 }
 
 /** Model and effort for this request. Deep = the strongest model at the highest effort, only for Knight / vip / admin. */
-export function chooseModel(settings: Settings, role: Role, plan: Plan, body: Pick<AiFixBody, "deep" | "mode">) {
-  const models = settings["ai.models"];
+export function chooseModel(settings: Settings, role: Role, plan: Plan, body: Pick<AiFixBody, "deep" | "mode" | "engine">) {
+  const models = modelsFor(settings, engineOf(body.engine));
   const deepAllowed = plan === "knight" || role !== "normal";
   const deep = !!body.deep && deepAllowed;
   const model = deep ? models.deep : body.mode === "explain" ? (models.explain ?? models.flash) : (models[plan] ?? models.high);
@@ -99,6 +107,8 @@ export function createAiFixHandler(deps: AiFixDeps): (req: Request) => Promise<R
     const body = await readJson<AiFixBody>(req);
     if (!body) return json(400, { error: "invalid JSON" });
     if (typeof body.prompt !== "string" || !body.prompt.trim()) return json(400, { error: "prompt required" });
+    const engine = engineOf(body.engine);
+    if (!engineConfigured(deps, engine)) return json(503, { error: `the ${engine} engine is not configured on this cloud`, code: "engine_unavailable", engine });
 
     // ---- who is asking
     const who = await callerOf(req, deps);
@@ -189,37 +199,29 @@ export function createAiFixHandler(deps: AiFixDeps): (req: Request) => Promise<R
       return json(429, { error: "too many requests", code: "rate_limited" });
     }
     // ---- call the model (streaming); aborted when the client goes away (audit C6)
-    const upstreamBody: Record<string, unknown> = {
-      model,
-      max_tokens: maxTokens,
-      system: body.system ?? "",
-      messages: [{ role: "user", content: body.prompt }],
-      stream: true,
-    };
-    if (!/haiku/i.test(model)) upstreamBody.output_config = { effort };
+    const up = upstreamRequest(deps, engine, { model, system: body.system ?? "", prompt: body.prompt, maxTokens, effort });
     const abort = new AbortController();
     let upstream: Response;
     try {
-      upstream = await deps.fetch(`${deps.anthropicBase}/v1/messages`, {
+      upstream = await deps.fetch(up.url, {
         method: "POST",
-        headers: { "content-type": "application/json", "x-api-key": deps.anthropicKey, "anthropic-version": "2023-06-01" },
-        body: JSON.stringify(upstreamBody),
+        headers: up.headers,
+        body: JSON.stringify(up.body),
         signal: AbortSignal.any([abort.signal,AbortSignal.timeout(5*60_000)]),
       });
     } catch (e) {
-      console.error("anthropic", (e as Error).message);
+      console.error(engine, (e as Error).message);
       await release("upstream");
       return json(502, { error: "model request failed (network)", code: "upstream" });
     }
     if (!upstream.ok || !upstream.body) {
       const text = await upstream.text().catch(() => "");
-      console.error("anthropic", upstream.status, text.slice(0, 300));
+      console.error(engine, upstream.status, text.slice(0, 300));
       await release("upstream");
       return json(502, { error: `model request failed (${upstream.status})`, code: "upstream" });
     }
 
     const encoder = new TextEncoder();
-    const decoder = new TextDecoder();
     let input = 0;
     let output = 0;
     let outputReported = false;
@@ -253,49 +255,18 @@ export function createAiFixHandler(deps: AiFixDeps): (req: Request) => Promise<R
             closed = true;
           }
         };
-        let buf = "";
         try {
-          const reader = upstream.body!.getReader();
-          while (true) {
-            const { value, done } = await reader.read();
-            if (done) break;
-            buf += decoder.decode(value, { stream: true }).replace(/\r\n/g, "\n");
-            let idx;
-            while ((idx = buf.indexOf("\n\n")) !== -1) {
-              const raw = buf.slice(0, idx);
-              buf = buf.slice(idx + 2);
-              const data = raw.split("\n").filter((l) => l.startsWith("data:")).map((l) => l.slice(5).trim()).join("\n");
-              if (!data) continue;
-              let j: Record<string, unknown>;
-              try {
-                j = JSON.parse(data);
-              } catch {
-                continue;
-              }
-              const type = j.type as string;
-              if (type === "message_start") {
-                const m = j.message as { usage?: { input_tokens?: number; output_tokens?: number }; model?: string };
-                input = m.usage?.input_tokens ?? 0;
-                output = m.usage?.output_tokens ?? 0;
-                usedModel = m.model ?? model;
-              } else if (type === "content_block_delta") {
-                const d = j.delta as { type?: string; text?: string };
-                if (d.type === "text_delta" && d.text) {
-                  deltaChars += d.text.length;
-                  send({ type: "delta", text: d.text });
-                }
-              } else if (type === "message_delta") {
-                const u = j.usage as { output_tokens?: number } | undefined;
-                if (u?.output_tokens != null) {
-                  output = u.output_tokens;
-                  outputReported = true;
-                }
-                const stop = (j.delta as { stop_reason?: string })?.stop_reason;
-                if (stop === "refusal") status = "refused";
-                if (stop === "max_tokens") status = "truncated";
-              } else if (type === "error") {
+          for await (const j of sseData(upstream.body!)) {
+            for (const ev of parseStreamEvent(engine, j)) {
+              if (ev.model) usedModel = ev.model;
+              if (ev.input != null) input = ev.input;
+              if (ev.output != null) { output = ev.output; outputReported = true; }
+              if (ev.text) { deltaChars += ev.text.length; send({ type: "delta", text: ev.text }); }
+              if (ev.stop === "refused") status = "refused";
+              if (ev.stop === "truncated") status = "truncated";
+              if (ev.stop === "error") {
                 status = "error";
-                console.error("anthropic stream", JSON.stringify(j.error ?? {}).slice(0, 300));
+                console.error(`${engine} stream`, ev.errorDetail ?? "");
                 send({ type: "error", error: "The model reported an error.", code: "model_error" });
               }
             }

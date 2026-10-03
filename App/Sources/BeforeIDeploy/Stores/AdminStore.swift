@@ -18,7 +18,7 @@ final class AdminStore: ObservableObject {
     @Published var diagnosticsError: String?
 
     /// Keys the panel offers even before they exist in the table.
-    static let knownSettings = ["pricing.actions", "pricing.version", "features.knightDomain", "features.netlifyCredits", "features.hostingIncluded", "billing.catalog", "plans", "ai.models", "ai.creditEur", "ai.usdToEur", "ai.sessionHours", "ai.sessionCapPercent",
+    static let knownSettings = ["pricing.actions", "pricing.version", "features.knightDomain", "features.netlifyCredits", "features.hostingIncluded", "billing.catalog", "plans", "ai.models", "ai.modelsCodex", "ai.creditEur", "ai.usdToEur", "ai.sessionHours", "ai.sessionCapPercent",
                                 "ai.rate", "ai.promptMaxChars", "ai.prices", "release.url", "help.url",
                                 "legal.privacy", "legal.terms", "legal.refund", "support.email"]
 

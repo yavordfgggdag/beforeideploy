@@ -218,6 +218,10 @@
 "assistant.rollbackNotes" = "Rollback: %@";
 "assistant.scope" = "Scope";
 "assistant.send" = "Send";
+"assistant.engine" = "Cloud AI engine";
+"assistant.engine.claude" = "Claude";
+"assistant.engine.codex" = "Codex";
+"assistant.engineHint" = "Which AI answers through the built-in cloud service — fixes, the assistant and the Site Builder. Your own keys (Setup → AI key) are not affected.";
 "assistant.settings" = "Assistant settings";
 "assistant.stages" = "Stages";
 "assistant.stop" = "Stop";

@@ -218,6 +218,10 @@
 "assistant.rollbackNotes" = "Връщане: %@";
 "assistant.scope" = "Обхват";
 "assistant.send" = "Изпрати";
+"assistant.engine" = "AI двигател в облака";
+"assistant.engine.claude" = "Claude";
+"assistant.engine.codex" = "Codex";
+"assistant.engineHint" = "Кой AI отговаря през вградената облачна услуга — поправки, асистент и Site Builder. Собствените ти ключове (Setup → AI ключ) не се засягат.";
 "assistant.settings" = "Настройки на асистента";
 "assistant.stages" = "Етапи";
 "assistant.stop" = "Спри";

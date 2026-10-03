@@ -10,6 +10,7 @@ import { EngineError, exists, fetchT, readJSON, ev } from '../util.mjs';
 import { t, msg, currentLang } from '../i18n.mjs';
 import { accountStatus, cloudConfig, currentSession } from '../account.mjs';
 import { chooseProvider, sseEvents } from '../ai/providers.mjs';
+import { cloudEngine } from '../ai/assistant.mjs';
 import { ownKey } from '../aikeys.mjs';
 import { recordCost } from '../costs.mjs';
 import { gitBin, gitSh } from '../gitbin.mjs';
@@ -146,7 +147,7 @@ async function cloudEditOps({ brief, content, look, say, onStep }) {
     res = await fetchT(`${c.url}/functions/v1/site-gen`, {
       method: 'POST',
       headers: { apikey: c.anonKey, Authorization: `Bearer ${s.accessToken}`, 'Content-Type': 'application/json', Accept: 'text/event-stream' },
-      body: JSON.stringify({ mode: 'edit', brief, content, look, say, locale: currentLang(), operationId: crypto.randomUUID() }),
+      body: JSON.stringify({ mode: 'edit', brief, content, look, say, locale: currentLang(), operationId: crypto.randomUUID(), engine: cloudEngine() }),
     }, Number(process.env.BID_AI_CONNECT_MS) || 60000);
   } catch (e) {
     throw new EngineError(msg('ai.network', { error: e.message }), 'network');
@@ -154,6 +155,7 @@ async function cloudEditOps({ brief, content, look, say, onStep }) {
   if (!res.ok) {
     const j = (await res.json().catch(() => null)) || {};
     if (res.status === 404 && j.code === 'NOT_FOUND') throw new EngineError(msg('cloud.functionMissing', { name: 'site-gen' }), 'cloud_function_missing');
+    if (j.code === 'engine_unavailable') throw new EngineError(msg('ai.engineUnavailable', { engine: j.engine || cloudEngine() }), 'engine_unavailable');
     if (res.status === 402) throw new EngineError(msg('ai.quotaExhausted', { renewsAt: j.renewsAt || '—' }), 'quota_exhausted', 8);
     if (res.status === 403) throw new EngineError(msg('ai.unavailable.noPlan'), 'ai_unavailable');
     if (res.status === 429) throw new EngineError(msg('ai.rateLimited', { name: 'Before I Deploy AI' }), 'ai_rate_limited');
