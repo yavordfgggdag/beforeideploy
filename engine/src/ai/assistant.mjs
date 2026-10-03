@@ -57,8 +57,15 @@ export const DEFAULT_SETTINGS = {
   maxFileChars: 24000, // one file snapshot
   maxFiles: 8,
   callTimeoutMs: 120000,
+  cloudEngine: 'claude', // which AI answers through the cloud: claude (Anthropic) or codex (OpenAI)
 };
+export const CLOUD_ENGINES = ['claude', 'codex'];
 const SETTINGS_FILE = () => path.join(APP_DIR, 'ai-settings.json');
+/** The engine the owner chose for the cloud AI (ai-fix, the assistant, site-gen); Claude unless set. */
+export function cloudEngine() {
+  const v = assistantSettings().cloudEngine;
+  return CLOUD_ENGINES.includes(v) ? v : 'claude';
+}
 export function assistantSettings() {
   return { ...DEFAULT_SETTINGS, ...(readJSON(SETTINGS_FILE(), {}) || {}) };
 }
@@ -70,6 +77,7 @@ export function setAssistantSettings(patch) {
   if (patch.maxTokensPerOperation !== undefined) next.maxTokensPerOperation = Math.min(400000, Math.max(4000, Math.round(Number(patch.maxTokensPerOperation) || 4000)));
   if (patch.callTimeoutMs !== undefined) next.callTimeoutMs = Math.min(600000, Math.max(1000, Math.round(Number(patch.callTimeoutMs) || 1000)));
   if (patch.maxContextChars !== undefined) next.maxContextChars = Math.min(200000, Math.max(4000, Math.round(Number(patch.maxContextChars) || 4000)));
+  if (patch.cloudEngine !== undefined) next.cloudEngine = CLOUD_ENGINES.includes(patch.cloudEngine) ? patch.cloudEngine : 'claude';
   writeJSON(SETTINGS_FILE(), next);
   return next;
 }

@@ -125,3 +125,23 @@ carries none.
 2. Keep `input.required` and every `{{name}}` in sync (the renderer refuses undeclared holes).
 3. Add / adjust an eval fixture and its assertion in `tests/run.mjs`.
 4. Run `node tests/run.mjs` and `node scripts/i18n-check.mjs` (titles in both languages).
+
+
+## AI Fix — what the model is given (S7)
+
+`buildPrompt` (engine/src/aifix.mjs) is shared by the copy-to-chat targets, the built-in fix (own key) and the cloud
+`ai-fix` function, so every improvement reaches all of them:
+
+- **Evidence.** The log tail and the check's detail lines; the files the log points at — any folder or a file in the project
+  root (`index.html`, `vite.config.js`), `file:line:col`, absolute paths turned into project-relative — up to four, around
+  the failing line; `package.json` scripts and dependencies; git state. `.env`, keys, lockfiles, `node_modules`, `.git` and
+  anything outside the project are never shown; everything passes through redaction.
+- **Likely causes** (`engine/src/ai/knowledge.mjs`, offline): a playbook of about 25 failures (missing module or package,
+  ERESOLVE, wrong Node, `window is not defined`, missing environment variable, TypeScript and ESLint classics, memory, busy
+  port, Git sign-in, Tailwind, publish folder, SPA routes …) and a hint for every site-quality rule. Facts only the project
+  can give are looked up, not guessed: an import that differs from a real file only by capitalisation (macOS vs the host),
+  the Node version, a Site Builder site (change text with words, never edit `bid.site.json`), and a **previous automatic fix**
+  that did not help ("do not repeat it"). They are hints, labelled as such.
+- **The system prompt** (`ai.system.fix`, bg/en): root cause with the exact log line, the smallest change, never silence a
+  check (no eslint-disable, `@ts-ignore`, loosened tsconfig, skipped tests), SEARCH blocks copied verbatim from files that were
+  shown (otherwise ask for the file), one clear fix, a harmless warning may stay, never invent a website's content.

@@ -243,9 +243,10 @@ struct HeroCard: View {
                     .accessibilityLabel(title)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
-                        .font(Typo.font(.title, weight: .heavy))
-                        .tracking(0.6)
+                        .font(Typo.font(.title, weight: .bold))
                         .foregroundColor(Theme.text)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.85)
                     HStack(spacing: 6) {
                         if let c = status.check {
                             Text(L("dashboard.checkedAgo", Fmt.relative(c.at)))
@@ -282,18 +283,23 @@ struct HeroCard: View {
                 let issues = steps.filter { $0.status == "fail" || $0.status == "warn" }
                 if !issues.isEmpty {
                     let hasFail = issues.contains { $0.status == "fail" }
-                    HStack(alignment: .center, spacing: 12) {
+                    let summary = HStack(alignment: .center, spacing: 12) {
                         Image(systemName: hasFail ? "xmark.octagon.fill" : "exclamationmark.triangle.fill")
                             .font(Typo.font(.headline)).foregroundColor(hasFail ? Theme.blocked : Theme.warn)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(issues.map { $0.label ?? $0.id }.joined(separator: " · "))
+                            // names from the step id, so they follow the app language, not the language of the last check
+                            Text(issues.map { K.step($0.id) }.joined(separator: " · "))
                                 .font(Typo.font(.body, weight: .semibold)).foregroundColor(Theme.text).lineLimit(1)
                             Text(issues.count == 1 ? (issues[0].summary ?? "") : L("dashboard.issuesOnePrompt", issues.count))
                                 .font(Typo.font(.callout)).foregroundColor(Theme.secondary).lineLimit(1)
                         }
-                        Spacer()
-                        AIFixBar(step: issues.count == 1 ? issues[0].id : "all", compact: true)
                     }
+                    let fix = AIFixBar(step: issues.count == 1 ? issues[0].id : "all", compact: true)
+                    ViewThatFits(in: .horizontal) {
+                        HStack(alignment: .center, spacing: 12) { summary; Spacer(minLength: 12); fix }
+                        VStack(alignment: .leading, spacing: 10) { summary; fix }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(12)
                     .background(RoundedRectangle(cornerRadius: Radius.m, style: .continuous).fill((hasFail ? Theme.blocked : Theme.warn).opacity(0.08)))
                 }
@@ -307,6 +313,17 @@ struct HeroCard: View {
                 }
                 .bidButton(.secondary)
                 .help(L("dashboard.checkHelp"))
+
+                if FileManager.default.fileExists(atPath: (status.project.path as NSString).appendingPathComponent("bid.site.json")) {
+                    // Site Builder S4: a generated site is changed with words, never by hand
+                    Button {
+                        model.sheet = .siteEdit
+                    } label: {
+                        Label(L("siteedit.button"), systemImage: "text.bubble")
+                    }
+                    .bidButton(.secondary)
+                    .help(L("siteedit.buttonHelp"))
+                }
 
                 Button {
                     model.smartDeploy()
@@ -457,8 +474,8 @@ struct HealthBar: View {
                 Capsule(style: .continuous)
                     .fill(s.status == "skipped" ? Theme.elevated : Theme.color(for: s.status).opacity(s.status == "info" ? 0.45 : 0.9))
                     .frame(height: 6)
-                    .help("\(s.label ?? s.id): \(s.summary ?? s.status)")
-                    .accessibilityLabel(s.label ?? s.id)
+                    .help("\(K.step(s.id)): \(s.summary ?? s.status)")
+                    .accessibilityLabel(K.step(s.id))
                     .accessibilityValue(s.summary ?? s.status)
             }
         }

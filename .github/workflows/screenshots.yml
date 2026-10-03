@@ -99,6 +99,10 @@ jobs:
           shoot 08-settings -BIDScreen settings
           shoot 09-command-palette -BIDScreen palette
           shoot 10-domains -BIDScreen domains
+          # Site Builder (S2): the three steps of "New site" with a filled-in brief
+          shoot 13-new-site-theme -BIDScreen newsite -BIDSiteBuilderStep theme -BIDSnapshotDelay 18
+          shoot 14-new-site-details -BIDScreen newsite -BIDSiteBuilderStep details
+          shoot 15-new-site-preview -BIDScreen newsite -BIDSiteBuilderStep preview -BIDSnapshotDelay 18
           defaults write "$APP_ID" locale -string en
           shoot 11-mission-control-en -BIDScreen overview
           shoot 12-project-en -BIDScreen project

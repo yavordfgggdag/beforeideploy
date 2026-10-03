@@ -1,0 +1,604 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "saas",
+  "category": "tech",
+  "icon": "cloud",
+  "accent": "#6366f1",
+  "mark": "chart",
+  "art": "orbit",
+  "schemaOrg": "Organization",
+  "sample": {
+    "name": "Flowdeck"
+  },
+  "featured": true,
+  "titleKey": "newsite.template.saas.title",
+  "descriptionKey": "newsite.template.saas.description",
+  "keywords": {
+    "en": [
+      "saas",
+      "software",
+      "startup",
+      "app",
+      "product",
+      "pricing",
+      "subscription",
+      "tool",
+      "platform",
+      "api"
+    ],
+    "bg": [
+      "софтуер",
+      "стартъп",
+      "приложение",
+      "продукт",
+      "абонамент",
+      "платформа",
+      "инструмент",
+      "цени"
+    ]
+  },
+  "style": "bold",
+  "tokens": {
+    "dark": true,
+    "bg": "#0a0c16",
+    "bg2": "#0f1220",
+    "surface": "#141830",
+    "text": "#eef0f7",
+    "muted": "#a3abc2",
+    "line": "rgba(255,255,255,.09)",
+    "accent": "#6366f1",
+    "accent2": "#22d3ee",
+    "radius": 16
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "hints": {
+    "en": {
+      "offer": "We build a tool that helps small teams automate repetitive tasks and get their weekly reports without digging through spreadsheets.",
+      "audience": "Operations, marketing and support teams who lose hours to routine work",
+      "services": [
+        [
+          "Starter",
+          "€0",
+          "For trying it out with a small team"
+        ],
+        [
+          "Team",
+          "€12",
+          "Per user, with all integrations and priority support"
+        ],
+        [
+          "Business",
+          "€29",
+          "Per user, with single sign-on and a dedicated manager"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Създаваме инструмент, с който малките екипи автоматизират повтарящата се работа и получават седмичните си отчети, без да ровят в таблици.",
+      "audience": "Екипи по операции, маркетинг и поддръжка, които губят часове в рутинна работа",
+      "services": [
+        [
+          "Старт",
+          "0 €",
+          "За изпробване с малък екип"
+        ],
+        [
+          "Екип",
+          "12 €",
+          "На потребител, с всички интеграции и приоритетна поддръжка"
+        ],
+        [
+          "Бизнес",
+          "29 €",
+          "На потребител, с единен вход (SSO) и отделен мениджър"
+        ]
+      ]
+    }
+  },
+  "lang": {
+    "bg": {
+      "tagline": "софтуер, който пести часове",
+      "description": "Автоматизирайте рутинната работа на екипа — от задачите до отчетите.",
+      "nav": [
+        [
+          "Възможности",
+          "/#features"
+        ],
+        [
+          "Цени",
+          "/pricing.html"
+        ],
+        [
+          "Въпроси",
+          "/#faq"
+        ]
+      ],
+      "headerCta": [
+        "Започни",
+        "/#start"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Автоматизация на работата в екипа",
+            "eyebrowIcon": "spark",
+            "title": "По-малко рутина, *повече работа*",
+            "lead": "Една платформа за задачи, отчети и автоматизации. Повтарящата се работа тече сама, а екипът се занимава с важното.",
+            "cta": [
+              "Започни пробен период",
+              "/#start"
+            ],
+            "cta2": [
+              "Виж цените",
+              "/pricing.html"
+            ],
+            "card": {
+              "icon": "chart",
+              "title": "Тази седмица",
+              "rows": [
+                [
+                  "Автоматизирани задачи",
+                  "1 284"
+                ],
+                [
+                  "Спестено време",
+                  "38 ч."
+                ],
+                [
+                  "Доволни клиенти",
+                  "+12%"
+                ]
+              ],
+              "note": "Табло в реално време."
+            }
+          },
+          "sections": [
+            {
+              "type": "stats",
+              "items": [
+                [
+                  "2 400+",
+                  "екипа"
+                ],
+                [
+                  "6 ч.",
+                  "спестени седмично"
+                ],
+                [
+                  "99,95%",
+                  "наличност"
+                ],
+                [
+                  "4.8/5",
+                  "оценка"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "features",
+              "alt": true,
+              "title": "Всичко на едно място",
+              "intro": "Започнете с шаблон и настройте за минути — без програмиране.",
+              "items": [
+                [
+                  "bolt",
+                  "Автоматизации",
+                  "Правила „ако — тогава“ за повтарящите се задачи."
+                ],
+                [
+                  "chart",
+                  "Отчети",
+                  "Табла в реално време, които се изпращат сами."
+                ],
+                [
+                  "link",
+                  "Интеграции",
+                  "Свържете чат, календар, плащания и другите инструменти, които ползвате."
+                ],
+                [
+                  "shield",
+                  "Сигурност",
+                  "Роли и права, така че всеки да вижда само каквото му трябва."
+                ]
+              ]
+            },
+            {
+              "type": "steps",
+              "title": "Започнете в три стъпки",
+              "items": [
+                [
+                  "Регистрация",
+                  "Само имейл — без карта."
+                ],
+                [
+                  "Шаблон",
+                  "Изберете готов процес за вашия екип."
+                ],
+                [
+                  "Покана",
+                  "Добавете колегите с един линк."
+                ]
+              ]
+            },
+            {
+              "type": "quotes",
+              "alt": true,
+              "title": "Екипите казват",
+              "items": [
+                [
+                  "„Спряхме да губим задачи между имейлите. Всичко е на едно място.“",
+                  "Радослав, CTO"
+                ],
+                [
+                  "„Отчетът в понеделник вече се пише сам.“",
+                  "Лора, мениджър операции"
+                ],
+                [
+                  "„Настроихме го за следобед.“",
+                  "Калин, основател"
+                ]
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Въпроси",
+              "items": [
+                [
+                  "Трябва ли карта за пробния период?",
+                  "Не е нужна карта, за да започнете. Когато пробният период свърши, избирате план или оставате на „Старт“."
+                ],
+                [
+                  "Безопасни ли са данните ми?",
+                  "Достъпът е само за поканените от вас хора, а вие решавате какво вижда всеки."
+                ],
+                [
+                  "Мога ли да откажа по всяко време?",
+                  "Да, с един клик от настройките. Без договори."
+                ]
+              ]
+            },
+            {
+              "type": "form",
+              "id": "start",
+              "alt": true,
+              "title": "Започнете пробния период",
+              "intro": "Ще ви изпратим линк за вход и кратко ръководство.",
+              "formName": "trial",
+              "button": "Създай акаунт",
+              "note": "За начало ни трябва само имейлът ви."
+            }
+          ]
+        },
+        "pricing": {
+          "title": "Цени и планове",
+          "description": "Прозрачни планове за екипи от всякакъв размер — от първия проект до цялата компания.",
+          "pagehead": [
+            "Цени",
+            "Плащате месечно или годишно. Сменяте или прекратявате плана, когато поискате."
+          ],
+          "sections": [
+            {
+              "type": "pricing",
+              "items": [
+                {
+                  "name": "Старт",
+                  "price": "0 €",
+                  "per": "/ месец",
+                  "features": [
+                    "До 3 потребители",
+                    "Месечен лимит автоматизации",
+                    "Основни отчети"
+                  ],
+                  "cta": [
+                    "Започни",
+                    "/#start"
+                  ]
+                },
+                {
+                  "name": "Екип",
+                  "price": "12 €",
+                  "per": "/ потребител",
+                  "featured": "Най-популярен",
+                  "features": [
+                    "Неограничени автоматизации",
+                    "Всички интеграции",
+                    "Приоритетна поддръжка"
+                  ],
+                  "cta": [
+                    "Опитай",
+                    "/#start"
+                  ]
+                },
+                {
+                  "name": "Бизнес",
+                  "price": "29 €",
+                  "per": "/ потребител",
+                  "features": [
+                    "SSO и одитен дневник",
+                    "Отделен мениджър",
+                    "Споразумение за ниво на услугата"
+                  ],
+                  "cta": [
+                    "Свържи се с нас",
+                    "mailto:hello@example.com"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "faq",
+              "alt": true,
+              "title": "Въпроси за плащането",
+              "items": [
+                [
+                  "Има ли ДДС?",
+                  "Цените са без ДДС. Той се добавя при плащане, когато се дължи."
+                ],
+                [
+                  "Как се плаща?",
+                  "С карта или по фактура за годишните планове."
+                ]
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "en": {
+      "tagline": "software that saves hours",
+      "description": "Automate your team’s routine work, from tasks to reports.",
+      "nav": [
+        [
+          "Features",
+          "/#features"
+        ],
+        [
+          "Pricing",
+          "/pricing.html"
+        ],
+        [
+          "FAQ",
+          "/#faq"
+        ]
+      ],
+      "headerCta": [
+        "Get started",
+        "/#start"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Workflow automation for teams",
+            "eyebrowIcon": "spark",
+            "title": "Less busywork, *more real work*",
+            "lead": "One platform for tasks, reports and automations. Repetitive work runs by itself, so your team can focus on what matters.",
+            "cta": [
+              "Start a trial",
+              "/#start"
+            ],
+            "cta2": [
+              "See pricing",
+              "/pricing.html"
+            ],
+            "card": {
+              "icon": "chart",
+              "title": "This week",
+              "rows": [
+                [
+                  "Automated tasks",
+                  "1,284"
+                ],
+                [
+                  "Time saved",
+                  "38 h"
+                ],
+                [
+                  "Happy customers",
+                  "+12%"
+                ]
+              ],
+              "note": "A real-time dashboard."
+            }
+          },
+          "sections": [
+            {
+              "type": "stats",
+              "items": [
+                [
+                  "2,400+",
+                  "teams"
+                ],
+                [
+                  "6 h",
+                  "saved every week"
+                ],
+                [
+                  "99.95%",
+                  "uptime"
+                ],
+                [
+                  "4.8/5",
+                  "rating"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "features",
+              "alt": true,
+              "title": "Everything in one place",
+              "intro": "Start from a template and set it up in minutes — no code.",
+              "items": [
+                [
+                  "bolt",
+                  "Automations",
+                  "“If this, then that” rules for repeating work."
+                ],
+                [
+                  "chart",
+                  "Reports",
+                  "Real-time dashboards that send themselves."
+                ],
+                [
+                  "link",
+                  "Integrations",
+                  "Connect chat, calendar, payments and the other tools you use."
+                ],
+                [
+                  "shield",
+                  "Security",
+                  "Roles and permissions, so people see only what they need."
+                ]
+              ]
+            },
+            {
+              "type": "steps",
+              "title": "Up and running in three steps",
+              "items": [
+                [
+                  "Sign up",
+                  "Just an email — no card."
+                ],
+                [
+                  "Pick a template",
+                  "A ready-made workflow for your team."
+                ],
+                [
+                  "Invite",
+                  "Add colleagues with one link."
+                ]
+              ]
+            },
+            {
+              "type": "quotes",
+              "alt": true,
+              "title": "Teams say",
+              "items": [
+                [
+                  "“We stopped losing tasks in email. Everything is in one place.”",
+                  "Radoslav, CTO"
+                ],
+                [
+                  "“The Monday report now writes itself.”",
+                  "Laura, operations manager"
+                ],
+                [
+                  "“We set it up in an afternoon.”",
+                  "Kalin, founder"
+                ]
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "FAQ",
+              "items": [
+                [
+                  "Do I need a card for the trial?",
+                  "No card is needed to start. When the trial ends, you pick a plan or stay on Starter."
+                ],
+                [
+                  "Is my data safe?",
+                  "Access is limited to the people you invite, and you choose what each of them can see."
+                ],
+                [
+                  "Can I cancel any time?",
+                  "Yes, with one click in settings. No contracts."
+                ]
+              ]
+            },
+            {
+              "type": "form",
+              "id": "start",
+              "alt": true,
+              "title": "Start your trial",
+              "intro": "We send you a sign-in link and a short guide.",
+              "formName": "trial",
+              "button": "Create account",
+              "note": "We only ask for your email to begin."
+            }
+          ]
+        },
+        "pricing": {
+          "title": "Pricing and plans",
+          "description": "Clear plans for teams of every size, from a first project to a whole company.",
+          "pagehead": [
+            "Pricing",
+            "Pay monthly or yearly. Change or cancel your plan whenever you need."
+          ],
+          "sections": [
+            {
+              "type": "pricing",
+              "items": [
+                {
+                  "name": "Starter",
+                  "price": "€0",
+                  "per": "/ month",
+                  "features": [
+                    "Up to 3 users",
+                    "A monthly automation allowance",
+                    "Basic reports"
+                  ],
+                  "cta": [
+                    "Get started",
+                    "/#start"
+                  ]
+                },
+                {
+                  "name": "Team",
+                  "price": "€12",
+                  "per": "/ user",
+                  "featured": "Most popular",
+                  "features": [
+                    "Unlimited automations",
+                    "All integrations",
+                    "Priority support"
+                  ],
+                  "cta": [
+                    "Start a trial",
+                    "/#start"
+                  ]
+                },
+                {
+                  "name": "Business",
+                  "price": "€29",
+                  "per": "/ user",
+                  "features": [
+                    "SSO and audit log",
+                    "Dedicated manager",
+                    "Service level agreement"
+                  ],
+                  "cta": [
+                    "Contact us",
+                    "mailto:hello@example.com"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "faq",
+              "alt": true,
+              "title": "Billing questions",
+              "items": [
+                [
+                  "Is VAT included?",
+                  "Prices are shown without VAT. VAT is added at checkout where it applies."
+                ],
+                [
+                  "How do I pay?",
+                  "By card, or by invoice on yearly plans."
+                ]
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

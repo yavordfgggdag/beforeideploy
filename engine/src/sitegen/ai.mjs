@@ -1,0 +1,907 @@
+// Site Builder S3 — the AI pipeline that writes a site's texts. Pure ESM, no Node or Deno imports: the same file
+// runs in the engine (own key) and in the `site-gen` Edge Function (supabase/functions/_shared/site-ai.mjs is a
+// copy kept in sync by scripts/sitegen-sync.mjs).
+//
+// The model never writes HTML, links, icons or section ids — only words, in a fixed JSON schema. The engine's
+// generator keeps the theme's structure and merges the words in (mergeContent), so a bad answer can at worst be
+// dull, never broken or unsafe.
+//
+//   plan     (cheap model)   which sections stay, the tone, a style suggestion
+//   content  (plan model)    every text of every kept section
+//   audit    (no model)      a checker finds invented numbers and claims, clichés, a wrong language, long or
+//                            repeated texts; reviews and stats the brief cannot support are dropped
+//   review   (cheap model)   gets the checker's findings and the numbered texts, answers with replacement
+//                            texts for only the strings that break a rule — the writer's words stay the writer's
+//   (audit again)            what the review could not fix is cut out sentence by sentence or reported
+//
+// `call({ step, model, system, prompt, schema, maxTokens, effort })` → `{ json, usage: { input, output, model } }`
+// is supplied by the host (engine: Anthropic over the owner's key; function: the central key with metering).
+
+export const PIPELINE_VERSION = 'site-ai/2';
+
+/** Models by step: the cheap steps on Haiku, the writing on the plan's model (the host may override). */
+export const STEP_MODELS = { plan: 'claude-haiku-4-5', content: 'claude-sonnet-5-5', review: 'claude-haiku-4-5' };
+export const STEP_MAX_TOKENS = { plan: 2000, content: 16000, review: 5000 };
+export const STEPS = ['plan', 'content', 'review'];
+
+/** The longest a field may be (characters). The schema cannot carry lengths; the merge enforces them. */
+export const LIMITS = { eyebrow: 60, title: 90, lead: 280, short: 120, text: 320, long: 700, label: 32, item: 200, name: 60, price: 32 };
+
+const LANG_NAMES = { bg: 'Bulgarian', en: 'English' };
+
+// ---------------------------------------------------------------- writing guides: tone, kind of site, language (S7)
+
+/** The tones an owner can pick in the wizard; none picked = the model decides from the brief. */
+export const TONES = ['friendly', 'professional', 'premium', 'playful'];
+const TONE_GUIDE = {
+  friendly: 'friendly — warm and conversational, like a helpful neighbour who knows the trade; short sentences, "you" is welcome',
+  professional: 'professional — clear, composed and precise; no slang and no hype, confidence comes from specifics',
+  premium: 'premium — understated and refined; fewer words, a calm rhythm, no discount language, nothing loud',
+  playful: 'playful — light and upbeat with a touch of humour; short sentences and vivid verbs, never silly at the cost of clarity',
+};
+
+/** What good copy does for each kind of site (the theme's category). */
+const CATEGORY_GUIDE = {
+  business: 'Kind of site: a service business. Trust is the product: show how the work goes and what the client gets at each step, answer the worries (price, time, what to prepare) in the FAQ, and give one clear next step — a call, a visit or a written quote.',
+  food: 'Kind of site: food and drink. Make the reader hungry and booking effortless: name dishes, ingredients and moods concretely, keep the menu exactly as the owner gave it, and keep practical information (hours, address, booking) one click away.',
+  beauty: 'Kind of site: beauty and wellbeing. Calm, personal, sensory language about how the client will feel and the care in the process; name treatments precisely; no medical claims and no promised results.',
+  commerce: 'Kind of site: a shop or producer. Sell through use and detail: what it is made of, how it is used, how ordering, delivery or pickup work. No fake scarcity and no invented discounts.',
+  tech: 'Kind of site: a product or digital service. Say what it does in the first line, then for whom, then how to start. Plain words over buzzwords; one idea per section.',
+  personal: 'Kind of site: a person as the brand. First person is fine; show the way of working and what working together is like; avoid CV-style lists and self-praise.',
+  community: 'Kind of site: a community, school or association. Warm and inviting; say who is welcome and how to take part; the first step must feel easy and low-pressure.',
+};
+
+const LANG_GUIDE = {
+  bg: 'Bulgarian: write like a Bulgarian copywriter, never like a translation. Address the visitor with "вие" (lower case, polite plural): "Свържете се с нас", "Запазете час". Prefer verbs over noun piles ("Ремонтираме" rather than "Извършване на ремонтни дейности"). Avoid English calques and officialese such as "индивидуален подход", "високо качество", "професионално отношение", "широка гама", "в най-кратки срокове" — say the concrete thing instead. Headings in sentence case (only the first word capitalised). Quotation marks „…“. Money as "25 €" (the euro sign after the number, with a space). Check gender and number agreement; read each sentence once for natural stress.',
+  en: 'English: plain international English, no jargon. Sentence case for headings. Money as "€25". Prefer short, active sentences; avoid filler openers ("Welcome to", "At [name], we").',
+};
+
+/** The guide the content step reads: the language's rules plus what the kind of site needs. */
+export function guideText(brief) {
+  return [LANG_GUIDE[brief?.lang] || LANG_GUIDE.en, CATEGORY_GUIDE[brief?.category]].filter(Boolean).join('\n');
+}
+
+export const SYSTEM = `You write the texts of small business websites for people who are not writers or programmers. Your copy is what a customer reads before they call, book or buy, so it has to be specific, warm and true.
+
+Rules you never break:
+- Write only what the brief supports. Never invent facts: no made-up reviews, client names, numbers, percentages, years of experience, awards, certificates, guarantees, "free" offers, response times, prices or addresses. If a section needs facts the brief does not give (reviews, stats, team), drop that section (keep: false) instead of inventing. When the brief is thin, describe what the service is and how it works in general terms instead of making claims.
+- Write in the site's language, in the owner's voice, in the tone the brief names. No marketing clichés ("unlock your potential", "we go the extra mile", "cutting-edge", "tailored solutions", "passionate team"), no exclamation marks, no emoji.
+- Short beats long. Headings under 8 words. One idea per sentence. The reader decides in 5 seconds whether this is for them.
+- Keep the structure you are given: the same pages, the same sections in the same order, the same number of items in a list unless told the list may shrink or grow. Buttons keep their meaning (a "book" button stays a booking button).
+- Never include HTML, Markdown, links, email addresses or phone numbers in the text — the site adds those itself. Emphasis in a title is allowed as *words between asterisks*, at most once per title.
+- Answer only with JSON that matches the schema. No commentary.
+
+How good small-business copy works:
+- Start from the visitor's need, then say what the owner does about it. A hero title says what the visitor gets ("A calm, tidy home every week"), not who the owner is. Never open with "Welcome to".
+- The hero lead is one or two sentences: who it is for, what they get, how it starts. Under 200 characters.
+- Every button names the action: "Book a table", "Ask for a quote", "See the menu". Never "Submit", "Click here" or "Learn more".
+- Cards have a concrete heading of two to four words and one plain sentence about what the visitor gets. No two cards start the same way; no three-adjective lists.
+- Steps are the real stages a customer goes through, each starting with a verb.
+- FAQ questions are the ones customers really ask before they decide (price, time, what to prepare, what happens next). Answer from the brief; when it does not say, explain how such a thing usually works and invite them to ask. Never invent a policy, a price or a time.
+- Use the owner's own words and the vocabulary of the trade instead of generic business talk. Name the real things: the dishes, treatments, repairs, documents, classes.
+- Never repeat a sentence or a heading anywhere on the site. The tagline is not the hero title.`;
+
+// ---------------------------------------------------------------- schemas (structured outputs: additionalProperties false everywhere, no lengths)
+
+const str = { type: 'string' };
+const nul = { type: 'null' };
+const nstr = { anyOf: [str, nul] };
+const strList = { type: 'array', items: str };
+const rows = { type: 'array', items: strList };
+const obj = (properties) => ({ type: 'object', properties, required: Object.keys(properties), additionalProperties: false });
+
+export const PLAN_SCHEMA = obj({
+  tone: str,
+  styleSuggestion: { anyOf: [{ type: 'string', enum: ['calm', 'bold', 'elegant'] }, nul] },
+  sections: { type: 'array', items: obj({ page: str, index: { type: 'integer' }, keep: { type: 'boolean' }, note: nstr }) },
+});
+
+const SECTION_SCHEMA = obj({
+  index: { type: 'integer' },
+  keep: { type: 'boolean' },
+  title: nstr,
+  intro: nstr,
+  h: nstr,
+  p: nstr,
+  button: nstr,
+  items: { anyOf: [rows, nul] },
+  plans: { anyOf: [{ type: 'array', items: obj({ name: str, price: str, per: nstr, featured: nstr, features: strList, cta: nstr }) }, nul] },
+  groups: { anyOf: [{ type: 'array', items: obj({ name: str, items: rows }) }, nul] },
+  posts: { anyOf: [{ type: 'array', items: obj({ tag: str, date: str, h: str, p: str }) }, nul] },
+  body: { anyOf: [strList, nul] },
+  send: nstr,
+  note: nstr,
+});
+
+export const CONTENT_SCHEMA = obj({
+  description: str,
+  tagline: str,
+  nav: strList,
+  headerCta: nstr,
+  pages: {
+    type: 'array',
+    items: obj({
+      id: str,
+      title: nstr,
+      description: nstr,
+      pagehead: { anyOf: [strList, nul] },
+      hero: { anyOf: [obj({ eyebrow: nstr, title: str, lead: str, cta: nstr, cta2: nstr, cardTitle: nstr, cardRows: { anyOf: [rows, nul] }, cardNote: nstr, chips: { anyOf: [strList, nul] } }), nul] },
+      sections: { type: 'array', items: SECTION_SCHEMA },
+    }),
+  },
+});
+
+/** The review answers with replacement texts only: `{ fixes: [{ id, text }] }` (ids from reviewPrompt). */
+export const REVIEW_SCHEMA = obj({ fixes: { type: 'array', items: obj({ id: str, text: str }) } });
+
+// ---------------------------------------------------------------- the brief and the recipe as the model sees them
+
+const clip = (s, n) => (typeof s === 'string' ? s.trim().slice(0, n) : '');
+
+/** The brief as a short, factual block. Contacts are named but never quoted (the site renders them itself). */
+export function briefText(brief) {
+  const lines = [`Site name: ${clip(brief.name, 80)}`, `Language: ${LANG_NAMES[brief.lang] || brief.lang}`];
+  if (brief.kind) lines.push(`Type of site: ${clip(brief.kind, 80)}`);
+  if (TONES.includes(brief.tone)) lines.push(`Tone the owner chose: ${TONE_GUIDE[brief.tone]}.`);
+  if (brief.description) lines.push(`One-line description: ${clip(brief.description, 300)}`);
+  if (brief.offer) lines.push(`What they offer, in their words: ${clip(brief.offer, 1200)}`);
+  if (brief.audience) lines.push(`Who it is for: ${clip(brief.audience, 200)}`);
+  if (Array.isArray(brief.services) && brief.services.length) {
+    lines.push('Services or programs (names and prices are facts — keep them exactly):');
+    for (const s of brief.services) lines.push(`- ${clip(s.name, 80)}${s.price ? ` — ${clip(s.price, 40)}` : ''}${s.text ? `: ${clip(s.text, 240)}` : ''}`);
+  }
+  const c = brief.contacts || {};
+  const has = ['email', 'phone', 'address', 'instagram', 'website'].filter((k) => c[k]);
+  lines.push(has.length ? `Contact channels the site shows: ${has.join(', ')} (do not write the values).` : 'No contact details were given.');
+  if (Array.isArray(brief.hours) && brief.hours.length) lines.push('Opening hours are given; the site shows them itself (do not write them).');
+  lines.push(Array.isArray(brief.photos) && brief.photos.length ? `Photos: ${brief.photos.length} (the first goes at the top of the page).` : 'No photos: sections that only make sense with photos may be dropped.');
+  if (brief.style) lines.push(`Chosen style: ${brief.style}.`);
+  return lines.join('\n');
+}
+
+/** What each section holds today — enough for the model to rewrite it, without HTML, links or icons. */
+function describeSection(s) {
+  const d = { type: s.type };
+  if (s.title) d.title = s.title;
+  if (s.intro) d.intro = s.intro;
+  if (s.h) d.h = s.h;
+  if (s.p) d.p = s.p;
+  if (Array.isArray(s.button)) d.button = s.button[0];
+  if (Array.isArray(s.items)) d.items = s.items.map((it) => (Array.isArray(it) ? (s.type === 'cards' || s.type === 'trust' ? it.slice(1) : it) : typeof it === 'object' && it ? [it.name || it.h || '', it.price || it.p || ''] : [String(it)]));
+  if (s.type === 'pricing' || s.type === 'programs') d.plans = (s.items || []).map((p) => ({ name: p.name, price: p.price, per: p.per || null, featured: p.featured || null, features: p.features || [], cta: Array.isArray(p.cta) ? p.cta[0] : null }));
+  if (s.type === 'menu') d.groups = (s.groups || []).map((g) => ({ name: g.name, items: g.items || [] }));
+  if (s.type === 'posts') d.posts = (s.items || []).map((p) => ({ tag: p.tag, date: p.date, h: p.h, p: p.p }));
+  if (s.type === 'article') d.body = s.body || [];
+  if (s.send) d.send = s.send;
+  if (s.note) d.note = s.note;
+  if (s.messageLabel) d.messageLabel = s.messageLabel;
+  if (s.hoursTitle) d.hoursTitle = s.hoursTitle;
+  return d;
+}
+
+export function recipeText(content) {
+  const out = { tagline: content.tagline, description: content.description, nav: (content.nav || []).map((n) => n[0]), headerCta: content.headerCta ? content.headerCta[0] : null, pages: [] };
+  for (const [id, p] of Object.entries(content.pages || {})) {
+    const page = { id, title: p.title || null, description: p.description || null, pagehead: p.pagehead || null, hero: null, sections: [] };
+    if (p.hero) {
+      const h = p.hero;
+      page.hero = { eyebrow: h.eyebrow || null, title: h.title, lead: h.lead, cta: Array.isArray(h.cta) ? h.cta[0] : null, cta2: Array.isArray(h.cta2) ? h.cta2[0] : null, cardTitle: h.card?.title || null, cardRows: h.card?.rows || null, cardNote: h.card?.note || null, chips: h.chips || null };
+    }
+    page.sections = (p.sections || []).map((s, index) => ({ index, ...describeSection(s) }));
+    out.pages.push(page);
+  }
+  return JSON.stringify(out, null, 1);
+}
+
+// ---------------------------------------------------------------- prompts
+
+export function planPrompt(brief, recipe) {
+  return `${briefText(brief)}
+
+The site is built from this recipe (the sample texts show what each section is for):
+${recipeText(recipe)}
+
+Decide for every section whether it stays (keep) given what the brief supports — drop reviews, stats, team or gallery sections the brief has no facts or photos for; keep contact, pricing and the hero. Describe the tone in one sentence${TONES.includes(brief.tone) ? ' (the owner chose one — follow it)' : ''}. Suggest a style (calm, bold, elegant) or null to keep the theme's own.`;
+}
+
+export function contentPrompt(brief, recipe, plan) {
+  const kept = plan ? plan.sections.filter((s) => s.keep).map((s) => `${s.page}#${s.index}`) : null;
+  return `${briefText(brief)}
+${plan?.tone ? `\nTone: ${clip(plan.tone, 200)}` : ''}
+
+Rewrite every text of this recipe for this owner. Keep the structure; mark a section keep: false only when it must go${kept ? ` (these stay: ${kept.join(', ')})` : ''}. Lists keep their number of items unless the brief gives a different number of services. Prices and service names come from the brief verbatim. The "items" rows keep their column meaning (for cards: [heading, text]; steps: [heading, text]; quotes: [quote, who]; faq: [question, answer]; stats: [number, label]; prose/story: [heading, paragraph]; chips/gallery: [caption]; trust: [one short promise]; split: [heading, paragraph, up to four bullets]).
+
+Writing guide:
+${guideText(brief)}
+
+Recipe:
+${recipeText(recipe)}`;
+}
+
+// ---------------------------------------------------------------- the audit: what no prompt can promise (S7)
+
+/** How long each kind of text may be before a reader stops reading it (characters). */
+export const ROLE_MAX = { tagline: 100, description: 200, eyebrow: 60, title: 80, heading: 60, lead: 220, intro: 220, text: 220, answer: 360, question: 120, promise: 90, bullet: 120, caption: 60, note: 120 };
+
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const isStr = (v) => typeof v === 'string' && v.trim() !== '';
+
+/**
+ * Every piece of prose in the content, in reading order, with a stable id and the path to set it. Icons, links,
+ * ids, prices, names, form fields and hours are structure or facts and never appear here.
+ */
+export function textsOf(content) {
+  const out = [];
+  const add = (path, role, text) => {
+    if (isStr(text)) out.push({ id: `t${out.length + 1}`, path, role, text });
+  };
+  add(['tagline'], 'tagline', content.tagline);
+  add(['description'], 'description', content.description);
+  for (const [pid, p] of Object.entries(content.pages || {})) {
+    const base = ['pages', pid];
+    if (pid !== 'index') {
+      add([...base, 'title'], 'title', p.title);
+      add([...base, 'description'], 'description', p.description);
+    }
+    if (Array.isArray(p.pagehead)) {
+      add([...base, 'pagehead', 0], 'title', p.pagehead[0]);
+      add([...base, 'pagehead', 1], 'lead', p.pagehead[1]);
+    }
+    const h = p.hero;
+    if (h) {
+      add([...base, 'hero', 'eyebrow'], 'eyebrow', h.eyebrow);
+      add([...base, 'hero', 'title'], 'title', h.title);
+      add([...base, 'hero', 'lead'], 'lead', h.lead);
+      if (h.card) {
+        add([...base, 'hero', 'card', 'title'], 'heading', h.card.title);
+        add([...base, 'hero', 'card', 'note'], 'note', h.card.note);
+      }
+    }
+    (p.sections || []).forEach((sec, i) => {
+      const sp = [...base, 'sections', i];
+      add([...sp, 'title'], 'title', sec.title);
+      add([...sp, 'intro'], 'intro', sec.intro);
+      add([...sp, 'h'], 'title', sec.h);
+      add([...sp, 'p'], 'text', sec.p);
+      const items = Array.isArray(sec.items) ? sec.items : [];
+      items.forEach((it, j) => {
+        const ip = [...sp, 'items', j];
+        if (typeof it === 'string') return add(ip, 'caption', it);
+        if (Array.isArray(it)) {
+          switch (sec.type) {
+            case 'cards': case 'audience': add([...ip, 1], 'heading', it[1]); add([...ip, 2], 'text', it[2]); break;
+            case 'trust': add([...ip, 1], 'promise', it[1]); break;
+            case 'faq': add([...ip, 0], 'question', it[0]); add([...ip, 1], 'answer', it[1]); break;
+            case 'split': add([...ip, 0], 'heading', it[0]); add([...ip, 1], 'text', it[1]); for (let k = 2; k < it.length; k++) add([...ip, k], 'bullet', it[k]); break;
+            case 'steps': case 'prose': case 'story': add([...ip, 0], 'heading', it[0]); add([...ip, 1], 'text', it[1]); break;
+            case 'quotes': add([...ip, 0], 'answer', it[0]); break;
+            case 'stats': add([...ip, 1], 'heading', it[1]); break;
+            default: break;
+          }
+        } else if (it && typeof it === 'object') {
+          if (sec.type === 'pricing' || sec.type === 'programs') (it.features || []).forEach((f, k) => add([...ip, 'features', k], 'bullet', f));
+          if (sec.type === 'posts') { add([...ip, 'h'], 'title', it.h); add([...ip, 'p'], 'text', it.p); }
+        }
+      });
+      if (sec.type === 'article') (sec.body || []).forEach((b, k) => { if (!/^(## |> )/.test(String(b))) add([...sp, 'body', k], 'text', b); });
+    });
+  }
+  return out;
+}
+
+const getPath = (o, path) => path.reduce((a, k) => (a == null ? a : a[k]), o);
+function setPath(o, path, value) {
+  const parent = getPath(o, path.slice(0, -1));
+  if (parent != null && typeof parent === 'object') parent[path[path.length - 1]] = value;
+}
+
+// ---- scrub: the mechanical clean-up (no model)
+
+const EMOJI = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}\u{2B50}\u{2B06}]/gu;
+
+/** Emoji, Markdown, links and exclamation marks out; spacing tidy. Idempotent. */
+export function scrub(text) {
+  return String(text)
+    .replace(/<[^>]*>/g, '')
+    .replace(EMOJI, '')
+    .replace(/\[([^\]]+)\]\((?:https?:|mailto:|tel:|\/)[^)]*\)/g, '$1')
+    .replace(/https?:\/\/\S+|www\.\S+/g, '')
+    .replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g, '')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/(^|\s)#{1,6}\s+/g, '$1')
+    .replace(/`+/g, '')
+    .replace(/!+/g, '.')
+    .replace(/\.{2}(?!\.)/g, '.')
+    .replace(/\s+([,.;:?])/g, '$1')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+/** Cuts at a sentence end, else at a word, never in the middle of a word. */
+export function fit(text, max) {
+  const str = String(text).trim();
+  if (str.length <= max) return str;
+  const head = str.slice(0, max);
+  const stop = Math.max(head.lastIndexOf('. '), head.lastIndexOf('? '), head.lastIndexOf('; '));
+  if (stop > max * 0.5) return head.slice(0, stop + 1).trim();
+  const space = head.lastIndexOf(' ');
+  return `${head.slice(0, space > max * 0.5 ? space : max).replace(/[\s,;:–—-]+$/, '')}…`;
+}
+
+// ---- facts: what the brief supports
+
+const numTokens = (text) => (String(text).match(/\d+(?:[.,]\d+)*/g) || []).map((n) => n.replace(/[.,\s]/g, ''));
+
+/** The brief's own words and numbers as one lower-case string (the claims and numbers the site may repeat). */
+export function factsText(brief) {
+  const b = brief || {};
+  const c = b.contacts || {};
+  const parts = [b.name, b.description, b.offer, b.audience, ...Object.values(c), ...(Array.isArray(b.hours) ? b.hours.flat() : [])];
+  for (const s of Array.isArray(b.services) ? b.services : []) parts.push(s?.name, s?.text, s?.price);
+  return parts.filter((x) => typeof x === 'string').join(' \n ').toLowerCase();
+}
+
+// ---- the dictionaries (English and Bulgarian): empty phrases and claims the brief must have earned
+
+const L = '(?<![\\p{L}\\p{N}])';
+const R = '(?![\\p{L}\\p{N}])';
+const rx = (src) => new RegExp(`${L}(?:${src})${R}`, 'iu');
+const CLICHES = {
+  en: [/passionate/i, /cutting[- ]edge/i, /world[- ]class/i, /state[- ]of[- ]the[- ]art/i, /tailored (?:solutions?|to your)/i, /unlock (?:your|the)/i, /next level/i, /extra mile/i, /one[- ]stop[- ]shop/i, /second to none/i, /trusted partner/i, /team of (?:dedicated )?professionals/i, /seamless(?:ly)?/i, /game[- ]chang/i, /revolution/i, /elevate your/i, /look no further/i, /\bjourney\b/i, /synerg/i, /best[- ]in[- ]class/i, /in today's (?:fast[- ]paced|digital)/i, /high[- ]quality (?:services|products)/i, /customer satisfaction is our/i, /^welcome to\b/i],
+  bg: [rx('динамичн\\p{L}*'), rx('индивидуален подход'), rx('високо ?качествен\\p{L}*'), rx('професионално отношение'), rx('широка гама'), rx('в най-кратки срокове'), rx('първокласн\\p{L}*'), rx('на достъпни цени'), rx('екип от професионалисти'), rx('ние сме тук за вас'), rx('вашият доверен партньор'), rx('безкомпромисн\\p{L}*'), rx('иновативни решения'), rx('комплексни решения'), rx('изцяло отдадени'), rx('качествени услуги'), /^добре дошли\b/iu],
+};
+const CLAIMS = {
+  en: [/award[- ]winning/i, /\bcertified\b/i, /\blicen[sc]ed\b/i, /\baccredited\b/i, /\bguarantee[ds]?\b/i, /\bfree (?:consultation|quote|estimate|delivery|shipping|trial|first|call|session|parking|wi-?fi|of charge|slots?|appointments?)\b/i, /\bfor free\b/i, /\bcomplimentary\b/i, /24\s?\/\s?7/i, /(?:no\.?\s?1|#1|number one)\b/i, /\bthe best\b/i, /\bbest (?:in|of|price|quality|service)\b/i, /\bleading\b/i, /top[- ]rated/i, /trusted by/i, /years of experience/i, /\bsince (?:19|20)\d{2}\b/i, /(?:over|more than) \d+/i],
+  bg: [rx('награден\\p{L}*'), rx('сертифициран\\p{L}*'), rx('лицензиран\\p{L}*'), rx('акредитиран\\p{L}*'), rx('гаранци\\p{L}*'), rx('безплатн\\p{L}*'), /24\s?\/\s?7/u, /№\s?1/u, rx('най-добр\\p{L}*'), rx('водещ\\p{L}*'), rx('години опит'), rx('дългогодишен опит'), rx('над \\d+'), rx('повече от \\d+'), /от (?:19|20)\d{2} (?:г|година)/iu],
+};
+
+const letters = (s) => String(s).match(/\p{L}/gu) || [];
+/** Share of letters in a script (0..1). */
+const share = (s, re) => {
+  const all = letters(s);
+  return all.length ? all.filter((c) => re.test(c)).length / all.length : 0;
+};
+
+/** What the checks need to know about a brief, worked out once. */
+export function auditContext(brief) {
+  const lang = brief?.lang === 'bg' ? 'bg' : 'en';
+  const facts = factsText(brief);
+  return { lang, facts, known: new Set(numTokens(facts)), name: String(brief?.name || '').toLowerCase() };
+}
+
+/**
+ * The checks for one text: `{ kinds, detail }` with kinds from number, claim, cliche, language, long, placeholder.
+ * (Repeats need the whole site and are found by auditContent.)
+ */
+export function checkText(brief, text, role = 'text', ctx = auditContext(brief)) {
+  const kinds = [];
+  const detail = [];
+  const flag = (k, d) => { kinds.push(k); detail.push(d); };
+  const { lang, facts, known, name } = ctx;
+  const low = String(text).toLowerCase();
+  // invented numbers: 10 and over, percentages, plus signs; the brief's own numbers are fine
+  for (const m of String(text).matchAll(/(\d+(?:[.,]\d+)*)\s*(%|\+)?/g)) {
+    const n = m[1].replace(/[.,\s]/g, '');
+    if ((Number(n) >= 10 || m[2]) && !known.has(n)) { flag('number', `the number "${m[0].trim()}" is not in the brief`); break; }
+  }
+  // claims the brief did not make
+  for (const re of CLAIMS[lang]) {
+    const m = re.exec(text);
+    if (m && !re.test(facts)) { flag('claim', `"${m[0]}" is a claim the brief does not make`); break; }
+  }
+  for (const re of CLICHES[lang]) {
+    const m = re.exec(text);
+    if (m && !re.test(facts)) { flag('cliche', `"${m[0]}" is an empty phrase — say the concrete thing`); break; }
+  }
+  // the wrong language (names and brand words excluded)
+  const plain = low.split(name || '\u0000').join(' ').replace(/[\p{Lu}]{2,}/gu, ' ');
+  if (letters(plain).length >= 14 && (lang === 'bg' ? share(plain, /[a-z]/i) > 0.5 : share(plain, /[\u0400-\u04FF]/) > 0.3)) flag('language', `this should be ${LANG_NAMES[lang]}`);
+  const max = ROLE_MAX[role];
+  if (max && String(text).length > max * 1.15) flag('long', `${String(text).length} characters, aim for under ${max}`);
+  if (/lorem|ipsum|\bTODO\b|\{\{|\[[^\]]*\]|example\.com|your (?:name|business|company)\b/i.test(text)) flag('placeholder', 'left-over placeholder text');
+  return { kinds, detail };
+}
+
+/**
+ * Problems in the content that the brief cannot support or a reader would notice. `[]` when clean. Each issue is
+ * `{ id, path, role, text, kinds: [...], detail: [...] }`; the ids match textsOf(content), so a review can answer
+ * with replacements by id.
+ */
+export function auditContent(brief, content) {
+  const ctx = auditContext(brief);
+  const seen = new Map();
+  const issues = [];
+  for (const tx of textsOf(content)) {
+    const { kinds, detail } = checkText(brief, tx.text, tx.role, ctx);
+    // the same sentence twice on the site
+    const key = tx.text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+    if (key.length >= 14) {
+      if (seen.has(key)) { kinds.push('repeat'); detail.push(`repeats ${seen.get(key)}`); } else seen.set(key, tx.id);
+    }
+    if (kinds.length) issues.push({ id: tx.id, path: tx.path, role: tx.role, text: tx.text, kinds, detail });
+  }
+  return issues;
+}
+
+/**
+ * The mechanical fixes: scrubbed texts, cut at word or sentence ends; reviews and invented stats removed; links
+ * to sections that no longer exist dropped. Pure and idempotent. `keepSamples` (previews of a theme) keeps them.
+ */
+export function finalizeContent(content, brief = {}, { keepSamples = false } = {}) {
+  const out = clone(content);
+  for (const tx of textsOf(out)) {
+    const v = fit(scrub(tx.text), (LIMITS[tx.role] || ROLE_MAX[tx.role] || LIMITS.text) * 1.3);
+    if (v !== tx.text) setPath(out, tx.path, v);
+  }
+  if (!keepSamples) {
+    const known = new Set(numTokens(factsText(brief)));
+    for (const p of Object.values(out.pages || {})) {
+      p.sections = (p.sections || []).filter((s) => {
+        if (s.type === 'quotes') return false; // a review needs a person who wrote it; the brief has none
+        if (s.type === 'stats') return (s.items || []).length > 0 && (s.items || []).every((r) => Array.isArray(r) && numTokens(r[0]).every((n) => known.has(n)));
+        return true;
+      });
+    }
+  }
+  return pruneLinks(out);
+}
+
+/** Navigation and buttons that point at a section which is gone go away (or to the contact section). */
+export function pruneLinks(content) {
+  const ids = new Set();
+  for (const p of Object.values(content.pages || {})) for (const s of p.sections || []) if (s.id) ids.add(s.id);
+  const live = (h) => {
+    const m = typeof h === 'string' ? /^\/#([\w-]+)$/.exec(h) : null;
+    return !m || ids.has(m[1]);
+  };
+  const fallback = ids.has('contact') ? '/#contact' : '/';
+  if (Array.isArray(content.nav)) content.nav = content.nav.filter((n) => live(n[1]));
+  if (Array.isArray(content.headerCta) && !live(content.headerCta[1])) content.headerCta = [content.headerCta[0], fallback];
+  for (const p of Object.values(content.pages || {})) {
+    for (const k of ['cta', 'cta2']) if (p.hero && Array.isArray(p.hero[k]) && !live(p.hero[k][1])) p.hero[k] = [p.hero[k][0], fallback];
+    for (const s of p.sections || []) {
+      if (Array.isArray(s.button) && !live(s.button[1])) s.button = [s.button[0], fallback];
+      if (Array.isArray(s.items)) for (const it of s.items) if (it && it.cta && !live(it.cta[1])) it.cta = [it.cta[0], fallback];
+    }
+  }
+  return content;
+}
+
+/** Replacement texts from the review, applied by id. Returns the new content and how many were applied. */
+export function applyFixes(content, fixes) {
+  const out = clone(content);
+  const byId = new Map(textsOf(out).map((tx) => [tx.id, tx]));
+  let applied = 0;
+  for (const f of (Array.isArray(fixes) ? fixes : []).slice(0, 40)) {
+    const tx = f && typeof f.id === 'string' ? byId.get(f.id) : null;
+    if (!tx || !isStr(f.text)) continue;
+    const v = fit(scrub(f.text), (LIMITS[tx.role] || ROLE_MAX[tx.role] || LIMITS.text) * 1.3);
+    if (!v || v === tx.text) continue;
+    setPath(out, tx.path, v);
+    applied++;
+  }
+  return { content: out, applied };
+}
+
+/**
+ * What the review could not fix: a sentence that carries an invented number or claim is cut out of a paragraph
+ * that has other sentences. Short texts and list items stay (and are reported) — the structure never changes.
+ */
+export function neutralise(content, issues) {
+  const out = clone(content);
+  let cutCount = 0;
+  const left = [];
+  for (const issue of issues) {
+    const bad = issue.kinds.filter((k) => k === 'number' || k === 'claim' || k === 'placeholder');
+    if (!bad.length) { if (issue.kinds.some((k) => k !== 'repeat')) left.push(issue); continue; }
+    const text = getPath(out, issue.path);
+    const sentences = typeof text === 'string' ? text.match(/[^.?;]+[.?;]?\s*/g) || [text] : [];
+    if (sentences.length < 2) { left.push(issue); continue; }
+    const keep = sentences.filter((s) => !/\d|%|\+/.test(s) || !issue.kinds.includes('number')).filter((s) => !(issue.kinds.includes('claim') && CLAIMS.en.concat(CLAIMS.bg).some((re) => re.test(s))));
+    if (!keep.length || keep.length === sentences.length) { left.push(issue); continue; }
+    setPath(out, issue.path, keep.join('').trim());
+    cutCount++;
+  }
+  return { content: out, cut: cutCount, left };
+}
+
+/** The review's request: the checker's findings and the numbered texts; the answer is only the texts to replace. */
+export function reviewPrompt(brief, content, issues = []) {
+  const texts = textsOf(content).slice(0, 220);
+  const lines = texts.map((tx) => `${tx.id} | ${tx.role} | ${tx.text.replace(/\s+/g, ' ').slice(0, 420)}`);
+  const found = issues.slice(0, 60).map((i) => `${i.id}: ${i.detail.join('; ')}`);
+  return `${briefText(brief)}
+
+Review the texts of this website against the brief. They are numbered, one per line as "id | role | text".
+
+Writing guide:
+${guideText(brief)}
+
+Checker findings (fix each one):
+${found.length ? found.join('\n') : '(none)'}
+
+Return replacement texts for only the texts that break a rule:
+- anything the brief does not support: an invented number, percentage, year, award, certificate, guarantee, "free" offer, response time, price, name or review — rewrite the text without it, saying what the service is or how it works in general terms;
+- empty marketing phrases and clichés — say the concrete thing instead;
+- text in the wrong language, unnatural wording, or a text that repeats another;
+- a text well over its role's length: titles and headings short, leads under two sentences.
+Keep the meaning, the role, the language and the voice of the original. Do not change texts that are fine — most sites need only a few replacements, and an empty list is a good answer. Never write HTML, Markdown, links, emails or phone numbers.
+
+Texts:
+${lines.join('\n')}`;
+}
+
+// ---------------------------------------------------------------- merge: the model's words into the recipe
+
+const cut = (v, n) => (typeof v === 'string' && v.trim() ? fit(v.trim().replace(/<[^>]*>/g, ''), n) : null);
+const cutRows = (v, n) => (Array.isArray(v) ? v.filter(Array.isArray).map((r) => r.map((c) => cut(c, n) || '')) : null);
+
+/** Sections the AI may add items to or shrink: the owner's services decide the count. */
+const FLEX = new Set(['cards', 'audience', 'pricing', 'programs', 'faq', 'steps', 'chips', 'quotes', 'stats']);
+
+function mergeSection(base, ai, { lock = false } = {}) {
+  const s = { ...base };
+  const type = s.type;
+  const title = cut(ai.title, LIMITS.title);
+  const intro = cut(ai.intro, LIMITS.text);
+  if (s.title !== undefined && title) s.title = title;
+  if (intro && (s.intro !== undefined || title)) s.intro = intro;
+  if (type === 'cta' || type === 'booking') {
+    if (cut(ai.h, LIMITS.title)) s.h = cut(ai.h, LIMITS.title);
+    if (cut(ai.p, LIMITS.text)) s.p = cut(ai.p, LIMITS.text);
+    if (Array.isArray(s.button) && cut(ai.button, LIMITS.label)) s.button = [cut(ai.button, LIMITS.label), s.button[1]];
+    return s;
+  }
+  if (type === 'pricing' || type === 'programs') {
+    if (Array.isArray(ai.plans) && ai.plans.length) {
+      const old = s.items || [];
+      // when the model writes the site (lock), names and prices are facts — the owner's, or the theme's sample — and it
+      // writes the lines around them; when the owner asks for a change, their words win
+      const count = lock ? Math.min(Math.max(old.length, 1), 6) : 6;
+      s.items = ai.plans.slice(0, count).map((p, i) => {
+        const o = old[i] || old[0] || {};
+        const name = lock ? o.name || cut(p.name, LIMITS.name) : cut(p.name, LIMITS.name) || o.name;
+        const price = lock ? o.price || cut(p.price, LIMITS.price) : cut(p.price, LIMITS.price) || o.price;
+        return { ...o, name: name || '', price: price || '', per: lock ? o.per : cut(p.per, LIMITS.label) || undefined, featured: lock ? o.featured : cut(p.featured, LIMITS.label) || undefined, features: (Array.isArray(p.features) ? p.features : o.features || []).map((f) => cut(f, LIMITS.item) || '').filter(Boolean).slice(0, 8), cta: Array.isArray(o.cta) ? [cut(p.cta, LIMITS.label) || o.cta[0], o.cta[1]] : o.cta };
+      });
+    }
+    return s;
+  }
+  if (type === 'menu') return s; // the owner's dishes and prices, never the model's
+  if (type === 'posts') {
+    if (Array.isArray(ai.posts) && ai.posts.length) {
+      const old = s.items || [];
+      s.items = ai.posts.slice(0, old.length || 6).map((p, i) => ({ ...(old[i] || old[0] || {}), tag: cut(p.tag, LIMITS.label) || '', date: cut(p.date, LIMITS.label) || '', h: cut(p.h, LIMITS.title) || '', p: cut(p.p, LIMITS.text) || '' }));
+    }
+    return s;
+  }
+  if (type === 'article') {
+    if (cut(ai.h, LIMITS.title)) s.h = cut(ai.h, LIMITS.title);
+    if (Array.isArray(ai.body) && ai.body.length) s.body = ai.body.map((b) => cut(b, LIMITS.long) || '').filter(Boolean).slice(0, 40);
+    return s;
+  }
+  if (type === 'contact') {
+    if (cut(ai.send, LIMITS.label)) s.send = cut(ai.send, LIMITS.label);
+    return s;
+  }
+  if (type === 'form') {
+    if (cut(ai.button, LIMITS.label)) s.button = cut(ai.button, LIMITS.label);
+    if (cut(ai.note, LIMITS.short)) s.note = cut(ai.note, LIMITS.short);
+    return s;
+  }
+  // list sections: rows of text, icons and extra columns kept from the recipe
+  const aiRows = cutRows(ai.items, LIMITS.item);
+  if (aiRows && aiRows.length && Array.isArray(s.items)) {
+    const old = s.items;
+    const count = FLEX.has(type) ? Math.min(aiRows.length, 12) : Math.min(old.length, aiRows.length);
+    s.items = aiRows.slice(0, count).map((r, i) => {
+      const o = old[i] ?? old[old.length - 1];
+      if (type === 'cards' || type === 'audience') return [Array.isArray(o) ? o[0] : 'spark', r[0] || '', r[1] || ''];
+      if (type === 'trust') return [Array.isArray(o) ? o[0] : 'check', r[0] || ''];
+      if (type === 'split') return [r[0] || '', r[1] || '', ...r.slice(2, 6)].filter((c, j) => j < 2 || c); // title, text, up to four bullets
+      if (type === 'chips' || type === 'gallery') return r[0] || '';
+      if (Array.isArray(o)) return o.map((cell, j) => r[j] ?? (j < r.length ? '' : cell));
+      return r;
+    });
+  }
+  return s;
+}
+
+/**
+ * The recipe (one language, already carrying the owner's services/contacts/photos) with the AI's words merged in.
+ * Nothing structural comes from the model: hrefs, icons, ids, form fields, hours and rows stay.
+ */
+export function mergeContent(base, ai) {
+  const out = JSON.parse(JSON.stringify(base));
+  if (cut(ai.description, LIMITS.text)) out.description = cut(ai.description, LIMITS.text);
+  if (cut(ai.tagline, LIMITS.short)) out.tagline = cut(ai.tagline, LIMITS.short);
+  if (Array.isArray(ai.nav) && Array.isArray(out.nav) && ai.nav.length === out.nav.length) out.nav = out.nav.map((n, i) => [cut(ai.nav[i], LIMITS.label) || n[0], n[1]]);
+  if (Array.isArray(out.headerCta) && cut(ai.headerCta, LIMITS.label)) out.headerCta = [cut(ai.headerCta, LIMITS.label), out.headerCta[1]];
+  for (const p of Array.isArray(ai.pages) ? ai.pages : []) {
+    const page = out.pages?.[p.id];
+    if (!page) continue;
+    if (page.title !== undefined && cut(p.title, LIMITS.title)) page.title = cut(p.title, LIMITS.title);
+    if (page.description !== undefined && cut(p.description, LIMITS.text)) page.description = cut(p.description, LIMITS.text);
+    if (Array.isArray(page.pagehead) && Array.isArray(p.pagehead) && p.pagehead.length >= 2) page.pagehead = [cut(p.pagehead[0], LIMITS.title) || page.pagehead[0], cut(p.pagehead[1], LIMITS.text) || page.pagehead[1]];
+    if (page.hero && p.hero) {
+      const h = page.hero;
+      const a = p.hero;
+      if (h.eyebrow !== undefined) h.eyebrow = cut(a.eyebrow, LIMITS.eyebrow) || h.eyebrow;
+      h.title = cut(a.title, LIMITS.title) || h.title;
+      h.lead = cut(a.lead, LIMITS.lead) || h.lead;
+      if (Array.isArray(h.cta) && cut(a.cta, LIMITS.label)) h.cta = [cut(a.cta, LIMITS.label), h.cta[1]];
+      if (Array.isArray(h.cta2) && cut(a.cta2, LIMITS.label)) h.cta2 = [cut(a.cta2, LIMITS.label), h.cta2[1]];
+      if (h.card) {
+        if (cut(a.cardTitle, LIMITS.short)) h.card.title = cut(a.cardTitle, LIMITS.short);
+        // the card's rows are the owner's services and prices (or the theme's sample): the model writes only its title and note
+        if (a.cardNote !== undefined) h.card.note = cut(a.cardNote, LIMITS.short) || undefined;
+      }
+      if (Array.isArray(h.chips) && Array.isArray(a.chips) && a.chips.length) h.chips = a.chips.map((c) => cut(c, LIMITS.label) || '').filter(Boolean).slice(0, 12);
+    }
+    const sections = page.sections || [];
+    const next = [];
+    const byIndex = new Map((Array.isArray(p.sections) ? p.sections : []).map((s) => [s.index, s]));
+    sections.forEach((s, index) => {
+      const ai = byIndex.get(index);
+      if (!ai) return next.push(s);
+      if (ai.keep === false && !['contact', 'cta', 'booking', 'form'].includes(s.type)) return;
+      next.push(mergeSection(s, ai, { lock: true }));
+    });
+    page.sections = next;
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------- the pipeline
+
+/** Problems in a content answer; [] when it is usable. */
+export function validateContent(ai) {
+  const errors = [];
+  if (!ai || typeof ai !== 'object') return ['not an object'];
+  if (!Array.isArray(ai.pages) || !ai.pages.length) errors.push('no pages');
+  for (const p of ai.pages || []) {
+    if (!p || typeof p.id !== 'string') errors.push('page without id');
+    if (p?.hero && (typeof p.hero.title !== 'string' || !p.hero.title.trim())) errors.push(`${p.id}: hero without title`);
+    if (!Array.isArray(p?.sections)) errors.push(`${p?.id}: sections missing`);
+  }
+  return errors;
+}
+
+/**
+ * Runs the three steps. `recipe` = the theme's content for the brief's language with the owner's details already
+ * applied (brief.mjs applyBrief); the result is the same shape with the AI's words. `models` may override the
+ * step models (the function picks by plan); `onStep(id, status, info)` reports progress.
+ */
+export async function runPipeline({ brief, recipe, call, models = {}, onStep = () => {} }) {
+  const usage = { input: 0, output: 0, steps: {} };
+  const use = (step, u) => {
+    usage.input += u?.input || 0;
+    usage.output += u?.output || 0;
+    usage.steps[step] = { input: u?.input || 0, output: u?.output || 0, model: u?.model || null };
+  };
+  const model = (step) => models[step] || STEP_MODELS[step];
+
+  onStep('plan', 'running', { model: model('plan') });
+  let plan = null;
+  try {
+    const r = await call({ step: 'plan', model: model('plan'), system: SYSTEM, prompt: planPrompt(brief, recipe), schema: PLAN_SCHEMA, maxTokens: STEP_MAX_TOKENS.plan, effort: 'low' });
+    use('plan', r.usage);
+    plan = r.json && Array.isArray(r.json.sections) ? r.json : null;
+    onStep('plan', 'pass', { model: r.usage?.model || model('plan') });
+  } catch (e) {
+    // the plan is advice; the content step can decide alone
+    onStep('plan', 'warn', { error: e.message });
+  }
+
+  onStep('content', 'running', { model: model('content') });
+  const c = await call({ step: 'content', model: model('content'), system: SYSTEM, prompt: contentPrompt(brief, recipe, plan), schema: CONTENT_SCHEMA, maxTokens: STEP_MAX_TOKENS.content, effort: 'medium' });
+  use('content', c.usage);
+  const problems = validateContent(c.json);
+  if (problems.length) {
+    onStep('content', 'fail', { error: problems.join('; ') });
+    throw Object.assign(new Error(`content step returned an unusable answer: ${problems.join('; ')}`), { code: 'ai_bad_answer' });
+  }
+  onStep('content', 'pass', { model: c.usage?.model || model('content') });
+
+  // the writer's words, merged into the recipe and cleaned mechanically; then the checker reads them
+  let content = finalizeContent(mergeContent(recipe, c.json), brief);
+  const found = auditContent(brief, content);
+
+  onStep('review', 'running', { model: model('review') });
+  let fixed = 0;
+  try {
+    const r = await call({ step: 'review', model: model('review'), system: SYSTEM, prompt: reviewPrompt(brief, content, found), schema: REVIEW_SCHEMA, maxTokens: STEP_MAX_TOKENS.review, effort: 'low' });
+    use('review', r.usage);
+    const applied = applyFixes(content, r.json?.fixes);
+    fixed = applied.applied;
+    content = finalizeContent(applied.content, brief);
+    onStep('review', 'pass', { model: r.usage?.model || model('review'), fixed });
+  } catch (e) {
+    onStep('review', 'warn', { error: e.message }); // the writer's content is still a real site; the checker's cuts below still apply
+  }
+
+  // what is still wrong is cut out sentence by sentence, or reported (the structure never changes)
+  const after = neutralise(content, auditContent(brief, content));
+  content = after.content;
+  const audit = { found: found.length, fixed, cut: after.cut, left: after.left.map((i) => ({ path: i.path.join('.'), kinds: i.kinds })) };
+  return { content, plan, usage, audit, styleSuggestion: plan?.styleSuggestion || null, version: PIPELINE_VERSION };
+}
+
+// ---------------------------------------------------------------- edits with words (S4)
+
+/** What one edit may do. Every field is present (null when unused) so the schema stays flat and cacheable. */
+export const EDIT_OPS = ['set_text', 'set_items', 'drop_section', 'add_section', 'style', 'none'];
+
+export const EDIT_SCHEMA = obj({
+  summary: str,
+  ops: {
+    type: 'array',
+    items: obj({
+      op: { type: 'string', enum: EDIT_OPS },
+      page: nstr,
+      section: { anyOf: [{ type: 'integer' }, nul] },
+      field: nstr,
+      value: nstr,
+      items: { anyOf: [rows, nul] },
+      type: nstr,
+      after: { anyOf: [{ type: 'integer' }, nul] },
+      title: nstr,
+      intro: nstr,
+      style: nstr,
+      palette: nstr,
+      scheme: nstr,
+    }),
+  },
+});
+
+/** Fields an edit may set, per place. Anything else is refused by applyEdits. */
+const PAGE_FIELDS = new Set(['title', 'description']);
+const HERO_FIELDS = new Set(['eyebrow', 'title', 'lead', 'cta', 'cta2', 'cardTitle', 'cardNote']);
+const SECTION_FIELDS = new Set(['title', 'intro', 'h', 'p', 'button', 'send', 'note']);
+const SITE_FIELDS = new Set(['description', 'tagline']);
+const ADDABLE = new Set(['cards', 'steps', 'faq', 'quotes', 'stats', 'prose', 'chips', 'cta', 'pricing', 'gallery', 'trust', 'split']);
+
+export function editPrompt(brief, content, look, say) {
+  return `${briefText(brief)}
+
+The owner wants to change their site. Their words: "${clip(say, 1500)}"
+
+The site today (page ids, section indexes and the current texts):
+${recipeText(content)}
+
+Current look: style ${look.style || 'the theme\'s own'}, palette ${look.palette || 'the theme\'s own'}, colour scheme ${look.scheme || 'auto'}. Styles: calm, bold, elegant. Palettes by style: ${Object.entries(look.palettes || {}).map(([s, p]) => `${s}: ${p.join(', ')}`).join('; ')}. Schemes: auto (light by day, dark at night, following the visitor's system), light, dark.
+
+Translate the request into the smallest list of operations:
+- set_text: page + section index (null for the hero or the page itself) + field + value. Hero fields: eyebrow, title, lead, cta, cta2, cardTitle, cardNote. Section fields: title, intro, h, p, button, send, note. Page fields (section null, no hero field): title, description. Site-wide (page null): description, tagline.
+- set_items: page + section + items (the full list of rows, same column meaning as today; a menu's rows are [dish, description, price]; pricing rows are [name, price, one line]).
+- drop_section: page + section.
+- add_section: page + after (section index, -1 = first) + type (cards, steps, faq, quotes, stats, prose, chips, cta, pricing, gallery, trust, split) + title + intro + items (rows for the type: cards [heading, text]; steps [heading, text]; faq [question, answer]; quotes [quote, who]; stats [number, label]; prose [heading, paragraph]; chips/gallery [caption]; trust [one short promise]; split [heading, paragraph, up to four bullets]; pricing [name, price, one line]; cta [heading, text, button label]).
+- style: style and/or palette and/or scheme (auto, light, dark).
+- none: when the request cannot be done with these operations (say why in summary).
+Write texts in the site's language, in the owner's voice; invent no facts — a number, review, name or claim goes in only when the owner's words above give it. Summary: one sentence in the site's language saying what changed.
+
+Writing guide:
+${guideText(brief)}`;
+}
+
+/** A section built from an add_section op: text from the owner (or the model), structure and links from here. */
+function sectionFrom(op, pages) {
+  const items = Array.isArray(op.items) ? op.items.filter(Array.isArray).map((r) => r.map((c) => cut(c, LIMITS.item) || '')) : [];
+  const title = cut(op.title, LIMITS.title);
+  const intro = cut(op.intro, LIMITS.text);
+  const contactHref = pages.contact ? '/contact.html' : '/#contact';
+  const base = { type: op.type, ...(title ? { title } : {}), ...(intro ? { intro } : {}) };
+  switch (op.type) {
+    case 'cards':
+      return { ...base, items: items.slice(0, 8).map((r) => ['spark', r[0] || '', r[1] || '']) };
+    case 'trust':
+      return { ...base, items: items.slice(0, 6).map((r) => ['check', r[0] || '']) };
+    case 'split':
+      return { ...base, items: items.slice(0, 4).map((r) => [r[0] || '', r[1] || '', ...r.slice(2, 6).filter(Boolean)]) };
+    case 'steps':
+    case 'faq':
+    case 'quotes':
+    case 'stats':
+    case 'prose':
+      return { ...base, items: items.slice(0, 12).map((r) => [r[0] || '', r[1] || '']) };
+    case 'chips':
+    case 'gallery':
+      return { ...base, items: items.slice(0, 12).map((r) => r[0] || '') };
+    case 'pricing':
+      return { ...base, items: items.slice(0, 6).map((r) => ({ name: r[0] || '', price: r[1] || '', features: r[2] ? [r[2]] : [], cta: [title || '→', contactHref] })) };
+    case 'cta':
+      return { type: 'cta', h: items[0]?.[0] || title || '', p: items[0]?.[1] || intro || '', button: [items[0]?.[2] || '→', contactHref] };
+    default:
+      return null;
+  }
+}
+
+/**
+ * Applies the ops to a copy of the content. Only words change; links, icons, ids and forms stay. Returns the
+ * new content, the look change (style/palette) and what was applied or refused, in order.
+ */
+export function applyEdits(content, ops) {
+  const out = JSON.parse(JSON.stringify(content));
+  const applied = [];
+  const refused = [];
+  const look = {};
+  const pageOf = (id) => (id && out.pages ? out.pages[id] : null);
+  for (const raw of Array.isArray(ops) ? ops : []) {
+    const op = raw && typeof raw === 'object' ? raw : {};
+    const page = pageOf(op.page);
+    const sections = page?.sections || [];
+    const idx = Number.isInteger(op.section) ? op.section : null;
+    const sec = idx !== null && idx >= 0 && idx < sections.length ? sections[idx] : null;
+    switch (op.op) {
+      case 'set_text': {
+        const v = cut(op.value, op.field === 'lead' ? LIMITS.lead : ['title', 'h'].includes(op.field) ? LIMITS.title : ['cta', 'cta2', 'button', 'send'].includes(op.field) ? LIMITS.label : LIMITS.text);
+        if (!v) { refused.push({ op, why: 'empty value' }); break; }
+        if (!op.page && SITE_FIELDS.has(op.field)) { out[op.field] = v; applied.push(`${op.field}`); break; }
+        if (!page) { refused.push({ op, why: 'unknown page' }); break; }
+        if (sec) {
+          if (!SECTION_FIELDS.has(op.field)) { refused.push({ op, why: 'unknown section field' }); break; }
+          if (op.field === 'button' && Array.isArray(sec.button)) sec.button = [v, sec.button[1]];
+          else if (op.field === 'button' && typeof sec.button === 'string') sec.button = v;
+          else sec[op.field] = v;
+          applied.push(`${op.page}#${idx}.${op.field}`);
+          break;
+        }
+        if (idx === null && page.hero && HERO_FIELDS.has(op.field)) {
+          const h = page.hero;
+          if (op.field === 'cta' || op.field === 'cta2') { if (Array.isArray(h[op.field])) h[op.field] = [v, h[op.field][1]]; else { refused.push({ op, why: 'no such button' }); break; } }
+          else if (op.field === 'cardTitle') { if (h.card) h.card.title = v; else { refused.push({ op, why: 'no card' }); break; } }
+          else if (op.field === 'cardNote') { if (h.card) h.card.note = v; else { refused.push({ op, why: 'no card' }); break; } }
+          else h[op.field] = v;
+          applied.push(`${op.page}.hero.${op.field}`);
+          break;
+        }
+        if (idx === null && PAGE_FIELDS.has(op.field) && op.page !== 'index') { page[op.field] = v; applied.push(`${op.page}.${op.field}`); break; }
+        refused.push({ op, why: 'unknown field' });
+        break;
+      }
+      case 'set_items': {
+        const rowsIn = cutRows(op.items, LIMITS.item);
+        if (!sec || !rowsIn || !rowsIn.length) { refused.push({ op, why: sec ? 'no items' : 'unknown section' }); break; }
+        if (sec.type === 'menu') {
+          // rows are [dish, description, price] in one group (the first group's name stays)
+          sec.groups = [{ name: sec.groups?.[0]?.name || '', items: rowsIn.slice(0, 40).map((r) => [r[0] || '', r[1] || '', r[2] || '']) }];
+          applied.push(`${op.page}#${idx}.items`);
+          break;
+        }
+        const merged = mergeSection(sec, { items: rowsIn, plans: sec.type === 'pricing' || sec.type === 'programs' ? rowsIn.map((r) => ({ name: r[0], price: r[1], per: null, featured: null, features: r[2] ? [r[2]] : [], cta: null })) : null, groups: null, posts: null, body: null, title: null, intro: null, h: null, p: null, button: null, send: null, note: null });
+        sections[idx] = merged;
+        applied.push(`${op.page}#${idx}.items`);
+        break;
+      }
+      case 'drop_section': {
+        if (!sec) { refused.push({ op, why: 'unknown section' }); break; }
+        if (['contact', 'form'].includes(sec.type)) { refused.push({ op, why: 'the contact section stays' }); break; }
+        sections.splice(idx, 1);
+        applied.push(`${op.page}#${idx} (${sec.type}) removed`);
+        break;
+      }
+      case 'add_section': {
+        if (!page || !ADDABLE.has(op.type)) { refused.push({ op, why: page ? 'unknown section type' : 'unknown page' }); break; }
+        const s = sectionFrom(op, out.pages);
+        if (!s) { refused.push({ op, why: 'could not build' }); break; }
+        const at = Number.isInteger(op.after) ? Math.max(0, Math.min(sections.length, op.after + 1)) : sections.length;
+        sections.splice(at, 0, s);
+        page.sections = sections;
+        applied.push(`${op.page}#${at} (${op.type}) added`);
+        break;
+      }
+      case 'style': {
+        if (op.style) look.style = op.style;
+        if (op.palette) look.palette = op.palette;
+        if (['auto', 'light', 'dark'].includes(op.scheme)) look.scheme = op.scheme;
+        if (op.style || op.palette || look.scheme) applied.push(`look: ${[op.style, op.palette, look.scheme].filter(Boolean).join(' / ')}`);
+        else refused.push({ op, why: 'no style, palette or scheme' });
+        break;
+      }
+      case 'none':
+      default:
+        refused.push({ op, why: op.op === 'none' ? 'not possible with words' : 'unknown op' });
+    }
+  }
+  return { content: out, look, applied, refused };
+}

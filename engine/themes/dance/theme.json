@@ -1,0 +1,365 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "dance",
+  "category": "community",
+  "icon": "figure.dance",
+  "accent": "#c4169f",
+  "mark": "music",
+  "art": "orbit",
+  "schemaOrg": "SportsActivityLocation",
+  "sample": { "name": "Ritmo Studio" },
+  "featured": false,
+  "titleKey": "newsite.template.dance.title",
+  "descriptionKey": "newsite.template.dance.description",
+  "keywords": {
+    "en": ["dance school", "dance studio", "dance classes", "dance lessons", "salsa", "bachata", "ballet", "hip hop", "ballroom", "latin dance", "kids dance", "wedding dance"],
+    "bg": ["танцово студио", "школа по танци", "уроци по танци", "салса", "бачата", "балет", "хип-хоп", "спортни танци", "латино", "детски танци", "сватбен танц", "танцов клуб"]
+  },
+  "style": "bold",
+  "tokens": {
+    "dark": false,
+    "bg": "#fcf7ff",
+    "bg2": "#f3e6ff",
+    "surface": "#ffffff",
+    "text": "#1c0b2e",
+    "muted": "#5a4871",
+    "line": "rgba(28,11,46,.12)",
+    "accent": "#c4169f",
+    "accent2": "#6d28d9",
+    "font": "sans",
+    "head": "grotesk",
+    "radius": 12,
+    "tilt": -2
+  },
+  "questions": ["services", "contacts", "photos"],
+  "hints": {
+    "en": {
+      "offer": "We teach salsa, ballet and hip-hop to adults and children, from complete beginners to dancers who want to perform.",
+      "audience": "Adults and children who want to dance, with or without experience",
+      "services": [
+        ["Monthly group", "€45", "One class a week in your style"],
+        ["Private lesson", "€30", "One-to-one with a teacher"],
+        ["Trial class", "€10", "Try a style before you commit"]
+      ]
+    },
+    "bg": {
+      "offer": "Преподаваме салса, балет и хип-хоп на възрастни и деца — от съвсем начинаещи до танцьори, които искат да се изявяват.",
+      "audience": "Възрастни и деца, които искат да танцуват — с опит или без",
+      "services": [
+        ["Месечна група", "45 €", "Един урок седмично във ваш стил"],
+        ["Индивидуален урок", "30 €", "Работа един на един с преподавател"],
+        ["Пробен урок", "10 €", "Опитайте стил, преди да решите"]
+      ]
+    }
+  },
+  "lang": {
+    "en": {
+      "tagline": "dance school and studio",
+      "description": "Classes in salsa, ballet, hip-hop and ballroom, plus kids’ groups, for every level. Try a class and find your style.",
+      "nav": [
+        ["Styles", "/#styles"],
+        ["First steps", "/#start"],
+        ["Prices", "/#plans"],
+        ["FAQ", "/#faq"]
+      ],
+      "headerCta": ["Try a class", "/#contact"],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Classes for every level",
+            "eyebrowIcon": "music",
+            "title": "Come as you are. *Leave dancing.*",
+            "lead": "Salsa, ballet, hip-hop, ballroom and groups for kids — for complete beginners and for dancers who want more. Try a class and find your style.",
+            "cta": ["Ask about a trial class", "/#contact"],
+            "cta2": ["See the styles", "/#styles"],
+            "card": {
+              "icon": "music",
+              "title": "Find your level",
+              "rows": [
+                ["Beginner", "Never danced before"],
+                ["Improver", "Know the basic steps"],
+                ["Advanced", "Ready for choreography"]
+              ],
+              "note": "Not sure? Come along and we place you in the right group."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                ["users", "Come alone or with a friend"],
+                ["music", "Styles from salsa to hip-hop"],
+                ["star", "Groups for kids and adults"],
+                ["target", "Beginner to advanced levels"]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "styles",
+              "title": "Styles",
+              "intro": "Pick the one that sounds like you, or try two before you decide.",
+              "items": [
+                ["heart", "Salsa and bachata", "Partner dancing with warm rhythm: turns, timing and plenty of laughter."],
+                ["star", "Ballet", "Posture, balance and grace, from first positions to light jumps."],
+                ["bolt", "Hip-hop", "Groove, isolations and choreography to music you actually listen to."],
+                ["ring", "Ballroom", "Waltz, tango and cha-cha: elegant, structured and ideal for first dances."]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "start",
+              "alt": true,
+              "title": "Your first steps",
+              "intro": "Three easy ways in. Pick the one that feels right.",
+              "items": [
+                ["Trial class", "Try a class in the style that tempts you. Wear comfortable clothes, bring water, and the teacher takes care of the rest.", "Ask us about a trial class", "The teacher finds the right group", "No experience needed"],
+                ["Group classes", "A weekly class with the same people builds friendships and confidence. Groups are arranged by style and level.", "Beginner, improver and advanced groups", "Kids’ groups by age", "Music, steps and a little choreography"],
+                ["Private lessons", "One-to-one time with a teacher for a first dance, a performance or the step you cannot get right.", "A plan built around your date or goal", "Times we agree together", "Single dancers and couples welcome"]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "plans",
+              "title": "Prices",
+              "intro": "Guide prices. We confirm the details when you join a group.",
+              "items": [
+                {
+                  "name": "Trial class",
+                  "price": "€10",
+                  "per": "/ class",
+                  "features": ["One class in the style you choose", "Help finding the right level", "A chance to meet the teacher and the group"],
+                  "cta": ["Ask for a trial", "/#contact"]
+                },
+                {
+                  "name": "Monthly group",
+                  "price": "€45",
+                  "per": "/ month",
+                  "featured": "Recommended",
+                  "features": ["One class a week in your style", "A group chosen for your level", "The same group every week"],
+                  "cta": ["Ask about a group", "/#contact"]
+                },
+                {
+                  "name": "Private lesson",
+                  "price": "€30",
+                  "per": "/ lesson",
+                  "features": ["One-to-one with a teacher", "Time and goal agreed with you", "For couples, too"],
+                  "cta": ["Ask about lessons", "/#contact"]
+                }
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "events",
+              "alt": true,
+              "title": "Beyond the weekly class",
+              "intro": "A studio is more than classes. Ask us what is coming up.",
+              "items": [
+                ["music", "Social nights", "Open evenings to practise with music and friends, without pressure."],
+                ["star", "Showcases", "A chance to perform what you have learned, for friends and family."],
+                ["calendar", "Workshops", "One-off sessions on a single style or technique, open to different levels."],
+                ["gift", "Parties and team events", "Dance lessons for a birthday, a hen party or a company evening."]
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Questions before the first class",
+              "items": [
+                ["Do I need a partner?", "No. Come alone or with a friend. In partner styles we usually rotate partners, so everyone dances."],
+                ["I have never danced. Is this for me?", "Yes. Beginner groups start from the very first step, and the teacher explains everything slowly. Ask us which group suits you."],
+                ["What should I wear?", "Comfortable clothes and shoes you can move in. For ballet and ballroom we tell you about shoes after your first class."],
+                ["Can my child join?", "Kids’ groups are arranged by age. Tell us how old your child is and which style they like, and we suggest a group."],
+                ["Do you teach first dances and run events?", "Ask us about private lessons for a first dance, and about groups for birthdays and team evenings. We plan the details with you."]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Your first class is one message away",
+              "p": "Tell us which style you are curious about and we suggest a class to try.",
+              "button": ["Ask about a trial class", "/#contact"]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Book a trial class",
+              "intro": "Choose a style, tell us a little about your experience, and we agree on a class to try.",
+              "formName": "trial",
+              "rows": [
+                ["mail", "Email", "hello@example.com", "mailto:hello@example.com"],
+                ["phone", "Phone", "+359 888 000 000", "tel:+359888000000"],
+                ["pin", "Address", "1 Vitosha St, Sofia"]
+              ],
+              "fields": [
+                { "id": "style", "label": "Style", "options": ["Salsa and bachata", "Ballet", "Hip-hop", "Ballroom", "Kids’ group", "Private lesson"] },
+                { "id": "level", "label": "Dance experience", "options": ["None", "A little", "Quite a lot"] }
+              ],
+              "messageLabel": "Anything we should know (optional)",
+              "send": "Ask for a trial class",
+              "hoursTitle": "Studio hours",
+              "hours": [
+                ["Monday – Friday", "16:00 – 22:00"],
+                ["Saturday", "10:00 – 16:00"],
+                ["Sunday", "closed"]
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "bg": {
+      "tagline": "танцово студио и школа",
+      "description": "Уроци по салса, балет, хип-хоп и спортни танци, както и детски групи — за всяко ниво. Пробвайте урок и открийте своя стил.",
+      "nav": [
+        ["Стилове", "/#styles"],
+        ["Първи стъпки", "/#start"],
+        ["Цени", "/#plans"],
+        ["Въпроси", "/#faq"]
+      ],
+      "headerCta": ["Пробен урок", "/#contact"],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Групи за всяко ниво",
+            "eyebrowIcon": "music",
+            "title": "Елате както сте. *Тръгнете си танцувайки.*",
+            "lead": "Салса, балет, хип-хоп, спортни танци и групи за деца — за съвсем начинаещи и за танцьори, които искат още. Пробвайте урок и открийте своя стил.",
+            "cta": ["Попитайте за пробен урок", "/#contact"],
+            "cta2": ["Вижте стиловете", "/#styles"],
+            "card": {
+              "icon": "music",
+              "title": "Намерете нивото си",
+              "rows": [
+                ["Начинаещи", "Не сте танцували досега"],
+                ["Средно ниво", "Знаете основните стъпки"],
+                ["Напреднали", "Готови за хореография"]
+              ],
+              "note": "Не сте сигурни? Елате и ще ви насочим към подходящата група."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                ["users", "Елате сами или с приятел"],
+                ["music", "Стилове от салса до хип-хоп"],
+                ["star", "Групи за деца и възрастни"],
+                ["target", "Нива от начинаещи до напреднали"]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "styles",
+              "title": "Стилове",
+              "intro": "Изберете този, който ви звучи най-близко, или пробвайте два, преди да решите.",
+              "items": [
+                ["heart", "Салса и бачата", "Танци по двойки с топъл ритъм: завъртания, такт и много смях."],
+                ["star", "Балет", "Стойка, равновесие и грация — от първите позиции до леки скокове."],
+                ["bolt", "Хип-хоп", "Грув, изолации и хореография на музика, която наистина слушате."],
+                ["ring", "Спортни танци", "Валс, танго и ча-ча: елегантни, подредени и подходящи за първи танц."]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "start",
+              "alt": true,
+              "title": "Първи стъпки",
+              "intro": "Три лесни начина да започнете. Изберете този, който ви допада.",
+              "items": [
+                ["Пробен урок", "Опитайте урок в стила, който ви привлича. Облечете удобни дрехи, вземете вода — за останалото се грижи преподавателят.", "Попитайте за пробен урок", "Преподавателят намира подходящата група", "Не е нужен опит"],
+                ["Групови уроци", "Седмичен урок с едни и същи хора ражда приятелства и увереност. Групите са по стил и ниво.", "Групи за начинаещи, средно ниво и напреднали", "Детски групи по възраст", "Музика, стъпки и малко хореография"],
+                ["Индивидуални уроци", "Време само за вас и преподавателя — за първи танц, изпълнение или за стъпката, която не ви се получава.", "План около вашата дата или цел", "Часове, които уточняваме заедно", "Добре дошли са и сами, и двойки"]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "plans",
+              "title": "Цени",
+              "intro": "Ориентировъчни цени. Подробностите уточняваме, когато се включите в група.",
+              "items": [
+                {
+                  "name": "Пробен урок",
+                  "price": "10 €",
+                  "per": "/ урок",
+                  "features": ["Един урок в избрания от вас стил", "Помощ да намерите нивото си", "Възможност да се запознаете с преподавателя и групата"],
+                  "cta": ["Поискайте пробен урок", "/#contact"]
+                },
+                {
+                  "name": "Месечна група",
+                  "price": "45 €",
+                  "per": "/ месец",
+                  "featured": "Препоръчваме",
+                  "features": ["Един урок седмично във ваш стил", "Група по вашето ниво", "Една и съща група всяка седмица"],
+                  "cta": ["Попитайте за група", "/#contact"]
+                },
+                {
+                  "name": "Индивидуален урок",
+                  "price": "30 €",
+                  "per": "/ урок",
+                  "features": ["Работа един на един с преподавател", "Време и цел, уточнени с вас", "Подходящо и за двойки"],
+                  "cta": ["Попитайте за уроци", "/#contact"]
+                }
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "events",
+              "alt": true,
+              "title": "Освен седмичния урок",
+              "intro": "Студиото не е само уроци. Попитайте ни какво предстои.",
+              "items": [
+                ["music", "Социални вечери", "Свободни вечери за упражнение с музика и приятели, без напрежение."],
+                ["star", "Изяви", "Възможност да покажете наученото пред приятели и семейство."],
+                ["calendar", "Уъркшопове", "Еднократни срещи по един стил или техника, отворени за различни нива."],
+                ["gift", "Партита и фирмени събития", "Уроци по танци за рожден ден, моминско парти или фирмена вечер."]
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Въпроси преди първия урок",
+              "items": [
+                ["Нужен ли ми е партньор?", "Не. Елате сами или с приятел. При танците по двойки обикновено сменяме партньорите, така че всеки да танцува."],
+                ["Никога не съм танцувал(а). Подходящо ли е за мен?", "Да. Групите за начинаещи започват от първата стъпка, а преподавателят обяснява бавно. Попитайте коя група ви подхожда."],
+                ["Какво да облека?", "Удобни дрехи и обувки, с които се движите свободно. За балет и спортни танци ще ви кажем за обувките след първия урок."],
+                ["Може ли детето ми да се включи?", "Детските групи са по възраст. Кажете ни на колко години е детето и кой стил му харесва и ще предложим група."],
+                ["Учите ли първи танц и организирате ли събития?", "Попитайте за индивидуални уроци за първи танц и за групи за рождени дни и фирмени вечери. Подробностите уточняваме заедно."]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Първият урок е на едно съобщение разстояние",
+              "p": "Кажете ни кой стил ви интригува и ще предложим урок за пробване.",
+              "button": ["Попитайте за пробен урок", "/#contact"]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Запишете пробен урок",
+              "intro": "Изберете стил, разкажете ни накратко какъв е опитът ви и ще уговорим урок за пробване.",
+              "formName": "trial",
+              "rows": [
+                ["mail", "Имейл", "hello@example.com", "mailto:hello@example.com"],
+                ["phone", "Телефон", "+359 888 000 000", "tel:+359888000000"],
+                ["pin", "Адрес", "ул. Витоша 1, София"]
+              ],
+              "fields": [
+                { "id": "style", "label": "Стил", "options": ["Салса и бачата", "Балет", "Хип-хоп", "Спортни танци", "Детска група", "Индивидуален урок"] },
+                { "id": "level", "label": "Опит в танците", "options": ["Никакъв", "Малко", "Доста"] }
+              ],
+              "messageLabel": "Нещо, което да знаем (по избор)",
+              "send": "Поискайте пробен урок",
+              "hoursTitle": "Работно време на студиото",
+              "hours": [
+                ["Понеделник – петък", "16:00 – 22:00"],
+                ["Събота", "10:00 – 16:00"],
+                ["Неделя", "почивен ден"]
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

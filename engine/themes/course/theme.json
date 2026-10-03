@@ -1,0 +1,502 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "course",
+  "category": "community",
+  "icon": "graduationcap",
+  "accent": "#16a34a",
+  "mark": "book",
+  "art": "orbit",
+  "schemaOrg": "EducationalOrganization",
+  "sample": {
+    "name": "Learn to Code"
+  },
+  "featured": true,
+  "titleKey": "newsite.template.course.title",
+  "descriptionKey": "newsite.template.course.description",
+  "keywords": {
+    "en": [
+      "course",
+      "online course",
+      "training",
+      "workshop",
+      "school",
+      "lessons",
+      "teacher",
+      "tutor",
+      "academy",
+      "curriculum",
+      "students"
+    ],
+    "bg": [
+      "курс",
+      "онлайн курс",
+      "обучение",
+      "уъркшоп",
+      "училище",
+      "уроци",
+      "учител",
+      "академия",
+      "ученици",
+      "студенти"
+    ]
+  },
+  "style": "calm",
+  "tokens": {
+    "dark": false,
+    "bg": "#f7f8fc",
+    "bg2": "#eaf4f0",
+    "surface": "#ffffff",
+    "text": "#11212d",
+    "muted": "#4c5e6b",
+    "line": "rgba(15,23,42,.10)",
+    "accent": "#16a34a",
+    "accent2": "#0ea5e9",
+    "font": "rounded",
+    "radius": 18
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "hints": {
+    "en": {
+      "offer": "We run a practical online course for people who want to learn programming from scratch: short video lessons, weekly exercises and live sessions where we look at your work together.",
+      "audience": "Beginners and career changers who learn best by doing",
+      "services": [
+        [
+          "Self-paced course",
+          "€149",
+          "All video lessons and exercises, learn whenever you like"
+        ],
+        [
+          "Course with a mentor",
+          "€349",
+          "Adds live sessions and a review of every project"
+        ],
+        [
+          "One-to-one session",
+          "€40",
+          "Help with your own project or an exercise you are stuck on"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Водим практичен онлайн курс за хора, които искат да научат програмиране от нулата: кратки видео уроци, седмични упражнения и живи срещи, на които разглеждаме работите ви заедно.",
+      "audience": "Начинаещи и хора, които сменят професията си и обичат да учат на практика",
+      "services": [
+        [
+          "Курс в свободно време",
+          "149 €",
+          "Всички видео уроци и упражнения, учите когато ви е удобно"
+        ],
+        [
+          "Курс с ментор",
+          "349 €",
+          "Добавя живи срещи и преглед на всеки проект"
+        ],
+        [
+          "Индивидуална сесия",
+          "40 €",
+          "Помощ със собствен проект или с упражнение, което не ви се получава"
+        ]
+      ]
+    }
+  },
+  "lang": {
+    "bg": {
+      "tagline": "онлайн курс и школа",
+      "description": "Практичен онлайн курс с ментор, упражнения и финален проект.",
+      "nav": [
+        [
+          "Програма",
+          "/#program"
+        ],
+        [
+          "Преподавател",
+          "/#teacher"
+        ],
+        [
+          "Цени",
+          "/#plans"
+        ],
+        [
+          "Въпроси",
+          "/#faq"
+        ]
+      ],
+      "headerCta": [
+        "Запиши се",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Учете онлайн, с ментор до вас",
+            "eyebrowIcon": "calendar",
+            "title": "Научете нещо ново *стъпка по стъпка*",
+            "lead": "Практичен онлайн курс с живи срещи, ментор и истински проект за портфолиото — в темпо, което ви е удобно.",
+            "cta": [
+              "Запиши се",
+              "/#contact"
+            ],
+            "cta2": [
+              "Програмата",
+              "/#program"
+            ],
+            "card": {
+              "icon": "book",
+              "title": "Какво получавате",
+              "rows": [
+                [
+                  "Видео уроци",
+                  "32"
+                ],
+                [
+                  "Живи срещи",
+                  "8"
+                ],
+                [
+                  "Сертификат",
+                  "✓"
+                ]
+              ],
+              "note": "Достъп до материалите завинаги."
+            }
+          },
+          "sections": [
+            {
+              "type": "timeline",
+              "id": "program",
+              "title": "Програма",
+              "items": [
+                [
+                  "Първо",
+                  "Основи",
+                  "Понятията и инструментите, без които не може."
+                ],
+                [
+                  "След това",
+                  "Практика",
+                  "Всяка седмица — малък проект с обратна връзка."
+                ],
+                [
+                  "Накрая",
+                  "Финален проект",
+                  "Ваш собствен проект, който показвате в портфолио."
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "teacher",
+              "alt": true,
+              "title": "Преподавател",
+              "items": [
+                [
+                  "users",
+                  "Насока на всяка стъпка",
+                  "Преподавателят обяснява всяка стъпка, отговаря на въпроси и показва как се прави в реална работа."
+                ],
+                [
+                  "star",
+                  "Честна обратна връзка",
+                  "Всеки проект получава коментар какво работи и какво да се подобри."
+                ],
+                [
+                  "heart",
+                  "Малки групи",
+                  "Група, достатъчно малка, за да получите отговор на всеки въпрос."
+                ]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "plans",
+              "title": "Цени",
+              "items": [
+                {
+                  "name": "Самостоятелно",
+                  "price": "149 €",
+                  "features": [
+                    "Всички видео уроци",
+                    "Упражнения",
+                    "Финален проект, който да покажете"
+                  ],
+                  "cta": [
+                    "Запиши се",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "С ментор",
+                  "price": "349 €",
+                  "featured": "Препоръчан",
+                  "features": [
+                    "Всичко от „Самостоятелно“",
+                    "Живи срещи с ментора",
+                    "Преглед на всеки проект"
+                  ],
+                  "cta": [
+                    "Запиши се",
+                    "/#contact"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "alt": true,
+              "title": "Въпроси",
+              "items": [
+                [
+                  "Нужен ли е опит?",
+                  "Не е задължителен — започваме от основите и надграждаме."
+                ],
+                [
+                  "Колко време седмично?",
+                  "Колкото са нужни за един урок и упражненията към него. Времето избирате вие; само живите срещи са в определени дни."
+                ],
+                [
+                  "Ако не ми хареса?",
+                  "Кажете ни веднага щом усетите, че нещо не е наред. Ще изслушаме, ще потърсим решение и ще уговорим следващата стъпка."
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "title": "Запиши се",
+              "intro": "Оставете имейл и няколко думи — ще ви пишем със следващите стъпки.",
+              "formName": "enroll",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "plan",
+                  "label": "План",
+                  "options": [
+                    "Самостоятелно",
+                    "С ментор"
+                  ]
+                }
+              ],
+              "messageLabel": "Въпрос (по избор)",
+              "send": "Запиши ме"
+            }
+          ]
+        }
+      }
+    },
+    "en": {
+      "tagline": "online course and school",
+      "description": "A practical online course with a mentor, exercises and a final project.",
+      "nav": [
+        [
+          "Program",
+          "/#program"
+        ],
+        [
+          "Teacher",
+          "/#teacher"
+        ],
+        [
+          "Pricing",
+          "/#plans"
+        ],
+        [
+          "FAQ",
+          "/#faq"
+        ]
+      ],
+      "headerCta": [
+        "Enrol",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Learn online, with a mentor beside you",
+            "eyebrowIcon": "calendar",
+            "title": "Learn something new *step by step*",
+            "lead": "A practical online course with live sessions, a mentor and a real project for your portfolio — at a pace that suits you.",
+            "cta": [
+              "Enrol",
+              "/#contact"
+            ],
+            "cta2": [
+              "The program",
+              "/#program"
+            ],
+            "card": {
+              "icon": "book",
+              "title": "What you get",
+              "rows": [
+                [
+                  "Video lessons",
+                  "32"
+                ],
+                [
+                  "Live sessions",
+                  "8"
+                ],
+                [
+                  "Certificate",
+                  "✓"
+                ]
+              ],
+              "note": "Lifetime access to the materials."
+            }
+          },
+          "sections": [
+            {
+              "type": "timeline",
+              "id": "program",
+              "title": "Program",
+              "items": [
+                [
+                  "First",
+                  "Foundations",
+                  "The concepts and tools you cannot do without."
+                ],
+                [
+                  "Then",
+                  "Practice",
+                  "A small project with feedback every week."
+                ],
+                [
+                  "Finally",
+                  "Final project",
+                  "Your own project to show in your portfolio."
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "teacher",
+              "alt": true,
+              "title": "Your teacher",
+              "items": [
+                [
+                  "users",
+                  "Guidance at every step",
+                  "Your teacher explains each step, answers questions and shows how it is done in real work."
+                ],
+                [
+                  "star",
+                  "Honest feedback",
+                  "Every project gets comments on what works and what to improve."
+                ],
+                [
+                  "heart",
+                  "Small groups",
+                  "A group small enough that your questions get answered."
+                ]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "plans",
+              "title": "Pricing",
+              "items": [
+                {
+                  "name": "Self-paced",
+                  "price": "€149",
+                  "features": [
+                    "All video lessons",
+                    "Exercises",
+                    "A final project to show"
+                  ],
+                  "cta": [
+                    "Enrol",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "With a mentor",
+                  "price": "€349",
+                  "featured": "Recommended",
+                  "features": [
+                    "Everything in Self-paced",
+                    "Live sessions with the mentor",
+                    "Review of every project"
+                  ],
+                  "cta": [
+                    "Enrol",
+                    "/#contact"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "alt": true,
+              "title": "FAQ",
+              "items": [
+                [
+                  "Do I need experience?",
+                  "Not required — we start with the basics and build up from there."
+                ],
+                [
+                  "How much time per week?",
+                  "Enough for a lesson and its exercises. You pick the time that suits you; only the live sessions have fixed dates."
+                ],
+                [
+                  "What if I do not like it?",
+                  "Tell us as soon as it does not feel right. We listen, look for a fix and agree the next step together."
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "title": "Enrol",
+              "intro": "Leave your email and a few words, and we will get back to you with the next steps.",
+              "formName": "enroll",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "plan",
+                  "label": "Plan",
+                  "options": [
+                    "Self-paced",
+                    "With a mentor"
+                  ]
+                }
+              ],
+              "messageLabel": "Question (optional)",
+              "send": "Enrol me"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

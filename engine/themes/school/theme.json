@@ -1,0 +1,365 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "school",
+  "category": "community",
+  "icon": "character.book.closed",
+  "accent": "#3f55d4",
+  "mark": "book",
+  "art": "blobs",
+  "schemaOrg": "EducationalOrganization",
+  "sample": { "name": "Lingua Studio" },
+  "featured": false,
+  "titleKey": "newsite.template.school.title",
+  "descriptionKey": "newsite.template.school.description",
+  "keywords": {
+    "en": ["language school", "language courses", "tutoring", "tutor", "private lessons", "english lessons", "exam preparation", "training centre", "learn a language", "evening classes", "children's courses"],
+    "bg": ["езикова школа", "езикови курсове", "школа", "уроци", "частни уроци", "курс по английски", "уроци по немски", "обучение", "учебен център", "преподавател", "подготовка за изпит", "езиков център"]
+  },
+  "style": "calm",
+  "tokens": {
+    "dark": false,
+    "bg": "#f6f7fd",
+    "bg2": "#eaedfb",
+    "surface": "#ffffff",
+    "text": "#171a3b",
+    "muted": "#4f5577",
+    "line": "rgba(23,26,59,.10)",
+    "accent": "#3f55d4",
+    "accent2": "#d4561a",
+    "font": "sans",
+    "head": "serif",
+    "radius": 16,
+    "tilt": 1
+  },
+  "questions": ["services", "contacts", "photos"],
+  "hints": {
+    "en": {
+      "offer": "We teach English and German to children and adults, in groups and one-to-one, with a lot of speaking in every lesson.",
+      "audience": "Children, teenagers and adults who want to speak with confidence",
+      "services": [
+        ["Group course", "€45", "Weekly lessons by level and age"],
+        ["One-to-one lesson", "€20", "Your goal, your pace"],
+        ["Exam preparation", "€180", "Focused practice before the exam"]
+      ]
+    },
+    "bg": {
+      "offer": "Преподаваме английски и немски на деца и възрастни — в групи и индивидуално, с много говорене във всеки урок.",
+      "audience": "Деца, тийнейджъри и възрастни, които искат да говорят уверено",
+      "services": [
+        ["Групов курс", "45 €", "Седмични уроци по ниво и възраст"],
+        ["Индивидуален урок", "20 €", "Вашата цел, вашият темп"],
+        ["Подготовка за изпит", "180 €", "Целенасочена практика преди изпита"]
+      ]
+    }
+  },
+  "lang": {
+    "en": {
+      "tagline": "language school and tutoring",
+      "description": "Language courses for children, teenagers and adults, in groups or one-to-one. We start with a short conversation to find your level.",
+      "nav": [
+        ["Courses", "/#courses"],
+        ["Method", "/#method"],
+        ["Prices", "/#prices"],
+        ["FAQ", "/#faq"]
+      ],
+      "headerCta": ["Book a chat", "/#contact"],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Courses for every age and level",
+            "eyebrowIcon": "book",
+            "title": "Learn a language by *speaking it*",
+            "lead": "Group and one-to-one lessons for children, teenagers and adults. We start with a short conversation to find your level, so you begin where learning really works.",
+            "cta": ["Book a placement chat", "/#contact"],
+            "cta2": ["See the courses", "/#courses"],
+            "card": {
+              "icon": "book",
+              "title": "Find your level",
+              "rows": [
+                ["Beginner", "A1–A2"],
+                ["Intermediate", "B1–B2"],
+                ["Advanced", "C1–C2"]
+              ],
+              "note": "Not sure? A short conversation shows where to start."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                ["target", "A placement chat first"],
+                ["users", "Groups by level and age"],
+                ["mic", "Speaking in every lesson"],
+                ["chart", "Regular progress reviews"]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "courses",
+              "title": "Courses",
+              "intro": "Choose by age and level. If you are unsure, we help you decide.",
+              "items": [
+                ["heart", "Children", "Games, songs and stories — the first words without pressure."],
+                ["rocket", "Teenagers", "Confident speaking, plus support for school tests and exams."],
+                ["users", "Adults", "Groups by level, from first words to easy talk. Business language and conversation clubs too."],
+                ["target", "Exam preparation", "Focused practice for the language exam you are aiming for."]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "formats",
+              "alt": true,
+              "title": "Group or one-to-one",
+              "intro": "Two ways to learn, and you can combine them.",
+              "items": [
+                ["Group lessons", "You work with people of a similar level and age, talk to each other and keep each other going.", "Groups arranged by level and age", "Everyone speaks in every lesson", "Short tasks to keep the week moving"],
+                ["One-to-one lessons", "Your own pace and your own goal: an interview, an exam, a move abroad or one stubborn gap.", "A plan built around your goal", "Times we agree together", "Ask us about online lessons"]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "method",
+              "title": "How a course works",
+              "intro": "Four steps, and each one has a purpose.",
+              "items": [
+                ["Placement conversation", "A short talk with a teacher in which we hear how far you have come and what you want to reach."],
+                ["Choosing the format", "We suggest a format and a group that fit your level, your age and your spare time."],
+                ["Practice", "In every lesson you speak, listen, read and write, with small tasks between lessons."],
+                ["Progress review", "At the end of a course we look together at what has changed and choose the next step."]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "prices",
+              "alt": true,
+              "title": "Course prices",
+              "intro": "Guide prices. We confirm the exact amount after the placement conversation.",
+              "items": [
+                {
+                  "name": "One-to-one",
+                  "price": "€20",
+                  "per": "/ lesson",
+                  "features": ["Your own goal and your own pace", "Lesson times agreed with you", "Notes on what to practise next"],
+                  "cta": ["Ask about lessons", "/#contact"]
+                },
+                {
+                  "name": "Group course",
+                  "price": "€45",
+                  "per": "/ month",
+                  "featured": "Recommended",
+                  "features": ["A group of your level and age", "A teacher and a clear course plan", "A progress review at the end"],
+                  "cta": ["Ask about a group", "/#contact"]
+                },
+                {
+                  "name": "Exam preparation",
+                  "price": "€180",
+                  "per": "/ course",
+                  "features": ["Practice in the exam format", "Mock tasks with feedback", "A plan for the weeks before the exam"],
+                  "cta": ["Ask about a course", "/#contact"]
+                }
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Questions learners ask",
+              "items": [
+                ["How will I know my level?", "You do not need to. A short conversation with a teacher shows where to start, and you can ask all your questions there."],
+                ["How big are the groups?", "Groups are kept small enough for everyone to speak in every lesson. Ask us about the current size of the group for your level."],
+                ["Can I try a lesson first?", "Ask about a trial lesson when you book the placement conversation, and we will tell you what is possible for your level."],
+                ["From what age can children join?", "Children’s groups are arranged by age. Tell us how old your child is and we suggest the group that fits."],
+                ["Is there homework?", "Short tasks between lessons keep the language fresh. We keep them realistic, so they fit into a busy week."],
+                ["Can I switch from a group to one-to-one?", "Yes, we can talk it through. Tell us what you need and we look at the options together."]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Ready to find your level?",
+              "p": "Book a short placement conversation and we suggest a course that fits.",
+              "button": ["Book a conversation", "/#contact"]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Book a placement chat",
+              "intro": "Tell us the language, who the course is for and what you want to reach. We agree a time for a short conversation.",
+              "formName": "enquiry",
+              "rows": [
+                ["mail", "Email", "hello@example.com", "mailto:hello@example.com"],
+                ["phone", "Phone", "+359 888 000 000", "tel:+359888000000"],
+                ["pin", "Address", "1 Vitosha St, Sofia"]
+              ],
+              "fields": [
+                { "id": "language", "label": "Language", "options": ["English", "German", "French", "Spanish", "Italian", "Other"] },
+                { "id": "who", "label": "The course is for", "options": ["A child", "A teenager", "An adult"] }
+              ],
+              "messageLabel": "Your goal or a question (optional)",
+              "send": "Send enquiry",
+              "hoursTitle": "Opening hours",
+              "hours": [
+                ["Monday – Friday", "9:00 – 20:00"],
+                ["Saturday", "9:00 – 13:00"],
+                ["Sunday", "closed"]
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "bg": {
+      "tagline": "езикова школа и уроци",
+      "description": "Езикови курсове за деца, тийнейджъри и възрастни — в група или индивидуално. Започваме с кратък разговор, за да определим нивото ви.",
+      "nav": [
+        ["Курсове", "/#courses"],
+        ["Метод", "/#method"],
+        ["Цени", "/#prices"],
+        ["Въпроси", "/#faq"]
+      ],
+      "headerCta": ["Запазете разговор", "/#contact"],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Курсове за всяка възраст и ниво",
+            "eyebrowIcon": "book",
+            "title": "Научете езика, като го *говорите*",
+            "lead": "Групови и индивидуални уроци за деца, тийнейджъри и възрастни. Започваме с кратък разговор за нивото ви, за да тръгнете оттам, където ученето наистина работи.",
+            "cta": ["Запазете разговор", "/#contact"],
+            "cta2": ["Вижте курсовете", "/#courses"],
+            "card": {
+              "icon": "book",
+              "title": "Намерете нивото си",
+              "rows": [
+                ["Начинаещи", "A1–A2"],
+                ["Средно ниво", "B1–B2"],
+                ["Напреднали", "C1–C2"]
+              ],
+              "note": "Не сте сигурни? Един кратък разговор показва откъде да започнете."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                ["target", "Първо — разговор за нивото"],
+                ["users", "Групи по ниво и възраст"],
+                ["mic", "Говорим във всеки урок"],
+                ["chart", "Редовен преглед на напредъка"]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "courses",
+              "title": "Курсове",
+              "intro": "Изберете по възраст и ниво. Ако се колебаете, ще ви помогнем да решите.",
+              "items": [
+                ["heart", "Деца", "Игри, песни и приказки — първите думи без напрежение."],
+                ["rocket", "Тийнейджъри", "Увереност в говоренето и подкрепа за училищни тестове и изпити."],
+                ["users", "Възрастни", "Групи по ниво — от първите думи до свободен разговор. Включително бизнес език и разговорен клуб."],
+                ["target", "Подготовка за изпит", "Целенасочена практика за езиковия изпит, към който се стремите."]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "formats",
+              "alt": true,
+              "title": "Група или индивидуално",
+              "intro": "Два начина да учите — и можете да ги съчетаете.",
+              "items": [
+                ["Групови уроци", "Учите се с хора на ваше ниво и възраст — говорите, подкрепяте се и се мотивирате взаимно.", "Групи, подредени по ниво и възраст", "Говорене във всеки урок", "Кратки задачи между уроците"],
+                ["Индивидуални уроци", "Свой темп и своя цел: интервю, изпит, преместване в чужбина или една упорита слабост.", "План, съставен около вашата цел", "Час, който уточняваме заедно", "Попитайте за уроци онлайн"]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "method",
+              "title": "Как протича курсът",
+              "intro": "Четири стъпки и всяка от тях има смисъл.",
+              "items": [
+                ["Разговор за нивото", "Кратък разговор с преподавател, в който чуваме докъде сте стигнали и какво искате да постигнете."],
+                ["Избор на формат", "Предлагаме формат и група, които съответстват на нивото, възрастта и свободното ви време."],
+                ["Практика", "Във всеки урок говорите, слушате, четете и пишете, а между уроците решавате малки задачи."],
+                ["Преглед на напредъка", "В края на курса заедно поглеждаме какво се е променило и избираме следващата стъпка."]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "prices",
+              "alt": true,
+              "title": "Цени на курсовете",
+              "intro": "Ориентировъчни цени. Точната сума уточняваме след разговора за нивото.",
+              "items": [
+                {
+                  "name": "Индивидуални уроци",
+                  "price": "20 €",
+                  "per": "/ урок",
+                  "features": ["Своя цел и свой темп", "Часове, уточнени с вас", "Бележки какво да упражнявате"],
+                  "cta": ["Попитайте за уроци", "/#contact"]
+                },
+                {
+                  "name": "Групов курс",
+                  "price": "45 €",
+                  "per": "/ месец",
+                  "featured": "Препоръчваме",
+                  "features": ["Група по ваше ниво и възраст", "Преподавател и ясен план на курса", "Преглед на напредъка в края"],
+                  "cta": ["Попитайте за група", "/#contact"]
+                },
+                {
+                  "name": "Подготовка за изпит",
+                  "price": "180 €",
+                  "per": "/ курс",
+                  "features": ["Упражнения във формата на изпита", "Пробни задачи с обратна връзка", "План за седмиците преди изпита"],
+                  "cta": ["Попитайте за курс", "/#contact"]
+                }
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Въпроси на учениците",
+              "items": [
+                ["Откъде да знам какво е нивото ми?", "Не е нужно да знаете. При кратък разговор с преподавател ще видим откъде да започнете, а вие ще зададете всичките си въпроси."],
+                ["Колко големи са групите?", "Групите са достатъчно малки, за да говори всеки във всеки урок. Попитайте ни какъв е размерът на групата за вашето ниво."],
+                ["Мога ли първо да пробвам урок?", "Попитайте за пробен урок, когато запазвате разговора за нивото — ще ви кажем какво е възможно."],
+                ["От каква възраст приемате деца?", "Детските групи са по възраст. Кажете ни на колко години е детето и ще предложим подходящата група."],
+                ["Има ли домашни?", "Кратките задачи между уроците поддържат езика жив. Правим ги реалистични, за да се вписват и в натоварена седмица."],
+                ["Мога ли да премина от група към индивидуални уроци?", "Да, ще го обсъдим. Кажете ни какво ви трябва и заедно ще разгледаме възможностите."]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Готови ли сте да намерите нивото си?",
+              "p": "Запазете кратък разговор и ще ви предложим подходящ курс.",
+              "button": ["Запазете разговор", "/#contact"]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Запазете разговор за нивото",
+              "intro": "Кажете ни за кой език става дума, за кого е курсът и какво искате да постигнете. Ще уговорим удобен час за кратък разговор.",
+              "formName": "enquiry",
+              "rows": [
+                ["mail", "Имейл", "hello@example.com", "mailto:hello@example.com"],
+                ["phone", "Телефон", "+359 888 000 000", "tel:+359888000000"],
+                ["pin", "Адрес", "ул. Витоша 1, София"]
+              ],
+              "fields": [
+                { "id": "language", "label": "Език", "options": ["Английски", "Немски", "Френски", "Испански", "Италиански", "Друг"] },
+                { "id": "who", "label": "Курсът е за", "options": ["Дете", "Тийнейджър", "Възрастен"] }
+              ],
+              "messageLabel": "Цел или въпрос (по избор)",
+              "send": "Изпратете запитване",
+              "hoursTitle": "Работно време",
+              "hours": [
+                ["Понеделник – петък", "9:00 – 20:00"],
+                ["Събота", "9:00 – 13:00"],
+                ["Неделя", "почивен ден"]
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

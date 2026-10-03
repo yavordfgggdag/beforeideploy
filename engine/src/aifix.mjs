@@ -1,6 +1,7 @@
 // AI Fix — builds a redacted, self-contained prompt for a failed step and hands it to ChatGPT / Claude / Codex / Claude Code
 import fs from 'node:fs';
 import { fitPrompt } from './ai/fit.mjs';
+import { knownCauses } from './ai/knowledge.mjs';
 import path from 'node:path';
 import { HOME, ENGINE_DIR, EngineError, sh, which, logDir, readJSON, exists } from './util.mjs';
 import { detect } from './detect.mjs';
@@ -60,23 +61,42 @@ function tailFile(file, lines = 80) {
   }
 }
 
-const FILE_RE = /(?:^|[\s("'`])((?:\.\/)?(?:src|app|pages|components|lib|public|content|styles|layouts|netlify|functions|server|utils)\/[^\s:()"'`]+?\.(?:tsx?|jsx?|mjs|cjs|astro|vue|svelte|css|scss|json|html|md|mdx))(?::(\d+))?/g;
+// Files the log points at. A path with a folder (any folder) or a file in the project root; the project itself decides
+// what exists, so a stray match costs nothing. `file:line[:col]` gives the window to show.
+const EXT = 'tsx?|jsx?|mjs|cjs|astro|vue|svelte|css|scss|sass|less|json|html?|md|mdx|toml|ya?ml|php|py';
+const FILE_RE = new RegExp(`(?:^|[\\s("'\`=<>\\[])((?:\\.{1,2}/)?(?:[\\w@~.-]+/)*[\\w@~.-]+\\.(?:${EXT}))(?::(\\d+))?(?::\\d+)?`, 'gm');
+// never show these to a model: secrets, keys, lockfiles, generated or vendored code
+const NEVER_SHOW = /(?:^|\/)(?:\.env[^/]*|[^/]*\.(?:pem|key|p12|pfx)|id_(?:rsa|ed25519)[^/]*|credentials[^/]*|[^/]*secrets?[^/]*\.(?:json|ya?ml|toml)|package-lock\.json|yarn\.lock|pnpm-lock\.yaml|node_modules\/.*|\.git\/.*|\.next\/.*|\.netlify\/.*)$/i;
+const MAX_FILES = 4;
 
 function mentionedFiles(dir, log) {
+  const root = path.resolve(dir);
+  // paths printed absolutely (…/my-site/src/app.tsx:12) become project-relative
+  // (macOS prints /private/var/… for the folder the app knows as /var/…, so both spellings go)
+  let real = root;
+  try { real = fs.realpathSync(root); } catch {}
+  const text = [...new Set([root, real])].sort((a, b) => b.length - a.length).reduce((acc, r) => acc.split(`${r}/`).join(' '), String(log));
   const found = new Map();
   let m;
   FILE_RE.lastIndex = 0;
-  while ((m = FILE_RE.exec(log)) && found.size < 3) {
+  while ((m = FILE_RE.exec(text)) && found.size < MAX_FILES) {
     const rel = m[1].replace(/^\.\//, '');
-    const abs = path.resolve(dir, rel);
-    if (!abs.startsWith(path.resolve(dir) + path.sep) || rel.split('/').includes('..')) continue; // never outside the project
-    if (!found.has(rel) && exists(abs)) found.set(rel, m[2] ? Number(m[2]) : null);
+    if (rel.startsWith('~') || rel.startsWith('/') || rel.split('/').includes('..') || NEVER_SHOW.test(rel)) continue; // never outside the project, never a secret
+    const abs = path.resolve(root, rel);
+    if (!abs.startsWith(root + path.sep)) continue;
+    if (found.has(rel)) { if (!found.get(rel) && m[2]) found.set(rel, Number(m[2])); continue; }
+    try {
+      if (!fs.statSync(abs).isFile() || fs.statSync(abs).size > 400000) continue;
+    } catch {
+      continue;
+    }
+    found.set(rel, m[2] ? Number(m[2]) : null);
   }
   const out = [];
   for (const [rel, line] of found) {
     let text;
     try {
-      text = fs.readFileSync(path.join(dir, rel), 'utf8');
+      text = fs.readFileSync(path.join(root, rel), 'utf8');
     } catch {
       continue;
     }
@@ -136,11 +156,18 @@ export function buildPrompt(project, stepId) {
   const node = sh('node', ['--version']).stdout.trim();
   const diffStat = d.git.isRepo ? gitSh(['diff', '--stat', 'HEAD'], { cwd: dir }).stdout.trim().split('\n').slice(-15).join('\n') : '';
   const recent = d.git.isRepo ? gitSh(['log', '-3', '--format=%h %s (%cr)'], { cwd: dir }).stdout.trim() : '';
-  const files = mentionedFiles(dir, blocks.map((b) => b.log).join('\n'));
+  const logText = blocks.map((b) => b.log).join('\n');
+  const files = mentionedFiles(dir, logText);
+  // S7: what the app already knows about this kind of failure, plus facts only the project can give
+  const st = getState(project.key);
+  const prev = st.aiUndo && ids.includes(st.aiUndo.step) && Date.now() - Date.parse(st.aiUndo.at) < 86400000 ? { files: st.aiUndo.applied || [], at: st.aiUndo.at } : null;
+  const causes = knownCauses({ stepIds: ids, log: logText, dir, node, siteBuilder: exists(path.join(dir, 'bid.site.json')), previousFix: prev });
 
   const parts = [];
   parts.push(t(onlyWarnings ? 'aifix.prompt.introWarnings' : 'aifix.prompt.introErrors'));
   const git = d.git.isRepo ? `${d.git.branch}${t(d.git.remote ? 'aifix.prompt.gitRemote' : 'aifix.prompt.gitNoRemote')}` : t('aifix.prompt.gitNoRepo');
+  // who is asking and which buttons they have: the answer must be steps in this app, not developer shorthand
+  parts.push(t('aifix.prompt.aboutApp'));
   parts.push(t('aifix.prompt.environment', { framework: d.framework, pm: d.packageManager || '—', node, publishDir: d.publishDir, git }));
   parts.push(`${t('aifix.prompt.problems')}\n\n${blocks.map((b) => b.text).join('\n\n')}`);
   if (pkg) {
@@ -152,6 +179,7 @@ export function buildPrompt(project, stepId) {
         .join(', ')}`
     );
   }
+  if (causes.length) parts.push(`## ${t('aifix.prompt.knownCauses')}\n${causes.map((c) => `- ${c.text}`).join('\n')}`);
   for (const f of files) parts.push(`## ${t('aifix.prompt.file')}: ${f.rel}${f.line ? ` (${t('aifix.prompt.aroundLine', { line: f.line })})` : ''}\n\`\`\`\n${f.body}\n\`\`\``);
   if (diffStat) parts.push(`## ${t('aifix.prompt.uncommitted')}\n\`\`\`\n${diffStat}\n\`\`\``);
   if (recent) parts.push(`## ${t('aifix.prompt.recentCommits')}\n${recent}`);

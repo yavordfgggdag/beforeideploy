@@ -1,0 +1,507 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "nonprofit",
+  "category": "community",
+  "icon": "hands.sparkles",
+  "accent": "#15803d",
+  "mark": "heart",
+  "art": "leaves",
+  "schemaOrg": "NGO",
+  "sample": {
+    "name": "Green Sofia"
+  },
+  "featured": false,
+  "titleKey": "newsite.template.nonprofit.title",
+  "descriptionKey": "newsite.template.nonprofit.description",
+  "keywords": {
+    "en": [
+      "nonprofit",
+      "charity",
+      "ngo",
+      "foundation",
+      "cause",
+      "volunteers",
+      "donate",
+      "community",
+      "association",
+      "campaign"
+    ],
+    "bg": [
+      "неправителствена",
+      "благотворителност",
+      "фондация",
+      "кауза",
+      "доброволци",
+      "дарение",
+      "общност",
+      "сдружение",
+      "кампания"
+    ]
+  },
+  "style": "calm",
+  "tokens": {
+    "dark": false,
+    "bg": "#f7faf6",
+    "bg2": "#ebf3e8",
+    "surface": "#ffffff",
+    "text": "#15251a",
+    "muted": "#4f6353",
+    "line": "rgba(15,23,42,.10)",
+    "accent": "#15803d",
+    "accent2": "#65a30d",
+    "radius": 18
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "hints": {
+    "en": {
+      "offer": "We run a reading club and a mentoring programme for children in small towns, and we collect donations for books and scholarships.",
+      "audience": "Donors, volunteers and local schools",
+      "services": [
+        [
+          "One-off donation",
+          "€10",
+          "Books for a class of children"
+        ],
+        [
+          "Monthly donation",
+          "€5",
+          "Steady support for a mentor and one child"
+        ],
+        [
+          "Volunteering",
+          "",
+          "Mentoring online or in person"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Организираме четене и менторство за деца от малките населени места и събираме дарения за книги и стипендии.",
+      "audience": "Дарители, доброволци и местни училища",
+      "services": [
+        [
+          "Еднократно дарение",
+          "10 €",
+          "Книги за един клас"
+        ],
+        [
+          "Месечно дарение",
+          "5 €",
+          "Постоянна подкрепа за наставник и дете"
+        ],
+        [
+          "Доброволчество",
+          "",
+          "Менторство онлайн или на място"
+        ]
+      ]
+    }
+  },
+  "lang": {
+    "bg": {
+      "tagline": "кауза, която променя",
+      "description": "Помагаме на деца от малките населени места да учат и мечтаят. Включете се като дарител или доброволец.",
+      "nav": [
+        [
+          "Мисия",
+          "/#mission"
+        ],
+        [
+          "Резултати",
+          "/#impact"
+        ],
+        [
+          "Включи се",
+          "/#help"
+        ],
+        [
+          "Контакт",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Дари",
+        "/#help"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Дарете или станете доброволец",
+            "eyebrowIcon": "heart",
+            "title": "Заедно даваме *шанс на всяко дете*",
+            "lead": "Осигуряваме книги, наставници и стипендии за деца от малките населени места. Можете да помогнете като дарител или като доброволец.",
+            "cta": [
+              "Дари сега",
+              "/#help"
+            ],
+            "cta2": [
+              "Нашата мисия",
+              "/#mission"
+            ],
+            "card": {
+              "icon": "heart",
+              "title": "Кампания „Книга за всеки“",
+              "rows": [
+                [
+                  "Събрани",
+                  "18 400 лв."
+                ],
+                [
+                  "Цел",
+                  "25 000 лв."
+                ],
+                [
+                  "Дарители",
+                  "612"
+                ]
+              ],
+              "note": "Примерни данни от примерна кампания."
+            }
+          },
+          "sections": [
+            {
+              "type": "cards",
+              "id": "mission",
+              "title": "Нашата мисия",
+              "items": [
+                [
+                  "book",
+                  "Образование",
+                  "Библиотеки и учебни материали за училища в малките населени места."
+                ],
+                [
+                  "users",
+                  "Наставници",
+                  "Доброволци, които учат с децата всяка седмица."
+                ],
+                [
+                  "star",
+                  "Стипендии",
+                  "Подкрепа за талантливи ученици до университета."
+                ]
+              ]
+            },
+            {
+              "type": "stats",
+              "id": "impact",
+              "alt": true,
+              "items": [
+                [
+                  "3 200",
+                  "деца в програмите"
+                ],
+                [
+                  "40",
+                  "училища"
+                ],
+                [
+                  "180",
+                  "доброволци"
+                ],
+                [
+                  "100%",
+                  "от даренията за каузата"
+                ]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "help",
+              "title": "Как да помогнете",
+              "items": [
+                {
+                  "name": "Еднократно",
+                  "price": "20 лв.",
+                  "per": "или повече",
+                  "features": [
+                    "Книги за един клас",
+                    "Благодарствено писмо",
+                    "Годишен отчет"
+                  ],
+                  "cta": [
+                    "Дари",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Месечно",
+                  "price": "10 лв.",
+                  "per": "/ месец",
+                  "featured": "Постоянна подкрепа",
+                  "features": [
+                    "Постоянен наставник за едно дете",
+                    "Новини от програмата",
+                    "Отказ по всяко време"
+                  ],
+                  "cta": [
+                    "Стани дарител",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Доброволец",
+                  "price": "2 ч.",
+                  "per": "/ седмица",
+                  "features": [
+                    "Онлайн или на място",
+                    "Обучение и подкрепа",
+                    "Място в екипа"
+                  ],
+                  "cta": [
+                    "Включи се",
+                    "/#contact"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "quotes",
+              "alt": true,
+              "title": "Истории",
+              "items": [
+                [
+                  "„Благодарение на наставника си влязох в университет.“",
+                  "Мартин, бивш стипендиант"
+                ],
+                [
+                  "„Два часа седмично, които ми дават повече, отколкото давам.“",
+                  "Яна, доброволец"
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "title": "Контакт",
+              "intro": "Пишете ни за дарения, партньорства или доброволчество.",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "shield",
+                  "Банкова сметка",
+                  "BG00 BANK 0000 0000 0000 00"
+                ]
+              ],
+              "send": "Изпрати"
+            }
+          ]
+        }
+      }
+    },
+    "en": {
+      "tagline": "a cause that makes a difference",
+      "description": "We help children from small towns learn and dream. Join as a donor or volunteer.",
+      "nav": [
+        [
+          "Mission",
+          "/#mission"
+        ],
+        [
+          "Impact",
+          "/#impact"
+        ],
+        [
+          "Get involved",
+          "/#help"
+        ],
+        [
+          "Contact",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Donate",
+        "/#help"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Donate or volunteer with us",
+            "eyebrowIcon": "heart",
+            "title": "Together we give *every child a chance*",
+            "lead": "We bring books, mentors and scholarships to children in small towns. You can help as a donor or as a volunteer.",
+            "cta": [
+              "Donate now",
+              "/#help"
+            ],
+            "cta2": [
+              "Our mission",
+              "/#mission"
+            ],
+            "card": {
+              "icon": "heart",
+              "title": "“A book for everyone” campaign",
+              "rows": [
+                [
+                  "Raised",
+                  "€9,400"
+                ],
+                [
+                  "Goal",
+                  "€12,500"
+                ],
+                [
+                  "Donors",
+                  "612"
+                ]
+              ],
+              "note": "Sample figures from an example campaign."
+            }
+          },
+          "sections": [
+            {
+              "type": "cards",
+              "id": "mission",
+              "title": "Our mission",
+              "items": [
+                [
+                  "book",
+                  "Education",
+                  "Libraries and learning materials for schools in small towns."
+                ],
+                [
+                  "users",
+                  "Mentors",
+                  "Volunteers who study with children every week."
+                ],
+                [
+                  "star",
+                  "Scholarships",
+                  "Support for talented students all the way to university."
+                ]
+              ]
+            },
+            {
+              "type": "stats",
+              "id": "impact",
+              "alt": true,
+              "items": [
+                [
+                  "3,200",
+                  "children in our programs"
+                ],
+                [
+                  "40",
+                  "schools"
+                ],
+                [
+                  "180",
+                  "volunteers"
+                ],
+                [
+                  "100%",
+                  "of donations to the cause"
+                ]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "help",
+              "title": "How you can help",
+              "items": [
+                {
+                  "name": "One-off",
+                  "price": "€10",
+                  "per": "or more",
+                  "features": [
+                    "Books for one class",
+                    "A thank-you letter",
+                    "Annual report"
+                  ],
+                  "cta": [
+                    "Donate",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Monthly",
+                  "price": "€5",
+                  "per": "/ month",
+                  "featured": "Steady support",
+                  "features": [
+                    "A steady mentor for one child",
+                    "Program news",
+                    "Cancel any time"
+                  ],
+                  "cta": [
+                    "Become a donor",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Volunteer",
+                  "price": "2 h",
+                  "per": "/ week",
+                  "features": [
+                    "Online or in person",
+                    "Training and support",
+                    "A place in the team"
+                  ],
+                  "cta": [
+                    "Get involved",
+                    "/#contact"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "quotes",
+              "alt": true,
+              "title": "Stories",
+              "items": [
+                [
+                  "“Thanks to my mentor I got into university.”",
+                  "Martin, former scholar"
+                ],
+                [
+                  "“Two hours a week that give me more than I give.”",
+                  "Yana, volunteer"
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "title": "Contact",
+              "intro": "Write to us about donations, partnerships or volunteering.",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "shield",
+                  "Bank account",
+                  "BG00 BANK 0000 0000 0000 00"
+                ]
+              ],
+              "send": "Send"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

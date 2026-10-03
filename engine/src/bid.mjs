@@ -5,7 +5,7 @@ import { gitAvailable } from './setup-tools.mjs';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 // Before I Deploy V6 — engine entrypoint. Every command prints NDJSON; the last line is {"type":"result",...}.
-import { parseArgs, ok, fail, ev, emit, sh, which, EngineError, APP_DIR, CACHE_DIR, ENGINE_DIR, ensureDir, exitAfterFlush } from './util.mjs';
+import { parseArgs, ok, fail, ev, emit, sh, which, EngineError, APP_DIR, CACHE_DIR, ENGINE_DIR, ensureDir, exitAfterFlush, readJSON } from './util.mjs';
 import { detect } from './detect.mjs';
 import { listProjects, upsertProject, removeProject, resolveProject, updateProject, getState, listHistory, findProject } from './store.mjs';
 import { runChecks } from './checks.mjs';
@@ -42,6 +42,12 @@ import { spaceshipConnect, spaceshipDisconnect, spaceshipDomains, spaceshipDns, 
 import { t, msg } from './i18n.mjs';
 import { launchStatus } from './launch.mjs';
 import { createSite, listTemplates } from './newsite.mjs';
+import { generateSite, previewSite } from './sitegen/generate.mjs';
+import { siteContent, siteChat, readContentArg } from './sitegen/aicontent.mjs';
+import { talkTurn, talkHistory, writeInstructions } from './sitegen/talk.mjs';
+import { editSite, undoSite, siteHistory, siteInfo } from './sitegen/edit.mjs';
+import { loadTheme, validateTheme, previewStatus, suggestThemes } from './sitegen/themes.mjs';
+import { STYLES, paletteIds } from './sitegen/tokens.mjs';
 
 // engine/VERSION is the single source of the product version (build.sh writes it into Info.plist)
 const VERSION = (() => {
@@ -95,7 +101,11 @@ const HELP = `Before I Deploy engine ${VERSION}
   bid deploy  --project P [--prod --confirm DEPLOY] [--recheck-if-stale]   with the selected hosting
   bid issues  --project P          prioritized issues from the last check (severity, evidence, fix, verification)
   bid launch  --project P          launch checklist: folder → check → site quality → hosting → deploy → domain → monitoring
-  bid new list | create --template landing|portfolio --name N --dir PARENT [--lang bg|en] [--description D]
+  bid new list | styles | check | create --template ID --name N --dir PARENT [--lang bg|en] [--description D] [--style calm|bold|elegant --palette P]
+  bid new generate --brief brief.json --dir PARENT [--content c.json | --ai] | preview --brief brief.json [--content c.json]
+  bid new content --brief brief.json [--provider cloud|anthropic]     the AI writes the texts (plan → content → review) into a content file
+  bid site info | history | undo --project P                           a generated site: what it is, the edits, revert the last one
+  bid site edit --project P --say "make it darker" [--force --dry-run --provider cloud|anthropic]   change the site with words (one commit each)
   bid monitor once [--project P] | status [--no-network] | incidents [--limit N] | settings --json '{…}' | agent install --yes | agent remove
   bid monitor cloud status | enable [--project P] [--interval N] [--paths /a,/b] | disable [--project P] | test --project P
   bid monitor maintenance add --from ISO --to ISO [--project P] [--note T] | list | clear · bid monitor notify test
@@ -226,8 +236,50 @@ async function main() {
 
     case 'new': {
       if (sub === 'list' || !sub) return ok(listTemplates());
-      if (sub === 'create') return ok(createSite({ template: flags.template, name: flags.name, dir: flags.dir, lang: flags.lang, description: flags.description }));
+      if (sub === 'styles') return ok(Object.fromEntries(Object.keys(STYLES).map((id) => [id, { head: STYLES[id].head, radius: STYLES[id].radius, palettes: paletteIds(id).map((p) => ({ id: p, dark: !!STYLES[id].palettes[p].dark, bg: STYLES[id].palettes[p].bg, accent: STYLES[id].palettes[p].accent, accent2: STYLES[id].palettes[p].accent2 })) }])));
+      if (sub === 'check') return ok(listTemplates().map((th) => ({ id: th.id, errors: validateTheme(loadTheme(th.id)), preview: previewStatus(th.id) })));
+      // S5 "something else": the closest themes to the owner's words (no model)
+      if (sub === 'suggest') return ok(suggestThemes(flags.say && flags.say !== true ? String(flags.say) : '', { limit: Number(flags.limit) || 3 }));
+      if (sub === 'create') {
+        if (flags.style || flags.palette) return ok(generateSite({ brief: { theme: flags.template, name: flags.name, lang: flags.lang, description: flags.description, style: flags.style, palette: flags.palette }, dir: flags.dir }));
+        return ok(createSite({ template: flags.template, name: flags.name, dir: flags.dir, lang: flags.lang, description: flags.description }));
+      }
+      if (sub === 'generate' || sub === 'preview' || sub === 'content') {
+        // the brief: a JSON file (the app writes one next to its form) or inline JSON
+        const raw = flags.brief && flags.brief !== true ? String(flags.brief) : '';
+        const brief = raw.trim().startsWith('{') ? JSON.parse(raw) : readJSON(raw, null);
+        if (!brief) throw new EngineError(msg('newsite.missingBrief'), 'usage', 2);
+        if (sub === 'content') return ok(await siteContent({ brief, provider: flags.provider && flags.provider !== true ? String(flags.provider) : null }));
+        // ready content (the AI path, `bid new content`) replaces the theme's sample texts
+        let content = readContentArg(flags.content);
+        if (sub === 'generate' && flags.ai && !content) content = readContentArg((await siteContent({ brief, provider: flags.provider && flags.provider !== true ? String(flags.provider) : null })).contentFile);
+        if (sub === 'preview') return ok(previewSite(brief, content));
+        return ok(generateSite({ brief, dir: flags.dir, content }));
+      }
       throw new EngineError(msg('cli.unknownCommand', { command: `new ${sub}` }), 'usage', 2);
+    }
+
+    case 'site': {
+      if (sub === 'chat') {
+        const raw = flags.messages && flags.messages !== true ? String(flags.messages) : '';
+        const messages = raw.trim().startsWith('[') ? JSON.parse(raw) : readJSON(raw, null);
+        if (!Array.isArray(messages)) throw new EngineError(msg('newsite.missingBrief'), 'usage', 2);
+        return ok(await siteChat({ messages, model: flags.model && flags.model !== true ? String(flags.model) : 'auto', asked: flags.asked, provider: flags.provider && flags.provider !== true ? String(flags.provider) : null }));
+      }
+      const p = proj();
+      if (sub === 'info' || !sub) return ok(siteInfo(p));
+      if (sub === 'talk') {
+        if (flags.history) return ok(talkHistory(p));
+        if (flags['instructions-clear']) return ok({ instructions: writeInstructions(p, '') });
+        if (flags.instructions && flags.instructions !== true) return ok({ instructions: writeInstructions(p, String(flags.instructions)) });
+        let plan = null;
+        if (flags.plan && flags.plan !== true) { try { plan = JSON.parse(String(flags.plan)); } catch { throw new EngineError(msg('site.edit.missingSay'), 'usage', 2); } }
+        return ok(await talkTurn(p, { mode: String(flags.mode || 'chat'), say: flags.say && flags.say !== true ? String(flags.say) : '', plan, model: flags.model && flags.model !== true ? String(flags.model) : 'auto', provider: flags.provider && flags.provider !== true ? String(flags.provider) : null, force: !!flags.force }));
+      }
+      if (sub === 'history') return ok(siteHistory(p));
+      if (sub === 'undo') return ok(undoSite(p));
+      if (sub === 'edit') return ok(await editSite(p, { say: flags.say, provider: flags.provider && flags.provider !== true ? String(flags.provider) : null, force: !!flags.force, dryRun: !!flags['dry-run'] }));
+      throw new EngineError(msg('cli.unknownCommand', { command: `site ${sub}` }), 'usage', 2);
     }
 
     case 'detect':

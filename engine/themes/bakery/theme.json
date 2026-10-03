@@ -1,0 +1,443 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "bakery",
+  "category": "food",
+  "icon": "birthday.cake",
+  "accent": "#8a5530",
+  "mark": "bread",
+  "art": "blobs",
+  "schemaOrg": "Bakery",
+  "sample": { "name": "Zora Bakehouse" },
+  "featured": false,
+  "titleKey": "newsite.template.bakery.title",
+  "descriptionKey": "newsite.template.bakery.description",
+  "keywords": {
+    "en": ["bakery", "bread", "pastry", "patisserie", "cake", "cakes to order", "croissant", "coffee bar", "cafe", "birthday cake", "wedding cake", "sourdough", "coffee shop"],
+    "bg": ["пекарна", "хляб", "сладкарница", "торта", "торти по поръчка", "кроасан", "кафе", "кафене", "козунак", "баничка", "сладкиши", "кифла", "фурна"]
+  },
+  "style": "calm",
+  "tokens": {
+    "dark": false,
+    "bg": "#fdf7ec",
+    "bg2": "#f6ead4",
+    "surface": "#fffdf7",
+    "text": "#3b2a1e",
+    "muted": "#6f5a48",
+    "line": "rgba(15,23,42,.10)",
+    "accent": "#8a5530",
+    "accent2": "#d4a35a",
+    "font": "rounded",
+    "head": "serif",
+    "radius": 22,
+    "tilt": 1.5
+  },
+  "questions": ["services", "contacts", "photos"],
+  "hints": {
+    "en": {
+      "offer": "We bake bread and pastries, make cakes to order and serve coffee from morning to afternoon.",
+      "audience": "Neighbours, office workers and anyone planning a birthday or wedding cake",
+      "services": [
+        ["Sourdough loaf", "€4", "Long-fermented, with a crisp crust"],
+        ["Celebration cake", "from €50", "Made to order, serves 12–15"],
+        ["Flat white", "€3", "Double shot with milk"]
+      ]
+    },
+    "bg": {
+      "offer": "Печем хляб и сладкиши, правим торти по поръчка и сервираме кафе от сутрин до следобед.",
+      "audience": "Съседи, хора от близките офиси и всеки, който планира торта за рожден ден или сватба",
+      "services": [
+        ["Хляб с квас", "4 €", "Дълго ферментирал, с хрупкава коричка"],
+        ["Празнична торта", "от 50 €", "По поръчка, за 12–15 души"],
+        ["Флат уайт", "3 €", "Двойно еспресо с мляко"]
+      ]
+    }
+  },
+  "lang": {
+    "en": {
+      "tagline": "bakery and coffee bar",
+      "description": "Bread, pastries, cakes to order and good coffee — for the morning rush and the slow afternoon.",
+      "nav": [
+        ["Menu", "/menu.html"],
+        ["Cakes to order", "/#cakes"],
+        ["Through the day", "/#day"],
+        ["Visit", "/#contact"]
+      ],
+      "headerCta": ["Order a cake", "/#contact"],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Bread, pastries and coffee",
+            "eyebrowIcon": "bread",
+            "title": "Something warm *from the oven*",
+            "lead": "Bread, croissants and cakes made by hand, and a proper cup of coffee. Stop by on your way to work or stay for the afternoon.",
+            "cta": ["See the menu", "/menu.html"],
+            "cta2": ["Order a cake", "/#cakes"],
+            "card": {
+              "icon": "bread",
+              "title": "Favourites at the counter",
+              "rows": [
+                ["Sourdough loaf", "€4"],
+                ["Butter croissant", "€2"],
+                ["Flat white", "€3"]
+              ],
+              "note": "The full menu, with prices, is on the menu page."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                ["bread", "From our own oven"],
+                ["cup", "Coffee to stay or to go"],
+                ["gift", "Cakes made to order"],
+                ["calendar", "Pre-orders for the day you need"]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "counter",
+              "title": "On the counter",
+              "intro": "Simple things done well, and a few seasonal extras.",
+              "items": [
+                ["bread", "Bread", "Sourdough, rye and seeded loaves, and soft rolls for breakfast."],
+                ["star", "Pastries", "Butter croissants, cinnamon buns and a few seasonal sweet bakes."],
+                ["gift", "Cakes and tarts", "Slices to enjoy here, whole cakes to take home or order ahead."],
+                ["cup", "Coffee and tea", "Espresso, flat white, filter and hot chocolate, made while you wait."]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "day",
+              "alt": true,
+              "title": "Through the day",
+              "intro": "The counter changes as the hours go by.",
+              "items": [
+                ["Morning", "Bread and pastries first, with coffee made while you wait. Quick enough for the commute, good enough to linger over.", "Loaves, croissants and buns", "Coffee to take away or to stay", "Something small for the walk to work"],
+                ["Midday", "Sandwiches, cheese pastries and a slice of something sweet for a quick lunch, to eat in or take away.", "Sandwiches and savoury bakes", "Eat in or take away", "Order ahead for the office or the team"],
+                ["Afternoon", "Cake, a second coffee and a seat for as long as you like. The slow part of the day, and often the nicest.", "Slices of cake and tarts", "Tea, coffee and hot chocolate", "Whole cakes to pick up for the evening"]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "cakes",
+              "title": "Cakes to order, step by step",
+              "intro": "Birthdays, weddings, christenings or just because. The earlier you ask, the more we can do.",
+              "items": [
+                ["Tell us", "The occasion, the date and how many people you are feeding."],
+                ["Choose", "Pick the sponge, the filling and the finish. Show us a picture if you have one."],
+                ["We confirm", "We agree the design, the size and the price with you before we bake."],
+                ["Collect", "Pick your cake up on the day, boxed and ready to carry."]
+              ]
+            },
+            {
+              "type": "gallery",
+              "alt": true,
+              "title": "From the counter",
+              "intro": "Replace the tiles with photos of your own bakes.",
+              "items": ["Sourdough loaves", "Morning pastries", "Celebration cakes", "Coffee and a slice"]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Good to know",
+              "items": [
+                ["What about allergens?", "We use flour, eggs, milk and nuts in the same kitchen, so we cannot promise that a product contains no traces. Tell us about any allergy and we will list exactly what goes into each item."],
+                ["Can I pre-order bread and pastries?", "Yes. Tell us what you need and when you will collect it, and we set it aside. For offices and events, ask a little earlier."],
+                ["How early should I order a cake?", "As early as you can. Simple cakes need less notice than tiered or decorated ones — tell us the date and we will say what is possible."],
+                ["Can you write a message on the cake?", "Yes: a name, a short message or an age. Send us the exact wording when you order."],
+                ["Do you bake for special diets?", "Ask us what you need — vegan, egg-less, gluten-intolerant. If we can make it, we tell you what to expect from taste and texture; if we cannot, we say so."],
+                ["Do you deliver?", "A cake travels most safely in your own hands, so we suggest collecting. If you need delivery, tell us the address and the date and we will see what is possible."]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Planning a celebration?",
+              "p": "Tell us the date and the guests — we will plan the cake with you.",
+              "button": ["Order a cake", "/#contact"]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Visit or order",
+              "intro": "Drop in, or send us a pre-order: tell us what you need and the day you will collect it.",
+              "formName": "preorder",
+              "rows": [
+                ["mail", "Email", "hello@example.com", "mailto:hello@example.com"],
+                ["phone", "Phone", "+359 888 000 000", "tel:+359888000000"],
+                ["pin", "Address", "1 Vitosha St, Sofia"]
+              ],
+              "fields": [
+                { "id": "what", "label": "What for", "options": ["Cake to order", "Bread or pastries", "Event or office order", "Something else"] },
+                { "id": "date", "label": "Collection date", "type": "date" }
+              ],
+              "messageLabel": "What would you like? Flavours, size, message",
+              "send": "Send pre-order",
+              "hoursTitle": "Opening hours",
+              "hours": [
+                ["Monday – Friday", "7:00 – 18:00"],
+                ["Saturday", "8:00 – 16:00"],
+                ["Sunday", "8:00 – 14:00"]
+              ]
+            }
+          ]
+        },
+        "menu": {
+          "title": "Menu and prices",
+          "description": "The bakery menu: bread, pastries, sweet things, coffee and cakes to order, with prices in euro.",
+          "pagehead": ["Menu", "Bread, pastries and coffee, with prices in euro. Ask us about allergens — we are happy to help."],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Bread",
+                  "items": [
+                    ["Sourdough loaf", "Long-fermented, with a crisp crust", "€4"],
+                    ["Rye loaf", "Dense and slightly sour", "€4"],
+                    ["Seeded loaf", "Sunflower, pumpkin and linseed", "€4"],
+                    ["Soft rolls", "Per roll", "€1"]
+                  ]
+                },
+                {
+                  "name": "Pastries",
+                  "items": [
+                    ["Butter croissant", "Flaky and buttery", "€2"],
+                    ["Chocolate croissant", "Filled with dark chocolate", "€3"],
+                    ["Cinnamon bun", "Soft, with sugar and spice", "€3"],
+                    ["Cheese pastry", "Savoury, with white cheese", "€3"]
+                  ]
+                },
+                {
+                  "name": "Something sweet",
+                  "items": [
+                    ["Slice of cake", "Ask what is on the counter", "€4"],
+                    ["Fruit tart", "Seasonal fruit", "€4"],
+                    ["Cookie", "With chocolate chips", "€2"]
+                  ]
+                },
+                {
+                  "name": "Coffee and tea",
+                  "items": [
+                    ["Espresso", "", "€2"],
+                    ["Flat white", "Double shot with milk", "€3"],
+                    ["Filter coffee", "", "€3"],
+                    ["Hot chocolate", "", "€3"],
+                    ["Tea", "A pot of loose-leaf tea", "€3"]
+                  ]
+                },
+                {
+                  "name": "Cakes to order",
+                  "items": [
+                    ["Small cake", "Serves 6–8", "from €30"],
+                    ["Celebration cake", "Serves 12–15", "from €50"],
+                    ["Tiered or decorated cake", "Priced once we agree the design", "on request"]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Cakes for the days that matter",
+              "p": "Tell us the date and the guests, and we plan the cake together.",
+              "button": ["Order a cake", "/#contact"]
+            }
+          ]
+        }
+      }
+    },
+    "bg": {
+      "tagline": "пекарна и кафе",
+      "description": "Хляб, сладкиши, торти по поръчка и хубаво кафе — за забързаната сутрин и за бавния следобед.",
+      "nav": [
+        ["Меню", "/menu.html"],
+        ["Торти по поръчка", "/#cakes"],
+        ["През деня", "/#day"],
+        ["Посетете ни", "/#contact"]
+      ],
+      "headerCta": ["Поръчайте торта", "/#contact"],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Хляб, сладкиши и кафе",
+            "eyebrowIcon": "bread",
+            "title": "Нещо топло *от фурната*",
+            "lead": "Хляб, кроасани и торти, направени на ръка, и истинско кафе. Минете на път за работа или останете за целия следобед.",
+            "cta": ["Вижте менюто", "/menu.html"],
+            "cta2": ["Поръчайте торта", "/#cakes"],
+            "card": {
+              "icon": "bread",
+              "title": "Любимите от витрината",
+              "rows": [
+                ["Хляб с квас", "4 €"],
+                ["Кроасан с масло", "2 €"],
+                ["Флат уайт", "3 €"]
+              ],
+              "note": "Цялото меню с цени е на страница „Меню“."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                ["bread", "От нашата собствена фурна"],
+                ["cup", "Кафе за тук или за вкъщи"],
+                ["gift", "Торти по поръчка"],
+                ["calendar", "Предварителна поръчка за избран ден"]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "counter",
+              "title": "На витрината",
+              "intro": "Прости неща, направени добре, и по някоя сезонна изненада.",
+              "items": [
+                ["bread", "Хляб", "Квасен, ръжен и със семена — и меки кифлички за закуска."],
+                ["star", "Кроасани и печива", "Кроасани с масло, кифли с канела и по някой сезонен сладкиш."],
+                ["gift", "Торти и тарталети", "Парче за тук и цели торти за вкъщи или по поръчка."],
+                ["cup", "Кафе и чай", "Еспресо, флат уайт, филтърно кафе и горещ шоколад — приготвени, докато чакате."]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "day",
+              "alt": true,
+              "title": "През деня",
+              "intro": "Витрината се сменя заедно с часовете.",
+              "items": [
+                ["Сутрин", "Първо хлябът и печивата, с кафе, направено, докато чакате. Достатъчно бързо за пътя към работа, достатъчно хубаво, за да поседите.", "Хляб, кроасани и кифли", "Кафе за вкъщи или за тук", "Нещо малко за разходката до работа"],
+                ["По обяд", "Сандвичи, баничка със сирене и парче нещо сладко за бърз обяд — за тук или за вкъщи.", "Сандвичи и солени печива", "За тук или за вкъщи", "Предварителна поръчка за офиса или за екипа"],
+                ["Следобед", "Торта, второ кафе и маса, на която да останете колкото искате. Най-бавната част от деня — и често най-приятната.", "Парчета торта и тарталети", "Чай, кафе и горещ шоколад", "Цели торти за вечерта"]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "cakes",
+              "title": "Торта по поръчка, стъпка по стъпка",
+              "intro": "За рожден ден, сватба, кръщене или просто така. Колкото по-рано ни питате, толкова повече можем.",
+              "items": [
+                ["Разкажете ни", "Повода, датата и колко души ще почерпите."],
+                ["Изберете", "Блат, крем и украса. Покажете ни снимка, ако имате."],
+                ["Потвърждаваме", "Уточняваме дизайна, размера и цената с вас, преди да започнем да печем."],
+                ["Вземете я", "Тортата ви чака в деня, който сте избрали — в кутия, готова за път."]
+              ]
+            },
+            {
+              "type": "gallery",
+              "alt": true,
+              "title": "От витрината",
+              "intro": "Сменете плочките със снимки на вашите изделия.",
+              "items": ["Хлябове с квас", "Сутрешни печива", "Празнични торти", "Кафе и парче торта"]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Полезно да знаете",
+              "items": [
+                ["А алергените?", "Работим с брашно, яйца, мляко и ядки в една и съща кухня, затова не можем да обещаем, че даден продукт няма следи от тях. Кажете ни за алергията си и ще ви изброим точно какво влиза във всяко изделие."],
+                ["Мога ли да поръчам хляб и печива предварително?", "Да. Кажете ни какво ви трябва и кога ще го вземете — ще го заделим. За офиси и събития питайте малко по-рано."],
+                ["Колко рано да поръчам торта?", "Колкото се може по-рано. Простите торти искат по-малко време от многоетажните и украсените — кажете ни датата и ще ви отговорим какво е възможно."],
+                ["Може ли надпис върху тортата?", "Да — име, кратко пожелание или възраст. Изпратете ни точния текст при поръчката."],
+                ["Печете ли за специални диети?", "Питайте ни какво ви трябва — веган, без яйца, без глутен. Ако можем да го направим, ще ви кажем какво да очаквате като вкус и текстура; ако не можем — ще го кажем честно."],
+                ["Доставяте ли?", "Тортата пътува най-спокойно в ръцете ви, затова препоръчваме да я вземете лично. Ако ви трябва доставка, кажете ни адреса и датата и ще видим какво е възможно."]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Планирате празник?",
+              "p": "Кажете ни датата и колко сте — тортата ще измислим заедно.",
+              "button": ["Поръчайте торта", "/#contact"]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Посетете ни или поръчайте",
+              "intro": "Минете през нас или ни изпратете предварителна поръчка: кажете какво ви трябва и в кой ден ще го вземете.",
+              "formName": "preorder",
+              "rows": [
+                ["mail", "Имейл", "hello@example.com", "mailto:hello@example.com"],
+                ["phone", "Телефон", "+359 888 000 000", "tel:+359888000000"],
+                ["pin", "Адрес", "ул. „Витоша“ 1, София"]
+              ],
+              "fields": [
+                { "id": "what", "label": "За какво", "options": ["Торта по поръчка", "Хляб или печива", "Поръчка за събитие или офис", "Друго"] },
+                { "id": "date", "label": "Ден за вземане", "type": "date" }
+              ],
+              "messageLabel": "Какво бихте искали? Вкусове, размер, надпис",
+              "send": "Изпратете поръчката",
+              "hoursTitle": "Работно време",
+              "hours": [
+                ["Понеделник – петък", "7:00 – 18:00"],
+                ["Събота", "8:00 – 16:00"],
+                ["Неделя", "8:00 – 14:00"]
+              ]
+            }
+          ]
+        },
+        "menu": {
+          "title": "Меню и цени",
+          "description": "Менюто на пекарната: хляб, печива, сладки неща, кафе и торти по поръчка — с цени в евро.",
+          "pagehead": ["Меню", "Хляб, печива и кафе, с цени в евро. Питайте ни за алергените — с радост ще ви насочим."],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Хляб",
+                  "items": [
+                    ["Хляб с квас", "Дълго ферментирал, с хрупкава коричка", "4 €"],
+                    ["Ръжен хляб", "Плътен и леко кисел", "4 €"],
+                    ["Хляб със семена", "Слънчоглед, тиквени семки и лен", "4 €"],
+                    ["Меки кифлички", "За брой", "1 €"]
+                  ]
+                },
+                {
+                  "name": "Кроасани и печива",
+                  "items": [
+                    ["Кроасан с масло", "Лек и маслен", "2 €"],
+                    ["Шоколадов кроасан", "С тъмен шоколад", "3 €"],
+                    ["Кифла с канела", "Мека, със захар и подправки", "3 €"],
+                    ["Баничка със сирене", "Солена, с бяло сирене", "3 €"]
+                  ]
+                },
+                {
+                  "name": "Нещо сладко",
+                  "items": [
+                    ["Парче торта", "Питайте какво има на витрината", "4 €"],
+                    ["Тарталета с плод", "Сезонни плодове", "4 €"],
+                    ["Курабийка", "С парченца шоколад", "2 €"]
+                  ]
+                },
+                {
+                  "name": "Кафе и чай",
+                  "items": [
+                    ["Еспресо", "", "2 €"],
+                    ["Флат уайт", "Двойно еспресо с мляко", "3 €"],
+                    ["Филтърно кафе", "", "3 €"],
+                    ["Горещ шоколад", "", "3 €"],
+                    ["Чай", "Чайник насипен чай", "3 €"]
+                  ]
+                },
+                {
+                  "name": "Торти по поръчка",
+                  "items": [
+                    ["Малка торта", "За 6–8 души", "от 30 €"],
+                    ["Празнична торта", "За 12–15 души", "от 50 €"],
+                    ["Многоетажна или украсена торта", "Цената се уточнява след избора на дизайн", "по договаряне"]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Торти за важните дни",
+              "p": "Кажете ни повода и датата — ще планираме тортата заедно.",
+              "button": ["Поръчайте торта", "/#contact"]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

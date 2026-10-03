@@ -1,0 +1,425 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "accountant",
+  "category": "business",
+  "icon": "chart.bar.doc.horizontal",
+  "accent": "#0f7a62",
+  "mark": "calc",
+  "art": "blobs",
+  "schemaOrg": "AccountingService",
+  "sample": { "name": "Balans Accounting" },
+  "featured": false,
+  "titleKey": "newsite.template.accountant.title",
+  "descriptionKey": "newsite.template.accountant.description",
+  "keywords": {
+    "en": ["accountant", "accounting", "bookkeeping", "bookkeeper", "tax return", "tax advisor", "VAT", "payroll", "freelancer", "small business", "company setup", "annual accounts"],
+    "bg": ["счетоводител", "счетоводна къща", "счетоводство", "счетоводно обслужване", "данъци", "данъчна декларация", "ДДС", "заплати", "фрийлансър", "регистрация на фирма", "годишен отчет", "фактури"]
+  },
+  "style": "calm",
+  "tokens": {
+    "dark": false,
+    "bg": "#f4faf7",
+    "bg2": "#e4f1ec",
+    "surface": "#ffffff",
+    "text": "#0d2b27",
+    "muted": "#46625d",
+    "line": "rgba(13,43,39,.11)",
+    "accent": "#0f7a62",
+    "accent2": "#38a889",
+    "font": "sans",
+    "head": "grotesk",
+    "radius": 16,
+    "tilt": 1
+  },
+  "questions": ["services", "contacts", "photos"],
+  "hints": {
+    "en": {
+      "offer": "We are an accounting practice for freelancers and small companies: bookkeeping, VAT, annual returns and payroll for a fixed monthly fee.",
+      "audience": "Freelancers, sole traders and owners of small companies",
+      "services": [
+        ["Freelancer package", "€49", "Bookkeeping and your annual tax return"],
+        ["Small company package", "€149", "Bookkeeping, VAT and annual statements"],
+        ["Payroll", "€30", "Per employee, per month"]
+      ]
+    },
+    "bg": {
+      "offer": "Счетоводна къща за фрийлансъри и малки фирми: счетоводство, ДДС, годишни декларации и заплати срещу фиксирана месечна цена.",
+      "audience": "Фрийлансъри, еднолични търговци и собственици на малки фирми",
+      "services": [
+        ["Пакет „Фрийлансър“", "49 €", "Счетоводство и годишна данъчна декларация"],
+        ["Пакет „Малка фирма“", "149 €", "Счетоводство, ДДС и годишен отчет"],
+        ["Заплати", "30 €", "На служител, на месец"]
+      ]
+    }
+  },
+  "lang": {
+    "en": {
+      "tagline": "accounting, tax and payroll",
+      "description": "Bookkeeping, VAT, annual returns and payroll for freelancers and small companies, with clear monthly packages.",
+      "nav": [
+        ["Services", "/#services"],
+        ["Getting started", "/#start"],
+        ["Packages", "/#plans"],
+        ["One-off prices", "/prices.html"]
+      ],
+      "headerCta": ["Get a quote", "/#contact"],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "For freelancers and small companies",
+            "eyebrowIcon": "calc",
+            "title": "You run the business, *we keep the books*",
+            "lead": "Bookkeeping, VAT, annual returns and payroll — done on schedule, explained in plain words and priced per month, so there are no surprises when the tax office writes.",
+            "cta": ["Get a quote", "/#contact"],
+            "cta2": ["See packages", "/#plans"],
+            "card": {
+              "icon": "calendar",
+              "title": "A typical month with us",
+              "rows": [
+                ["You send", "invoices and statements"],
+                ["We record", "and reconcile it all"],
+                ["You receive", "a clear summary"]
+              ],
+              "note": "One shared folder for all your documents."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                ["calendar", "Filing deadlines tracked"],
+                ["doc", "Clear monthly summary"],
+                ["lock", "Documents kept private"],
+                ["check", "One fixed monthly price"]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "services",
+              "title": "What we take care of",
+              "intro": "Everything a small business needs to stay in order with the tax office.",
+              "items": [
+                ["book", "Bookkeeping", "Sales and purchase invoices, receipts and bank statements, recorded and reconciled every month."],
+                ["calc", "VAT and returns", "VAT registration and monthly returns, plus your annual income tax return or company statements."],
+                ["users", "Payroll", "Contracts, payslips, social security and the monthly declarations for your employees."],
+                ["bag", "Company setup", "Sole trader or company? We help you choose, register and set up your books from day one."]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "who",
+              "alt": true,
+              "title": "Who we work with",
+              "intro": "Three kinds of business, three kinds of attention.",
+              "items": [
+                ["Freelancers and sole traders", "You send the invoices, we deal with the paperwork. You know what you owe before the deadline, not after it.", "Income tax return prepared and filed", "Help deciding whether to register for VAT", "Social security contributions explained"],
+                ["Small companies", "Monthly books, VAT and annual statements in one place, with a clear contact for your questions.", "Monthly bookkeeping and VAT returns", "Annual financial statements", "Questions answered between deadlines"],
+                ["New businesses", "The easiest time to set things up properly is the beginning — it is the hardest time to fix them later.", "A plain comparison: sole trader or company", "Registration papers prepared with you", "A simple system for invoices and receipts from day one"]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "start",
+              "title": "Getting started",
+              "intro": "From the first call to your first monthly summary, in four steps.",
+              "items": [
+                ["A short call", "You tell us what you do, how you invoice and what has been done so far."],
+                ["A written offer", "You receive a fixed monthly price and a list of exactly what it includes."],
+                ["Handover", "You share past documents and, where needed, sign an authorisation so we can deal with the tax office for you."],
+                ["Your monthly rhythm", "Each month you send documents to one shared folder. We record them and send you a short summary."]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "plans",
+              "alt": true,
+              "title": "Monthly packages",
+              "intro": "Starting prices. We confirm the exact fee after a short look at your documents, and it stays fixed until the work changes.",
+              "items": [
+                { "name": "Freelancer", "price": "€49", "per": "/ month", "features": ["Bookkeeping for one sole trader", "Annual income tax return", "Up to twenty documents a month", "Advice by email"], "cta": ["Choose this plan", "/#contact"] },
+                { "name": "Small company", "price": "€149", "per": "/ month", "featured": "Popular", "features": ["Full bookkeeping and VAT returns", "Year-end financial statements", "Up to eighty documents a month", "A planning call twice a year"], "cta": ["Choose this plan", "/#contact"] },
+                { "name": "Company + payroll", "price": "€249", "per": "/ month", "features": ["Everything in Small company", "Payroll for up to 5 employees", "Contracts, payslips and declarations", "Up to a hundred and fifty documents a month"], "cta": ["Choose this plan", "/#contact"] }
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Questions we hear most",
+              "items": [
+                ["Do I need to be registered for VAT?", "Not always. It depends on your turnover and on who you sell to. We look at your situation and tell you whether registering helps or only adds paperwork."],
+                ["Can you take over from my current accountant?", "Yes. We request the records, check what has been filed and carry on from there, with no gap in your deadlines."],
+                ["What do I send you every month?", "Sales invoices, purchase invoices, receipts and bank statements. For most receipts a photo from your phone is enough."],
+                ["How do I pay, and can the price change?", "A fixed monthly fee by bank transfer. It changes only if the work grows — more employees or more documents — and we tell you first."],
+                ["Do you help me register a company?", "Yes. We help you choose between a sole trader and a company, prepare the papers and set up your books from the first day."],
+                ["What if the tax office writes to me?", "Send it to us. We read it, explain what it means and prepare the reply."]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Not sure which package fits?",
+              "p": "Tell us what you do and roughly how many invoices you issue a month. We suggest a package — or tell you honestly that you do not need one yet.",
+              "button": ["Get a quote", "/#contact"]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Get a quote",
+              "intro": "Tell us what you do and how you invoice. We get in touch to arrange a short call.",
+              "formName": "quote",
+              "rows": [
+                ["mail", "Email", "hello@example.com", "mailto:hello@example.com"],
+                ["phone", "Phone", "+359 888 000 000", "tel:+359888000000"],
+                ["pin", "Address", "1 Vitosha St, Sofia"]
+              ],
+              "fields": [
+                { "id": "type", "label": "I am a", "options": ["Freelancer or sole trader", "Small company", "Starting a business"] },
+                { "id": "need", "label": "I need help with", "options": ["Bookkeeping", "VAT", "Annual return", "Payroll", "Company setup", "Not sure yet"] }
+              ],
+              "messageLabel": "Anything we should know?",
+              "send": "Request a quote",
+              "hoursTitle": "Opening hours",
+              "hours": [
+                ["Monday – Friday", "9:00 – 17:30"],
+                ["Saturday", "closed"],
+                ["Sunday", "closed"]
+              ]
+            }
+          ]
+        },
+        "prices": {
+          "title": "One-off prices and services",
+          "description": "Starting prices for company registration, VAT registration, annual returns and other one-off jobs.",
+          "pagehead": ["One-off prices", "For jobs outside the monthly packages. Prices are a guide — we confirm the exact amount after a quick look at your papers."],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Starting out",
+                  "items": [
+                    ["Sole trader registration", "Choosing the form, papers and filing", "from €60"],
+                    ["Company registration", "Papers, filing and setting up your books", "from €190"],
+                    ["VAT registration", "The application and first guidance", "from €70"]
+                  ]
+                },
+                {
+                  "name": "Once a year",
+                  "items": [
+                    ["Personal income tax return", "For freelancers and sole traders", "from €60"],
+                    ["Annual financial statements", "For a small company", "from €220"]
+                  ]
+                },
+                {
+                  "name": "When you need a hand",
+                  "items": [
+                    ["Catching up on missing books", "For each month of records", "from €40"],
+                    ["Hiring an employee", "Contract, notification and first payslip", "€30"],
+                    ["Advice by the hour", "By phone or video call", "€45"]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "prose",
+              "alt": true,
+              "items": [
+                ["How we price", "Fees depend on the number of documents, the number of employees and how tidy your records are. Send us a sample month and we tell you the price before we start."]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Need something that is not listed?",
+              "p": "Just ask. A lot of what we do does not fit in a table.",
+              "button": ["Get a quote", "/#contact"]
+            }
+          ]
+        }
+      }
+    },
+    "bg": {
+      "tagline": "счетоводство, данъци и заплати",
+      "description": "Счетоводство, ДДС, годишни декларации и заплати за фрийлансъри и малки фирми — с ясни месечни пакети.",
+      "nav": [
+        ["Услуги", "/#services"],
+        ["Как започваме", "/#start"],
+        ["Пакети", "/#plans"],
+        ["Еднократни цени", "/prices.html"]
+      ],
+      "headerCta": ["Поискайте оферта", "/#contact"],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "За фрийлансъри и малки фирми",
+            "eyebrowIcon": "calc",
+            "title": "Вие работите, ние *подреждаме числата*",
+            "lead": "Счетоводство, ДДС, годишни декларации и заплати — в срок, обяснени на разбираем език и с месечна цена, за да няма изненади, когато от данъчната ви пишат.",
+            "cta": ["Поискайте оферта", "/#contact"],
+            "cta2": ["Вижте пакетите", "/#plans"],
+            "card": {
+              "icon": "calendar",
+              "title": "Един типичен месец",
+              "rows": [
+                ["Вие изпращате", "фактури и извлечения"],
+                ["Ние записваме", "и съгласуваме всичко"],
+                ["Вие получавате", "ясна справка"]
+              ],
+              "note": "Всички документи — в една споделена папка."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                ["calendar", "Сроковете са под контрол"],
+                ["doc", "Ясна месечна справка"],
+                ["lock", "Документите остават поверителни"],
+                ["check", "Една фиксирана месечна цена"]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "services",
+              "title": "За какво се грижим",
+              "intro": "Всичко, което един малък бизнес трябва да има в ред пред данъчните.",
+              "items": [
+                ["book", "Счетоводство", "Фактури за продажби и покупки, разписки и банкови извлечения — записани и съгласувани всеки месец."],
+                ["calc", "ДДС и декларации", "Регистрация по ДДС и месечни справки, плюс годишната ви данъчна декларация или отчетът на фирмата."],
+                ["users", "Заплати", "Трудови договори, фишове, осигуровки и месечните декларации за вашите служители."],
+                ["bag", "Стартиране на фирма", "ЕТ или дружество? Помагаме ви да изберете, да регистрирате и да подредите книгите от първия ден."]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "who",
+              "alt": true,
+              "title": "С кого работим",
+              "intro": "Три вида бизнес — три вида внимание.",
+              "items": [
+                ["Фрийлансъри и еднолични търговци", "Вие издавате фактурите, ние се грижим за документите. Знаете какво дължите преди крайния срок, а не след него.", "Подготвена и подадена годишна данъчна декларация", "Помощ да решите дали да се регистрирате по ДДС", "Ясни обяснения за осигуровките"],
+                ["Малки фирми", "Месечно счетоводство, ДДС и годишен отчет на едно място — с ясен контакт за въпросите ви.", "Месечно счетоводство и справки-декларации по ДДС", "Годишен финансов отчет", "Отговори на въпросите ви и между сроковете"],
+                ["Нови бизнеси", "Началото е най-лесното време да подредите нещата както трябва — и най-трудното да ги оправяте по-късно.", "Ясно сравнение: ЕТ или дружество", "Документите за регистрация — подготвени заедно с вас", "Проста система за фактури и разписки от първия ден"]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "start",
+              "title": "Как започваме",
+              "intro": "От първия разговор до първата месечна справка — в четири стъпки.",
+              "items": [
+                ["Кратък разговор", "Разказвате ни с какво се занимавате, как фактурирате и какво е направено досега."],
+                ["Писмена оферта", "Получавате фиксирана месечна цена и списък с това, което точно включва."],
+                ["Предаване на документите", "Споделяте досегашните документи и при нужда подписвате пълномощно, за да разговаряме с данъчните вместо вас."],
+                ["Месечният ритъм", "Всеки месец качвате документите в обща папка. Ние ги записваме и ви изпращаме кратка справка."]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "plans",
+              "alt": true,
+              "title": "Месечни пакети",
+              "intro": "Цените са начални. Точната сума потвърждаваме след кратък поглед към документите ви и тя остава фиксирана, докато бизнесът ви не се промени.",
+              "items": [
+                { "name": "Фрийлансър", "price": "49 €", "per": "/ месец", "features": ["Счетоводство за един ЕТ или фрийлансър", "Годишна данъчна декларация", "До двайсет документа на месец", "Съвети по имейл"], "cta": ["Изберете пакета", "/#contact"] },
+                { "name": "Малка фирма", "price": "149 €", "per": "/ месец", "featured": "Най-избиран", "features": ["Пълно счетоводство и ДДС декларации", "Изготвяне на годишния финансов отчет", "До осемдесет документа на месец", "Разговор за планиране два пъти годишно"], "cta": ["Изберете пакета", "/#contact"] },
+                { "name": "Фирма със заплати", "price": "249 €", "per": "/ месец", "features": ["Всичко от пакета „Малка фирма“", "Заплати за до 5 служители", "Договори, фишове и декларации", "До сто и петдесет документа на месец"], "cta": ["Изберете пакета", "/#contact"] }
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Въпроси, които чуваме най-често",
+              "items": [
+                ["Трябва ли да съм регистриран по ДДС?", "Не винаги. Зависи от оборота ви и от това, на кого продавате. Разглеждаме вашия случай и казваме дали регистрацията помага, или само добавя хартия."],
+                ["Можете ли да поемете от сегашния ми счетоводител?", "Да. Искаме книгите, проверяваме какво е подадено и продължаваме оттам — без прекъсване в сроковете."],
+                ["Какво трябва да ви изпращам всеки месец?", "Фактури за продажби и покупки, разписки и банкови извлечения. За повечето разписки стига снимка от телефона."],
+                ["Как плащам и може ли цената да се промени?", "С фиксирана месечна банкова вноска. Цената се променя само ако бизнесът ви се промени — повече служители или документи — и ви уведомяваме предварително."],
+                ["Помагате ли с регистрацията на фирма?", "Да. Помагаме ви да изберете между ЕТ и дружество, подготвяме документите и подреждаме книгите от първия ден."],
+                ["Какво да направя, ако получа писмо от данъчните?", "Изпратете ни го. Четем го, обясняваме какво означава и подготвяме отговора."]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Не сте сигурни кой пакет ви трябва?",
+              "p": "Кажете с какво се занимавате и приблизително колко фактури издавате на месец. Ще предложим пакет — или честно ще кажем, че още не ви трябва.",
+              "button": ["Поискайте оферта", "/#contact"]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Поискайте оферта",
+              "intro": "Разкажете ни за бизнеса си. Ще се свържем с вас, за да уговорим кратък разговор.",
+              "formName": "quote",
+              "rows": [
+                ["mail", "Имейл", "hello@example.com", "mailto:hello@example.com"],
+                ["phone", "Телефон", "+359 888 000 000", "tel:+359888000000"],
+                ["pin", "Адрес", "ул. „Витоша“ 1, София"]
+              ],
+              "fields": [
+                { "id": "type", "label": "Аз съм", "options": ["Фрийлансър или ЕТ", "Малка фирма", "Започвам бизнес"] },
+                { "id": "need", "label": "Нуждая се от", "options": ["Счетоводство", "ДДС", "Годишна декларация", "Заплати", "Стартиране на фирма", "Още не знам"] }
+              ],
+              "messageLabel": "Нещо, което трябва да знаем?",
+              "send": "Изпратете запитване",
+              "hoursTitle": "Работно време",
+              "hours": [
+                ["Понеделник – петък", "9:00 – 17:30"],
+                ["Събота", "почивен ден"],
+                ["Неделя", "почивен ден"]
+              ]
+            }
+          ]
+        },
+        "prices": {
+          "title": "Еднократни услуги и цени",
+          "description": "Начални цени за регистрация на фирма, регистрация по ДДС, годишни декларации и други еднократни услуги.",
+          "pagehead": ["Еднократни услуги", "За работа извън месечните пакети. Цените са ориентировъчни — точната сума потвърждаваме, след като видим документите ви."],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "В началото",
+                  "items": [
+                    ["Регистрация на ЕТ", "Избор на форма, документи и вписване", "от 60 €"],
+                    ["Регистрация на фирма", "Документи, вписване и подреждане на книгите", "от 190 €"],
+                    ["Регистрация по ДДС", "Заявление и първи насоки", "от 70 €"]
+                  ]
+                },
+                {
+                  "name": "Веднъж годишно",
+                  "items": [
+                    ["Годишна данъчна декларация", "За фрийлансъри и еднолични търговци", "от 60 €"],
+                    ["Годишен финансов отчет", "За малка фирма", "от 220 €"]
+                  ]
+                },
+                {
+                  "name": "Когато ви трябва помощ",
+                  "items": [
+                    ["Наваксване на липсващо счетоводство", "За всеки месец документи", "от 40 €"],
+                    ["Назначаване на служител", "Договор, уведомление и първи фиш", "30 €"],
+                    ["Консултация на час", "По телефон или видеовръзка", "45 €"]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "prose",
+              "alt": true,
+              "items": [
+                ["Как определяме цената", "Тя зависи от броя документи, от броя служители и от това колко подредени са записите ви. Изпратете ни примерен месец и ще ви кажем цената, преди да започнем."]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Нещо, което го няма в списъка?",
+              "p": "Попитайте. Голяма част от работата ни не се побира в таблица.",
+              "button": ["Поискайте оферта", "/#contact"]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

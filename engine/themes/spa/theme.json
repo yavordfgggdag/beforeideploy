@@ -1,0 +1,985 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "spa",
+  "category": "beauty",
+  "icon": "drop",
+  "accent": "#1d5c5a",
+  "mark": "drop",
+  "art": "rings",
+  "schemaOrg": "DaySpa",
+  "sample": {
+    "name": "Verde Spa"
+  },
+  "featured": false,
+  "titleKey": "newsite.template.spa.title",
+  "descriptionKey": "newsite.template.spa.description",
+  "keywords": {
+    "en": [
+      "massage",
+      "spa",
+      "day spa",
+      "facial",
+      "relaxation",
+      "sports massage",
+      "body treatment",
+      "wellness",
+      "couples massage",
+      "gift voucher"
+    ],
+    "bg": [
+      "масаж",
+      "спа",
+      "спа център",
+      "релаксация",
+      "спортен масаж",
+      "терапия за лице",
+      "козметика",
+      "масаж за двама",
+      "ваучер",
+      "уелнес"
+    ]
+  },
+  "style": "elegant",
+  "tokens": {
+    "dark": false,
+    "bg": "#f4f7f5",
+    "bg2": "#e4ece9",
+    "surface": "#fcfdfc",
+    "text": "#10292b",
+    "muted": "#4a6164",
+    "line": "rgba(16,41,43,.12)",
+    "accent": "#1d5c5a",
+    "accent2": "#b8935a",
+    "font": "sans",
+    "head": "serif",
+    "radius": 10,
+    "tilt": 0
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "hints": {
+    "en": {
+      "offer": "A quiet day spa with relaxing, sports and therapeutic massage, facials and body rituals, plus packages for couples.",
+      "audience": "Anyone who needs to slow down: busy professionals, athletes, couples and friends",
+      "services": [
+        [
+          "Relaxing massage, 60 min",
+          "€55",
+          "Slow strokes with warm oil"
+        ],
+        [
+          "Classic facial",
+          "€50",
+          "Cleanse, massage and mask"
+        ],
+        [
+          "Massage for two",
+          "€120",
+          "Side by side, with tea"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Тихо СПА с релаксиращ, спортен и терапевтичен масаж, терапии за лице и ритуали за тялото, плюс пакети за двама.",
+      "audience": "Всеки, който има нужда да забави темпото: заети професионалисти, спортуващи, двойки и приятели",
+      "services": [
+        [
+          "Релаксиращ масаж, 60 мин",
+          "55 €",
+          "Бавни движения с топло масло"
+        ],
+        [
+          "Класическа терапия за лице",
+          "50 €",
+          "Почистване, масаж и маска"
+        ],
+        [
+          "Масаж за двама",
+          "120 €",
+          "Един до друг, с чай"
+        ]
+      ]
+    }
+  },
+  "lang": {
+    "en": {
+      "tagline": "massage and day spa",
+      "description": "Massage, facials and body rituals in a calm space. See the treatments and prices, then book your visit.",
+      "nav": [
+        [
+          "Treatments",
+          "/treatments.html"
+        ],
+        [
+          "First visit",
+          "/#first-visit"
+        ],
+        [
+          "Vouchers",
+          "/#vouchers"
+        ],
+        [
+          "Contact",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Book a treatment",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Massage, facials and body rituals",
+            "eyebrowIcon": "drop",
+            "title": "Quiet rooms, *warm hands*",
+            "lead": "Relaxing, sports and therapeutic massage, facials and body rituals in a calm space. Come for one treatment or stay for the whole afternoon.",
+            "cta": [
+              "Book a treatment",
+              "/#contact"
+            ],
+            "cta2": [
+              "Treatments and prices",
+              "/treatments.html"
+            ],
+            "card": {
+              "icon": "drop",
+              "title": "A good place to start",
+              "rows": [
+                [
+                  "Relaxing massage",
+                  "€55"
+                ],
+                [
+                  "Classic facial",
+                  "€50"
+                ],
+                [
+                  "Massage for two",
+                  "€120"
+                ]
+              ],
+              "note": "Every price is on the treatments page."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                [
+                  "leaf",
+                  "Calm and unhurried"
+                ],
+                [
+                  "hand",
+                  "Pressure set by you"
+                ],
+                [
+                  "drop",
+                  "Warm oils, soft towels"
+                ],
+                [
+                  "gift",
+                  "Vouchers to give"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "treatments",
+              "title": "Treatments",
+              "intro": "From a one-hour massage to a full afternoon of rituals. Not sure what you need? Tell us how you feel.",
+              "items": [
+                [
+                  "drop",
+                  "Massage",
+                  "Relaxing, sports or therapeutic, from slow and soothing to firm and focused on tight spots."
+                ],
+                [
+                  "flower",
+                  "Facials",
+                  "Cleansing, massage and a mask chosen for your skin type."
+                ],
+                [
+                  "leaf",
+                  "Body rituals",
+                  "Scrub, wrap and massage in one slow, scented treatment."
+                ],
+                [
+                  "heart",
+                  "Couples packages",
+                  "Treatments side by side, then tea and time to unwind together."
+                ]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "approach",
+              "alt": true,
+              "title": "A spa that listens",
+              "items": [
+                [
+                  "Built around you",
+                  "No two backs are the same. Before we start we ask where you hold tension, how you sleep and what you hope to feel afterwards.",
+                  "Pressure from feather-light to firm",
+                  "Oils and products chosen for your skin",
+                  "Areas you would rather skip stay untouched"
+                ],
+                [
+                  "Quiet from start to finish",
+                  "Low light, warm rooms and phones switched off. We keep the pace slow, because the point is to arrive somewhere calmer.",
+                  "Soft music and low light",
+                  "No rush between treatments",
+                  "Tea or water to finish"
+                ]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "first-visit",
+              "title": "What to expect at your first visit",
+              "items": [
+                [
+                  "Arrive and settle",
+                  "Come a few minutes early. We show you around, offer a drink and ask about your health and what you need."
+                ],
+                [
+                  "Tell us what you want",
+                  "Tension in the shoulders? Poor sleep? Light or firm pressure? Your therapist plans the treatment around your answers."
+                ],
+                [
+                  "Relax",
+                  "Undress to your comfort, lie under a warm towel and let go. Tell us at any time if you want more or less pressure."
+                ],
+                [
+                  "Take your time after",
+                  "Drink some water, rest for a few minutes and ask about aftercare. There is no need to rush back out."
+                ]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "packages",
+              "alt": true,
+              "title": "Packages",
+              "intro": "Choose one treatment or combine them into a slower afternoon.",
+              "items": [
+                {
+                  "name": "Quiet hour",
+                  "price": "€55",
+                  "per": "/ 60 min",
+                  "features": [
+                    "Relaxing massage",
+                    "Warm oil and a warm towel",
+                    "Tea afterwards"
+                  ],
+                  "cta": [
+                    "Book this",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "For two",
+                  "price": "€120",
+                  "per": "/ 60 min",
+                  "featured": "Popular",
+                  "features": [
+                    "Massage side by side",
+                    "Herbal tea together",
+                    "Time to unwind afterwards"
+                  ],
+                  "cta": [
+                    "Book this",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "The full ritual",
+                  "price": "€110",
+                  "per": "/ 2 hours",
+                  "features": [
+                    "Body scrub and wrap",
+                    "A slow, relaxing massage",
+                    "A short facial"
+                  ],
+                  "cta": [
+                    "Book this",
+                    "/#contact"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "vouchers",
+              "title": "Gift vouchers",
+              "intro": "A voucher is a gift of time. Tell us who it is for and we will help you choose.",
+              "items": [
+                [
+                  "gift",
+                  "A treatment",
+                  "Choose a massage, facial or ritual for someone who needs a pause."
+                ],
+                [
+                  "heart",
+                  "Time for two",
+                  "A package for a couple or two friends, shared in the same quiet room."
+                ],
+                [
+                  "star",
+                  "An amount",
+                  "Let them choose: a voucher for the value you decide."
+                ]
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "alt": true,
+              "title": "Before your visit",
+              "items": [
+                [
+                  "What should I wear?",
+                  "Arrive in anything comfortable. For massage you undress to your comfort level and stay covered by a towel at all times."
+                ],
+                [
+                  "How long does a treatment take?",
+                  "Massages and facials usually take between half an hour and an hour and a half. Allow a little extra time to arrive, settle in and rest afterwards."
+                ],
+                [
+                  "How firm will the massage be?",
+                  "As firm as you like. Say so at the start and speak up at any point; adjusting the pressure is part of the job."
+                ],
+                [
+                  "Are the treatments suitable in pregnancy or with a health condition?",
+                  "Often, with some changes. Tell us when you book so we can choose the right treatment. For anything medical, check with your doctor first."
+                ],
+                [
+                  "What if I am late?",
+                  "Let us know as soon as you can. We may need to shorten the treatment so the next guest is not kept waiting."
+                ],
+                [
+                  "How do I book a treatment or a voucher?",
+                  "Use the form below or give us a call. Tell us the treatment, a preferred day and anything we should know, and we will confirm."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Come in and slow down",
+              "p": "Choose a treatment and a day. We confirm and answer any questions before you arrive.",
+              "button": [
+                "Book a treatment",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Book a treatment",
+              "intro": "Tell us what you would like and when. Not sure which treatment? Describe how you feel and we will suggest one.",
+              "formName": "booking",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Address",
+                  "1 Vitosha St, Sofia"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "treatment",
+                  "label": "Treatment",
+                  "options": [
+                    "Relaxing massage",
+                    "Sports massage",
+                    "Therapeutic massage",
+                    "Facial",
+                    "Body ritual",
+                    "Couples package",
+                    "Gift voucher"
+                  ]
+                },
+                {
+                  "id": "date",
+                  "label": "Preferred day",
+                  "type": "date"
+                }
+              ],
+              "messageLabel": "Anything we should know? (optional)",
+              "send": "Request a time",
+              "hoursTitle": "Opening hours",
+              "hours": [
+                [
+                  "Mon – Fri",
+                  "10:00 – 20:00"
+                ],
+                [
+                  "Sat",
+                  "10:00 – 18:00"
+                ],
+                [
+                  "Sun",
+                  "11:00 – 17:00"
+                ]
+              ]
+            }
+          ]
+        },
+        "treatments": {
+          "title": "Spa treatments and prices",
+          "description": "Massage, facials, body rituals and couples packages, with durations and prices in euro.",
+          "pagehead": [
+            "Treatments and prices",
+            "Prices in euro. Tell us about allergies, pregnancy or health conditions when you book, so we can choose the right treatment."
+          ],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Massage",
+                  "items": [
+                    [
+                      "Relaxing massage",
+                      "60 min · slow strokes, warm oil",
+                      "€55"
+                    ],
+                    [
+                      "Relaxing massage, long",
+                      "90 min",
+                      "€75"
+                    ],
+                    [
+                      "Sports massage",
+                      "60 min · firm, for tired muscles",
+                      "€60"
+                    ],
+                    [
+                      "Back, neck and shoulders",
+                      "45 min · therapeutic, focused",
+                      "€45"
+                    ],
+                    [
+                      "Foot massage",
+                      "30 min",
+                      "€30"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Facials",
+                  "items": [
+                    [
+                      "Classic facial",
+                      "60 min · cleanse, massage, mask",
+                      "€50"
+                    ],
+                    [
+                      "Hydrating facial",
+                      "75 min · extra moisture for dry skin",
+                      "€60"
+                    ],
+                    [
+                      "Facial massage",
+                      "30 min · a short, lifting massage",
+                      "€30"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Rituals and couples",
+                  "items": [
+                    [
+                      "Scrub and massage",
+                      "90 min · exfoliation, then oil massage",
+                      "€80"
+                    ],
+                    [
+                      "The full ritual",
+                      "2 hours · scrub, wrap, massage, short facial",
+                      "€110"
+                    ],
+                    [
+                      "Couples massage",
+                      "60 min · side by side",
+                      "€120"
+                    ],
+                    [
+                      "Couples afternoon",
+                      "2.5 hours · massage, facial and tea",
+                      "€170"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Give an hour of calm",
+              "p": "Gift vouchers for a treatment or an amount of your choice. Ask us and we will help you choose.",
+              "button": [
+                "Ask about vouchers",
+                "/#contact"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "bg": {
+      "tagline": "масаж и СПА център",
+      "description": "Масаж, терапии за лице и ритуали за тялото в спокойна обстановка. Вижте процедурите и цените и запазете час.",
+      "nav": [
+        [
+          "Процедури",
+          "/treatments.html"
+        ],
+        [
+          "Първо посещение",
+          "/#first-visit"
+        ],
+        [
+          "Ваучери",
+          "/#vouchers"
+        ],
+        [
+          "Контакти",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Запазете час",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Масаж, терапии за лице и ритуали",
+            "eyebrowIcon": "drop",
+            "title": "Тиха стая, *топли ръце*",
+            "lead": "Релаксиращ, спортен и терапевтичен масаж, терапии за лице и ритуали за тялото в спокойна обстановка. Елате за една процедура или останете за целия следобед.",
+            "cta": [
+              "Запазете час",
+              "/#contact"
+            ],
+            "cta2": [
+              "Процедури и цени",
+              "/treatments.html"
+            ],
+            "card": {
+              "icon": "drop",
+              "title": "С какво да започнете",
+              "rows": [
+                [
+                  "Релаксиращ масаж",
+                  "55 €"
+                ],
+                [
+                  "Терапия за лице",
+                  "50 €"
+                ],
+                [
+                  "Масаж за двама",
+                  "120 €"
+                ]
+              ],
+              "note": "Всички цени са на страницата с процедури."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                [
+                  "leaf",
+                  "Спокойно и без бързане"
+                ],
+                [
+                  "hand",
+                  "Натиск по ваш избор"
+                ],
+                [
+                  "drop",
+                  "Топли масла, меки кърпи"
+                ],
+                [
+                  "gift",
+                  "Ваучери за подарък"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "treatments",
+              "title": "Процедури",
+              "intro": "От едночасов масаж до цял следобед с ритуали. Не сте сигурни какво ви трябва? Разкажете ни как се чувствате.",
+              "items": [
+                [
+                  "drop",
+                  "Масаж",
+                  "Релаксиращ, спортен или терапевтичен: от бавен и успокояващ до плътен и насочен към схванатите места."
+                ],
+                [
+                  "flower",
+                  "Терапии за лице",
+                  "Почистване, масаж и маска, подбрана за вашия тип кожа."
+                ],
+                [
+                  "leaf",
+                  "Ритуали за тялото",
+                  "Скраб, обвивка и масаж в една бавна, ароматна процедура."
+                ],
+                [
+                  "heart",
+                  "Пакети за двама",
+                  "Процедури една до друга, а след тях чай и време да се отпуснете заедно."
+                ]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "approach",
+              "alt": true,
+              "title": "СПА, което ви слуша",
+              "items": [
+                [
+                  "Изградено около вас",
+                  "Няма два еднакви гръбнака. Преди да започнем, питаме къде усещате напрежение, как спите и какво се надявате да почувствате след това.",
+                  "Натиск от съвсем лек до плътен",
+                  "Масла и продукти, подбрани за вашата кожа",
+                  "Местата, които предпочитате да пропуснем, остават недокоснати"
+                ],
+                [
+                  "Тихо от началото до края",
+                  "Приглушена светлина, топли стаи и изключени телефони. Темпото е бавно, защото целта е да стигнете до по-спокойно място.",
+                  "Тиха музика и приглушена светлина",
+                  "Без бързане между процедурите",
+                  "Чай или вода накрая"
+                ]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "first-visit",
+              "title": "Какво да очаквате при първото посещение",
+              "items": [
+                [
+                  "Пристигнете и се настанете",
+                  "Дойдете малко по-рано. Ще ви разведем, ще ви предложим напитка и ще попитаме за здравето ви и какво ви трябва."
+                ],
+                [
+                  "Кажете какво искате",
+                  "Напрежение в раменете? Лош сън? Лек или плътен натиск? Терапевтът планира процедурата според отговорите ви."
+                ],
+                [
+                  "Отпуснете се",
+                  "Съблечете се до степента, която ви е удобна, легнете под топла кърпа и се отпуснете. Кажете ни по всяко време, ако искате повече или по-малко натиск."
+                ],
+                [
+                  "Не бързайте след това",
+                  "Изпийте вода, починете няколко минути и попитайте за съвети след процедурата. Няма нужда да излизате набързо."
+                ]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "packages",
+              "alt": true,
+              "title": "Пакети",
+              "intro": "Изберете една процедура или ги съчетайте в по-бавен следобед.",
+              "items": [
+                {
+                  "name": "Тихият час",
+                  "price": "55 €",
+                  "per": "/ 60 мин",
+                  "features": [
+                    "Релаксиращ масаж",
+                    "Топло масло и топла кърпа",
+                    "Чай след процедурата"
+                  ],
+                  "cta": [
+                    "Запазете",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "За двама",
+                  "price": "120 €",
+                  "per": "/ 60 мин",
+                  "featured": "Популярен",
+                  "features": [
+                    "Масаж един до друг",
+                    "Билков чай заедно",
+                    "Време да се отпуснете след това"
+                  ],
+                  "cta": [
+                    "Запазете",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Пълният ритуал",
+                  "price": "110 €",
+                  "per": "/ 2 часа",
+                  "features": [
+                    "Скраб и обвивка за тялото",
+                    "Бавен, релаксиращ масаж",
+                    "Кратка терапия за лице"
+                  ],
+                  "cta": [
+                    "Запазете",
+                    "/#contact"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "vouchers",
+              "title": "Подаръчни ваучери",
+              "intro": "Ваучерът е подарък време. Кажете ни за кого е и ще ви помогнем да изберете.",
+              "items": [
+                [
+                  "gift",
+                  "Процедура",
+                  "Изберете масаж, терапия за лице или ритуал за човек, който има нужда от пауза."
+                ],
+                [
+                  "heart",
+                  "Време за двама",
+                  "Пакет за двойка или двама приятели, споделен в една и съща тиха стая."
+                ],
+                [
+                  "star",
+                  "Сума по ваш избор",
+                  "Нека сами изберат: ваучер за стойността, която вие решите."
+                ]
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "alt": true,
+              "title": "Преди посещението",
+              "items": [
+                [
+                  "Какво да облека?",
+                  "Дойдете с каквото ви е удобно. За масажа се събличате до степента, която ви е удобна, и сте покрити с кърпа през цялото време."
+                ],
+                [
+                  "Колко продължава една процедура?",
+                  "Масажите и терапиите за лице обикновено траят от половин час до час и половина. Оставете малко време за настаняване и почивка след това."
+                ],
+                [
+                  "Колко силен ще е масажът?",
+                  "Колкото ви е приятно. Кажете го в началото и по всяко време по време на процедурата. Нагласянето на натиска е част от работата ни."
+                ],
+                [
+                  "Подходящи ли са процедурите при бременност или здравословен проблем?",
+                  "Често да, с някои промени. Кажете ни при записването, за да изберем подходяща процедура. При медицински въпроси първо се консултирайте с лекар."
+                ],
+                [
+                  "Какво става, ако закъснея?",
+                  "Обадете ни се веднага щом разберете. Може да се наложи да съкратим процедурата, за да не караме следващия гост да чака."
+                ],
+                [
+                  "Как да запазя час или ваучер?",
+                  "Използвайте формата по-долу или ни се обадете. Кажете ни процедурата, удобен ден и всичко, което трябва да знаем, и ще потвърдим."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Влезте и забавете темпото",
+              "p": "Изберете процедура и ден. Ще потвърдим и ще отговорим на въпросите ви, преди да дойдете.",
+              "button": [
+                "Запазете час",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Запазете час",
+              "intro": "Кажете ни какво желаете и кога. Не знаете коя процедура да изберете? Опишете как се чувствате и ще предложим подходяща.",
+              "formName": "booking",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Адрес",
+                  "ул. „Витоша“ 1, София"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "treatment",
+                  "label": "Процедура",
+                  "options": [
+                    "Релаксиращ масаж",
+                    "Спортен масаж",
+                    "Терапевтичен масаж",
+                    "Терапия за лице",
+                    "Ритуал за тялото",
+                    "Пакет за двама",
+                    "Подаръчен ваучер"
+                  ]
+                },
+                {
+                  "id": "date",
+                  "label": "Желан ден",
+                  "type": "date"
+                }
+              ],
+              "messageLabel": "Има ли нещо, което да знаем? (по избор)",
+              "send": "Заявете час",
+              "hoursTitle": "Работно време",
+              "hours": [
+                [
+                  "Пон – пет",
+                  "10:00 – 20:00"
+                ],
+                [
+                  "Съб",
+                  "10:00 – 18:00"
+                ],
+                [
+                  "Нед",
+                  "11:00 – 17:00"
+                ]
+              ]
+            }
+          ]
+        },
+        "treatments": {
+          "title": "СПА процедури и цени",
+          "description": "Масажи, терапии за лице, ритуали за тялото и пакети за двама, с продължителност и цени в евро.",
+          "pagehead": [
+            "Процедури и цени",
+            "Цените са в евро. Кажете ни за алергии, бременност или здравословни проблеми при записването, за да изберем подходяща процедура."
+          ],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Масаж",
+                  "items": [
+                    [
+                      "Релаксиращ масаж",
+                      "60 мин · бавни движения, топло масло",
+                      "55 €"
+                    ],
+                    [
+                      "Релаксиращ масаж, удължен",
+                      "90 мин",
+                      "75 €"
+                    ],
+                    [
+                      "Спортен масаж",
+                      "60 мин · плътен, за уморени мускули",
+                      "60 €"
+                    ],
+                    [
+                      "Гръб, врат и рамене",
+                      "45 мин · терапевтичен, насочен",
+                      "45 €"
+                    ],
+                    [
+                      "Масаж на стъпала",
+                      "30 мин",
+                      "30 €"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Терапии за лице",
+                  "items": [
+                    [
+                      "Класическа терапия",
+                      "60 мин · почистване, масаж, маска",
+                      "50 €"
+                    ],
+                    [
+                      "Хидратираща терапия",
+                      "75 мин · допълнителна хидратация за суха кожа",
+                      "60 €"
+                    ],
+                    [
+                      "Масаж на лице",
+                      "30 мин · кратък, подтягащ масаж",
+                      "30 €"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Ритуали и двойки",
+                  "items": [
+                    [
+                      "Скраб и масаж",
+                      "90 мин · ексфолиране, после масаж с масло",
+                      "80 €"
+                    ],
+                    [
+                      "Пълният ритуал",
+                      "2 часа · скраб, обвивка, масаж, кратка терапия за лице",
+                      "110 €"
+                    ],
+                    [
+                      "Масаж за двама",
+                      "60 мин · един до друг",
+                      "120 €"
+                    ],
+                    [
+                      "Следобед за двама",
+                      "2,5 часа · масаж, терапия за лице и чай",
+                      "170 €"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Подарете час спокойствие",
+              "p": "Подаръчни ваучери за процедура или за сума по ваш избор. Попитайте ни и ще ви помогнем да изберете.",
+              "button": [
+                "Попитайте за ваучер",
+                "/#contact"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

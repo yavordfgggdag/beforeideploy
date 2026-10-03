@@ -1,0 +1,227 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "comingsoon",
+  "category": "business",
+  "icon": "hourglass",
+  "accent": "#a855f7",
+  "mark": "rocket",
+  "art": "orbit",
+  "schemaOrg": "Organization",
+  "sample": {
+    "name": "Launching soon"
+  },
+  "featured": true,
+  "titleKey": "newsite.template.comingsoon.title",
+  "descriptionKey": "newsite.template.comingsoon.description",
+  "keywords": {
+    "en": [
+      "coming soon",
+      "launch",
+      "waitlist",
+      "teaser",
+      "pre-launch",
+      "signup",
+      "countdown",
+      "new product"
+    ],
+    "bg": [
+      "очаквайте скоро",
+      "старт",
+      "списък с чакащи",
+      "тийзър",
+      "предварителна регистрация",
+      "нов продукт"
+    ]
+  },
+  "style": "bold",
+  "tokens": {
+    "dark": true,
+    "bg": "#0a0a12",
+    "bg2": "#11111c",
+    "surface": "#15152a",
+    "text": "#eef0f7",
+    "muted": "#a3abc2",
+    "line": "rgba(255,255,255,.09)",
+    "accent": "#a855f7",
+    "accent2": "#ec4899"
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "hints": {
+    "en": {
+      "offer": "We are getting ready to open an online shop for handmade ceramics, and we want to tell people the moment it opens.",
+      "audience": "People who follow us and want to hear about the launch first",
+      "services": [
+        [
+          "The first collection",
+          "",
+          "Mugs, bowls and vases, made in small batches"
+        ],
+        [
+          "Gift cards",
+          "",
+          "A present for someone who loves ceramics"
+        ],
+        [
+          "Launch-day email",
+          "",
+          "One message when the shop opens, and nothing else"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Подготвяме откриването на онлайн магазин за ръчно изработена керамика и искаме да съобщим на хората още в деня на старта.",
+      "audience": "Хора, които ни следват и искат да научат първи за старта",
+      "services": [
+        [
+          "Първата колекция",
+          "",
+          "Чаши, купи и вази, правени в малки серии"
+        ],
+        [
+          "Подаръчни карти",
+          "",
+          "Подарък за човек, който обича керамиката"
+        ],
+        [
+          "Писмо в деня на старта",
+          "",
+          "Едно съобщение, когато магазинът отвори, и нищо повече"
+        ]
+      ]
+    }
+  },
+  "lang": {
+    "bg": {
+      "tagline": "скоро отваряме",
+      "description": "Нещо ново идва скоро. Оставете имейл и ще ви пишем първи.",
+      "nav": [
+        [
+          "Какво идва",
+          "/#what"
+        ],
+        [
+          "Абонирай се",
+          "/#notify"
+        ]
+      ],
+      "headerCta": null,
+      "pages": {
+        "index": {
+          "hero": {
+            "center": true,
+            "eyebrow": "Списъкът за старта е отворен",
+            "eyebrowIcon": "rocket",
+            "title": "Нещо ново *идва скоро*",
+            "lead": "Работим по последните детайли. Оставете имейл и ще ви пишем веднъж — в деня на старта.",
+            "cta": [
+              "Искам покана",
+              "/#notify"
+            ]
+          },
+          "sections": [
+            {
+              "type": "cards",
+              "id": "what",
+              "title": "Какво да очаквате",
+              "items": [
+                [
+                  "spark",
+                  "Нов подход",
+                  "Едно изречение за това какво ще е различното."
+                ],
+                [
+                  "heart",
+                  "Направено с грижа",
+                  "Защо го правите и за кого."
+                ],
+                [
+                  "gift",
+                  "Първи на опашката",
+                  "Абонатите научават за старта преди всички останали."
+                ]
+              ]
+            },
+            {
+              "type": "form",
+              "id": "notify",
+              "alt": true,
+              "title": "Бъдете първи",
+              "intro": "Един имейл в деня на старта. Без спам.",
+              "formName": "notify",
+              "button": "Абонирай ме",
+              "note": "Можете да се отпишете с един клик."
+            }
+          ]
+        }
+      }
+    },
+    "en": {
+      "tagline": "launching soon",
+      "description": "Something new is coming soon. Leave your email and hear about it first.",
+      "nav": [
+        [
+          "What’s coming",
+          "/#what"
+        ],
+        [
+          "Get notified",
+          "/#notify"
+        ]
+      ],
+      "headerCta": null,
+      "pages": {
+        "index": {
+          "hero": {
+            "center": true,
+            "eyebrow": "The launch list is open",
+            "eyebrowIcon": "rocket",
+            "title": "Something new is *coming soon*",
+            "lead": "We are polishing the last details. Leave your email and we will write to you once, on launch day.",
+            "cta": [
+              "Get an invite",
+              "/#notify"
+            ]
+          },
+          "sections": [
+            {
+              "type": "cards",
+              "id": "what",
+              "title": "What to expect",
+              "items": [
+                [
+                  "spark",
+                  "A fresh approach",
+                  "One sentence on what will be different."
+                ],
+                [
+                  "heart",
+                  "Made with care",
+                  "Why you are building it and for whom."
+                ],
+                [
+                  "gift",
+                  "First in line",
+                  "Subscribers hear about the launch before everyone else."
+                ]
+              ]
+            },
+            {
+              "type": "form",
+              "id": "notify",
+              "alt": true,
+              "title": "Be the first",
+              "intro": "One email on launch day. No spam.",
+              "formName": "notify",
+              "button": "Notify me",
+              "note": "Unsubscribe with one click."
+            }
+          ]
+        }
+      }
+    }
+  }
+}

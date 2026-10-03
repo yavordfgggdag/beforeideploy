@@ -8,6 +8,7 @@ struct MonitorCard: View {
     @EnvironmentObject var model: AppModel
     @Local private var confirmAgent = false
     @Local private var webhookDraft = ""
+    @Local private var showNotifySettings = false
 
     var body: some View {
         let m = model.monitor
@@ -54,18 +55,24 @@ struct MonitorCard: View {
                         .font(Typo.font(.caption)).foregroundColor(Theme.warn)
                 }
             }
-            channelRow(m)
-
-            if let s = m?.settings {
-                FlowLayout(spacing: Space.m, lineSpacing: Space.s) {
-                    Text(L("monitor.notifyLabel")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.secondary)
-                    notifyToggle(L("monitor.notify.down"), s.notify.down) { model.setMonitorNotify(down: $0) }
-                    notifyToggle(L("monitor.notify.ssl"), s.notify.ssl) { model.setMonitorNotify(ssl: $0) }
-                    notifyToggle(L("monitor.notify.domain"), s.notify.domain) { model.setMonitorNotify(domain: $0) }
-                    notifyToggle(L("monitor.notify.recovered"), s.notify.recovered) { model.setMonitorNotify(recovered: $0) }
-                    Spacer()
+            // webhook, Pushover and what to notify about are set once: folded away so the status reads at a glance
+            DisclosureGroup(L("monitor.notificationSettings"), isExpanded: $showNotifySettings) {
+                VStack(alignment: .leading, spacing: 10) {
+                    channelRow(m)
+                    if let s = m?.settings {
+                        FlowLayout(spacing: Space.m, lineSpacing: Space.s) {
+                            Text(L("monitor.notifyLabel")).font(Typo.font(.callout, weight: .semibold)).foregroundColor(Theme.secondary)
+                            notifyToggle(L("monitor.notify.down"), s.notify.down) { model.setMonitorNotify(down: $0) }
+                            notifyToggle(L("monitor.notify.ssl"), s.notify.ssl) { model.setMonitorNotify(ssl: $0) }
+                            notifyToggle(L("monitor.notify.domain"), s.notify.domain) { model.setMonitorNotify(domain: $0) }
+                            notifyToggle(L("monitor.notify.recovered"), s.notify.recovered) { model.setMonitorNotify(recovered: $0) }
+                            Spacer()
+                        }
+                    }
                 }
+                .padding(.top, 6)
             }
+            .font(Typo.font(.callout)).foregroundColor(Theme.secondary)
 
             if let open = m?.openIncidents, !open.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {

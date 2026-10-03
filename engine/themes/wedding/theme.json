@@ -1,0 +1,399 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "wedding",
+  "category": "community",
+  "icon": "heart",
+  "accent": "#a47148",
+  "mark": "ring",
+  "art": "leaves",
+  "schemaOrg": "Organization",
+  "sample": {
+    "name": "Maria & Petar"
+  },
+  "featured": false,
+  "titleKey": "newsite.template.wedding.title",
+  "descriptionKey": "newsite.template.wedding.description",
+  "keywords": {
+    "en": [
+      "wedding",
+      "invitation",
+      "rsvp",
+      "couple",
+      "ceremony",
+      "celebration",
+      "anniversary",
+      "save the date"
+    ],
+    "bg": [
+      "сватба",
+      "покана",
+      "потвърждение",
+      "двойка",
+      "церемония",
+      "празник",
+      "годишнина",
+      "запазете датата"
+    ]
+  },
+  "style": "elegant",
+  "tokens": {
+    "dark": false,
+    "bg": "#fbf8f3",
+    "bg2": "#f4ede3",
+    "surface": "#fffdf9",
+    "text": "#3b2f2a",
+    "muted": "#6f625a",
+    "line": "rgba(15,23,42,.10)",
+    "accent": "#a47148",
+    "accent2": "#d4a373",
+    "font": "serif",
+    "head": "serif",
+    "radius": 20,
+    "tilt": 0
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "hints": {
+    "en": {
+      "offer": "We are getting married and would love to celebrate with you. Here are the plan for the day, the venue and where to tell us you are coming.",
+      "audience": "Family and friends we want beside us",
+      "services": [
+        [
+          "Church ceremony",
+          "",
+          "In the afternoon, with family and close friends"
+        ],
+        [
+          "Dinner and party",
+          "",
+          "Music and dancing in the restaurant garden"
+        ],
+        [
+          "Where to stay",
+          "",
+          "Hotels near the venue, if you are travelling"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Женим се и ще се радваме да празнуваме с вас. Тук са програмата на деня, мястото и къде да ни кажете, че идвате.",
+      "audience": "Семейство и приятели, които искаме до нас",
+      "services": [
+        [
+          "Църковен ритуал",
+          "",
+          "Следобед, сред семейството и най-близките"
+        ],
+        [
+          "Вечеря и празник",
+          "",
+          "Музика и танци в градината на ресторанта"
+        ],
+        [
+          "Настаняване",
+          "",
+          "Хотели близо до мястото, ако идвате отдалеч"
+        ]
+      ]
+    }
+  },
+  "lang": {
+    "bg": {
+      "tagline": "нашата сватба",
+      "description": "Поканата, програмата на деня и потвърждение за присъствие.",
+      "nav": [
+        [
+          "Историята",
+          "/#story"
+        ],
+        [
+          "Програма",
+          "/#day"
+        ],
+        [
+          "Потвърди",
+          "/#rsvp"
+        ]
+      ],
+      "headerCta": [
+        "Потвърди присъствие",
+        "/#rsvp"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "center": true,
+            "eyebrow": "Запазете датата",
+            "eyebrowIcon": "heart",
+            "title": "Женим се! *Ела с нас*",
+            "lead": "Ще се радваме да споделим най-хубавия ни ден с вас. Тук ще намерите програмата, мястото и формата за потвърждение.",
+            "cta": [
+              "Потвърди присъствие",
+              "/#rsvp"
+            ],
+            "cta2": [
+              "Програмата",
+              "/#day"
+            ]
+          },
+          "sections": [
+            {
+              "type": "timeline",
+              "id": "story",
+              "title": "Нашата история",
+              "items": [
+                [
+                  "Началото",
+                  "Запознаване",
+                  "На рожден ден на общ приятел — и спор за любим филм."
+                ],
+                [
+                  "По пътя",
+                  "Първото пътуване",
+                  "Пътуване заедно и една изгубена карта."
+                ],
+                [
+                  "И един ден",
+                  "Годежът",
+                  "На покрива, с изглед към тепетата."
+                ]
+              ]
+            },
+            {
+              "type": "timeline",
+              "id": "day",
+              "alt": true,
+              "title": "Програма на деня",
+              "items": [
+                [
+                  "Следобед",
+                  "Църковен ритуал",
+                  "В храма, сред семейството и най-близките ни приятели."
+                ],
+                [
+                  "Привечер",
+                  "Граждански ритуал",
+                  "В градината на ресторанта."
+                ],
+                [
+                  "Вечер",
+                  "Вечеря и празник",
+                  "Музика, танци и много обич — до сутринта."
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "title": "Полезно",
+              "items": [
+                [
+                  "pin",
+                  "Място",
+                  "Къде празнуваме — с адрес и как да стигнете."
+                ],
+                [
+                  "home",
+                  "Настаняване",
+                  "Хотели наблизо за гостите от други градове — пишете ни."
+                ],
+                [
+                  "gift",
+                  "Подаръци",
+                  "Най-големият подарък е да сте с нас."
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "rsvp",
+              "alt": true,
+              "title": "Потвърди присъствие",
+              "intro": "Моля, потвърдете колкото можете по-рано, за да подготвим всичко за всички.",
+              "formName": "rsvp",
+              "rows": [
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "attending",
+                  "label": "Ще дойдете ли?",
+                  "options": [
+                    "Да, с радост",
+                    "За съжаление, не"
+                  ]
+                },
+                {
+                  "id": "guests",
+                  "label": "Брой гости",
+                  "options": [
+                    "1",
+                    "2",
+                    "3",
+                    "4"
+                  ]
+                }
+              ],
+              "messageLabel": "Хранителни предпочитания или пожелание",
+              "send": "Потвърди"
+            }
+          ]
+        }
+      }
+    },
+    "en": {
+      "tagline": "our wedding",
+      "description": "The invitation, the plan for the day and an RSVP.",
+      "nav": [
+        [
+          "Our story",
+          "/#story"
+        ],
+        [
+          "The day",
+          "/#day"
+        ],
+        [
+          "RSVP",
+          "/#rsvp"
+        ]
+      ],
+      "headerCta": [
+        "RSVP",
+        "/#rsvp"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "center": true,
+            "eyebrow": "Save the date",
+            "eyebrowIcon": "heart",
+            "title": "We’re getting married! *Join us*",
+            "lead": "We would love to share our happiest day with you. Here you will find the plan, the venue and the RSVP form.",
+            "cta": [
+              "RSVP",
+              "/#rsvp"
+            ],
+            "cta2": [
+              "The day",
+              "/#day"
+            ]
+          },
+          "sections": [
+            {
+              "type": "timeline",
+              "id": "story",
+              "title": "Our story",
+              "items": [
+                [
+                  "The beginning",
+                  "We met",
+                  "At a friend’s birthday — and argued about our favourite film."
+                ],
+                [
+                  "Along the way",
+                  "First trip",
+                  "A trip together and one lost map."
+                ],
+                [
+                  "Then, one day",
+                  "The proposal",
+                  "On a rooftop overlooking the hills."
+                ]
+              ]
+            },
+            {
+              "type": "timeline",
+              "id": "day",
+              "alt": true,
+              "title": "The day",
+              "items": [
+                [
+                  "Afternoon",
+                  "Church ceremony",
+                  "In the church, with family and our closest friends."
+                ],
+                [
+                  "Early evening",
+                  "Civil ceremony",
+                  "In the restaurant garden."
+                ],
+                [
+                  "Evening",
+                  "Dinner and party",
+                  "Music, dancing and lots of love — until morning."
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "title": "Good to know",
+              "items": [
+                [
+                  "pin",
+                  "Venue",
+                  "Where we celebrate, with the address and how to get there."
+                ],
+                [
+                  "home",
+                  "Where to stay",
+                  "Hotels nearby for guests from out of town — just ask."
+                ],
+                [
+                  "gift",
+                  "Gifts",
+                  "Your presence is the greatest gift."
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "rsvp",
+              "alt": true,
+              "title": "RSVP",
+              "intro": "Please reply as soon as you can, so we can plan for everyone.",
+              "formName": "rsvp",
+              "rows": [
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "attending",
+                  "label": "Will you come?",
+                  "options": [
+                    "Yes, with joy",
+                    "Sadly, no"
+                  ]
+                },
+                {
+                  "id": "guests",
+                  "label": "Guests",
+                  "options": [
+                    "1",
+                    "2",
+                    "3",
+                    "4"
+                  ]
+                }
+              ],
+              "messageLabel": "Dietary needs or a wish",
+              "send": "Send RSVP"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

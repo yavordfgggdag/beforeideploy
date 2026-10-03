@@ -5,7 +5,7 @@ import SwiftUI
 enum Screen: Hashable { case overview, project, domains, costs, setup, admin, account, assistant, usage }
 
 enum SheetKind: Identifiable {
-    case production, netlifySetup, commit, history, settings, remote, spaceshipConnect, connectDomain, deleteAccount, plans, release, rollback, client, aiKeys, newSite, pushover, gitIdentity
+    case production, netlifySetup, commit, history, settings, remote, spaceshipConnect, connectDomain, deleteAccount, plans, release, rollback, client, aiKeys, newSite, pushover, gitIdentity, siteEdit
     var id: Int { hashValue }
 }
 
@@ -478,10 +478,87 @@ final class AppModel: ObservableObject, Feedback {
         templates = (try? await engine.call(["new", "list"], as: [SiteTemplate].self)) ?? []
     }
 
-    /// Creates a site from a template, adds it to the library and opens it. Returns an error message, or nil.
-    func createSite(name: String, template: String, dir: String, lang: String) async -> String? {
+    @Published var siteStyles: [String: SiteStyle] = [:]
+
+    func loadSiteStyles() async {
+        siteStyles = (try? await engine.call(["new", "styles"], as: [String: SiteStyle].self)) ?? [:]
+    }
+
+    /// Renders the brief in memory (Site Builder S2): file name → text, nothing written to disk.
+    /// `contentFile` (S3): the AI's texts from `siteContent`, instead of the theme's sample texts.
+    func previewSite(_ brief: SiteBrief, contentFile: String? = nil) async throws -> [String: String] {
+        var args = ["new", "preview", "--brief", brief.json()]
+        if let contentFile { args += ["--content", contentFile] }
+        return try await engine.call(args, as: [String: String].self, timeout: 60)
+    }
+
+    /// The AI writes the site's texts (plan → content → review); progress arrives as `step` events. Nothing is
+    /// written to the site folder — the result is a content file for `previewSite` / `generateSite`.
+    func siteContent(_ brief: SiteBrief, onStep: @escaping @MainActor (EngineEvent) -> Void) async throws -> SiteContentResult {
+        try await engine.call(["new", "content", "--brief", brief.json()], as: SiteContentResult.self, timeout: 600) { e in
+            if e.type == "step" { onStep(e) }
+        }
+    }
+
+    /// Site Builder v2 (`bid site chat`): one turn of "start a site from one message". `modelChoice` is `auto` or a model id.
+    func siteChat(_ messages: [[String: String]], modelChoice: String, asked: Int) async throws -> SiteChatTurn {
+        let data = try JSONSerialization.data(withJSONObject: messages)
+        let json = String(data: data, encoding: .utf8) ?? "[]"
+        return try await engine.call(["site", "chat", "--messages", json, "--model", modelChoice, "--asked", String(asked)], as: SiteChatTurn.self, timeout: 120)
+    }
+
+    // MARK: - Site Builder S4: change a generated site with words
+
+    func siteInfo(_ project: Project) async -> SiteInfo? {
+        try? await engine.call(["site", "info", "--project", project.key], as: SiteInfo.self, timeout: 30)
+    }
+
+    /// `bid site edit`: the words become a commit; progress arrives as `step` events when a model is needed.
+    func siteEdit(_ project: Project, say: String, force: Bool = false, onStep: @escaping @MainActor (EngineEvent) -> Void) async throws -> SiteEditResult {
+        var args = ["site", "edit", "--project", project.key, "--say", say]
+        if force { args.append("--force") }
+        let r = try await engine.call(args, as: SiteEditResult.self, timeout: 300) { e in if e.type == "step" { onStep(e) } }
+        await refreshStatus(quiet: true)
+        return r
+    }
+
+    /// The kept conversation about the site (chat, plan and build entries) and its standing instructions.
+    func siteTalkHistory(_ project: Project) async -> SiteTalkHistory? {
+        try? await engine.call(["site", "talk", "--project", project.key, "--history"], as: SiteTalkHistory.self, timeout: 30)
+    }
+
+    /// One turn: `chat` answers, `plan` writes editable steps, `build` changes the real site. `handle` cancels the run (Stop).
+    func siteTalk(_ project: Project, mode: String, say: String, plan: [String]?, modelChoice: String, force: Bool, handle: EngineHandle) async throws -> SiteTalkResult {
+        var args = ["site", "talk", "--project", project.key, "--mode", mode, "--model", modelChoice]
+        if mode == "build", let plan, !plan.isEmpty, let d = try? JSONSerialization.data(withJSONObject: plan) { args += ["--plan", String(decoding: d, as: UTF8.self)] }
+        if !say.isEmpty { args += ["--say", say] }
+        if force { args.append("--force") }
+        let outcome = try await engine.run(args, handle: handle, timeout: 600)
+        let r = try outcome.decode(SiteTalkResult.self)
+        if mode == "build" { await refreshStatus(quiet: true) }
+        return r
+    }
+
+    @discardableResult
+    func siteInstructions(_ project: Project, text: String) async -> String? {
+        struct R: Decodable { var instructions: String }
+        let args = text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? ["site", "talk", "--project", project.key, "--instructions-clear"] : ["site", "talk", "--project", project.key, "--instructions", text]
+        return (try? await engine.call(args, as: R.self, timeout: 30))?.instructions
+    }
+
+    /// `bid site undo`: reverts the last edit with a new commit.
+    func siteUndo(_ project: Project) async throws {
+        struct Undo: Decodable { var commit: String? }
+        _ = try await engine.call(["site", "undo", "--project", project.key], as: Undo.self, timeout: 60)
+        await refreshStatus(quiet: true)
+    }
+
+    /// Creates the site from the brief, adds it to the library and opens it. Returns an error message, or nil.
+    func generateSite(_ brief: SiteBrief, dir: String, contentFile: String? = nil) async -> String? {
         do {
-            let r = try await engine.call(["new", "create", "--template", template, "--name", name, "--dir", dir, "--lang", lang], as: NewSiteResult.self)
+            var args = ["new", "generate", "--brief", brief.json(), "--dir", dir]
+            if let contentFile { args += ["--content", contentFile] }
+            let r = try await engine.call(args, as: NewSiteResult.self)
             await projectStore.loadProjects()
             flash(L("newsite.created", r.project.name))
             await select(r.project.key)
@@ -1166,6 +1243,7 @@ final class AppModel: ObservableObject, Feedback {
         case "usage": screen = .usage
         case "admin": screen = .admin
         case "plans": sheet = .plans
+        case "newsite": sheet = .newSite
         case "settings": SettingsWindow.open()
         case "palette": showPalette = true
         default: screen = .overview

@@ -1,0 +1,957 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "vet",
+  "category": "business",
+  "icon": "pawprint.fill",
+  "accent": "#4a8b3c",
+  "mark": "paw",
+  "art": "blobs",
+  "schemaOrg": "VeterinaryCare",
+  "sample": {
+    "name": "Paw & Care"
+  },
+  "featured": false,
+  "titleKey": "newsite.template.vet.title",
+  "descriptionKey": "newsite.template.vet.description",
+  "keywords": {
+    "en": [
+      "vet",
+      "veterinary clinic",
+      "veterinarian",
+      "pet",
+      "dog",
+      "cat",
+      "vaccination",
+      "grooming",
+      "pet dental",
+      "animal hospital",
+      "puppy",
+      "kitten",
+      "neutering"
+    ],
+    "bg": [
+      "ветеринар",
+      "ветеринарна клиника",
+      "домашни любимци",
+      "куче",
+      "котка",
+      "ваксинация",
+      "груминг",
+      "кастрация",
+      "зъби на куче",
+      "ветеринарен лекар",
+      "кученце",
+      "коте",
+      "чип"
+    ]
+  },
+  "style": "calm",
+  "tokens": {
+    "dark": false,
+    "bg": "#f8faf1",
+    "bg2": "#e9f1dc",
+    "surface": "#ffffff",
+    "text": "#1d2b1f",
+    "muted": "#4f6352",
+    "line": "rgba(15,23,42,.10)",
+    "accent": "#4a8b3c",
+    "accent2": "#e0702e",
+    "font": "rounded",
+    "head": "rounded",
+    "radius": 24,
+    "tilt": 1.5
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "hints": {
+    "en": {
+      "offer": "A small clinic for dogs, cats and small pets: check-ups, vaccination, dental care, surgery and grooming, in a calm, friendly space.",
+      "audience": "Dog, cat and small-pet owners",
+      "services": [
+        [
+          "Check-up and vaccination",
+          "€25",
+          "Exam, vaccine and booklet entry"
+        ],
+        [
+          "Dental cleaning",
+          "€90",
+          "Scale and polish under anaesthesia"
+        ],
+        [
+          "Full groom",
+          "€40",
+          "Bath, trim and nails"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Малка клиника за кучета, котки и дребни любимци: прегледи, ваксинации, грижа за зъбите, операции и груминг — в спокойна и приветлива обстановка.",
+      "audience": "Стопани на кучета, котки и дребни любимци",
+      "services": [
+        [
+          "Преглед и ваксинация",
+          "25 €",
+          "Преглед, ваксина и вписване в книжката"
+        ],
+        [
+          "Почистване на зъби",
+          "90 €",
+          "Зъбен камък и полиране под упойка"
+        ],
+        [
+          "Пълен груминг",
+          "40 €",
+          "Къпане, подстригване и нокти"
+        ]
+      ]
+    }
+  },
+  "lang": {
+    "en": {
+      "tagline": "veterinary clinic and grooming",
+      "description": "Check-ups, vaccination, dental care, surgery and grooming for dogs, cats and small pets. Book a visit online.",
+      "nav": [
+        [
+          "Care",
+          "/#care"
+        ],
+        [
+          "First visit",
+          "/#first-visit"
+        ],
+        [
+          "Prices",
+          "/prices.html"
+        ],
+        [
+          "FAQ",
+          "/#faq"
+        ]
+      ],
+      "headerCta": [
+        "Book a visit",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Dogs, cats and small pets",
+            "eyebrowIcon": "paw",
+            "title": "Calm visits and *gentle hands*",
+            "lead": "Check-ups, vaccination, dental care, surgery and grooming for dogs, cats and small pets, with time to explain and a plan that fits your pet and your life.",
+            "cta": [
+              "Book a visit",
+              "/#contact"
+            ],
+            "cta2": [
+              "What to expect",
+              "/#first-visit"
+            ],
+            "card": {
+              "icon": "heart",
+              "title": "Before your visit",
+              "rows": [
+                [
+                  "Bring",
+                  "vaccination booklet"
+                ],
+                [
+                  "Note",
+                  "eating, drinking, energy"
+                ],
+                [
+                  "Ask",
+                  "anything that worries you"
+                ]
+              ],
+              "note": "Cats in a carrier, dogs on a short lead. It keeps everyone calm."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                [
+                  "heart",
+                  "Calm, unhurried visits"
+                ],
+                [
+                  "shield",
+                  "Prevention first"
+                ],
+                [
+                  "doc",
+                  "Plans and prices explained"
+                ],
+                [
+                  "phone",
+                  "Call us when unsure"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "care",
+              "title": "Care for every stage",
+              "intro": "From a puppy’s first vaccines to a senior cat’s check-ups.",
+              "items": [
+                [
+                  "heart",
+                  "Check-ups and vaccination",
+                  "A nose-to-tail exam, vaccines, deworming and microchip, planned around your pet’s age and lifestyle."
+                ],
+                [
+                  "tooth",
+                  "Dental care",
+                  "Examination, scaling and polishing, with advice on brushing to keep teeth and gums healthy."
+                ],
+                [
+                  "hand",
+                  "Surgery and aftercare",
+                  "Neutering, lump removal and other planned operations, with pain relief and a clear recovery plan."
+                ],
+                [
+                  "brush",
+                  "Grooming",
+                  "Bathing, brushing, trimming and nail care, gentle with puppies and nervous pets."
+                ]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "first-visit",
+              "alt": true,
+              "title": "Your first visit",
+              "intro": "What to expect when you walk in with a new patient.",
+              "items": [
+                [
+                  "Book",
+                  "Choose a day online or by phone and tell us the pet type, age and reason for the visit."
+                ],
+                [
+                  "Arrive",
+                  "Cats in a carrier, dogs on a lead. Bring the vaccination booklet and any earlier results."
+                ],
+                [
+                  "Exam and talk",
+                  "The vet examines your pet and listens first. You get clear explanations and options."
+                ],
+                [
+                  "Plan",
+                  "We write down what we found, what to do at home and when to come back."
+                ]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "approach",
+              "title": "How we look after pets",
+              "items": [
+                [
+                  "Gentle handling, every time",
+                  "A frightened pet is hard to examine and harder to help. We go slowly, speak softly and let animals settle.",
+                  "Time to sniff around and settle in",
+                  "You can stay beside your pet where it is safe",
+                  "Treats and calm voices, not force"
+                ],
+                [
+                  "Prevention saves worry",
+                  "Regular vaccination, parasite control and dental care catch problems early and keep costs predictable.",
+                  "A vaccination plan written for your pet",
+                  "Weight and food advice at every visit",
+                  "The date of the next vaccine in the booklet"
+                ],
+                [
+                  "If something feels wrong",
+                  "Call us first. We help you judge how urgent it is and what to do on the way.",
+                  "Trouble breathing, collapse or heavy bleeding: call at once",
+                  "Poisoning or a swallowed object: call and tell us what and when",
+                  "If you cannot reach us, go to the nearest emergency clinic"
+                ]
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "alt": true,
+              "title": "Questions owners ask",
+              "items": [
+                [
+                  "When should my puppy or kitten be vaccinated?",
+                  "The first vaccines usually start from around eight weeks, with boosters a few weeks apart. Bring any papers you have, and we will build a schedule for your pet."
+                ],
+                [
+                  "How often do adult pets need vaccines?",
+                  "Most adult dogs and cats need a yearly booster, and rabies follows the official schedule. We check your pet’s booklet and tell you what is due."
+                ],
+                [
+                  "How should I prepare my pet for a visit?",
+                  "Bring the vaccination booklet, keep cats in a carrier and dogs on a lead, and note appetite, drinking and behaviour. Ask us if your pet should skip a meal beforehand."
+                ],
+                [
+                  "What should I do before surgery or a dental?",
+                  "We give written instructions when you book: when to stop food and water, and what to bring. Following them keeps anaesthesia safe. If you are unsure, call the day before."
+                ],
+                [
+                  "What counts as an emergency?",
+                  "Trouble breathing, collapse, heavy bleeding, repeated vomiting, a swollen belly, seizures or a suspected poisoning. Call us straight away; if you cannot reach us, go to the nearest emergency clinic."
+                ],
+                [
+                  "Do you groom nervous or elderly pets?",
+                  "Yes. Tell us about fears, health problems or past bad experiences when you book. We take more time, short breaks and gentle handling."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Not sure it can wait?",
+              "p": "Call us and describe what you see. We will help you decide whether to come today or book a check-up.",
+              "button": [
+                "Call the clinic",
+                "tel:+359888000000"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Book a visit",
+              "intro": "Tell us about your pet and what you need. We confirm a day and time with you.",
+              "formName": "appointment",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Address",
+                  "1 Vitosha St, Sofia"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "pet",
+                  "label": "Pet",
+                  "options": [
+                    "Dog",
+                    "Cat",
+                    "Rabbit or rodent",
+                    "Bird",
+                    "Other"
+                  ]
+                },
+                {
+                  "id": "reason",
+                  "label": "Reason for the visit",
+                  "options": [
+                    "Check-up",
+                    "Vaccination",
+                    "Dental care",
+                    "Surgery consultation",
+                    "Grooming",
+                    "Not sure"
+                  ]
+                }
+              ],
+              "messageLabel": "Your pet’s name, age and anything we should know (optional)",
+              "send": "Request a visit",
+              "hoursTitle": "Opening hours",
+              "hours": [
+                [
+                  "Monday – Friday",
+                  "9:00 – 19:00"
+                ],
+                [
+                  "Saturday",
+                  "9:00 – 14:00"
+                ],
+                [
+                  "Sunday",
+                  "closed"
+                ]
+              ]
+            }
+          ]
+        },
+        "prices": {
+          "title": "Prices and grooming",
+          "description": "Starting prices for check-ups, vaccination, dental care, surgery and grooming.",
+          "pagehead": [
+            "Price list",
+            "Starting prices for common visits. We explain and price any treatment with you before it starts, and the final amount depends on your pet’s size and needs."
+          ],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Check-ups",
+                  "items": [
+                    [
+                      "Check-up",
+                      "Full exam and advice",
+                      "from €25"
+                    ],
+                    [
+                      "Follow-up visit",
+                      "A short re-check",
+                      "from €15"
+                    ],
+                    [
+                      "Senior pet check-up",
+                      "A longer exam and advice",
+                      "from €35"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Vaccination and prevention",
+                  "items": [
+                    [
+                      "Vaccination",
+                      "Vaccine and booklet entry",
+                      "from €25"
+                    ],
+                    [
+                      "Microchip",
+                      "Implant and registration",
+                      "from €25"
+                    ],
+                    [
+                      "Parasite treatment",
+                      "Tablets or spot-on, by weight",
+                      "from €10"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Dental care",
+                  "items": [
+                    [
+                      "Dental examination",
+                      "Teeth and gums",
+                      "from €20"
+                    ],
+                    [
+                      "Scale and polish",
+                      "Under anaesthesia, price by size",
+                      "from €90"
+                    ],
+                    [
+                      "Tooth extraction",
+                      "Per tooth, after examination",
+                      "from €30"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Surgery",
+                  "items": [
+                    [
+                      "Neutering, cat",
+                      "Price depends on sex and weight",
+                      "from €60"
+                    ],
+                    [
+                      "Neutering, dog",
+                      "Price depends on weight",
+                      "from €90"
+                    ],
+                    [
+                      "Lump removal",
+                      "After examination",
+                      "from €80"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Grooming",
+                  "items": [
+                    [
+                      "Bath and brush-out",
+                      "Cats and small dogs",
+                      "from €25"
+                    ],
+                    [
+                      "Full groom",
+                      "Bath, trim and nails",
+                      "from €40"
+                    ],
+                    [
+                      "Puppy’s first groom",
+                      "A short, gentle introduction",
+                      "from €20"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Nails, ears and coat",
+                  "items": [
+                    [
+                      "Nail trim",
+                      "",
+                      "from €8"
+                    ],
+                    [
+                      "Ear cleaning",
+                      "",
+                      "from €8"
+                    ],
+                    [
+                      "De-matting",
+                      "Per 15 minutes",
+                      "from €10"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "A question about a price?",
+              "p": "Describe your pet and the treatment. We give you a clear guide before you come.",
+              "button": [
+                "Book a visit",
+                "/#contact"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "bg": {
+      "tagline": "ветеринарна клиника и груминг",
+      "description": "Прегледи, ваксинации, грижа за зъбите, операции и груминг за кучета, котки и дребни животни. Запазете час онлайн.",
+      "nav": [
+        [
+          "Грижа",
+          "/#care"
+        ],
+        [
+          "Първо посещение",
+          "/#first-visit"
+        ],
+        [
+          "Цени",
+          "/prices.html"
+        ],
+        [
+          "Въпроси",
+          "/#faq"
+        ]
+      ],
+      "headerCta": [
+        "Запазете час",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Кучета, котки и дребни любимци",
+            "eyebrowIcon": "paw",
+            "title": "Спокойни прегледи и *нежни ръце*",
+            "lead": "Прегледи, ваксинации, грижа за зъбите, операции и груминг за кучета, котки и дребни животни — с време да обясним и план, който пасва на вашия любимец и на вас.",
+            "cta": [
+              "Запазете час",
+              "/#contact"
+            ],
+            "cta2": [
+              "Какво да очаквате",
+              "/#first-visit"
+            ],
+            "card": {
+              "icon": "heart",
+              "title": "Преди посещението",
+              "rows": [
+                [
+                  "Донесете",
+                  "ваксинационната книжка"
+                ],
+                [
+                  "Отбележете",
+                  "как яде, пие и се държи"
+                ],
+                [
+                  "Питайте",
+                  "всичко, което ви тревожи"
+                ]
+              ],
+              "note": "Котките — в транспортна чанта, кучетата — на къса каишка. Така всички са спокойни."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                [
+                  "heart",
+                  "Прегледи без бързане"
+                ],
+                [
+                  "shield",
+                  "Първо профилактика"
+                ],
+                [
+                  "doc",
+                  "Ясен план и цена"
+                ],
+                [
+                  "phone",
+                  "Обадете се, ако се колебаете"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "care",
+              "title": "Грижа на всеки етап",
+              "intro": "От първите ваксини на кученцето до прегледите на възрастната котка.",
+              "items": [
+                [
+                  "heart",
+                  "Прегледи и ваксинации",
+                  "Преглед от носа до опашката, ваксини, обезпаразитяване и чип — по план според възрастта и начина на живот."
+                ],
+                [
+                  "tooth",
+                  "Грижа за зъбите",
+                  "Преглед, почистване на зъбен камък и полиране, плюс съвети за миенето им, за здрави зъби и венци."
+                ],
+                [
+                  "hand",
+                  "Операции и възстановяване",
+                  "Кастрация, отстраняване на образувания и други планови операции, с обезболяване и ясен план за възстановяване."
+                ],
+                [
+                  "brush",
+                  "Груминг",
+                  "Къпане, разресване, подстригване и грижа за ноктите — внимателно с кученца и страхливи любимци."
+                ]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "first-visit",
+              "alt": true,
+              "title": "Първото ви посещение",
+              "intro": "Какво се случва, когато дойдете с нов пациент.",
+              "items": [
+                [
+                  "Запазвате час",
+                  "Избирате ден онлайн или по телефона и ни казвате вида на любимеца, възрастта и повода."
+                ],
+                [
+                  "Пристигате",
+                  "Котките — в транспортна чанта, кучетата — на каишка. Донесете ваксинационната книжка и предишните изследвания."
+                ],
+                [
+                  "Преглед и разговор",
+                  "Ветеринарят прегледва любимеца ви и първо ви изслушва. Получавате ясни обяснения и възможности."
+                ],
+                [
+                  "План",
+                  "Записваме какво установихме, какво да правите у дома и кога да се върнете."
+                ]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "approach",
+              "title": "Как се грижим",
+              "items": [
+                [
+                  "Нежно боравене, всеки път",
+                  "Изплашеното животно трудно се преглежда и още по-трудно се лекува. Действаме бавно, говорим тихо и оставяме любимеца да свикне.",
+                  "Време да поразгледа и да привикне",
+                  "Можете да сте до него, където е безопасно",
+                  "Лакомства и спокоен глас, не сила"
+                ],
+                [
+                  "Профилактиката спестява тревоги",
+                  "Редовните ваксини, защитата от паразити и грижата за зъбите откриват проблемите рано и правят разходите предвидими.",
+                  "Ваксинационен план, изготвен за вашия любимец",
+                  "Съвети за теглото и храната при всеки преглед",
+                  "Датата на следващата ваксина — вписана в книжката"
+                ],
+                [
+                  "Ако нещо не е наред",
+                  "Обадете се първо при нас. Ще ви помогнем да прецените колко е спешно и какво да направите по пътя.",
+                  "Затруднено дишане, колапс или силен кръвоизлив: звънете веднага",
+                  "Отравяне или погълнат предмет: обадете се и кажете какво и кога",
+                  "Ако не можете да се свържете с нас, отидете в най-близката спешна клиника"
+                ]
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "alt": true,
+              "title": "Въпроси на стопаните",
+              "items": [
+                [
+                  "Кога да ваксинирам кученцето или котето?",
+                  "Първите ваксини обикновено започват около осмата седмица, с реваксинации през няколко седмици. Донесете документите, които имате, и ще изготвим график."
+                ],
+                [
+                  "Колко често се ваксинират възрастните животни?",
+                  "Повечето възрастни кучета и котки се нуждаят от ревакцина веднъж годишно, а ваксината срещу бяс следва официалния календар. Проверяваме книжката и ви казваме какво предстои."
+                ],
+                [
+                  "Как да подготвя любимеца си за преглед?",
+                  "Донесете ваксинационната книжка, дръжте котката в транспортна чанта и кучето на каишка и отбележете апетита, пиенето и поведението. Питайте ни дали да пропусне едно хранене."
+                ],
+                [
+                  "Какво да направя преди операция или почистване на зъбите?",
+                  "При записването даваме писмени указания: кога да спрете храната и водата и какво да донесете. Спазването им прави упойката безопасна. Ако се колебаете, обадете се предния ден."
+                ],
+                [
+                  "Кое се смята за спешен случай?",
+                  "Затруднено дишане, припадане, силен кръвоизлив, многократно повръщане, подут корем, гърчове или съмнение за отравяне. Обадете се веднага, а ако не успеете да се свържете с нас — отидете в най-близката спешна клиника."
+                ],
+                [
+                  "Приемате ли за груминг страхливи или възрастни любимци?",
+                  "Да. Кажете ни за страховете, здравословните проблеми или лошия опит още при записването. Отделяме повече време, правим кратки почивки и боравим нежно."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Не сте сигурни дали може да почака?",
+              "p": "Обадете се и опишете какво виждате. Ще ви помогнем да решите дали да дойдете днес, или да запишете час за преглед.",
+              "button": [
+                "Обадете се в клиниката",
+                "tel:+359888000000"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Запазете час",
+              "intro": "Разкажете ни за любимеца си и от какво имате нужда. Ще потвърдим ден и час с вас.",
+              "formName": "appointment",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Адрес",
+                  "ул. Витоша 1, София"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "pet",
+                  "label": "Любимец",
+                  "options": [
+                    "Куче",
+                    "Котка",
+                    "Заек или гризач",
+                    "Птица",
+                    "Друго"
+                  ]
+                },
+                {
+                  "id": "reason",
+                  "label": "Повод за посещението",
+                  "options": [
+                    "Преглед",
+                    "Ваксинация",
+                    "Грижа за зъбите",
+                    "Консултация за операция",
+                    "Груминг",
+                    "Нуждая се от съвет"
+                  ]
+                }
+              ],
+              "messageLabel": "Име и възраст на любимеца и всичко, което трябва да знаем (по избор)",
+              "send": "Изпратете заявка",
+              "hoursTitle": "Работно време",
+              "hours": [
+                [
+                  "Понеделник – петък",
+                  "9:00 – 19:00"
+                ],
+                [
+                  "Събота",
+                  "9:00 – 14:00"
+                ],
+                [
+                  "Неделя",
+                  "почивен ден"
+                ]
+              ]
+            }
+          ]
+        },
+        "prices": {
+          "title": "Цени и груминг",
+          "description": "Начални цени за прегледи, ваксинации, грижа за зъбите, операции и груминг.",
+          "pagehead": [
+            "Ценоразпис",
+            "Начални цени за най-честите посещения. Всяко лечение го обясняваме и остойностяваме с вас, преди да започне, а крайната сума зависи от размера и нуждите на любимеца."
+          ],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Прегледи",
+                  "items": [
+                    [
+                      "Преглед",
+                      "Пълен преглед и съвети",
+                      "от 25 €"
+                    ],
+                    [
+                      "Контролен преглед",
+                      "Кратка проверка",
+                      "от 15 €"
+                    ],
+                    [
+                      "Преглед на възрастно животно",
+                      "По-дълъг преглед и съвети",
+                      "от 35 €"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Ваксинации и профилактика",
+                  "items": [
+                    [
+                      "Ваксинация",
+                      "Ваксина и вписване в книжката",
+                      "от 25 €"
+                    ],
+                    [
+                      "Чип",
+                      "Поставяне и регистрация",
+                      "от 25 €"
+                    ],
+                    [
+                      "Обезпаразитяване",
+                      "Таблетки или капки, по тегло",
+                      "от 10 €"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Грижа за зъбите",
+                  "items": [
+                    [
+                      "Преглед на зъбите",
+                      "Зъби и венци",
+                      "от 20 €"
+                    ],
+                    [
+                      "Почистване и полиране",
+                      "Под упойка, цената зависи от размера",
+                      "от 90 €"
+                    ],
+                    [
+                      "Изваждане на зъб",
+                      "На зъб, след преглед",
+                      "от 30 €"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Операции",
+                  "items": [
+                    [
+                      "Кастрация, котка",
+                      "Цената зависи от пола и теглото",
+                      "от 60 €"
+                    ],
+                    [
+                      "Кастрация, куче",
+                      "Цената зависи от теглото",
+                      "от 90 €"
+                    ],
+                    [
+                      "Отстраняване на образувание",
+                      "След преглед",
+                      "от 80 €"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Груминг",
+                  "items": [
+                    [
+                      "Къпане и разресване",
+                      "Котки и малки кучета",
+                      "от 25 €"
+                    ],
+                    [
+                      "Пълен груминг",
+                      "Къпане, подстригване и нокти",
+                      "от 40 €"
+                    ],
+                    [
+                      "Първи груминг на кученце",
+                      "Кратко и нежно запознаване",
+                      "от 20 €"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Нокти, уши и козина",
+                  "items": [
+                    [
+                      "Подрязване на нокти",
+                      "",
+                      "от 8 €"
+                    ],
+                    [
+                      "Почистване на уши",
+                      "",
+                      "от 8 €"
+                    ],
+                    [
+                      "Разплитане на заплетена козина",
+                      "На 15 минути",
+                      "от 10 €"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Имате въпрос за цена?",
+              "p": "Опишете любимеца и лечението. Ще ви дадем ясен ориентир, преди да дойдете.",
+              "button": [
+                "Запазете час",
+                "/#contact"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

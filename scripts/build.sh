@@ -45,7 +45,7 @@ echo "▸ Engine в пакета…"
 # The app installs this copy into Application Support on first launch and after every update (audit B1)
 ENGINE_DST="$APP/Contents/Resources/engine"
 mkdir -p "$ENGINE_DST/supabase"
-cp -R "$ROOT/engine/bid" "$ROOT/engine/VERSION" "$ROOT/engine/cloud.json" "$ROOT/engine/i18n" "$ROOT/engine/src" "$ROOT/engine/prompts" "$ROOT/engine/templates" "$ENGINE_DST/"
+cp -R "$ROOT/engine/bid" "$ROOT/engine/VERSION" "$ROOT/engine/cloud.json" "$ROOT/engine/i18n" "$ROOT/engine/src" "$ROOT/engine/prompts" "$ROOT/engine/themes" "$ENGINE_DST/"
 # the bundled engine is the production copy: test-only endpoint overrides and a local cloud are refused (isolation.mjs)
 touch "$ENGINE_DST/.production"
 # bundled Node runtime (scripts/bundle-node.sh, V11 RC): the launcher prefers it over a developer Node on PATH

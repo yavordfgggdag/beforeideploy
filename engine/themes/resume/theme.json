@@ -1,0 +1,390 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "resume",
+  "category": "personal",
+  "icon": "person.text.rectangle",
+  "accent": "#0f766e",
+  "mark": "users",
+  "art": "rings",
+  "schemaOrg": "Person",
+  "sample": {
+    "name": "Georgi Ivanov"
+  },
+  "featured": false,
+  "titleKey": "newsite.template.resume.title",
+  "descriptionKey": "newsite.template.resume.description",
+  "keywords": {
+    "en": [
+      "resume",
+      "cv",
+      "job",
+      "career",
+      "skills",
+      "experience",
+      "developer",
+      "engineer",
+      "hire me",
+      "personal"
+    ],
+    "bg": [
+      "автобиография",
+      "резюме",
+      "работа",
+      "кариера",
+      "умения",
+      "опит",
+      "разработчик",
+      "инженер",
+      "лично"
+    ]
+  },
+  "style": "calm",
+  "tokens": {
+    "dark": false,
+    "bg": "#fafafa",
+    "bg2": "#f1f3f4",
+    "surface": "#ffffff",
+    "text": "#18181b",
+    "muted": "#52525b",
+    "line": "rgba(15,23,42,.10)",
+    "accent": "#0f766e",
+    "accent2": "#0891b2",
+    "radius": 14,
+    "tilt": 0
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "hints": {
+    "en": {
+      "offer": "I am a product manager who turns complex problems into simple products, and I am looking for my next role in a software team.",
+      "audience": "Recruiters and hiring managers at software companies",
+      "services": [
+        [
+          "Product strategy",
+          "",
+          "Roadmaps and priorities for a software team"
+        ],
+        [
+          "User research",
+          "",
+          "Interviews and tests that shape the product"
+        ],
+        [
+          "Mentoring",
+          "",
+          "Guidance for junior product colleagues"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Продуктов мениджър съм — превръщам сложни проблеми в прости продукти и търся следващата си роля в софтуерен екип.",
+      "audience": "Рекрутери и ръководители в софтуерни компании",
+      "services": [
+        [
+          "Продуктова стратегия",
+          "",
+          "Пътна карта и приоритети за софтуерен екип"
+        ],
+        [
+          "Потребителски проучвания",
+          "",
+          "Интервюта и тестове, които оформят продукта"
+        ],
+        [
+          "Менторство",
+          "",
+          "Напътствия за млади колеги в продуктовия екип"
+        ]
+      ]
+    }
+  },
+  "lang": {
+    "bg": {
+      "tagline": "автобиография и опит",
+      "description": "Професионален опит, умения и проекти — и как да се свържете за работа.",
+      "nav": [
+        [
+          "Опит",
+          "/#experience"
+        ],
+        [
+          "Умения",
+          "/#skills"
+        ],
+        [
+          "Проекти",
+          "/#projects"
+        ],
+        [
+          "Контакт",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Свържи се",
+        "mailto:hello@example.com"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Отворен за нови възможности",
+            "eyebrowIcon": "spark",
+            "title": "Здравейте, аз съм *{{NAME}}*",
+            "lead": "Продуктов мениджър в софтуерни компании. Превръщам сложни проблеми в прости продукти, които хората обичат.",
+            "cta": [
+              "Свържи се",
+              "mailto:hello@example.com"
+            ],
+            "cta2": [
+              "Виж опита",
+              "/#experience"
+            ],
+            "chips": [
+              "Дистанционно или на място",
+              "Пишете ми по имейл"
+            ]
+          },
+          "sections": [
+            {
+              "type": "timeline",
+              "id": "experience",
+              "title": "Опит",
+              "items": [
+                [
+                  "Текуща позиция",
+                  "Старши продуктов мениджър · Компания А",
+                  "Ръководя продуктовия екип: пътна карта, приоритети и версии."
+                ],
+                [
+                  "Предишна позиция",
+                  "Продуктов мениджър · Компания Б",
+                  "Преведох мобилното приложение от първата идея до пускането му."
+                ],
+                [
+                  "По-рано",
+                  "Бизнес анализатор · Компания В",
+                  "Анализи и процеси за отдела по продажби."
+                ],
+                [
+                  "Образование",
+                  "Бакалавър, Икономика · Университет",
+                  "Дипломна работа за поведенческа икономика."
+                ]
+              ]
+            },
+            {
+              "type": "chips",
+              "id": "skills",
+              "alt": true,
+              "title": "Умения",
+              "items": [
+                "Продуктова стратегия",
+                "Потребителски проучвания",
+                "Agile / Scrum",
+                "SQL и анализ",
+                "Figma",
+                "Водене на екипи",
+                "Публично говорене"
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "projects",
+              "title": "Избрани проекти",
+              "items": [
+                [
+                  "rocket",
+                  "Мобилно приложение",
+                  "От първата идея до пуснато приложение, което хората ползват."
+                ],
+                [
+                  "chart",
+                  "Нова ценова политика",
+                  "По-ясен ценови модел, изпробван с реални клиенти."
+                ],
+                [
+                  "users",
+                  "Програма за менторство",
+                  "Млади колеги, подкрепяни стъпка по стъпка, докато поемат повече отговорност."
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Контакт",
+              "intro": "Пишете ми за роли, проекти или просто за кафе.",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "link",
+                  "LinkedIn",
+                  "linkedin.com/in/…",
+                  "https://www.linkedin.com/"
+                ]
+              ],
+              "send": "Изпрати"
+            }
+          ]
+        }
+      }
+    },
+    "en": {
+      "tagline": "résumé and experience",
+      "description": "Professional experience, skills and projects — and how to get in touch about work.",
+      "nav": [
+        [
+          "Experience",
+          "/#experience"
+        ],
+        [
+          "Skills",
+          "/#skills"
+        ],
+        [
+          "Projects",
+          "/#projects"
+        ],
+        [
+          "Contact",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Get in touch",
+        "mailto:hello@example.com"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Open to new opportunities",
+            "eyebrowIcon": "spark",
+            "title": "Hi, I’m *{{NAME}}*",
+            "lead": "A product manager at software companies. I turn complex problems into simple products people love.",
+            "cta": [
+              "Get in touch",
+              "mailto:hello@example.com"
+            ],
+            "cta2": [
+              "See experience",
+              "/#experience"
+            ],
+            "chips": [
+              "Remote or on site",
+              "Write to me by email"
+            ]
+          },
+          "sections": [
+            {
+              "type": "timeline",
+              "id": "experience",
+              "title": "Experience",
+              "items": [
+                [
+                  "Current role",
+                  "Senior Product Manager · Company A",
+                  "Running the product team: roadmap, priorities and releases."
+                ],
+                [
+                  "Previous role",
+                  "Product Manager · Company B",
+                  "Took the mobile app from the first idea to launch."
+                ],
+                [
+                  "Earlier role",
+                  "Business Analyst · Company C",
+                  "Analysis and processes for the sales department."
+                ],
+                [
+                  "Education",
+                  "BSc Economics · University",
+                  "Thesis on behavioural economics."
+                ]
+              ]
+            },
+            {
+              "type": "chips",
+              "id": "skills",
+              "alt": true,
+              "title": "Skills",
+              "items": [
+                "Product strategy",
+                "User research",
+                "Agile / Scrum",
+                "SQL and analytics",
+                "Figma",
+                "Team leadership",
+                "Public speaking"
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "projects",
+              "title": "Selected projects",
+              "items": [
+                [
+                  "rocket",
+                  "Mobile app",
+                  "From first idea to a launched app that people use."
+                ],
+                [
+                  "chart",
+                  "New pricing",
+                  "A clearer pricing model, tested with real customers."
+                ],
+                [
+                  "users",
+                  "Mentoring program",
+                  "Junior colleagues supported step by step as they take on more responsibility."
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Contact",
+              "intro": "Write to me about roles, projects or just a coffee.",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "link",
+                  "LinkedIn",
+                  "linkedin.com/in/…",
+                  "https://www.linkedin.com/"
+                ]
+              ],
+              "send": "Send"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

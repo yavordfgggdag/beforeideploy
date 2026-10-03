@@ -1,0 +1,325 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "travel",
+  "category": "business",
+  "icon": "airplane",
+  "accent": "#0a6ca8",
+  "mark": "compass",
+  "art": "waves",
+  "schemaOrg": "TravelAgency",
+  "sample": { "name": "Horizon Travel" },
+  "featured": false,
+  "titleKey": "newsite.template.travel.title",
+  "descriptionKey": "newsite.template.travel.description",
+  "keywords": {
+    "en": ["travel agency", "tour operator", "holidays", "city breaks", "sea holidays", "mountain trips", "group tours", "tour guide", "itinerary", "travel planning", "excursions", "trip"],
+    "bg": ["туристическа агенция", "туроператор", "почивка", "екскурзии", "градски почивки", "море", "планинска почивка", "групови турове", "пътуване", "маршрут", "водач", "организирани пътувания"]
+  },
+  "style": "bold",
+  "tokens": {
+    "dark": false,
+    "bg": "#f6fbfd",
+    "bg2": "#e3f1f6",
+    "surface": "#ffffff",
+    "text": "#0c2233",
+    "muted": "#4a6071",
+    "line": "rgba(12,34,51,.12)",
+    "accent": "#0a6ca8",
+    "accent2": "#d9452b",
+    "font": "sans",
+    "head": "grotesk",
+    "radius": 14,
+    "tilt": -1.5
+  },
+  "questions": ["services", "contacts", "photos"],
+  "hints": {
+    "en": {
+      "offer": "We plan city breaks, sea holidays and mountain trips for individuals and groups, and build custom itineraries on request.",
+      "audience": "Couples, families and friends who want a well-planned trip",
+      "services": [
+        ["City break", "€300", "A weekend or a week, planned for you"],
+        ["Sea holiday", "€500", "A week by the sea, stay and transfers"],
+        ["Custom itinerary", "", "Built around your dates and interests"]
+      ]
+    },
+    "bg": {
+      "offer": "Планираме градски почивки, море и планински преходи за единични пътници и групи и съставяме маршрути по поръчка.",
+      "audience": "Двойки, семейства и приятели, които искат добре планирано пътуване",
+      "services": [
+        ["Градска почивка", "300 €", "Уикенд или седмица, планирани за вас"],
+        ["Море", "500 €", "Седмица на морето, настаняване и трансфери"],
+        ["Маршрут по поръчка", "", "Съставен около вашите дати и интереси"]
+      ]
+    }
+  },
+  "lang": {
+    "en": {
+      "tagline": "travel agency and trip planning",
+      "description": "City breaks, sea holidays, mountain trips and group tours, planned step by step around how you like to travel.",
+      "nav": [
+        ["Trips", "/#destinations"],
+        ["Planning", "/#plan"],
+        ["Trip styles", "/#styles"],
+        ["FAQ", "/#faq"]
+      ],
+      "headerCta": ["Plan my trip", "/#contact"],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Trips planned around you",
+            "eyebrowIcon": "compass",
+            "title": "The trip you picture, *planned with you*",
+            "lead": "City breaks, sea holidays, mountain trips and group tours — or a custom itinerary built from scratch. Tell us what you imagine and we plan it together.",
+            "cta": ["Plan my trip", "/#contact"],
+            "cta2": ["See trip types", "/#destinations"],
+            "card": {
+              "icon": "compass",
+              "title": "Where to?",
+              "rows": [
+                ["City break", "A weekend or a week"],
+                ["Sea holiday", "Sun, sand, slow days"],
+                ["Mountain trip", "Trails and fresh air"]
+              ],
+              "note": "Not sure yet? Tell us the season and the mood."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                ["compass", "Itineraries planned with you"],
+                ["doc", "Help checking documents"],
+                ["shield", "Help checking insurance"],
+                ["users", "Solo, couples, families, groups"]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "destinations",
+              "title": "Where we can take you",
+              "intro": "Four kinds of trips. Each can be adjusted to your dates, pace and budget.",
+              "items": [
+                ["pin", "City breaks", "Old streets, museums and food — a weekend or a week in a city you want to know."],
+                ["sun", "Sea holidays", "Beach days, slow mornings and boat trips, from lively resorts to quiet coves."],
+                ["leaf", "Mountain trips", "Trails, viewpoints and fresh air, in summer or in snow, for walkers of every level."],
+                ["users", "Group tours", "Travel together with a guide, a shared plan and the logistics taken care of."]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "plan",
+              "alt": true,
+              "title": "How planning works",
+              "intro": "Four steps, from the first idea to a packed bag.",
+              "items": [
+                ["Tell us your idea", "Where you feel drawn to, when you can go, who is travelling and what matters most."],
+                ["We suggest options", "A few routes or packages to compare, with what is included and what is not."],
+                ["We fine-tune together", "We adjust dates, stops and pace until it feels right, then confirm the details in writing."],
+                ["Prepare and go", "We help you check documents and insurance, and share a clear plan before you leave."]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "custom",
+              "title": "Something of your own",
+              "intro": "Not every trip fits a brochure. These are built around you.",
+              "items": [
+                ["Custom itineraries", "A route built from scratch around your dates, your pace and the things you really want to see.", "Stops and rhythm chosen with you", "Options compared before you decide", "Changes talked through before you confirm"],
+                ["With a local guide", "Some places are best seen with someone who lives there. Ask us about guided days and small walking tours.", "Stories and corners no brochure mentions", "A pace that suits your group", "Ask what is possible in your destination"]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "styles",
+              "alt": true,
+              "title": "Which kind of traveller are you?",
+              "intro": "Most trips are a mix. Tell us which of these sounds most like you.",
+              "items": [
+                ["cup", "Slow and relaxed", "Long breakfasts, a pool or a beach, and no alarm clock. Rest is the point."],
+                ["bike", "Active and outdoors", "Hikes, bike rides and water sports, with enough time left for a good dinner."],
+                ["camera", "Curious and cultural", "Museums, markets and side streets: a trip for people who love to wander."]
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Questions before you book",
+              "items": [
+                ["Do I need a visa or other documents?", "It depends on where you go and which passport you hold. We help you check what applies, so you know what to prepare in good time."],
+                ["Do you help with travel insurance?", "We help you check what a policy should cover for your trip, so you can choose one that fits your plans."],
+                ["Can you plan around my budget?", "Tell us your range and dates, and we suggest options that fit. We say clearly what is included and what is not."],
+                ["Can I travel alone or with children?", "Of course. Tell us who is travelling — solo, as a couple, with children or with friends — and we shape the pace and the stops around them."],
+                ["Can I change the plan later?", "Small changes are often possible before you travel. Conditions depend on the services booked, and we explain them before you confirm."]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Where would you like to go?",
+              "p": "Share a rough idea — a place, a season, a mood — and we start from there.",
+              "button": ["Start planning", "/#contact"]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Plan my trip",
+              "intro": "Tell us what draws you, when you can go and who is travelling. We suggest the next step.",
+              "formName": "trip-enquiry",
+              "rows": [
+                ["mail", "Email", "hello@example.com", "mailto:hello@example.com"],
+                ["phone", "Phone", "+359 888 000 000", "tel:+359888000000"],
+                ["pin", "Address", "1 Vitosha St, Sofia"]
+              ],
+              "fields": [
+                { "id": "destination", "label": "Destination or kind of trip", "type": "text" },
+                { "id": "travellers", "label": "Travellers", "options": ["1", "2", "3–4", "5–8", "More than 8"] }
+              ],
+              "messageLabel": "Dates, ideas and wishes (optional)",
+              "send": "Send my trip idea",
+              "hoursTitle": "Office hours",
+              "hours": [
+                ["Monday – Friday", "9:00 – 18:00"],
+                ["Saturday", "10:00 – 14:00"],
+                ["Sunday", "closed"]
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "bg": {
+      "tagline": "туристическа агенция",
+      "description": "Градски почивки, море, планина и групови турове — планирани стъпка по стъпка според начина, по който обичате да пътувате.",
+      "nav": [
+        ["Пътувания", "/#destinations"],
+        ["Планиране", "/#plan"],
+        ["Стилове", "/#styles"],
+        ["Въпроси", "/#faq"]
+      ],
+      "headerCta": ["Планирайте пътуване", "/#contact"],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Пътувания по ваша мярка",
+            "eyebrowIcon": "compass",
+            "title": "Пътуването ви, *планирано заедно*",
+            "lead": "Градски почивки, море, планина и групови турове — или маршрут, съставен от нулата. Разкажете ни какво си представяте и ще го планираме заедно с вас.",
+            "cta": ["Планирайте пътуване", "/#contact"],
+            "cta2": ["Видове пътувания", "/#destinations"],
+            "card": {
+              "icon": "compass",
+              "title": "Накъде?",
+              "rows": [
+                ["Градска почивка", "Уикенд или седмица"],
+                ["Море", "Слънце, пясък, бавни дни"],
+                ["Планина", "Пътеки и чист въздух"]
+              ],
+              "note": "Още не сте решили? Кажете ни сезона и настроението."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                ["compass", "Маршрути, планирани с вас"],
+                ["doc", "Помощ с документите"],
+                ["shield", "Помощ със застраховката"],
+                ["users", "Сами, двойки, семейства, групи"]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "destinations",
+              "title": "Накъде можем да ви отведем",
+              "intro": "Четири вида пътувания. Всяко можем да нагодим към датите, темпото и бюджета ви.",
+              "items": [
+                ["pin", "Градски почивки", "Стари улици, музеи и вкусна храна — уикенд или цяла седмица в град, който искате да опознаете."],
+                ["sun", "Море", "Плажни дни, бавни утрини и разходки с лодка — от оживени курорти до тихи заливчета."],
+                ["leaf", "Планински преходи", "Пътеки, панорами и чист въздух — лете или в снега, с темпо според подготовката ви."],
+                ["users", "Групови турове", "Пътувате заедно с водач, по общ план и без грижа за логистиката."]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "plan",
+              "alt": true,
+              "title": "Как планираме",
+              "intro": "Четири стъпки — от първата идея до стегнатия куфар.",
+              "items": [
+                ["Разкажете ни идеята", "Накъде ви тегли, кога можете да пътувате, кои пътуват и кое е най-важно за вас."],
+                ["Предлагаме варианти", "Няколко маршрута или пакета за сравнение — с ясно написано какво е включено и какво не."],
+                ["Нагласяме заедно", "Променяме дати, спирки и темпо, докато стане както го искате, и потвърждаваме подробностите писмено."],
+                ["Подготвяме се и тръгваме", "Помагаме ви да проверите документите и застраховката и ви даваме ясен план преди заминаването."]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "custom",
+              "title": "Нещо само ваше",
+              "intro": "Не всяко пътуване се побира в брошура. Тези се създават около вас.",
+              "items": [
+                ["Маршрут по поръчка", "Маршрут, съставен от нулата — според датите, темпото и местата, които наистина искате да видите.", "Спирки и ритъм, избрани заедно с вас", "Варианти за сравнение, преди да решите", "Промените се обсъждат, преди да потвърдите"],
+                ["С местен водач", "Някои места е хубаво да се видят с човек, който живее там. Попитайте за дни с водач и малки пешеходни турове.", "Истории и кътчета, които брошурите пропускат", "Темпо, което пасва на вашата група", "Попитайте какво е възможно във вашата дестинация"]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "styles",
+              "alt": true,
+              "title": "Какъв пътешественик сте?",
+              "intro": "Повечето пътувания са смес. Кажете ни кое от тези ви звучи най-познато.",
+              "items": [
+                ["cup", "Спокойно и бавно", "Дълги закуски, басейн или плаж и никакъв будилник. Почивката е целта."],
+                ["bike", "Активно, на открито", "Преходи, колоездене и водни спортове — с достатъчно време за хубава вечеря."],
+                ["camera", "Любопитно и културно", "Музеи, пазари и малки улички: пътуване за хора, които обичат да се лутат."]
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Въпроси преди да резервирате",
+              "items": [
+                ["Нужна ли ми е виза или други документи?", "Зависи накъде пътувате и с какъв паспорт. Помагаме ви да проверите какво важи за вас, за да се подготвите навреме."],
+                ["Помагате ли със застраховка?", "Помагаме ви да проверите какво трябва да покрива една полица за вашето пътуване, за да изберете подходяща."],
+                ["Можете ли да планирате според бюджета ми?", "Кажете ни в какви граници и дати мислите и ще предложим подходящи варианти. Ясно казваме какво е включено и какво не."],
+                ["Мога ли да пътувам сам или с деца?", "Разбира се. Кажете ни кой пътува — сами, двойка, с деца или с приятели — и ще нагласим темпото и спирките според тях."],
+                ["Мога ли да променя плана по-късно?", "Малки промени често са възможни преди пътуването. Условията зависят от резервираните услуги и ги обясняваме, преди да потвърдите."]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Накъде искате да тръгнете?",
+              "p": "Споделете груба представа — място, сезон, настроение — и започваме оттам.",
+              "button": ["Започнете да планирате", "/#contact"]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Планирайте пътуването си",
+              "intro": "Кажете ни какво ви привлича, кога можете да пътувате и кой пътува. Ще предложим следващата стъпка.",
+              "formName": "trip-enquiry",
+              "rows": [
+                ["mail", "Имейл", "hello@example.com", "mailto:hello@example.com"],
+                ["phone", "Телефон", "+359 888 000 000", "tel:+359888000000"],
+                ["pin", "Адрес", "ул. Витоша 1, София"]
+              ],
+              "fields": [
+                { "id": "destination", "label": "Дестинация или вид пътуване", "type": "text" },
+                { "id": "travellers", "label": "Пътуващи", "options": ["1", "2", "3–4", "5–8", "Повече от 8"] }
+              ],
+              "messageLabel": "Дати, идеи и пожелания (по избор)",
+              "send": "Изпратете идеята си",
+              "hoursTitle": "Работно време",
+              "hours": [
+                ["Понеделник – петък", "9:00 – 18:00"],
+                ["Събота", "10:00 – 14:00"],
+                ["Неделя", "почивен ден"]
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

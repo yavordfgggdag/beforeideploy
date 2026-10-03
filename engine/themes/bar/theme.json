@@ -1,0 +1,463 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "bar",
+  "category": "food",
+  "icon": "wineglass",
+  "accent": "#ffb224",
+  "mark": "cup",
+  "art": "rings",
+  "schemaOrg": "BarOrPub",
+  "sample": { "name": "Bar Ember" },
+  "featured": false,
+  "titleKey": "newsite.template.bar.title",
+  "descriptionKey": "newsite.template.bar.description",
+  "keywords": {
+    "en": ["bar", "cocktail bar", "pub", "lounge", "cocktails", "beer", "wine bar", "drinks", "nightlife", "private party", "live music", "brewery"],
+    "bg": ["бар", "коктейл бар", "пъб", "лаундж", "коктейли", "бира", "винен бар", "питиета", "нощен живот", "частно парти", "музика", "кръчма"]
+  },
+  "style": "bold",
+  "tokens": {
+    "dark": true,
+    "bg": "#0e0a14",
+    "bg2": "#151020",
+    "surface": "#1c1528",
+    "text": "#f5eff9",
+    "muted": "#b8abc6",
+    "line": "rgba(255,255,255,.10)",
+    "accent": "#ffb224",
+    "accent2": "#ff3c9e",
+    "font": "sans",
+    "head": "grotesk",
+    "radius": 12,
+    "tilt": -2
+  },
+  "questions": ["services", "contacts", "photos"],
+  "hints": {
+    "en": {
+      "offer": "We make cocktails to order, pour beer and wine, and host private evenings for groups.",
+      "audience": "Friends after work, couples, groups and private parties",
+      "services": [
+        ["Old Fashioned", "€9", "Bourbon, bitters, orange peel"],
+        ["Cheese and cured meats", "€14", "A board for sharing"],
+        ["Private evening", "from €300", "A reserved area and a set drinks list"]
+      ]
+    },
+    "bg": {
+      "offer": "Приготвяме коктейли по поръчка, наливаме бира и вино и организираме частни вечери за компании.",
+      "audience": "Приятели след работа, двойки, компании и частни партита",
+      "services": [
+        ["Олд Фешънд", "9 €", "Бърбън, битер, портокалова кора"],
+        ["Сирена и сушени меса", "14 €", "Дъска за споделяне"],
+        ["Частна вечер", "от 300 €", "Резервирана зона и подготвена листа с напитки"]
+      ]
+    }
+  },
+  "lang": {
+    "en": {
+      "tagline": "cocktail bar and lounge",
+      "description": "Cocktails shaken to order, beer, wine and bites to share. Book a table for the evening or plan a private event.",
+      "nav": [
+        ["Drinks", "/menu.html"],
+        ["Evenings", "/#evenings"],
+        ["Private events", "/#events"],
+        ["Book", "/#contact"]
+      ],
+      "headerCta": ["Book a table", "/#contact"],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Cocktails, beer and wine",
+            "eyebrowIcon": "cup",
+            "title": "Low lights, *proper drinks*",
+            "lead": "Cocktails made to order, beer, wine and bites to share. Come after work, bring friends, stay for one more round.",
+            "cta": ["Book a table", "/#contact"],
+            "cta2": ["See the drinks menu", "/menu.html"],
+            "card": {
+              "icon": "cup",
+              "title": "House favourites",
+              "rows": [
+                ["Old Fashioned", "€9"],
+                ["Gin and tonic", "€7"],
+                ["Draught beer", "€4"]
+              ],
+              "note": "The full drinks menu is on the menu page."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                ["cup", "Cocktails made to order"],
+                ["music", "Music that suits the room"],
+                ["users", "Groups and private events"],
+                ["calendar", "Reserve a table ahead"]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "drinks",
+              "title": "At the bar",
+              "intro": "A short list, made with care — and someone to help you choose.",
+              "items": [
+                ["cup", "Cocktails", "Classics done properly and a few house inventions, shaken or stirred to order."],
+                ["drop", "Beer and wine", "Beer on tap and in bottles, and wine by the glass or the bottle."],
+                ["bread", "Bites to share", "Olives, nuts, cheese and small plates for the table."],
+                ["leaf", "Zero alcohol", "Non-alcoholic cocktails and soft drinks, made with the same care."]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "evenings",
+              "alt": true,
+              "title": "Evenings at the bar",
+              "intro": "Walk in for one drink, or settle in for the night.",
+              "items": [
+                ["Made to your taste", "Not sure what you fancy? Tell us what you like — sweet, sour, bitter, smoky — and we suggest something.", "Classic and house cocktails", "Beer and wine by the glass", "Zero-alcohol drinks with the same care"],
+                ["Room to talk", "Low lights, music chosen to suit the hour and a bar where it is easy to start a conversation.", "Seats at the bar and tables for groups", "Music that follows the evening", "Bites to share between drinks"]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "events",
+              "title": "Private events",
+              "intro": "Tell us the date, the guests and the mood — we shape the evening around it.",
+              "items": [
+                ["gift", "Birthdays and parties", "A reserved area, a drinks list set up for your group and food to share."],
+                ["users", "Team evenings", "After-work drinks or a company celebration, arranged before you arrive."],
+                ["star", "Receptions and farewells", "Small gatherings, with the room arranged to suit the occasion."]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "book",
+              "alt": true,
+              "title": "How to book a table",
+              "intro": "A few details are all we need.",
+              "items": [
+                ["Tell us when", "The date, the time and how many of you are coming."],
+                ["Add a note", "A birthday, a quiet corner or a spot near the music — mention anything that helps."],
+                ["We confirm", "We reply with your table, or suggest a nearby time if that one is taken."],
+                ["Arrive", "Tell us who the booking is under, and we show you to your table."]
+              ]
+            },
+            {
+              "type": "gallery",
+              "title": "The room",
+              "intro": "Replace the tiles with photos of the bar, the drinks and the nights.",
+              "items": ["The bar", "The cocktails", "The lounge", "Event nights"]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "alt": true,
+              "title": "Good to know",
+              "items": [
+                ["Do I need to book a table?", "Not always, but on busy evenings it helps. Send the date, the time and how many of you are coming, and we confirm a table or suggest another time."],
+                ["Can I book for a large group?", "Yes. Tell us the date and how many of you there will be, and we suggest an area, a drinks setup and food to share."],
+                ["Do you host private events?", "Birthdays, team evenings and small receptions, yes. Tell us the date, the guest count and what you have in mind, and we plan from there."],
+                ["Do you serve food?", "We have a short menu of bites to share. If you have an allergy, tell us before you order and we will guide you."],
+                ["Are there non-alcoholic options?", "Yes: zero-alcohol cocktails and soft drinks, made with the same care as the rest."],
+                ["Can I change or cancel a booking?", "Please tell us as soon as your plans change, so the table can go to someone else. Just reply to your confirmation or call us."]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Planning a night out?",
+              "p": "Book a table, or tell us about your event.",
+              "button": ["Book a table", "/#contact"]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Book a table",
+              "intro": "Tell us the date and how many of you are coming. For a larger group or a private event, add the details in your message.",
+              "formName": "reservation",
+              "rows": [
+                ["mail", "Email", "hello@example.com", "mailto:hello@example.com"],
+                ["phone", "Phone", "+359 888 000 000", "tel:+359888000000"],
+                ["pin", "Address", "1 Vitosha St, Sofia"]
+              ],
+              "fields": [
+                { "id": "date", "label": "Date", "type": "date" },
+                { "id": "guests", "label": "Guests", "options": ["2", "3", "4", "5", "6", "7", "8", "A larger group"] }
+              ],
+              "messageLabel": "Occasion or requests (optional)",
+              "send": "Send booking request",
+              "hoursTitle": "Opening hours",
+              "hours": [
+                ["Monday – Thursday", "17:00 – 00:00"],
+                ["Friday – Saturday", "17:00 – 02:00"],
+                ["Sunday", "17:00 – 23:00"]
+              ]
+            }
+          ]
+        },
+        "menu": {
+          "title": "Drinks menu",
+          "description": "The drinks menu: cocktails, beer, wine, bites and zero-alcohol options, with prices in euro.",
+          "pagehead": ["Drinks menu", "Cocktails, beer, wine and bites, with prices in euro. Ask us about allergens — we are happy to help."],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Cocktails",
+                  "items": [
+                    ["Old Fashioned", "Bourbon, bitters, orange peel", "€9"],
+                    ["Negroni", "Gin, red vermouth, bitter liqueur", "€9"],
+                    ["Margarita", "Tequila, lime, salt rim", "€9"],
+                    ["Espresso Martini", "Vodka, coffee liqueur, espresso", "€10"],
+                    ["Bartender’s choice", "Tell us what you like", "€10"]
+                  ]
+                },
+                {
+                  "name": "Beer",
+                  "items": [
+                    ["Draught lager", "0.4 l", "€4"],
+                    ["Craft beer", "Ask what is on tap", "€5"],
+                    ["Cider", "Bottle", "€5"]
+                  ]
+                },
+                {
+                  "name": "Wine",
+                  "items": [
+                    ["White or red", "By the glass", "€5"],
+                    ["Sparkling", "By the glass", "€6"],
+                    ["Bottle", "Ask us what we are pouring", "from €22"]
+                  ]
+                },
+                {
+                  "name": "Bites",
+                  "items": [
+                    ["Olives and almonds", "Marinated olives, salted almonds", "€4"],
+                    ["Cheese and cured meats", "A board for sharing", "€14"],
+                    ["Bruschetta", "Tomato, basil, olive oil", "€6"],
+                    ["Fries", "With aioli", "€5"]
+                  ]
+                },
+                {
+                  "name": "Zero alcohol",
+                  "items": [
+                    ["Non-alcoholic cocktail", "Made like the real thing", "€6"],
+                    ["Soft drink", "Cola, lemonade, tonic", "€3"],
+                    ["Sparkling water", "Bottle", "€3"]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "A table for the evening?",
+              "p": "Send us the date and the guests, and we find you a table.",
+              "button": ["Book a table", "/#contact"]
+            }
+          ]
+        }
+      }
+    },
+    "bg": {
+      "tagline": "коктейл бар и лаундж",
+      "description": "Коктейли по поръчка, бира, вино и мезета за споделяне. Запазете маса за вечерта или организирайте частно събитие.",
+      "nav": [
+        ["Напитки", "/menu.html"],
+        ["Вечери", "/#evenings"],
+        ["Частни събития", "/#events"],
+        ["Резервация", "/#contact"]
+      ],
+      "headerCta": ["Резервирайте маса", "/#contact"],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Коктейли, бира и вино",
+            "eyebrowIcon": "cup",
+            "title": "Полумрак и *добро питие*",
+            "lead": "Коктейли по поръчка, бира, вино и мезета за споделяне. Елате след работа, доведете приятели и останете за още едно питие.",
+            "cta": ["Резервирайте маса", "/#contact"],
+            "cta2": ["Вижте менюто", "/menu.html"],
+            "card": {
+              "icon": "cup",
+              "title": "Любими на бара",
+              "rows": [
+                ["Олд Фешънд", "9 €"],
+                ["Джин с тоник", "7 €"],
+                ["Наливна бира", "4 €"]
+              ],
+              "note": "Цялото меню с напитки е на страница „Напитки“."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                ["cup", "Коктейли по поръчка"],
+                ["music", "Музика според настроението"],
+                ["users", "Компании и частни събития"],
+                ["calendar", "Резервация на маса"]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "drinks",
+              "title": "На бара",
+              "intro": "Кратка листа, приготвена с грижа — и човек, който да ви помогне да изберете.",
+              "items": [
+                ["cup", "Коктейли", "Класики, приготвени както трябва, и няколко авторски — разклатени или разбъркани пред вас."],
+                ["drop", "Бира и вино", "Бира на чаша и в бутилка, вино на чаша или на бутилка."],
+                ["bread", "Мезета", "Маслини, ядки, сирена и малки чинии за масата."],
+                ["leaf", "Без алкохол", "Безалкохолни коктейли и напитки, приготвени със същата грижа."]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "evenings",
+              "alt": true,
+              "title": "Вечери на бара",
+              "intro": "Влезте за едно питие или останете за цялата вечер.",
+              "items": [
+                ["По ваш вкус", "Не знаете какво ви се пие? Кажете ни какво харесвате — сладко, кисело, горчиво или с дъх на дим — и ще ви предложим.", "Класически и авторски коктейли", "Бира и вино на чаша", "Безалкохолни напитки със същата грижа"],
+                ["Място за разговор", "Приглушена светлина, музика според часа и бар, на който е лесно да подхванете разговор.", "Места на бара и маси за компании", "Музика, която следва вечерта", "Мезета за споделяне между питиетата"]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "events",
+              "title": "Частни събития",
+              "intro": "Кажете ни датата, гостите и настроението — ние оформяме вечерта според тях.",
+              "items": [
+                ["gift", "Рождени дни и партита", "Резервирана зона, листа с напитки за вашата компания и храна за споделяне."],
+                ["users", "Фирмени вечери", "Питие след работа или фирмено тържество, подготвено преди да пристигнете."],
+                ["star", "Приеми и изпращания", "Малки събирания, за които подреждаме залата според повода."]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "book",
+              "alt": true,
+              "title": "Как се резервира маса",
+              "intro": "Нужни са ни само няколко подробности.",
+              "items": [
+                ["Кажете ни кога", "Датата, часа и колко души сте."],
+                ["Добавете бележка", "Рожден ден, тих ъгъл или място близо до музиката — споменете всичко, което помага."],
+                ["Потвърждаваме", "Отговаряме с вашата маса или предлагаме близък час, ако този е зает."],
+                ["Заповядайте", "Кажете на чие име е резервацията и ние ще ви заведем до масата."]
+              ]
+            },
+            {
+              "type": "gallery",
+              "title": "Атмосферата",
+              "intro": "Сменете плочките със снимки на бара, питиетата и вечерите.",
+              "items": ["Барът", "Коктейлите", "Салонът", "Вечерите със събития"]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "alt": true,
+              "title": "Полезно да знаете",
+              "items": [
+                ["Нужна ли е резервация?", "Не винаги, но в натоварените вечери помага. Изпратете датата, часа и колко сте — ще потвърдим маса или ще предложим друг час."],
+                ["Може ли резервация за голяма компания?", "Да. Кажете ни датата и колко сте и ще предложим зона, подредба на напитките и храна за споделяне."],
+                ["Организирате ли частни събития?", "Да — рождени дни, фирмени вечери и малки приеми. Кажете ни датата, броя на гостите и какво си представяте, и ще планираме оттам."],
+                ["Предлагате ли храна?", "Имаме кратко меню с мезета за споделяне. Ако имате алергия, кажете ни, преди да поръчате, и ще ви насочим."],
+                ["Има ли безалкохолни напитки?", "Да — безалкохолни коктейли и напитки, приготвени със същата грижа като останалите."],
+                ["Мога ли да променя или откажа резервацията?", "Кажете ни веднага щом плановете ви се променят, за да може масата да отиде при друг. Отговорете на потвърждението или ни се обадете."]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Планирате вечер навън?",
+              "p": "Резервирайте маса или ни разкажете за събитието си.",
+              "button": ["Резервирайте маса", "/#contact"]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Резервирайте маса",
+              "intro": "Кажете ни датата и колко сте. За по-голяма компания или частно събитие добавете подробности в съобщението.",
+              "formName": "reservation",
+              "rows": [
+                ["mail", "Имейл", "hello@example.com", "mailto:hello@example.com"],
+                ["phone", "Телефон", "+359 888 000 000", "tel:+359888000000"],
+                ["pin", "Адрес", "ул. „Витоша“ 1, София"]
+              ],
+              "fields": [
+                { "id": "date", "label": "Дата", "type": "date" },
+                { "id": "guests", "label": "Брой гости", "options": ["2", "3", "4", "5", "6", "7", "8", "По-голяма компания"] }
+              ],
+              "messageLabel": "Повод или пожелания (по избор)",
+              "send": "Изпратете резервацията",
+              "hoursTitle": "Работно време",
+              "hours": [
+                ["Понеделник – четвъртък", "17:00 – 00:00"],
+                ["Петък – събота", "17:00 – 02:00"],
+                ["Неделя", "17:00 – 23:00"]
+              ]
+            }
+          ]
+        },
+        "menu": {
+          "title": "Меню с напитки",
+          "description": "Менюто с напитки: коктейли, бира, вино, мезета и безалкохолни напитки — с цени в евро.",
+          "pagehead": ["Напитки", "Коктейли, бира, вино и мезета, с цени в евро. Питайте ни за алергените — с радост ще ви насочим."],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Коктейли",
+                  "items": [
+                    ["Олд Фешънд", "Бърбън, битер, портокалова кора", "9 €"],
+                    ["Негрони", "Джин, червен вермут, горчив ликьор", "9 €"],
+                    ["Маргарита", "Текила, лайм, сол по ръба", "9 €"],
+                    ["Еспресо мартини", "Водка, кафе ликьор, еспресо", "10 €"],
+                    ["Изборът на бармана", "Кажете ни какво обичате", "10 €"]
+                  ]
+                },
+                {
+                  "name": "Бира",
+                  "items": [
+                    ["Наливна бира", "0,4 л", "4 €"],
+                    ["Крафт бира", "Питайте какво има наливно", "5 €"],
+                    ["Сайдер", "Бутилка", "5 €"]
+                  ]
+                },
+                {
+                  "name": "Вино",
+                  "items": [
+                    ["Бяло или червено", "На чаша", "5 €"],
+                    ["Пенливо вино", "На чаша", "6 €"],
+                    ["Бутилка", "Питайте какво наливаме", "от 22 €"]
+                  ]
+                },
+                {
+                  "name": "Мезета",
+                  "items": [
+                    ["Маслини и бадеми", "Мариновани маслини, солени бадеми", "4 €"],
+                    ["Сирена и сушени меса", "Дъска за споделяне", "14 €"],
+                    ["Брускети", "Домат, босилек, зехтин", "6 €"],
+                    ["Пържени картофи", "С айоли", "5 €"]
+                  ]
+                },
+                {
+                  "name": "Без алкохол",
+                  "items": [
+                    ["Безалкохолен коктейл", "Приготвен като истинския", "6 €"],
+                    ["Безалкохолна напитка", "Кола, лимонада, тоник", "3 €"],
+                    ["Газирана вода", "Бутилка", "3 €"]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Маса за вечерта?",
+              "p": "Изпратете ни датата и колко сте — ще ви намерим маса.",
+              "button": ["Резервирайте", "/#contact"]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

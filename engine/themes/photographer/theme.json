@@ -1,0 +1,763 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "photographer",
+  "category": "personal",
+  "icon": "camera",
+  "accent": "#ece2d0",
+  "mark": "camera",
+  "art": "rings",
+  "schemaOrg": "ProfessionalService",
+  "sample": {
+    "name": "Atelier Lumen"
+  },
+  "featured": false,
+  "titleKey": "newsite.template.photographer.title",
+  "descriptionKey": "newsite.template.photographer.description",
+  "keywords": {
+    "en": [
+      "photographer",
+      "photography",
+      "videographer",
+      "wedding photographer",
+      "portrait",
+      "product photography",
+      "real estate photos",
+      "photoshoot",
+      "headshots",
+      "event photography",
+      "video",
+      "studio"
+    ],
+    "bg": [
+      "фотограф",
+      "фотография",
+      "видеограф",
+      "сватбен фотограф",
+      "портрет",
+      "продуктова фотография",
+      "снимки на имоти",
+      "фотосесия",
+      "събитийна фотография",
+      "заснемане",
+      "видео",
+      "снимки"
+    ]
+  },
+  "style": "elegant",
+  "tokens": {
+    "dark": true,
+    "bg": "#0e0d0c",
+    "bg2": "#171513",
+    "surface": "#1e1c19",
+    "text": "#f2ede4",
+    "muted": "#aca497",
+    "line": "rgba(255,240,220,.12)",
+    "accent": "#ece2d0",
+    "accent2": "#b89b6c",
+    "font": "sans",
+    "head": "serif",
+    "radius": 4,
+    "tilt": 0
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "hints": {
+    "en": {
+      "offer": "Wedding and portrait photographer working in natural light, with short films for social media.",
+      "audience": "Couples, families and small businesses",
+      "services": [
+        [
+          "Portrait session",
+          "€120",
+          "One hour, edited gallery"
+        ],
+        [
+          "Wedding day",
+          "€900",
+          "Preparations to the first dance"
+        ],
+        [
+          "Product set",
+          "€250",
+          "White background and styled shots"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Сватбен и портретен фотограф, който работи с естествена светлина и прави кратки филми за социалните мрежи.",
+      "audience": "Младоженци, семейства и малък бизнес",
+      "services": [
+        [
+          "Портретна сесия",
+          "120 €",
+          "Един час, обработена галерия"
+        ],
+        [
+          "Сватбен ден",
+          "900 €",
+          "От подготовката до първия танц"
+        ],
+        [
+          "Продуктова серия",
+          "250 €",
+          "Бял фон и стилизирани кадри"
+        ]
+      ]
+    }
+  },
+  "lang": {
+    "en": {
+      "tagline": "photography and video",
+      "description": "Portraits, weddings, events, products and interiors. See how a shoot works, what you receive and how to book a date.",
+      "nav": [
+        [
+          "Genres",
+          "/#genres"
+        ],
+        [
+          "Process",
+          "/#process"
+        ],
+        [
+          "Packages",
+          "/#packages"
+        ],
+        [
+          "FAQ",
+          "/#faq"
+        ]
+      ],
+      "headerCta": [
+        "Book a shoot",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Photography and video on location",
+            "eyebrowIcon": "camera",
+            "title": "Real moments in *good light*",
+            "lead": "Portraits, weddings, events, products and interiors, photographed with patience and an eye for light. We plan the shoot with you and deliver edited images ready to share and print.",
+            "cta": [
+              "Book a shoot",
+              "/#contact"
+            ],
+            "cta2": [
+              "See the packages",
+              "/#packages"
+            ],
+            "chips": [
+              "Portrait",
+              "Wedding",
+              "Events",
+              "Product",
+              "Real estate"
+            ],
+            "card": {
+              "icon": "camera",
+              "title": "Where to start",
+              "rows": [
+                [
+                  "Portrait session",
+                  "from €120"
+                ],
+                [
+                  "Commercial shoot",
+                  "from €250"
+                ],
+                [
+                  "Wedding day",
+                  "from €900"
+                ]
+              ],
+              "note": "Prices are a guide. The final price is confirmed in writing."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                [
+                  "camera",
+                  "Natural light, honest colour"
+                ],
+                [
+                  "calendar",
+                  "A clear plan before the day"
+                ],
+                [
+                  "link",
+                  "Private online gallery"
+                ],
+                [
+                  "heart",
+                  "Gentle direction, no stiff poses"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "genres",
+              "title": "What we photograph",
+              "intro": "Choose one genre or combine them. The approach changes with the subject, the care does not.",
+              "items": [
+                [
+                  "users",
+                  "Portrait",
+                  "Personal and business portraits in daylight or in the studio, relaxed and true to you."
+                ],
+                [
+                  "heart",
+                  "Family",
+                  "Parents, children and grandparents together, photographed at home or outdoors without forced smiles."
+                ],
+                [
+                  "ring",
+                  "Wedding",
+                  "From getting ready to the last dance, photographed quietly so you can enjoy the day."
+                ],
+                [
+                  "star",
+                  "Events",
+                  "Conferences, launches and parties: the people, the details and the atmosphere of the evening."
+                ],
+                [
+                  "bag",
+                  "Product",
+                  "Clean, consistent images for shops and catalogues, on white or styled in context."
+                ],
+                [
+                  "cup",
+                  "Food",
+                  "Dishes, menus and rooms for restaurants and cafés, shot in a way that makes people hungry."
+                ],
+                [
+                  "home",
+                  "Real estate",
+                  "Bright, straight, well-composed photographs of rooms and exteriors that make a listing stand out."
+                ],
+                [
+                  "play",
+                  "Video",
+                  "Short films, highlight reels and social clips, cut to the music with sound and colour done properly."
+                ]
+              ]
+            },
+            {
+              "type": "gallery",
+              "id": "work",
+              "alt": true,
+              "title": "Selected work",
+              "intro": "Portraits, weddings, spaces and details: light first, always.",
+              "items": [
+                "Portrait, window light",
+                "Wedding, the first look",
+                "Event, the room",
+                "Product, on stone",
+                "Interior, morning",
+                "Detail, hands",
+                "Family, golden hour",
+                "Dish, side light"
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "process",
+              "title": "How a shoot works",
+              "intro": "From the first message to the final gallery.",
+              "items": [
+                [
+                  "Enquiry and call",
+                  "Tell us what you need, the date and the place. We talk through the idea and answer your questions."
+                ],
+                [
+                  "Plan and quote",
+                  "You receive a written plan: locations, timing, what is included and the price."
+                ],
+                [
+                  "The shoot",
+                  "We arrive early, work with the light and guide you gently, so it feels easy in front of the camera."
+                ],
+                [
+                  "Selection and delivery",
+                  "You get an online gallery of edited images to download, share and print. Timing is agreed in the plan."
+                ]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "packages",
+              "alt": true,
+              "title": "Packages",
+              "intro": "Starting points for most shoots. Every package can be adjusted, and the final price is confirmed in writing.",
+              "items": [
+                {
+                  "name": "Portrait session",
+                  "price": "from €120",
+                  "per": "/ session",
+                  "features": [
+                    "Up to one hour, on location or in a studio",
+                    "Light retouching on every selected image",
+                    "Online gallery to download and share"
+                  ],
+                  "cta": [
+                    "Book a portrait",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Commercial shoot",
+                  "price": "from €250",
+                  "per": "/ shoot",
+                  "featured": "Popular",
+                  "features": [
+                    "Product sets, interiors or event coverage",
+                    "Web-ready and print-ready files",
+                    "One consistent look across the whole set",
+                    "Short video clips on request"
+                  ],
+                  "cta": [
+                    "Plan a shoot",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Wedding day",
+                  "price": "from €900",
+                  "per": "/ day",
+                  "features": [
+                    "Coverage from preparations to the first dance",
+                    "Edited gallery with retouched favourites",
+                    "A highlight film on request",
+                    "A planning call before the day"
+                  ],
+                  "cta": [
+                    "Ask about a date",
+                    "/#contact"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Before you book",
+              "items": [
+                [
+                  "How many photos will I get?",
+                  "It depends on the shoot. We agree a rough range in the plan, and you receive every image that passes our edit, not just a handful."
+                ],
+                [
+                  "How soon do I get the gallery?",
+                  "We agree the delivery time in your plan, based on the type and size of the shoot. A preview of the strongest frames usually comes first."
+                ],
+                [
+                  "Can I print the images?",
+                  "Yes. Files come in sizes for screens and for print, and we are glad to suggest a lab or an album if you want something to hold."
+                ],
+                [
+                  "What if it rains on the day?",
+                  "For outdoor shoots we plan a backup: another time or an indoor location. We decide together the evening before."
+                ],
+                [
+                  "What should I wear?",
+                  "Plain, comfortable colours that suit you. We send a short style guide with the plan, so you arrive knowing what works."
+                ],
+                [
+                  "Do you also film?",
+                  "Yes. Short films, highlight reels and social clips can be added to any package. Tell us what you have in mind and we quote it."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Let us plan your shoot",
+              "p": "Tell us the date, the place and the idea. We reply with questions and a first plan.",
+              "button": [
+                "Book a shoot",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Book a shoot",
+              "intro": "Tell us what you would like photographed, when and where. We come back with questions and a plan.",
+              "formName": "booking",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Address",
+                  "1 Vitosha St, Sofia"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "shoot",
+                  "label": "Type of shoot",
+                  "options": [
+                    "Portrait",
+                    "Wedding",
+                    "Event",
+                    "Product",
+                    "Real estate",
+                    "Video",
+                    "Other"
+                  ]
+                },
+                {
+                  "id": "date",
+                  "label": "Preferred date",
+                  "type": "date"
+                }
+              ],
+              "messageLabel": "Your idea and details",
+              "send": "Send enquiry"
+            }
+          ]
+        }
+      }
+    },
+    "bg": {
+      "tagline": "фотография и видео",
+      "description": "Портрети, сватби, събития, продукти и интериори. Вижте как протича снимането, какво получавате и как да запазите дата.",
+      "nav": [
+        [
+          "Жанрове",
+          "/#genres"
+        ],
+        [
+          "Как работим",
+          "/#process"
+        ],
+        [
+          "Пакети",
+          "/#packages"
+        ],
+        [
+          "Въпроси",
+          "/#faq"
+        ]
+      ],
+      "headerCta": [
+        "Запазете снимане",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Фотография и видео на място",
+            "eyebrowIcon": "camera",
+            "title": "Истински моменти в *добра светлина*",
+            "lead": "Портрети, сватби, събития, продукти и имоти — снимани с търпение и поглед за светлина. Планираме снимането заедно и ви предаваме обработени кадри, готови за споделяне и печат.",
+            "cta": [
+              "Запазете снимане",
+              "/#contact"
+            ],
+            "cta2": [
+              "Вижте пакетите",
+              "/#packages"
+            ],
+            "chips": [
+              "Портрет",
+              "Сватба",
+              "Събития",
+              "Продукт",
+              "Имоти"
+            ],
+            "card": {
+              "icon": "camera",
+              "title": "Откъде да започнете",
+              "rows": [
+                [
+                  "Портретна сесия",
+                  "от 120 €"
+                ],
+                [
+                  "Бизнес снимане",
+                  "от 250 €"
+                ],
+                [
+                  "Сватбен ден",
+                  "от 900 €"
+                ]
+              ],
+              "note": "Цените са ориентировъчни. Крайната цена потвърждаваме писмено."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                [
+                  "camera",
+                  "Естествена светлина"
+                ],
+                [
+                  "calendar",
+                  "Ясен план преди снимането"
+                ],
+                [
+                  "link",
+                  "Частна онлайн галерия"
+                ],
+                [
+                  "heart",
+                  "Насоки без вдървени пози"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "genres",
+              "title": "Какво снимаме",
+              "intro": "Изберете един жанр или комбинирайте. Подходът се променя според обекта, грижата — не.",
+              "items": [
+                [
+                  "users",
+                  "Портрет",
+                  "Лични и бизнес портрети на дневна светлина или в студио — спокойни и истински."
+                ],
+                [
+                  "heart",
+                  "Семейство",
+                  "Родители, деца и баби и дядовци заедно — у дома или навън, без насилени усмивки."
+                ],
+                [
+                  "ring",
+                  "Сватба",
+                  "От подготовката до последния танц — снимаме тихо, за да се наслаждавате на деня."
+                ],
+                [
+                  "star",
+                  "Събития",
+                  "Конференции, премиери и партита: хората, детайлите и атмосферата на вечерта."
+                ],
+                [
+                  "bag",
+                  "Продукт",
+                  "Чисти, еднотипни кадри за онлайн магазини и каталози — на бял фон или в обстановка."
+                ],
+                [
+                  "cup",
+                  "Храна",
+                  "Ястия, менюта и заведения за ресторанти и кафенета — снимани така, че да отварят апетит."
+                ],
+                [
+                  "home",
+                  "Имоти",
+                  "Светли, прави и добре композирани снимки на стаи и фасади, с които обявата се откроява."
+                ],
+                [
+                  "play",
+                  "Видео",
+                  "Кратки филми, акценти от събития и клипове за социалните мрежи — със звук и цвят, свършени както трябва."
+                ]
+              ]
+            },
+            {
+              "type": "gallery",
+              "id": "work",
+              "alt": true,
+              "title": "Избрани кадри",
+              "intro": "Портрети, сватби, пространства и детайли — първо светлината, винаги.",
+              "items": [
+                "Портрет, светлина от прозорец",
+                "Сватба, първият поглед",
+                "Събитие, залата",
+                "Продукт, върху камък",
+                "Интериор, сутрин",
+                "Детайл, ръце",
+                "Семейство, златен час",
+                "Ястие, странична светлина"
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "process",
+              "title": "Как протича снимането",
+              "intro": "От първото съобщение до готовата галерия.",
+              "items": [
+                [
+                  "Запитване и разговор",
+                  "Разкажете какво ви трябва, кога и къде. Обсъждаме идеята и отговаряме на въпросите ви."
+                ],
+                [
+                  "План и оферта",
+                  "Получавате писмен план: места, график, какво е включено и цената."
+                ],
+                [
+                  "Снимането",
+                  "Пристигаме по-рано, работим със светлината и ви напътстваме нежно, за да ви е леко пред обектива."
+                ],
+                [
+                  "Избор и предаване",
+                  "Получавате онлайн галерия с обработени кадри за сваляне, споделяне и печат. Срокът уговаряме в плана."
+                ]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "packages",
+              "alt": true,
+              "title": "Пакети",
+              "intro": "Отправна точка за повечето снимания. Всеки пакет може да се нагоди, а крайната цена потвърждаваме писмено.",
+              "items": [
+                {
+                  "name": "Портретна сесия",
+                  "price": "от 120 €",
+                  "per": "/ сесия",
+                  "features": [
+                    "До един час на място или в студио",
+                    "Леко ретуширане на всеки избран кадър",
+                    "Онлайн галерия за сваляне и споделяне"
+                  ],
+                  "cta": [
+                    "Запазете портрет",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Бизнес снимане",
+                  "price": "от 250 €",
+                  "per": "/ снимане",
+                  "featured": "Популярен",
+                  "features": [
+                    "Продуктови серии, интериори или отразяване на събитие",
+                    "Файлове за уеб и за печат",
+                    "Единен стил за цялата серия",
+                    "Кратки видео клипове при поискване"
+                  ],
+                  "cta": [
+                    "Планирайте снимане",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Сватбен ден",
+                  "price": "от 900 €",
+                  "per": "/ ден",
+                  "features": [
+                    "Снимане от подготовката до първия танц",
+                    "Обработена галерия с ретуширани любими кадри",
+                    "Филм с акценти от деня при поискване",
+                    "Разговор за планиране преди сватбата"
+                  ],
+                  "cta": [
+                    "Попитайте за дата",
+                    "/#contact"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Преди да запазите",
+              "items": [
+                [
+                  "Колко снимки ще получа?",
+                  "Зависи от снимането. В плана уговаряме ориентировъчен обем, а вие получавате всеки кадър, който мине през обработката ни — не само няколко."
+                ],
+                [
+                  "Кога ще получа галерията?",
+                  "Срокът уговаряме в плана според вида и големината на снимането. Преглед на най-силните кадри обикновено идва първи."
+                ],
+                [
+                  "Мога ли да отпечатам снимките?",
+                  "Да. Файловете са в размери за екран и за печат, а ако искате нещо, което да държите в ръка, ще препоръчаме лаборатория или албум."
+                ],
+                [
+                  "Какво става, ако вали?",
+                  "За снимки на открито подготвяме резервен вариант — друг час или място на закрито. Решаваме го заедно вечерта преди това."
+                ],
+                [
+                  "Какво да облека?",
+                  "Семпли, удобни цветове, които ви отиват. С плана изпращаме кратко ръководство за стила, за да знаете предварително какво работи."
+                ],
+                [
+                  "Снимате ли и видео?",
+                  "Да. Кратки филми, акценти от събития и клипове за социалните мрежи могат да се добавят към всеки пакет. Разкажете идеята си и ще направим оферта."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Нека планираме снимането",
+              "p": "Кажете ни датата, мястото и идеята. Ще отговорим с въпроси и първи план.",
+              "button": [
+                "Запазете снимане",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Запазете снимане",
+              "intro": "Напишете какво искате да снимаме, кога и къде. Ще се върнем с въпроси и план.",
+              "formName": "booking",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Адрес",
+                  "ул. Витоша 1, София"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "shoot",
+                  "label": "Вид снимане",
+                  "options": [
+                    "Портрет",
+                    "Сватба",
+                    "Събитие",
+                    "Продукт",
+                    "Имот",
+                    "Видео",
+                    "Друго"
+                  ]
+                },
+                {
+                  "id": "date",
+                  "label": "Желана дата",
+                  "type": "date"
+                }
+              ],
+              "messageLabel": "Идея и подробности",
+              "send": "Изпратете запитване"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

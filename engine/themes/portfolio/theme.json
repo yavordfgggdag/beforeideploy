@@ -1,0 +1,560 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "portfolio",
+  "category": "personal",
+  "icon": "rectangle.3.group",
+  "accent": "#ff5a36",
+  "mark": "camera",
+  "art": "rings",
+  "schemaOrg": "Person",
+  "sample": {
+    "name": "Studio North"
+  },
+  "featured": true,
+  "titleKey": "newsite.template.portfolio.title",
+  "descriptionKey": "newsite.template.portfolio.description",
+  "keywords": {
+    "en": [
+      "portfolio",
+      "designer",
+      "photographer",
+      "illustrator",
+      "architect",
+      "creative",
+      "freelancer",
+      "work",
+      "projects",
+      "gallery"
+    ],
+    "bg": [
+      "портфолио",
+      "дизайнер",
+      "фотограф",
+      "илюстратор",
+      "архитект",
+      "творец",
+      "фрийланс",
+      "проекти",
+      "галерия"
+    ]
+  },
+  "style": "calm",
+  "tokens": {
+    "dark": false,
+    "bg": "#fafaf8",
+    "bg2": "#f1f0ec",
+    "surface": "#ffffff",
+    "text": "#141414",
+    "muted": "#5c5c5c",
+    "line": "rgba(15,23,42,.10)",
+    "accent": "#ff5a36",
+    "accent2": "#ff9f1c",
+    "radius": 12,
+    "tilt": 0
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "hints": {
+    "en": {
+      "offer": "I design brand identities, websites and product photography for small businesses that want to look as good as the work they do.",
+      "audience": "Small businesses, cafés, studios and makers",
+      "services": [
+        [
+          "Logo and brand identity",
+          "€900",
+          "Logo, colours, typefaces and a short guide to using them"
+        ],
+        [
+          "One-page website",
+          "€600",
+          "Designed and built, ready for your own words and photos"
+        ],
+        [
+          "Product photo set",
+          "€250",
+          "Ten edited images for your shop or catalogue"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Правя бранд идентичност, уебсайтове и продуктова фотография за малки бизнеси, които искат да изглеждат толкова добре, колкото работят.",
+      "audience": "Малки бизнеси, кафенета, студия и майстори",
+      "services": [
+        [
+          "Лого и бранд идентичност",
+          "900 €",
+          "Лого, цветове, шрифтове и кратко ръководство за употреба"
+        ],
+        [
+          "Едностраничен сайт",
+          "600 €",
+          "Дизайн и изработка, готов за вашите текстове и снимки"
+        ],
+        [
+          "Продуктова фотосесия",
+          "250 €",
+          "Десет обработени кадъра за магазин или каталог"
+        ]
+      ]
+    }
+  },
+  "lang": {
+    "bg": {
+      "tagline": "дизайн и визуални истории",
+      "description": "Портфолио с избрани проекти, процес на работа и контакт за нови поръчки.",
+      "nav": [
+        [
+          "Работи",
+          "/work.html"
+        ],
+        [
+          "За мен",
+          "/about.html"
+        ],
+        [
+          "Контакт",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Нов проект",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Нека поговорим за следващия ви проект",
+            "eyebrowIcon": "spark",
+            "title": "Създавам визия, *която продава*",
+            "lead": "Бранд идентичност, уеб дизайн и фотография за малки бизнеси и смели идеи.",
+            "cta": [
+              "Виж работите",
+              "/work.html"
+            ],
+            "cta2": [
+              "Нов проект",
+              "/#contact"
+            ]
+          },
+          "sections": [
+            {
+              "type": "gallery",
+              "title": "Избрани проекти",
+              "intro": "Няколко примера за работата, с която се занимавам.",
+              "items": [
+                "Бранд на кафене",
+                "Уебсайт на студио",
+                "Серия винени етикети",
+                "Фотография за ателие",
+                "Плакати за фестивал",
+                "Дизайн на приложение"
+              ]
+            },
+            {
+              "type": "cards",
+              "alt": true,
+              "title": "Услуги",
+              "items": [
+                [
+                  "spark",
+                  "Бранд идентичност",
+                  "Лого, цветове, шрифтове и правила за употреба."
+                ],
+                [
+                  "globe",
+                  "Уеб дизайн",
+                  "Сайтове, които изглеждат добре и носят запитвания."
+                ],
+                [
+                  "camera",
+                  "Фотография",
+                  "Продукти, хора и пространства."
+                ]
+              ]
+            },
+            {
+              "type": "quotes",
+              "title": "Клиентите казват",
+              "items": [
+                [
+                  "„Разбра бизнеса ни по-добре от нас самите.“",
+                  "Мила, кафе „Зрънце“"
+                ],
+                [
+                  "„Сайтът удвои запитванията за два месеца.“",
+                  "Studio North"
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Да работим заедно",
+              "intro": "Разкажете за проекта и ще уговорим следващата стъпка.",
+              "formName": "project",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "budget",
+                  "label": "Бюджет",
+                  "options": [
+                    "до 1 000 €",
+                    "1 000 – 3 000 €",
+                    "3 000 – 8 000 €",
+                    "над 8 000 €"
+                  ]
+                }
+              ],
+              "messageLabel": "За проекта",
+              "send": "Изпрати"
+            }
+          ]
+        },
+        "work": {
+          "title": "Работи и проекти",
+          "description": "Избрани проекти: бранд идентичност, уеб дизайн и фотография.",
+          "pagehead": [
+            "Работи",
+            "Всеки проект започва с въпрос — ето как отговорихме."
+          ],
+          "sections": [
+            {
+              "type": "posts",
+              "items": [
+                {
+                  "tag": "Бранд",
+                  "date": "Проект",
+                  "h": "Идентичност за кафене",
+                  "p": "От логото до чашите: един облик за всичко, което гостът вижда и докосва.",
+                  "href": "/#contact"
+                },
+                {
+                  "tag": "Уеб",
+                  "date": "Проект",
+                  "h": "Сайт за студио",
+                  "p": "Ясен и спокоен сайт за малко студио, построен около въпросите, които посетителите наистина задават.",
+                  "href": "/#contact"
+                },
+                {
+                  "tag": "Опаковка",
+                  "date": "Проект",
+                  "h": "Винени етикети",
+                  "p": "Етикети, вдъхновени от релефа на лозето и създадени да работят като комплект.",
+                  "href": "/#contact"
+                },
+                {
+                  "tag": "Фото",
+                  "date": "Проект",
+                  "h": "Продуктова фотография",
+                  "p": "Чисти и единни продуктови снимки за онлайн каталог.",
+                  "href": "/#contact"
+                }
+              ]
+            }
+          ]
+        },
+        "about": {
+          "title": "За мен и процеса",
+          "description": "Кой стои зад портфолиото, как работя и с какви инструменти.",
+          "pagehead": [
+            "За мен",
+            "Дизайнер, който работи с малки бизнеси и смели идеи."
+          ],
+          "sections": [
+            {
+              "type": "prose",
+              "items": [
+                [
+                  "Кой съм",
+                  "Аз съм дизайнер, който обича ясните идеи и простите, добре направени неща. Работя с малки бизнеси и хора със смели идеи — бранд, уебсайтове и фотография."
+                ],
+                [
+                  "Как работя",
+                  "Започвам с разговор и кратко проучване, после предлагам две посоки, избираме една и я довеждаме до край. Без изненади в цената."
+                ]
+              ]
+            },
+            {
+              "type": "timeline",
+              "alt": true,
+              "title": "Над какво работя",
+              "items": [
+                [
+                  "Бранд",
+                  "Идентичност и лого",
+                  "Лого, цветове и шрифтове, събрани в система, която е лесна за прилагане."
+                ],
+                [
+                  "Уеб",
+                  "Сайтове и интерфейси",
+                  "Страници и екрани, подредени около това, което посетителят трябва да направи."
+                ],
+                [
+                  "Печат",
+                  "Опаковки и илюстрация",
+                  "Печат, опаковки и илюстрация, подготвени за производство."
+                ]
+              ]
+            },
+            {
+              "type": "chips",
+              "title": "Инструменти",
+              "items": [
+                "Figma",
+                "Illustrator",
+                "Photoshop",
+                "Lightroom",
+                "Webflow",
+                "HTML и CSS"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "en": {
+      "tagline": "design and visual stories",
+      "description": "A portfolio of selected projects, the process and a way to start a new one.",
+      "nav": [
+        [
+          "Work",
+          "/work.html"
+        ],
+        [
+          "About",
+          "/about.html"
+        ],
+        [
+          "Contact",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "New project",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Let’s talk about your next project",
+            "eyebrowIcon": "spark",
+            "title": "I create visuals *that sell*",
+            "lead": "Brand identity, web design and photography for small businesses and bold ideas.",
+            "cta": [
+              "See the work",
+              "/work.html"
+            ],
+            "cta2": [
+              "New project",
+              "/#contact"
+            ]
+          },
+          "sections": [
+            {
+              "type": "gallery",
+              "title": "Selected projects",
+              "intro": "A few examples of the kind of work I take on.",
+              "items": [
+                "Café brand identity",
+                "Studio website",
+                "Wine label series",
+                "Atelier photography",
+                "Festival posters",
+                "App interface design"
+              ]
+            },
+            {
+              "type": "cards",
+              "alt": true,
+              "title": "Services",
+              "items": [
+                [
+                  "spark",
+                  "Brand identity",
+                  "Logo, colours, typefaces and usage rules."
+                ],
+                [
+                  "globe",
+                  "Web design",
+                  "Sites that look good and bring enquiries."
+                ],
+                [
+                  "camera",
+                  "Photography",
+                  "Products, people and spaces."
+                ]
+              ]
+            },
+            {
+              "type": "quotes",
+              "title": "Clients say",
+              "items": [
+                [
+                  "“Understood our business better than we did.”",
+                  "Mila, Zrantse Coffee"
+                ],
+                [
+                  "“The site doubled our enquiries in two months.”",
+                  "Studio North"
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Let’s work together",
+              "intro": "Tell me about the project and we agree the next step.",
+              "formName": "project",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "budget",
+                  "label": "Budget",
+                  "options": [
+                    "up to €1,000",
+                    "€1,000 – €3,000",
+                    "€3,000 – €8,000",
+                    "over €8,000"
+                  ]
+                }
+              ],
+              "messageLabel": "About the project",
+              "send": "Send"
+            }
+          ]
+        },
+        "work": {
+          "title": "Work and projects",
+          "description": "Selected projects: brand identity, web design and photography.",
+          "pagehead": [
+            "Work",
+            "Every project starts with a question — here is how we answered."
+          ],
+          "sections": [
+            {
+              "type": "posts",
+              "items": [
+                {
+                  "tag": "Brand",
+                  "date": "Project",
+                  "h": "A café identity",
+                  "p": "From the logo to the cups: one look across everything a guest sees and touches.",
+                  "href": "/#contact"
+                },
+                {
+                  "tag": "Web",
+                  "date": "Project",
+                  "h": "A studio website",
+                  "p": "A clear, calm site for a small studio, built around the questions visitors actually ask.",
+                  "href": "/#contact"
+                },
+                {
+                  "tag": "Packaging",
+                  "date": "Project",
+                  "h": "A wine label series",
+                  "p": "Labels inspired by the lay of the vineyard, designed to work as a set.",
+                  "href": "/#contact"
+                },
+                {
+                  "tag": "Photo",
+                  "date": "Project",
+                  "h": "Product photography",
+                  "p": "Clean, consistent product images for an online catalogue.",
+                  "href": "/#contact"
+                }
+              ]
+            }
+          ]
+        },
+        "about": {
+          "title": "About me and the process",
+          "description": "Who is behind the portfolio, how I work and with which tools.",
+          "pagehead": [
+            "About",
+            "A designer who works with small businesses and bold ideas."
+          ],
+          "sections": [
+            {
+              "type": "prose",
+              "items": [
+                [
+                  "Who I am",
+                  "I am a designer who likes clear ideas and simple, well-made things. I work with small businesses and people with bold ideas on identity, websites and photography."
+                ],
+                [
+                  "How I work",
+                  "I start with a conversation and a short research phase, propose two directions, we pick one and take it all the way. No surprises in the price."
+                ]
+              ]
+            },
+            {
+              "type": "timeline",
+              "alt": true,
+              "title": "What I work on",
+              "items": [
+                [
+                  "Brand",
+                  "Identity and logo",
+                  "A logo, colours and typefaces brought together in a system that is easy to apply."
+                ],
+                [
+                  "Web",
+                  "Sites and interfaces",
+                  "Pages and screens designed around what visitors need to do."
+                ],
+                [
+                  "Print",
+                  "Packaging and illustration",
+                  "Print, packaging and illustration, prepared for production."
+                ]
+              ]
+            },
+            {
+              "type": "chips",
+              "title": "Tools",
+              "items": [
+                "Figma",
+                "Illustrator",
+                "Photoshop",
+                "Lightroom",
+                "Webflow",
+                "HTML and CSS"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

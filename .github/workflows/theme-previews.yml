@@ -1,0 +1,51 @@
+# Site Builder S5: the pictures of the themes in the "New site" picker (engine/themes/<id>/preview.jpg).
+# Runs when a theme, the renderer or this tooling changes (and by hand): it renders every theme on macOS (the
+# fonts the Mac app's users see), commits the pictures to the branch and uploads them as an artifact — so after
+# a push, `git pull` brings the pictures. The engine tests fail when a picture is missing or older than its
+# theme.json, so a theme cannot ship without one. Its own commit touches only pictures, so it never loops.
+name: theme-previews
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'engine/themes/*/theme.json'
+      - 'engine/src/sitegen/**'
+      - 'scripts/theme-shots.mjs'
+      - '.github/workflows/theme-previews.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  previews:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: macos-15
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Playwright (drives the runner's Chrome; nothing is downloaded)
+        run: npm i --no-save --no-audit --no-fund --prefix scripts playwright-core
+      - name: Render the previews
+        run: node scripts/theme-shots.mjs --all
+      - name: Previews are current
+        run: node scripts/theme-shots.mjs --check
+      - uses: actions/upload-artifact@v4
+        with:
+          name: theme-previews
+          path: engine/themes/*/preview.jpg
+      - name: Commit the pictures
+        run: |
+          set -e
+          git add engine/themes/*/preview.jpg engine/themes/previews.json
+          if git diff --cached --quiet; then echo "nothing changed"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -qm "Theme previews: rendered on macOS"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

@@ -428,3 +428,82 @@ Deno.test("ai-fix V12: missing model prices fail before the upstream call and be
  assert.equal(res.status,503);assert.equal((await res.json()).code,"meter_unavailable");
  assert.equal(w.up.calls.length,0);assert.equal(w.db.rows("credit_holds").length,0);
 });
+
+// ---------------------------------------------------------------- the Codex engine (OpenAI), chosen per request
+
+/** An OpenAI chat-completions stream: text in `choices[0].delta.content`, the counts in the last chunk, then [DONE]. */
+function openaiSse(model = "gpt-5", finish = "stop"): string {
+  const chunks = [
+    { id: "c1", model, choices: [{ index: 0, delta: { role: "assistant", content: "Hello " }, finish_reason: null }] },
+    { id: "c1", model, choices: [{ index: 0, delta: { content: "codex" }, finish_reason: null }] },
+    { id: "c1", model, choices: [{ index: 0, delta: {}, finish_reason: finish }] },
+    { id: "c1", model, choices: [], usage: { prompt_tokens: 4000, completion_tokens: 2000 } },
+  ];
+  return chunks.map((c) => `data: ${JSON.stringify(c)}\n\n`).join("") + "data: [DONE]\n\n";
+}
+
+function codexWorld(o: WorldOpts & { openaiKey?: string; stream?: string } = {}) {
+  const db = new FakeDb({
+    profiles: [{ user_id: USER.id, email: USER.email, role: o.role ?? "normal", plan: o.plan ?? "high", ai_disabled: false }],
+    ai_usage: [], credit_ledger: [{ user_id: USER.id, delta: o.balance ?? 100000, bucket: "plan", reason: "plan_grant", ref: "t0" }], settings: o.settings ?? [], subscriptions: [],
+  }, USER);
+  const calls: { url: string; headers: Record<string, string>; body: Row }[] = [];
+  const f = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    calls.push({ url: String(input), headers: (init?.headers ?? {}) as Record<string, string>, body: JSON.parse(String(init?.body)) });
+    const url = String(input);
+    return new Response(url.includes("openai") ? (o.stream ?? openaiSse()) : OK_STREAM, { status: 200, headers: { "content-type": "text/event-stream" } });
+  }) as unknown as typeof fetch;
+  const handle = createAiFixHandler({ ...fakeDeps(db), anthropicKey: "sk-ant-test", anthropicBase: "https://anthropic.local", openaiKey: o.openaiKey, openaiBase: "https://openai.local", fetch: f });
+  return { db, handle, calls };
+}
+
+Deno.test("ai-fix: engine codex → 503 engine_unavailable when the cloud has no Codex key; claude keeps working", async () => {
+  const { handle, calls } = codexWorld({ openaiKey: "" });
+  const res = await handle(post("ai-fix", { ...PROMPT, engine: "codex" }));
+  assert.equal(res.status, 503);
+  const j = await res.json();
+  assert.equal(j.code, "engine_unavailable");
+  assert.equal(j.engine, "codex");
+  assert.equal(calls.length, 0, "no model call, nothing reserved");
+  const ok = await handle(post("ai-fix", { ...PROMPT, engine: "claude" }));
+  assert.equal(ok.status, 200);
+  assert.ok(calls[0].url.startsWith("https://anthropic.local/"));
+});
+
+Deno.test("ai-fix: engine codex → OpenAI chat completions with the plan's Codex model, the stream normalized, billed at the Codex price", async () => {
+  const { handle, calls, db } = codexWorld({ openaiKey: "sk-openai-test", plan: "high" });
+  const res = await handle(post("ai-fix", { ...PROMPT, engine: "codex", operationId: "op-codex-0001" }));
+  const ev = await events(res);
+  assert.equal(calls.length, 1);
+  assert.ok(calls[0].url.startsWith("https://openai.local/v1/chat/completions"), calls[0].url);
+  assert.equal(calls[0].headers.authorization, "Bearer sk-openai-test");
+  assert.equal(calls[0].body.model, "gpt-5", "High plan → gpt-5 on Codex");
+  assert.equal(calls[0].body.stream, true);
+  assert.deepEqual(calls[0].body.stream_options, { include_usage: true });
+  assert.equal((calls[0].body.messages as Row[])[0].role, "system");
+  assert.equal(ev.filter((e) => e.type === "delta").map((e) => e.text).join(""), "Hello codex");
+  const usage = ev.find((e) => e.type === "usage")!;
+  assert.equal(usage.model, "gpt-5");
+  assert.equal(usage.input, 4000);
+  assert.equal(usage.output, 2000);
+  assert.equal(usage.charged, charge("high", "gpt-5"), "the Codex price, not Claude's");
+  assert.equal(ev.at(-1)!.type, "done");
+  const row = db.tables.ai_usage[0] as Row;
+  assert.equal(row.model, "gpt-5");
+  assert.equal(row.status, "ok");
+});
+
+Deno.test("ai-fix: engine codex explain → the cheap Codex model; an unknown engine value means Claude", async () => {
+  const { handle, calls } = codexWorld({ openaiKey: "sk-openai-test" });
+  await events(await handle(post("ai-fix", { ...PROMPT, mode: "explain", engine: "codex" })));
+  assert.equal(calls[0].body.model, "gpt-5-mini");
+  await events(await handle(post("ai-fix", { ...PROMPT, engine: "gemini" })));
+  assert.ok(calls[1].url.startsWith("https://anthropic.local/"), "unknown engine → Claude");
+});
+
+Deno.test("ai-fix: engine codex — a cut-off answer (finish_reason length) is billed as truncated", async () => {
+  const { handle, db } = codexWorld({ openaiKey: "sk-openai-test", stream: openaiSse("gpt-5", "length") });
+  const ev = await events(await handle(post("ai-fix", { ...PROMPT, engine: "codex" })));
+  assert.equal(ev.find((e) => e.type === "usage")!.status, "truncated");
+  assert.equal((db.tables.ai_usage[0] as Row).status, "truncated");
+});

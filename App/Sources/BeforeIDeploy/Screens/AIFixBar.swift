@@ -17,7 +17,8 @@ struct AIFixBar: View {
                 }
             }
             let builtin = model.account?.features?.aiBuiltin == true
-            HStack(spacing: 6) {
+            // buttons keep one-line labels and move to the next row when the pane is narrow
+            FlowLayout(spacing: 6, lineSpacing: 6) {
                 if builtin {
                     Button { model.aiStore.start(step: step) } label: { Label(L("ai.fixButton"), systemImage: "sparkles") }
                         .bidButton(.primary, compact: true)

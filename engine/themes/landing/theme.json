@@ -1,0 +1,509 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "landing",
+  "category": "business",
+  "icon": "sparkles.rectangle.stack",
+  "accent": "#5b8cff",
+  "mark": "bolt",
+  "art": "grid",
+  "schemaOrg": "ProfessionalService",
+  "sample": {
+    "name": "Northline"
+  },
+  "featured": true,
+  "titleKey": "newsite.template.landing.title",
+  "descriptionKey": "newsite.template.landing.description",
+  "keywords": {
+    "en": [
+      "business",
+      "company",
+      "services",
+      "agency",
+      "landing",
+      "firm",
+      "office",
+      "b2b",
+      "consultancy",
+      "local business",
+      "studio"
+    ],
+    "bg": [
+      "бизнес",
+      "фирма",
+      "услуги",
+      "агенция",
+      "лендинг",
+      "компания",
+      "офис",
+      "студио",
+      "малък бизнес"
+    ]
+  },
+  "style": "bold",
+  "tokens": {
+    "dark": true,
+    "bg": "#0b0f1a",
+    "bg2": "#10172a",
+    "surface": "#131b2f",
+    "text": "#eef0f7",
+    "muted": "#a3abc2",
+    "line": "rgba(255,255,255,.09)",
+    "accent": "#5b8cff",
+    "accent2": "#a26bff"
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "hints": {
+    "en": {
+      "offer": "We are a small team that helps local businesses with their paperwork, accounts and online presence, so the owners can get on with their real work.",
+      "audience": "Small business owners, shops, cafés and freelancers",
+      "services": [
+        [
+          "Consultation",
+          "€40",
+          "We go through the job and agree the next step"
+        ],
+        [
+          "Monthly support",
+          "€120",
+          "Regular tasks handled, one person to call"
+        ],
+        [
+          "Project work",
+          "€300",
+          "A clear scope, a written price and a deadline"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Ние сме малък екип, който помага на местни фирми с документите, счетоводството и присъствието им онлайн, за да могат собствениците да се занимават с истинската си работа.",
+      "audience": "Собственици на малък бизнес, магазини, кафенета и свободни професии",
+      "services": [
+        [
+          "Консултация",
+          "40 €",
+          "Преглеждаме задачата и уточняваме следващата стъпка"
+        ],
+        [
+          "Месечна поддръжка",
+          "120 €",
+          "Редовните задачи са поети, имате един човек за връзка"
+        ],
+        [
+          "Работа по проект",
+          "300 €",
+          "Ясен обхват, цена в писмен вид и срок"
+        ]
+      ]
+    }
+  },
+  "lang": {
+    "bg": {
+      "tagline": "услуги, на които можете да разчитате",
+      "description": "Какво правим, как работим и как да се свържете с нас.",
+      "nav": [
+        [
+          "Услуги",
+          "/#services"
+        ],
+        [
+          "Как работим",
+          "/#process"
+        ],
+        [
+          "Отзиви",
+          "/#reviews"
+        ],
+        [
+          "Контакт",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Запитване",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Ясни отговори, ясен план",
+            "title": "Решаваме проблема ви *бързо и честно*",
+            "lead": "Кажете ни какво ви трябва — ще получите ясна оферта, реалистичен срок и човек, на когото можете да се обадите.",
+            "cta": [
+              "Поискай оферта",
+              "/#contact"
+            ],
+            "cta2": [
+              "Виж услугите",
+              "/#services"
+            ],
+            "card": {
+              "icon": "shield",
+              "title": "Защо клиентите остават",
+              "rows": [
+                [
+                  "Отговор",
+                  "до 24 ч."
+                ],
+                [
+                  "Спазени срокове",
+                  "98%"
+                ],
+                [
+                  "Гаранция",
+                  "12 месеца"
+                ]
+              ],
+              "note": "Числата са пример — сменете ги с вашите."
+            }
+          },
+          "sections": [
+            {
+              "type": "cards",
+              "id": "services",
+              "title": "Какво правим",
+              "intro": "Три части във всяка поръчка: разбираме задачата, изпълняваме я и оставаме във връзка след това.",
+              "items": [
+                [
+                  "spark",
+                  "Консултация",
+                  "Разбираме задачата, преди да дадем цена — така офертата отговаря на работата."
+                ],
+                [
+                  "tools",
+                  "Изпълнение",
+                  "Работим по ясен план с междинни срокове и снимки на напредъка."
+                ],
+                [
+                  "shield",
+                  "Поддръжка",
+                  "След приключване оставаме на разположение, ако нещо трябва да се доуточни или поправи."
+                ]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "process",
+              "alt": true,
+              "title": "Как работим",
+              "intro": "Без изненади: знаете какво следва на всяка стъпка.",
+              "items": [
+                [
+                  "Разговор",
+                  "Разказвате какво ви трябва — по телефона или на място."
+                ],
+                [
+                  "Оферта",
+                  "Получавате цена и срок в писмен вид, преди да започне работата."
+                ],
+                [
+                  "Работа",
+                  "Изпълняваме и ви държим в течение."
+                ],
+                [
+                  "Предаване",
+                  "Проверяваме резултата заедно и уточняваме какво, ако има, остава за доработка."
+                ]
+              ]
+            },
+            {
+              "type": "stats",
+              "items": [
+                [
+                  "12+",
+                  "години опит"
+                ],
+                [
+                  "850",
+                  "завършени проекта"
+                ],
+                [
+                  "4.9/5",
+                  "средна оценка"
+                ],
+                [
+                  "24 ч.",
+                  "време за отговор"
+                ]
+              ]
+            },
+            {
+              "type": "quotes",
+              "id": "reviews",
+              "title": "Какво казват клиентите",
+              "items": [
+                [
+                  "„Дойдоха точно когато казаха и оставиха всичко чисто. Препоръчвам.“",
+                  "Мария Петрова, София"
+                ],
+                [
+                  "„Офертата беше ясна, нямаше скрити разходи. Второ поръчване вече.“",
+                  "Георги Иванов, Пловдив"
+                ],
+                [
+                  "„Бърз отговор и истински човек отсреща — рядкост.“",
+                  "Елена Димитрова, Варна"
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Готови ли сте да започнем?",
+              "p": "Пишете ни и заедно ще уточним следващата стъпка.",
+              "button": [
+                "Свържи се с нас",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Контакт",
+              "intro": "Разкажете ни накратко за задачата.",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Адрес",
+                  "ул. „Витоша“ 1, София"
+                ]
+              ],
+              "hoursTitle": "Работно време",
+              "hours": [
+                [
+                  "Понеделник – петък",
+                  "9:00 – 18:00"
+                ],
+                [
+                  "Събота",
+                  "10:00 – 14:00"
+                ],
+                [
+                  "Неделя",
+                  "почивен ден"
+                ]
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "en": {
+      "tagline": "services you can rely on",
+      "description": "What we do, how we work and how to reach us.",
+      "nav": [
+        [
+          "Services",
+          "/#services"
+        ],
+        [
+          "Process",
+          "/#process"
+        ],
+        [
+          "Reviews",
+          "/#reviews"
+        ],
+        [
+          "Contact",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Get a quote",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Straight answers, clear plans",
+            "title": "We solve your problem *fast and fairly*",
+            "lead": "Tell us what you need — you get a clear quote, a realistic deadline and one person you can call.",
+            "cta": [
+              "Get a quote",
+              "/#contact"
+            ],
+            "cta2": [
+              "See services",
+              "/#services"
+            ],
+            "card": {
+              "icon": "shield",
+              "title": "Why clients stay",
+              "rows": [
+                [
+                  "Reply",
+                  "within 24h"
+                ],
+                [
+                  "Deadlines met",
+                  "98%"
+                ],
+                [
+                  "Warranty",
+                  "12 months"
+                ]
+              ],
+              "note": "Sample numbers — replace them with yours."
+            }
+          },
+          "sections": [
+            {
+              "type": "cards",
+              "id": "services",
+              "title": "What we do",
+              "intro": "Three parts of every job: we understand it, we carry it out, and we stay in touch afterwards.",
+              "items": [
+                [
+                  "spark",
+                  "Consulting",
+                  "We understand the job before we price it, so the quote matches the work."
+                ],
+                [
+                  "tools",
+                  "Delivery",
+                  "A clear plan with milestones and progress photos."
+                ],
+                [
+                  "shield",
+                  "Support",
+                  "We stay in touch after the job and are here if something needs a second look."
+                ]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "process",
+              "alt": true,
+              "title": "How we work",
+              "intro": "No surprises: you always know what comes next.",
+              "items": [
+                [
+                  "Talk",
+                  "Tell us what you need — by phone or on site."
+                ],
+                [
+                  "Quote",
+                  "You get a written price and a deadline before anything starts."
+                ],
+                [
+                  "Work",
+                  "We deliver and keep you posted."
+                ],
+                [
+                  "Handover",
+                  "We check the result together and agree on anything that still needs doing."
+                ]
+              ]
+            },
+            {
+              "type": "stats",
+              "items": [
+                [
+                  "12+",
+                  "years of experience"
+                ],
+                [
+                  "850",
+                  "projects delivered"
+                ],
+                [
+                  "4.9/5",
+                  "average rating"
+                ],
+                [
+                  "24h",
+                  "response time"
+                ]
+              ]
+            },
+            {
+              "type": "quotes",
+              "id": "reviews",
+              "title": "What clients say",
+              "items": [
+                [
+                  "“They arrived exactly on time and left everything clean. Recommended.”",
+                  "Maria Petrova, Sofia"
+                ],
+                [
+                  "“A clear quote with no hidden costs. Already our second order.”",
+                  "George Ivanov, Plovdiv"
+                ],
+                [
+                  "“Fast replies and a real person on the other end — rare.”",
+                  "Elena Dimitrova, Varna"
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Ready to start?",
+              "p": "Write to us and we will agree the next step together.",
+              "button": [
+                "Contact us",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Contact",
+              "intro": "Tell us briefly about the job.",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Address",
+                  "1 Vitosha St, Sofia"
+                ]
+              ],
+              "hoursTitle": "Opening hours",
+              "hours": [
+                [
+                  "Monday – Friday",
+                  "9:00 – 18:00"
+                ],
+                [
+                  "Saturday",
+                  "10:00 – 14:00"
+                ],
+                [
+                  "Sunday",
+                  "closed"
+                ]
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

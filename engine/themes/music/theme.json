@@ -1,0 +1,653 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "music",
+  "category": "personal",
+  "icon": "music.mic",
+  "accent": "#c93cff",
+  "mark": "music",
+  "art": "orbit",
+  "schemaOrg": "MusicGroup",
+  "sample": {
+    "name": "Nocturne Live"
+  },
+  "featured": false,
+  "titleKey": "newsite.template.music.title",
+  "descriptionKey": "newsite.template.music.description",
+  "keywords": {
+    "en": [
+      "music",
+      "band",
+      "live band",
+      "dj",
+      "wedding band",
+      "musician",
+      "singer",
+      "party band",
+      "cover band",
+      "gig",
+      "live music",
+      "booking"
+    ],
+    "bg": [
+      "музика",
+      "група",
+      "жива музика",
+      "диджей",
+      "сватбена музика",
+      "музикант",
+      "певец",
+      "оркестър",
+      "кавър група",
+      "парти музика",
+      "купон",
+      "свирим"
+    ]
+  },
+  "style": "bold",
+  "tokens": {
+    "dark": true,
+    "bg": "#0b0510",
+    "bg2": "#130a1c",
+    "surface": "#1a1026",
+    "text": "#f4eefb",
+    "muted": "#b5a8c9",
+    "line": "rgba(255,255,255,.10)",
+    "accent": "#c93cff",
+    "accent2": "#ff2f92",
+    "font": "sans",
+    "head": "grotesk",
+    "radius": 10,
+    "tilt": -2
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "hints": {
+    "en": {
+      "offer": "We are a four-piece party band playing funk, soul and pop at weddings and private parties, and we also do DJ sets.",
+      "audience": "Couples planning a wedding, venues and event organisers",
+      "services": [
+        [
+          "Wedding band",
+          "€900",
+          "Ceremony, dinner and dance sets"
+        ],
+        [
+          "DJ set",
+          "€350",
+          "Dinner to last song, sound included"
+        ],
+        [
+          "Acoustic duo",
+          "€400",
+          "Music for the ceremony and dinner"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Сме четиричленна парти група и свирим фънк, соул и поп на сватби и частни партита. Правим и DJ сетове.",
+      "audience": "Младоженци, зали и организатори на събития",
+      "services": [
+        [
+          "Сватбена група",
+          "900 €",
+          "Церемония, вечеря и танцови сетове"
+        ],
+        [
+          "DJ сет",
+          "350 €",
+          "От вечеря до последна песен, с озвучаване"
+        ],
+        [
+          "Акустично дуо",
+          "400 €",
+          "Музика за церемония и вечеря"
+        ]
+      ]
+    }
+  },
+  "lang": {
+    "en": {
+      "tagline": "live music and DJ sets",
+      "description": "A live band and DJ sets for weddings, clubs, private parties and festivals. Hear the sound, then check your date.",
+      "nav": [
+        [
+          "Sound",
+          "/#sound"
+        ],
+        [
+          "Where we play",
+          "/#events"
+        ],
+        [
+          "Booking",
+          "/#how"
+        ],
+        [
+          "FAQ",
+          "/#faq"
+        ]
+      ],
+      "headerCta": [
+        "Check a date",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Weddings, clubs and private events",
+            "eyebrowIcon": "music",
+            "title": "Live sound that *fills the floor*",
+            "lead": "A live band and DJ sets for weddings, clubs, private parties and festivals. Hear the sound, tell us the date and the room, and we take care of the rest.",
+            "cta": [
+              "Check a date",
+              "/#contact"
+            ],
+            "cta2": [
+              "Hear the sound",
+              "/#sound"
+            ],
+            "card": {
+              "icon": "music",
+              "title": "Ways to book us",
+              "rows": [
+                [
+                  "Live band",
+                  "dance sets"
+                ],
+                [
+                  "DJ set",
+                  "all evening"
+                ],
+                [
+                  "Acoustic",
+                  "ceremony, dinner"
+                ]
+              ],
+              "note": "Every format is shaped around your date and your room."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                [
+                  "music",
+                  "Live band, DJ or acoustic"
+                ],
+                [
+                  "tools",
+                  "Sound system brought if needed"
+                ],
+                [
+                  "calendar",
+                  "Date and price agreed in writing"
+                ],
+                [
+                  "heart",
+                  "One contact, start to finish"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "formats",
+              "title": "Three ways to book us",
+              "intro": "Pick a format and we fit it to your room and your guests.",
+              "items": [
+                [
+                  "users",
+                  "Live band",
+                  "The full show: musicians on stage, sets built around your guests, and our own sound system when the room needs one."
+                ],
+                [
+                  "music",
+                  "DJ set",
+                  "From welcome drinks to the last song, mixed live in blocks for dinner, dancing and late night. Requests welcome."
+                ],
+                [
+                  "mic",
+                  "Acoustic sets",
+                  "Quiet, warm music for ceremonies, dinners and lounge hours, low enough to talk over, with a setup that fits any space."
+                ]
+              ]
+            },
+            {
+              "type": "chips",
+              "id": "sound",
+              "alt": true,
+              "title": "The sound",
+              "intro": "Genres we play, from the first dance to last call. Tell us your mix and we build the set around it.",
+              "items": [
+                "Pop hits",
+                "Funk and soul",
+                "House",
+                "Disco",
+                "Latin",
+                "Rock classics",
+                "Jazz standards",
+                "Retro hits",
+                "Acoustic covers",
+                "Lounge"
+              ]
+            },
+            {
+              "type": "split",
+              "id": "events",
+              "title": "Where we play",
+              "intro": "A good set depends on the room. These are the occasions we play for.",
+              "items": [
+                [
+                  "Weddings",
+                  "Ceremony, dinner and the first dance, then a dance floor that stays full until the end.",
+                  "Ceremony and first-dance music arranged with you",
+                  "A wireless microphone for speeches and toasts",
+                  "Sets timed to your programme"
+                ],
+                [
+                  "Clubs, bars and festivals",
+                  "Sets that grow with the crowd, from the early warm-up to the peak of the night.",
+                  "Outdoor stages with a sound check and a clear changeover time",
+                  "A technical rider on request",
+                  "Set lengths that fit any line-up"
+                ],
+                [
+                  "Private parties",
+                  "Birthdays, anniversaries and house parties, planned around your guest list and your songs.",
+                  "A wish list and a do-not-play list, both respected",
+                  "A setup that fits a living room, a garden or a hall",
+                  "Music that follows the mood of the evening"
+                ]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "how",
+              "alt": true,
+              "title": "How booking works",
+              "intro": "Four steps from the first message to the last song.",
+              "items": [
+                [
+                  "Tell us the date",
+                  "Send the date, the place, the kind of event and roughly how many guests."
+                ],
+                [
+                  "We make an offer",
+                  "You get the format, the time on stage, the equipment and the price in one clear message."
+                ],
+                [
+                  "You confirm",
+                  "We settle the details and the date is held for you in our calendar."
+                ],
+                [
+                  "Sound check and music",
+                  "We arrive early, set up and check the sound, and you enjoy the night."
+                ]
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Booking and equipment",
+              "items": [
+                [
+                  "How far ahead should we book?",
+                  "As soon as you know the date. Popular dates fill up, so write before the venue is final. We will tell you honestly whether the day is still open."
+                ],
+                [
+                  "Do you bring your own sound system?",
+                  "When the venue needs it, yes. Tell us about the room and the guest count and we recommend the setup. If the venue has a good system, we simply plug in."
+                ],
+                [
+                  "Can we request songs?",
+                  "Yes. Send a wish list and a do-not-play list before the day. We build the set around them and still read the room on the night."
+                ],
+                [
+                  "What do you need from the venue?",
+                  "Access to power, a safe place to set up and a load-in time. Once the date is confirmed we send you a short technical sheet."
+                ],
+                [
+                  "Do you travel?",
+                  "Gladly. Tell us the town and we include the travel in the offer, so there are no surprises later."
+                ],
+                [
+                  "How long do you play?",
+                  "We agree it with you: a short ceremony set, background music for dinner or a full evening with breaks. The length goes into the offer."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Hear us before you book",
+              "p": "Ask for a listening link and we send a few recordings and a sample set for your kind of event.",
+              "button": [
+                "Get a listening link",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Check your date",
+              "intro": "Tell us the date, the place and the kind of event. We come back with a clear offer.",
+              "formName": "booking",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Address",
+                  "1 Vitosha St, Sofia"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "event",
+                  "label": "Event",
+                  "options": [
+                    "Wedding",
+                    "Club or bar",
+                    "Private party",
+                    "Festival",
+                    "Company event",
+                    "Other"
+                  ]
+                },
+                {
+                  "id": "date",
+                  "label": "Date",
+                  "type": "date"
+                }
+              ],
+              "messageLabel": "Place, guests and wishes",
+              "send": "Send enquiry"
+            }
+          ]
+        }
+      }
+    },
+    "bg": {
+      "tagline": "жива музика и DJ сетове",
+      "description": "Група на живо и DJ сетове за сватби, клубове, частни партита и фестивали. Чуйте звука и проверете дата.",
+      "nav": [
+        [
+          "Звукът",
+          "/#sound"
+        ],
+        [
+          "Къде свирим",
+          "/#events"
+        ],
+        [
+          "Резервация",
+          "/#how"
+        ],
+        [
+          "Въпроси",
+          "/#faq"
+        ]
+      ],
+      "headerCta": [
+        "Проверете дата",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Сватби, клубове и частни събития",
+            "eyebrowIcon": "music",
+            "title": "Жив звук, който *пълни дансинга*",
+            "lead": "Група на живо и DJ сетове за сватби, клубове, частни партита и фестивали. Чуйте звука, кажете ни датата и залата — останалото е наша грижа.",
+            "cta": [
+              "Проверете дата",
+              "/#contact"
+            ],
+            "cta2": [
+              "Чуйте звука",
+              "/#sound"
+            ],
+            "card": {
+              "icon": "music",
+              "title": "Как можете да ни поканите",
+              "rows": [
+                [
+                  "Група на живо",
+                  "танцови сетове"
+                ],
+                [
+                  "DJ сет",
+                  "цяла вечер"
+                ],
+                [
+                  "Акустично",
+                  "церемония, вечеря"
+                ]
+              ],
+              "note": "Всеки формат се изгражда около вашата дата и зала."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                [
+                  "music",
+                  "Група, DJ или акустично"
+                ],
+                [
+                  "tools",
+                  "Озвучаване при нужда"
+                ],
+                [
+                  "calendar",
+                  "Дата и цена — писмено"
+                ],
+                [
+                  "heart",
+                  "Един контакт до края"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "formats",
+              "title": "Три начина да ни поканите",
+              "intro": "Изберете формат — ще го нагодим към залата и гостите.",
+              "items": [
+                [
+                  "users",
+                  "Група на живо",
+                  "Пълното шоу: музиканти на сцената, сетове по вкуса на гостите ви и собствено озвучаване, когато залата има нужда."
+                ],
+                [
+                  "music",
+                  "DJ сет",
+                  "От аперитива до последната песен — миксирано на живо, на блокове за вечеря, танци и късна нощ. Желани песни — добре дошли."
+                ],
+                [
+                  "mic",
+                  "Акустични сетове",
+                  "Тиха, топла музика за церемонии, вечери и лаундж часове — достатъчно тиха, за да си говорите, с техника, която се побира навсякъде."
+                ]
+              ]
+            },
+            {
+              "type": "chips",
+              "id": "sound",
+              "alt": true,
+              "title": "Звукът",
+              "intro": "Жанровете, които свирим — от първия танц до последната песен. Кажете ни вашата смесица и ще подредим сета.",
+              "items": [
+                "Поп хитове",
+                "Фънк и соул",
+                "Хаус",
+                "Диско",
+                "Латино",
+                "Рок класики",
+                "Джаз стандарти",
+                "Ретро хитове",
+                "Акустични кавъри",
+                "Лаундж"
+              ]
+            },
+            {
+              "type": "split",
+              "id": "events",
+              "title": "Къде свирим",
+              "intro": "Добрият сет зависи от залата. Ето поводите, за които свирим.",
+              "items": [
+                [
+                  "Сватби",
+                  "Церемония, вечеря и първи танц, после дансинг, който остава пълен до края.",
+                  "Музика за церемонията и първия танц, уточнена с вас",
+                  "Безжичен микрофон за тостове и слова",
+                  "Сетове, подредени по програмата ви"
+                ],
+                [
+                  "Клубове, барове и фестивали",
+                  "Сетове, които растат заедно с публиката — от ранното загряване до пика на вечерта.",
+                  "Сцени на открито със саундчек и ясен час за смяна",
+                  "Технически райдер при поискване",
+                  "Продължителност, която пасва на всяка програма"
+                ],
+                [
+                  "Частни партита",
+                  "Рождени дни, годишнини и домашни партита — по вашия списък с гости и песни.",
+                  "Списък с желани и списък с нежелани песни — и двата се спазват",
+                  "Техника за хол, градина или зала",
+                  "Музика, която следва настроението на вечерта"
+                ]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "how",
+              "alt": true,
+              "title": "Как се резервира",
+              "intro": "Четири стъпки от първото съобщение до последната песен.",
+              "items": [
+                [
+                  "Пишете ни датата",
+                  "Изпратете дата, място, вид събитие и приблизително колко гости ще има."
+                ],
+                [
+                  "Правим предложение",
+                  "Получавате формат, време на сцената, техника и цена в едно ясно съобщение."
+                ],
+                [
+                  "Потвърждавате",
+                  "Уточняваме детайлите и пазим датата за вас в календара си."
+                ],
+                [
+                  "Саундчек и музика",
+                  "Пристигаме по-рано, подреждаме и проверяваме звука, а вие се наслаждавате на вечерта."
+                ]
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Резервации и техника",
+              "items": [
+                [
+                  "Колко рано да резервираме?",
+                  "Веднага щом знаете датата. Популярните дати се заемат бързо, затова пишете преди да сте избрали залата. Ще ви кажем честно дали денят е свободен."
+                ],
+                [
+                  "Носите ли свое озвучаване?",
+                  "Носим го, когато залата има нужда. Разкажете ни за помещението и колко гости ще има — ще препоръчаме техника. Ако залата има добра система, просто се включваме."
+                ],
+                [
+                  "Можем ли да поръчаме песни?",
+                  "Да. Изпратете списък с желани песни и списък с такива, които да не свирим. Подреждаме сета около тях, а на самата вечер следим как реагира залата."
+                ],
+                [
+                  "Какво ви трябва от залата?",
+                  "Достъп до ток, сигурно място за подредба и час за товарене. След като потвърдим датата, ви изпращаме кратък технически лист."
+                ],
+                [
+                  "Пътувате ли?",
+                  "С удоволствие. Кажете ни града и включваме пътя в офертата, за да няма изненади по-късно."
+                ],
+                [
+                  "Колко дълго свирите?",
+                  "Уточняваме го заедно: кратък сет за церемония, фонова музика за вечеря или цяла вечер с почивки. Продължителността влиза в офертата."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Чуйте ни, преди да резервирате",
+              "p": "Поискайте линк за слушане и ще ви изпратим няколко записа и примерен сет за вашия тип събитие.",
+              "button": [
+                "Поискайте линк за слушане",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Проверете датата си",
+              "intro": "Напишете датата, мястото и вида събитие. Връщаме се с ясна оферта.",
+              "formName": "booking",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Адрес",
+                  "ул. Витоша 1, София"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "event",
+                  "label": "Събитие",
+                  "options": [
+                    "Сватба",
+                    "Клуб или бар",
+                    "Частно парти",
+                    "Фестивал",
+                    "Фирмено събитие",
+                    "Друго"
+                  ]
+                },
+                {
+                  "id": "date",
+                  "label": "Дата",
+                  "type": "date"
+                }
+              ],
+              "messageLabel": "Място, гости и пожелания",
+              "send": "Изпратете запитване"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

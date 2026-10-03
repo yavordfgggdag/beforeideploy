@@ -182,9 +182,42 @@ struct SiteTemplate: Codable, Hashable, Identifiable {
     var categoryTitle: String?
     var icon: String?
     var accent: String?
+    /// Site Builder (S2): the first screen shows the featured themes, the rest sit under "More".
+    var featured: Bool?
+    var style: String?
+    var questions: [String]?
+    /// Site Builder (S5): the picture in the picker, the illustration motif, the words "something else" matches.
+    var preview: String?
+    var art: String?
+    var keywords: [String]?
+    var sample: String?
+    /// Site Builder (S7): what to write in each box of the form for this kind of site, per site language.
+    var hints: [String: SiteHints]?
 }
 
-/// `bid new create` — the site that was just created.
+/// S7: example texts for one kind of site — placeholders in the "New site" form, never saved.
+struct SiteHints: Codable, Hashable {
+    var offer: String
+    var audience: String
+    /// `[name, price, one line]` examples.
+    var services: [[String]]
+}
+
+/// `bid new styles` — a style (type, shapes) and the four palettes that suit it.
+struct SiteStyle: Codable, Hashable {
+    struct Palette: Codable, Hashable, Identifiable {
+        var id: String
+        var dark: Bool
+        var bg: String
+        var accent: String
+        var accent2: String
+    }
+    var head: String
+    var radius: Double
+    var palettes: [Palette]
+}
+
+/// `bid new create` / `bid new generate` — the site that was just created.
 struct NewSiteResult: Codable {
     var project: Project
     var path: String
@@ -192,6 +225,111 @@ struct NewSiteResult: Codable {
     var lang: String
     var git: Bool
     var files: [String]
+    var theme: String?
+    var style: String?
+    var palette: String?
+}
+
+/// `bid new content` — the AI wrote the site's texts into a content file (Site Builder S3).
+struct SiteContentResult: Codable {
+    struct Usage: Codable {
+        var input: Int?
+        var output: Int?
+        var charged: Int?
+        var balance: Int?
+        var model: String?
+    }
+    var contentFile: String
+    var provider: String
+    var model: String?
+    var usage: Usage
+    var styleSuggestion: String?
+    var pages: [String]
+    var duration: Double?
+}
+
+/// `bid site info` — a generated site (Site Builder S4): what it is, hand-edited files, the last edits.
+struct SiteInfo: Codable {
+    struct Entry: Codable, Identifiable {
+        var sha: String?
+        var say: String
+        var at: String?
+        var kind: String
+        var id: String { (sha ?? "") + say + (at ?? "") }
+    }
+    var generated: Bool
+    var theme: String?
+    var lang: String?
+    var style: String?
+    var palette: String?
+    var scheme: String?
+    var pages: [String]?
+    var edits: Int?
+    var modified: [String]?
+    var history: [Entry]?
+}
+
+/// `bid site edit` — what the words changed.
+struct SiteEditResult: Codable {
+    var applied: [String]
+    var refused: [String]
+    var summary: String
+    var provider: String
+    var usage: SiteContentResult.Usage?
+    var changed: [String]
+    var removed: [String]
+    var dryRun: Bool
+    var commit: String?
+}
+
+/// The brief (`bid.site-brief/1`): what the owner told the "New site" wizard. Sent to the engine as JSON.
+struct SiteBrief: Codable, Hashable {
+    struct Service: Codable, Hashable, Identifiable {
+        var id = UUID()
+        var name = ""
+        var price = ""
+        var text = ""
+        enum CodingKeys: String, CodingKey { case name, price, text }
+    }
+    struct Contacts: Codable, Hashable {
+        var email = ""
+        var phone = ""
+        var instagram = ""
+        var address = ""
+        var website = ""
+    }
+    struct Photo: Codable, Hashable, Identifiable {
+        var path: String
+        var alt = ""
+        var id: String { path }
+        enum CodingKeys: String, CodingKey { case path, alt }
+    }
+    var schema = "bid.site-brief/1"
+    var theme = "mentor"
+    var lang = "en"
+    var name = ""
+    var description = ""
+    var offer = ""
+    var audience = ""
+    var services: [Service] = []
+    var contacts = Contacts()
+    var photos: [Photo] = []
+    var style: String?
+    var palette: String?
+    /// S5: `auto` (light by day, its dark twin at night), `light` or `dark`.
+    var scheme = "auto"
+    /// S7: how the texts should sound — `friendly`, `professional`, `premium` or `playful`; nil lets the AI decide.
+    var tone: String?
+    /// S7: opening hours as the owner types them, one line each ("Mon–Fri 9:00–18:00").
+    var hours = ""
+
+    /// The JSON the engine reads (`--brief '{…}'`); empty services are left out.
+    func json() -> String {
+        var copy = self
+        copy.services = services.filter { !$0.name.trimmingCharacters(in: .whitespaces).isEmpty }
+        let data = (try? JSONEncoder().encode(copy)) ?? Data("{}".utf8)
+        return String(decoding: data, as: UTF8.self)
+    }
 }
 
 struct HostingInfo: Codable, Hashable {
@@ -1421,6 +1559,8 @@ struct AssistantSettings: Codable, Hashable {
     var maxFileChars: Int?
     var maxFiles: Int?
     var callTimeoutMs: Int?
+    /// Which AI answers through the cloud: `claude` (default) or `codex`.
+    var cloudEngine: String?
 }
 
 struct PromptInfo: Codable, Identifiable, Hashable {
@@ -1565,4 +1705,70 @@ struct AdminCreditState: Decodable {
     var usage: UsageReport
     var drift: [Drift]
     struct Drift: Decodable, Identifiable { var operation_id: String; var recorded: Int; var ledger_charged: Int; var id: String { operation_id } }
+}
+
+/// Site Builder v2: one turn of `bid site chat` — the assistant asks (with tap-able options) or hands back a brief.
+struct SiteChatTurn: Decodable {
+    struct Question: Decodable, Identifiable {
+        var id: String
+        var text: String
+        var options: [String]
+    }
+    struct Brief: Decodable {
+        struct Service: Decodable { var name: String? }
+        var name: String?
+        var theme: String?
+        var description: String?
+        var offer: String?
+        var audience: String?
+        var tone: String?
+        var services: [Service]?
+    }
+    var action: String
+    var say: String
+    var questions: [Question]?
+    var brief: Brief?
+    var model: String?
+}
+
+/// Builder phase 2: the conversation about one site (`bid site talk`).
+struct SiteTalkEntry: Codable, Identifiable {
+    struct Plan: Codable { var summary: String; var steps: [String] }
+    struct Build: Codable {
+        var applied: [String]?
+        var refused: [String]?
+        var changed: [String]?
+        var commit: String?
+        var usage: SiteContentResult.Usage?
+    }
+    var at: String?
+    var role: String
+    var kind: String
+    var mode: String?
+    var text: String
+    var plan: Plan?
+    var build: Build?
+    var next: [String]?
+    var usage: SiteContentResult.Usage?
+    var id: String { (at ?? "") + role + kind + String(text.prefix(24)) }
+}
+
+struct SiteTalkHistory: Codable {
+    var entries: [SiteTalkEntry]
+    var hasMore: Bool?
+    var instructions: String
+}
+
+struct SiteTalkResult: Codable {
+    var mode: String
+    var reply: String?
+    var next: [String]?
+    var plan: SiteTalkEntry.Plan?
+    var summary: String?
+    var applied: [String]?
+    var refused: [String]?
+    var changed: [String]?
+    var commit: String?
+    var usage: SiteContentResult.Usage?
+    var provider: String?
 }

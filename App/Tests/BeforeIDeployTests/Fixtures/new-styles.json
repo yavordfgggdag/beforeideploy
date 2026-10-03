@@ -1,0 +1,104 @@
+{
+  "calm": {
+    "head": "serif",
+    "radius": 18,
+    "palettes": [
+      {
+        "id": "sand",
+        "dark": false,
+        "bg": "#fbfaf6",
+        "accent": "#2f6f5e",
+        "accent2": "#c58f3b"
+      },
+      {
+        "id": "forest",
+        "dark": false,
+        "bg": "#f6f9f6",
+        "accent": "#1f6b45",
+        "accent2": "#8fbf6a"
+      },
+      {
+        "id": "terracotta",
+        "dark": false,
+        "bg": "#fbf7f3",
+        "accent": "#b4532a",
+        "accent2": "#d98a1f"
+      },
+      {
+        "id": "sea",
+        "dark": false,
+        "bg": "#f5f8fb",
+        "accent": "#1f5f8b",
+        "accent2": "#59a7c9"
+      }
+    ]
+  },
+  "bold": {
+    "head": "grotesk",
+    "radius": 10,
+    "palettes": [
+      {
+        "id": "lemon",
+        "dark": true,
+        "bg": "#0b0b0f",
+        "accent": "#e9e24a",
+        "accent2": "#8bd3a7"
+      },
+      {
+        "id": "indigo",
+        "dark": true,
+        "bg": "#0b0f1a",
+        "accent": "#5b8cff",
+        "accent2": "#a26bff"
+      },
+      {
+        "id": "coral",
+        "dark": false,
+        "bg": "#fffaf7",
+        "accent": "#ff5a36",
+        "accent2": "#ffb347"
+      },
+      {
+        "id": "electric",
+        "dark": true,
+        "bg": "#070b14",
+        "accent": "#2bd4ff",
+        "accent2": "#7c5cff"
+      }
+    ]
+  },
+  "elegant": {
+    "head": "serif",
+    "radius": 4,
+    "palettes": [
+      {
+        "id": "ivory",
+        "dark": false,
+        "bg": "#fcfbf7",
+        "accent": "#111111",
+        "accent2": "#9a7b4f"
+      },
+      {
+        "id": "bordeaux",
+        "dark": false,
+        "bg": "#fbf7f6",
+        "accent": "#6b1f2b",
+        "accent2": "#c99a5b"
+      },
+      {
+        "id": "olive",
+        "dark": false,
+        "bg": "#f9f9f4",
+        "accent": "#4f5a2d",
+        "accent2": "#b7a66a"
+      },
+      {
+        "id": "champagne",
+        "dark": true,
+        "bg": "#14110e",
+        "accent": "#d9b26a",
+        "accent2": "#f0dcb0"
+      }
+    ]
+  }
+}

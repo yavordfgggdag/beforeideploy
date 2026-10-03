@@ -1,0 +1,611 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "event",
+  "category": "community",
+  "icon": "ticket",
+  "accent": "#f43f5e",
+  "mark": "mic",
+  "art": "confetti",
+  "schemaOrg": "Organization",
+  "sample": {
+    "name": "Sofia Design Week"
+  },
+  "featured": true,
+  "titleKey": "newsite.template.event.title",
+  "descriptionKey": "newsite.template.event.description",
+  "keywords": {
+    "en": [
+      "event",
+      "conference",
+      "festival",
+      "meetup",
+      "concert",
+      "tickets",
+      "schedule",
+      "speakers",
+      "workshop day",
+      "party"
+    ],
+    "bg": [
+      "събитие",
+      "конференция",
+      "фестивал",
+      "среща",
+      "концерт",
+      "билети",
+      "програма",
+      "лектори",
+      "парти"
+    ]
+  },
+  "style": "bold",
+  "tokens": {
+    "dark": true,
+    "bg": "#0b1020",
+    "bg2": "#10172b",
+    "surface": "#151d36",
+    "text": "#eef0f7",
+    "muted": "#a3abc2",
+    "line": "rgba(255,255,255,.09)",
+    "accent": "#f43f5e",
+    "accent2": "#8b5cf6",
+    "radius": 16
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "hints": {
+    "en": {
+      "offer": "We organise a one-day design conference with talks, hands-on workshops and an evening party for people who work in digital products.",
+      "audience": "Designers, developers and product people, from students to team leads",
+      "services": [
+        [
+          "Standard ticket",
+          "€89",
+          "All talks, lunch and coffee"
+        ],
+        [
+          "VIP ticket",
+          "€199",
+          "Dinner with the speakers and front-row seats"
+        ],
+        [
+          "Team ticket",
+          "€75",
+          "Price per person for groups, with one invoice"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Организираме еднодневна конференция по дизайн с лекции, практически работилници и вечерно парти за хората, които работят с дигитални продукти.",
+      "audience": "Дизайнери, разработчици и продуктови специалисти — от студенти до ръководители на екипи",
+      "services": [
+        [
+          "Стандартен билет",
+          "89 €",
+          "Всички лекции, обяд и кафе"
+        ],
+        [
+          "VIP билет",
+          "199 €",
+          "Вечеря с лекторите и места на първите редове"
+        ],
+        [
+          "Билет за екип",
+          "75 €",
+          "Цена на човек за групи, с обща фактура"
+        ]
+      ]
+    }
+  },
+  "lang": {
+    "bg": {
+      "tagline": "ден на лекции и работилници",
+      "description": "Ден на лекции, работилници и добра компания. Разгледайте програмата и изберете билет.",
+      "nav": [
+        [
+          "Програма",
+          "/#schedule"
+        ],
+        [
+          "Лектори",
+          "/#speakers"
+        ],
+        [
+          "Билети",
+          "/#tickets"
+        ],
+        [
+          "Въпроси",
+          "/#faq"
+        ]
+      ],
+      "headerCta": [
+        "Вземи билет",
+        "/#tickets"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Лекции · работилници · запознанства",
+            "eyebrowIcon": "calendar",
+            "title": "Един ден, който *променя посоката*",
+            "lead": "Лекции, практически работилници и дълги почивки за разговори с хора, които правят интересни неща.",
+            "cta": [
+              "Вземи билет",
+              "/#tickets"
+            ],
+            "cta2": [
+              "Програмата",
+              "/#schedule"
+            ],
+            "card": {
+              "icon": "calendar",
+              "title": "Ранни билети",
+              "rows": [
+                [
+                  "Остават",
+                  "87 от 200"
+                ],
+                [
+                  "Цена",
+                  "89 € → 129 €"
+                ],
+                [
+                  "До",
+                  "31 октомври"
+                ]
+              ],
+              "note": "Цената се вдига след ранния период."
+            }
+          },
+          "sections": [
+            {
+              "type": "stats",
+              "items": [
+                [
+                  "20",
+                  "лектори"
+                ],
+                [
+                  "3",
+                  "сцени"
+                ],
+                [
+                  "500",
+                  "участници"
+                ],
+                [
+                  "12",
+                  "работилници"
+                ]
+              ]
+            },
+            {
+              "type": "timeline",
+              "id": "schedule",
+              "alt": true,
+              "title": "Програма",
+              "items": [
+                [
+                  "9:00",
+                  "Регистрация и кафе",
+                  "Вземете бадж и намерете познати."
+                ],
+                [
+                  "10:00",
+                  "Откриване",
+                  "Защо сме тук и какво следва."
+                ],
+                [
+                  "11:00",
+                  "Лекции в паралелни потоци",
+                  "Технологии, дизайн и бизнес."
+                ],
+                [
+                  "14:00",
+                  "Работилници",
+                  "Практика в малки групи."
+                ],
+                [
+                  "18:00",
+                  "Парти",
+                  "Музика, храна и нетуъркинг."
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "speakers",
+              "title": "Лектори",
+              "intro": "Сменете с имената и снимките на лекторите.",
+              "items": [
+                [
+                  "mic",
+                  "Основна лекция",
+                  "Откриващата лекция — за това как се правят добри продукти."
+                ],
+                [
+                  "mic",
+                  "Случай от практиката",
+                  "Екип разказва за реален проект: какво проработи и какво не."
+                ],
+                [
+                  "mic",
+                  "Работилница",
+                  "Практическа сесия в малка група, за да опитате сами."
+                ]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "tickets",
+              "alt": true,
+              "title": "Билети",
+              "items": [
+                {
+                  "name": "Стандартен",
+                  "price": "89 €",
+                  "per": "ранна цена",
+                  "features": [
+                    "Всички лекции",
+                    "Обяд и кафе",
+                    "Записи след събитието"
+                  ],
+                  "cta": [
+                    "Купи",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "VIP",
+                  "price": "199 €",
+                  "per": "ранна цена",
+                  "featured": "Ограничени",
+                  "features": [
+                    "Всичко от стандартния",
+                    "Вечеря с лекторите",
+                    "Места на първите редове"
+                  ],
+                  "cta": [
+                    "Купи",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Екип",
+                  "price": "75 €",
+                  "per": "/ човек",
+                  "features": [
+                    "Отстъпка за групи",
+                    "Една фактура",
+                    "Лого на стената на партньорите"
+                  ],
+                  "cta": [
+                    "Запитване",
+                    "/#contact"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Въпроси",
+              "items": [
+                [
+                  "Мога ли да върна билета?",
+                  "Пишете ни преди събитието и ще върнем билета или ще го прехвърлим на колега."
+                ],
+                [
+                  "Ще има ли записи?",
+                  "Да, всички лекции се записват и се пращат на участниците."
+                ],
+                [
+                  "Къде е?",
+                  "Адресът е в раздела за контакт по-долу, заедно с указания как да стигнете."
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Билети и партньорства",
+              "intro": "Пишете ни за групови билети, спонсорство или участие като лектор.",
+              "formName": "tickets",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Адрес",
+                  "ул. „Витоша“ 1, София"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "ticket",
+                  "label": "Билет",
+                  "options": [
+                    "Стандартен",
+                    "VIP",
+                    "Екип",
+                    "Партньорство"
+                  ]
+                }
+              ],
+              "messageLabel": "Съобщение",
+              "send": "Изпрати"
+            }
+          ]
+        }
+      }
+    },
+    "en": {
+      "tagline": "a day of talks and workshops",
+      "description": "A day of talks, workshops and good company. See the programme and choose your ticket.",
+      "nav": [
+        [
+          "Schedule",
+          "/#schedule"
+        ],
+        [
+          "Speakers",
+          "/#speakers"
+        ],
+        [
+          "Tickets",
+          "/#tickets"
+        ],
+        [
+          "FAQ",
+          "/#faq"
+        ]
+      ],
+      "headerCta": [
+        "Get a ticket",
+        "/#tickets"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Talks · workshops · networking",
+            "eyebrowIcon": "calendar",
+            "title": "One day that *changes direction*",
+            "lead": "Talks, hands-on workshops and long breaks for conversation with people who are doing interesting things.",
+            "cta": [
+              "Get a ticket",
+              "/#tickets"
+            ],
+            "cta2": [
+              "The schedule",
+              "/#schedule"
+            ],
+            "card": {
+              "icon": "calendar",
+              "title": "Early-bird tickets",
+              "rows": [
+                [
+                  "Left",
+                  "87 of 200"
+                ],
+                [
+                  "Price",
+                  "€89 → €129"
+                ],
+                [
+                  "Until",
+                  "31 October"
+                ]
+              ],
+              "note": "The price goes up after the early period."
+            }
+          },
+          "sections": [
+            {
+              "type": "stats",
+              "items": [
+                [
+                  "20",
+                  "speakers"
+                ],
+                [
+                  "3",
+                  "stages"
+                ],
+                [
+                  "500",
+                  "attendees"
+                ],
+                [
+                  "12",
+                  "workshops"
+                ]
+              ]
+            },
+            {
+              "type": "timeline",
+              "id": "schedule",
+              "alt": true,
+              "title": "Schedule",
+              "items": [
+                [
+                  "9:00",
+                  "Registration and coffee",
+                  "Pick up your badge and find friends."
+                ],
+                [
+                  "10:00",
+                  "Opening",
+                  "Why we are here and what comes next."
+                ],
+                [
+                  "11:00",
+                  "Talks in parallel tracks",
+                  "Tech, design and business."
+                ],
+                [
+                  "14:00",
+                  "Workshops",
+                  "Hands-on in small groups."
+                ],
+                [
+                  "18:00",
+                  "Party",
+                  "Music, food and networking."
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "speakers",
+              "title": "Speakers",
+              "intro": "Replace with your speakers’ names and photos.",
+              "items": [
+                [
+                  "mic",
+                  "Keynote",
+                  "The opening talk, on how good products get made."
+                ],
+                [
+                  "mic",
+                  "Case study",
+                  "A team shows a real project: what worked and what did not."
+                ],
+                [
+                  "mic",
+                  "Workshop",
+                  "A hands-on session in a small group, so you can try it yourself."
+                ]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "tickets",
+              "alt": true,
+              "title": "Tickets",
+              "items": [
+                {
+                  "name": "Standard",
+                  "price": "€89",
+                  "per": "early bird",
+                  "features": [
+                    "All talks",
+                    "Lunch and coffee",
+                    "Recordings afterwards"
+                  ],
+                  "cta": [
+                    "Buy",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "VIP",
+                  "price": "€199",
+                  "per": "early bird",
+                  "featured": "Limited",
+                  "features": [
+                    "Everything in Standard",
+                    "Dinner with the speakers",
+                    "Front-row seats"
+                  ],
+                  "cta": [
+                    "Buy",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Team",
+                  "price": "€75",
+                  "per": "/ person",
+                  "features": [
+                    "Group discount",
+                    "One invoice",
+                    "Logo on the partners wall"
+                  ],
+                  "cta": [
+                    "Enquire",
+                    "/#contact"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "FAQ",
+              "items": [
+                [
+                  "Can I get a refund?",
+                  "Write to us before the event and we will refund the ticket or transfer it to a colleague."
+                ],
+                [
+                  "Will there be recordings?",
+                  "Yes, every talk is recorded and sent to attendees."
+                ],
+                [
+                  "Where is it?",
+                  "The address is in the contact section below, with directions on how to get there."
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Tickets and partnerships",
+              "intro": "Write to us about group tickets, sponsorship or speaking.",
+              "formName": "tickets",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Address",
+                  "1 Vitosha St, Sofia"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "ticket",
+                  "label": "Ticket",
+                  "options": [
+                    "Standard",
+                    "VIP",
+                    "Team",
+                    "Partnership"
+                  ]
+                }
+              ],
+              "messageLabel": "Message",
+              "send": "Send"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

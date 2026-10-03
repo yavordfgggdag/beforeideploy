@@ -1,0 +1,365 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "kids",
+  "category": "community",
+  "icon": "balloon.2",
+  "accent": "#f8a91a",
+  "mark": "star",
+  "art": "confetti",
+  "schemaOrg": "ChildCare",
+  "sample": { "name": "Sunny Kids" },
+  "featured": false,
+  "titleKey": "newsite.template.kids.title",
+  "descriptionKey": "newsite.template.kids.description",
+  "keywords": {
+    "en": ["kindergarten", "kids club", "nursery", "childcare", "preschool", "birthday party", "children’s party", "party entertainer", "kids activities", "playgroup", "after school", "animator"],
+    "bg": ["детска градина", "детски клуб", "ясла", "занималня", "рожден ден", "детско парти", "аниматор", "детски рожден ден", "игри за деца", "забавачка", "организиране на парти", "предучилищна подготовка"]
+  },
+  "style": "calm",
+  "tokens": {
+    "dark": false,
+    "bg": "#fffcf4",
+    "bg2": "#e9f6fd",
+    "surface": "#ffffff",
+    "text": "#1e2a47",
+    "muted": "#53607c",
+    "line": "rgba(30,42,71,.10)",
+    "accent": "#f8a91a",
+    "accent2": "#38b4ee",
+    "font": "rounded",
+    "head": "rounded",
+    "radius": 24,
+    "tilt": 2
+  },
+  "questions": ["services", "contacts", "photos"],
+  "hints": {
+    "en": {
+      "offer": "We run a kids’ club with crafts, music and outdoor play, and we organise birthday parties with a host who leads the fun.",
+      "audience": "Parents of small children, from toddlers to school age",
+      "services": [
+        ["Birthday party", "€150", "Games, a craft and a host"],
+        ["Weekly club", "€60", "Play, crafts and music"],
+        ["Holiday day camp", "€35", "A full day of activities"]
+      ]
+    },
+    "bg": {
+      "offer": "Имаме детски клуб с рисуване, музика и игри на открито и организираме рождени дни с аниматор, който води веселбата.",
+      "audience": "Родители на малки деца — от прохождащи до първокласници",
+      "services": [
+        ["Рожден ден", "150 €", "Игри, творчество и аниматор"],
+        ["Седмичен клуб", "60 €", "Игра, творчество и музика"],
+        ["Лятна занималня", "35 €", "Цял ден занимания"]
+      ]
+    }
+  },
+  "lang": {
+    "en": {
+      "tagline": "kids’ club and birthday parties",
+      "description": "A bright, careful place for play, creative activities and birthday parties, with a daily rhythm parents can picture.",
+      "nav": [
+        ["Activities", "/#activities"],
+        ["A day", "/#rhythm"],
+        ["Parties", "/#parties"],
+        ["FAQ", "/#faq"]
+      ],
+      "headerCta": ["Plan a visit", "/#contact"],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Play, learn, celebrate",
+            "eyebrowIcon": "star",
+            "title": "Everything starts with *play*",
+            "lead": "Creative activities, outdoor play and a gentle daily rhythm for little ones — and birthday parties where the children play and the grown-ups can relax.",
+            "cta": ["Plan a visit", "/#contact"],
+            "cta2": ["Party packages", "/#parties"],
+            "card": {
+              "icon": "star",
+              "title": "A day in our club",
+              "rows": [
+                ["Morning", "Welcome and play"],
+                ["Midday", "A meal and a rest"],
+                ["Afternoon", "Crafts and fresh air"]
+              ],
+              "note": "Every day follows the same gentle rhythm."
+            },
+            "chips": ["Crafts", "Music and dance", "Outdoor play", "Birthday parties"]
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                ["shield", "Careful supervision"],
+                ["heart", "Patient, kind grown-ups"],
+                ["leaf", "Outdoor play in good weather"],
+                ["users", "Open talk with parents"]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "activities",
+              "title": "What the children do",
+              "intro": "Playful by design: behind every activity there is something small to discover.",
+              "items": [
+                ["brush", "Arts and crafts", "Painting, clay and paper — messy hands and proud faces."],
+                ["music", "Music and movement", "Songs, rhythm games and dancing around the room."],
+                ["spark", "Little experiments", "Water, sand and magnets: curiosity first, explanations second."],
+                ["leaf", "Outdoor play", "Running, climbing and exploring the garden or the park."]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "rhythm",
+              "alt": true,
+              "title": "A day, in words",
+              "intro": "The rhythm is the same every day, so children always know what comes next.",
+              "items": [
+                ["Arrival and open play", "Children hang up their coats and ease into the day with toys, friends and a friendly hello."],
+                ["Circle time", "A song, a story and a chat about what we will do today. First letters and numbers sneak in here."],
+                ["Meal and quiet rest", "Lunch together, then a calm hour with books, or a nap for those who need one."],
+                ["Afternoon adventures", "Crafts, music or the garden, and a calm goodbye with a few words for the parents."]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "care",
+              "title": "Care you can see",
+              "intro": "Small children need calm, attentive grown-ups. Here is how we try to give them that.",
+              "items": [
+                ["Safe by design", "Rooms, toys and routines are chosen with small children in mind, and a grown-up is close to every activity.", "Spaces and toys suited to small children", "Simple rules children learn through play", "Tell us about allergies and we write them down"],
+                ["Parents in the loop", "You know who looks after your child, what the day holds and how it went.", "A short word at pick-up", "Questions are always welcome", "Photos only with your consent"]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "parties",
+              "alt": true,
+              "title": "Birthday party packages",
+              "intro": "Guide prices. Tell us the age and the number of children, and we adjust the package.",
+              "items": [
+                {
+                  "name": "Mini party",
+                  "price": "€90",
+                  "per": "/ party",
+                  "features": ["Up to 8 children", "Two games and a craft", "Table and decorations"],
+                  "cta": ["Ask about a party", "/#contact"]
+                },
+                {
+                  "name": "Classic party",
+                  "price": "€150",
+                  "per": "/ party",
+                  "featured": "Recommended",
+                  "features": ["Up to ten children", "Games, music and a craft", "A host to lead the fun", "Decorated room and table"],
+                  "cta": ["Ask about a party", "/#contact"]
+                },
+                {
+                  "name": "Big celebration",
+                  "price": "€220",
+                  "per": "/ party",
+                  "features": ["Up to twenty children", "A theme of your choice", "Two hosts, games and a dance round", "Ask us about food and cake"],
+                  "cta": ["Ask about a party", "/#contact"]
+                }
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Questions parents ask",
+              "items": [
+                ["Which ages do you welcome?", "Groups are arranged by age. Tell us how old your child is and we suggest the group that suits them best."],
+                ["Can I stay with my child on the first day?", "Ask us about a settling-in visit. A gentle start helps both of you."],
+                ["What should my child bring?", "Comfortable clothes, indoor shoes and a spare set of clothes. You get the full list when you join."],
+                ["What about allergies and special diets?", "Tell us when you get in touch. Together we agree how to handle meals and snacks."],
+                ["How do we book a birthday party?", "Choose a package, tell us the date and the number of children, and we confirm what is possible. Ask us about food and cake too."]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Come and see how a day feels",
+              "p": "Arrange a visit, bring your child along and take a look around.",
+              "button": ["Arrange a visit", "/#contact"]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Visit us or plan a party",
+              "intro": "Tell us about your child or your party, and we suggest the next step.",
+              "formName": "enquiry",
+              "rows": [
+                ["mail", "Email", "hello@example.com", "mailto:hello@example.com"],
+                ["phone", "Phone", "+359 888 000 000", "tel:+359888000000"],
+                ["pin", "Address", "1 Vitosha St, Sofia"]
+              ],
+              "fields": [
+                { "id": "topic", "label": "I am interested in", "options": ["The club", "A birthday party", "Something else"] },
+                { "id": "date", "label": "Preferred date", "type": "date" }
+              ],
+              "messageLabel": "Your child’s age and anything we should know",
+              "send": "Send enquiry",
+              "hoursTitle": "Opening hours",
+              "hours": [
+                ["Monday – Friday", "8:00 – 18:00"],
+                ["Saturday", "Parties by arrangement"],
+                ["Sunday", "closed"]
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "bg": {
+      "tagline": "детски клуб и рождени дни",
+      "description": "Светло и спокойно място за игри, творчески занимания и рождени дни — с ритъм на деня, който родителите лесно си представят.",
+      "nav": [
+        ["Занимания", "/#activities"],
+        ["Денят", "/#rhythm"],
+        ["Партита", "/#parties"],
+        ["Въпроси", "/#faq"]
+      ],
+      "headerCta": ["Посетете ни", "/#contact"],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Игра, учене, празник",
+            "eyebrowIcon": "star",
+            "title": "Тук всичко започва с *игра*",
+            "lead": "Творчески занимания, игри на открито и спокоен ритъм на деня за малките — и рождени дни, на които децата играят, а възрастните си почиват.",
+            "cta": ["Уговорете посещение", "/#contact"],
+            "cta2": ["Пакети за рожден ден", "/#parties"],
+            "card": {
+              "icon": "star",
+              "title": "Един ден в клуба",
+              "rows": [
+                ["Сутрин", "Посрещане и игра"],
+                ["Обед", "Хранене и почивка"],
+                ["Следобед", "Рисуване и свеж въздух"]
+              ],
+              "note": "Всеки ден следва един и същ спокоен ритъм."
+            },
+            "chips": ["Творчество", "Музика и танци", "Игри на открито", "Рождени дни"]
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                ["shield", "Внимателно наблюдение"],
+                ["heart", "Търпеливи възрастни"],
+                ["leaf", "Игри на чист въздух"],
+                ["users", "Открит разговор с родителите"]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "activities",
+              "title": "Какво правят децата",
+              "intro": "Игра със смисъл: зад всяко занимание има нещо малко за откриване.",
+              "items": [
+                ["brush", "Рисуване и творчество", "Бои, глина и хартия — изцапани ръце и горди лица."],
+                ["music", "Музика и движение", "Песнички, ритмични игри и танци из стаята."],
+                ["spark", "Малки опити", "Вода, пясък и магнити: първо любопитството, после обясненията."],
+                ["leaf", "Игри на открито", "Тичане, катерене и опознаване на градината или парка."]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "rhythm",
+              "alt": true,
+              "title": "Един ден с думи",
+              "intro": "Ритъмът е един и същ всеки ден, затова децата винаги знаят какво следва.",
+              "items": [
+                ["Посрещане и свободна игра", "Децата си закачат якетата и влизат в деня с играчки, приятели и усмивка."],
+                ["Сутрешен кръг", "Песен, приказка и разговор какво ще правим днес. Тук се промъкват и първите букви и числа."],
+                ["Хранене и тих час", "Обядваме заедно, после следва спокоен час с книжки или сън за този, който има нужда."],
+                ["Следобедни приключения", "Рисуване, музика или градината — и спокойно сбогуване с няколко думи за родителите."]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "care",
+              "title": "Грижа, която се вижда",
+              "intro": "Малките деца имат нужда от спокойни и внимателни възрастни. Ето как се стараем да им ги осигурим.",
+              "items": [
+                ["Сигурност по замисъл", "Стаите, играчките и правилата са подбрани за малки деца, а възрастен е близо до всяко занимание.", "Пространство и играчки за малки деца", "Прости правила, които децата усвояват с игра", "Кажете ни за алергии — записваме ги"],
+                ["Родителите са в течение", "Знаете кой се грижи за детето ви, какво предстои през деня и как е минал той.", "Няколко думи при вземане на детето", "Въпросите винаги са добре дошли", "Снимки само с вашето съгласие"]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "parties",
+              "alt": true,
+              "title": "Пакети за рожден ден",
+              "intro": "Ориентировъчни цени. Кажете ни възрастта и броя на децата и ще нагласим пакета.",
+              "items": [
+                {
+                  "name": "Мини парти",
+                  "price": "90 €",
+                  "per": "/ парти",
+                  "features": ["До 8 деца", "Две игри и творческа работилничка", "Маса и украса"],
+                  "cta": ["Попитайте за парти", "/#contact"]
+                },
+                {
+                  "name": "Класическо парти",
+                  "price": "150 €",
+                  "per": "/ парти",
+                  "featured": "Препоръчваме",
+                  "features": ["До десет деца", "Игри, музика и творческа работилничка", "Аниматор, който води веселбата", "Украсена зала и маса"],
+                  "cta": ["Попитайте за парти", "/#contact"]
+                },
+                {
+                  "name": "Голям празник",
+                  "price": "220 €",
+                  "per": "/ парти",
+                  "features": ["До двайсет деца", "Тема по ваш избор", "Двама аниматори, игри и танци", "Попитайте за храна и торта"],
+                  "cta": ["Попитайте за парти", "/#contact"]
+                }
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Въпроси на родителите",
+              "items": [
+                ["Кои възрасти приемате?", "Групите са по възраст. Кажете ни на колко години е детето и ще предложим подходяща група."],
+                ["Мога ли да остана с детето в първия ден?", "Попитайте за ден за свикване. Спокойното начало помага и на детето, и на вас."],
+                ["Какво да носи детето?", "Удобни дрехи, сменяеми обувки и резервен комплект дрехи. Когато се присъедините, ще получите пълен списък."],
+                ["Ами алергиите и специалните режими?", "Споделете ги при първия разговор. Заедно ще уточним как да подходим при храненето и закуските."],
+                ["Как се запазва рожден ден?", "Изберете пакет, кажете ни датата и броя на децата и ще потвърдим какво е възможно. Попитайте и за храна и торта."]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Елате да видите как минава денят",
+              "p": "Уговорете посещение, доведете детето и разгледайте на спокойствие.",
+              "button": ["Уговорете посещение", "/#contact"]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Посетете ни или планирайте парти",
+              "intro": "Разкажете ни за детето си или за празника и ще предложим следващата стъпка.",
+              "formName": "enquiry",
+              "rows": [
+                ["mail", "Имейл", "hello@example.com", "mailto:hello@example.com"],
+                ["phone", "Телефон", "+359 888 000 000", "tel:+359888000000"],
+                ["pin", "Адрес", "ул. Витоша 1, София"]
+              ],
+              "fields": [
+                { "id": "topic", "label": "Интересувам се от", "options": ["Клуба", "Рожден ден", "Нещо друго"] },
+                { "id": "date", "label": "Желана дата", "type": "date" }
+              ],
+              "messageLabel": "Възраст на детето и какво да знаем",
+              "send": "Изпратете запитване",
+              "hoursTitle": "Работно време",
+              "hours": [
+                ["Понеделник – петък", "8:00 – 18:00"],
+                ["Събота", "Партита по договаряне"],
+                ["Неделя", "почивен ден"]
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

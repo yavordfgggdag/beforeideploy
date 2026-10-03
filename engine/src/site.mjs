@@ -9,6 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { exists, readJSON } from './util.mjs';
 import { t } from './i18n.mjs';
+import { sectionHash } from './sitegen/brief.mjs';
 
 /**
  * Every rule with its default severity: 'fail' = visitors would notice, blocks the release; 'warn' = a
@@ -33,6 +34,8 @@ export const SITE_RULES = {
   'content.mixedContent': 'warn',
   'content.emptyHref': 'info',
   'content.todo': 'warn',
+  'content.exampleContact': 'fail',
+  'content.sample': 'warn',
   'a11y.imgAlt': 'warn',
   'a11y.inputLabel': 'warn',
   'a11y.buttonText': 'warn',
@@ -170,6 +173,9 @@ export function scanSite(dir, d, { liveUrl = null } = {}) {
     // content
     const lorem = /lorem ipsum|dolor sit amet/i.exec(body);
     if (lorem) add('content.lorem', { file: page, line: lineOf(body, lorem.index), detail: t('site.detail.lorem') });
+    // a theme's example email or phone left in a link: customers would write to nobody
+    const example = /href\s*=\s*["'](mailto:hello@example\.com|tel:\+359888000000)["']/i.exec(body);
+    if (example) add('content.exampleContact', { file: page, line: lineOf(body, example.index), detail: t('site.detail.exampleContact', { value: example[1].replace(/^(mailto|tel):/i, '') }) });
     const todo = /\b(TODO|FIXME|XXX)\b/.exec(html);
     if (todo) add('content.todo', { file: page, line: lineOf(html, todo.index), detail: t('site.detail.todo', { word: todo[1] }) });
 
@@ -214,6 +220,16 @@ export function scanSite(dir, d, { liveUrl = null } = {}) {
     if (altMissing) add('a11y.imgAlt', { file: page, count: altMissing, detail: t('site.detail.imgAlt', { count: altMissing }) });
     altMissingTotal += altMissing;
     if (!labelled.size && page) labelled.add(page);
+  }
+
+  // ---- parts of a Site Builder site that still show the theme's sample facts (a menu or prices the owner never gave)
+  const record = readJSON(path.join(dir, 'bid.site.json'), null);
+  if (record && record.schema === 'bid.site/1' && Array.isArray(record.samples) && record.samples.length) {
+    const still = record.samples.filter((smp) => {
+      const sec = record.content?.pages?.[smp.page]?.sections?.[smp.section];
+      return sec && sectionHash(sec) === smp.hash;
+    });
+    if (still.length) add('content.sample', { file: 'bid.site.json', detail: t('site.detail.sample', { what: [...new Set(still.map((x) => x.type === 'menu' ? t('site.sample.menu') : t('site.sample.prices')))].join(', ') }) });
   }
 
   // ---- asset budgets

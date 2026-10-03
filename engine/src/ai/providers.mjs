@@ -4,6 +4,7 @@
 // Every provider yields { type: 'delta', text } · { type: 'usage', input?, output?, model? } · { type: 'done', stopReason? }.
 import { testEndpoint } from '../isolation.mjs';
 import { EngineError, fetchT } from '../util.mjs';
+import { cloudEngine } from './assistant.mjs';
 import { msg } from '../i18n.mjs';
 import { ownKey } from '../aikeys.mjs';
 import { cloudConfig, currentSession } from '../account.mjs';
@@ -88,11 +89,13 @@ const parseJSON = (s) => {
 
 // ---------------------------------------------------------------- Anthropic (own key)
 
-async function* anthropic({ key, model, system, messages, maxTokens = 8000, effort = 'medium', signal, idleMs }) {
+async function* anthropic({ key, model, system, messages, maxTokens = 8000, effort = 'medium', format = null, signal, idleMs }) {
   const body = { model, max_tokens: maxTokens, system, messages, stream: true };
   // effort is not accepted by the Haiku 4.5 family; the other current models take it in output_config and run
   // adaptive thinking on their own (Opus 5.5 cannot switch it off — effort is the only depth control)
   if (effort && !/haiku/i.test(model)) body.output_config = { effort };
+  // structured outputs (Site Builder): the answer is JSON that matches the schema
+  if (format) body.output_config = { ...(body.output_config || {}), format: { type: 'json_schema', schema: format } };
   const base = { 'x-api-key': key, 'anthropic-version': '2023-06-01' };
   // A declined request is re-run server-side on Anthropic's recommended fallback model (beta).
   let res = await post(`${ANTHROPIC_API()}/v1/messages`, { ...base, 'anthropic-beta': 'server-side-fallback-2026-07-01' }, { ...body, fallbacks: 'default' }, signal);
@@ -165,7 +168,7 @@ async function* cloud({ prompt, system, step, project, locale, deep, model, mode
     res = await fetchT(`${c.url}/functions/v1/ai-fix`, {
       signal, method: 'POST',
       headers: { apikey: c.anonKey, Authorization: `Bearer ${s.accessToken}`, 'Content-Type': 'application/json', Accept: 'text/event-stream' },
-      body: JSON.stringify({ prompt, system, step, project, locale, mode, operationId, deep: !!deep, model: model || undefined }),
+      body: JSON.stringify({ prompt, system, step, project, locale, mode, operationId, deep: !!deep, model: model || undefined, engine: cloudEngine() }),
     }, Number(process.env.BID_AI_CONNECT_MS) || 60000);
   } catch (e) {
     if (e.code === 'ETIMEDOUT') throw new EngineError(msg('ai.streamIdle', { seconds: Math.round((Number(process.env.BID_AI_CONNECT_MS) || 60000) / 1000) }), 'ai_timeout');
@@ -174,6 +177,7 @@ async function* cloud({ prompt, system, step, project, locale, deep, model, mode
   if (!res.ok) {
     const j = (await res.json().catch(() => null)) || {};
     if (res.status === 404 && j.code === 'NOT_FOUND') throw new EngineError(msg('cloud.functionMissing', { name: 'ai-fix' }), 'cloud_function_missing');
+    if (j.code === 'engine_unavailable') throw new EngineError(msg('ai.engineUnavailable', { engine: j.engine || cloudEngine() }), 'engine_unavailable');
     if (res.status === 402) throw new EngineError(msg('ai.quotaExhausted', { renewsAt: j.renewsAt || '—' }), 'quota_exhausted', 8);
     if (res.status === 403 && ['session_cap','window_5h'].includes(j.code)) throw new EngineError(msg('ai.sessionCap', { at: j.resetsAt ? new Date(j.resetsAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—', hours: j.windowHours || 5 }), 'ai_session_cap');
     if (res.status === 403 && j.code === 'window_week') throw new EngineError(msg('ai.weeklyCap', { at: j.resetsAt ? new Date(j.resetsAt).toLocaleString() : '—' }), 'window_week');

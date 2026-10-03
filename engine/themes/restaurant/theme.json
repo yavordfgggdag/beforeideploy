@@ -1,0 +1,675 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "restaurant",
+  "category": "food",
+  "icon": "fork.knife",
+  "accent": "#b4532a",
+  "mark": "cup",
+  "art": "leaves",
+  "schemaOrg": "Restaurant",
+  "sample": {
+    "name": "Bistro Lipa"
+  },
+  "featured": true,
+  "titleKey": "newsite.template.restaurant.title",
+  "descriptionKey": "newsite.template.restaurant.description",
+  "keywords": {
+    "en": [
+      "restaurant",
+      "bistro",
+      "cafe",
+      "bar",
+      "menu",
+      "food",
+      "kitchen",
+      "pizza",
+      "sushi",
+      "dinner",
+      "reservation"
+    ],
+    "bg": [
+      "ресторант",
+      "бистро",
+      "кафе",
+      "бар",
+      "меню",
+      "храна",
+      "кухня",
+      "пица",
+      "вечеря",
+      "резервация",
+      "механа"
+    ]
+  },
+  "style": "elegant",
+  "tokens": {
+    "dark": false,
+    "bg": "#faf6ef",
+    "bg2": "#f3ebdd",
+    "surface": "#fffdf9",
+    "text": "#2a1d14",
+    "muted": "#6b5a4c",
+    "line": "rgba(15,23,42,.10)",
+    "accent": "#b4532a",
+    "accent2": "#d98a1f",
+    "font": "sans",
+    "head": "serif",
+    "radius": 14,
+    "tilt": -1.5
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "hints": {
+    "en": {
+      "offer": "We are a small restaurant with a seasonal menu, local produce and a wine list from small wineries. Come for lunch, dinner or a celebration.",
+      "audience": "Couples, families, friends and groups celebrating",
+      "services": [
+        [
+          "Roast beetroot salad",
+          "€7",
+          "Goat cheese, walnuts and honey"
+        ],
+        [
+          "Rosemary lamb",
+          "€14",
+          "Slow-roasted, with potatoes"
+        ],
+        [
+          "Chocolate fondant",
+          "€6",
+          "With vanilla ice cream"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Ние сме малък ресторант със сезонно меню, местни продукти и винена листа от малки изби. Елате на обяд, на вечеря или за празник.",
+      "audience": "Двойки, семейства, приятели и компании, които празнуват",
+      "services": [
+        [
+          "Салата с печена цвекла",
+          "7 €",
+          "Козе сирене, орехи и мед"
+        ],
+        [
+          "Агнешко с розмарин",
+          "14 €",
+          "Бавно печено, с картофи"
+        ],
+        [
+          "Шоколадов фондан",
+          "6 €",
+          "С ванилов сладолед"
+        ]
+      ]
+    }
+  },
+  "lang": {
+    "bg": {
+      "tagline": "ресторант и винен бар",
+      "description": "Сезонна кухня, местни продукти и подбрани вина. Резервирайте маса онлайн.",
+      "nav": [
+        [
+          "Меню",
+          "/menu.html"
+        ],
+        [
+          "За нас",
+          "/#about"
+        ],
+        [
+          "Отзиви",
+          "/#reviews"
+        ],
+        [
+          "Резервация",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Резервирай маса",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Дойдете гладни, останете за по-дълго",
+            "eyebrowIcon": "clock",
+            "title": "Сезонна кухня, *сготвена с време*",
+            "lead": "Сезонни ястия, пресен хляб и вино от малки изби. Маса за двама или празник с цялото семейство.",
+            "cta": [
+              "Резервирай маса",
+              "/#contact"
+            ],
+            "cta2": [
+              "Виж менюто",
+              "/menu.html"
+            ],
+            "card": {
+              "icon": "cup",
+              "title": "Днес препоръчваме",
+              "rows": [
+                [
+                  "Крем супа от тиква",
+                  "9 лв."
+                ],
+                [
+                  "Агнешко с розмарин",
+                  "28 лв."
+                ],
+                [
+                  "Шоколадов фондан",
+                  "12 лв."
+                ]
+              ],
+              "note": "Менюто на деня се сменя всяка сутрин."
+            }
+          },
+          "sections": [
+            {
+              "type": "cards",
+              "id": "about",
+              "title": "Нашата кухня",
+              "intro": "Малко меню, което се сменя със сезона — защото вкусът е в продукта.",
+              "items": [
+                [
+                  "leaf",
+                  "Местни продукти",
+                  "Зеленчуци от близки ферми и месо от стопанства, които познаваме."
+                ],
+                [
+                  "cup",
+                  "Подбрани вина",
+                  "Винена листа от малки български изби."
+                ],
+                [
+                  "users",
+                  "Събития",
+                  "Рождени дни, фирмени вечери и дегустации за по-големи компании."
+                ]
+              ]
+            },
+            {
+              "type": "gallery",
+              "alt": true,
+              "title": "Атмосфера",
+              "intro": "Поглед към салона, ястията и хората.",
+              "items": [
+                "Салонът",
+                "Барът",
+                "Кухнята",
+                "Чаши и бутилки"
+              ]
+            },
+            {
+              "type": "quotes",
+              "id": "reviews",
+              "title": "Гостите казват",
+              "items": [
+                [
+                  "„Най-доброто агнешко в града и обслужване, което те кара да се върнеш.“",
+                  "Ивайло, Google"
+                ],
+                [
+                  "„Винената листа е чудесна, а персоналът знае какво препоръчва.“",
+                  "Надя, TripAdvisor"
+                ],
+                [
+                  "„Празнувахме рожден ден — всичко беше перфектно.“",
+                  "Симона, Facebook"
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Резервация",
+              "intro": "За по-големи компании се обадете по телефона.",
+              "formName": "reservation",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Адрес",
+                  "ул. „Витоша“ 1, София"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "date",
+                  "label": "Дата",
+                  "type": "date"
+                },
+                {
+                  "id": "guests",
+                  "label": "Брой гости",
+                  "options": [
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                    "6",
+                    "7",
+                    "8"
+                  ]
+                }
+              ],
+              "messageLabel": "Пожелания (по избор)",
+              "send": "Изпрати резервация",
+              "hoursTitle": "Работно време",
+              "hours": [
+                [
+                  "Понеделник – петък",
+                  "12:00 – 23:00"
+                ],
+                [
+                  "Събота",
+                  "12:00 – 24:00"
+                ],
+                [
+                  "Неделя",
+                  "12:00 – 22:00"
+                ]
+              ]
+            }
+          ]
+        },
+        "menu": {
+          "title": "Меню и цени",
+          "description": "Сезонното меню на ресторанта: предястия, основни ястия, десерти и вино.",
+          "pagehead": [
+            "Меню",
+            "Сезонно меню. Попитайте за алергени — ще ви насочим."
+          ],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Предястия",
+                  "items": [
+                    [
+                      "Хляб с квас и масло",
+                      "Печен сутринта",
+                      "5 лв."
+                    ],
+                    [
+                      "Салата с печена цвекла",
+                      "Козе сирене, орехи, мед",
+                      "14 лв."
+                    ],
+                    [
+                      "Крем супа от тиква",
+                      "Тиквени семки, сметана",
+                      "9 лв."
+                    ]
+                  ]
+                },
+                {
+                  "name": "Основни",
+                  "items": [
+                    [
+                      "Агнешко с розмарин",
+                      "Бавно печено, картофи",
+                      "28 лв."
+                    ],
+                    [
+                      "Ризото с гъби",
+                      "Манатарки, пармезан",
+                      "22 лв."
+                    ],
+                    [
+                      "Филе от пъстърва",
+                      "Масло с лимон, зеленчуци",
+                      "24 лв."
+                    ]
+                  ]
+                },
+                {
+                  "name": "Десерти",
+                  "items": [
+                    [
+                      "Шоколадов фондан",
+                      "Ванилов сладолед",
+                      "12 лв."
+                    ],
+                    [
+                      "Тиквеник по нашему",
+                      "Канела, орехи",
+                      "9 лв."
+                    ]
+                  ]
+                },
+                {
+                  "name": "Вино",
+                  "items": [
+                    [
+                      "Мавруд, чаша",
+                      "Пловдивски регион",
+                      "9 лв."
+                    ],
+                    [
+                      "Тамянка, чаша",
+                      "Южна Черноморка",
+                      "8 лв."
+                    ],
+                    [
+                      "Бутилка на деня",
+                      "Попитайте сервитьора",
+                      "38 лв."
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Запазете маса",
+              "p": "Планирате вечер навън? Резервирайте предварително и масата ви ще е готова.",
+              "button": [
+                "Резервирай",
+                "/#contact"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "en": {
+      "tagline": "restaurant and wine bar",
+      "description": "Seasonal cooking, local produce and hand-picked wines. Book a table online.",
+      "nav": [
+        [
+          "Menu",
+          "/menu.html"
+        ],
+        [
+          "About",
+          "/#about"
+        ],
+        [
+          "Reviews",
+          "/#reviews"
+        ],
+        [
+          "Book",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Book a table",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Come hungry, stay a while",
+            "eyebrowIcon": "clock",
+            "title": "Seasonal cooking, *made with time*",
+            "lead": "Seasonal dishes, fresh bread and wine from small wineries. A table for two or a celebration with the whole family.",
+            "cta": [
+              "Book a table",
+              "/#contact"
+            ],
+            "cta2": [
+              "See the menu",
+              "/menu.html"
+            ],
+            "card": {
+              "icon": "cup",
+              "title": "Today we recommend",
+              "rows": [
+                [
+                  "Pumpkin soup",
+                  "€5"
+                ],
+                [
+                  "Rosemary lamb",
+                  "€14"
+                ],
+                [
+                  "Chocolate fondant",
+                  "€6"
+                ]
+              ],
+              "note": "The daily menu changes every morning."
+            }
+          },
+          "sections": [
+            {
+              "type": "cards",
+              "id": "about",
+              "title": "Our kitchen",
+              "intro": "A short menu that changes with the season — because flavour starts with the produce.",
+              "items": [
+                [
+                  "leaf",
+                  "Local produce",
+                  "Vegetables from nearby farms and meat from farms we know."
+                ],
+                [
+                  "cup",
+                  "Hand-picked wine",
+                  "A wine list from small wineries."
+                ],
+                [
+                  "users",
+                  "Events",
+                  "Birthdays, company dinners and tastings for larger groups."
+                ]
+              ]
+            },
+            {
+              "type": "gallery",
+              "alt": true,
+              "title": "Atmosphere",
+              "intro": "A look at the room, the food and the people.",
+              "items": [
+                "The dining room",
+                "The bar",
+                "The kitchen",
+                "Glasses and bottles"
+              ]
+            },
+            {
+              "type": "quotes",
+              "id": "reviews",
+              "title": "Guests say",
+              "items": [
+                [
+                  "“The best lamb in town and service that makes you come back.”",
+                  "Ivaylo, Google"
+                ],
+                [
+                  "“A wonderful wine list, and the staff know what to recommend.”",
+                  "Nadia, TripAdvisor"
+                ],
+                [
+                  "“We celebrated a birthday — everything was perfect.”",
+                  "Simona, Facebook"
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Book a table",
+              "intro": "For larger groups please call us.",
+              "formName": "reservation",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Address",
+                  "1 Vitosha St, Sofia"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "date",
+                  "label": "Date",
+                  "type": "date"
+                },
+                {
+                  "id": "guests",
+                  "label": "Guests",
+                  "options": [
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                    "6",
+                    "7",
+                    "8"
+                  ]
+                }
+              ],
+              "messageLabel": "Requests (optional)",
+              "send": "Send booking",
+              "hoursTitle": "Opening hours",
+              "hours": [
+                [
+                  "Monday – Friday",
+                  "12:00 – 23:00"
+                ],
+                [
+                  "Saturday",
+                  "12:00 – 24:00"
+                ],
+                [
+                  "Sunday",
+                  "12:00 – 22:00"
+                ]
+              ]
+            }
+          ]
+        },
+        "menu": {
+          "title": "Menu and prices",
+          "description": "The seasonal menu: starters, mains, desserts and wine.",
+          "pagehead": [
+            "Menu",
+            "Seasonal menu. Ask us about allergens — we are happy to help."
+          ],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Starters",
+                  "items": [
+                    [
+                      "Sourdough and butter",
+                      "Baked this morning",
+                      "€3"
+                    ],
+                    [
+                      "Roast beetroot salad",
+                      "Goat cheese, walnuts, honey",
+                      "€7"
+                    ],
+                    [
+                      "Pumpkin soup",
+                      "Pumpkin seeds, cream",
+                      "€5"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Mains",
+                  "items": [
+                    [
+                      "Rosemary lamb",
+                      "Slow-roasted, potatoes",
+                      "€14"
+                    ],
+                    [
+                      "Mushroom risotto",
+                      "Porcini, parmesan",
+                      "€11"
+                    ],
+                    [
+                      "Trout fillet",
+                      "Lemon butter, vegetables",
+                      "€12"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Desserts",
+                  "items": [
+                    [
+                      "Chocolate fondant",
+                      "Vanilla ice cream",
+                      "€6"
+                    ],
+                    [
+                      "Pumpkin pie our way",
+                      "Cinnamon, walnuts",
+                      "€5"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Wine",
+                  "items": [
+                    [
+                      "Mavrud, glass",
+                      "Plovdiv region",
+                      "€5"
+                    ],
+                    [
+                      "Tamyanka, glass",
+                      "Southern Black Sea",
+                      "€4"
+                    ],
+                    [
+                      "Bottle of the day",
+                      "Ask your waiter",
+                      "€19"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Save a table",
+              "p": "Planning an evening out? Book ahead and we will have your table ready.",
+              "button": [
+                "Book",
+                "/#contact"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

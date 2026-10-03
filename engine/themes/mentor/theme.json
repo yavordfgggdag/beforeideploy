@@ -1,0 +1,785 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "mentor",
+  "category": "personal",
+  "icon": "person.wave.2",
+  "accent": "#2f6f5e",
+  "mark": "compass",
+  "art": "blobs",
+  "schemaOrg": "ProfessionalService",
+  "sample": {
+    "name": "Iva Petrova"
+  },
+  "featured": true,
+  "titleKey": "newsite.template.mentor.title",
+  "descriptionKey": "newsite.template.mentor.description",
+  "keywords": {
+    "en": [
+      "mentor",
+      "coach",
+      "coaching",
+      "consultant",
+      "consulting",
+      "therapist",
+      "psychologist",
+      "advisor",
+      "sessions",
+      "programs",
+      "personal brand"
+    ],
+    "bg": [
+      "ментор",
+      "коуч",
+      "коучинг",
+      "консултант",
+      "консултации",
+      "терапевт",
+      "психолог",
+      "съветник",
+      "сесии",
+      "програми",
+      "личен бранд"
+    ]
+  },
+  "style": "calm",
+  "tokens": {
+    "dark": false,
+    "bg": "#fbfaf6",
+    "bg2": "#f3f0e8",
+    "surface": "#ffffff",
+    "text": "#1f1d1a",
+    "muted": "#5f5a52",
+    "line": "rgba(15,23,42,.10)",
+    "accent": "#2f6f5e",
+    "accent2": "#c58f3b",
+    "head": "serif",
+    "font": "sans",
+    "radius": 18,
+    "tilt": 1.5
+  },
+  "questions": [
+    "offer",
+    "audience",
+    "services",
+    "photos",
+    "contacts"
+  ],
+  "hints": {
+    "en": {
+      "offer": "I work one-to-one with people who want to change career, start their own business or finally act on a plan, through regular sessions and clear next steps.",
+      "audience": "Founders, professionals at a turning point and people at a crossroads",
+      "services": [
+        [
+          "Single session",
+          "€60",
+          "One conversation and a clear next step"
+        ],
+        [
+          "3-month program",
+          "€450",
+          "Regular sessions, a plan with goals and a monthly review"
+        ],
+        [
+          "Team workshop",
+          "",
+          "A half-day session for a small team, priced on request"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Работя индивидуално с хора, които искат да сменят кариерата си, да започнат свой бизнес или най-после да изпълнят план, който отлагат — с редовни сесии и ясни следващи стъпки.",
+      "audience": "Начинаещи предприемачи, специалисти пред смяна и хора на кръстопът",
+      "services": [
+        [
+          "Единична сесия",
+          "60 €",
+          "Един разговор и ясна следваща стъпка"
+        ],
+        [
+          "Програма за 3 месеца",
+          "450 €",
+          "Редовни сесии, план с цели и преглед всеки месец"
+        ],
+        [
+          "Работилница за екип",
+          "",
+          "Полудневна среща за малък екип, цената е по запитване"
+        ]
+      ]
+    }
+  },
+  "lang": {
+    "bg": {
+      "tagline": "менторство и консултации",
+      "description": "На кого помагам, какви програми предлагам и как да запазите първи разговор.",
+      "nav": [
+        [
+          "За мен",
+          "/about.html"
+        ],
+        [
+          "Програми",
+          "/#programs"
+        ],
+        [
+          "Как работим",
+          "/#how"
+        ],
+        [
+          "Отзиви",
+          "/#reviews"
+        ],
+        [
+          "Контакт",
+          "/contact.html"
+        ]
+      ],
+      "headerCta": [
+        "Запази разговор",
+        "/contact.html"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "За хора, които искат следваща стъпка",
+            "eyebrowIcon": "compass",
+            "title": "Помагам ви да стигнете *там, където искате*",
+            "lead": "Индивидуални сесии и програми за хора, които имат цел, но не и ясен път до нея. Започваме с първи разговор, за да видим дали си пасваме.",
+            "cta": [
+              "Запази първи разговор",
+              "/contact.html"
+            ],
+            "cta2": [
+              "Виж програмите",
+              "/#programs"
+            ],
+            "card": {
+              "icon": "target",
+              "title": "Какво получавате",
+              "rows": [
+                [
+                  "Първи разговор",
+                  "безплатно"
+                ],
+                [
+                  "Отговор на съобщение",
+                  "до 24 ч."
+                ],
+                [
+                  "Сесия",
+                  "60 мин."
+                ]
+              ],
+              "note": "Онлайн или на живо — както ви е удобно."
+            }
+          },
+          "sections": [
+            {
+              "type": "audience",
+              "id": "who",
+              "title": "За кого е",
+              "intro": "Работя с хора, които знаят какво искат да променят и са готови да действат.",
+              "items": [
+                [
+                  "users",
+                  "Начинаещи предприемачи",
+                  "Имате идея или първи клиенти и искате структура, преди да порасне хаосът."
+                ],
+                [
+                  "chart",
+                  "Специалисти пред смяна",
+                  "Искате нова роля, повишение или собствена практика — и план как да се случи."
+                ],
+                [
+                  "heart",
+                  "Хора на кръстопът",
+                  "Знаете, че нещо трябва да се промени, но не и откъде да започнете."
+                ]
+              ]
+            },
+            {
+              "type": "programs",
+              "id": "programs",
+              "alt": true,
+              "title": "Програми",
+              "intro": "Три формата според това колко време и подкрепа ви трябват.",
+              "items": [
+                {
+                  "name": "Единична сесия",
+                  "price": "120 лв.",
+                  "per": "/ сесия",
+                  "features": [
+                    "Онлайн или на живо",
+                    "Ясен следващ ход в края",
+                    "Бележки след срещата"
+                  ],
+                  "cta": [
+                    "Запази сесия",
+                    "/contact.html"
+                  ]
+                },
+                {
+                  "name": "Програма 3 месеца",
+                  "price": "890 лв.",
+                  "per": "/ 3 месеца",
+                  "featured": "Предпочитана",
+                  "features": [
+                    "Редовни сесии в рамките на три месеца",
+                    "Съобщения между сесиите",
+                    "План с цели и срокове",
+                    "Преглед на напредъка всеки месец"
+                  ],
+                  "cta": [
+                    "Започни програма",
+                    "/contact.html"
+                  ]
+                },
+                {
+                  "name": "Интензив за екип",
+                  "price": "по запитване",
+                  "features": [
+                    "Полудневен или целодневен формат",
+                    "За малък екип",
+                    "Материали и последваща среща"
+                  ],
+                  "cta": [
+                    "Попитай за екип",
+                    "/contact.html"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "how",
+              "title": "Как работим",
+              "intro": "Без магия — ясен процес, който се повтаря всяка седмица.",
+              "items": [
+                [
+                  "Разговор",
+                  "Първи разговор, в който разбирам къде сте и къде искате да стигнете."
+                ],
+                [
+                  "План",
+                  "Заедно подреждаме целта в стъпки с реалистични срокове."
+                ],
+                [
+                  "Сесии",
+                  "Работим по една стъпка наведнъж и махаме пречките по пътя."
+                ],
+                [
+                  "Резултат",
+                  "Преглеждаме какво се промени и какво следва след програмата."
+                ]
+              ]
+            },
+            {
+              "type": "quotes",
+              "id": "reviews",
+              "alt": true,
+              "title": "Какво казват хората",
+              "items": [
+                [
+                  "„За три месеца направих това, което отлагах три години. Най-ценното беше да имам човек, който пита какво направих тази седмица.“",
+                  "Мария, основател"
+                ],
+                [
+                  "„Ясни въпроси, без празни приказки. Сменях работа и получих план, който наистина следвах.“",
+                  "Петър, продуктов мениджър"
+                ],
+                [
+                  "„Първият разговор беше достатъчен, за да видя къде се въртя в кръг.“",
+                  "Елица, дизайнер"
+                ]
+              ]
+            },
+            {
+              "type": "faq",
+              "title": "Чести въпроси",
+              "items": [
+                [
+                  "Онлайн ли са сесиите?",
+                  "И двете — онлайн през видеовръзка или на живо по уговорка. Вие избирате."
+                ],
+                [
+                  "Какво става, ако не ми подхожда?",
+                  "След първия разговор решавате спокойно. Ако нещо не ви подхожда, кажете ми — ще променим подхода или ще се разделим без напрежение."
+                ],
+                [
+                  "Колко бързо ще видя резултат?",
+                  "Зависи от целта ви и от това колко редовно действате. След всяка сесия уговаряме по една малка стъпка, така че напредъкът да се вижда рано."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Да започнем с един разговор",
+              "p": "Първи разговор, без ангажимент. Ако не съм правилният човек за вас, ще ви кажа честно.",
+              "button": [
+                "Запази разговор",
+                "/contact.html"
+              ]
+            }
+          ]
+        },
+        "about": {
+          "title": "За мен",
+          "description": "Кой стои зад менторството: подход, начин на работа и защо правя това.",
+          "pagehead": [
+            "За мен",
+            "Помагам на хора да превърнат намеренията си в действия — стъпка по стъпка."
+          ],
+          "sections": [
+            {
+              "type": "story",
+              "items": [
+                [
+                  "Защо го правя",
+                  "Плановете се пишат лесно, а се изпълняват трудно. Разликата често е в това дали някой върви с вас по пътя — тази част поемам аз."
+                ],
+                [
+                  "Как работя",
+                  "Задавам въпроси, не давам готови рецепти. Вие знаете отговорите по-добре от мен — моята работа е да ги извадя и да ги подредя в стъпки."
+                ],
+                [
+                  "Какво вярвам",
+                  "Малки, редовни стъпки побеждават големите решения, взети веднъж в годината."
+                ]
+              ]
+            },
+            {
+              "type": "stats",
+              "alt": true,
+              "items": [
+                [
+                  "10+",
+                  "години опит"
+                ],
+                [
+                  "200+",
+                  "хора в програми"
+                ],
+                [
+                  "4.9/5",
+                  "средна оценка"
+                ],
+                [
+                  "30 мин.",
+                  "безплатен първи разговор"
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Искате да работим заедно?",
+              "p": "Пишете ми и ще уговорим как да започнем.",
+              "button": [
+                "Към контакта",
+                "/contact.html"
+              ]
+            }
+          ]
+        },
+        "contact": {
+          "title": "Контакт",
+          "description": "Запазете първи разговор или задайте въпрос.",
+          "pagehead": [
+            "Запазете разговор",
+            "Напишете с две изречения какво искате да промените и ще уговорим следващата стъпка."
+          ],
+          "sections": [
+            {
+              "type": "contact",
+              "id": "contact",
+              "formName": "booking",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Среща на живо",
+                  "София, по уговорка"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "topic",
+                  "label": "Тема",
+                  "options": [
+                    "Кариера",
+                    "Собствен бизнес",
+                    "Лична цел",
+                    "Друго"
+                  ]
+                }
+              ],
+              "messageLabel": "Какво искате да промените",
+              "send": "Запази разговор",
+              "hoursTitle": "Кога отговарям",
+              "hours": [
+                [
+                  "Понеделник – петък",
+                  "9:00 – 18:00"
+                ],
+                [
+                  "Събота",
+                  "по уговорка"
+                ],
+                [
+                  "Неделя",
+                  "почивен ден"
+                ]
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "en": {
+      "tagline": "mentoring and coaching",
+      "description": "Who I help, the programs I offer and how to book a first conversation.",
+      "nav": [
+        [
+          "About",
+          "/about.html"
+        ],
+        [
+          "Programs",
+          "/#programs"
+        ],
+        [
+          "How it works",
+          "/#how"
+        ],
+        [
+          "Reviews",
+          "/#reviews"
+        ],
+        [
+          "Contact",
+          "/contact.html"
+        ]
+      ],
+      "headerCta": [
+        "Book a call",
+        "/contact.html"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "For people who want their next step",
+            "eyebrowIcon": "compass",
+            "title": "I help you get *where you want to be*",
+            "lead": "One-to-one sessions and programs for people who have a goal but not a clear path to it. We begin with a first conversation to see whether we are a good fit.",
+            "cta": [
+              "Book a first call",
+              "/contact.html"
+            ],
+            "cta2": [
+              "See the programs",
+              "/#programs"
+            ],
+            "card": {
+              "icon": "target",
+              "title": "What you get",
+              "rows": [
+                [
+                  "First call",
+                  "free"
+                ],
+                [
+                  "Reply to messages",
+                  "within 24h"
+                ],
+                [
+                  "Session",
+                  "60 min"
+                ]
+              ],
+              "note": "Online or in person — whatever suits you."
+            }
+          },
+          "sections": [
+            {
+              "type": "audience",
+              "id": "who",
+              "title": "Who it is for",
+              "intro": "I work with people who know what they want to change and are ready to act.",
+              "items": [
+                [
+                  "users",
+                  "First-time founders",
+                  "You have an idea or first clients and want structure before the chaos grows."
+                ],
+                [
+                  "chart",
+                  "Professionals at a turning point",
+                  "You want a new role, a promotion or your own practice — and a plan to get there."
+                ],
+                [
+                  "heart",
+                  "People at a crossroads",
+                  "You know something has to change, but not where to start."
+                ]
+              ]
+            },
+            {
+              "type": "programs",
+              "id": "programs",
+              "alt": true,
+              "title": "Programs",
+              "intro": "Three formats, depending on how much time and support you need.",
+              "items": [
+                {
+                  "name": "Single session",
+                  "price": "€60",
+                  "per": "/ session",
+                  "features": [
+                    "Online or in person",
+                    "A clear next move by the end",
+                    "Notes after the meeting"
+                  ],
+                  "cta": [
+                    "Book a session",
+                    "/contact.html"
+                  ]
+                },
+                {
+                  "name": "3-month program",
+                  "price": "€450",
+                  "per": "/ 3 months",
+                  "featured": "Popular",
+                  "features": [
+                    "Regular sessions over three months",
+                    "Messages between sessions",
+                    "A plan with goals and deadlines",
+                    "A progress review every month"
+                  ],
+                  "cta": [
+                    "Start the program",
+                    "/contact.html"
+                  ]
+                },
+                {
+                  "name": "Team intensive",
+                  "price": "on request",
+                  "features": [
+                    "Half-day or full-day format",
+                    "For a small team",
+                    "Materials and a follow-up meeting"
+                  ],
+                  "cta": [
+                    "Ask about teams",
+                    "/contact.html"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "how",
+              "title": "How it works",
+              "intro": "No magic — a clear process that repeats every week.",
+              "items": [
+                [
+                  "Conversation",
+                  "A first conversation in which I understand where you are and where you want to go."
+                ],
+                [
+                  "Plan",
+                  "Together we break the goal into steps with realistic deadlines."
+                ],
+                [
+                  "Sessions",
+                  "We work on one step at a time and remove what gets in the way."
+                ],
+                [
+                  "Result",
+                  "We review what changed and what comes after the program."
+                ]
+              ]
+            },
+            {
+              "type": "quotes",
+              "id": "reviews",
+              "alt": true,
+              "title": "What people say",
+              "items": [
+                [
+                  "“In three months I did what I had postponed for three years. The most valuable part was having someone ask what I did this week.”",
+                  "Maria, founder"
+                ],
+                [
+                  "“Clear questions, no empty talk. I was changing jobs and got a plan I actually followed.”",
+                  "Peter, product manager"
+                ],
+                [
+                  "“The first call was enough to see where I was going in circles.”",
+                  "Elitsa, designer"
+                ]
+              ]
+            },
+            {
+              "type": "faq",
+              "title": "Questions people ask",
+              "items": [
+                [
+                  "Are sessions online?",
+                  "Both — online by video or in person, by arrangement. You choose."
+                ],
+                [
+                  "What if it is not a fit?",
+                  "After the first call you decide at your own pace. If it does not feel right, tell me — we will adjust the approach or part ways without hard feelings."
+                ],
+                [
+                  "How fast will I see results?",
+                  "That depends on your goal and on how regularly you act. We agree one small step after every session, so you can see progress early."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Let’s start with one conversation",
+              "p": "A first conversation, no obligation. If I am not the right person for you, I will tell you honestly.",
+              "button": [
+                "Book a call",
+                "/contact.html"
+              ]
+            }
+          ]
+        },
+        "about": {
+          "title": "About me",
+          "description": "Who is behind the mentoring: my approach, how I work and why I do this.",
+          "pagehead": [
+            "About me",
+            "I help people turn intentions into action, one step at a time."
+          ],
+          "sections": [
+            {
+              "type": "story",
+              "items": [
+                [
+                  "Why I do this",
+                  "Plans are easy to write and hard to carry out. The difference is often whether someone walks the road with you — that is the part I take on."
+                ],
+                [
+                  "How I work",
+                  "I ask questions rather than hand out recipes. You know the answers better than I do — my job is to bring them out and put them in order."
+                ],
+                [
+                  "What I believe",
+                  "Small, regular steps beat big decisions taken once a year."
+                ]
+              ]
+            },
+            {
+              "type": "stats",
+              "alt": true,
+              "items": [
+                [
+                  "10+",
+                  "years of experience"
+                ],
+                [
+                  "200+",
+                  "people in programs"
+                ],
+                [
+                  "4.9/5",
+                  "average rating"
+                ],
+                [
+                  "30 min",
+                  "free first call"
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Want to work together?",
+              "p": "Write to me and we will agree how to start.",
+              "button": [
+                "Go to contact",
+                "/contact.html"
+              ]
+            }
+          ]
+        },
+        "contact": {
+          "title": "Contact",
+          "description": "Book a first conversation or ask a question.",
+          "pagehead": [
+            "Book a call",
+            "Tell me in two sentences what you want to change, and we agree the next step."
+          ],
+          "sections": [
+            {
+              "type": "contact",
+              "id": "contact",
+              "formName": "booking",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "In person",
+                  "Sofia, by appointment"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "topic",
+                  "label": "Topic",
+                  "options": [
+                    "Career",
+                    "Own business",
+                    "Personal goal",
+                    "Other"
+                  ]
+                }
+              ],
+              "messageLabel": "What you want to change",
+              "send": "Book a call",
+              "hoursTitle": "When I reply",
+              "hours": [
+                [
+                  "Monday – Friday",
+                  "9:00 – 18:00"
+                ],
+                [
+                  "Saturday",
+                  "by arrangement"
+                ],
+                [
+                  "Sunday",
+                  "closed"
+                ]
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

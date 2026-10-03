@@ -1,0 +1,645 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "podcast",
+  "category": "personal",
+  "icon": "mic",
+  "accent": "#ff5a1f",
+  "mark": "mic",
+  "art": "waves",
+  "schemaOrg": "PodcastSeries",
+  "sample": {
+    "name": "Open Frequency"
+  },
+  "featured": false,
+  "titleKey": "newsite.template.podcast.title",
+  "descriptionKey": "newsite.template.podcast.description",
+  "keywords": {
+    "en": [
+      "podcast",
+      "youtube",
+      "youtuber",
+      "video",
+      "creator",
+      "vlog",
+      "show",
+      "channel",
+      "episodes",
+      "streamer",
+      "newsletter",
+      "content creator"
+    ],
+    "bg": [
+      "подкаст",
+      "ютюб",
+      "ютюбър",
+      "видео",
+      "влог",
+      "шоу",
+      "канал",
+      "епизоди",
+      "стрийм",
+      "бюлетин",
+      "създател на съдържание",
+      "видео блогър"
+    ]
+  },
+  "style": "bold",
+  "tokens": {
+    "dark": false,
+    "bg": "#fff6ec",
+    "bg2": "#ffe9d6",
+    "surface": "#ffffff",
+    "text": "#1f1511",
+    "muted": "#6a564a",
+    "line": "rgba(31,21,17,.12)",
+    "accent": "#ff5a1f",
+    "accent2": "#ff2e63",
+    "font": "sans",
+    "head": "grotesk",
+    "radius": 14,
+    "tilt": -2
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "hints": {
+    "en": {
+      "offer": "A weekly podcast about running a small business: honest conversations with people who have done it, also on YouTube.",
+      "audience": "Founders, freelancers and curious listeners",
+      "services": [
+        [
+          "Guest appearance",
+          "",
+          "Pitch a topic and join an episode"
+        ],
+        [
+          "Episode sponsorship",
+          "€150",
+          "A short read or a full segment"
+        ],
+        [
+          "Newsletter mention",
+          "€60",
+          "Your link in the show notes"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Седмичен подкаст за живота на малкия бизнес: честни разговори с хора, които вече са го направили. Излиза и в YouTube.",
+      "audience": "Предприемачи, фрийлансъри и любопитни слушатели",
+      "services": [
+        [
+          "Гост в шоуто",
+          "",
+          "Предложете тема и се включете в епизод"
+        ],
+        [
+          "Спонсорство на епизод",
+          "150 €",
+          "Кратко четене или цяла рубрика"
+        ],
+        [
+          "Споменаване в бюлетина",
+          "60 €",
+          "Вашият линк в бележките"
+        ]
+      ]
+    }
+  },
+  "lang": {
+    "en": {
+      "tagline": "podcast and video show",
+      "description": "What the show is about, where to listen or watch, how to be a guest or sponsor, and a newsletter to follow along.",
+      "nav": [
+        [
+          "The show",
+          "/#show"
+        ],
+        [
+          "Listen",
+          "/#platforms"
+        ],
+        [
+          "Be a guest",
+          "/#guest"
+        ],
+        [
+          "Newsletter",
+          "/#newsletter"
+        ]
+      ],
+      "headerCta": [
+        "Get in touch",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Listen, watch or read",
+            "eyebrowIcon": "mic",
+            "title": "Conversations worth *pressing play on*",
+            "lead": "A show about the questions you actually ask: real conversations, honest answers and no filler. Listen in your favourite app or watch the full episodes on YouTube.",
+            "cta": [
+              "Listen now",
+              "/#platforms"
+            ],
+            "cta2": [
+              "Be on the show",
+              "/#guest"
+            ],
+            "card": {
+              "icon": "play",
+              "title": "Ways to take part",
+              "rows": [
+                [
+                  "Be a guest",
+                  "pitch a topic"
+                ],
+                [
+                  "Sponsor",
+                  "a read or a segment"
+                ],
+                [
+                  "Newsletter",
+                  "a mention"
+                ]
+              ],
+              "note": "Tell us what you have in mind and we suggest a format."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                [
+                  "mic",
+                  "Real conversations, not scripts"
+                ],
+                [
+                  "play",
+                  "Audio and video, same episode"
+                ],
+                [
+                  "mail",
+                  "Show notes by email"
+                ],
+                [
+                  "users",
+                  "Listener questions welcome"
+                ]
+              ]
+            },
+            {
+              "type": "chips",
+              "id": "platforms",
+              "title": "Where to listen and watch",
+              "intro": "Find the show in the app you already use.",
+              "items": [
+                "Spotify",
+                "Apple Podcasts",
+                "YouTube",
+                "RSS"
+              ]
+            },
+            {
+              "type": "split",
+              "id": "show",
+              "alt": true,
+              "title": "What the show is about",
+              "intro": "One question per episode, followed until it is answered properly.",
+              "items": [
+                [
+                  "The questions",
+                  "Each episode starts with something people really ask, and follows it until the answer is clear.",
+                  "One topic per episode",
+                  "Plain language, no jargon",
+                  "Show notes with the key points"
+                ],
+                [
+                  "The conversations",
+                  "We talk with our guests the way you would over coffee: curious, direct and unhurried.",
+                  "Interviews with people who know the subject",
+                  "Solo episodes when a topic needs more room",
+                  "Listener questions answered on air"
+                ],
+                [
+                  "The format",
+                  "Audio for the commute, video for the full picture. Same episode, your choice.",
+                  "Full episodes on YouTube",
+                  "Audio in every major podcast app",
+                  "Short clips for the busy days"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "guest",
+              "title": "Be on the show or sponsor it",
+              "intro": "Three ways to take part, none of them complicated.",
+              "items": [
+                [
+                  "mic",
+                  "Be a guest",
+                  "Tell us what you know and what you would like to talk about. We reply if it fits an upcoming topic."
+                ],
+                [
+                  "target",
+                  "Sponsor an episode",
+                  "Reach people who chose to listen. We agree the format together: a short read, a mention or a full segment."
+                ],
+                [
+                  "mail",
+                  "Send a question",
+                  "Your question may become an episode. Ask it through the form below or by replying to the newsletter."
+                ]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "how",
+              "alt": true,
+              "title": "How getting on the show works",
+              "intro": "From a short pitch to a published episode.",
+              "items": [
+                [
+                  "Send a pitch",
+                  "Two or three lines: who you are, what you would talk about and why listeners would care."
+                ],
+                [
+                  "Have a first chat",
+                  "A short call to see if the topic fits and to agree what the conversation should cover."
+                ],
+                [
+                  "Record",
+                  "We settle a time and send a few prep notes. Recording is online or in person, whichever suits you."
+                ],
+                [
+                  "Publish",
+                  "We share the publish date and the links, so you can pass the episode on to your own audience."
+                ]
+              ]
+            },
+            {
+              "type": "form",
+              "id": "newsletter",
+              "title": "Follow along",
+              "intro": "Leave your email to get new episodes, show notes and the odd extra. Unsubscribe whenever you like.",
+              "formName": "newsletter",
+              "note": "We use your email only for the newsletter."
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "alt": true,
+              "title": "Questions we get",
+              "items": [
+                [
+                  "How do I never miss an episode?",
+                  "Subscribe in your podcast app or on YouTube and new episodes arrive on their own. The newsletter adds the show notes and links for each one."
+                ],
+                [
+                  "Where can I watch the video version?",
+                  "Full episodes live on YouTube. The same conversation is available as audio in Spotify, Apple Podcasts and other podcast apps."
+                ],
+                [
+                  "How do I get on the show?",
+                  "Send a short pitch through the form: who you are, what you would talk about and why it helps listeners. We reply if it fits an upcoming topic."
+                ],
+                [
+                  "Can my company sponsor an episode?",
+                  "Yes. We keep sponsorships clear and honest: a short read, a mention or a full segment. Tell us about your product and your audience and we suggest a format."
+                ],
+                [
+                  "Do you take listener questions?",
+                  "Please send them. Use the form or reply to any newsletter. The most useful ones become part of an episode."
+                ],
+                [
+                  "What is in the newsletter?",
+                  "The show notes and links from each episode, plus the odd extra you will not find elsewhere. You can leave at any time."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Got an idea for the show?",
+              "p": "A topic, a guest, a partnership: send it over and we will take a look.",
+              "button": [
+                "Pitch us",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Pitch us, or just say hello",
+              "intro": "Guest pitch, sponsorship or a question: tell us in a few lines and we get back to you.",
+              "formName": "pitch",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Address",
+                  "1 Vitosha St, Sofia"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "topic",
+                  "label": "What is it about",
+                  "options": [
+                    "Guest pitch",
+                    "Sponsorship",
+                    "Listener question",
+                    "Something else"
+                  ]
+                }
+              ],
+              "messageLabel": "Your message",
+              "send": "Send message"
+            }
+          ]
+        }
+      }
+    },
+    "bg": {
+      "tagline": "подкаст и видео шоу",
+      "description": "За какво е шоуто, къде да го слушате или гледате, как да участвате и бюлетин, за да не изпускате епизод.",
+      "nav": [
+        [
+          "Шоуто",
+          "/#show"
+        ],
+        [
+          "Слушайте",
+          "/#platforms"
+        ],
+        [
+          "Гост в шоуто",
+          "/#guest"
+        ],
+        [
+          "Бюлетин",
+          "/#newsletter"
+        ]
+      ],
+      "headerCta": [
+        "Пишете ни",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Слушайте, гледайте, четете",
+            "eyebrowIcon": "mic",
+            "title": "Разговори, които *си заслужава да чуете*",
+            "lead": "Шоу за въпросите, които наистина си задавате: истински разговори, честни отговори и нищо излишно. Слушайте в любимото си приложение или гледайте целите епизоди в YouTube.",
+            "cta": [
+              "Слушайте сега",
+              "/#platforms"
+            ],
+            "cta2": [
+              "Бъдете гост",
+              "/#guest"
+            ],
+            "card": {
+              "icon": "play",
+              "title": "Как да се включите",
+              "rows": [
+                [
+                  "Гост",
+                  "предложете тема"
+                ],
+                [
+                  "Спонсор",
+                  "четене или рубрика"
+                ],
+                [
+                  "Бюлетин",
+                  "споменаване"
+                ]
+              ],
+              "note": "Кажете какво имате предвид и ще предложим формат."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                [
+                  "mic",
+                  "Разговори без сценарий"
+                ],
+                [
+                  "play",
+                  "Аудио и видео версия"
+                ],
+                [
+                  "mail",
+                  "Бележки по имейл"
+                ],
+                [
+                  "users",
+                  "Въпросите ви — добре дошли"
+                ]
+              ]
+            },
+            {
+              "type": "chips",
+              "id": "platforms",
+              "title": "Къде да слушате и гледате",
+              "intro": "Намерете шоуто в приложението, което вече ползвате.",
+              "items": [
+                "Spotify",
+                "Apple Podcasts",
+                "YouTube",
+                "RSS"
+              ]
+            },
+            {
+              "type": "split",
+              "id": "show",
+              "alt": true,
+              "title": "За какво е шоуто",
+              "intro": "Един въпрос във всеки епизод — разглеждаме го, докато отговорът стане ясен.",
+              "items": [
+                [
+                  "Въпросите",
+                  "Всеки епизод тръгва от нещо, което хората наистина питат, и го следва, докато отговорът стане ясен.",
+                  "Една тема във всеки епизод",
+                  "Говорим на разбираем език, без жаргон",
+                  "Бележки към епизода с най-важното"
+                ],
+                [
+                  "Разговорите",
+                  "Със своите гости говорим като на кафе: любопитно, направо и без бързане.",
+                  "Интервюта с хора, които познават темата",
+                  "Самостоятелни епизоди, когато темата иска повече място",
+                  "Въпроси от слушателите — отговаряме в ефир"
+                ],
+                [
+                  "Форматът",
+                  "Аудио за пътуването, видео за пълната картина. Един и същ епизод — по ваш избор.",
+                  "Пълните епизоди в YouTube",
+                  "Аудио във всички големи приложения за подкасти",
+                  "Кратки клипове за натоварените дни"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "guest",
+              "title": "Бъдете гост или станете спонсор",
+              "intro": "Три начина да се включите — без излишна сложност.",
+              "items": [
+                [
+                  "mic",
+                  "Гост в шоуто",
+                  "Разкажете какво знаете и за какво бихте говорили. Отговаряме, ако темата пасва на предстоящ епизод."
+                ],
+                [
+                  "target",
+                  "Спонсорство на епизод",
+                  "Стигнете до хора, които сами са избрали да слушат. Формата уговаряме заедно: кратко четене, споменаване или цяла рубрика."
+                ],
+                [
+                  "mail",
+                  "Изпратете въпрос",
+                  "Вашият въпрос може да стане епизод. Задайте го през формата по-долу или като отговорите на бюлетина."
+                ]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "how",
+              "alt": true,
+              "title": "Как се стига до шоуто",
+              "intro": "От кратко писмо до публикуван епизод.",
+              "items": [
+                [
+                  "Изпратете идея",
+                  "Два-три реда: кои сте, за какво бихте говорили и защо това е важно за слушателите."
+                ],
+                [
+                  "Първи разговор",
+                  "Кратко обаждане, за да видим дали темата пасва и какво да обхване разговорът."
+                ],
+                [
+                  "Запис",
+                  "Уговаряме час и ви изпращаме няколко бележки за подготовка. Записваме онлайн или на живо — както ви е удобно."
+                ],
+                [
+                  "Публикуване",
+                  "Съобщаваме датата и линковете, за да споделите епизода с вашата публика."
+                ]
+              ]
+            },
+            {
+              "type": "form",
+              "id": "newsletter",
+              "title": "Следвайте шоуто",
+              "intro": "Оставете имейла си и получавайте нови епизоди, бележки и по някое допълнение. Отписвате се, когато пожелаете.",
+              "formName": "newsletter",
+              "note": "Използваме имейла ви само за бюлетина."
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "alt": true,
+              "title": "Въпроси, които получаваме",
+              "items": [
+                [
+                  "Как да не изпусна епизод?",
+                  "Абонирайте се в приложението за подкасти или в YouTube и новите епизоди идват сами. Бюлетинът добавя бележките и връзките към всеки от тях."
+                ],
+                [
+                  "Къде да гледам видео версията?",
+                  "Целите епизоди са в YouTube. Същият разговор има и като аудио в Spotify, Apple Podcasts и други приложения за подкасти."
+                ],
+                [
+                  "Как да стана гост в шоуто?",
+                  "Изпратете кратка идея през формата: кои сте, за какво бихте говорили и с какво това помага на слушателите. Отговаряме, ако пасва на предстоящ епизод."
+                ],
+                [
+                  "Може ли фирмата ми да спонсорира епизод?",
+                  "Да. Държим спонсорството ясно и честно: кратко четене, споменаване или цяла рубрика. Разкажете за продукта и публиката си и ще предложим формат."
+                ],
+                [
+                  "Приемате ли въпроси от слушатели?",
+                  "Моля, пишете ни. Използвайте формата или отговорете на който и да е бюлетин. Най-полезните стават част от епизод."
+                ],
+                [
+                  "Какво има в бюлетина?",
+                  "Бележките и връзките от всеки епизод, плюс по някое допълнение, което няма да намерите другаде. Можете да се отпишете по всяко време."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Имате идея за шоуто?",
+              "p": "Тема, гост, партньорство — изпратете я и ще я разгледаме.",
+              "button": [
+                "Пишете ни",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Пишете ни",
+              "intro": "Гост, спонсорство или въпрос — разкажете в няколко реда и ще ви отговорим.",
+              "formName": "pitch",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Адрес",
+                  "ул. Витоша 1, София"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "topic",
+                  "label": "За какво е",
+                  "options": [
+                    "Идея за гост",
+                    "Спонсорство",
+                    "Въпрос от слушател",
+                    "Друго"
+                  ]
+                }
+              ],
+              "messageLabel": "Вашето съобщение",
+              "send": "Изпратете съобщението"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

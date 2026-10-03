@@ -1,0 +1,27 @@
+{
+  "schema": "bid.builder-assessment/1",
+  "note": "Group-level baseline from reading the code on 2026-10-03. Rows stay 'не е оценено' until checked one by one; a row becomes 'налично и тествано' only with evidence (a test name or a recorded manual check).",
+  "groups": {
+    "1": { "exists": "Библиотека на проектите; 45 теми (bg/en) с избор и преглед; чат „Нов сайт“ (bid site chat); търсене в командната палитра.", "missing": "Папки, копие/remix, екипни шаблони, галерия с общностни шаблони.", "depends": "Хранилище на проекти (LocalState/engine library)." },
+    "2": { "exists": "AI асистент (диагноза, поправка, ревю) и чат за нов сайт с въпроси и бутони; „промени с думи“ (bid site edit).", "missing": "Режими Обсъждане/План/Изграждане, редактируем план, Stop с отчет, постоянни инструкции.", "depends": "engine/src/ai/*, sitegen/chat.mjs." },
+    "3": { "exists": "Auto + избор на модел в чата; облачен двигател Claude/Codex по план; собствен ключ за VIP.", "missing": "Сравнение на модели, видим fallback, AI в създаденото приложение.", "depends": "supabase/functions/_shared/engines.ts." },
+    "4": { "exists": "Преглед на сайта (WebKit), „промени с думи“, undo на промени (bid site undo).", "missing": "Избор на елемент в preview, директни редакции, размери на екрана в редактора, redo.", "depends": "Връзка елемент→източник (bid.site.json секции)." },
+    "5": { "exists": "Токени, 3 стила × 4 палитри, WCAG AA, илюстрации, снимки на потребителя.", "missing": "Компоненти, Figma, генерирани медии, шрифтове по избор.", "depends": "sitegen/tokens.mjs, render.mjs." },
+    "6": { "exists": "Git commit при всяка промяна на сайт, история и undo, Git състояние в приложението.", "missing": "Разклонения, сливане, сравнение, двупосочна Git синхронизация, редактор на код.", "depends": "engine/src/git.mjs." },
+    "7": { "exists": "Нищо за генерирани приложения (сайтовете са статични).", "missing": "Таблици, CRUD, импорт/експорт, test/prod данни, архиви.", "depends": "Избор на backend за генерирани приложения." },
+    "8": { "exists": "Акаунти и роли само за самия Before I Deploy (Supabase Auth).", "missing": "Потребители на създаденото приложение, роли, сесии, SSO.", "depends": "Фаза 4 backend." },
+    "9": { "exists": "Проверка за secrets в проекти; RLS тестове за таблиците на Before I Deploy.", "missing": "RLS/FLS за генерирани приложения, secrets на приложението, одобрения, audit.", "depends": "Фаза 4 backend." },
+    "10": { "exists": "Edge Functions на Before I Deploy (account, ai-fix, site-gen, billing, monitor, admin).", "missing": "Функции, файлове, имейли и webhooks за генерираните приложения.", "depends": "Фаза 4 backend." },
+    "11": { "exists": "Netlify, Spaceship (домейни), Paddle sandbox (само за плановете на Before I Deploy).", "missing": "Конектори, OAuth, Stripe, собствен Supabase за генерираните приложения.", "depends": "Фаза 4–5." },
+    "12": { "exists": "—", "missing": "Агенти в приложенията: инструменти, разговори, памет.", "depends": "Фаза 4 backend, Фаза 5." },
+    "13": { "exists": "—", "missing": "Workflows: събития, график, условия, история.", "depends": "Фаза 4 backend." },
+    "14": { "exists": "Локален engine с NDJSON команди (bid …); няма MCP.", "missing": "API/SDK, MCP за управление на билдера, външни инструменти, MCP на приложението.", "depends": "Сайдкар, който слуша (bid serve) — още не съществува." },
+    "15": { "exists": "Деплой в Netlify с преглед → проверка → промотиране → проверка → връщане; домейни през Spaceship; HTTPS от хостинга.", "missing": "Публикувана версия, свързана с коммит и данни; мобилни канали.", "depends": "engine/src/release.mjs, netlify.mjs, spaceship.mjs." },
+    "16": { "exists": "Мониторинг на достъпност, SSL и домейн; проверка на сайта (SEO, достъпност); разходи на AI.", "missing": "Трафик, събития, recordings, runtime logs на приложението.", "depends": "supabase/functions/monitor." },
+    "17": { "exists": "Правила за SEO в проверката на сайта; JSON-LD, Open Graph, sitemap, robots.", "missing": "Search Console, GEO/AEO прегледи, рекламни кампании.", "depends": "engine/src/site.mjs." },
+    "18": { "exists": "Администратор и роли само за Before I Deploy.", "missing": "Екипи, гости, коментари, споделяне на проект.", "depends": "Фаза 4 backend." },
+    "19": { "exists": "Кредити, резервиране и отчитане по действие, екран „План и използване“, лимити по план.", "missing": "Бюджет и твърд лимит на проект/задача, оценка преди дълга задача.", "depends": "supabase billing функции." },
+    "20": { "contextReason": "Историческо, поддръжка и субективно съдържание; не е функция на билдера." }
+  },
+  "rows": {}
+}

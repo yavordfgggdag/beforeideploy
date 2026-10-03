@@ -1,0 +1,702 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "salon",
+  "category": "beauty",
+  "icon": "scissors",
+  "accent": "#c0265e",
+  "mark": "scissors",
+  "art": "leaves",
+  "schemaOrg": "BeautySalon",
+  "sample": {
+    "name": "Salon Mira"
+  },
+  "featured": true,
+  "titleKey": "newsite.template.salon.title",
+  "descriptionKey": "newsite.template.salon.description",
+  "keywords": {
+    "en": [
+      "salon",
+      "hair",
+      "hairdresser",
+      "barber",
+      "nails",
+      "beauty",
+      "spa",
+      "massage",
+      "lashes",
+      "makeup",
+      "prices"
+    ],
+    "bg": [
+      "салон",
+      "коса",
+      "фризьор",
+      "бръснар",
+      "нокти",
+      "маникюр",
+      "красота",
+      "спа",
+      "масаж",
+      "мигли",
+      "грим"
+    ]
+  },
+  "style": "elegant",
+  "tokens": {
+    "dark": false,
+    "bg": "#fdf7f6",
+    "bg2": "#f8ecea",
+    "surface": "#ffffff",
+    "text": "#2d1b22",
+    "muted": "#6e5660",
+    "line": "rgba(15,23,42,.10)",
+    "accent": "#c0265e",
+    "accent2": "#e879a6",
+    "head": "serif",
+    "radius": 20,
+    "tilt": 2
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "hints": {
+    "en": {
+      "offer": "We are a small salon for hair, nails and skin care. Come for a cut, a colour or a manicure and leave feeling looked after.",
+      "audience": "Women and men who want a calm, unhurried visit",
+      "services": [
+        [
+          "Women’s cut",
+          "€25",
+          "Wash, cut and blow-dry"
+        ],
+        [
+          "Gel manicure",
+          "€20",
+          "Shaping, gel polish and cuticle care"
+        ],
+        [
+          "Colour",
+          "€35",
+          "One tone, after a short consultation"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Ние сме малък салон за коса, нокти и грижа за кожата. Елате за подстригване, боядисване или маникюр и си тръгнете с чувство, че са се погрижили за вас.",
+      "audience": "Жени и мъже, които искат спокойно посещение без бързане",
+      "services": [
+        [
+          "Дамско подстригване",
+          "25 €",
+          "Измиване, подстригване и сешоар"
+        ],
+        [
+          "Маникюр с гел лак",
+          "20 €",
+          "Оформяне, гел лак и грижа за кожичките"
+        ],
+        [
+          "Боядисване",
+          "35 €",
+          "Един тон, след кратка консултация"
+        ]
+      ]
+    }
+  },
+  "lang": {
+    "bg": {
+      "tagline": "салон за красота",
+      "description": "Фризьорство, маникюр, козметика и грим. Запазете час онлайн за минута.",
+      "nav": [
+        [
+          "Услуги",
+          "/#services"
+        ],
+        [
+          "Цени",
+          "/prices.html"
+        ],
+        [
+          "Екип",
+          "/#team"
+        ],
+        [
+          "Час",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Запази час",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Запазете час онлайн",
+            "eyebrowIcon": "calendar",
+            "title": "Време само *за вас*",
+            "lead": "Подстригване, цвят, маникюр и грижа за лицето в спокойна обстановка — с продукти, които обичаме и на които вярваме.",
+            "cta": [
+              "Запази час",
+              "/#contact"
+            ],
+            "cta2": [
+              "Цени",
+              "/prices.html"
+            ],
+            "card": {
+              "icon": "calendar",
+              "title": "Свободни часове",
+              "rows": [
+                [
+                  "Чт, 11:00",
+                  "Подстригване"
+                ],
+                [
+                  "Чт, 14:30",
+                  "Маникюр"
+                ],
+                [
+                  "Пт, 10:00",
+                  "Боядисване"
+                ]
+              ],
+              "note": "Потвърждаваме с SMS."
+            }
+          },
+          "sections": [
+            {
+              "type": "cards",
+              "id": "services",
+              "title": "Услуги",
+              "items": [
+                [
+                  "scissors",
+                  "Коса",
+                  "Подстригване, боядисване, балеаж, прически за поводи."
+                ],
+                [
+                  "hand",
+                  "Маникюр и педикюр",
+                  "Класически, гел лак, ноктопластика."
+                ],
+                [
+                  "leaf",
+                  "Козметика",
+                  "Почистване на лице, масажи, терапии против стареене."
+                ],
+                [
+                  "star",
+                  "Грим",
+                  "Дневен, вечерен и булчински — с проба."
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "team",
+              "alt": true,
+              "title": "Екипът",
+              "intro": "Клиентите избират човек, не просто салон. Запознайте се с хората, които ще се грижат за вас.",
+              "items": [
+                [
+                  "heart",
+                  "Фризьор-стилист",
+                  "Специалист по цвят и балеаж."
+                ],
+                [
+                  "hand",
+                  "Маникюрист",
+                  "Прецизност и търпение за най-сложните дизайни."
+                ],
+                [
+                  "leaf",
+                  "Козметик",
+                  "Терапии и грижа за чувствителна кожа."
+                ]
+              ]
+            },
+            {
+              "type": "quotes",
+              "title": "Отзиви",
+              "items": [
+                [
+                  "„Най-после някой, който разбира какво искам с косата си!“",
+                  "Кристина"
+                ],
+                [
+                  "„Маникюрът издържа три седмици. Връщам се всеки месец.“",
+                  "Весела"
+                ],
+                [
+                  "„Спокойна атмосфера и страхотен екип.“",
+                  "Анелия"
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Запази час",
+              "intro": "Изберете услуга и удобен ден — ще потвърдим с обаждане или SMS.",
+              "formName": "booking",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Адрес",
+                  "ул. „Витоша“ 1, София"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "service",
+                  "label": "Услуга",
+                  "options": [
+                    "Подстригване",
+                    "Боядисване",
+                    "Маникюр",
+                    "Педикюр",
+                    "Лице",
+                    "Грим"
+                  ]
+                },
+                {
+                  "id": "date",
+                  "label": "Желан ден",
+                  "type": "date"
+                }
+              ],
+              "messageLabel": "Бележка (по избор)",
+              "send": "Запази час",
+              "hoursTitle": "Работно време",
+              "hours": [
+                [
+                  "Понеделник – петък",
+                  "9:00 – 20:00"
+                ],
+                [
+                  "Събота",
+                  "9:00 – 16:00"
+                ],
+                [
+                  "Неделя",
+                  "почивен ден"
+                ]
+              ]
+            }
+          ]
+        },
+        "prices": {
+          "title": "Цени на услугите",
+          "description": "Цени за подстригване, боядисване, маникюр, козметика и грим.",
+          "pagehead": [
+            "Цени",
+            "Цените зависят от дължината на косата и продуктите — ще ги потвърдим на място."
+          ],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Коса",
+                  "items": [
+                    [
+                      "Дамско подстригване",
+                      "С измиване и сешоар",
+                      "45 лв."
+                    ],
+                    [
+                      "Мъжко подстригване",
+                      "",
+                      "25 лв."
+                    ],
+                    [
+                      "Боядисване",
+                      "Един тон, средна коса",
+                      "от 70 лв."
+                    ],
+                    [
+                      "Балеаж",
+                      "С тониране",
+                      "от 150 лв."
+                    ]
+                  ]
+                },
+                {
+                  "name": "Ръце и крака",
+                  "items": [
+                    [
+                      "Маникюр с гел лак",
+                      "",
+                      "40 лв."
+                    ],
+                    [
+                      "Педикюр",
+                      "Класически",
+                      "45 лв."
+                    ],
+                    [
+                      "Ноктопластика",
+                      "Изграждане",
+                      "65 лв."
+                    ]
+                  ]
+                },
+                {
+                  "name": "Лице",
+                  "items": [
+                    [
+                      "Почистване на лице",
+                      "60 мин.",
+                      "70 лв."
+                    ],
+                    [
+                      "Масаж на лице",
+                      "30 мин.",
+                      "40 лв."
+                    ]
+                  ]
+                },
+                {
+                  "name": "Грим",
+                  "items": [
+                    [
+                      "Вечерен грим",
+                      "",
+                      "60 лв."
+                    ],
+                    [
+                      "Булчински грим",
+                      "С проба",
+                      "150 лв."
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Подаръчни ваучери",
+              "p": "Подарете време за красота — ваучери на всякаква стойност.",
+              "button": [
+                "Попитай за ваучер",
+                "/#contact"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "en": {
+      "tagline": "beauty salon",
+      "description": "Hair, nails, skin care and make-up. Book an appointment online in a minute.",
+      "nav": [
+        [
+          "Services",
+          "/#services"
+        ],
+        [
+          "Prices",
+          "/prices.html"
+        ],
+        [
+          "Team",
+          "/#team"
+        ],
+        [
+          "Book",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Book now",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Book your appointment online",
+            "eyebrowIcon": "calendar",
+            "title": "Time just *for you*",
+            "lead": "Cuts, colour, nails and skin care in a calm space — with products we love and trust.",
+            "cta": [
+              "Book now",
+              "/#contact"
+            ],
+            "cta2": [
+              "Prices",
+              "/prices.html"
+            ],
+            "card": {
+              "icon": "calendar",
+              "title": "Free slots",
+              "rows": [
+                [
+                  "Thu, 11:00",
+                  "Haircut"
+                ],
+                [
+                  "Thu, 14:30",
+                  "Manicure"
+                ],
+                [
+                  "Fri, 10:00",
+                  "Colour"
+                ]
+              ],
+              "note": "We confirm by text message."
+            }
+          },
+          "sections": [
+            {
+              "type": "cards",
+              "id": "services",
+              "title": "Services",
+              "items": [
+                [
+                  "scissors",
+                  "Hair",
+                  "Cuts, colour, balayage, occasion styling."
+                ],
+                [
+                  "hand",
+                  "Nails",
+                  "Classic, gel polish, extensions."
+                ],
+                [
+                  "leaf",
+                  "Skin care",
+                  "Facials, massage, anti-ageing treatments."
+                ],
+                [
+                  "star",
+                  "Make-up",
+                  "Day, evening and bridal — with a trial."
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "team",
+              "alt": true,
+              "title": "The team",
+              "intro": "Clients choose a person, not just a salon. Meet the people who will look after you.",
+              "items": [
+                [
+                  "heart",
+                  "Hair stylist",
+                  "Specialist in colour and balayage."
+                ],
+                [
+                  "hand",
+                  "Nail artist",
+                  "Precision and patience for the most detailed designs."
+                ],
+                [
+                  "leaf",
+                  "Beautician",
+                  "Treatments and care for sensitive skin."
+                ]
+              ]
+            },
+            {
+              "type": "quotes",
+              "title": "Reviews",
+              "items": [
+                [
+                  "“Finally someone who understands what I want with my hair!”",
+                  "Kristina"
+                ],
+                [
+                  "“My manicure lasted three weeks. I come back every month.”",
+                  "Vesela"
+                ],
+                [
+                  "“A calm atmosphere and a wonderful team.”",
+                  "Aneliya"
+                ]
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Book an appointment",
+              "intro": "Pick a service and a day — we confirm by phone or text.",
+              "formName": "booking",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Address",
+                  "1 Vitosha St, Sofia"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "service",
+                  "label": "Service",
+                  "options": [
+                    "Haircut",
+                    "Colour",
+                    "Manicure",
+                    "Pedicure",
+                    "Facial",
+                    "Make-up"
+                  ]
+                },
+                {
+                  "id": "date",
+                  "label": "Preferred day",
+                  "type": "date"
+                }
+              ],
+              "messageLabel": "Note (optional)",
+              "send": "Book now",
+              "hoursTitle": "Opening hours",
+              "hours": [
+                [
+                  "Monday – Friday",
+                  "9:00 – 20:00"
+                ],
+                [
+                  "Saturday",
+                  "9:00 – 16:00"
+                ],
+                [
+                  "Sunday",
+                  "closed"
+                ]
+              ]
+            }
+          ]
+        },
+        "prices": {
+          "title": "Prices and treatments",
+          "description": "Prices for haircuts, colour, nails, facials and make-up.",
+          "pagehead": [
+            "Prices",
+            "Prices depend on hair length and products — we confirm them in the salon."
+          ],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Hair",
+                  "items": [
+                    [
+                      "Women’s cut",
+                      "Wash and blow-dry",
+                      "€23"
+                    ],
+                    [
+                      "Men’s cut",
+                      "",
+                      "€13"
+                    ],
+                    [
+                      "Colour",
+                      "One tone, medium hair",
+                      "from €35"
+                    ],
+                    [
+                      "Balayage",
+                      "With toner",
+                      "from €75"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Nails",
+                  "items": [
+                    [
+                      "Gel manicure",
+                      "",
+                      "€20"
+                    ],
+                    [
+                      "Pedicure",
+                      "Classic",
+                      "€23"
+                    ],
+                    [
+                      "Nail extensions",
+                      "Full set",
+                      "€33"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Skin",
+                  "items": [
+                    [
+                      "Deep-cleansing facial",
+                      "60 min",
+                      "€35"
+                    ],
+                    [
+                      "Facial massage",
+                      "30 min",
+                      "€20"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Make-up",
+                  "items": [
+                    [
+                      "Evening make-up",
+                      "",
+                      "€30"
+                    ],
+                    [
+                      "Bridal make-up",
+                      "With a trial",
+                      "€75"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Gift vouchers",
+              "p": "Give the gift of time — vouchers for any amount.",
+              "button": [
+                "Ask about vouchers",
+                "/#contact"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

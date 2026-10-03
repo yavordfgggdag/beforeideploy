@@ -16,7 +16,7 @@ on:
         type: boolean
         default: true
       deploy_functions:
-        description: "Deploy the Edge Functions (account, ai-fix, billing, monitor, admin)"
+        description: "Deploy the Edge Functions (account, ai-fix, site-gen, billing, monitor, admin)"
         type: boolean
         default: true
       disable_email_confirmation:
@@ -27,6 +27,10 @@ on:
         description: "Allow beforeideploy://auth-callback as an auth redirect (OAuth sign-in returns to the app)"
         type: boolean
         default: true
+      setup_monitor_cron:
+        description: "Server-side monitoring: generate MONITOR_CRON_SECRET, schedule the monitor every 5 min (pg_cron + Vault) and run it once"
+        type: boolean
+        default: false
 
 jobs:
   deploy:
@@ -74,7 +78,7 @@ jobs:
       - name: Deploy the Edge Functions
         if: ${{ inputs.deploy_functions }}
         run: |
-          supabase functions deploy admin ai-fix account --project-ref "$PROJECT_REF"
+          supabase functions deploy admin ai-fix account site-gen --project-ref "$PROJECT_REF"
           supabase functions deploy billing --no-verify-jwt --project-ref "$PROJECT_REF"
           supabase functions deploy monitor --no-verify-jwt --project-ref "$PROJECT_REF"
 
@@ -101,6 +105,64 @@ jobs:
           DISABLE_CONFIRM: ${{ inputs.disable_email_confirmation }}
           ALLOW_REDIRECT: ${{ inputs.allow_app_redirect }}
 
+      - name: Server-side monitoring scheduler
+        if: ${{ inputs.setup_monitor_cron }}
+        run: |
+          # a fresh random secret, created here and handed straight to Supabase: no person ever sees it
+          export SECRET="$(openssl rand -hex 32)"
+          echo "::add-mask::$SECRET"
+          node -e 'require("fs").writeFileSync("/tmp/secrets.json", JSON.stringify([{ name: "MONITOR_CRON_SECRET", value: process.env.SECRET }]))'
+          code=$(curl -sS -m 30 -o /tmp/sec.out -w "%{http_code}" -X POST "https://api.supabase.com/v1/projects/$PROJECT_REF/secrets" \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "Content-Type: application/json" --data-binary @/tmp/secrets.json)
+          rm -f /tmp/secrets.json
+          echo "function secret MONITOR_CRON_SECRET → HTTP $code"
+          case "$code" in 200|201) ;; *) head -c 300 /tmp/sec.out; echo; echo "::error::could not set MONITOR_CRON_SECRET"; exit 1 ;; esac
+
+          # the same values into Vault and the pg_cron job (supabase/monitor-cron.sql, made idempotent)
+          node -e '
+            const url = process.env.PROJECT_URL + "/functions/v1/monitor";
+            const sql = `
+          create extension if not exists pg_cron;
+          create extension if not exists pg_net;
+          do $do$
+          declare i uuid;
+          begin
+            select id into i from vault.secrets where name = $n$bid_monitor_url$n$;
+            if i is null then perform vault.create_secret($v$${url}$v$, $n$bid_monitor_url$n$);
+            else perform vault.update_secret(i, $v$${url}$v$); end if;
+            select id into i from vault.secrets where name = $n$bid_monitor_secret$n$;
+            if i is null then perform vault.create_secret($v$${process.env.SECRET}$v$, $n$bid_monitor_secret$n$);
+            else perform vault.update_secret(i, $v$${process.env.SECRET}$v$); end if;
+          end
+          $do$;
+          select cron.unschedule($n$bid-monitor$n$) where exists (select 1 from cron.job where jobname = $n$bid-monitor$n$);
+          select cron.schedule($n$bid-monitor$n$, $n$*/5 * * * *$n$, $job$
+            select net.http_post(
+              url := (select decrypted_secret from vault.decrypted_secrets where name = $q$bid_monitor_url$q$),
+              headers := jsonb_build_object($q$content-type$q$, $q$application/json$q$,
+                $q$x-monitor-secret$q$, (select decrypted_secret from vault.decrypted_secrets where name = $q$bid_monitor_secret$q$)),
+              body := jsonb_build_object($q$action$q$, $q$run$q$),
+              timeout_milliseconds := 55000);
+          $job$);`;
+            require("fs").writeFileSync("/tmp/cron.json", JSON.stringify({ query: sql }));'
+          code=$(curl -sS -m 60 -o /tmp/cron.out -w "%{http_code}" -X POST "https://api.supabase.com/v1/projects/$PROJECT_REF/database/query" \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "Content-Type: application/json" --data-binary @/tmp/cron.json)
+          rm -f /tmp/cron.json
+          echo "pg_cron job bid-monitor → HTTP $code"
+          case "$code" in 200|201) ;; *) head -c 800 /tmp/cron.out; echo; echo "::error::scheduling failed"; exit 1 ;; esac
+
+          # one run now, the way the scheduler calls it (the new secret can take a few seconds to reach the function)
+          for i in 1 2 3 4 5 6; do
+            code=$(curl -sS -m 60 -o /tmp/run.out -w "%{http_code}" -X POST "$PROJECT_URL/functions/v1/monitor" \
+              -H "Content-Type: application/json" -H "x-monitor-secret: $SECRET" -d '{"action":"run"}' || true)
+            echo "monitor run (try $i) → HTTP $code"
+            [ "$code" = "200" ] && break
+            sleep 10
+          done
+          head -c 300 /tmp/run.out; echo
+          [ "$code" = "200" ] || { echo "::error::the monitor function did not accept the scheduler call"; exit 1; }
+          echo "server-side monitoring is scheduled every 5 minutes and answered a first run"
+
       - name: Probe the project again
         run: |
           K=$(node -p "require('./engine/cloud.json').anonKey")
@@ -111,5 +173,5 @@ jobs:
           for f in account billing monitor ai-fix admin; do probe "POST /functions/v1/$f" -X POST "$PROJECT_URL/functions/v1/$f" -H "apikey: $K" -H "Authorization: Bearer $K" -H "Content-Type: application/json" -d '{}'; done
           echo
           echo "Still yours to do in the dashboard (secrets are never set from CI):"
-          echo "  supabase secrets: ANTHROPIC_API_KEY (ai-fix), PADDLE_API_KEY + PADDLE_WEBHOOK_SECRET + PADDLE_ENV=sandbox (billing), MONITOR_CRON_SECRET (monitor)"
-          echo "  then run supabase/monitor-cron.sql in the SQL Editor (two placeholders)"
+          echo "  supabase secrets: ANTHROPIC_API_KEY (+ ANTHROPIC_API_BASE for a proxy) for ai-fix; PADDLE_API_KEY + PADDLE_WEBHOOK_SECRET + PADDLE_ENV=sandbox for billing"
+          echo "  monitoring scheduler: run this workflow with setup_monitor_cron (no manual SQL needed)"

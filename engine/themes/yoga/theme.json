@@ -1,0 +1,925 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "yoga",
+  "category": "beauty",
+  "icon": "figure.yoga",
+  "accent": "#587a67",
+  "mark": "leaf",
+  "art": "waves",
+  "schemaOrg": "HealthClub",
+  "sample": {
+    "name": "Studio Zora"
+  },
+  "featured": false,
+  "titleKey": "newsite.template.yoga.title",
+  "descriptionKey": "newsite.template.yoga.description",
+  "keywords": {
+    "en": [
+      "yoga",
+      "pilates",
+      "yoga studio",
+      "stretching",
+      "meditation",
+      "wellness",
+      "mindfulness",
+      "flow",
+      "classes",
+      "wellbeing"
+    ],
+    "bg": [
+      "йога",
+      "пилатес",
+      "йога студио",
+      "стречинг",
+      "медитация",
+      "уелнес",
+      "разтягане",
+      "майндфулнес",
+      "дишане",
+      "групови занимания"
+    ]
+  },
+  "style": "calm",
+  "tokens": {
+    "dark": false,
+    "bg": "#faf7f2",
+    "bg2": "#eef0e8",
+    "surface": "#fffdfa",
+    "text": "#26252e",
+    "muted": "#5e5c69",
+    "line": "rgba(38,37,46,.10)",
+    "accent": "#587a67",
+    "accent2": "#9d8ec4",
+    "font": "rounded",
+    "head": "serif",
+    "radius": 24,
+    "tilt": 1
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "hints": {
+    "en": {
+      "offer": "We run yoga and pilates classes in the middle of town: morning flow, strength and long stretches. Beginners are very welcome.",
+      "audience": "Adults of every level, including complete beginners",
+      "services": [
+        [
+          "Morning flow",
+          "€10",
+          "A gentle sequence to start the day"
+        ],
+        [
+          "Mat pilates",
+          "€12",
+          "Core strength and good posture"
+        ],
+        [
+          "10-class pass",
+          "€90",
+          "Pick your days week by week"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Провеждаме занимания по йога и пилатес в центъра на града: сутрешен флоу, сила и дълги разтягания. Начинаещите са повече от добре дошли.",
+      "audience": "Възрастни от всички нива, включително съвсем начинаещи",
+      "services": [
+        [
+          "Сутрешен флоу",
+          "10 €",
+          "Нежна последователност за начало на деня"
+        ],
+        [
+          "Пилатес на постелка",
+          "12 €",
+          "Сила в корема и добра стойка"
+        ],
+        [
+          "Карта за 10 занимания",
+          "90 €",
+          "Избирате дните си от седмица на седмица"
+        ]
+      ]
+    }
+  },
+  "lang": {
+    "en": {
+      "tagline": "yoga and pilates studio",
+      "description": "Yoga, pilates and stretch classes for every level. See what is on and book your first class.",
+      "nav": [
+        [
+          "Classes",
+          "/classes.html"
+        ],
+        [
+          "Memberships",
+          "/#pricing"
+        ],
+        [
+          "FAQ",
+          "/#faq"
+        ],
+        [
+          "Contact",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Book a class",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Yoga, pilates and stretch",
+            "eyebrowIcon": "leaf",
+            "title": "Move slowly, *feel stronger*",
+            "lead": "Morning flow, strength and long, quiet stretches for every level, taught slowly enough to follow. Come as you are: no experience, no special kit, nothing to prove.",
+            "cta": [
+              "Book a class",
+              "/#contact"
+            ],
+            "cta2": [
+              "See memberships",
+              "/#pricing"
+            ],
+            "card": {
+              "icon": "calendar",
+              "title": "A typical week",
+              "rows": [
+                [
+                  "Mornings",
+                  "Morning flow"
+                ],
+                [
+                  "Lunchtime",
+                  "Strength and core"
+                ],
+                [
+                  "Evenings",
+                  "Stretch and unwind"
+                ]
+              ],
+              "note": "Ask us for the current timetable."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                [
+                  "leaf",
+                  "Every level welcome"
+                ],
+                [
+                  "heart",
+                  "No rush, no pressure"
+                ],
+                [
+                  "hand",
+                  "Clear, calm guidance"
+                ],
+                [
+                  "sun",
+                  "Morning and evening classes"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "classes",
+              "title": "Classes",
+              "intro": "Four ways to move, from gentle to strong. Not sure where to start? Begin with the Beginners class.",
+              "items": [
+                [
+                  "sun",
+                  "Morning flow",
+                  "A steady, flowing sequence to wake the body and clear the head."
+                ],
+                [
+                  "bolt",
+                  "Strength and pilates",
+                  "Slow holds, core work and controlled mat pilates that build strength without strain."
+                ],
+                [
+                  "leaf",
+                  "Stretch and restore",
+                  "Long, supported stretches and quiet breathing for tight hips, shoulders and backs."
+                ],
+                [
+                  "heart",
+                  "Beginners",
+                  "Basic poses and breathing at an easy pace, with time for questions."
+                ]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "who",
+              "alt": true,
+              "title": "Who it is for",
+              "intro": "You do not need to be flexible, fit or calm. Those come with practice.",
+              "items": [
+                [
+                  "Complete beginners",
+                  "If you have never stood on a mat, the first class is made for you. Nobody expects you to touch your toes.",
+                  "Poses explained simply, with easier options",
+                  "Time to ask questions before and after",
+                  "Comfortable clothes are all you need"
+                ],
+                [
+                  "People who sit all day",
+                  "Stiff shoulders, a tight lower back and a head that will not switch off are a good reason to start. Slow movement and steady breathing give the day a proper pause.",
+                  "Neck, shoulder and hip release",
+                  "Posture and core you can feel at your desk",
+                  "A real break in the middle of the day"
+                ],
+                [
+                  "Practised yogis too",
+                  "Already have a routine? Livelier flows and longer holds keep it interesting, and pilates adds core strength to balance your flexibility.",
+                  "Stronger flows and longer holds",
+                  "Mat pilates alongside your yoga",
+                  "Space to practise at your own pace"
+                ]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "how",
+              "title": "How your first class works",
+              "items": [
+                [
+                  "Pick a class",
+                  "Choose a class and a day, or tell us your level and we will suggest one."
+                ],
+                [
+                  "Arrive a few minutes early",
+                  "We show you around, find you a spot and answer any questions before you start."
+                ],
+                [
+                  "Move at your own pace",
+                  "The teacher offers an easier and a stronger option for every pose. Rest whenever you need to."
+                ],
+                [
+                  "Decide what comes next",
+                  "Come back when it suits you, or pick a pass or membership that fits your week."
+                ]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "pricing",
+              "alt": true,
+              "title": "Passes and memberships",
+              "intro": "Start with a single class, then choose what fits your week.",
+              "items": [
+                {
+                  "name": "First class",
+                  "price": "€10",
+                  "per": "/ class",
+                  "features": [
+                    "Any beginner-friendly class",
+                    "Time to settle in and ask questions",
+                    "No commitment: come back if you like it"
+                  ],
+                  "cta": [
+                    "Book your first class",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "10-class pass",
+                  "price": "€90",
+                  "per": "/ pass",
+                  "featured": "Popular",
+                  "features": [
+                    "Any class on the timetable",
+                    "Yoga, pilates and stretch included",
+                    "Pick your days week by week"
+                  ],
+                  "cta": [
+                    "Choose the pass",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Monthly membership",
+                  "price": "€69",
+                  "per": "/ month",
+                  "features": [
+                    "Every class on the timetable",
+                    "A steady weekly rhythm",
+                    "The lowest price per class if you come often"
+                  ],
+                  "cta": [
+                    "Join the studio",
+                    "/#contact"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Questions before your first class",
+              "items": [
+                [
+                  "What should I bring?",
+                  "Comfortable clothes you can stretch in, a water bottle and a small towel. If you would like to borrow a mat, just ask us."
+                ],
+                [
+                  "Do I need to be flexible?",
+                  "No. Flexibility is something yoga builds, not something you need to start. Every pose has an easier version, and the teacher will show you."
+                ],
+                [
+                  "I have never done yoga. Where do I start?",
+                  "Book the Beginners class, or a first class, and tell us you are new. We will point you to something gentle and explain everything on the day."
+                ],
+                [
+                  "What if I have an injury or a health condition?",
+                  "Tell us when you book and mention it to the teacher before class. They can offer gentler options. For anything medical, check with your doctor first."
+                ],
+                [
+                  "Can I eat before class?",
+                  "A light snack an hour or two earlier usually feels comfortable. A heavy meal can make twists and forward folds uncomfortable."
+                ],
+                [
+                  "How do I book or change a class?",
+                  "Send a request through the form or give us a call. If your plans change, tell us as early as you can so someone else can take your place."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Come and try one class",
+              "p": "Pick a day and a class type. We confirm and tell you everything you need to know before you arrive.",
+              "button": [
+                "Book a class",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Book a class",
+              "intro": "Tell us which class you are curious about and a day that suits you. New to yoga? Just say so and we will help you choose.",
+              "formName": "booking",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Address",
+                  "1 Vitosha St, Sofia"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "class",
+                  "label": "Class",
+                  "options": [
+                    "First class",
+                    "Morning flow",
+                    "Strength",
+                    "Stretch and release",
+                    "Mat pilates",
+                    "Beginners",
+                    "Not sure yet"
+                  ]
+                },
+                {
+                  "id": "date",
+                  "label": "Preferred day",
+                  "type": "date"
+                }
+              ],
+              "messageLabel": "Anything we should know? (optional)",
+              "send": "Send request",
+              "hoursTitle": "Studio hours",
+              "hours": [
+                [
+                  "Mon – Fri",
+                  "7:30 – 20:00"
+                ],
+                [
+                  "Sat",
+                  "9:00 – 14:00"
+                ],
+                [
+                  "Sun",
+                  "closed"
+                ]
+              ]
+            }
+          ]
+        },
+        "classes": {
+          "title": "Classes and weekly rhythm",
+          "description": "What each class feels like, who it suits and how the week is laid out.",
+          "pagehead": [
+            "Classes",
+            "From a slow start to a strong finish. Here is what each class feels like and who it suits."
+          ],
+          "sections": [
+            {
+              "type": "split",
+              "items": [
+                [
+                  "Flow classes",
+                  "Movement linked to breath, one pose melting into the next. Morning flow wakes you up; slower evening flows let the day settle.",
+                  "Good for: waking up or winding down",
+                  "Feels like: a steady rhythm from warm-up to cool-down",
+                  "Level: all, with easier and stronger options"
+                ],
+                [
+                  "Strength and mat pilates",
+                  "Controlled work for the core, hips and back. Fewer poses, held with care, so you build strength that supports you outside the studio too.",
+                  "Good for: posture, core and steady energy",
+                  "Feels like: slow, focused effort and a quiet burn",
+                  "Level: beginner to intermediate"
+                ],
+                [
+                  "Stretch, release and rest",
+                  "Long holds, soft props and plenty of breathing. These classes are for tight bodies and busy minds. You finish lighter than you arrived.",
+                  "Good for: stiffness, stress and tired evenings",
+                  "Feels like: slow, supported and deeply quiet",
+                  "Level: everyone, including complete beginners"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "week",
+              "alt": true,
+              "title": "A typical week, in words",
+              "intro": "The exact timetable changes with the season, so ask us for the current one. The rhythm stays the same.",
+              "items": [
+                [
+                  "sun",
+                  "Mornings",
+                  "Morning flow and mobility, to start the day awake rather than rushed."
+                ],
+                [
+                  "clock",
+                  "Lunchtime",
+                  "Short, focused classes for a break from the desk."
+                ],
+                [
+                  "leaf",
+                  "Evenings",
+                  "Stretch, restore and slow flow to let the day go."
+                ],
+                [
+                  "heart",
+                  "Weekends",
+                  "Longer, slower classes and beginner sessions, with time to linger."
+                ]
+              ]
+            },
+            {
+              "type": "chips",
+              "title": "What to bring",
+              "items": [
+                "Comfortable clothes",
+                "A water bottle",
+                "A small towel",
+                "Warm socks for rest",
+                "An open mind"
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Not sure which class to try?",
+              "p": "Tell us how you feel and how much time you have, and we will point you to the right one.",
+              "button": [
+                "Ask us",
+                "/#contact"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "bg": {
+      "tagline": "студио за йога и пилатес",
+      "description": "Йога, пилатес и стречинг за всяко ниво. Вижте заниманията и запазете първия си час.",
+      "nav": [
+        [
+          "Занимания",
+          "/classes.html"
+        ],
+        [
+          "Карти",
+          "/#pricing"
+        ],
+        [
+          "Въпроси",
+          "/#faq"
+        ],
+        [
+          "Контакти",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Запазете час",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Йога, пилатес и стречинг",
+            "eyebrowIcon": "leaf",
+            "title": "Бавно движение, *по-силно тяло*",
+            "lead": "Сутрешен флоу, сила и дълги, спокойни разтягания за всяко ниво, обяснени достатъчно бавно, за да ги следвате. Елате такива, каквито сте: без опит, без специално облекло, без нужда да доказвате нищо.",
+            "cta": [
+              "Запазете час",
+              "/#contact"
+            ],
+            "cta2": [
+              "Вижте картите",
+              "/#pricing"
+            ],
+            "card": {
+              "icon": "calendar",
+              "title": "Типична седмица",
+              "rows": [
+                [
+                  "Сутрин",
+                  "Сутрешен флоу"
+                ],
+                [
+                  "По обяд",
+                  "Сила и корем"
+                ],
+                [
+                  "Вечер",
+                  "Разтягане и отпускане"
+                ]
+              ],
+              "note": "Попитайте ни за актуалната програма."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                [
+                  "leaf",
+                  "Добре дошли са всички нива"
+                ],
+                [
+                  "heart",
+                  "Без бързане и натиск"
+                ],
+                [
+                  "hand",
+                  "Ясни и спокойни насоки"
+                ],
+                [
+                  "sun",
+                  "Занимания сутрин и вечер"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "classes",
+              "title": "Занимания",
+              "intro": "Четири начина да се раздвижите, от нежни до силни. Не знаете откъде да започнете? Опитайте часа за начинаещи.",
+              "items": [
+                [
+                  "sun",
+                  "Сутрешен флоу",
+                  "Плавна последователност от пози, която събужда тялото и прояснява ума."
+                ],
+                [
+                  "bolt",
+                  "Сила и пилатес",
+                  "Бавни задържания, работа за корема и контролиран пилатес, които изграждат сила без пренапрягане."
+                ],
+                [
+                  "leaf",
+                  "Разтягане и възстановяване",
+                  "Дълги, подкрепени разтягания и спокойно дишане за схванати бедра, рамене и гръб."
+                ],
+                [
+                  "heart",
+                  "За начинаещи",
+                  "Основни пози и дишане в лек темп, с време за въпроси."
+                ]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "who",
+              "alt": true,
+              "title": "За кого са заниманията",
+              "intro": "Не е нужно да сте гъвкави, във форма или спокойни. Всичко това идва с практиката.",
+              "items": [
+                [
+                  "Съвсем начинаещи",
+                  "Ако никога не сте стъпвали на постелка, първото занимание е точно за вас. Никой не очаква да докоснете пръстите на краката си.",
+                  "Позите са обяснени просто, с по-лесни варианти",
+                  "Има време за въпроси преди и след часа",
+                  "Достатъчно е удобно облекло"
+                ],
+                [
+                  "Хората, които седят по цял ден",
+                  "Схванати рамене, стегнат кръст и глава, която не се изключва, са добра причина да започнете. Бавното движение и равното дишане са истинска пауза в деня.",
+                  "Отпускане на врата, раменете и таза",
+                  "Стойка и корем, които усещате и на бюрото",
+                  "Истинска почивка по средата на деня"
+                ],
+                [
+                  "И за опитни практикуващи",
+                  "Вече имате навик? По-активните последователности и по-дългите задържания го правят интересен, а пилатесът добавя сила в корема, която балансира гъвкавостта.",
+                  "По-силни последователности и по-дълги задържания",
+                  "Пилатес като допълнение към йогата",
+                  "Място да практикувате със свой темп"
+                ]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "how",
+              "title": "Как протича първото занимание",
+              "items": [
+                [
+                  "Изберете занимание",
+                  "Изберете занимание и ден или ни кажете нивото си, и ще ви препоръчаме подходящо."
+                ],
+                [
+                  "Дойдете малко по-рано",
+                  "Ще ви разведем, ще ви намерим място и ще отговорим на въпросите ви преди началото."
+                ],
+                [
+                  "Движете се със свой темп",
+                  "За всяка поза преподавателят показва по-лесен и по-силен вариант. Почивайте, когато ви се наложи."
+                ],
+                [
+                  "Решете какво следва",
+                  "Върнете се, когато ви е удобно, или изберете карта, която пасва на седмицата ви."
+                ]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "pricing",
+              "alt": true,
+              "title": "Карти и абонаменти",
+              "intro": "Започнете с едно занимание, после изберете това, което пасва на седмицата ви.",
+              "items": [
+                {
+                  "name": "Първо занимание",
+                  "price": "10 €",
+                  "per": "/ занимание",
+                  "features": [
+                    "Всяко занимание, подходящо за начинаещи",
+                    "Време да се огледате и да попитате",
+                    "Без ангажимент: върнете се, ако ви хареса"
+                  ],
+                  "cta": [
+                    "Запазете първия си час",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Карта за 10 занимания",
+                  "price": "90 €",
+                  "per": "/ карта",
+                  "featured": "Популярна",
+                  "features": [
+                    "Всяко занимание от програмата",
+                    "Включва йога, пилатес и стречинг",
+                    "Избирате дните си от седмица на седмица"
+                  ],
+                  "cta": [
+                    "Изберете картата",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Месечен абонамент",
+                  "price": "69 €",
+                  "per": "/ месец",
+                  "features": [
+                    "Достъп до всички занимания в програмата",
+                    "Устойчив седмичен ритъм",
+                    "Най-ниска цена на занимание, ако идвате често"
+                  ],
+                  "cta": [
+                    "Присъединете се",
+                    "/#contact"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Въпроси преди първото занимание",
+              "items": [
+                [
+                  "Какво да нося?",
+                  "Удобни дрехи, в които можете да се разтягате, бутилка вода и малка кърпа. Ако ви трябва постелка, просто попитайте."
+                ],
+                [
+                  "Трябва ли да съм гъвкав?",
+                  "Не. Гъвкавостта идва с практиката и не е условие да започнете. Всяка поза има по-лесен вариант и преподавателят ще ви го покаже."
+                ],
+                [
+                  "Първи път съм на йога. С какво да започна?",
+                  "Запазете час за начинаещи или първо занимание и ни кажете, че сте нови. Ще ви насочим към нещо леко и ще обясним всичко на място."
+                ],
+                [
+                  "Какво да правя при травма или здравословен проблем?",
+                  "Кажете ни при записването и споменете на преподавателя преди часа. Той ще предложи по-леки варианти. При медицински въпроси първо се консултирайте с лекар."
+                ],
+                [
+                  "Може ли да ям преди заниманието?",
+                  "Лека закуска час-два по-рано обикновено е най-удобна. След тежко хранене завоите и наклоните са неприятни."
+                ],
+                [
+                  "Как да запазя или сменя час?",
+                  "Изпратете заявка през формата или ни се обадете. Ако плановете ви се променят, кажете ни колкото може по-рано, за да освободим мястото."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Елате и опитайте едно занимание",
+              "p": "Изберете ден и вид занимание. Ще потвърдим и ще ви кажем всичко нужно, преди да дойдете.",
+              "button": [
+                "Запазете час",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Запазете час",
+              "intro": "Кажете ни кое занимание ви интересува и кой ден ви е удобен. Нови сте в йогата? Просто го споменете и ще ви помогнем да изберете.",
+              "formName": "booking",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Адрес",
+                  "ул. „Витоша“ 1, София"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "class",
+                  "label": "Занимание",
+                  "options": [
+                    "Първо занимание",
+                    "Сутрешен флоу",
+                    "Сила",
+                    "Разтягане и отпускане",
+                    "Пилатес на постелка",
+                    "За начинаещи",
+                    "Още не знам"
+                  ]
+                },
+                {
+                  "id": "date",
+                  "label": "Желан ден",
+                  "type": "date"
+                }
+              ],
+              "messageLabel": "Има ли нещо, което да знаем? (по избор)",
+              "send": "Изпратете заявка",
+              "hoursTitle": "Работно време",
+              "hours": [
+                [
+                  "Пон – пет",
+                  "7:30 – 20:00"
+                ],
+                [
+                  "Съб",
+                  "9:00 – 14:00"
+                ],
+                [
+                  "Нед",
+                  "почивен ден"
+                ]
+              ]
+            }
+          ]
+        },
+        "classes": {
+          "title": "Занимания и седмичен ритъм",
+          "description": "Какво представлява всяко занимание, за кого е подходящо и как е подредена седмицата.",
+          "pagehead": [
+            "Занимания",
+            "От бавно начало до силен финал. Ето как се усеща всяко занимание и за кого е подходящо."
+          ],
+          "sections": [
+            {
+              "type": "split",
+              "items": [
+                [
+                  "Занимания с флоу",
+                  "Движение, свързано с дишането, при което една поза преминава плавно в следващата. Сутрешният флоу ви събужда, а по-бавният вечерен оставя деня да се уталожи.",
+                  "Подходящо за: събуждане или отпускане",
+                  "Усеща се като: равномерен ритъм от загряване до охлаждане",
+                  "Ниво: всички, с по-лесни и по-силни варианти"
+                ],
+                [
+                  "Сила и пилатес на постелка",
+                  "Контролирана работа за корема, таза и гърба. По-малко пози, задържани внимателно, за сила, която ви служи и извън студиото.",
+                  "Подходящо за: стойка, корем и устойчива енергия",
+                  "Усеща се като: бавно, съсредоточено усилие и тихо парене в мускулите",
+                  "Ниво: от начинаещи до средно напреднали"
+                ],
+                [
+                  "Разтягане, отпускане и почивка",
+                  "Дълги задържания, меки опори и много дишане. Заниманията са за схванати тела и претоварени умове. Излизате по-леки, отколкото сте влезли.",
+                  "Подходящо за: схващания, стрес и уморени вечери",
+                  "Усеща се като: бавно, подкрепено и дълбоко тихо",
+                  "Ниво: за всички, включително съвсем начинаещи"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "week",
+              "alt": true,
+              "title": "Типична седмица с думи",
+              "intro": "Точната програма се сменя със сезона, затова поискайте актуалната. Ритъмът остава същият.",
+              "items": [
+                [
+                  "sun",
+                  "Сутрин",
+                  "Сутрешен флоу и мобилност, за да започнете деня будни, а не забързани."
+                ],
+                [
+                  "clock",
+                  "По обяд",
+                  "Кратки, съсредоточени занимания за почивка от бюрото."
+                ],
+                [
+                  "leaf",
+                  "Вечер",
+                  "Разтягане, възстановяване и бавен флоу, за да оставите деня зад гърба си."
+                ],
+                [
+                  "heart",
+                  "В почивните дни",
+                  "По-дълги и по-бавни занимания и часове за начинаещи, с време да не бързате."
+                ]
+              ]
+            },
+            {
+              "type": "chips",
+              "title": "Какво да вземете",
+              "items": [
+                "Удобни дрехи",
+                "Бутилка вода",
+                "Малка кърпа",
+                "Топли чорапи за почивката",
+                "Отворен ум"
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Не знаете кое занимание да изберете?",
+              "p": "Разкажете ни как се чувствате и колко време имате, и ще ви насочим към подходящото.",
+              "button": [
+                "Попитайте ни",
+                "/#contact"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

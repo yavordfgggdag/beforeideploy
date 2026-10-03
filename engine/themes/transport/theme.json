@@ -1,0 +1,1025 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "transport",
+  "category": "business",
+  "icon": "box.truck",
+  "accent": "#ffc62d",
+  "mark": "truck",
+  "art": "orbit",
+  "schemaOrg": "LocalBusiness",
+  "sample": {
+    "name": "Nordline"
+  },
+  "featured": false,
+  "titleKey": "newsite.template.transport.title",
+  "descriptionKey": "newsite.template.transport.description",
+  "keywords": {
+    "en": [
+      "taxi",
+      "airport transfer",
+      "moving",
+      "courier",
+      "delivery",
+      "transport",
+      "van",
+      "removals",
+      "minibus",
+      "logistics",
+      "cargo",
+      "ride"
+    ],
+    "bg": [
+      "такси",
+      "трансфер",
+      "летище",
+      "преместване",
+      "куриер",
+      "доставка",
+      "транспорт",
+      "бус",
+      "минибус",
+      "превоз на товари",
+      "хамали",
+      "логистика"
+    ]
+  },
+  "style": "bold",
+  "tokens": {
+    "dark": true,
+    "bg": "#0b1630",
+    "bg2": "#101d3d",
+    "surface": "#15254a",
+    "text": "#f1f5fc",
+    "muted": "#a9b7d3",
+    "line": "rgba(255,255,255,.10)",
+    "accent": "#ffc62d",
+    "accent2": "#2cc5b4",
+    "font": "sans",
+    "head": "grotesk",
+    "radius": 12,
+    "tilt": 1.5
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "hints": {
+    "en": {
+      "offer": "We run taxi rides, airport transfers, small moves and courier deliveries with cars, vans and a minibus, booked by phone or online.",
+      "audience": "Residents, travellers, small businesses and shops",
+      "services": [
+        [
+          "Airport transfer",
+          "€20",
+          "Door to door, one way"
+        ],
+        [
+          "Van and driver",
+          "€30",
+          "Per hour, two-hour minimum"
+        ],
+        [
+          "Courier delivery",
+          "€6",
+          "A parcel within the city"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Извършваме такси превози, трансфери до летището, малки премествания и куриерски доставки с леки автомобили, бусове и минибус — по телефон или онлайн.",
+      "audience": "Жители, пътуващи, малки фирми и магазини",
+      "services": [
+        [
+          "Трансфер до летището",
+          "20 €",
+          "От врата до врата, в една посока"
+        ],
+        [
+          "Бус и шофьор",
+          "30 €",
+          "На час, минимум два часа"
+        ],
+        [
+          "Куриерска доставка",
+          "6 €",
+          "Колет в рамките на града"
+        ]
+      ]
+    }
+  },
+  "lang": {
+    "en": {
+      "tagline": "taxi, transfers and moving",
+      "description": "Taxi rides, airport transfers, moving and courier deliveries with cars, vans and a minibus. Send your route and get a clear price.",
+      "nav": [
+        [
+          "Services",
+          "/#services"
+        ],
+        [
+          "Fleet",
+          "/#fleet"
+        ],
+        [
+          "Prices",
+          "/prices.html"
+        ],
+        [
+          "FAQ",
+          "/#faq"
+        ]
+      ],
+      "headerCta": [
+        "Book now",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Taxi, transfers, moving and courier",
+            "eyebrowIcon": "truck",
+            "title": "Door to door, for *people and cargo*",
+            "lead": "Taxi rides, airport transfers, small moves and courier runs. Send us the pickup, the destination and the date, and we reply with the right vehicle and a clear price.",
+            "cta": [
+              "Book now",
+              "/#contact"
+            ],
+            "cta2": [
+              "See prices",
+              "/prices.html"
+            ],
+            "card": {
+              "icon": "pin",
+              "title": "Your trip in three lines",
+              "rows": [
+                [
+                  "From",
+                  "pickup address"
+                ],
+                [
+                  "To",
+                  "destination"
+                ],
+                [
+                  "When",
+                  "date and time"
+                ]
+              ],
+              "note": "Add passengers or luggage and we confirm the vehicle and the price."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                [
+                  "check",
+                  "Price agreed before the trip"
+                ],
+                [
+                  "truck",
+                  "Cars, vans and a minibus"
+                ],
+                [
+                  "clock",
+                  "Waiting time agreed upfront"
+                ],
+                [
+                  "doc",
+                  "Invoices for companies"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "services",
+              "title": "What we do",
+              "intro": "Four ways to get people and things where they need to be.",
+              "items": [
+                [
+                  "car",
+                  "Taxi",
+                  "City and out-of-town rides, with a price you know before you set off."
+                ],
+                [
+                  "plane",
+                  "Airport transfers",
+                  "Door-to-door rides to and from the airport, with the flight time noted at booking."
+                ],
+                [
+                  "truck",
+                  "Moving",
+                  "A van and a driver for flats, offices and single heavy items, with help carrying if you need it."
+                ],
+                [
+                  "bag",
+                  "Courier and delivery",
+                  "Parcels, documents and shop orders delivered across the city or to another town."
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "fleet",
+              "alt": true,
+              "title": "Choose the right vehicle",
+              "intro": "Tell us how many people or how much cargo, and we suggest the vehicle.",
+              "items": [
+                [
+                  "car",
+                  "Car",
+                  "For a few passengers with luggage. Taxi rides, airport transfers and small parcels."
+                ],
+                [
+                  "truck",
+                  "Van",
+                  "For boxes, furniture and larger deliveries, with a driver who helps load."
+                ],
+                [
+                  "users",
+                  "Minibus",
+                  "For families, teams and groups travelling together, with room for everyone’s luggage."
+                ]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "how",
+              "title": "How to book",
+              "intro": "Send the details once and we take care of the rest.",
+              "items": [
+                [
+                  "Send the route",
+                  "Pickup, destination, date and time. For a move or delivery, add what and how much."
+                ],
+                [
+                  "Get the price",
+                  "We confirm the vehicle and the price, or exactly how it will be worked out."
+                ],
+                [
+                  "Ride or load",
+                  "The driver arrives at the agreed time. For moves, we help carry and protect your things."
+                ],
+                [
+                  "Pay and invoice",
+                  "Pay as agreed. Companies receive an invoice with the details they need."
+                ]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "pricing",
+              "alt": true,
+              "title": "How prices are worked out",
+              "intro": "Guide prices are on the prices page.",
+              "items": [
+                [
+                  "Rides: by route, not by surprise",
+                  "Taxi rides and transfers are priced by distance and time. For fixed routes such as the airport, you get one price when you book.",
+                  "Waiting time agreed before you set off",
+                  "Extra stops added to the price in advance",
+                  "Luggage and child seats noted at booking"
+                ],
+                [
+                  "Moves and deliveries: by load and time",
+                  "For a move we need the addresses, the floors and the size of the load. For a delivery, the size, weight and route.",
+                  "Loading and carrying agreed upfront",
+                  "Packing material on request",
+                  "A written quote for larger jobs"
+                ]
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Questions about booking",
+              "items": [
+                [
+                  "How much luggage can I take?",
+                  "Tell us how many people and bags when you book. A car takes ordinary suitcases for the passengers on board; bikes, sports gear or bulky items may need a van, and we will say so."
+                ],
+                [
+                  "What if my flight is delayed?",
+                  "Add the flight number when you book. We watch the arrival time, so a short delay does not cancel your ride, and we agree any longer wait with you."
+                ],
+                [
+                  "How does waiting time work?",
+                  "A short wait at pickup is part of the ride. For longer stops we agree the waiting rate before the trip, so there is no surprise at the end."
+                ],
+                [
+                  "Can I get an invoice for my company?",
+                  "Yes. Give us the company name and tax number when you book, and you receive an invoice for each trip, or one monthly invoice for regular journeys."
+                ],
+                [
+                  "Do you provide child seats?",
+                  "Please ask when you book and tell us the child’s age, so we can arrange the right seat."
+                ],
+                [
+                  "Can you help carry things when moving?",
+                  "Yes. Tell us the floors, whether there is a lift and what is heavy, and we quote for a driver alone or with helpers."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Need a ride or a van?",
+              "p": "Send the pickup, the destination and the date. We confirm the vehicle and the price.",
+              "button": [
+                "Book now",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Book a trip",
+              "intro": "Fill in the route and the date. We confirm the vehicle and the price with you.",
+              "formName": "booking",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Address",
+                  "1 Vitosha St, Sofia"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "pickup",
+                  "label": "Pickup address"
+                },
+                {
+                  "id": "destination",
+                  "label": "Destination"
+                },
+                {
+                  "id": "date",
+                  "label": "Date",
+                  "type": "date"
+                }
+              ],
+              "messageLabel": "Passengers, luggage or cargo (optional)",
+              "send": "Request a booking",
+              "hoursTitle": "Dispatch hours",
+              "hours": [
+                [
+                  "Monday – Friday",
+                  "7:00 – 20:00"
+                ],
+                [
+                  "Saturday",
+                  "8:00 – 18:00"
+                ],
+                [
+                  "Sunday",
+                  "by arrangement"
+                ]
+              ]
+            }
+          ]
+        },
+        "prices": {
+          "title": "Prices and guidance",
+          "description": "Starting prices for taxi rides, airport transfers, moving and courier deliveries, and how they are worked out.",
+          "pagehead": [
+            "Prices",
+            "Starting prices for a typical job in the city. The final price depends on distance, time, load and extras, and we confirm it before the trip."
+          ],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Taxi",
+                  "items": [
+                    [
+                      "Starting fare",
+                      "Pickup included",
+                      "from €3"
+                    ],
+                    [
+                      "Per kilometre",
+                      "City, daytime",
+                      "from €1"
+                    ],
+                    [
+                      "Waiting time",
+                      "Per 10 minutes",
+                      "from €2"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Airport transfers",
+                  "items": [
+                    [
+                      "Car, one way",
+                      "Door to door",
+                      "from €20"
+                    ],
+                    [
+                      "Minibus, one way",
+                      "For a group",
+                      "from €45"
+                    ],
+                    [
+                      "Return trip",
+                      "Both ways booked together",
+                      "from €38"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Group trips",
+                  "items": [
+                    [
+                      "Minibus with driver",
+                      "Per hour, three-hour minimum",
+                      "from €40"
+                    ],
+                    [
+                      "Group transfer in the city",
+                      "Minibus, one way",
+                      "from €25"
+                    ],
+                    [
+                      "Waiting time, minibus",
+                      "Per 10 minutes",
+                      "from €4"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Moving",
+                  "items": [
+                    [
+                      "Van and driver",
+                      "Per hour, two-hour minimum",
+                      "from €30"
+                    ],
+                    [
+                      "Helper",
+                      "Per person, per hour",
+                      "from €12"
+                    ],
+                    [
+                      "Boxes and wrapping",
+                      "Per set",
+                      "from €15"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Courier",
+                  "items": [
+                    [
+                      "Document run",
+                      "Within the city",
+                      "from €4"
+                    ],
+                    [
+                      "Parcel",
+                      "Within the city",
+                      "from €6"
+                    ],
+                    [
+                      "Out-of-town delivery",
+                      "Per kilometre",
+                      "from €1"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Extras",
+                  "items": [
+                    [
+                      "Child seat",
+                      "Booster or full seat",
+                      "from €3"
+                    ],
+                    [
+                      "Extra stop",
+                      "Added to the route",
+                      "from €3"
+                    ],
+                    [
+                      "Carrying up stairs",
+                      "Per floor, without a lift",
+                      "from €5"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "factors",
+              "alt": true,
+              "title": "What affects the price",
+              "items": [
+                [
+                  "pin",
+                  "Distance and route",
+                  "Longer routes, tolls and out-of-town stops are added up front."
+                ],
+                [
+                  "clock",
+                  "Time and waiting",
+                  "The rate for waiting, night trips or holidays is stated when you book."
+                ],
+                [
+                  "truck",
+                  "Load and floors",
+                  "The size and weight of the load, floors, lift access and how many helpers you need."
+                ],
+                [
+                  "doc",
+                  "Extras",
+                  "Child seats, extra stops, packing material and return trips are priced separately."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Not sure what to expect?",
+              "p": "Send the route and a few details. We reply with the vehicle and a price.",
+              "button": [
+                "Book now",
+                "/#contact"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "bg": {
+      "tagline": "такси, трансфери и превози",
+      "description": "Такси, трансфери до летището, преместване и куриерски доставки с леки автомобили, бусове и минибус. Изпратете маршрута и получете ясна цена.",
+      "nav": [
+        [
+          "Услуги",
+          "/#services"
+        ],
+        [
+          "Автомобили",
+          "/#fleet"
+        ],
+        [
+          "Цени",
+          "/prices.html"
+        ],
+        [
+          "Въпроси",
+          "/#faq"
+        ]
+      ],
+      "headerCta": [
+        "Заявете сега",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Такси, трансфери, преместване и куриер",
+            "eyebrowIcon": "truck",
+            "title": "Хора и товари — *от врата до врата*",
+            "lead": "Такси, трансфери до летището, малки премествания и куриерски доставки. Изпратете адрес за вземане, дестинация и дата — ще предложим подходящ автомобил и ясна цена.",
+            "cta": [
+              "Заявете сега",
+              "/#contact"
+            ],
+            "cta2": [
+              "Вижте цените",
+              "/prices.html"
+            ],
+            "card": {
+              "icon": "pin",
+              "title": "Пътуването ви в три реда",
+              "rows": [
+                [
+                  "От",
+                  "адрес за вземане"
+                ],
+                [
+                  "До",
+                  "дестинация"
+                ],
+                [
+                  "Кога",
+                  "дата и час"
+                ]
+              ],
+              "note": "Добавете пътници или багаж и ще потвърдим автомобила и цената."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                [
+                  "check",
+                  "Цена преди пътуването"
+                ],
+                [
+                  "truck",
+                  "Автомобили, бусове и минибус"
+                ],
+                [
+                  "clock",
+                  "Изчакване — по уговорка"
+                ],
+                [
+                  "doc",
+                  "Фактури за фирми"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "services",
+              "title": "Какво правим",
+              "intro": "Четири начина да стигнат до мястото си хора и вещи.",
+              "items": [
+                [
+                  "car",
+                  "Такси",
+                  "Градски и междуградски превози с цена, която знаете, преди да потеглим."
+                ],
+                [
+                  "plane",
+                  "Трансфери до летището",
+                  "От врата до летището и обратно, като часът на полета се отбелязва при заявката."
+                ],
+                [
+                  "truck",
+                  "Преместване",
+                  "Бус и шофьор за апартаменти, офиси и тежки единични вещи — с помощ при пренасянето, ако е нужна."
+                ],
+                [
+                  "bag",
+                  "Куриерски доставки",
+                  "Колети, документи и поръчки от магазини — из града или до друго населено място."
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "fleet",
+              "alt": true,
+              "title": "Изберете подходящия автомобил",
+              "intro": "Кажете ни колко души или какъв товар, а ние ще предложим автомобил.",
+              "items": [
+                [
+                  "car",
+                  "Лек автомобил",
+                  "За малък брой пътници с багаж. Такси, трансфери до летището и малки колети."
+                ],
+                [
+                  "truck",
+                  "Бус",
+                  "За кашони, мебели и по-големи доставки, с шофьор, който помага при товаренето."
+                ],
+                [
+                  "users",
+                  "Минибус",
+                  "За семейства, екипи и групи, които пътуват заедно, с място за багажа на всички."
+                ]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "how",
+              "title": "Как да заявите",
+              "intro": "Изпратете данните веднъж, а останалото е наша грижа.",
+              "items": [
+                [
+                  "Изпратете маршрута",
+                  "Адрес за вземане, дестинация, дата и час. При преместване или доставка добавете какво и колко е."
+                ],
+                [
+                  "Получавате цена",
+                  "Потвърждаваме автомобила и цената или точно как ще бъде изчислена."
+                ],
+                [
+                  "Пътуване или товарене",
+                  "Шофьорът пристига в уговорения час. При преместване помагаме да пренесем и опазим вещите ви."
+                ],
+                [
+                  "Плащане и фактура",
+                  "Плащате по уговорка. Фирмите получават фактура с нужните им данни."
+                ]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "pricing",
+              "alt": true,
+              "title": "Как се формира цената",
+              "intro": "Ориентировъчните цени са на страницата с цените.",
+              "items": [
+                [
+                  "Пътуване: по маршрут, без изненади",
+                  "Таксито и трансферите се таксуват по разстояние и време. За фиксирани маршрути като летището получавате една цена още при заявката.",
+                  "Изчакването се уговаря, преди да тръгнете",
+                  "Допълнителните спирки се добавят към цената предварително",
+                  "Багажът и детските столчета се отбелязват при заявката"
+                ],
+                [
+                  "Преместване и доставки: по товар и време",
+                  "За преместване са ни нужни адресите, етажите и обемът на товара. За доставка — размерът, теглото и маршрутът.",
+                  "Товаренето и пренасянето се уговарят предварително",
+                  "Опаковъчни материали — при поискване",
+                  "Писмена оферта за по-големи задачи"
+                ]
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Въпроси за заявката",
+              "items": [
+                [
+                  "Колко багаж мога да взема?",
+                  "Кажете ни колко души и колко чанти сте при заявката. В лек автомобил се побират обикновени куфари за пътниците; колела, спортна екипировка или обемисти вещи може да изискват бус — ще ви кажем."
+                ],
+                [
+                  "Какво става, ако полетът ми закъснее?",
+                  "Добавете номера на полета при заявката. Следим часа на кацане, така че кратко закъснение не отменя превоза ви, а по-дълго изчакване уговаряме с вас."
+                ],
+                [
+                  "Как работи изчакването?",
+                  "Кратко изчакване при вземането е част от превоза. За по-дълги престои уговаряме таксата за изчакване преди пътуването, за да няма изненади накрая."
+                ],
+                [
+                  "Може ли фактура за фирма?",
+                  "Да. Дайте ни името на фирмата и ЕИК при заявката и ще получите фактура за всяко пътуване или една месечна — при редовни превози."
+                ],
+                [
+                  "Осигурявате ли детски столчета?",
+                  "Попитайте при заявката и ни кажете на каква възраст е детето, за да подготвим подходящото столче."
+                ],
+                [
+                  "Помагате ли при пренасяне на вещи?",
+                  "Да. Кажете ни на кой етаж е, има ли асансьор и кои вещи са тежки, и ще дадем оферта за шофьор сам или с помощници."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Трябва ви превоз или бус?",
+              "p": "Изпратете адрес за вземане, дестинация и дата. Ще потвърдим автомобила и цената.",
+              "button": [
+                "Заявете сега",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Заявка за превоз",
+              "intro": "Попълнете маршрута и датата. Ще потвърдим автомобила и цената с вас.",
+              "formName": "booking",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Адрес",
+                  "ул. Витоша 1, София"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "pickup",
+                  "label": "Адрес за вземане"
+                },
+                {
+                  "id": "destination",
+                  "label": "Дестинация"
+                },
+                {
+                  "id": "date",
+                  "label": "Дата",
+                  "type": "date"
+                }
+              ],
+              "messageLabel": "Пътници, багаж или товар (по избор)",
+              "send": "Изпратете заявка",
+              "hoursTitle": "Работно време",
+              "hours": [
+                [
+                  "Понеделник – петък",
+                  "7:00 – 20:00"
+                ],
+                [
+                  "Събота",
+                  "8:00 – 18:00"
+                ],
+                [
+                  "Неделя",
+                  "по уговорка"
+                ]
+              ]
+            }
+          ]
+        },
+        "prices": {
+          "title": "Цени и ориентири",
+          "description": "Начални цени за такси, трансфери до летището, преместване и куриерски доставки и как се изчисляват.",
+          "pagehead": [
+            "Цени",
+            "Начални цени за обичайна задача в града. Крайната цена зависи от разстоянието, времето, товара и допълненията и я потвърждаваме преди пътуването."
+          ],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Такси",
+                  "items": [
+                    [
+                      "Начална тарифа",
+                      "Включва вземането",
+                      "от 3 €"
+                    ],
+                    [
+                      "На километър",
+                      "В града, през деня",
+                      "от 1 €"
+                    ],
+                    [
+                      "Изчакване",
+                      "На 10 минути",
+                      "от 2 €"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Трансфери до летището",
+                  "items": [
+                    [
+                      "Лек автомобил, в една посока",
+                      "От врата до врата",
+                      "от 20 €"
+                    ],
+                    [
+                      "Минибус, в една посока",
+                      "За група",
+                      "от 45 €"
+                    ],
+                    [
+                      "Двупосочен превоз",
+                      "Заявен заедно",
+                      "от 38 €"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Групови пътувания",
+                  "items": [
+                    [
+                      "Минибус с шофьор",
+                      "На час, минимум три часа",
+                      "от 40 €"
+                    ],
+                    [
+                      "Групов превоз в града",
+                      "Минибус, в една посока",
+                      "от 25 €"
+                    ],
+                    [
+                      "Изчакване с минибус",
+                      "На 10 минути",
+                      "от 4 €"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Преместване",
+                  "items": [
+                    [
+                      "Бус и шофьор",
+                      "На час, минимум два часа",
+                      "от 30 €"
+                    ],
+                    [
+                      "Помощник",
+                      "На човек, на час",
+                      "от 12 €"
+                    ],
+                    [
+                      "Кашони и опаковка",
+                      "На комплект",
+                      "от 15 €"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Куриер",
+                  "items": [
+                    [
+                      "Документи",
+                      "В рамките на града",
+                      "от 4 €"
+                    ],
+                    [
+                      "Колет",
+                      "В рамките на града",
+                      "от 6 €"
+                    ],
+                    [
+                      "Доставка извън града",
+                      "На километър",
+                      "от 1 €"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Допълнения",
+                  "items": [
+                    [
+                      "Детско столче",
+                      "Бустер или пълно столче",
+                      "от 3 €"
+                    ],
+                    [
+                      "Допълнителна спирка",
+                      "Добавя се към маршрута",
+                      "от 3 €"
+                    ],
+                    [
+                      "Качване по стълби",
+                      "На етаж, без асансьор",
+                      "от 5 €"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "factors",
+              "alt": true,
+              "title": "Какво влияе на цената",
+              "items": [
+                [
+                  "pin",
+                  "Разстояние и маршрут",
+                  "Дългите маршрути, пътните такси и спирките извън града се добавят предварително."
+                ],
+                [
+                  "clock",
+                  "Време и изчакване",
+                  "Ставката за изчакване, нощни пътувания или празници се казва при заявката."
+                ],
+                [
+                  "truck",
+                  "Товар и етажи",
+                  "Размерът и теглото на товара, етажите, асансьорът и колко помощници са нужни."
+                ],
+                [
+                  "doc",
+                  "Допълнения",
+                  "Детски столчета, допълнителни спирки, опаковъчни материали и обратни курсове се калкулират отделно."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Не знаете какво да очаквате?",
+              "p": "Изпратете маршрута и няколко подробности. Ще отговорим с автомобил и цена.",
+              "button": [
+                "Заявете сега",
+                "/#contact"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

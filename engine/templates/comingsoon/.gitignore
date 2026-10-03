@@ -1,7 +1,0 @@
-.DS_Store
-.netlify/
-.env
-.env.*
-!.env.example
-*.log
-node_modules/

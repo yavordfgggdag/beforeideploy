@@ -51,15 +51,35 @@ struct CloudPriceCard: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text(L("usage.cloudPrices")).font(Typo.font(.subhead))
                 Text(L("usage.cloudPricesDetail")).font(Typo.font(.callout)).foregroundColor(Theme.secondary)
-                ForEach(actions.keys.sorted(), id: \.self) { key in
-                    if let price = actions[key] {
-                        InfoRow(label: CreditActionName.label(key), value: price.credits.map { L("usage.creditsCount", Fmt.tokens($0)) } ?? L("usage.actualAIPrice"))
-                    }
+                ForEach(rows(actions)) { row in
+                    InfoRow(label: row.label, value: row.value)
                 }
             }.card()
         }
     }
+
+    /// One row per name: the three metered AI actions read as one "AI assistant — measured usage" line,
+    /// actions that cost nothing say "Included", and the order follows a site's life rather than the alphabet.
+    private func rows(_ actions: [String: UsageReport.ActionPrice]) -> [PriceRow] {
+        let order = ["ai.chat", "ai.fix", "ai.fix.deep", "check.run", "audit.full", "deploy.preview", "deploy.production",
+                     "deploy.rollback", "backup.snapshot", "monitor.fast", "monitor.path", "site.day"]
+        let keys = order.filter { actions[$0] != nil } + actions.keys.filter { !order.contains($0) }.sorted()
+        var seen = Set<String>()
+        var out: [PriceRow] = []
+        for key in keys {
+            guard let price = actions[key] else { continue }
+            let label = CreditActionName.label(key)
+            guard seen.insert(label).inserted else { continue }
+            let value: String
+            if let credits = price.credits { value = credits == 0 ? L("usage.priceIncluded") : L("usage.creditsCount", Fmt.tokens(credits)) }
+            else { value = L("usage.actualAIPrice") }
+            out.append(PriceRow(label: label, value: value))
+        }
+        return out
+    }
 }
+
+struct PriceRow: Identifiable { let label: String; let value: String; var id: String { label } }
 
 enum CreditActionName {
     static func label(_ action: String) -> String {

@@ -1,0 +1,791 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "interior",
+  "category": "personal",
+  "icon": "sofa",
+  "accent": "#2e3d44",
+  "mark": "sofa",
+  "art": "blobs",
+  "schemaOrg": "HomeAndConstructionBusiness",
+  "sample": {
+    "name": "Studio Nord"
+  },
+  "featured": false,
+  "titleKey": "newsite.template.interior.title",
+  "descriptionKey": "newsite.template.interior.description",
+  "keywords": {
+    "en": [
+      "interior design",
+      "interior designer",
+      "architect",
+      "furniture",
+      "custom furniture",
+      "home design",
+      "renovation",
+      "decorator",
+      "stylist",
+      "floor plan",
+      "kitchen design",
+      "furniture maker"
+    ],
+    "bg": [
+      "интериорен дизайн",
+      "интериор",
+      "дизайнер",
+      "архитект",
+      "мебели",
+      "мебели по поръчка",
+      "ремонт",
+      "декоратор",
+      "стайлинг",
+      "проект",
+      "обзавеждане",
+      "авторски надзор"
+    ]
+  },
+  "style": "elegant",
+  "tokens": {
+    "dark": false,
+    "bg": "#f4f1ec",
+    "bg2": "#eae5dc",
+    "surface": "#fbfaf7",
+    "text": "#25211d",
+    "muted": "#645d54",
+    "line": "rgba(37,33,29,.12)",
+    "accent": "#2e3d44",
+    "accent2": "#b8654a",
+    "font": "sans",
+    "head": "serif",
+    "radius": 6,
+    "tilt": 0
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "hints": {
+    "en": {
+      "offer": "We design apartments and houses from concept to supervision on site, and make custom wardrobes and shelving.",
+      "audience": "Homeowners renovating or furnishing, and small businesses",
+      "services": [
+        [
+          "Concept design",
+          "€600",
+          "Layouts, mood board and materials"
+        ],
+        [
+          "Full interior design",
+          "€2,400",
+          "Drawings, 3D views and specification"
+        ],
+        [
+          "Project supervision",
+          "€60",
+          "Per site visit, with a photo report"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Проектираме апартаменти и къщи от концепцията до авторския надзор на обекта, и правим гардероби и рафтове по поръчка.",
+      "audience": "Собственици, които ремонтират или обзавеждат, и малък бизнес",
+      "services": [
+        [
+          "Концепция",
+          "600 €",
+          "Разпределения, мудборд и материали"
+        ],
+        [
+          "Пълен проект",
+          "2 400 €",
+          "Чертежи, 3D визуализации и спецификация"
+        ],
+        [
+          "Авторски надзор",
+          "60 €",
+          "На посещение, със снимков отчет"
+        ]
+      ]
+    }
+  },
+  "lang": {
+    "en": {
+      "tagline": "interior design studio",
+      "description": "Concept, full design, project supervision, styling and custom furniture. See how we work, what it costs and how to start.",
+      "nav": [
+        [
+          "Services",
+          "/#services"
+        ],
+        [
+          "Process",
+          "/#process"
+        ],
+        [
+          "Projects",
+          "/#projects"
+        ],
+        [
+          "Packages",
+          "/#packages"
+        ]
+      ],
+      "headerCta": [
+        "Book a consultation",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Interior design and custom furniture",
+            "eyebrowIcon": "sofa",
+            "title": "Homes designed *around how you live*",
+            "lead": "From the first sketch to the last cushion: concept, full design, supervision on site and furniture made to measure. We start by listening to how you actually use your space.",
+            "cta": [
+              "Book a consultation",
+              "/#contact"
+            ],
+            "cta2": [
+              "See the services",
+              "/#services"
+            ],
+            "card": {
+              "icon": "home",
+              "title": "Where to start",
+              "rows": [
+                [
+                  "Concept design",
+                  "from €600"
+                ],
+                [
+                  "Full interior design",
+                  "from €2,400"
+                ],
+                [
+                  "Project supervision",
+                  "from €60"
+                ]
+              ],
+              "note": "Prices are a guide. We confirm the fee in writing after a first conversation."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                [
+                  "compass",
+                  "Layout first, decoration second"
+                ],
+                [
+                  "tools",
+                  "Drawings builders can follow"
+                ],
+                [
+                  "check",
+                  "Scope and fee agreed in writing"
+                ],
+                [
+                  "heart",
+                  "Your habits shape the plan"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "services",
+              "title": "What we do",
+              "intro": "Take one service or the whole project. Each one stands on its own.",
+              "items": [
+                [
+                  "compass",
+                  "Space planning",
+                  "Measured layouts that settle how rooms flow, where the light falls and what fits, before any style is chosen."
+                ],
+                [
+                  "brush",
+                  "Concept design",
+                  "Mood boards, materials and a colour palette, so you see the direction before you commit to anything."
+                ],
+                [
+                  "home",
+                  "Full interior design",
+                  "Drawings, 3D views and a specification that builders can price, for one room or a whole home."
+                ],
+                [
+                  "bolt",
+                  "Lighting and electrics",
+                  "A lighting plan and socket layout that makes rooms work at every hour, not only in photographs."
+                ],
+                [
+                  "tools",
+                  "Project supervision",
+                  "Regular site visits, answers for the builders and a check on quality, schedule and budget."
+                ],
+                [
+                  "spark",
+                  "Styling and finishing",
+                  "Textiles, art, plants and the last details that make a finished room feel lived in."
+                ],
+                [
+                  "sofa",
+                  "Custom furniture",
+                  "Wardrobes, shelving, tables and kitchens drawn for your room and built to fit it, down to the millimetre."
+                ],
+                [
+                  "calc",
+                  "Budget and sourcing",
+                  "A realistic budget, a schedule and a shortlist of suppliers for tiles, fixtures and furniture."
+                ]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "process",
+              "alt": true,
+              "title": "How a project runs",
+              "intro": "Four steps from the first conversation to the finished room.",
+              "items": [
+                [
+                  "Brief and visit",
+                  "We talk about how you live, visit the space and measure it. You leave the call knowing what happens next."
+                ],
+                [
+                  "Concept",
+                  "Layouts, a mood board and a materials palette. We refine them with you until the direction feels right."
+                ],
+                [
+                  "Detailed design",
+                  "Drawings, lighting plan, joinery details and a specification: everything a builder needs to price and build."
+                ],
+                [
+                  "Build and finish",
+                  "We supervise on site, answer questions and style the finished rooms, so what is built matches what you saw."
+                ]
+              ]
+            },
+            {
+              "type": "gallery",
+              "id": "projects",
+              "title": "Project types",
+              "intro": "The spaces we design, from small flats to whole houses.",
+              "items": [
+                "Apartment, living room",
+                "Family kitchen and dining",
+                "Bedroom and wardrobe",
+                "Bathroom in stone and tile",
+                "Home office",
+                "Hallway and storage",
+                "Small shop interior",
+                "Built-in shelving"
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "packages",
+              "alt": true,
+              "title": "Packages",
+              "intro": "Guide prices. The exact offer comes after a site visit, and the packages combine freely.",
+              "items": [
+                {
+                  "name": "Concept",
+                  "price": "from €600",
+                  "per": "/ room",
+                  "features": [
+                    "Site visit and measuring",
+                    "Layout options with a recommendation",
+                    "Mood board and materials palette",
+                    "Direction for furniture and lighting"
+                  ],
+                  "cta": [
+                    "Ask about a concept",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Full design",
+                  "price": "from €2,400",
+                  "per": "/ project",
+                  "featured": "Popular",
+                  "features": [
+                    "Everything in Concept",
+                    "Working drawings, 3D views and specification",
+                    "Lighting and electrics plan",
+                    "Schedule of furniture, fixtures and finishes"
+                  ],
+                  "cta": [
+                    "Start a project",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Supervision",
+                  "price": "from €60",
+                  "per": "/ site visit",
+                  "features": [
+                    "Checks on quality and schedule",
+                    "Answers for your contractors",
+                    "A photo report after each visit",
+                    "A styling day at the end, if you like"
+                  ],
+                  "cta": [
+                    "Ask about supervision",
+                    "/#contact"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Questions before you start",
+              "items": [
+                [
+                  "Do you work on small projects?",
+                  "Yes. A single room, a hallway or just the lighting is a project too. Tell us what you need and we suggest the smallest service that solves it."
+                ],
+                [
+                  "How is the fee calculated?",
+                  "By scope: a fixed fee for concept and design, a rate per visit for supervision. You get it in writing before we start."
+                ],
+                [
+                  "Can you work with my builders?",
+                  "Yes. We hand over complete drawings and are happy to meet your builders on site, or introduce craftsmen we have worked with if you prefer."
+                ],
+                [
+                  "Do I have to buy furniture through you?",
+                  "No. We specify what works and give you links and options, and you buy where you like. For custom pieces we organise the making."
+                ],
+                [
+                  "How long does a project take?",
+                  "A concept takes a few weeks, a full design longer, depending on size. We set a schedule in the proposal; the build depends on your contractor."
+                ],
+                [
+                  "Do you visit the property before quoting?",
+                  "Yes. A first visit lets us measure, see the light and understand the layout, so the proposal is based on the real space."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Start with one conversation",
+              "p": "Tell us about your space and what is not working. We suggest the right first step.",
+              "button": [
+                "Book a consultation",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Book a consultation",
+              "intro": "Describe the space, the town and what you would like to change. We come back with a time for a first call.",
+              "formName": "consultation",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Address",
+                  "1 Vitosha St, Sofia"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "project",
+                  "label": "Project",
+                  "options": [
+                    "Apartment",
+                    "House",
+                    "Single room",
+                    "Shop or office",
+                    "Furniture only",
+                    "Other"
+                  ]
+                },
+                {
+                  "id": "service",
+                  "label": "Service",
+                  "options": [
+                    "Concept",
+                    "Full design",
+                    "Supervision",
+                    "Styling",
+                    "Custom furniture"
+                  ]
+                }
+              ],
+              "messageLabel": "Tell us about the space",
+              "send": "Send enquiry",
+              "hoursTitle": "Studio hours",
+              "hours": [
+                [
+                  "Monday – Friday",
+                  "10:00 – 18:00"
+                ],
+                [
+                  "Saturday",
+                  "by appointment"
+                ],
+                [
+                  "Sunday",
+                  "closed"
+                ]
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "bg": {
+      "tagline": "студио за интериорен дизайн",
+      "description": "Концепция, пълен проект, авторски надзор, стайлинг и мебели по поръчка. Вижте как работим, колко струва и как да започнете.",
+      "nav": [
+        [
+          "Услуги",
+          "/#services"
+        ],
+        [
+          "Процес",
+          "/#process"
+        ],
+        [
+          "Проекти",
+          "/#projects"
+        ],
+        [
+          "Пакети",
+          "/#packages"
+        ]
+      ],
+      "headerCta": [
+        "Запазете консултация",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Интериорен дизайн и мебели по поръчка",
+            "eyebrowIcon": "sofa",
+            "title": "Дом по *мярката на живота ви*",
+            "lead": "От първата скица до последната възглавница: концепция, пълен проект, надзор на обекта и мебели по мярка. Започваме със слушане — как наистина използвате пространството.",
+            "cta": [
+              "Запазете консултация",
+              "/#contact"
+            ],
+            "cta2": [
+              "Вижте услугите",
+              "/#services"
+            ],
+            "card": {
+              "icon": "home",
+              "title": "Откъде да започнете",
+              "rows": [
+                [
+                  "Концепция",
+                  "от 600 €"
+                ],
+                [
+                  "Пълен проект",
+                  "от 2 400 €"
+                ],
+                [
+                  "Авторски надзор",
+                  "от 60 €"
+                ]
+              ],
+              "note": "Цените са ориентировъчни. Хонорарът потвърждаваме писмено след първия разговор."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                [
+                  "compass",
+                  "Разпределение преди декор"
+                ],
+                [
+                  "tools",
+                  "Чертежи за майсторите"
+                ],
+                [
+                  "check",
+                  "Обхват и хонорар — писмено"
+                ],
+                [
+                  "heart",
+                  "Планът следва навиците ви"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "services",
+              "title": "Какво правим",
+              "intro": "Вземете една услуга или целия проект. Всяка стои самостоятелно.",
+              "items": [
+                [
+                  "compass",
+                  "Планиране на пространството",
+                  "Измерени планове, които решават как се движат стаите, къде пада светлината и какво се побира — преди да е избран стилът."
+                ],
+                [
+                  "brush",
+                  "Концепция",
+                  "Мудборд, материали и цветова палитра — виждате посоката, преди да се ангажирате с каквото и да било."
+                ],
+                [
+                  "home",
+                  "Пълен проект",
+                  "Чертежи, 3D визуализации и спецификация, по която майсторите могат да оферират — за една стая или за цял дом."
+                ],
+                [
+                  "bolt",
+                  "Осветление и електрика",
+                  "План за осветление и разпределение на контактите, при който стаите работят във всеки час, не само на снимките."
+                ],
+                [
+                  "tools",
+                  "Авторски надзор",
+                  "Редовни посещения на обекта, отговори за майсторите и проверка на качеството, графика и бюджета."
+                ],
+                [
+                  "spark",
+                  "Стайлинг и довършване",
+                  "Текстил, картини, растения и последните детайли, от които готовата стая започва да изглежда обитаема."
+                ],
+                [
+                  "sofa",
+                  "Мебели по поръчка",
+                  "Гардероби, рафтове, маси и кухни, начертани за вашата стая и изработени да пасват до милиметър."
+                ],
+                [
+                  "calc",
+                  "Бюджет и доставчици",
+                  "Реалистичен бюджет, график и списък с доставчици за плочки, санитарна арматура и мебели."
+                ]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "process",
+              "alt": true,
+              "title": "Как протича проектът",
+              "intro": "Четири стъпки от първия разговор до готовата стая.",
+              "items": [
+                [
+                  "Задание и оглед",
+                  "Говорим как живеете, оглеждаме и измерваме пространството. След разговора знаете какво следва."
+                ],
+                [
+                  "Концепция",
+                  "Разпределения, мудборд и палитра от материали. Прецизираме ги заедно, докато посоката ви хареса."
+                ],
+                [
+                  "Работен проект",
+                  "Чертежи, план за осветление, детайли за мебелите и спецификация — всичко, от което строителят има нужда, за да оферира и изгради."
+                ],
+                [
+                  "Изпълнение и финал",
+                  "Следим обекта, отговаряме на въпроси и подреждаме готовите стаи, така че построеното да отговаря на видяното."
+                ]
+              ]
+            },
+            {
+              "type": "gallery",
+              "id": "projects",
+              "title": "Видове проекти",
+              "intro": "Пространствата, които проектираме — от малки апартаменти до цели къщи.",
+              "items": [
+                "Апартамент, дневна",
+                "Семейна кухня и трапезария",
+                "Спалня и гардероб",
+                "Баня с камък и плочки",
+                "Домашен офис",
+                "Антре и съхранение",
+                "Интериор на малък магазин",
+                "Вградени рафтове"
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "packages",
+              "alt": true,
+              "title": "Пакети",
+              "intro": "Ориентировъчни цени. Точната оферта идва след оглед, а пакетите се комбинират свободно.",
+              "items": [
+                {
+                  "name": "Концепция",
+                  "price": "от 600 €",
+                  "per": "/ помещение",
+                  "features": [
+                    "Оглед и замерване",
+                    "Варианти за разпределение с препоръка",
+                    "Мудборд и палитра от материали",
+                    "Посока за мебели и осветление"
+                  ],
+                  "cta": [
+                    "Попитайте за концепция",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Пълен проект",
+                  "price": "от 2 400 €",
+                  "per": "/ проект",
+                  "featured": "Популярен",
+                  "features": [
+                    "Всичко от „Концепция“",
+                    "Работни чертежи, 3D визуализации и спецификация",
+                    "План за осветление и електрика",
+                    "Списък на мебели, арматура и покрития"
+                  ],
+                  "cta": [
+                    "Започнете проект",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Надзор",
+                  "price": "от 60 €",
+                  "per": "/ посещение",
+                  "features": [
+                    "Проверка на качеството и графика",
+                    "Отговори за вашите изпълнители",
+                    "Снимков отчет след всяко посещение",
+                    "Стайлинг ден в края — по желание"
+                  ],
+                  "cta": [
+                    "Попитайте за надзор",
+                    "/#contact"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Въпроси преди да започнем",
+              "items": [
+                [
+                  "Работите ли по малки проекти?",
+                  "Да. Една стая, коридор или само осветлението също са проект. Разкажете какво ви трябва и ще предложим най-малката услуга, която решава задачата."
+                ],
+                [
+                  "Как се определя хонорарът?",
+                  "По обхват: твърд хонорар за концепция и проект, цена на посещение за надзор. Получавате го писмено, преди да започнем."
+                ],
+                [
+                  "Можете ли да работите с моите майстори?",
+                  "Да. Предаваме пълни чертежи и с удоволствие се срещаме с вашите майстори на обекта — или ви препоръчваме майстори, с които сме работили."
+                ],
+                [
+                  "Длъжен ли съм да купувам мебели през вас?",
+                  "Не. Описваме какво работи и ви даваме връзки и варианти — купувате откъдето искате. За мебелите по поръчка организираме изработката."
+                ],
+                [
+                  "Колко време отнема един проект?",
+                  "Концепцията — няколко седмици, а пълният проект — повече, според големината. Графикът е в предложението, а строителството зависи от вашия изпълнител."
+                ],
+                [
+                  "Идвате ли на оглед преди оферта?",
+                  "Да. Така замерваме, виждаме светлината и разбираме разпределението, и предложението е за истинското пространство."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Започнете с един разговор",
+              "p": "Разкажете за пространството си и какво не работи. Ще предложим подходящата първа стъпка.",
+              "button": [
+                "Запазете консултация",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Запазете консултация",
+              "intro": "Опишете пространството, града и какво искате да промените. Ще се върнем с час за първи разговор.",
+              "formName": "consultation",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Адрес",
+                  "ул. Витоша 1, София"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "project",
+                  "label": "Проект",
+                  "options": [
+                    "Апартамент",
+                    "Къща",
+                    "Една стая",
+                    "Магазин или офис",
+                    "Само мебели",
+                    "Друго"
+                  ]
+                },
+                {
+                  "id": "service",
+                  "label": "Услуга",
+                  "options": [
+                    "Концепция",
+                    "Пълен проект",
+                    "Надзор",
+                    "Стайлинг",
+                    "Мебели по поръчка"
+                  ]
+                }
+              ],
+              "messageLabel": "Разкажете ни за пространството",
+              "send": "Изпратете запитване",
+              "hoursTitle": "Работно време на студиото",
+              "hours": [
+                [
+                  "Понеделник – петък",
+                  "10:00 – 18:00"
+                ],
+                [
+                  "Събота",
+                  "по уговорка"
+                ],
+                [
+                  "Неделя",
+                  "почивен ден"
+                ]
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

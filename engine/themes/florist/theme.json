@@ -1,0 +1,1054 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "florist",
+  "category": "commerce",
+  "icon": "camera.macro",
+  "accent": "#557a5d",
+  "mark": "flower",
+  "art": "leaves",
+  "schemaOrg": "Florist",
+  "sample": {
+    "name": "Atelier Iris"
+  },
+  "featured": false,
+  "titleKey": "newsite.template.florist.title",
+  "descriptionKey": "newsite.template.florist.description",
+  "keywords": {
+    "en": [
+      "florist",
+      "flower shop",
+      "flowers",
+      "bouquet",
+      "wedding flowers",
+      "funeral flowers",
+      "sympathy flowers",
+      "flower delivery",
+      "flower subscription",
+      "floral design",
+      "roses",
+      "plants"
+    ],
+    "bg": [
+      "цветарница",
+      "цветарски магазин",
+      "цветя",
+      "букет",
+      "цветя за сватба",
+      "сватбена украса",
+      "траурни цветя",
+      "венец",
+      "доставка на цветя",
+      "абонамент за цветя",
+      "рози",
+      "флорист",
+      "саксийни растения"
+    ]
+  },
+  "style": "elegant",
+  "tokens": {
+    "dark": false,
+    "bg": "#fbf4f1",
+    "bg2": "#f4e5e1",
+    "surface": "#fffcfa",
+    "text": "#2c2226",
+    "muted": "#6b5a5e",
+    "line": "rgba(15,23,42,.10)",
+    "accent": "#557a5d",
+    "accent2": "#d98a9b",
+    "font": "sans",
+    "head": "serif",
+    "radius": 24,
+    "tilt": 1
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "hints": {
+    "en": {
+      "offer": "We make hand-tied bouquets, wedding flowers and sympathy arrangements, and deliver across the city.",
+      "audience": "People sending flowers, couples planning a wedding, offices and venues",
+      "services": [
+        [
+          "Seasonal bouquet",
+          "€40",
+          "Mixed flowers in the colours you choose"
+        ],
+        [
+          "Bridal bouquet",
+          "from €90",
+          "Designed around your dress and colours"
+        ],
+        [
+          "Weekly subscription",
+          "from €25",
+          "A seasonal bouquet at your door"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Правим ръчно вързани букети, сватбени цветя и траурни аранжировки и доставяме из целия град.",
+      "audience": "Хора, които изпращат цветя, двойки преди сватба, офиси и заведения",
+      "services": [
+        [
+          "Сезонен букет",
+          "40 €",
+          "Смесени цветя в избраните от вас цветове"
+        ],
+        [
+          "Булчински букет",
+          "от 90 €",
+          "Изработен според роклята и цветовете ви"
+        ],
+        [
+          "Седмичен абонамент",
+          "от 25 €",
+          "Сезонен букет пред вратата ви"
+        ]
+      ]
+    }
+  },
+  "lang": {
+    "en": {
+      "tagline": "flowers for every occasion",
+      "description": "Seasonal bouquets, wedding flowers, subscriptions and sympathy tributes, arranged by hand and delivered to your door.",
+      "nav": [
+        [
+          "Flowers",
+          "/#flowers"
+        ],
+        [
+          "Weddings",
+          "/#events"
+        ],
+        [
+          "Price guide",
+          "/prices.html"
+        ],
+        [
+          "Order",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Order flowers",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Seasonal flowers, arranged to order",
+            "eyebrowIcon": "flower",
+            "title": "Flowers with *something to say*",
+            "lead": "Hand-tied bouquets, wedding flowers, weekly subscriptions and sympathy tributes — chosen with the season and delivered to the door.",
+            "cta": [
+              "Order flowers",
+              "/#contact"
+            ],
+            "cta2": [
+              "Price guide",
+              "/prices.html"
+            ],
+            "card": {
+              "icon": "flower",
+              "title": "Popular bouquets",
+              "rows": [
+                [
+                  "Small hand-tied",
+                  "from €25"
+                ],
+                [
+                  "Seasonal bouquet",
+                  "from €40"
+                ],
+                [
+                  "Table arrangement",
+                  "from €30"
+                ]
+              ],
+              "note": "The final price depends on the flowers in season."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                [
+                  "flower",
+                  "Arranged by hand, to order"
+                ],
+                [
+                  "truck",
+                  "Delivery to the door"
+                ],
+                [
+                  "calendar",
+                  "Ordered for the day you choose"
+                ],
+                [
+                  "gift",
+                  "A card with your own words"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "flowers",
+              "title": "Pick an occasion",
+              "intro": "Tell us the occasion, the colours and your budget — we choose what is looking its finest this season.",
+              "items": [
+                [
+                  "heart",
+                  "Love and anniversaries",
+                  "Roses and garden flowers in soft, romantic mixes."
+                ],
+                [
+                  "gift",
+                  "Birthdays and thank-yous",
+                  "Bright, generous bouquets, wrapped and ready to give."
+                ],
+                [
+                  "sun",
+                  "Welcome and get well",
+                  "Gentle, sunny colours for a new baby, a new home or a hospital room."
+                ],
+                [
+                  "leaf",
+                  "Plants and green gifts",
+                  "Orchids, potted plants and arrangements that last well beyond the week."
+                ]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "events",
+              "alt": true,
+              "title": "More than a bouquet",
+              "intro": "Flowers for the big days, the quiet ones and the ordinary Tuesday.",
+              "items": [
+                [
+                  "Weddings and events",
+                  "From the bridal bouquet to the last table, we plan the flowers around your colours, your venue and the season you marry in.",
+                  "Bridal bouquet, bridesmaids and buttonholes",
+                  "Arch, aisle or ceremony flowers",
+                  "Centrepieces and details for every table"
+                ],
+                [
+                  "Sympathy flowers",
+                  "Tell us about the service and the family’s wishes. We suggest what suits, arrange it with care and take it to the venue or the home.",
+                  "Wreaths and baskets",
+                  "Simple bouquets for the family",
+                  "Delivery to the service or the home"
+                ],
+                [
+                  "Flowers on repeat",
+                  "Choose how often and how big, and a seasonal arrangement arrives on the day you pick — for a home, a café counter or a reception desk.",
+                  "Weekly, fortnightly or monthly",
+                  "A different seasonal mix each time",
+                  "Gift subscriptions with a card"
+                ]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "how",
+              "title": "How ordering works",
+              "intro": "Four simple steps, whether it is one bouquet or a whole wedding.",
+              "items": [
+                [
+                  "Tell us",
+                  "The occasion, the date, the address and your budget. Mention any colours or flowers you love."
+                ],
+                [
+                  "We confirm",
+                  "We reply with ideas, a price and what is possible for your date."
+                ],
+                [
+                  "We arrange",
+                  "Your flowers are chosen and arranged by hand for the day."
+                ],
+                [
+                  "Delivery",
+                  "We bring them to the door with a card if you like, or you collect them from us."
+                ]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "plans",
+              "alt": true,
+              "title": "Flower subscriptions",
+              "intro": "Choose a size and a rhythm — every delivery is a new seasonal arrangement.",
+              "items": [
+                {
+                  "name": "Small",
+                  "price": "from €25",
+                  "per": "per delivery",
+                  "features": [
+                    "A hand-tied seasonal bouquet",
+                    "Your choice of day and rhythm",
+                    "Delivered to the door"
+                  ],
+                  "cta": [
+                    "Subscribe",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Seasonal",
+                  "price": "from €40",
+                  "per": "per delivery",
+                  "featured": "Popular",
+                  "features": [
+                    "A fuller bouquet in the colours of the season",
+                    "Suits a home, a desk or a gift",
+                    "A note card for gift subscriptions"
+                  ],
+                  "cta": [
+                    "Subscribe",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Generous",
+                  "price": "from €65",
+                  "per": "per delivery",
+                  "features": [
+                    "A large arrangement for halls, shops and offices",
+                    "Weekly or fortnightly",
+                    "A vase or container to suit"
+                  ],
+                  "cta": [
+                    "Subscribe",
+                    "/#contact"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "gallery",
+              "id": "gallery",
+              "title": "From the workbench",
+              "intro": "Replace the tiles with photos of your own bouquets and arrangements.",
+              "items": [
+                "Hand-tied bouquets",
+                "Wedding tables",
+                "Wreaths and tributes",
+                "Plants and pots"
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "alt": true,
+              "title": "Good to know",
+              "items": [
+                [
+                  "How far ahead should I order?",
+                  "For a bouquet, tell us the day you need it and we confirm what is possible. For weddings and large events, write as early as you can, so the flowers you love are available."
+                ],
+                [
+                  "Can I choose the flowers and colours?",
+                  "Yes. Tell us the colours, the mood and your budget, and we choose what is looking its finest this season. Have a favourite flower? Mention it — we will tell you if it is in season."
+                ],
+                [
+                  "How does delivery work?",
+                  "Send us the address, the day and any preferred time. We confirm what we can do and deliver the bouquet wrapped and ready for a vase, with a card if you like."
+                ],
+                [
+                  "Can you send flowers with a message?",
+                  "Of course. Give us the recipient’s address and the words for the card. If you would rather stay a mystery, just say so."
+                ],
+                [
+                  "How do I make a bouquet last?",
+                  "Trim the stems at an angle, use a clean vase and fresh water, and keep it away from direct sun, heaters and fruit bowls. Change the water every couple of days."
+                ],
+                [
+                  "Do you arrange sympathy flowers?",
+                  "Yes. Tell us about the service and the family’s wishes, and we suggest a wreath, a basket or a simple bouquet — and arrange delivery to the venue or the home."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Flowers for someone special?",
+              "p": "Tell us the occasion and the day — we take care of the rest.",
+              "button": [
+                "Order flowers",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Order flowers",
+              "intro": "Tell us the occasion, the day and the address. We confirm the flowers and the price with you before we start.",
+              "formName": "order",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Address",
+                  "1 Vitosha St, Sofia"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "occasion",
+                  "label": "Occasion",
+                  "options": [
+                    "Bouquet",
+                    "Subscription",
+                    "Wedding",
+                    "Sympathy flowers",
+                    "Plant or gift",
+                    "Event or office"
+                  ]
+                },
+                {
+                  "id": "date",
+                  "label": "Date needed",
+                  "type": "date"
+                }
+              ],
+              "messageLabel": "Colours, budget, address and card message",
+              "send": "Send order request",
+              "hoursTitle": "Opening hours",
+              "hours": [
+                [
+                  "Monday – Friday",
+                  "9:00 – 18:00"
+                ],
+                [
+                  "Saturday",
+                  "9:00 – 15:00"
+                ],
+                [
+                  "Sunday",
+                  "closed"
+                ]
+              ]
+            }
+          ]
+        },
+        "prices": {
+          "title": "Price guide",
+          "description": "Guide prices for bouquets, wedding and event flowers, sympathy arrangements, plants, delivery and subscriptions.",
+          "pagehead": [
+            "Price guide",
+            "Guide prices in euro. The final price depends on the flowers in season and the size — we confirm it before we start."
+          ],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Bouquets",
+                  "items": [
+                    [
+                      "Small hand-tied",
+                      "A handful of seasonal stems, wrapped",
+                      "from €25"
+                    ],
+                    [
+                      "Seasonal bouquet",
+                      "Mixed flowers in the colours you choose",
+                      "from €40"
+                    ],
+                    [
+                      "Rose bouquet",
+                      "A classic, wrapped with foliage",
+                      "from €35"
+                    ],
+                    [
+                      "Statement bouquet",
+                      "Large and generous, for a big moment",
+                      "from €70"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Weddings and events",
+                  "items": [
+                    [
+                      "Bridal bouquet",
+                      "Designed around your dress and colours",
+                      "from €90"
+                    ],
+                    [
+                      "Buttonhole or corsage",
+                      "Per piece",
+                      "from €8"
+                    ],
+                    [
+                      "Table centrepiece",
+                      "Per table",
+                      "from €30"
+                    ],
+                    [
+                      "Ceremony flowers",
+                      "Arch, aisle or backdrop",
+                      "on request"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Sympathy",
+                  "items": [
+                    [
+                      "Sympathy bouquet",
+                      "Simple and quiet",
+                      "from €35"
+                    ],
+                    [
+                      "Wreath",
+                      "On a stand",
+                      "from €80"
+                    ],
+                    [
+                      "Basket arrangement",
+                      "Seasonal flowers in a basket",
+                      "from €60"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Plants and gifts",
+                  "items": [
+                    [
+                      "Potted plant",
+                      "In a decorative pot",
+                      "from €15"
+                    ],
+                    [
+                      "Orchid",
+                      "In a pot",
+                      "from €30"
+                    ],
+                    [
+                      "Plant arrangement",
+                      "Several plants in one container",
+                      "from €45"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Delivery and subscriptions",
+                  "items": [
+                    [
+                      "Delivery in town",
+                      "Within the city",
+                      "from €5"
+                    ],
+                    [
+                      "Delivery outside town",
+                      "Priced by distance",
+                      "on request"
+                    ],
+                    [
+                      "Flower subscription",
+                      "Weekly, fortnightly or monthly",
+                      "from €25"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Not sure what to choose?",
+              "p": "Tell us the occasion and your budget, and we suggest something that fits.",
+              "button": [
+                "Ask us",
+                "/#contact"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "bg": {
+      "tagline": "цветя за всеки повод",
+      "description": "Сезонни букети, цветя за сватби, абонаменти и траурни аранжировки — аранжирани на ръка и доставени до вратата ви.",
+      "nav": [
+        [
+          "Цветя",
+          "/#flowers"
+        ],
+        [
+          "Сватби",
+          "/#events"
+        ],
+        [
+          "Цени",
+          "/prices.html"
+        ],
+        [
+          "Поръчка",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Поръчайте цветя",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Сезонни цветя, аранжирани по поръчка",
+            "eyebrowIcon": "flower",
+            "title": "Цветя, които *казват всичко*",
+            "lead": "Ръчно вързани букети, цветя за сватби, седмичен абонамент и траурни аранжировки — подбрани според сезона и доставени до вратата.",
+            "cta": [
+              "Поръчайте цветя",
+              "/#contact"
+            ],
+            "cta2": [
+              "Вижте цените",
+              "/prices.html"
+            ],
+            "card": {
+              "icon": "flower",
+              "title": "Любими букети",
+              "rows": [
+                [
+                  "Малък букет",
+                  "от 25 €"
+                ],
+                [
+                  "Сезонен букет",
+                  "от 40 €"
+                ],
+                [
+                  "Аранжировка за маса",
+                  "от 30 €"
+                ]
+              ],
+              "note": "Крайната цена зависи от цветята през сезона."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                [
+                  "flower",
+                  "Аранжирано на ръка, по поръчка"
+                ],
+                [
+                  "truck",
+                  "Доставка до вратата"
+                ],
+                [
+                  "calendar",
+                  "Поръчка за избрана дата"
+                ],
+                [
+                  "gift",
+                  "Картичка с вашите думи"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "flowers",
+              "title": "Изберете повод",
+              "intro": "Кажете ни повода, цветовете и бюджета — а ние избираме най-хубавото от сезона.",
+              "items": [
+                [
+                  "heart",
+                  "Любов и годишнини",
+                  "Рози и градински цветя в меки, романтични комбинации."
+                ],
+                [
+                  "gift",
+                  "Рождени дни и благодарности",
+                  "Ярки, богати букети — опаковани и готови за подарък."
+                ],
+                [
+                  "sun",
+                  "Посрещане и оздравяване",
+                  "Нежни, слънчеви цветове за новородено, нов дом или болнична стая."
+                ],
+                [
+                  "leaf",
+                  "Растения и зелени подаръци",
+                  "Орхидеи, саксийни растения и композиции, които траят дълго."
+                ]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "events",
+              "alt": true,
+              "title": "Повече от един букет",
+              "intro": "Цветя за големите дни, за тихите моменти и за най-обикновения вторник.",
+              "items": [
+                [
+                  "Сватби и събития",
+                  "От булчинския букет до последната маса — планираме цветята според вашите цветове, мястото и сезона, в който се женете.",
+                  "Булчински букет, букети за шаферките и бутониери",
+                  "Арка, пътека или цветя за церемонията",
+                  "Централни аранжировки и детайли за всяка маса"
+                ],
+                [
+                  "Траурни цветя",
+                  "Разкажете ни за церемонията и желанията на семейството. Предлагаме какво ще е подходящо, аранжираме го с уважение и го доставяме на място.",
+                  "Венци и кошници",
+                  "Семпли букети за близките",
+                  "Доставка до церемонията или до дома"
+                ],
+                [
+                  "Цветя по график",
+                  "Изберете колко често и колко голяма да е аранжировката — и тя пристига в деня, който сте посочили. За дома, за плота на кафенето или за рецепцията.",
+                  "Всяка седмица, на две седмици или всеки месец",
+                  "Различна сезонна комбинация всеки път",
+                  "Подаръчен абонамент с картичка"
+                ]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "how",
+              "title": "Как се поръчва",
+              "intro": "Четири прости стъпки — за един букет или за цяла сватба.",
+              "items": [
+                [
+                  "Кажете ни",
+                  "Повода, датата, адреса и бюджета. Споменете цветя или цветове, които обичате."
+                ],
+                [
+                  "Потвърждаваме",
+                  "Отговаряме с идеи, цена и какво е възможно за вашата дата."
+                ],
+                [
+                  "Аранжираме",
+                  "Цветята се подбират и подреждат на ръка специално за деня."
+                ],
+                [
+                  "Доставка",
+                  "Носим ги до вратата — с картичка, ако желаете — или ги вземате от нас."
+                ]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "plans",
+              "alt": true,
+              "title": "Абонамент за цветя",
+              "intro": "Изберете размер и ритъм — всяка доставка е нова сезонна аранжировка.",
+              "items": [
+                {
+                  "name": "Малък",
+                  "price": "от 25 €",
+                  "per": "на доставка",
+                  "features": [
+                    "Ръчно вързан сезонен букет",
+                    "Вие избирате деня и ритъма",
+                    "Донесен до дома или офиса ви"
+                  ],
+                  "cta": [
+                    "Абонирайте се",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Сезонен",
+                  "price": "от 40 €",
+                  "per": "на доставка",
+                  "featured": "Популярен",
+                  "features": [
+                    "По-богат букет в цветовете на сезона",
+                    "Подходящ за дома, бюрото или за подарък",
+                    "Картичка с послание за подаръчен абонамент"
+                  ],
+                  "cta": [
+                    "Абонирайте се",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Щедър",
+                  "price": "от 65 €",
+                  "per": "на доставка",
+                  "features": [
+                    "Голяма аранжировка за зали, магазини и офиси",
+                    "Всяка седмица или на две седмици",
+                    "Ваза или съд по ваш избор"
+                  ],
+                  "cta": [
+                    "Абонирайте се",
+                    "/#contact"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "gallery",
+              "id": "gallery",
+              "title": "От работната маса",
+              "intro": "Сменете плочките със снимки на ваши букети и аранжировки.",
+              "items": [
+                "Ръчно вързани букети",
+                "Украса за сватбени маси",
+                "Венци и траурни цветя",
+                "Растения и саксии"
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "alt": true,
+              "title": "Полезно да знаете",
+              "items": [
+                [
+                  "Колко рано да поръчам?",
+                  "За букет ни кажете датата и ще потвърдим какво е възможно. За сватби и големи събития пишете колкото се може по-рано — така цветята, които харесвате, ще са налични."
+                ],
+                [
+                  "Мога ли да избера цветята и цветовете?",
+                  "Да. Кажете ни цветовете, настроението и бюджета, а ние ще изберем най-хубавото от сезона. Имате любимо цвете? Споменете го — ще ви кажем дали му е времето."
+                ],
+                [
+                  "Как работи доставката?",
+                  "Изпратете ни адреса, деня и удобния час. Потвърждаваме какво е възможно и доставяме букета опакован и готов за ваза — по желание с картичка."
+                ],
+                [
+                  "Може ли да изпратите цветя с картичка?",
+                  "Разбира се. Дайте ни адреса на получателя и текста за картичката. А ако предпочитате да останете загадка, просто ни кажете."
+                ],
+                [
+                  "Как да запазя букета по-дълго?",
+                  "Подрежете стеблата под ъгъл, ползвайте чиста ваза и прясна вода и го дръжте далеч от слънце, радиатори и купа с плодове. Сменяйте водата през ден-два."
+                ],
+                [
+                  "Аранжирате ли траурни цветя?",
+                  "Да. Разкажете ни за церемонията и желанията на семейството и ще предложим венец, кошница или семпъл букет — и ще уговорим доставка до мястото или до дома."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Цветя за скъп човек?",
+              "p": "Кажете ни повода и датата — останалото е наша грижа.",
+              "button": [
+                "Поръчайте цветя",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Поръчка на цветя",
+              "intro": "Кажете ни повода, датата и адреса. Преди да започнем, потвърждаваме цветята и цената с вас.",
+              "formName": "order",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Адрес",
+                  "ул. „Витоша“ 1, София"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "occasion",
+                  "label": "Повод",
+                  "options": [
+                    "Букет",
+                    "Абонамент",
+                    "Сватба",
+                    "Траурни цветя",
+                    "Растение или подарък",
+                    "Събитие или офис"
+                  ]
+                },
+                {
+                  "id": "date",
+                  "label": "Желана дата",
+                  "type": "date"
+                }
+              ],
+              "messageLabel": "Цветове, бюджет, адрес и текст за картичка",
+              "send": "Изпратете поръчката",
+              "hoursTitle": "Работно време",
+              "hours": [
+                [
+                  "Понеделник – петък",
+                  "9:00 – 18:00"
+                ],
+                [
+                  "Събота",
+                  "9:00 – 15:00"
+                ],
+                [
+                  "Неделя",
+                  "почивен ден"
+                ]
+              ]
+            }
+          ]
+        },
+        "prices": {
+          "title": "Цени на букети и аранжировки",
+          "description": "Ориентировъчни цени за букети, сватбени и събитийни цветя, траурни аранжировки, растения, доставка и абонамент.",
+          "pagehead": [
+            "Ориентировъчни цени",
+            "Цените са в евро. Крайната цена зависи от цветята през сезона и от размера — потвърждаваме я, преди да започнем."
+          ],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Букети",
+                  "items": [
+                    [
+                      "Малък ръчно вързан букет",
+                      "Шепа сезонни цветя, опаковани",
+                      "от 25 €"
+                    ],
+                    [
+                      "Сезонен букет",
+                      "Смесени цветя в избраните от вас цветове",
+                      "от 40 €"
+                    ],
+                    [
+                      "Букет от рози",
+                      "Класика, обвита в зеленина",
+                      "от 35 €"
+                    ],
+                    [
+                      "Голям букет",
+                      "Богат и щедър — за специален момент",
+                      "от 70 €"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Сватби и събития",
+                  "items": [
+                    [
+                      "Булчински букет",
+                      "Изработен според роклята и цветовете ви",
+                      "от 90 €"
+                    ],
+                    [
+                      "Бутониера или китка",
+                      "За брой",
+                      "от 8 €"
+                    ],
+                    [
+                      "Аранжировка за маса",
+                      "За всяка маса",
+                      "от 30 €"
+                    ],
+                    [
+                      "Цветя за церемония",
+                      "Арка, пътека или фон",
+                      "по договаряне"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Траурни цветя",
+                  "items": [
+                    [
+                      "Траурен букет",
+                      "Семпъл и сдържан",
+                      "от 35 €"
+                    ],
+                    [
+                      "Венец",
+                      "На стойка",
+                      "от 80 €"
+                    ],
+                    [
+                      "Кошница с цветя",
+                      "Сезонни цветя в кошница",
+                      "от 60 €"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Растения и подаръци",
+                  "items": [
+                    [
+                      "Саксийно растение",
+                      "С декоративна саксия",
+                      "от 15 €"
+                    ],
+                    [
+                      "Орхидея",
+                      "В саксия",
+                      "от 30 €"
+                    ],
+                    [
+                      "Композиция от растения",
+                      "Няколко растения в един съд",
+                      "от 45 €"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Доставка и абонамент",
+                  "items": [
+                    [
+                      "Доставка в града",
+                      "В рамките на населеното място",
+                      "от 5 €"
+                    ],
+                    [
+                      "Доставка извън града",
+                      "Цената зависи от разстоянието",
+                      "по договаряне"
+                    ],
+                    [
+                      "Абонамент за цветя",
+                      "Всяка седмица, на две седмици или всеки месец",
+                      "от 25 €"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Не сте сигурни какво да изберете?",
+              "p": "Кажете ни повода и бюджета — ще предложим нещо подходящо.",
+              "button": [
+                "Попитайте ни",
+                "/#contact"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}
