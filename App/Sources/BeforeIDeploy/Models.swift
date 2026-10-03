@@ -1706,3 +1706,27 @@ struct AdminCreditState: Decodable {
     var drift: [Drift]
     struct Drift: Decodable, Identifiable { var operation_id: String; var recorded: Int; var ledger_charged: Int; var id: String { operation_id } }
 }
+
+/// Site Builder v2: one turn of `bid site chat` — the assistant asks (with tap-able options) or hands back a brief.
+struct SiteChatTurn: Decodable {
+    struct Question: Decodable, Identifiable {
+        var id: String
+        var text: String
+        var options: [String]
+    }
+    struct Brief: Decodable {
+        struct Service: Decodable { var name: String? }
+        var name: String?
+        var theme: String?
+        var description: String?
+        var offer: String?
+        var audience: String?
+        var tone: String?
+        var services: [Service]?
+    }
+    var action: String
+    var say: String
+    var questions: [Question]?
+    var brief: Brief?
+    var model: String?
+}

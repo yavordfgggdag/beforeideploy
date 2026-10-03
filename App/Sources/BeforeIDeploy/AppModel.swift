@@ -500,6 +500,13 @@ final class AppModel: ObservableObject, Feedback {
         }
     }
 
+    /// Site Builder v2 (`bid site chat`): one turn of "start a site from one message". `modelChoice` is `auto` or a model id.
+    func siteChat(_ messages: [[String: String]], modelChoice: String, asked: Int) async throws -> SiteChatTurn {
+        let data = try JSONSerialization.data(withJSONObject: messages)
+        let json = String(data: data, encoding: .utf8) ?? "[]"
+        return try await engine.call(["site", "chat", "--messages", json, "--model", modelChoice, "--asked", String(asked)], as: SiteChatTurn.self, timeout: 120)
+    }
+
     // MARK: - Site Builder S4: change a generated site with words
 
     func siteInfo(_ project: Project) async -> SiteInfo? {

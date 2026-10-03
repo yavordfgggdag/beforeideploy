@@ -1508,3 +1508,12 @@
 "newsite.tone.premium" = "Премиум";
 "newsite.tone.professional" = "Делови";
 "newsite.toneHint" = "По желание. На „Авто“ изкуственият интелект избира глас, който подхожда на вашия сайт.";
+
+"newsite.chat.title" = "Нов сайт";
+"newsite.chat.welcome" = "Разкажи ми с едно съобщение какъв сайт искаш: за какво е, за кого е и как се казва. Ще попитам само онова, което ми трябва.";
+"newsite.chat.placeholder" = "Например: сайт за фризьорски салон в Пловдив";
+"newsite.chat.send" = "Изпрати";
+"newsite.chat.model" = "Модел";
+"newsite.chat.auto" = "Auto — сам избирам модела";
+"newsite.chat.building" = "Правя сайта…";
+"newsite.chat.manual" = "Предпочитам да избера тема сам";

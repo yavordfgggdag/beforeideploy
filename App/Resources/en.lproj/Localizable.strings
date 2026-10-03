@@ -1508,3 +1508,12 @@
 "newsite.tone.premium" = "Premium";
 "newsite.tone.professional" = "Business";
 "newsite.toneHint" = "Optional. Leave it on Auto and the AI picks a voice that suits your kind of site.";
+
+"newsite.chat.title" = "New site";
+"newsite.chat.welcome" = "Tell me in one message what site you want: what it is for, who it is for and what it is called. I will only ask what I need.";
+"newsite.chat.placeholder" = "For example: a website for a hair salon in Plovdiv";
+"newsite.chat.send" = "Send";
+"newsite.chat.model" = "Model";
+"newsite.chat.auto" = "Auto — pick the model for me";
+"newsite.chat.building" = "Building your site…";
+"newsite.chat.manual" = "I would rather pick a theme myself";
