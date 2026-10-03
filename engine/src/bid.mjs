@@ -43,7 +43,7 @@ import { t, msg } from './i18n.mjs';
 import { launchStatus } from './launch.mjs';
 import { createSite, listTemplates } from './newsite.mjs';
 import { generateSite, previewSite } from './sitegen/generate.mjs';
-import { siteContent, readContentArg } from './sitegen/aicontent.mjs';
+import { siteContent, siteChat, readContentArg } from './sitegen/aicontent.mjs';
 import { editSite, undoSite, siteHistory, siteInfo } from './sitegen/edit.mjs';
 import { loadTheme, validateTheme, previewStatus, suggestThemes } from './sitegen/themes.mjs';
 import { STYLES, paletteIds } from './sitegen/tokens.mjs';
@@ -259,6 +259,12 @@ async function main() {
     }
 
     case 'site': {
+      if (sub === 'chat') {
+        const raw = flags.messages && flags.messages !== true ? String(flags.messages) : '';
+        const messages = raw.trim().startsWith('[') ? JSON.parse(raw) : readJSON(raw, null);
+        if (!Array.isArray(messages)) throw new EngineError(msg('newsite.missingBrief'), 'usage', 2);
+        return ok(await siteChat({ messages, model: flags.model && flags.model !== true ? String(flags.model) : 'auto', asked: flags.asked, provider: flags.provider && flags.provider !== true ? String(flags.provider) : null }));
+      }
       const p = proj();
       if (sub === 'info' || !sub) return ok(siteInfo(p));
       if (sub === 'history') return ok(siteHistory(p));

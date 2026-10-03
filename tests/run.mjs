@@ -2019,6 +2019,32 @@ t('ai: собствен ключ → patch, прилагане само с --yes
   bid('account', 'keys', 'delete', '--provider', 'anthropic');
 });
 
+ta('site chat (v2): от едно съобщение — въпроси с отговори (най-много 2 кръга), после бриф с тема от списъка; без измислени контакти; Auto е бърз модел', async () => {
+  const C = await import(path.join(ROOT, 'engine', 'src', 'sitegen', 'chat.mjs'));
+  const { looseJSON } = await import(path.join(ROOT, 'engine', 'src', 'sitegen', 'aicontent.mjs'));
+  assert(C.routeModel('auto') === C.AUTO_MODEL && C.routeModel() === C.AUTO_MODEL && C.routeModel('claude-opus-5-5') === 'claude-opus-5-5', 'auto is the fast model; an explicit pick is kept');
+  assert(looseJSON('```json\n{"a":1}\n```').a === 1 && looseJSON('Here: {"a":2} ok').a === 2 && looseJSON('no json') === null, 'loose JSON');
+  const seen = [];
+  const fake = (answer) => async (req) => { seen.push(req); return { json: answer, usage: { input: 10, output: 5, model: req.model } }; };
+  // 1. a vague message: the assistant asks, options are cleaned and capped
+  const ask = await C.chatTurn({ messages: [{ role: 'user', content: 'Искам сайт' }], call: fake({ action: 'ask', say: 'Кажи ми още.', questions: [{ id: 'kind', text: 'За какво е сайтът?', options: ['Бизнес', 'Портфолио', 'Магазин', 'Блог', 'Събитие', 'Друго'] }, { id: '', text: '  ', options: [] }], brief: {} }) });
+  assert(ask.action === 'ask' && ask.questions.length === 1 && ask.questions[0].options.length === 5 && ask.model === C.AUTO_MODEL, JSON.stringify(ask));
+  assert(seen[0].prompt.includes('mentor:') && seen[0].prompt.includes('Owner: Искам сайт') && seen[0].step === 'chat', 'the prompt lists the shipped themes and the conversation');
+  // 2. a clear message: build; the theme must be shipped, the contacts never come from the model
+  const built = await C.chatTurn({ messages: [{ role: 'user', content: 'Сайт за фризьорски салон Ива в Пловдив' }], call: fake({ action: 'build', say: 'Правя сайт за салона.', questions: [], brief: { name: 'Салон Ива', theme: 'no-such-theme', description: 'Прически', offer: 'Подстригване и оцветяване', audience: '', services: ['Подстригване', 'Оцветяване'], tone: 'friendly', city: 'Пловдив', contacts: { phone: '0888 123 456' } } }) });
+  assert(built.action === 'build' && built.brief.name === 'Салон Ива' && built.brief.services.length === 2 && built.brief.contacts.phone === '' && built.brief.contacts.email === '', JSON.stringify(built.brief));
+  assert(listThemeIds().includes(built.brief.theme), 'an unknown theme falls back to a shipped one: ' + built.brief.theme);
+  // 3. after two question rounds the assistant must build, even if the model keeps asking
+  const forced = await C.chatTurn({ messages: [{ role: 'user', content: 'Йога студио Лотос' }], asked: 2, call: fake({ action: 'ask', say: '?', questions: [{ id: 'x', text: 'Още?', options: [] }], brief: { name: 'Лотос', theme: 'yoga' } }) });
+  assert(forced.action === 'build' && forced.brief.name === 'Лотос', JSON.stringify(forced).slice(0, 200));
+  // 4. a bad answer is an error, an empty conversation is a usage error
+  let bad = null; try { await C.chatTurn({ messages: [{ role: 'user', content: 'x' }], call: fake(null) }); } catch (e) { bad = e; }
+  assert(bad && bad.code === 'ai_bad_answer', 'null answer');
+  let empty = null; try { await C.chatTurn({ messages: [], call: fake({}) }); } catch (e) { empty = e; }
+  assert(empty && empty.code === 'usage', 'no message');
+  function listThemeIds() { return JSON.parse(fs.readFileSync(path.join(ROOT, 'engine', 'themes', 'mentor', 'theme.json'), 'utf8')) && fs.readdirSync(path.join(ROOT, 'engine', 'themes')).filter((d) => fs.existsSync(path.join(ROOT, 'engine', 'themes', d, 'theme.json'))); }
+});
+
 t('sitegen: supabase/functions/_shared/site-ai.mjs е точно копие на engine/src/sitegen/ai.mjs (scripts/sitegen-sync.mjs)', () => {
   const src = fs.readFileSync(path.join(ROOT, 'engine', 'src', 'sitegen', 'ai.mjs'), 'utf8');
   const copy = fs.readFileSync(path.join(ROOT, 'supabase', 'functions', '_shared', 'site-ai.mjs'), 'utf8');

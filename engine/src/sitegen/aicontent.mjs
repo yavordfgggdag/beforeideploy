@@ -163,3 +163,45 @@ export async function siteContent({ brief: input, provider: requested = null }) 
     duration: (Date.now() - t0) / 1000,
   };
 }
+
+// ---------------------------------------------------------------- Site Builder v2: the conversation (chat.mjs)
+
+/** Parses a model's JSON answer even when it wrapped it in a code fence or added a sentence around it. */
+export function looseJSON(text) {
+  const s = String(text || '').trim();
+  try { return JSON.parse(s); } catch { /* fall through */ }
+  const a = s.indexOf('{');
+  const b = s.lastIndexOf('}');
+  if (a >= 0 && b > a) { try { return JSON.parse(s.slice(a, b + 1)); } catch { /* not JSON */ } }
+  return null;
+}
+
+/** A call function for any provider (own key or the metered cloud) that returns { json, usage } for a JSON answer. */
+export function providerCall(provider) {
+  return async ({ model, system, prompt, schema, maxTokens, effort, step }) => {
+    let text = '';
+    const usage = { input: 0, output: 0, model };
+    for await (const e of stream(provider, { model, system, prompt, messages: [{ role: 'user', content: prompt }], maxTokens, effort, format: schema, step, mode: 'assistant', locale: currentLang() })) {
+      if (e.type === 'delta') text += e.text;
+      else if (e.type === 'usage') {
+        if (e.input != null) usage.input = e.input;
+        if (e.output != null) usage.output = e.output;
+        if (e.model) usage.model = e.model;
+      }
+    }
+    const json = looseJSON(text);
+    if (!json) throw new EngineError(msg('newsite.ai.badAnswer'), 'ai_failed');
+    return { json, usage };
+  };
+}
+
+/** `bid site chat`: one turn of the "start a site from one message" conversation. */
+export async function siteChat({ messages, model = 'auto', asked = 0, provider: requested = null }) {
+  const status = await accountStatus();
+  const provider = chooseProvider({ features: status.features || null, requested });
+  const { chatTurn } = await import('./chat.mjs');
+  const out = await chatTurn({ messages, call: providerCall(provider), model, asked: Number(asked) || 0 });
+  const amount = out.usage?.charged ?? (out.usage?.input || 0) + (out.usage?.output || 0);
+  recordCost({ project: null, projectName: null, service: provider === 'cloud' ? 'ai-cloud' : `ai-${provider}`, op: 'site.chat', amount, unit: out.usage?.charged != null ? 'credits' : 'tokens', estimated: false, ref: out.model || null });
+  return { ...out, provider, round: out.action === 'ask' ? (Number(asked) || 0) + 1 : Number(asked) || 0 };
+}
