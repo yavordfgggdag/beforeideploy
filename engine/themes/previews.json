@@ -4,107 +4,107 @@
     "app": {
       "hash": "fdbdb1d93f305705",
       "at": "2026-10-03",
-      "bytes": 62133
+      "bytes": 60960
     },
     "blog": {
       "hash": "1f892673dda024fb",
       "at": "2026-10-03",
-      "bytes": 47162
+      "bytes": 49638
     },
     "clinic": {
       "hash": "08e53913c2d73744",
       "at": "2026-10-03",
-      "bytes": 65072
+      "bytes": 60888
     },
     "comingsoon": {
       "hash": "71e5f8ee48ea957c",
       "at": "2026-10-03",
-      "bytes": 52651
+      "bytes": 50800
     },
     "course": {
       "hash": "aea862de53e5f79e",
       "at": "2026-10-03",
-      "bytes": 64112
+      "bytes": 62548
     },
     "event": {
       "hash": "ae22a1ae3ce68453",
       "at": "2026-10-03",
-      "bytes": 60014
+      "bytes": 61169
     },
     "fitness": {
       "hash": "3f41f946a0cb5d09",
       "at": "2026-10-03",
-      "bytes": 58904
+      "bytes": 59307
     },
     "hotel": {
       "hash": "779cd86d1690466f",
       "at": "2026-10-03",
-      "bytes": 66432
+      "bytes": 69035
     },
     "landing": {
       "hash": "91cb8f868600a1fe",
       "at": "2026-10-03",
-      "bytes": 62614
+      "bytes": 62607
     },
     "linkinbio": {
       "hash": "8f5e9e60e7a3bba3",
       "at": "2026-10-03",
-      "bytes": 29966
+      "bytes": 28218
     },
     "mentor": {
       "hash": "809a301d7d6d9311",
       "at": "2026-10-03",
-      "bytes": 63507
+      "bytes": 66146
     },
     "nonprofit": {
       "hash": "d79c5dc1b73c03c0",
       "at": "2026-10-03",
-      "bytes": 66264
+      "bytes": 66224
     },
     "portfolio": {
       "hash": "df84767aed5e0b99",
       "at": "2026-10-03",
-      "bytes": 59273
+      "bytes": 58427
     },
     "realestate": {
       "hash": "fd62346cfd8bee74",
       "at": "2026-10-03",
-      "bytes": 59667
+      "bytes": 62093
     },
     "restaurant": {
       "hash": "a8aec6c1d98a8234",
       "at": "2026-10-03",
-      "bytes": 63920
+      "bytes": 67291
     },
     "resume": {
       "hash": "dd02625b45e4b705",
       "at": "2026-10-03",
-      "bytes": 64286
+      "bytes": 63680
     },
     "saas": {
       "hash": "53b4302f5761dc9d",
       "at": "2026-10-03",
-      "bytes": 58582
+      "bytes": 58781
     },
     "salon": {
       "hash": "2329dc3c4a9d793d",
       "at": "2026-10-03",
-      "bytes": 52223
+      "bytes": 53524
     },
     "services": {
       "hash": "5ec34de76b9676f5",
       "at": "2026-10-03",
-      "bytes": 63809
+      "bytes": 63846
     },
     "shop": {
       "hash": "0d510be7eb373240",
       "at": "2026-10-03",
-      "bytes": 64022
+      "bytes": 60005
     },
     "wedding": {
       "hash": "158d9e6d8841cf03",
       "at": "2026-10-03",
-      "bytes": 46015
+      "bytes": 49115
     }
   }
 }
