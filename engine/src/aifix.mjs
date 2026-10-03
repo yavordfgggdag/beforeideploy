@@ -72,7 +72,10 @@ const MAX_FILES = 4;
 function mentionedFiles(dir, log) {
   const root = path.resolve(dir);
   // paths printed absolutely (…/my-site/src/app.tsx:12) become project-relative
-  const text = String(log).split(`${root}/`).join('');
+  // (macOS prints /private/var/… for the folder the app knows as /var/…, so both spellings go)
+  let real = root;
+  try { real = fs.realpathSync(root); } catch {}
+  const text = [...new Set([root, real])].reduce((acc, r) => acc.split(`${r}/`).join(''), String(log));
   const found = new Map();
   let m;
   FILE_RE.lastIndex = 0;

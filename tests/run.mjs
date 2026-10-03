@@ -670,13 +670,13 @@ ta('new S7-B: AI текстове — одит на измислени факт�
   assert(chk2.status === 'fail' && chk2.details.some((d) => d.includes('content.exampleContact')), JSON.stringify(chk2.details));
 });
 
-ta('new S7-C: 41 тема — всяка е честна (без измислени числа и твърдения), с подсказки за формата, и оценката за AI работи офлайн', async () => {
+ta('new S7-C: 45 теми — всяка е честна (без измислени числа и твърдения), с подсказки за формата, и оценката за AI работи офлайн', async () => {
   const A = await import(path.join(ROOT, 'engine', 'src', 'sitegen', 'ai.mjs'));
   const { loadTheme } = await import(path.join(ROOT, 'engine', 'src', 'sitegen', 'themes.mjs'));
   const { applyBrief, normalizeBrief } = await import(path.join(ROOT, 'engine', 'src', 'sitegen', 'brief.mjs'));
   const { ICONS } = await import(path.join(ROOT, 'engine', 'src', 'sitegen', 'icons.mjs'));
   const list = bid('new', 'list').data;
-  assert(list.length >= 41, `${list.length} themes`);
+  assert(list.length >= 45, `${list.length} themes`);
   const kinds = new Set(list.map((x) => x.id));
   for (const id of ['lawyer', 'accountant', 'autoservice', 'cleaning', 'florist', 'bakery', 'bar', 'yoga', 'barber', 'spa', 'tattoo', 'music', 'podcast', 'photographer', 'interior', 'school', 'kids', 'dance', 'travel', 'vet', 'agency', 'construction', 'transport', 'farm']) assert(kinds.has(id), `theme ${id}`);
   const problems = [];
