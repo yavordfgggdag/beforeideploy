@@ -7,7 +7,12 @@ export interface Theme {
   id: string; title: string; description: string; pages: number; category: string; categoryTitle: string;
   icon: string; accent: string; featured: boolean; style: string; questions: string[];
   preview: string | null; art: string; keywords: string[]; sample: string;
+  /** S7: what to write in each box of the form for this kind of site, per site language (placeholders only). */
+  hints?: Partial<Record<'bg' | 'en', ThemeHints>>;
 }
+export interface ThemeHints { offer: string; audience: string; services: string[][] }
+export type Tone = 'friendly' | 'professional' | 'premium' | 'playful';
+export const TONES: Tone[] = ['friendly', 'professional', 'premium', 'playful'];
 export interface Palette { id: string; dark: boolean; bg: string; accent: string; accent2: string }
 export interface Style { head: string; radius: number; palettes: Palette[] }
 export type Styles = Record<string, Style>;
@@ -18,10 +23,12 @@ export interface Brief {
   schema: 'bid.site-brief/1'; theme: string; lang: 'bg' | 'en'; name: string; description: string; offer: string; audience: string;
   services: Service[]; contacts: { email: string; phone: string; instagram: string; address: string; website: string };
   photos: { path: string; alt: string }[]; style: string | null; palette: string | null; scheme: 'auto' | 'light' | 'dark';
+  /** S7: how the texts should sound (null = the AI decides) and opening hours, one line each. */
+  tone: Tone | null; hours: string;
 }
 export const emptyBrief = (lang: 'bg' | 'en'): Brief => ({
   schema: 'bid.site-brief/1', theme: 'mentor', lang, name: '', description: '', offer: '', audience: '', services: [{ name: '', price: '', text: '' }],
-  contacts: { email: '', phone: '', instagram: '', address: '', website: '' }, photos: [], style: null, palette: null, scheme: 'auto',
+  contacts: { email: '', phone: '', instagram: '', address: '', website: '' }, photos: [], style: null, palette: null, scheme: 'auto', tone: null, hours: '',
 });
 
 /** The JSON the engine reads (`--brief '{…}'`): empty service rows are left out, the name trimmed. */

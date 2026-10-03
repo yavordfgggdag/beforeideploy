@@ -235,9 +235,9 @@ function section(s, site) {
             <label for="f-${fid}">${esc(f.label)}${f.options ? `<select id="f-${fid}" name="${fid}">${list(f.options).map((o) => `<option>${esc(o)}</option>`).join('')}</select>` : `<input id="f-${fid}" name="${fid}" type="${['text', 'date', 'tel', 'email', 'number'].includes(f.type) ? f.type : 'text'}">`}</label>`;
       }).join('');
       const formName = id(s.formName) || 'contact';
-      inner = `<div class="contact">
+      inner = `<div class="contact${rows || hours ? '' : ' solo'}">${rows || hours ? `
           <div class="info">${rows}${hours}
-          </div>
+          </div>` : ''}
           <form class="form" name="${formName}" method="POST" data-netlify="true" netlify-honeypot="company">
             <input type="hidden" name="form-name" value="${formName}">
             <p class="hp"><label for="f-company">Company</label><input id="f-company" name="company"></p>

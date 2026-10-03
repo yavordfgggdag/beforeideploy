@@ -34,7 +34,11 @@ function answerFor(body: Row): string {
   const prompt = String(body.messages[0].content);
   if (/The owner wants to change their site/.test(prompt)) return JSON.stringify({ summary: "Промених увода.", ops: [{ op: "set_text", page: "index", section: null, field: "lead", value: "Нов увод от модела.", items: null, type: null, after: null, title: null, intro: null, style: null, palette: null }] });
   if (/Decide for every section/.test(prompt)) return JSON.stringify({ tone: "warm and concrete", styleSuggestion: "calm", sections: [{ page: "index", index: 1, keep: false, note: "no reviews in the brief" }] });
-  if (/^Review this site/m.test(prompt)) return prompt.slice(prompt.indexOf("Content:\n") + 9);
+  if (/^Review the texts of this website/m.test(prompt)) {
+    // the review answers with replacements by id only: here it rewrites the tagline it was shown
+    const line = /^(t\d+) \| tagline \| AI слоган$/m.exec(prompt);
+    return JSON.stringify({ fixes: line ? [{ id: line[1], text: "Ревю слоган" }] : [] });
+  }
   const recipe = JSON.parse(prompt.slice(prompt.indexOf("Recipe:\n") + 8));
   return JSON.stringify({
     description: "AI описание", tagline: "AI слоган", nav: recipe.nav, headerCta: "Запази час",
@@ -103,7 +107,15 @@ Deno.test("site-gen: three steps, the words merged into the recipe, billed once 
   const result = ev.find((e) => e.type === "result")!;
   const content = result.content as Row;
   assert.equal(content.description, "AI описание");
+  assert.equal(content.tagline, "Ревю слоган", "the review replaced one text by id and left the writer's other words alone");
   assert.equal(content.pages.index.hero.title, "AI *заглавие*");
+  // the review is told the findings, the numbered texts, the writing guide and the tone
+  const reviewPrompt = String(up.calls[2].body.messages[0].content);
+  assert.match(reviewPrompt, /Checker findings/);
+  assert.match(reviewPrompt, /Writing guide:/);
+  assert.match(reviewPrompt, /^t\d+ \| tagline \| AI слоган$/m);
+  assert.ok(String(up.calls[1].body.messages[0].content).includes("Writing guide:"), "the writer reads the guide too");
+  assert.equal((result.audit as Row).fixed, 1);
   assert.deepEqual(content.pages.index.hero.cta, ["Запази", "/contact.html"], "links come from the recipe, never the model");
   assert.deepEqual(content.headerCta, ["Запази час", "/contact.html"]);
   const types = content.pages.index.sections.map((s: Row) => s.type);

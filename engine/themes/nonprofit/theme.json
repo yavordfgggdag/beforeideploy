@@ -56,6 +56,50 @@
     "contacts",
     "photos"
   ],
+  "hints": {
+    "en": {
+      "offer": "We run a reading club and a mentoring programme for children in small towns, and we collect donations for books and scholarships.",
+      "audience": "Donors, volunteers and local schools",
+      "services": [
+        [
+          "One-off donation",
+          "€10",
+          "Books for a class of children"
+        ],
+        [
+          "Monthly donation",
+          "€5",
+          "Steady support for a mentor and one child"
+        ],
+        [
+          "Volunteering",
+          "",
+          "Mentoring online or in person"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Организираме четене и менторство за деца от малките населени места и събираме дарения за книги и стипендии.",
+      "audience": "Дарители, доброволци и местни училища",
+      "services": [
+        [
+          "Еднократно дарение",
+          "10 €",
+          "Книги за един клас"
+        ],
+        [
+          "Месечно дарение",
+          "5 €",
+          "Постоянна подкрепа за наставник и дете"
+        ],
+        [
+          "Доброволчество",
+          "",
+          "Менторство онлайн или на място"
+        ]
+      ]
+    }
+  },
   "lang": {
     "bg": {
       "tagline": "кауза, която променя",
@@ -85,10 +129,10 @@
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "Всяко дарение отива директно за каузата",
+            "eyebrow": "Дарете или станете доброволец",
             "eyebrowIcon": "heart",
             "title": "Заедно даваме *шанс на всяко дете*",
-            "lead": "Осигуряваме книги, наставници и стипендии за деца от малките населени места. 100% от даренията отиват за програмите.",
+            "lead": "Осигуряваме книги, наставници и стипендии за деца от малките населени места. Можете да помогнете като дарител или като доброволец.",
             "cta": [
               "Дари сега",
               "/#help"
@@ -114,7 +158,7 @@
                   "612"
                 ]
               ],
-              "note": "Остават 18 дни."
+              "note": "Примерни данни от примерна кампания."
             }
           },
           "sections": [
@@ -126,7 +170,7 @@
                 [
                   "book",
                   "Образование",
-                  "Библиотеки и учебни материали за 40 училища."
+                  "Библиотеки и учебни материали за училища в малките населени места."
                 ],
                 [
                   "users",
@@ -186,7 +230,7 @@
                   "name": "Месечно",
                   "price": "10 лв.",
                   "per": "/ месец",
-                  "featured": "Най-голям ефект",
+                  "featured": "Постоянна подкрепа",
                   "features": [
                     "Постоянен наставник за едно дете",
                     "Новини от програмата",
@@ -204,7 +248,7 @@
                   "features": [
                     "Онлайн или на място",
                     "Обучение и подкрепа",
-                    "Удостоверение"
+                    "Място в екипа"
                   ],
                   "cta": [
                     "Включи се",
@@ -286,10 +330,10 @@
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "Every donation goes straight to the cause",
+            "eyebrow": "Donate or volunteer with us",
             "eyebrowIcon": "heart",
             "title": "Together we give *every child a chance*",
-            "lead": "We provide books, mentors and scholarships for children in small towns. 100% of donations fund the programs.",
+            "lead": "We bring books, mentors and scholarships to children in small towns. You can help as a donor or as a volunteer.",
             "cta": [
               "Donate now",
               "/#help"
@@ -315,7 +359,7 @@
                   "612"
                 ]
               ],
-              "note": "18 days left."
+              "note": "Sample figures from an example campaign."
             }
           },
           "sections": [
@@ -327,7 +371,7 @@
                 [
                   "book",
                   "Education",
-                  "Libraries and learning materials for 40 schools."
+                  "Libraries and learning materials for schools in small towns."
                 ],
                 [
                   "users",
@@ -387,7 +431,7 @@
                   "name": "Monthly",
                   "price": "€5",
                   "per": "/ month",
-                  "featured": "Biggest impact",
+                  "featured": "Steady support",
                   "features": [
                     "A steady mentor for one child",
                     "Program news",
@@ -405,7 +449,7 @@
                   "features": [
                     "Online or in person",
                     "Training and support",
-                    "Certificate"
+                    "A place in the team"
                   ],
                   "cta": [
                     "Get involved",

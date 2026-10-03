@@ -1,0 +1,377 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "agency",
+  "category": "tech",
+  "icon": "megaphone",
+  "accent": "#25d9ff",
+  "mark": "rocket",
+  "art": "orbit",
+  "schemaOrg": "ProfessionalService",
+  "sample": { "name": "Lumen Studio" },
+  "featured": false,
+  "titleKey": "newsite.template.agency.title",
+  "descriptionKey": "newsite.template.agency.description",
+  "keywords": {
+    "en": ["agency", "digital agency", "marketing agency", "web design", "website", "branding", "logo", "social media", "advertising", "SEO", "creative studio", "web developer"],
+    "bg": ["агенция", "дигитална агенция", "рекламна агенция", "уеб дизайн", "изработка на сайт", "сайт", "брандинг", "лого", "социални мрежи", "реклама", "SEO оптимизация", "онлайн магазин", "маркетинг"]
+  },
+  "style": "bold",
+  "tokens": {
+    "dark": true,
+    "bg": "#07090f",
+    "bg2": "#0d111b",
+    "surface": "#131929",
+    "text": "#f2f5fa",
+    "muted": "#a3adc1",
+    "line": "rgba(255,255,255,.09)",
+    "accent": "#25d9ff",
+    "accent2": "#ff4db8",
+    "font": "sans",
+    "head": "grotesk",
+    "radius": 12,
+    "tilt": -2
+  },
+  "questions": ["services", "contacts", "photos"],
+  "hints": {
+    "en": {
+      "offer": "We are a digital agency that builds websites, brand identities and social media campaigns for local businesses and start-ups.",
+      "audience": "Local businesses, shops and start-ups",
+      "services": [
+        ["Website", "€900", "One page or up to five pages, ready for phones"],
+        ["Brand identity", "€600", "Logo, colours and typography"],
+        ["Social media", "€400", "A monthly content plan and posting"]
+      ]
+    },
+    "bg": {
+      "offer": "Дигитална агенция, която прави сайтове, брандове и кампании в социалните мрежи за местни фирми и стартиращи бизнеси.",
+      "audience": "Местни фирми, магазини и стартиращи бизнеси",
+      "services": [
+        ["Сайт", "900 €", "Една страница или до пет, готови за телефон"],
+        ["Брандинг", "600 €", "Лого, цветове и шрифтове"],
+        ["Социални мрежи", "400 €", "Месечен план за съдържание и публикуване"]
+      ]
+    }
+  },
+  "lang": {
+    "en": {
+      "tagline": "web, brand and marketing studio",
+      "description": "Websites, branding, social media, ads and SEO — planned in writing and built in clear steps.",
+      "nav": [
+        ["Services", "/services.html"],
+        ["Work", "/#work"],
+        ["Process", "/#process"],
+        ["Packages", "/#plans"]
+      ],
+      "headerCta": ["Start a project", "/#contact"],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Web design, branding and marketing",
+            "eyebrowIcon": "rocket",
+            "title": "Websites and brands *built to be noticed*",
+            "lead": "Web design, branding, social media, ads and SEO under one roof. We start from your goal, agree a plan in writing and ship in clear steps you can follow.",
+            "cta": ["Start a project", "/#contact"],
+            "cta2": ["See our work", "/#work"],
+            "chips": ["Websites", "Branding", "Social media", "Ads", "SEO"],
+            "card": {
+              "icon": "target",
+              "title": "A project, step by step",
+              "rows": [
+                ["Discover", "goals and audience"],
+                ["Design", "concepts you react to"],
+                ["Launch", "live, tested, tracked"]
+              ],
+              "note": "Every step ends with a review."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                ["target", "Goals first, pixels second"],
+                ["doc", "Scope and price in writing"],
+                ["chart", "Progress you can see"],
+                ["lock", "Files and logins are yours"]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "services",
+              "title": "What we do",
+              "intro": "Pick one service or combine them — each works on its own and fits with the rest.",
+              "items": [
+                ["globe", "Websites", "Fast, mobile-first sites for businesses, online shops and landing pages."],
+                ["brush", "Branding", "Logo, colours, typography and the rules that keep everything consistent."],
+                ["instagram", "Social media", "Content plans, posts, stories and short videos that sound like you."],
+                ["target", "Ads and SEO", "Google and Facebook campaigns with a clear budget, plus SEO so the right people find you."]
+              ]
+            },
+            {
+              "type": "gallery",
+              "id": "work",
+              "alt": true,
+              "title": "Projects we take on",
+              "intro": "From a first logo to a complete online shop.",
+              "items": ["Café brand identity", "Clinic website", "Online shop", "Social media campaign", "Product launch page", "Packaging design", "Product photography", "Search ads"]
+            },
+            {
+              "type": "steps",
+              "id": "process",
+              "title": "How a project runs",
+              "intro": "Four steps, each with something you can see and approve.",
+              "items": [
+                ["Discover", "A call and a short brief: what you sell, who it is for and what success looks like."],
+                ["Plan", "We propose scope, timeline and price in writing. Nothing starts until you approve it."],
+                ["Build", "Design first, then development. You review at agreed points and your feedback shapes each round."],
+                ["Launch and grow", "We test, go live and track results. Then we agree what to improve next — or hand over the keys."]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "plans",
+              "alt": true,
+              "title": "Packages",
+              "intro": "Starting prices. Every project is quoted in writing after a short brief.",
+              "items": [
+                { "name": "Starter site", "price": "from €900", "features": ["One page or up to 5 pages", "Mobile-first design", "Basic SEO setup", "Contact form and analytics"], "cta": ["Start a project", "/#contact"] },
+                { "name": "Brand + site", "price": "from €2,400", "featured": "Popular", "features": ["Logo, colours and typography", "Website of up to ten pages", "Social media templates", "Launch support"], "cta": ["Start a project", "/#contact"] },
+                { "name": "Growth", "price": "from €600", "per": "/ month", "features": ["Social media content plan", "Ad campaign management", "Monthly report and call", "Ongoing SEO improvements"], "cta": ["Start a project", "/#contact"] }
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Questions before we start",
+              "items": [
+                ["How long does a website take?", "A simple site often takes a few weeks; a larger one takes longer. The timeline is part of the written plan, so you know before we start."],
+                ["What do you need from me to begin?", "A short brief, your logo and any materials you already have, and one person on your side who can approve decisions."],
+                ["Do I own the website and the files?", "Yes. At handover you receive the files and the logins for your domain, hosting and ad accounts."],
+                ["Is the ad budget included in the price?", "No. Our fee covers the work; the ad budget goes straight to Google or Facebook, so you see every euro spent."],
+                ["Can you work with our existing brand?", "Yes. We can extend your current identity or refresh it, and we tell you honestly which makes more sense."],
+                ["Do you look after the site after launch?", "If you want us to. A monthly plan covers updates, backups and small changes; otherwise we hand over a short guide."]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Have a project in mind?",
+              "p": "Send a few lines about it. We will tell you how we would approach it and what to expect.",
+              "button": ["Start a project", "/#contact"]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Start a project",
+              "intro": "Tell us what you do and what you want to achieve. We get in touch to arrange a first call.",
+              "formName": "project",
+              "rows": [
+                ["mail", "Email", "hello@example.com", "mailto:hello@example.com"],
+                ["phone", "Phone", "+359 888 000 000", "tel:+359888000000"],
+                ["pin", "Address", "1 Vitosha St, Sofia"]
+              ],
+              "fields": [
+                { "id": "need", "label": "I need", "options": ["Website", "Branding", "Social media", "Ads", "SEO", "Not sure yet"] },
+                { "id": "budget", "label": "Budget", "options": ["up to €1,000", "€1,000 – €3,000", "€3,000 – €8,000", "over €8,000"] }
+              ],
+              "messageLabel": "About the project",
+              "send": "Send the brief",
+              "hoursTitle": "Opening hours",
+              "hours": [
+                ["Monday – Friday", "10:00 – 18:00"],
+                ["Saturday", "closed"],
+                ["Sunday", "closed"]
+              ]
+            }
+          ]
+        },
+        "services": {
+          "title": "Services",
+          "description": "Websites, branding, social media, ads and SEO — what each service includes.",
+          "pagehead": ["Services", "What each service includes, so you can choose one or combine them."],
+          "sections": [
+            {
+              "type": "split",
+              "items": [
+                ["Websites and online shops", "Clear structure, fast pages and a design that works on a phone first.", "Page structure and a plan for the copy", "Design, development and testing", "Contact forms, analytics and basic SEO built in"],
+                ["Branding", "A look and a voice that make you recognisable — and a guide so everyone uses them the same way.", "Logo and colour palette", "Typography and image style", "A short brand guide for your team and suppliers"],
+                ["Social media, ads and SEO", "Plans that work together: content that attracts, ads that reach further and a site that gets found.", "Content plans, posts and short videos", "Google and Facebook campaigns with monthly reports", "Technical SEO and content for search"]
+              ]
+            },
+            {
+              "type": "chips",
+              "alt": true,
+              "title": "Also ask us about",
+              "items": ["Landing pages", "Logo refresh", "Email newsletters", "Google Business profile", "Photo shoots", "Website care plans", "Online shops", "Presentations"]
+            },
+            {
+              "type": "cta",
+              "h": "Not sure what you need?",
+              "p": "Describe the goal and we will suggest where to start.",
+              "button": ["Start a project", "/#contact"]
+            }
+          ]
+        }
+      }
+    },
+    "bg": {
+      "tagline": "студио за уеб дизайн, брандинг и маркетинг",
+      "description": "Сайтове, брандинг, социални мрежи, реклама и SEO — планирани писмено и изпълнени на ясни етапи.",
+      "nav": [
+        ["Услуги", "/services.html"],
+        ["Проекти", "/#work"],
+        ["Процес", "/#process"],
+        ["Пакети", "/#plans"]
+      ],
+      "headerCta": ["Започнете проект", "/#contact"],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Уеб дизайн, брандинг и маркетинг",
+            "eyebrowIcon": "rocket",
+            "title": "Сайтове и брандове, *които се забелязват*",
+            "lead": "Уеб дизайн, брандинг, социални мрежи, реклама и SEO под един покрив. Започваме от вашата цел, уговаряме плана писмено и работим на ясни стъпки, които можете да следите.",
+            "cta": ["Започнете проект", "/#contact"],
+            "cta2": ["Вижте проектите", "/#work"],
+            "chips": ["Сайтове", "Брандинг", "Социални мрежи", "Реклама", "SEO"],
+            "card": {
+              "icon": "target",
+              "title": "Проект — стъпка по стъпка",
+              "rows": [
+                ["Проучване", "цели и аудитория"],
+                ["Дизайн", "идеи, върху които реагирате"],
+                ["Старт", "на живо, тестван, следен"]
+              ],
+              "note": "Всяка стъпка завършва с преглед."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                ["target", "Първо целите, после пикселите"],
+                ["doc", "Обхват и цена — писмено"],
+                ["chart", "Напредък, който виждате"],
+                ["lock", "Файловете и достъпите са ваши"]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "services",
+              "title": "С какво се занимаваме",
+              "intro": "Изберете една услуга или ги комбинирайте — всяка работи сама и пасва на останалите.",
+              "items": [
+                ["globe", "Сайтове", "Бързи сайтове, които първо работят на телефон — за фирми, онлайн магазини и целеви страници."],
+                ["brush", "Брандинг", "Лого, цветове, шрифтове и правила, които държат всичко последователно."],
+                ["instagram", "Социални мрежи", "Планове за съдържание, публикации, истории и кратки видеа, които звучат като вас."],
+                ["target", "Реклама и SEO", "Кампании в Google и Facebook с ясен бюджет, плюс SEO, за да ви намират точните хора."]
+              ]
+            },
+            {
+              "type": "gallery",
+              "id": "work",
+              "alt": true,
+              "title": "Проекти, които поемаме",
+              "intro": "От първото лого до цялостен онлайн магазин.",
+              "items": ["Бранд за кафене", "Сайт за клиника", "Онлайн магазин", "Кампания във Facebook", "Страница за нов продукт", "Дизайн на опаковки", "Продуктова фотография", "Реклама в търсачките"]
+            },
+            {
+              "type": "steps",
+              "id": "process",
+              "title": "Как върви един проект",
+              "intro": "Четири стъпки — във всяка има нещо, което виждате и одобрявате.",
+              "items": [
+                ["Проучване", "Разговор и кратко задание: бизнесът ви, хората, до които искате да стигнете, и как изглежда успехът."],
+                ["План", "Предлагаме обхват, срок и цена писмено. Нищо не започва, докато не го одобрите."],
+                ["Изработка", "Първо дизайн, после разработка. Преглеждате на уговорени моменти и вашата обратна връзка оформя всеки следващ кръг."],
+                ["Старт и растеж", "Тестваме, пускаме на живо и следим резултатите. После уговаряме какво да подобрим — или ви предаваме ключовете."]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "plans",
+              "alt": true,
+              "title": "Пакети",
+              "intro": "Цените са начални. Всеки проект се оферира писмено след кратко задание.",
+              "items": [
+                { "name": "Начален сайт", "price": "от 900 €", "features": ["Една страница или до 5 страници", "Дизайн, първо за телефон", "Основна SEO настройка", "Контактна форма и статистика"], "cta": ["Започнете проект", "/#contact"] },
+                { "name": "Бранд и сайт", "price": "от 2 400 €", "featured": "Най-избиран", "features": ["Лого, цветове и шрифтове", "Сайт до десет страници", "Шаблони за социални мрежи", "Съдействие при пускането"], "cta": ["Започнете проект", "/#contact"] },
+                { "name": "Растеж", "price": "от 600 €", "per": "/ месец", "features": ["План за съдържание в социалните мрежи", "Управление на рекламни кампании", "Месечен отчет и разговор", "Постоянни SEO подобрения"], "cta": ["Започнете проект", "/#contact"] }
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Въпроси преди да започнем",
+              "items": [
+                ["Колко време отнема един сайт?", "Прост сайт често отнема няколко седмици, по-голям — повече. Срокът е част от писмения план, така че го знаете още преди да започнем."],
+                ["Какво ви трябва от мен, за да започнем?", "Кратко задание, логото ви и каквито материали вече имате, плюс един човек от ваша страна, който взема решенията."],
+                ["Мои ли са сайтът и файловете му?", "Да. При предаването получавате файловете и достъпите до домейна, хостинга и рекламните акаунти."],
+                ["Включен ли е рекламният бюджет в цената?", "Не. Нашето възнаграждение е за работата; рекламният бюджет отива директно към Google или Facebook и виждате всяко похарчено евро."],
+                ["Можете ли да работите с нашата съществуваща марка?", "Да. Можем да доразвием сегашната ви идентичност или да я освежим и честно казваме кое е по-разумно."],
+                ["Грижите ли се за сайта и след пускането?", "Ако искате. Месечният план включва обновления, резервни копия и малки промени; иначе предаваме кратко ръководство."]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Имате проект наум?",
+              "p": "Пишете ни няколко реда за него. Ще кажем как бихме подходили и какво да очаквате.",
+              "button": ["Започнете проект", "/#contact"]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Започнете проект",
+              "intro": "Разкажете за бизнеса си и какво искате да постигнете. Ще се свържем с вас, за да уговорим първи разговор.",
+              "formName": "project",
+              "rows": [
+                ["mail", "Имейл", "hello@example.com", "mailto:hello@example.com"],
+                ["phone", "Телефон", "+359 888 000 000", "tel:+359888000000"],
+                ["pin", "Адрес", "ул. „Витоша“ 1, София"]
+              ],
+              "fields": [
+                { "id": "need", "label": "Нуждая се от", "options": ["Сайт", "Брандинг", "Социални мрежи", "Реклама", "SEO", "Още не знам"] },
+                { "id": "budget", "label": "Бюджет", "options": ["до 1 000 €", "1 000 – 3 000 €", "3 000 – 8 000 €", "над 8 000 €"] }
+              ],
+              "messageLabel": "За проекта",
+              "send": "Изпратете заданието",
+              "hoursTitle": "Работно време",
+              "hours": [
+                ["Понеделник – петък", "10:00 – 18:00"],
+                ["Събота", "почивен ден"],
+                ["Неделя", "почивен ден"]
+              ]
+            }
+          ]
+        },
+        "services": {
+          "title": "Услуги",
+          "description": "Сайтове, брандинг, социални мрежи, реклама и SEO — какво включва всяка услуга.",
+          "pagehead": ["Услуги", "Какво включва всяка услуга — изберете една или ги комбинирайте."],
+          "sections": [
+            {
+              "type": "split",
+              "items": [
+                ["Сайтове и онлайн магазини", "Ясна структура, бързи страници и дизайн, който първо работи на телефон.", "Структура на страниците и план за текстовете", "Дизайн, разработка и тестване", "Контактни форми, статистика и основно SEO — вградени"],
+                ["Брандинг", "Визия и тон, по които ви разпознават — и ръководство, с което всички ги прилагат еднакво.", "Лого и цветова палитра", "Шрифтове и стил на изображенията", "Кратко ръководство за екипа и доставчиците ви"],
+                ["Социални мрежи, реклама и SEO", "Планове, които се допълват: съдържание, което привлича, реклама, която стига по-далеч, и сайт, който се намира.", "Планове за съдържание, публикации и кратки видеа", "Кампании в Google и Facebook с месечни отчети", "Техническо SEO и съдържание за търсачките"]
+              ]
+            },
+            {
+              "type": "chips",
+              "alt": true,
+              "title": "Питайте ни и за",
+              "items": ["Целеви страници", "Освежаване на лого", "Имейл бюлетини", "Профил в Google", "Фотосесии", "Поддръжка на сайт", "Онлайн магазини", "Презентации"]
+            },
+            {
+              "type": "cta",
+              "h": "Не сте сигурни какво ви трябва?",
+              "p": "Опишете целта и ще предложим откъде да започнете.",
+              "button": ["Започнете проект", "/#contact"]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

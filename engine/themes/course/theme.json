@@ -59,10 +59,54 @@
     "contacts",
     "photos"
   ],
+  "hints": {
+    "en": {
+      "offer": "We run a practical online course for people who want to learn programming from scratch: short video lessons, weekly exercises and live sessions where we look at your work together.",
+      "audience": "Beginners and career changers who learn best by doing",
+      "services": [
+        [
+          "Self-paced course",
+          "€149",
+          "All video lessons and exercises, learn whenever you like"
+        ],
+        [
+          "Course with a mentor",
+          "€349",
+          "Adds live sessions and a review of every project"
+        ],
+        [
+          "One-to-one session",
+          "€40",
+          "Help with your own project or an exercise you are stuck on"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Водим практичен онлайн курс за хора, които искат да научат програмиране от нулата: кратки видео уроци, седмични упражнения и живи срещи, на които разглеждаме работите ви заедно.",
+      "audience": "Начинаещи и хора, които сменят професията си и обичат да учат на практика",
+      "services": [
+        [
+          "Курс в свободно време",
+          "149 €",
+          "Всички видео уроци и упражнения, учите когато ви е удобно"
+        ],
+        [
+          "Курс с ментор",
+          "349 €",
+          "Добавя живи срещи и преглед на всеки проект"
+        ],
+        [
+          "Индивидуална сесия",
+          "40 €",
+          "Помощ със собствен проект или с упражнение, което не ви се получава"
+        ]
+      ]
+    }
+  },
   "lang": {
     "bg": {
       "tagline": "онлайн курс и школа",
-      "description": "Практичен онлайн курс с ментор, домашни и сертификат. Първият урок е безплатен.",
+      "description": "Практичен онлайн курс с ментор, упражнения и финален проект.",
       "nav": [
         [
           "Програма",
@@ -88,10 +132,10 @@
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "Нов поток от 3 ноември",
+            "eyebrow": "Учете онлайн, с ментор до вас",
             "eyebrowIcon": "calendar",
-            "title": "Научете нещо ново *за 8 седмици*",
-            "lead": "Практичен онлайн курс с живи срещи, ментор и истински проект в портфолиото. Първият урок е безплатен.",
+            "title": "Научете нещо ново *стъпка по стъпка*",
+            "lead": "Практичен онлайн курс с живи срещи, ментор и истински проект за портфолиото — в темпо, което ви е удобно.",
             "cta": [
               "Запиши се",
               "/#contact"
@@ -127,17 +171,17 @@
               "title": "Програма",
               "items": [
                 [
-                  "Седмици 1–2",
+                  "Първо",
                   "Основи",
                   "Понятията и инструментите, без които не може."
                 ],
                 [
-                  "Седмици 3–5",
+                  "След това",
                   "Практика",
                   "Всяка седмица — малък проект с обратна връзка."
                 ],
                 [
-                  "Седмици 6–8",
+                  "Накрая",
                   "Финален проект",
                   "Ваш собствен проект, който показвате в портфолио."
                 ]
@@ -151,18 +195,18 @@
               "items": [
                 [
                   "users",
-                  "Десислава Маринова",
-                  "10 години в индустрията, над 2 000 обучени студенти."
+                  "Насока на всяка стъпка",
+                  "Преподавателят обяснява всяка стъпка, отговаря на въпроси и показва как се прави в реална работа."
                 ],
                 [
                   "star",
-                  "4,9 от 5",
-                  "Средна оценка от над 600 отзива."
+                  "Честна обратна връзка",
+                  "Всеки проект получава коментар какво работи и какво да се подобри."
                 ],
                 [
                   "heart",
                   "Малки групи",
-                  "До 20 души — всеки получава внимание."
+                  "Група, достатъчно малка, за да получите отговор на всеки въпрос."
                 ]
               ]
             },
@@ -177,7 +221,7 @@
                   "features": [
                     "Всички видео уроци",
                     "Упражнения",
-                    "Сертификат"
+                    "Финален проект, който да покажете"
                   ],
                   "cta": [
                     "Запиши се",
@@ -190,7 +234,7 @@
                   "featured": "Препоръчан",
                   "features": [
                     "Всичко от „Самостоятелно“",
-                    "8 живи срещи",
+                    "Живи срещи с ментора",
                     "Преглед на всеки проект"
                   ],
                   "cta": [
@@ -208,15 +252,15 @@
               "items": [
                 [
                   "Нужен ли е опит?",
-                  "Не — започваме от нулата."
+                  "Не е задължителен — започваме от основите и надграждаме."
                 ],
                 [
                   "Колко време седмично?",
-                  "Около 4–6 часа, в удобно за вас време."
+                  "Колкото са нужни за един урок и упражненията към него. Времето избирате вие; само живите срещи са в определени дни."
                 ],
                 [
                   "Ако не ми хареса?",
-                  "Връщаме парите до 14 дни след началото."
+                  "Кажете ни веднага щом усетите, че нещо не е наред. Ще изслушаме, ще потърсим решение и ще уговорим следващата стъпка."
                 ]
               ]
             },
@@ -224,7 +268,7 @@
               "type": "contact",
               "id": "contact",
               "title": "Запиши се",
-              "intro": "Оставете имейл — ще получите безплатния първи урок веднага.",
+              "intro": "Оставете имейл и няколко думи — ще ви пишем със следващите стъпки.",
               "formName": "enroll",
               "rows": [
                 [
@@ -259,7 +303,7 @@
     },
     "en": {
       "tagline": "online course and school",
-      "description": "A practical online course with a mentor, homework and a certificate. The first lesson is free.",
+      "description": "A practical online course with a mentor, exercises and a final project.",
       "nav": [
         [
           "Program",
@@ -285,10 +329,10 @@
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "Next cohort starts 3 November",
+            "eyebrow": "Learn online, with a mentor beside you",
             "eyebrowIcon": "calendar",
-            "title": "Learn something new *in 8 weeks*",
-            "lead": "A practical online course with live sessions, a mentor and a real project for your portfolio. The first lesson is free.",
+            "title": "Learn something new *step by step*",
+            "lead": "A practical online course with live sessions, a mentor and a real project for your portfolio — at a pace that suits you.",
             "cta": [
               "Enrol",
               "/#contact"
@@ -324,17 +368,17 @@
               "title": "Program",
               "items": [
                 [
-                  "Weeks 1–2",
+                  "First",
                   "Foundations",
                   "The concepts and tools you cannot do without."
                 ],
                 [
-                  "Weeks 3–5",
+                  "Then",
                   "Practice",
                   "A small project with feedback every week."
                 ],
                 [
-                  "Weeks 6–8",
+                  "Finally",
                   "Final project",
                   "Your own project to show in your portfolio."
                 ]
@@ -348,18 +392,18 @@
               "items": [
                 [
                   "users",
-                  "Desislava Marinova",
-                  "10 years in the industry, over 2,000 students taught."
+                  "Guidance at every step",
+                  "Your teacher explains each step, answers questions and shows how it is done in real work."
                 ],
                 [
                   "star",
-                  "4.9 out of 5",
-                  "Average rating from over 600 reviews."
+                  "Honest feedback",
+                  "Every project gets comments on what works and what to improve."
                 ],
                 [
                   "heart",
                   "Small groups",
-                  "Up to 20 people — everyone gets attention."
+                  "A group small enough that your questions get answered."
                 ]
               ]
             },
@@ -374,7 +418,7 @@
                   "features": [
                     "All video lessons",
                     "Exercises",
-                    "Certificate"
+                    "A final project to show"
                   ],
                   "cta": [
                     "Enrol",
@@ -387,7 +431,7 @@
                   "featured": "Recommended",
                   "features": [
                     "Everything in Self-paced",
-                    "8 live sessions",
+                    "Live sessions with the mentor",
                     "Review of every project"
                   ],
                   "cta": [
@@ -405,15 +449,15 @@
               "items": [
                 [
                   "Do I need experience?",
-                  "No — we start from zero."
+                  "Not required — we start with the basics and build up from there."
                 ],
                 [
                   "How much time per week?",
-                  "About 4–6 hours, whenever suits you."
+                  "Enough for a lesson and its exercises. You pick the time that suits you; only the live sessions have fixed dates."
                 ],
                 [
                   "What if I do not like it?",
-                  "Full refund within 14 days of the start."
+                  "Tell us as soon as it does not feel right. We listen, look for a fix and agree the next step together."
                 ]
               ]
             },
@@ -421,7 +465,7 @@
               "type": "contact",
               "id": "contact",
               "title": "Enrol",
-              "intro": "Leave your email — the free first lesson arrives right away.",
+              "intro": "Leave your email and a few words, and we will get back to you with the next steps.",
               "formName": "enroll",
               "rows": [
                 [

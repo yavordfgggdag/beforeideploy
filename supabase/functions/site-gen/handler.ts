@@ -227,7 +227,7 @@ export function createSiteGenHandler(deps: SiteGenDeps): (req: Request) => Promi
           const billed = await record();
           const input = steps.reduce((a, s) => a + s.input, 0);
           const output = steps.reduce((a, s) => a + s.output, 0);
-          send({ type: "result", content: result.content, plan: result.plan, styleSuggestion: result.styleSuggestion, version: result.version });
+          send({ type: "result", content: result.content, plan: result.plan, audit: result.audit ?? null, styleSuggestion: result.styleSuggestion, version: result.version });
           send({ type: "usage", input, output, model: models.content, charged: billed.charged, balance: billed.balance, status, steps: steps.map((s) => ({ model: s.model, input: s.input, output: s.output })) });
           send({ type: "done", stopReason: status });
         } catch (e) {

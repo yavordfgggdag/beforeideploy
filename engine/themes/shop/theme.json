@@ -56,10 +56,54 @@
     "contacts",
     "photos"
   ],
+  "hints": {
+    "en": {
+      "offer": "I make candles, ceramics and linen by hand in small batches and sell them online as gifts and things for the home.",
+      "audience": "People looking for a thoughtful gift, or something handmade for their own home",
+      "services": [
+        [
+          "Soy candle",
+          "€12",
+          "Hand-poured in a glass jar, 200 g"
+        ],
+        [
+          "Ceramic mug",
+          "€16",
+          "Hand-glazed, each one slightly different"
+        ],
+        [
+          "Gift set",
+          "€35",
+          "Candle, mug and tea, wrapped with a card"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Правя на ръка свещи, керамика и ленени изделия в малки серии и ги продавам онлайн като подаръци и неща за дома.",
+      "audience": "Хора, които търсят обмислен подарък или нещо ръчно изработено за дома си",
+      "services": [
+        [
+          "Соева свещ",
+          "12 €",
+          "Ръчно изляна в стъклено бурканче, 200 г"
+        ],
+        [
+          "Керамична чаша",
+          "16 €",
+          "Ръчно глазирана, всяка е малко по-различна"
+        ],
+        [
+          "Подаръчен комплект",
+          "35 €",
+          "Свещ, чаша и чай, опаковани с картичка"
+        ]
+      ]
+    }
+  },
   "lang": {
     "bg": {
       "tagline": "ръчно изработени неща с характер",
-      "description": "Малък магазин за ръчно изработени подаръци. Поръчка с един имейл, доставка до 2 дни.",
+      "description": "Малък магазин за ръчно изработени подаръци. Поръчвате с един имейл, а ние се грижим за доставката.",
       "nav": [
         [
           "Продукти",
@@ -85,7 +129,7 @@
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "Безплатна доставка над 60 лв.",
+            "eyebrow": "Доставка с куриер до офис или до вашия адрес",
             "eyebrowIcon": "gift",
             "title": "Подаръци, които *се помнят*",
             "lead": "Свещи, керамика и текстил, изработени на ръка в малки серии. Всеки предмет е единствен по рода си.",
@@ -99,7 +143,7 @@
             ],
             "card": {
               "icon": "bag",
-              "title": "Най-продавани",
+              "title": "Идеи за подарък",
               "rows": [
                 [
                   "Свещ „Лавандула“",
@@ -114,7 +158,7 @@
                   "28 лв."
                 ]
               ],
-              "note": "Наличност: обновена днес."
+              "note": "Всички продукти и цени са на страница „Продукти“."
             }
           },
           "sections": [
@@ -141,11 +185,11 @@
                 ],
                 [
                   "Потвърждаваме",
-                  "До няколко часа — с наличност и обща цена."
+                  "Отговаряме с наличност и обща цена."
                 ],
                 [
                   "Изпращаме",
-                  "С куриер до офис или адрес, до 2 работни дни."
+                  "С куриер до офис или до адрес."
                 ],
                 [
                   "Плащате",
@@ -160,7 +204,7 @@
                 [
                   "hand",
                   "Ръчна изработка",
-                  "Правим всичко в ателието си в Пловдив."
+                  "Всичко правим ръчно в собственото си ателие."
                 ],
                 [
                   "leaf",
@@ -170,7 +214,7 @@
                 [
                   "gift",
                   "Подаръчна опаковка",
-                  "Безплатно, с картичка по ваш текст."
+                  "Опаковаме като подарък, с картичка по ваш текст."
                 ]
               ]
             },
@@ -224,7 +268,7 @@
           "description": "Всички продукти: свещи, керамика, текстил и подаръчни комплекти с цени.",
           "pagehead": [
             "Продукти",
-            "Цените са с ДДС. Доставка 6 лв., безплатна над 60 лв."
+            "Изберете какво ви харесва и ни пишете — потвърждаваме общата цена с доставката, преди да платите."
           ],
           "sections": [
             {
@@ -235,7 +279,7 @@
                   "items": [
                     [
                       "„Лавандула“",
-                      "Соев восък, 200 г, 40 ч. горене",
+                      "Соев восък, 200 г, успокояващ аромат",
                       "24 лв."
                     ],
                     [
@@ -317,7 +361,7 @@
     },
     "en": {
       "tagline": "handmade things with character",
-      "description": "A small shop for handmade gifts. Order with one email, delivered within 2 days.",
+      "description": "A small shop for handmade gifts. Order with one email and we take care of the delivery.",
       "nav": [
         [
           "Products",
@@ -343,7 +387,7 @@
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "Free delivery over €30",
+            "eyebrow": "Courier delivery to a locker or your door",
             "eyebrowIcon": "gift",
             "title": "Gifts people *remember*",
             "lead": "Candles, ceramics and textiles made by hand in small batches. Every piece is one of a kind.",
@@ -357,7 +401,7 @@
             ],
             "card": {
               "icon": "bag",
-              "title": "Best sellers",
+              "title": "Gift ideas",
               "rows": [
                 [
                   "“Lavender” candle",
@@ -372,7 +416,7 @@
                   "€14"
                 ]
               ],
-              "note": "Stock: updated today."
+              "note": "See every product and price on the products page."
             }
           },
           "sections": [
@@ -399,11 +443,11 @@
                 ],
                 [
                   "Confirm",
-                  "Within hours — stock and total price."
+                  "We reply with stock and the total price."
                 ],
                 [
                   "Ship",
-                  "By courier to a locker or your door in 2 working days."
+                  "By courier to a locker or to your door."
                 ],
                 [
                   "Pay",
@@ -418,7 +462,7 @@
                 [
                   "hand",
                   "Handmade",
-                  "Everything is made in our Plovdiv studio."
+                  "Everything is made by hand in our own studio."
                 ],
                 [
                   "leaf",
@@ -428,7 +472,7 @@
                 [
                   "gift",
                   "Gift wrapping",
-                  "Free, with a card in your words."
+                  "Wrapped as a gift, with a card in your words."
                 ]
               ]
             },
@@ -482,7 +526,7 @@
           "description": "All products: candles, ceramics, textiles and gift sets with prices.",
           "pagehead": [
             "Products",
-            "Prices include VAT. Delivery €3, free over €30."
+            "Choose what you like and write to us — we confirm the total, delivery included, before you pay."
           ],
           "sections": [
             {
@@ -493,7 +537,7 @@
                   "items": [
                     [
                       "“Lavender”",
-                      "Soy wax, 200 g, 40 h burn",
+                      "Soy wax, 200 g, calming scent",
                       "€12"
                     ],
                     [

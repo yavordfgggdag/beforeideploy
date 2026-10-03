@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { ENGINE_DIR, readJSON, isDir, exists } from '../util.mjs';
-import { t } from '../i18n.mjs';
+import { t, loadCatalog } from '../i18n.mjs';
 import { LANGS, SECTION_TYPES } from './render.mjs';
 import { MOTIFS } from './art.mjs';
 
@@ -61,8 +61,23 @@ export function listThemes() {
       art: MOTIFS.includes(th.art) ? th.art : 'blobs',
       keywords: keywordsOf(th),
       sample: th.sample?.name || '',
+      // S7: what to write in each box of the form, for this kind of site, in each language (placeholders, never saved)
+      hints: hintsOf(th),
     }))
     .sort((a, b) => (ORDER.indexOf(a.id) + 1 || 999) - (ORDER.indexOf(b.id) + 1 || 999) || a.id.localeCompare(b.id));
+}
+
+/** The wizard's example texts per language; only well-formed ones. */
+function hintsOf(th) {
+  const out = {};
+  for (const l of LANGS) {
+    const h = th.hints?.[l];
+    if (!h || typeof h !== 'object') continue;
+    const str = (v, n) => (typeof v === 'string' ? v.trim().slice(0, n) : '');
+    const services = (Array.isArray(h.services) ? h.services : []).filter(Array.isArray).slice(0, 4).map((r) => [str(r[0], 60), str(r[1], 30), str(r[2], 120)]).filter((r) => r[0]);
+    out[l] = { offer: str(h.offer, 300), audience: str(h.audience, 100), services };
+  }
+  return out;
 }
 
 const previewPath = (id) => {
@@ -70,6 +85,12 @@ const previewPath = (id) => {
   return exists(p) ? p : null;
 };
 const keywordsOf = (th) => [...new Set(LANGS.flatMap((l) => (Array.isArray(th.keywords?.[l]) ? th.keywords[l] : [])).map((k) => String(k).toLowerCase().trim()).filter(Boolean))];
+
+/** What the model is told about the theme: the kind of site in English and the category that picks its writing guide. */
+export function aiTheme(theme) {
+  const en = loadCatalog('en') || {};
+  return { kind: [en[theme.titleKey], en[theme.descriptionKey]].filter(Boolean).join(' — ').slice(0, 160) || theme.id, category: CATEGORY_TEXT[theme.category] ? theme.category : 'business' };
+}
 
 /** The theme.json fingerprint a preview was made from: `bid new check` says when the picture is stale. */
 export const themeHash = (id) => {
@@ -136,5 +157,10 @@ export function validateTheme(th) {
   if (th.art !== undefined && !MOTIFS.includes(th.art)) errors.push(`art must be one of ${MOTIFS.join(', ')}`);
   for (const l of LANGS) if (!Array.isArray(th.keywords?.[l]) || th.keywords[l].filter((k) => typeof k === 'string' && k.trim()).length < 3) errors.push(`keywords.${l}: at least three words for "something else"`);
   if (!th.sample?.name || typeof th.sample.name !== 'string') errors.push('sample.name: the name the preview picture is rendered with');
+  // S7: examples for the form, so a first-time owner knows what to write in each box
+  for (const l of LANGS) {
+    const h = th.hints?.[l];
+    if (!h || typeof h.offer !== 'string' || !h.offer.trim() || typeof h.audience !== 'string' || !h.audience.trim() || !Array.isArray(h.services) || h.services.length < 2 || !h.services.every((r) => Array.isArray(r) && typeof r[0] === 'string' && r[0].trim())) errors.push(`hints.${l}: offer, audience and at least two example services [name, price, line]`);
+  }
   return errors;
 }

@@ -58,10 +58,54 @@
     "contacts",
     "photos"
   ],
+  "hints": {
+    "en": {
+      "offer": "We help families sell, buy and rent apartments and houses, and we stay with you through viewings, paperwork and the notary.",
+      "audience": "Owners who want to sell or let, and buyers looking for a home",
+      "services": [
+        [
+          "Property valuation",
+          "",
+          "A market estimate after a short visit"
+        ],
+        [
+          "Selling your home",
+          "2%",
+          "Photos, viewings and negotiation up to the notary"
+        ],
+        [
+          "Letting",
+          "€300",
+          "Tenant search and a rental contract"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Помагаме на семейства да продадат, купят или наемат апартамент или къща и сме до тях на огледите, при документите и при нотариуса.",
+      "audience": "Собственици, които продават или отдават имот, и купувачи, които търсят дом",
+      "services": [
+        [
+          "Оценка на имот",
+          "",
+          "Пазарна оценка след кратък оглед"
+        ],
+        [
+          "Продажба на имот",
+          "2%",
+          "Снимки, огледи и договаряне до нотариуса"
+        ],
+        [
+          "Отдаване под наем",
+          "300 €",
+          "Търсене на наемател и договор"
+        ]
+      ]
+    }
+  },
   "lang": {
     "bg": {
       "tagline": "агенция за недвижими имоти",
-      "description": "Продажба и наем на жилища и офиси. Безплатна оценка на имота ви до 48 часа.",
+      "description": "Продажба и наем на жилища и офиси, с оценка на имота ви по заявка.",
       "nav": [
         [
           "Имоти",
@@ -81,13 +125,13 @@
         ]
       ],
       "headerCta": [
-        "Безплатна оценка",
+        "Оценка на имот",
         "/#contact"
       ],
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "Над 300 сделки миналата година",
+            "eyebrow": "Продажба, покупка и наем",
             "eyebrowIcon": "home",
             "title": "Вашият следващ дом *е тук*",
             "lead": "Купуваме, продаваме и отдаваме под наем с прозрачни условия, проверени документи и брокер, който е на ваша страна.",
@@ -176,7 +220,7 @@
               "items": [
                 [
                   "„Продадохме апартамента за три седмици, на по-добра цена от очакваното.“",
-                  "Семейство Тодорови"
+                  "Семейство Петрови"
                 ],
                 [
                   "„Всички документи бяха проверени, преди да кажем „да“. Спокойствие.“",
@@ -192,8 +236,8 @@
               "type": "contact",
               "id": "contact",
               "alt": true,
-              "title": "Безплатна оценка",
-              "intro": "Кажете ни за имота — ще получите пазарна оценка до 48 часа.",
+              "title": "Колко струва имотът ви?",
+              "intro": "Разкажете ни за имота и ще подготвим пазарна оценка.",
               "formName": "valuation",
               "rows": [
                 [
@@ -301,7 +345,7 @@
     },
     "en": {
       "tagline": "real estate agency",
-      "description": "Homes and offices for sale and rent. A free valuation of your property within 48 hours.",
+      "description": "Homes and offices for sale and rent, with a valuation of your property on request.",
       "nav": [
         [
           "Listings",
@@ -321,13 +365,13 @@
         ]
       ],
       "headerCta": [
-        "Free valuation",
+        "Property valuation",
         "/#contact"
       ],
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "Over 300 deals last year",
+            "eyebrow": "Sales, purchases and lettings",
             "eyebrowIcon": "home",
             "title": "Your next home *is here*",
             "lead": "We buy, sell and let with clear terms, verified paperwork and an agent who is on your side.",
@@ -416,7 +460,7 @@
               "items": [
                 [
                   "“We sold our flat in three weeks, above what we expected.”",
-                  "The Todorov family"
+                  "The Petrov family"
                 ],
                 [
                   "“Every document was checked before we said yes. Peace of mind.”",
@@ -432,8 +476,8 @@
               "type": "contact",
               "id": "contact",
               "alt": true,
-              "title": "Free valuation",
-              "intro": "Tell us about the property — a market valuation within 48 hours.",
+              "title": "What is your property worth?",
+              "intro": "Tell us about the property and we will prepare a market valuation.",
               "formName": "valuation",
               "rows": [
                 [

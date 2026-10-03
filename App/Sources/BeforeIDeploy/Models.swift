@@ -191,6 +191,16 @@ struct SiteTemplate: Codable, Hashable, Identifiable {
     var art: String?
     var keywords: [String]?
     var sample: String?
+    /// Site Builder (S7): what to write in each box of the form for this kind of site, per site language.
+    var hints: [String: SiteHints]?
+}
+
+/// S7: example texts for one kind of site — placeholders in the "New site" form, never saved.
+struct SiteHints: Codable, Hashable {
+    var offer: String
+    var audience: String
+    /// `[name, price, one line]` examples.
+    var services: [[String]]
 }
 
 /// `bid new styles` — a style (type, shapes) and the four palettes that suit it.
@@ -308,6 +318,10 @@ struct SiteBrief: Codable, Hashable {
     var palette: String?
     /// S5: `auto` (light by day, its dark twin at night), `light` or `dark`.
     var scheme = "auto"
+    /// S7: how the texts should sound — `friendly`, `professional`, `premium` or `playful`; nil lets the AI decide.
+    var tone: String?
+    /// S7: opening hours as the owner types them, one line each ("Mon–Fri 9:00–18:00").
+    var hours = ""
 
     /// The JSON the engine reads (`--brief '{…}'`); empty services are left out.
     func json() -> String {

@@ -1,0 +1,825 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "tattoo",
+  "category": "beauty",
+  "icon": "paintbrush.pointed",
+  "accent": "#e3dccb",
+  "mark": "brush",
+  "art": "peaks",
+  "schemaOrg": "TattooParlor",
+  "sample": {
+    "name": "Ash & Ink"
+  },
+  "featured": false,
+  "titleKey": "newsite.template.tattoo.title",
+  "descriptionKey": "newsite.template.tattoo.description",
+  "keywords": {
+    "en": [
+      "tattoo",
+      "tattoo studio",
+      "piercing",
+      "tattoo artist",
+      "fine line",
+      "blackwork",
+      "cover-up",
+      "ink",
+      "tattoo aftercare",
+      "body art"
+    ],
+    "bg": [
+      "татуировка",
+      "татуировки",
+      "тату студио",
+      "тату",
+      "пиърсинг",
+      "татуист",
+      "фин лайн",
+      "блекуърк",
+      "покриване на татуировка",
+      "боди арт"
+    ]
+  },
+  "style": "bold",
+  "tokens": {
+    "dark": true,
+    "bg": "#0f0e0e",
+    "bg2": "#171514",
+    "surface": "#201d1c",
+    "text": "#eee8dd",
+    "muted": "#aba196",
+    "line": "rgba(255,255,255,.11)",
+    "accent": "#e3dccb",
+    "accent2": "#b8453b",
+    "font": "sans",
+    "head": "grotesk",
+    "radius": 4,
+    "tilt": 2
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "hints": {
+    "en": {
+      "offer": "A small studio for fine line, blackwork and colour tattoos, cover-ups and piercings. Every design is drawn with you.",
+      "audience": "Adults who want a custom tattoo or piercing, first-timers and collectors alike",
+      "services": [
+        [
+          "Fine line tattoo",
+          "from €80",
+          "Small, delicate, detailed pieces"
+        ],
+        [
+          "Blackwork",
+          "from €120",
+          "Bold black patterns and shapes"
+        ],
+        [
+          "Cover-up",
+          "on request",
+          "A new design over an old tattoo"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Малко студио за фин лайн, блекуърк и цветни татуировки, покриване на стари и пиърсинг. Всеки дизайн се рисува заедно с вас.",
+      "audience": "Възрастни, които искат собствена татуировка или пиърсинг, първи път или за колекцията",
+      "services": [
+        [
+          "Фин лайн татуировка",
+          "от 80 €",
+          "Малки, нежни, детайлни рисунки"
+        ],
+        [
+          "Блекуърк",
+          "от 120 €",
+          "Смели черни шарки и форми"
+        ],
+        [
+          "Покриване на стара",
+          "по запитване",
+          "Нов дизайн върху стара татуировка"
+        ]
+      ]
+    }
+  },
+  "lang": {
+    "en": {
+      "tagline": "tattoo and piercing studio",
+      "description": "Fine line, blackwork, colour and cover-ups, plus piercings. See the process, aftercare and how to book a consultation.",
+      "nav": [
+        [
+          "Styles",
+          "/#styles"
+        ],
+        [
+          "Process",
+          "/#process"
+        ],
+        [
+          "Aftercare",
+          "/aftercare.html"
+        ],
+        [
+          "Contact",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Book a consultation",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Tattoos and piercings",
+            "eyebrowIcon": "brush",
+            "title": "A tattoo that is *only yours*",
+            "lead": "Fine line, blackwork, colour and cover-ups, drawn with you and tattooed with care. Start with an idea, a reference or just a feeling, and we will help it become a design.",
+            "cta": [
+              "Book a consultation",
+              "/#contact"
+            ],
+            "cta2": [
+              "See the process",
+              "/#process"
+            ],
+            "card": {
+              "icon": "brush",
+              "title": "From idea to healed",
+              "rows": [
+                [
+                  "Idea",
+                  "We talk it through"
+                ],
+                [
+                  "Design",
+                  "Drawn, approved by you"
+                ],
+                [
+                  "Session",
+                  "Tattooed with care"
+                ]
+              ],
+              "note": "We walk you through aftercare."
+            },
+            "chips": [
+              "Fine line",
+              "Blackwork",
+              "Colour",
+              "Cover-ups",
+              "Piercings"
+            ]
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                [
+                  "shield",
+                  "Hygiene comes first"
+                ],
+                [
+                  "brush",
+                  "Drawn for you"
+                ],
+                [
+                  "check",
+                  "Honest advice on placement"
+                ],
+                [
+                  "ring",
+                  "Piercings too"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "styles",
+              "title": "Styles",
+              "intro": "Not sure which style suits your idea? Send a reference and we will tell you honestly what works on skin.",
+              "items": [
+                [
+                  "brush",
+                  "Fine line",
+                  "Delicate thin lines for small, detailed pieces: botanicals, lettering, tiny symbols."
+                ],
+                [
+                  "bolt",
+                  "Blackwork",
+                  "Solid black, bold patterns and strong contrast that reads from across the room."
+                ],
+                [
+                  "sun",
+                  "Colour",
+                  "Saturated or soft watercolour palettes, planned to hold up on your skin."
+                ],
+                [
+                  "shield",
+                  "Cover-ups",
+                  "Turn an old or unloved tattoo into one you are proud of. We look first and say honestly what is possible."
+                ]
+              ]
+            },
+            {
+              "type": "gallery",
+              "id": "gallery",
+              "alt": true,
+              "title": "Work in the styles we love",
+              "intro": "A taste of what the studio does. Every piece starts from the person who will wear it.",
+              "items": [
+                "Fine line florals",
+                "Blackwork pattern",
+                "Colour illustration",
+                "Cover-up redesign"
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "process",
+              "title": "From idea to healed tattoo",
+              "items": [
+                [
+                  "Tell us your idea",
+                  "Send a description, references and the body part you have in mind. We talk through size, style and placement."
+                ],
+                [
+                  "Consultation and design",
+                  "We agree the design, size and a price range. You see the drawing before the day and can ask for changes."
+                ],
+                [
+                  "Tattoo day",
+                  "Arrive rested and fed. We prepare the skin, place the stencil with you and tattoo with breaks whenever you need them."
+                ],
+                [
+                  "Healing and check-up",
+                  "Follow the aftercare for the first weeks. When it has healed, come back if any line needs a touch-up."
+                ]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "before",
+              "alt": true,
+              "title": "Before you book",
+              "intro": "A few things make the first conversation easier.",
+              "items": [
+                [
+                  "What we need from you",
+                  "A clear idea or reference pictures, the size and body part you have in mind, and the time you can set aside. The more you share, the better the design.",
+                  "A description or reference pictures",
+                  "Size and placement in mind",
+                  "Allergies or health conditions we should know about"
+                ],
+                [
+                  "On the day",
+                  "Eat beforehand, wear clothes that give easy access to the area and plan for a calm, unhurried session.",
+                  "A light meal and some water",
+                  "Clothes that leave the area easy to reach",
+                  "Ask us about ID and age rules"
+                ],
+                [
+                  "Deposits and dates",
+                  "Holding a date can involve a deposit. Ask us how it works, what happens if plans change and how long your design needs.",
+                  "Ask about deposits before you commit",
+                  "Tell us early if you need to rearrange",
+                  "Larger pieces can take more than one session"
+                ]
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Questions we get asked",
+              "items": [
+                [
+                  "How old do I need to be?",
+                  "Ask us. Age rules for tattoos and piercings depend on the law and on the studio, and may need ID or a parent or guardian. Tell us when you get in touch and we will explain."
+                ],
+                [
+                  "Do I need to leave a deposit?",
+                  "Ask us. Many studios use a deposit to hold a date and cover design time. We will explain how it works before you commit to anything."
+                ],
+                [
+                  "Does it hurt?",
+                  "Some, yes. It depends on the body part, your pain tolerance and the style. Ribs and feet feel different from forearms. We take breaks and talk you through it."
+                ],
+                [
+                  "Can you cover up an old tattoo?",
+                  "Often, with a larger or darker design. Send us a photo and we will say honestly what can work and what cannot."
+                ],
+                [
+                  "How much will it cost?",
+                  "It depends on size, detail and time. After the consultation we give you a clear price range before you book."
+                ],
+                [
+                  "Can I bring a friend?",
+                  "Ask us. Some sessions are easier with company and others with space. We agree it when you book."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Let’s talk about your idea",
+              "p": "Describe what you have in mind and where it would go. We suggest the next step.",
+              "button": [
+                "Book a consultation",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Book a consultation",
+              "intro": "Tell us about your idea, the size and where on the body. Add links to references in the message.",
+              "formName": "consultation",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Address",
+                  "1 Vitosha St, Sofia"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "style",
+                  "label": "Style",
+                  "options": [
+                    "Fine line",
+                    "Blackwork",
+                    "Colour",
+                    "Cover-up",
+                    "Piercing",
+                    "Not sure yet"
+                  ]
+                },
+                {
+                  "id": "date",
+                  "label": "Preferred day for a chat",
+                  "type": "date"
+                }
+              ],
+              "messageLabel": "Your idea, size and placement",
+              "send": "Send enquiry",
+              "hoursTitle": "Studio hours",
+              "hours": [
+                [
+                  "Tue – Sat",
+                  "12:00 – 19:00"
+                ],
+                [
+                  "Sun – Mon",
+                  "by appointment"
+                ]
+              ]
+            }
+          ]
+        },
+        "aftercare": {
+          "title": "Aftercare for tattoos and piercings",
+          "description": "How to look after a new tattoo or piercing, from the first day to a fully healed result.",
+          "pagehead": [
+            "Aftercare",
+            "How you treat a new tattoo decides how it looks long after the healing is done. Your artist’s instructions always come first; this is the general idea."
+          ],
+          "sections": [
+            {
+              "type": "steps",
+              "title": "The first days",
+              "items": [
+                [
+                  "Keep the cover on",
+                  "Leave the wrap on for as long as your artist advises. Then wash your hands and clean the area gently."
+                ],
+                [
+                  "Wash and dry gently",
+                  "Use lukewarm water and a mild, unscented soap. Pat dry with a clean paper towel and never rub."
+                ],
+                [
+                  "Moisturise lightly",
+                  "Apply a thin layer of the product your artist recommends. Too much can clog the skin and slow healing."
+                ],
+                [
+                  "Leave it alone",
+                  "Do not pick or scratch flaking skin. Keep the area out of pools, baths and direct sun while it heals."
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "alt": true,
+              "title": "Do, avoid, ask",
+              "items": [
+                [
+                  "check",
+                  "Do",
+                  "Wash gently, moisturise lightly, wear loose clothing and drink plenty of water."
+                ],
+                [
+                  "shield",
+                  "Avoid",
+                  "Swimming, saunas, sunbathing and tight clothes over the area until it has healed."
+                ],
+                [
+                  "heart",
+                  "Ask us",
+                  "Spreading redness, heat or growing pain are worth a message to us and a call to your doctor."
+                ]
+              ]
+            },
+            {
+              "type": "prose",
+              "items": [
+                [
+                  "Piercings heal differently",
+                  "Clean with the saline solution your piercer recommends, do not twist or touch the jewellery, and keep it in until your piercer says otherwise."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Questions about healing?",
+              "p": "Write to us with a photo and we will take a look together.",
+              "button": [
+                "Get in touch",
+                "/#contact"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "bg": {
+      "tagline": "студио за татуировки и пиърсинг",
+      "description": "Фин лайн, блекуърк, цветни татуировки и покриване на стари, плюс пиърсинг. Вижте процеса, грижата след това и как да запазите консултация.",
+      "nav": [
+        [
+          "Стилове",
+          "/#styles"
+        ],
+        [
+          "Процес",
+          "/#process"
+        ],
+        [
+          "След татуировката",
+          "/aftercare.html"
+        ],
+        [
+          "Контакти",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Запазете консултация",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Татуировки и пиърсинг",
+            "eyebrowIcon": "brush",
+            "title": "Татуировка, която е *само ваша*",
+            "lead": "Фин лайн, блекуърк, цвят и покриване на стари татуировки, нарисувани заедно с вас и направени с грижа. Започнете с идея, снимка или просто усещане, а ние ще го превърнем в дизайн.",
+            "cta": [
+              "Запазете консултация",
+              "/#contact"
+            ],
+            "cta2": [
+              "Вижте процеса",
+              "/#process"
+            ],
+            "card": {
+              "icon": "brush",
+              "title": "От идеята до заздравяването",
+              "rows": [
+                [
+                  "Идея",
+                  "Говорим за нея"
+                ],
+                [
+                  "Дизайн",
+                  "Рисуваме, вие одобрявате"
+                ],
+                [
+                  "Сесия",
+                  "Татуираме с грижа"
+                ]
+              ],
+              "note": "Обясняваме ви как да се грижите за нея."
+            },
+            "chips": [
+              "Фин лайн",
+              "Блекуърк",
+              "Цвят",
+              "Покриване на стари",
+              "Пиърсинг"
+            ]
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                [
+                  "shield",
+                  "Хигиената е на първо място"
+                ],
+                [
+                  "brush",
+                  "Рисувано за вас"
+                ],
+                [
+                  "check",
+                  "Честен съвет за мястото"
+                ],
+                [
+                  "ring",
+                  "И пиърсинг"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "styles",
+              "title": "Стилове",
+              "intro": "Не знаете кой стил отива на идеята ви? Пратете пример и ще ви кажем честно какво ще работи върху кожата.",
+              "items": [
+                [
+                  "brush",
+                  "Фин лайн",
+                  "Нежни тънки линии за малки, детайлни рисунки: растения, надписи, малки символи."
+                ],
+                [
+                  "bolt",
+                  "Блекуърк",
+                  "Плътно черно, смели шарки и силен контраст, който се забелязва отдалеч."
+                ],
+                [
+                  "sun",
+                  "Цветни татуировки",
+                  "Наситени или меки акварелни палитри, планирани да издържат върху кожата."
+                ],
+                [
+                  "shield",
+                  "Покриване на стари",
+                  "Превърнете стара или нехаресвана татуировка в такава, с която се гордеете. Първо я разглеждаме и казваме честно какво е възможно."
+                ]
+              ]
+            },
+            {
+              "type": "gallery",
+              "id": "gallery",
+              "alt": true,
+              "title": "Стиловете, в които работим",
+              "intro": "Малко от това, което правим. Всяка рисунка започва от човека, който ще я носи.",
+              "items": [
+                "Фин лайн с цветя",
+                "Блекуърк шарка",
+                "Цветна илюстрация",
+                "Нов дизайн върху стара татуировка"
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "process",
+              "title": "От идеята до заздравялата татуировка",
+              "items": [
+                [
+                  "Разкажете ни идеята си",
+                  "Изпратете описание, примери и къде на тялото си я представяте. Обсъждаме размер, стил и място."
+                ],
+                [
+                  "Консултация и дизайн",
+                  "Уточняваме рисунката, размера и ценови диапазон. Виждате дизайна преди деня на татуирането и можете да поискате промени."
+                ],
+                [
+                  "Денят на татуирането",
+                  "Дойдете отпочинали и хранени. Подготвяме кожата, поставяме шаблона заедно с вас и татуираме с почивки, когато ви трябват."
+                ],
+                [
+                  "Заздравяване и проверка",
+                  "Следвайте съветите за грижа през първите седмици. След като заздравее, елате отново, ако някоя линия иска корекция."
+                ]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "before",
+              "alt": true,
+              "title": "Преди да запазите",
+              "intro": "Няколко неща улесняват първия разговор.",
+              "items": [
+                [
+                  "Какво ни е нужно от вас",
+                  "Ясна идея или примерни снимки, размер и място на тялото, както и времето, което можете да отделите. Колкото повече споделите, толкова по-добър е дизайнът.",
+                  "Описание или примерни снимки",
+                  "Идея за размер и място",
+                  "Алергии или здравословни проблеми, които да знаем"
+                ],
+                [
+                  "В деня на татуирането",
+                  "Хапнете предварително, облечете дрехи с лесен достъп до мястото и планирайте спокойна сесия без бързане.",
+                  "Лека храна и вода",
+                  "Дрехи, които оставят мястото достъпно",
+                  "Попитайте ни за документ за самоличност и възраст"
+                ],
+                [
+                  "Депозити и дати",
+                  "Запазването на дата може да включва депозит. Попитайте как работи, какво става, ако плановете ви се променят, и колко време отнема дизайнът.",
+                  "Попитайте за депозит, преди да решите",
+                  "Кажете ни навреме, ако смените датата",
+                  "По-големите рисунки може да отнемат повече от една сесия"
+                ]
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Въпроси, които ни задават",
+              "items": [
+                [
+                  "От каква възраст може да се татуирам?",
+                  "Попитайте ни. Възрастовите изисквания за татуировки и пиърсинг зависят от закона и от студиото и може да изискват документ за самоличност или родител. Споменете възрастта си, когато ни пишете, и ще ви обясним."
+                ],
+                [
+                  "Трябва ли да оставя депозит?",
+                  "Попитайте ни. Много студия ползват депозит, за да запазят дата и да покрият времето за дизайн. Ще ви обясним как работи, преди да сте се ангажирали с каквото и да е."
+                ],
+                [
+                  "Боли ли?",
+                  "Донякъде, да. Зависи от мястото на тялото, от болковия ви праг и от стила. Ребрата и стъпалата се усещат различно от предмишницата. Правим почивки и ви обясняваме какво правим."
+                ],
+                [
+                  "Можете ли да покриете стара татуировка?",
+                  "Често да, с по-голям или по-тъмен дизайн. Пратете ни снимка и ще ви кажем честно какво е възможно и какво не."
+                ],
+                [
+                  "Колко ще струва?",
+                  "Зависи от размера, детайлите и времето. След консултацията ви даваме ясен ценови диапазон, преди да запазите дата."
+                ],
+                [
+                  "Мога ли да доведа приятел?",
+                  "Попитайте ни. Някои сесии са по-лесни с компания, други със свободно пространство. Уточняваме го при записването."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Да поговорим за идеята ви",
+              "p": "Опишете какво си представяте и къде. Ще ви предложим следващата стъпка.",
+              "button": [
+                "Запазете консултация",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Запазете консултация",
+              "intro": "Разкажете ни за идеята си, размера и мястото на тялото. Добавете връзки към примери в съобщението.",
+              "formName": "consultation",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Адрес",
+                  "ул. „Витоша“ 1, София"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "style",
+                  "label": "Стил",
+                  "options": [
+                    "Фин лайн",
+                    "Блекуърк",
+                    "Цветна татуировка",
+                    "Покриване на стара",
+                    "Пиърсинг",
+                    "Още не знам"
+                  ]
+                },
+                {
+                  "id": "date",
+                  "label": "Удобен ден за разговор",
+                  "type": "date"
+                }
+              ],
+              "messageLabel": "Идеята ви, размер и място",
+              "send": "Изпратете запитване",
+              "hoursTitle": "Работно време",
+              "hours": [
+                [
+                  "Вт – съб",
+                  "12:00 – 19:00"
+                ],
+                [
+                  "Нед – пон",
+                  "по уговорка"
+                ]
+              ]
+            }
+          ]
+        },
+        "aftercare": {
+          "title": "Грижа след татуировка и пиърсинг",
+          "description": "Как да се грижите за нова татуировка или пиърсинг от първия ден до пълното заздравяване.",
+          "pagehead": [
+            "Грижа след татуировката",
+            "Как се грижите за нова татуировка определя как ще изглежда дълго след заздравяването. Указанията на вашия художник са с предимство, а тук е общата идея."
+          ],
+          "sections": [
+            {
+              "type": "steps",
+              "title": "Първите дни",
+              "items": [
+                [
+                  "Оставете покритието",
+                  "Задръжте защитното покритие толкова, колкото ви посъветва художникът. След това измийте ръцете си и почистете мястото внимателно."
+                ],
+                [
+                  "Мийте и подсушавайте нежно",
+                  "Използвайте хладка вода и мек сапун без аромат. Подсушете с чиста хартиена кърпа, без да търкате."
+                ],
+                [
+                  "Хидратирайте леко",
+                  "Нанесете тънък слой от продукта, който препоръча художникът. Прекалено много запушва кожата и забавя заздравяването."
+                ],
+                [
+                  "Не го пипайте",
+                  "Не чоплете и не чешете лющещата се кожа. Пазете мястото от басейни, вани и директно слънце, докато заздравява."
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "alt": true,
+              "title": "Правете, избягвайте, питайте",
+              "items": [
+                [
+                  "check",
+                  "Правете",
+                  "Мийте внимателно, хидратирайте леко, носете свободни дрехи и пийте достатъчно вода."
+                ],
+                [
+                  "shield",
+                  "Избягвайте",
+                  "Плуване, сауна, слънчеви бани и тесни дрехи върху мястото, докато заздравее."
+                ],
+                [
+                  "heart",
+                  "Питайте нас",
+                  "Зачервяване, което се разпространява, топлина или нарастваща болка са повод да ни пишете и да се обадите на лекар."
+                ]
+              ]
+            },
+            {
+              "type": "prose",
+              "items": [
+                [
+                  "Пиърсингът заздравява по-различно",
+                  "Почиствайте с физиологичния разтвор, който препоръчва вашият пиърсър, не въртете и не пипайте бижуто и го оставете, докато пиърсърът не каже друго."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Въпроси за заздравяването?",
+              "p": "Пишете ни със снимка и ще я погледнем заедно.",
+              "button": [
+                "Свържете се с нас",
+                "/#contact"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

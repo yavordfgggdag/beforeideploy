@@ -1,0 +1,377 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "construction",
+  "category": "business",
+  "icon": "hammer",
+  "accent": "#ff6a00",
+  "mark": "tools",
+  "art": "peaks",
+  "schemaOrg": "HomeAndConstructionBusiness",
+  "sample": { "name": "Brickline Renovations" },
+  "featured": false,
+  "titleKey": "newsite.template.construction.title",
+  "descriptionKey": "newsite.template.construction.description",
+  "keywords": {
+    "en": ["renovation", "builder", "contractor", "construction", "bathroom renovation", "kitchen fitting", "flooring", "painting", "electrician", "refurbishment", "tiling", "home repairs"],
+    "bg": ["ремонт", "ремонти", "строител", "строителна фирма", "ремонт на баня", "ремонт на кухня", "подови настилки", "боядисване", "ел. инсталация", "цялостен ремонт", "фаянс и теракот", "майстор"]
+  },
+  "style": "bold",
+  "tokens": {
+    "dark": false,
+    "bg": "#f4f3ef",
+    "bg2": "#e8e6df",
+    "surface": "#ffffff",
+    "text": "#12181f",
+    "muted": "#505963",
+    "line": "rgba(18,24,31,.14)",
+    "accent": "#ff6a00",
+    "accent2": "#e63b12",
+    "font": "sans",
+    "head": "grotesk",
+    "radius": 6,
+    "tilt": -2
+  },
+  "questions": ["services", "contacts", "photos"],
+  "hints": {
+    "en": {
+      "offer": "We are a renovation team doing bathrooms, kitchens, floors and full refurbishments, with a written quote and an agreed schedule.",
+      "audience": "Homeowners, landlords and small shops",
+      "services": [
+        ["Bathroom renovation", "from €2,500", "Waterproofing, tiling and fixtures"],
+        ["Painting", "€6", "Per m², filling and two coats"],
+        ["Floor laying", "€12", "Per m², levelling extra"]
+      ]
+    },
+    "bg": {
+      "offer": "Ремонтен екип за бани, кухни, подове и цялостни ремонти — с писмена оферта и уговорен график.",
+      "audience": "Собственици на жилища, наемодатели и малки магазини",
+      "services": [
+        ["Ремонт на баня", "от 2 500 €", "Хидроизолация, облицовка и санитария"],
+        ["Боядисване", "6 €", "На м², шпакловка и две ръце"],
+        ["Полагане на под", "12 €", "На м², изравняването е отделно"]
+      ]
+    }
+  },
+  "lang": {
+    "en": {
+      "tagline": "renovation and building contractor",
+      "description": "Bathrooms, kitchens, floors, painting, electrics and full refurbishment — a written quote, a clear schedule and a proper handover.",
+      "nav": [
+        ["Services", "/services.html"],
+        ["How it works", "/#process"],
+        ["Projects", "/#projects"],
+        ["FAQ", "/#faq"]
+      ],
+      "headerCta": ["Request a visit", "/#contact"],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "One room or the whole home",
+            "eyebrowIcon": "tools",
+            "title": "Renovation from *visit to handover*",
+            "lead": "Bathrooms, kitchens, floors, painting, electrics and full refurbishment. We visit, quote in writing, agree a schedule and hand over a clean, finished home.",
+            "cta": ["Request a visit", "/#contact"],
+            "cta2": ["How a project runs", "/#process"],
+            "chips": ["Bathrooms", "Kitchens", "Floors", "Painting", "Electrics"],
+            "card": {
+              "icon": "home",
+              "title": "A project at a glance",
+              "rows": [
+                ["Visit", "we measure and listen"],
+                ["Quote", "itemised, in writing"],
+                ["Schedule", "agreed before we start"]
+              ],
+              "note": "Labour and materials on separate lines."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                ["doc", "Itemised written quote"],
+                ["calendar", "Schedule agreed up front"],
+                ["home", "Floors and furniture protected"],
+                ["check", "Walk-through at handover"]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "services",
+              "title": "What we renovate",
+              "intro": "The jobs we are asked for most often.",
+              "items": [
+                ["drop", "Bathrooms", "Waterproofing, tiling, plumbing and fixtures — from a refresh to a full rebuild."],
+                ["cup", "Kitchens", "Layout, units, worktops and appliances, plus the plumbing and wiring behind them."],
+                ["brush", "Floors and painting", "Laminate, parquet, vinyl or tiles on a levelled floor; walls filled, primed and painted."],
+                ["bolt", "Electrical", "New circuits, sockets, lighting and fuse boards, tested before the walls are closed."]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "approach",
+              "alt": true,
+              "title": "How we keep a project on track",
+              "intro": "Three habits that keep a renovation calm.",
+              "items": [
+                ["A quote you can read", "Every line has a quantity, a unit price and a reason. Labour and materials are separate, so you can compare and decide.", "Measured on site, not guessed from photos", "Optional extras listed apart from the essentials", "Valid for a stated period, so you can take your time"],
+                ["A schedule, not a hope", "We agree start and finish dates and the order of the trades, then keep you posted as the work moves.", "A short weekly update: done, next, open questions", "Delays explained when they happen, not at the end", "Changes priced and agreed before they are made"],
+                ["One team for the whole home", "For a full refurbishment we coordinate every trade — demolition, plumbing, electrics, plaster, finishing — so you deal with one team, not six.", "One schedule for all trades", "Floors and furniture covered, dust sealed off", "Site cleared every day and cleaned before handover"]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "process",
+              "title": "How a project runs",
+              "intro": "Four stages, and you know what comes next at every one.",
+              "items": [
+                ["Site visit", "We come, measure, look at the walls, pipes and wiring and ask what you want from the space."],
+                ["Written quote", "You receive an itemised quote with materials, labour and a start date. No pressure, no surprise lines."],
+                ["Schedule and start", "We agree who does what and when, order the materials and begin on the day we said."],
+                ["Handover", "We walk through every room with you, note anything to correct and put it right before the final invoice is closed."]
+              ]
+            },
+            {
+              "type": "gallery",
+              "id": "projects",
+              "alt": true,
+              "title": "Project types",
+              "intro": "A few of the jobs we take on, big and small.",
+              "items": ["Bathroom refit", "Kitchen refit", "Parquet floor", "Living room repaint", "New electrics", "Apartment refurbishment", "Wall tiling", "Office refresh"]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Questions about quotes and materials",
+              "items": [
+                ["What happens at the site visit?", "We measure, photograph, check the condition of the walls, pipes and wiring, and listen to what you want. Afterwards we send an itemised quote."],
+                ["How is the price calculated?", "From measured quantities: area, number of fixtures, units of work. Labour, materials and extras are on separate lines, so you can see where the money goes."],
+                ["Can I buy the materials myself?", "Yes. We tell you exactly what to buy and how much, or we order it for you. Either way you see the cost of every item."],
+                ["What if I want changes during the work?", "We write the change down, price it and agree the extra time before doing it. Nothing is added to the bill without your yes."],
+                ["Do I need to move out during the work?", "For a bathroom or a single room, usually not. For a full refurbishment it is quicker and cleaner if the home is empty. We discuss it at the visit."],
+                ["Do I need a permit?", "Small works often need none, but moving walls or changing the structure does. We tell you at the visit which case you are in and which documents to prepare."]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Planning a renovation?",
+              "p": "Tell us what you have in mind. We arrange a visit and send an itemised quote.",
+              "button": ["Request a visit", "/#contact"]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Request a visit",
+              "intro": "Tell us what needs doing and where. We get in touch to agree a time for the site visit.",
+              "formName": "visit",
+              "rows": [
+                ["mail", "Email", "hello@example.com", "mailto:hello@example.com"],
+                ["phone", "Phone", "+359 888 000 000", "tel:+359888000000"],
+                ["pin", "Address", "1 Vitosha St, Sofia"]
+              ],
+              "fields": [
+                { "id": "project", "label": "Project", "options": ["Bathroom", "Kitchen", "Flooring", "Painting", "Electrical", "Full refurbishment", "Other"] },
+                { "id": "property", "label": "Property", "options": ["Apartment", "House", "Shop or office"] }
+              ],
+              "messageLabel": "What needs doing?",
+              "send": "Request a visit",
+              "hoursTitle": "Opening hours",
+              "hours": [
+                ["Monday – Friday", "8:00 – 17:00"],
+                ["Saturday", "9:00 – 13:00"],
+                ["Sunday", "closed"]
+              ]
+            }
+          ]
+        },
+        "services": {
+          "title": "Services",
+          "description": "Bathrooms, kitchens, floors, painting, electrical work and full refurbishment — what each job includes.",
+          "pagehead": ["Services", "What each kind of job includes, from the first measurement to the final clean."],
+          "sections": [
+            {
+              "type": "split",
+              "items": [
+                ["Bathrooms and kitchens", "The rooms with the most trades in the smallest space — so the order of work matters.", "Demolition, waterproofing, plumbing and wiring", "Tiling, fixtures, units and worktops", "Every connection tested before we close up"],
+                ["Floors, walls and painting", "The finishing you see every day, done on surfaces that have been prepared properly.", "Levelling and laying: laminate, parquet, vinyl, tiles", "Plastering, filling, sanding and priming", "Two coats of paint, with floors and furniture covered"],
+                ["Electrical and full refurbishment", "From a new socket to a whole home rewired and refinished, with one schedule for all trades.", "New circuits, sockets, lighting and fuse boards", "Demolition, partition walls and ceilings", "Coordination of every trade and a final clean"]
+              ]
+            },
+            {
+              "type": "chips",
+              "alt": true,
+              "title": "Also ask us about",
+              "items": ["Plastering", "Suspended ceilings", "Doors and windows", "Wall tiling", "Skirting and trim", "Small repairs", "Waterproofing", "Partition walls"]
+            },
+            {
+              "type": "cta",
+              "h": "Not sure what your project needs?",
+              "p": "Describe it and we will tell you what a visit would cover.",
+              "button": ["Request a visit", "/#contact"]
+            }
+          ]
+        }
+      }
+    },
+    "bg": {
+      "tagline": "ремонти и строителство",
+      "description": "Бани, кухни, подове, боядисване, ел. инсталации и цялостен ремонт — писмена оферта, ясен график и предаване на довършен дом.",
+      "nav": [
+        ["Услуги", "/services.html"],
+        ["Как работим", "/#process"],
+        ["Проекти", "/#projects"],
+        ["Въпроси", "/#faq"]
+      ],
+      "headerCta": ["Заявете оглед", "/#contact"],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Една стая или целият дом",
+            "eyebrowIcon": "tools",
+            "title": "Ремонт *от оглед до ключ*",
+            "lead": "Бани, кухни, подове, боядисване, ел. инсталации и цялостен ремонт. Идваме на оглед, даваме писмена оферта, уговаряме график и предаваме чист, довършен дом.",
+            "cta": ["Заявете оглед", "/#contact"],
+            "cta2": ["Как върви един ремонт", "/#process"],
+            "chips": ["Бани", "Кухни", "Подове", "Боядисване", "Електро"],
+            "card": {
+              "icon": "home",
+              "title": "Ремонтът с един поглед",
+              "rows": [
+                ["Оглед", "мерим и слушаме"],
+                ["Оферта", "разписана, писмена"],
+                ["График", "уговорен преди старта"]
+              ],
+              "note": "Труд и материали — на отделни редове."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                ["doc", "Оферта по редове"],
+                ["calendar", "Уговорен график"],
+                ["home", "Подове и мебели — защитени"],
+                ["check", "Обиколка при предаване"]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "services",
+              "title": "Какво ремонтираме",
+              "intro": "Работите, за които ни търсят най-често.",
+              "items": [
+                ["drop", "Бани", "Хидроизолация, облицовка, ВиК и санитария — от освежаване до цялостна подмяна."],
+                ["cup", "Кухни", "Разпределение, шкафове, плотове и уреди, плюс ВиК и ел. инсталацията зад тях."],
+                ["brush", "Подове и боядисване", "Ламинат, паркет, винил или плочки върху изравнен под; стени — шпакловани, грундирани и боядисани."],
+                ["bolt", "Електро", "Нови кръгове, контакти, осветление и табла — изпитани, преди да затворим стените."]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "approach",
+              "alt": true,
+              "title": "Как държим проекта в релси",
+              "intro": "Три навика, които правят ремонта спокоен.",
+              "items": [
+                ["Оферта, която се чете", "Всеки ред има количество, единична цена и причина. Трудът и материалите са отделно, за да сравнявате и да решавате.", "Измерваме на място, не гадаем по снимки", "Допълненията са отделени от основното", "Офертата важи определен срок — не се налага да бързате"],
+                ["График, не надежда", "Уговаряме начални и крайни дати и последователността на дейностите, а после ви държим в течение.", "Кратка седмична справка: готово, следва, открити въпроси", "Забавянията се обясняват, когато станат, а не накрая", "Промените се остойностяват и одобряват, преди да бъдат направени"],
+                ["Един екип за целия дом", "При цялостен ремонт координираме всички дейности — къртене, ВиК, ел. инсталация, мазилка, довършителни работи — и вие имате работа с един екип, а не с шестима.", "Един график за всички дейности", "Подове и мебели — покрити, прахът — изолиран", "Обектът се почиства всеки ден и преди предаването"]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "process",
+              "title": "Как върви един ремонт",
+              "intro": "Четири етапа — и на всеки знаете какво следва.",
+              "items": [
+                ["Оглед", "Идваме, мерим, оглеждаме стените, тръбите и кабелите и питаме какво искате от помещението."],
+                ["Писмена оферта", "Получавате разписана оферта с материали, труд и начална дата. Без натиск и без изненадващи редове."],
+                ["График и старт", "Уточняваме кой какво и кога прави, поръчваме материалите и започваме в деня, който сме казали."],
+                ["Предаване", "Обикаляме всяка стая заедно с вас, отбелязваме какво да се поправи и го оправяме, преди да приключим последната фактура."]
+              ]
+            },
+            {
+              "type": "gallery",
+              "id": "projects",
+              "alt": true,
+              "title": "Видове проекти",
+              "intro": "Част от работите, които поемаме — големи и малки.",
+              "items": ["Баня след ремонт", "Кухня след ремонт", "Паркет", "Боядисана всекидневна", "Нова ел. инсталация", "Ремонт на апартамент", "Облицовка с плочки", "Освежаване на офис"]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Въпроси за офертите и материалите",
+              "items": [
+                ["Какво става на огледа?", "Мерим, снимаме, проверяваме състоянието на стените, тръбите и кабелите и ви изслушваме. След това ви изпращаме разписана оферта."],
+                ["Как се оформя цената?", "От измерени количества: площ, брой уреди, мерки работа. Трудът, материалите и допълненията са на отделни редове, за да виждате къде отиват парите."],
+                ["Мога ли сам да купя материалите?", "Да. Казваме ви точно какво и колко да вземете или го поръчваме ние. И в двата случая виждате цената на всяка позиция."],
+                ["Ами ако поискам промени по време на работата?", "Записваме промяната, оценяваме я и уговаряме допълнителното време, преди да я направим. Нищо не се добавя към сметката без вашето съгласие."],
+                ["Трябва ли да се изнеса по време на ремонта?", "При баня или една стая — обикновено не. При цялостен ремонт е по-бързо и по-чисто, ако домът е празен. Обсъждаме го на огледа."],
+                ["Трябва ли ми разрешение за строеж?", "За дребни работи често не, но за преместване на стени или промяна в конструкцията — да. На огледа ви казваме в кой случай сте и какви документи да подготвите."]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Планирате ремонт?",
+              "p": "Разкажете ни какво имате предвид. Уговаряме оглед и ви изпращаме разписана оферта.",
+              "button": ["Заявете оглед", "/#contact"]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Заявете оглед",
+              "intro": "Кажете какво трябва да се направи и къде. Ще се свържем с вас, за да уговорим час за огледа.",
+              "formName": "visit",
+              "rows": [
+                ["mail", "Имейл", "hello@example.com", "mailto:hello@example.com"],
+                ["phone", "Телефон", "+359 888 000 000", "tel:+359888000000"],
+                ["pin", "Адрес", "ул. „Витоша“ 1, София"]
+              ],
+              "fields": [
+                { "id": "project", "label": "Вид ремонт", "options": ["Баня", "Кухня", "Подове", "Боядисване", "Електро", "Цялостен ремонт", "Друго"] },
+                { "id": "property", "label": "Имот", "options": ["Апартамент", "Къща", "Магазин или офис"] }
+              ],
+              "messageLabel": "Какво трябва да се направи?",
+              "send": "Заявете оглед",
+              "hoursTitle": "Работно време",
+              "hours": [
+                ["Понеделник – петък", "8:00 – 17:00"],
+                ["Събота", "9:00 – 13:00"],
+                ["Неделя", "почивен ден"]
+              ]
+            }
+          ]
+        },
+        "services": {
+          "title": "Услуги",
+          "description": "Бани, кухни, подове, боядисване, електро и цялостен ремонт — какво включва всяка работа.",
+          "pagehead": ["Услуги", "Какво включва всеки вид работа — от първото измерване до финалното почистване."],
+          "sections": [
+            {
+              "type": "split",
+              "items": [
+                ["Бани и кухни", "Помещенията с най-много дейности на най-малко място — затова редът на работа има значение.", "Къртене, хидроизолация, ВиК и ел. инсталация", "Облицовка, санитария, шкафове и плотове", "Проверка на всяка връзка, преди да затворим"],
+                ["Подове, стени и боядисване", "Довършителните работи, които виждате всеки ден — върху правилно подготвени повърхности.", "Изравняване и полагане: ламинат, паркет, винил, плочки", "Мазилка, шпакловка, шлайфане и грундиране", "Две ръце боя, с покрити подове и мебели"],
+                ["Електро и цялостен ремонт", "От един нов контакт до цял дом с нова инсталация и довършителни работи — с общ график за всички дейности.", "Нови кръгове, контакти, осветление и табла", "Къртене, преградни стени и тавани", "Координация на всички майстори и финално почистване"]
+              ]
+            },
+            {
+              "type": "chips",
+              "alt": true,
+              "title": "Питайте ни и за",
+              "items": ["Мазилка", "Окачени тавани", "Врати и прозорци", "Стенни плочки", "Первази", "Дребни поправки", "Хидроизолация", "Преградни стени"]
+            },
+            {
+              "type": "cta",
+              "h": "Не сте сигурни какво изисква вашият ремонт?",
+              "p": "Опишете го и ще ви кажем какво включва един оглед.",
+              "button": ["Заявете оглед", "/#contact"]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

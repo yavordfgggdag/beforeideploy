@@ -43,7 +43,51 @@
       "programs",
       "personal brand"
     ],
-    "sample": "Iva Petrova"
+    "sample": "Iva Petrova",
+    "hints": {
+      "bg": {
+        "offer": "Работя индивидуално с хора, които искат да сменят кариерата си, да започнат свой бизнес или най-после да изпълнят план, който отлагат — с редовни сесии и ясни следващи стъпки.",
+        "audience": "Начинаещи предприемачи, специалисти пред смяна и хора на кръстопът",
+        "services": [
+          [
+            "Единична сесия",
+            "60 €",
+            "Един разговор и ясна следваща стъпка"
+          ],
+          [
+            "Програма за 3 месеца",
+            "450 €",
+            "Редовни сесии, план с цели и преглед всеки месец"
+          ],
+          [
+            "Работилница за екип",
+            "",
+            "Полудневна среща за малък екип, цената е по запитване"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "I work one-to-one with people who want to change career, start their own business or finally act on a plan, through regular sessions and clear next steps.",
+        "audience": "Founders, professionals at a turning point and people at a crossroads",
+        "services": [
+          [
+            "Single session",
+            "€60",
+            "One conversation and a clear next step"
+          ],
+          [
+            "3-month program",
+            "€450",
+            "Regular sessions, a plan with goals and a monthly review"
+          ],
+          [
+            "Team workshop",
+            "",
+            "A half-day session for a small team, priced on request"
+          ]
+        ]
+      }
+    }
   },
   {
     "id": "landing",
@@ -85,7 +129,51 @@
       "local business",
       "studio"
     ],
-    "sample": "Northline"
+    "sample": "Northline",
+    "hints": {
+      "bg": {
+        "offer": "Ние сме малък екип, който помага на местни фирми с документите, счетоводството и присъствието им онлайн, за да могат собствениците да се занимават с истинската си работа.",
+        "audience": "Собственици на малък бизнес, магазини, кафенета и свободни професии",
+        "services": [
+          [
+            "Консултация",
+            "40 €",
+            "Преглеждаме задачата и уточняваме следващата стъпка"
+          ],
+          [
+            "Месечна поддръжка",
+            "120 €",
+            "Редовните задачи са поети, имате един човек за връзка"
+          ],
+          [
+            "Работа по проект",
+            "300 €",
+            "Ясен обхват, цена в писмен вид и срок"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We are a small team that helps local businesses with their paperwork, accounts and online presence, so the owners can get on with their real work.",
+        "audience": "Small business owners, shops, cafés and freelancers",
+        "services": [
+          [
+            "Consultation",
+            "€40",
+            "We go through the job and agree the next step"
+          ],
+          [
+            "Monthly support",
+            "€120",
+            "Regular tasks handled, one person to call"
+          ],
+          [
+            "Project work",
+            "€300",
+            "A clear scope, a written price and a deadline"
+          ]
+        ]
+      }
+    }
   },
   {
     "id": "services",
@@ -128,7 +216,51 @@
       "prices",
       "service"
     ],
-    "sample": "Dimitrov & Sons"
+    "sample": "Dimitrov & Sons",
+    "hints": {
+      "bg": {
+        "offer": "Правим ремонти в дома и офиса: ВиК, електро, боядисване и монтаж. Кажете ни какво се е счупило и уговаряме кога да дойдем да го огледаме.",
+        "audience": "Собственици на жилища, наематели и малки офиси",
+        "services": [
+          [
+            "Смяна на смесител",
+            "25 €",
+            "Сваляме стария и монтираме новия, материалите са отделно"
+          ],
+          [
+            "Контакт или ключ",
+            "15 €",
+            "Безопасна смяна на съществуващ"
+          ],
+          [
+            "Боядисване",
+            "3 €",
+            "На квадратен метър, на две ръце"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We do home and office repairs: plumbing, electrics, painting and installation. Tell us what is broken and we agree a time to come and take a look.",
+        "audience": "Homeowners, tenants and small offices",
+        "services": [
+          [
+            "New tap",
+            "€25",
+            "We remove the old one and fit the new, materials extra"
+          ],
+          [
+            "Socket or switch",
+            "€15",
+            "Replacing an existing one, safely"
+          ],
+          [
+            "Painting",
+            "€3",
+            "Per square metre, two coats"
+          ]
+        ]
+      }
+    }
   },
   {
     "id": "portfolio",
@@ -169,7 +301,51 @@
       "projects",
       "gallery"
     ],
-    "sample": "Studio North"
+    "sample": "Studio North",
+    "hints": {
+      "bg": {
+        "offer": "Правя бранд идентичност, уебсайтове и продуктова фотография за малки бизнеси, които искат да изглеждат толкова добре, колкото работят.",
+        "audience": "Малки бизнеси, кафенета, студия и майстори",
+        "services": [
+          [
+            "Лого и бранд идентичност",
+            "900 €",
+            "Лого, цветове, шрифтове и кратко ръководство за употреба"
+          ],
+          [
+            "Едностраничен сайт",
+            "600 €",
+            "Дизайн и изработка, готов за вашите текстове и снимки"
+          ],
+          [
+            "Продуктова фотосесия",
+            "250 €",
+            "Десет обработени кадъра за магазин или каталог"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "I design brand identities, websites and product photography for small businesses that want to look as good as the work they do.",
+        "audience": "Small businesses, cafés, studios and makers",
+        "services": [
+          [
+            "Logo and brand identity",
+            "€900",
+            "Logo, colours, typefaces and a short guide to using them"
+          ],
+          [
+            "One-page website",
+            "€600",
+            "Designed and built, ready for your own words and photos"
+          ],
+          [
+            "Product photo set",
+            "€250",
+            "Ten edited images for your shop or catalogue"
+          ]
+        ]
+      }
+    }
   },
   {
     "id": "restaurant",
@@ -213,7 +389,51 @@
       "dinner",
       "reservation"
     ],
-    "sample": "Bistro Lipa"
+    "sample": "Bistro Lipa",
+    "hints": {
+      "bg": {
+        "offer": "Ние сме малък ресторант със сезонно меню, местни продукти и винена листа от малки изби. Елате на обяд, на вечеря или за празник.",
+        "audience": "Двойки, семейства, приятели и компании, които празнуват",
+        "services": [
+          [
+            "Салата с печена цвекла",
+            "7 €",
+            "Козе сирене, орехи и мед"
+          ],
+          [
+            "Агнешко с розмарин",
+            "14 €",
+            "Бавно печено, с картофи"
+          ],
+          [
+            "Шоколадов фондан",
+            "6 €",
+            "С ванилов сладолед"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We are a small restaurant with a seasonal menu, local produce and a wine list from small wineries. Come for lunch, dinner or a celebration.",
+        "audience": "Couples, families, friends and groups celebrating",
+        "services": [
+          [
+            "Roast beetroot salad",
+            "€7",
+            "Goat cheese, walnuts and honey"
+          ],
+          [
+            "Rosemary lamb",
+            "€14",
+            "Slow-roasted, with potatoes"
+          ],
+          [
+            "Chocolate fondant",
+            "€6",
+            "With vanilla ice cream"
+          ]
+        ]
+      }
+    }
   },
   {
     "id": "course",
@@ -256,7 +476,51 @@
       "curriculum",
       "students"
     ],
-    "sample": "Learn to Code"
+    "sample": "Learn to Code",
+    "hints": {
+      "bg": {
+        "offer": "Водим практичен онлайн курс за хора, които искат да научат програмиране от нулата: кратки видео уроци, седмични упражнения и живи срещи, на които разглеждаме работите ви заедно.",
+        "audience": "Начинаещи и хора, които сменят професията си и обичат да учат на практика",
+        "services": [
+          [
+            "Курс в свободно време",
+            "149 €",
+            "Всички видео уроци и упражнения, учите когато ви е удобно"
+          ],
+          [
+            "Курс с ментор",
+            "349 €",
+            "Добавя живи срещи и преглед на всеки проект"
+          ],
+          [
+            "Индивидуална сесия",
+            "40 €",
+            "Помощ със собствен проект или с упражнение, което не ви се получава"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We run a practical online course for people who want to learn programming from scratch: short video lessons, weekly exercises and live sessions where we look at your work together.",
+        "audience": "Beginners and career changers who learn best by doing",
+        "services": [
+          [
+            "Self-paced course",
+            "€149",
+            "All video lessons and exercises, learn whenever you like"
+          ],
+          [
+            "Course with a mentor",
+            "€349",
+            "Adds live sessions and a review of every project"
+          ],
+          [
+            "One-to-one session",
+            "€40",
+            "Help with your own project or an exercise you are stuck on"
+          ]
+        ]
+      }
+    }
   },
   {
     "id": "salon",
@@ -300,7 +564,51 @@
       "makeup",
       "prices"
     ],
-    "sample": "Salon Mira"
+    "sample": "Salon Mira",
+    "hints": {
+      "bg": {
+        "offer": "Ние сме малък салон за коса, нокти и грижа за кожата. Елате за подстригване, боядисване или маникюр и си тръгнете с чувство, че са се погрижили за вас.",
+        "audience": "Жени и мъже, които искат спокойно посещение без бързане",
+        "services": [
+          [
+            "Дамско подстригване",
+            "25 €",
+            "Измиване, подстригване и сешоар"
+          ],
+          [
+            "Маникюр с гел лак",
+            "20 €",
+            "Оформяне, гел лак и грижа за кожичките"
+          ],
+          [
+            "Боядисване",
+            "35 €",
+            "Един тон, след кратка консултация"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We are a small salon for hair, nails and skin care. Come for a cut, a colour or a manicure and leave feeling looked after.",
+        "audience": "Women and men who want a calm, unhurried visit",
+        "services": [
+          [
+            "Women’s cut",
+            "€25",
+            "Wash, cut and blow-dry"
+          ],
+          [
+            "Gel manicure",
+            "€20",
+            "Shaping, gel polish and cuticle care"
+          ],
+          [
+            "Colour",
+            "€35",
+            "One tone, after a short consultation"
+          ]
+        ]
+      }
+    }
   },
   {
     "id": "shop",
@@ -340,7 +648,51 @@
       "crafts",
       "order"
     ],
-    "sample": "Handmade by Lina"
+    "sample": "Handmade by Lina",
+    "hints": {
+      "bg": {
+        "offer": "Правя на ръка свещи, керамика и ленени изделия в малки серии и ги продавам онлайн като подаръци и неща за дома.",
+        "audience": "Хора, които търсят обмислен подарък или нещо ръчно изработено за дома си",
+        "services": [
+          [
+            "Соева свещ",
+            "12 €",
+            "Ръчно изляна в стъклено бурканче, 200 г"
+          ],
+          [
+            "Керамична чаша",
+            "16 €",
+            "Ръчно глазирана, всяка е малко по-различна"
+          ],
+          [
+            "Подаръчен комплект",
+            "35 €",
+            "Свещ, чаша и чай, опаковани с картичка"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "I make candles, ceramics and linen by hand in small batches and sell them online as gifts and things for the home.",
+        "audience": "People looking for a thoughtful gift, or something handmade for their own home",
+        "services": [
+          [
+            "Soy candle",
+            "€12",
+            "Hand-poured in a glass jar, 200 g"
+          ],
+          [
+            "Ceramic mug",
+            "€16",
+            "Hand-glazed, each one slightly different"
+          ],
+          [
+            "Gift set",
+            "€35",
+            "Candle, mug and tea, wrapped with a card"
+          ]
+        ]
+      }
+    }
   },
   {
     "id": "saas",
@@ -380,7 +732,51 @@
       "platform",
       "api"
     ],
-    "sample": "Flowdeck"
+    "sample": "Flowdeck",
+    "hints": {
+      "bg": {
+        "offer": "Създаваме инструмент, с който малките екипи автоматизират повтарящата се работа и получават седмичните си отчети, без да ровят в таблици.",
+        "audience": "Екипи по операции, маркетинг и поддръжка, които губят часове в рутинна работа",
+        "services": [
+          [
+            "Старт",
+            "0 €",
+            "За изпробване с малък екип"
+          ],
+          [
+            "Екип",
+            "12 €",
+            "На потребител, с всички интеграции и приоритетна поддръжка"
+          ],
+          [
+            "Бизнес",
+            "29 €",
+            "На потребител, с единен вход (SSO) и отделен мениджър"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We build a tool that helps small teams automate repetitive tasks and get their weekly reports without digging through spreadsheets.",
+        "audience": "Operations, marketing and support teams who lose hours to routine work",
+        "services": [
+          [
+            "Starter",
+            "€0",
+            "For trying it out with a small team"
+          ],
+          [
+            "Team",
+            "€12",
+            "Per user, with all integrations and priority support"
+          ],
+          [
+            "Business",
+            "€29",
+            "Per user, with single sign-on and a dedicated manager"
+          ]
+        ]
+      }
+    }
   },
   {
     "id": "event",
@@ -421,7 +817,51 @@
       "workshop day",
       "party"
     ],
-    "sample": "Sofia Design Week"
+    "sample": "Sofia Design Week",
+    "hints": {
+      "bg": {
+        "offer": "Организираме еднодневна конференция по дизайн с лекции, практически работилници и вечерно парти за хората, които работят с дигитални продукти.",
+        "audience": "Дизайнери, разработчици и продуктови специалисти — от студенти до ръководители на екипи",
+        "services": [
+          [
+            "Стандартен билет",
+            "89 €",
+            "Всички лекции, обяд и кафе"
+          ],
+          [
+            "VIP билет",
+            "199 €",
+            "Вечеря с лекторите и места на първите редове"
+          ],
+          [
+            "Билет за екип",
+            "75 €",
+            "Цена на човек за групи, с обща фактура"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We organise a one-day design conference with talks, hands-on workshops and an evening party for people who work in digital products.",
+        "audience": "Designers, developers and product people, from students to team leads",
+        "services": [
+          [
+            "Standard ticket",
+            "€89",
+            "All talks, lunch and coffee"
+          ],
+          [
+            "VIP ticket",
+            "€199",
+            "Dinner with the speakers and front-row seats"
+          ],
+          [
+            "Team ticket",
+            "€75",
+            "Price per person for groups, with one invoice"
+          ]
+        ]
+      }
+    }
   },
   {
     "id": "blog",
@@ -461,7 +901,51 @@
       "magazine",
       "personal site"
     ],
-    "sample": "Notes by Ana"
+    "sample": "Notes by Ana",
+    "hints": {
+      "bg": {
+        "offer": "Пиша личен блог за пътувания, книги и малки ежедневни ритуали и изпращам кратък бюлетин на читателите, които искат новите статии по имейл.",
+        "audience": "Любопитни читатели, които обичат пътеписи, книги и спокойно, замислено писане",
+        "services": [
+          [
+            "Пътеписи",
+            "",
+            "Походи, пътеки и места, заради които си струва да се отклоните"
+          ],
+          [
+            "Бележки за книги",
+            "",
+            "Какво чета и защо ми остава в ума"
+          ],
+          [
+            "Бюлетин",
+            "",
+            "Кратко писмо с новите статии"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "I write a personal blog about travel, books and small daily rituals, and send a short newsletter to readers who want new articles by email.",
+        "audience": "Curious readers who enjoy travel stories, books and slow, thoughtful writing",
+        "services": [
+          [
+            "Travel stories",
+            "",
+            "Trips, trails and places worth the detour"
+          ],
+          [
+            "Book notes",
+            "",
+            "What I read and why it stayed with me"
+          ],
+          [
+            "Newsletter",
+            "",
+            "A short email with the new articles"
+          ]
+        ]
+      }
+    }
   },
   {
     "id": "comingsoon",
@@ -497,7 +981,232 @@
       "countdown",
       "new product"
     ],
-    "sample": "Launching soon"
+    "sample": "Launching soon",
+    "hints": {
+      "bg": {
+        "offer": "Подготвяме откриването на онлайн магазин за ръчно изработена керамика и искаме да съобщим на хората още в деня на старта.",
+        "audience": "Хора, които ни следват и искат да научат първи за старта",
+        "services": [
+          [
+            "Първата колекция",
+            "",
+            "Чаши, купи и вази, правени в малки серии"
+          ],
+          [
+            "Подаръчни карти",
+            "",
+            "Подарък за човек, който обича керамиката"
+          ],
+          [
+            "Писмо в деня на старта",
+            "",
+            "Едно съобщение, когато магазинът отвори, и нищо повече"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We are getting ready to open an online shop for handmade ceramics, and we want to tell people the moment it opens.",
+        "audience": "People who follow us and want to hear about the launch first",
+        "services": [
+          [
+            "The first collection",
+            "",
+            "Mugs, bowls and vases, made in small batches"
+          ],
+          [
+            "Gift cards",
+            "",
+            "A present for someone who loves ceramics"
+          ],
+          [
+            "Launch-day email",
+            "",
+            "One message when the shop opens, and nothing else"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "accountant",
+    "title": "Accountant",
+    "description": "Services, monthly packages with euro prices and a clear onboarding — for accountants, tax advisers and bookkeepers.",
+    "pages": 4,
+    "category": "business",
+    "categoryTitle": "Business",
+    "icon": "chart.bar.doc.horizontal",
+    "accent": "#0f7a62",
+    "featured": false,
+    "style": "calm",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/accountant/preview.jpg",
+    "art": "blobs",
+    "keywords": [
+      "счетоводител",
+      "счетоводна къща",
+      "счетоводство",
+      "счетоводно обслужване",
+      "данъци",
+      "данъчна декларация",
+      "ддс",
+      "заплати",
+      "фрийлансър",
+      "регистрация на фирма",
+      "годишен отчет",
+      "фактури",
+      "accountant",
+      "accounting",
+      "bookkeeping",
+      "bookkeeper",
+      "tax return",
+      "tax advisor",
+      "vat",
+      "payroll",
+      "freelancer",
+      "small business",
+      "company setup",
+      "annual accounts"
+    ],
+    "sample": "Balans Accounting",
+    "hints": {
+      "bg": {
+        "offer": "Счетоводна къща за фрийлансъри и малки фирми: счетоводство, ДДС, годишни декларации и заплати срещу фиксирана месечна цена.",
+        "audience": "Фрийлансъри, еднолични търговци и собственици на малки фирми",
+        "services": [
+          [
+            "Пакет „Фрийлансър“",
+            "49 €",
+            "Счетоводство и годишна данъчна декларация"
+          ],
+          [
+            "Пакет „Малка фирма“",
+            "149 €",
+            "Счетоводство, ДДС и годишен отчет"
+          ],
+          [
+            "Заплати",
+            "30 €",
+            "На служител, на месец"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We are an accounting practice for freelancers and small companies: bookkeeping, VAT, annual returns and payroll for a fixed monthly fee.",
+        "audience": "Freelancers, sole traders and owners of small companies",
+        "services": [
+          [
+            "Freelancer package",
+            "€49",
+            "Bookkeeping and your annual tax return"
+          ],
+          [
+            "Small company package",
+            "€149",
+            "Bookkeeping, VAT and annual statements"
+          ],
+          [
+            "Payroll",
+            "€30",
+            "Per employee, per month"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "agency",
+    "title": "Digital agency",
+    "description": "Services, a step-by-step process, package cards and a work gallery — a dark, bold look for web and marketing studios.",
+    "pages": 4,
+    "category": "tech",
+    "categoryTitle": "Tech & apps",
+    "icon": "megaphone",
+    "accent": "#25d9ff",
+    "featured": false,
+    "style": "bold",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/agency/preview.jpg",
+    "art": "orbit",
+    "keywords": [
+      "агенция",
+      "дигитална агенция",
+      "рекламна агенция",
+      "уеб дизайн",
+      "изработка на сайт",
+      "сайт",
+      "брандинг",
+      "лого",
+      "социални мрежи",
+      "реклама",
+      "seo оптимизация",
+      "онлайн магазин",
+      "маркетинг",
+      "agency",
+      "digital agency",
+      "marketing agency",
+      "web design",
+      "website",
+      "branding",
+      "logo",
+      "social media",
+      "advertising",
+      "seo",
+      "creative studio",
+      "web developer"
+    ],
+    "sample": "Lumen Studio",
+    "hints": {
+      "bg": {
+        "offer": "Дигитална агенция, която прави сайтове, брандове и кампании в социалните мрежи за местни фирми и стартиращи бизнеси.",
+        "audience": "Местни фирми, магазини и стартиращи бизнеси",
+        "services": [
+          [
+            "Сайт",
+            "900 €",
+            "Една страница или до пет, готови за телефон"
+          ],
+          [
+            "Брандинг",
+            "600 €",
+            "Лого, цветове и шрифтове"
+          ],
+          [
+            "Социални мрежи",
+            "400 €",
+            "Месечен план за съдържание и публикуване"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We are a digital agency that builds websites, brand identities and social media campaigns for local businesses and start-ups.",
+        "audience": "Local businesses, shops and start-ups",
+        "services": [
+          [
+            "Website",
+            "€900",
+            "One page or up to five pages, ready for phones"
+          ],
+          [
+            "Brand identity",
+            "€600",
+            "Logo, colours and typography"
+          ],
+          [
+            "Social media",
+            "€400",
+            "A monthly content plan and posting"
+          ]
+        ]
+      }
+    }
   },
   {
     "id": "app",
@@ -519,19 +1228,510 @@
     "art": "grid",
     "keywords": [
       "мобилно приложение",
-      "ios",
-      "android",
+      "айфон",
+      "андроид",
       "изтегли",
       "функции",
       "игра",
       "mobile app",
+      "ios",
+      "android",
       "app store",
       "download",
       "features",
       "screenshots",
       "game"
     ],
-    "sample": "Pocket Budget"
+    "sample": "Pocket Budget",
+    "hints": {
+      "bg": {
+        "offer": "Правя просто приложение за задачи и навици за iPhone и Android, което помага на хората да планират деня си и да поддържат малките си ритуали.",
+        "audience": "Заети хора, които искат на едно спокойно място задачите, навиците и напомнянията си",
+        "services": [
+          [
+            "Pro за месец",
+            "3 €",
+            "Теми, споделени списъци и статистика"
+          ],
+          [
+            "Pro за година",
+            "25 €",
+            "Същото като месечния план, но с едно плащане годишно"
+          ],
+          [
+            "Семеен план",
+            "5 €",
+            "Pro за целия дом, със споделени списъци"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "I build a simple task and habit app for iPhone and Android that helps people plan their day and keep small routines going.",
+        "audience": "Busy people who want one calm place for tasks, habits and reminders",
+        "services": [
+          [
+            "Pro monthly",
+            "€3",
+            "Themes, shared lists and statistics"
+          ],
+          [
+            "Pro yearly",
+            "€25",
+            "The same as monthly, paid once a year"
+          ],
+          [
+            "Family plan",
+            "€5",
+            "Pro for the whole household, with shared lists"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "autoservice",
+    "title": "Car repair and tyre shop",
+    "description": "Diagnostics, servicing, brakes, tyres and air-conditioning, with a price list and an online booking form.",
+    "pages": 4,
+    "category": "business",
+    "categoryTitle": "Business",
+    "icon": "car.fill",
+    "accent": "#e03a2f",
+    "featured": false,
+    "style": "bold",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/autoservice/preview.jpg",
+    "art": "grid",
+    "keywords": [
+      "автосервиз",
+      "сервиз",
+      "ремонт на автомобили",
+      "автомеханик",
+      "гуми",
+      "смяна на масла",
+      "спирачки",
+      "диагностика",
+      "детайлинг",
+      "климатик",
+      "ходова част",
+      "вулканизатор",
+      "технически преглед",
+      "car repair",
+      "auto service",
+      "garage",
+      "mechanic",
+      "tyres",
+      "oil change",
+      "car service",
+      "brakes",
+      "diagnostics",
+      "detailing",
+      "air conditioning",
+      "pre-inspection check"
+    ],
+    "sample": "Garage Nord",
+    "hints": {
+      "bg": {
+        "offer": "Обслужваме и ремонтираме леки автомобили и бусове: диагностика, масло и филтри, спирачки, гуми и климатик — винаги с писмена оферта, преди да започнем.",
+        "audience": "Шофьори и малки фирми с по няколко автомобила",
+        "services": [
+          [
+            "Пълен сервиз",
+            "60 €",
+            "Масло, филтри и преглед на цялата кола"
+          ],
+          [
+            "Накладки, една ос",
+            "30 €",
+            "Труд; накладките са отделно"
+          ],
+          [
+            "Смяна и баланс на гуми",
+            "25 €",
+            "Четири колела, на автомобил"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We service and repair cars and vans: diagnostics, oil and filters, brakes, tyres and air-conditioning, always with a written estimate before we start.",
+        "audience": "Private drivers and small businesses with a few vehicles",
+        "services": [
+          [
+            "Full service",
+            "€60",
+            "Oil, filters and a check of the whole car"
+          ],
+          [
+            "Brake pads, one axle",
+            "€30",
+            "Labour; pads priced separately"
+          ],
+          [
+            "Tyre change and balancing",
+            "€25",
+            "Four wheels, per car"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "bakery",
+    "title": "Bakery and coffee bar",
+    "description": "Bread, pastries, cakes to order and coffee, with a menu page, cake-ordering steps and a FAQ about allergens.",
+    "pages": 4,
+    "category": "food",
+    "categoryTitle": "Food & stays",
+    "icon": "birthday.cake",
+    "accent": "#8a5530",
+    "featured": false,
+    "style": "calm",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/bakery/preview.jpg",
+    "art": "blobs",
+    "keywords": [
+      "пекарна",
+      "хляб",
+      "сладкарница",
+      "торта",
+      "торти по поръчка",
+      "кроасан",
+      "кафе",
+      "кафене",
+      "козунак",
+      "баничка",
+      "сладкиши",
+      "кифла",
+      "фурна",
+      "bakery",
+      "bread",
+      "pastry",
+      "patisserie",
+      "cake",
+      "cakes to order",
+      "croissant",
+      "coffee bar",
+      "cafe",
+      "birthday cake",
+      "wedding cake",
+      "sourdough",
+      "coffee shop"
+    ],
+    "sample": "Zora Bakehouse",
+    "hints": {
+      "bg": {
+        "offer": "Печем хляб и сладкиши, правим торти по поръчка и сервираме кафе от сутрин до следобед.",
+        "audience": "Съседи, хора от близките офиси и всеки, който планира торта за рожден ден или сватба",
+        "services": [
+          [
+            "Хляб с квас",
+            "4 €",
+            "Дълго ферментирал, с хрупкава коричка"
+          ],
+          [
+            "Празнична торта",
+            "от 50 €",
+            "По поръчка, за 12–15 души"
+          ],
+          [
+            "Флат уайт",
+            "3 €",
+            "Двойно еспресо с мляко"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We bake bread and pastries, make cakes to order and serve coffee from morning to afternoon.",
+        "audience": "Neighbours, office workers and anyone planning a birthday or wedding cake",
+        "services": [
+          [
+            "Sourdough loaf",
+            "€4",
+            "Long-fermented, with a crisp crust"
+          ],
+          [
+            "Celebration cake",
+            "from €50",
+            "Made to order, serves 12–15"
+          ],
+          [
+            "Flat white",
+            "€3",
+            "Double shot with milk"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "bar",
+    "title": "Cocktail bar and lounge",
+    "description": "A dark, neon-lit site with a drinks menu, evenings, private events and table booking for bars, pubs and lounges.",
+    "pages": 4,
+    "category": "food",
+    "categoryTitle": "Food & stays",
+    "icon": "wineglass",
+    "accent": "#ffb224",
+    "featured": false,
+    "style": "bold",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/bar/preview.jpg",
+    "art": "rings",
+    "keywords": [
+      "бар",
+      "коктейл бар",
+      "пъб",
+      "лаундж",
+      "коктейли",
+      "бира",
+      "винен бар",
+      "питиета",
+      "нощен живот",
+      "частно парти",
+      "музика",
+      "кръчма",
+      "bar",
+      "cocktail bar",
+      "pub",
+      "lounge",
+      "cocktails",
+      "beer",
+      "wine bar",
+      "drinks",
+      "nightlife",
+      "private party",
+      "live music",
+      "brewery"
+    ],
+    "sample": "Bar Ember",
+    "hints": {
+      "bg": {
+        "offer": "Приготвяме коктейли по поръчка, наливаме бира и вино и организираме частни вечери за компании.",
+        "audience": "Приятели след работа, двойки, компании и частни партита",
+        "services": [
+          [
+            "Олд Фешънд",
+            "9 €",
+            "Бърбън, битер, портокалова кора"
+          ],
+          [
+            "Сирена и сушени меса",
+            "14 €",
+            "Дъска за споделяне"
+          ],
+          [
+            "Частна вечер",
+            "от 300 €",
+            "Резервирана зона и подготвена листа с напитки"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We make cocktails to order, pour beer and wine, and host private evenings for groups.",
+        "audience": "Friends after work, couples, groups and private parties",
+        "services": [
+          [
+            "Old Fashioned",
+            "€9",
+            "Bourbon, bitters, orange peel"
+          ],
+          [
+            "Cheese and cured meats",
+            "€14",
+            "A board for sharing"
+          ],
+          [
+            "Private evening",
+            "from €300",
+            "A reserved area and a set drinks list"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "barber",
+    "title": "Barbershop",
+    "description": "Services, a price list in euro, a simple way to book a chair and answers to what men ask first.",
+    "pages": 4,
+    "category": "beauty",
+    "categoryTitle": "Beauty & health",
+    "icon": "scissors",
+    "accent": "#c97b3d",
+    "featured": false,
+    "style": "bold",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/barber/preview.jpg",
+    "art": "grid",
+    "keywords": [
+      "бръснар",
+      "бръснарница",
+      "мъжко подстригване",
+      "брада",
+      "бръснене",
+      "фейд",
+      "барбър",
+      "мъжка прическа",
+      "детско подстригване",
+      "оформяне на брада",
+      "barber",
+      "barbershop",
+      "men’s haircut",
+      "beard trim",
+      "shave",
+      "hot towel shave",
+      "fade",
+      "grooming",
+      "haircut",
+      "kids haircut"
+    ],
+    "sample": "Brass Chair",
+    "hints": {
+      "bg": {
+        "offer": "Квартална бръснарница за подстригване, оформяне на брада и бръснене с топли кърпи. Класически и модерни прически, а децата са добре дошли.",
+        "audience": "Мъже и момчета, от първото подстригване до пълната брада",
+        "services": [
+          [
+            "Подстригване",
+            "15 €",
+            "Ножица или машинка, бръснене на врата"
+          ],
+          [
+            "Оформяне на брада",
+            "10 €",
+            "Очертана, подравнена и омекотена с масло"
+          ],
+          [
+            "Бръснене с топли кърпи",
+            "15 €",
+            "Топли кърпи и финиш с бръснач"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "A neighbourhood barbershop for haircuts, beard trims and hot-towel shaves. Classic and modern cuts, and kids are welcome.",
+        "audience": "Men and boys, from first haircuts to full beards",
+        "services": [
+          [
+            "Haircut",
+            "€15",
+            "Scissors or clippers, neck shave"
+          ],
+          [
+            "Beard trim",
+            "€10",
+            "Lined, tidied and softened with oil"
+          ],
+          [
+            "Hot-towel shave",
+            "€15",
+            "Warm towels and a razor finish"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "cleaning",
+    "title": "Cleaning company",
+    "description": "Home, office and post-renovation cleaning with packages by property size, a price list and a quote form.",
+    "pages": 5,
+    "category": "business",
+    "categoryTitle": "Business",
+    "icon": "sparkles",
+    "accent": "#0b9aa0",
+    "featured": false,
+    "style": "calm",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/cleaning/preview.jpg",
+    "art": "waves",
+    "keywords": [
+      "почистване",
+      "почистване на домове",
+      "почистване на офиси",
+      "почистване след ремонт",
+      "миене на прозорци",
+      "пране на мека мебел",
+      "пране на килими",
+      "фирма за почистване",
+      "хигиенист",
+      "основно почистване",
+      "cleaning",
+      "house cleaning",
+      "office cleaning",
+      "post-renovation cleaning",
+      "window cleaning",
+      "upholstery cleaning",
+      "carpet cleaning",
+      "cleaner",
+      "deep clean",
+      "cleaning company"
+    ],
+    "sample": "Clear Day",
+    "hints": {
+      "bg": {
+        "offer": "Почистваме домове и офиси — еднократно или по график, както и след ремонт, прозорци и мека мебел.",
+        "audience": "Домакинства, наемодатели, офиси и малки магазини",
+        "services": [
+          [
+            "Почистване на дом",
+            "40 €",
+            "Кухня, баня, подове и прах"
+          ],
+          [
+            "Почистване след ремонт",
+            "120 €",
+            "Прах, петна от боя и дограма"
+          ],
+          [
+            "Почистване на диван",
+            "45 €",
+            "Дълбоко екстракционно почистване на двуместен"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We clean homes and offices, one-off or on a regular schedule, and also do post-renovation cleaning, windows and upholstery.",
+        "audience": "Households, landlords, offices and small shops",
+        "services": [
+          [
+            "Home cleaning",
+            "€40",
+            "Kitchen, bathroom, floors and dusting"
+          ],
+          [
+            "Post-renovation clean",
+            "€120",
+            "Dust, paint splashes and window frames"
+          ],
+          [
+            "Sofa cleaning",
+            "€45",
+            "Deep extraction cleaning for a two-seater"
+          ]
+        ]
+      }
+    }
   },
   {
     "id": "clinic",
@@ -574,7 +1774,321 @@
       "appointment",
       "team"
     ],
-    "sample": "Dental Clinic Vita"
+    "sample": "Dental Clinic Vita",
+    "hints": {
+      "bg": {
+        "offer": "Семейна дентална клиника за профилактични прегледи, лечение, избелване и ортодонтска грижа, с търпелив подход към децата.",
+        "audience": "Възрастни и деца, които искат спокоен и ясно обяснен преглед",
+        "services": [
+          [
+            "Преглед и почистване",
+            "45 €",
+            "Оглед, почистване на зъбен камък и полиране"
+          ],
+          [
+            "Пломба",
+            "60 €",
+            "На зъб, с локална анестезия"
+          ],
+          [
+            "Избелване на зъби",
+            "180 €",
+            "Професионално избелване за една визита"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We are a family dental clinic offering check-ups, fillings, whitening and orthodontic care, with a patient approach for children.",
+        "audience": "Adults and children who want a calm, clearly explained dental visit",
+        "services": [
+          [
+            "Check-up and cleaning",
+            "€45",
+            "Examination, scaling and polishing"
+          ],
+          [
+            "Filling",
+            "€60",
+            "Per tooth, with local anaesthesia"
+          ],
+          [
+            "Teeth whitening",
+            "€180",
+            "Professional whitening in a single visit"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "construction",
+    "title": "Renovation and building",
+    "description": "Services, how a project runs from site visit to handover, a project gallery and FAQ — for renovation contractors.",
+    "pages": 4,
+    "category": "business",
+    "categoryTitle": "Business",
+    "icon": "hammer",
+    "accent": "#ff6a00",
+    "featured": false,
+    "style": "bold",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/construction/preview.jpg",
+    "art": "peaks",
+    "keywords": [
+      "ремонт",
+      "ремонти",
+      "строител",
+      "строителна фирма",
+      "ремонт на баня",
+      "ремонт на кухня",
+      "подови настилки",
+      "боядисване",
+      "ел. инсталация",
+      "цялостен ремонт",
+      "фаянс и теракот",
+      "майстор",
+      "renovation",
+      "builder",
+      "contractor",
+      "construction",
+      "bathroom renovation",
+      "kitchen fitting",
+      "flooring",
+      "painting",
+      "electrician",
+      "refurbishment",
+      "tiling",
+      "home repairs"
+    ],
+    "sample": "Brickline Renovations",
+    "hints": {
+      "bg": {
+        "offer": "Ремонтен екип за бани, кухни, подове и цялостни ремонти — с писмена оферта и уговорен график.",
+        "audience": "Собственици на жилища, наемодатели и малки магазини",
+        "services": [
+          [
+            "Ремонт на баня",
+            "от 2 500 €",
+            "Хидроизолация, облицовка и санитария"
+          ],
+          [
+            "Боядисване",
+            "6 €",
+            "На м², шпакловка и две ръце"
+          ],
+          [
+            "Полагане на под",
+            "12 €",
+            "На м², изравняването е отделно"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We are a renovation team doing bathrooms, kitchens, floors and full refurbishments, with a written quote and an agreed schedule.",
+        "audience": "Homeowners, landlords and small shops",
+        "services": [
+          [
+            "Bathroom renovation",
+            "from €2,500",
+            "Waterproofing, tiling and fixtures"
+          ],
+          [
+            "Painting",
+            "€6",
+            "Per m², filling and two coats"
+          ],
+          [
+            "Floor laying",
+            "€12",
+            "Per m², levelling extra"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "dance",
+    "title": "Dance school",
+    "description": "Styles, levels, ways to start, class prices and events, in a bold and energetic look made for a dance studio.",
+    "pages": 3,
+    "category": "community",
+    "categoryTitle": "Events & causes",
+    "icon": "figure.dance",
+    "accent": "#c4169f",
+    "featured": false,
+    "style": "bold",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/dance/preview.jpg",
+    "art": "orbit",
+    "keywords": [
+      "танцово студио",
+      "школа по танци",
+      "уроци по танци",
+      "салса",
+      "бачата",
+      "балет",
+      "хип-хоп",
+      "спортни танци",
+      "латино",
+      "детски танци",
+      "сватбен танц",
+      "танцов клуб",
+      "dance school",
+      "dance studio",
+      "dance classes",
+      "dance lessons",
+      "salsa",
+      "bachata",
+      "ballet",
+      "hip hop",
+      "ballroom",
+      "latin dance",
+      "kids dance",
+      "wedding dance"
+    ],
+    "sample": "Ritmo Studio",
+    "hints": {
+      "bg": {
+        "offer": "Преподаваме салса, балет и хип-хоп на възрастни и деца — от съвсем начинаещи до танцьори, които искат да се изявяват.",
+        "audience": "Възрастни и деца, които искат да танцуват — с опит или без",
+        "services": [
+          [
+            "Месечна група",
+            "45 €",
+            "Един урок седмично във ваш стил"
+          ],
+          [
+            "Индивидуален урок",
+            "30 €",
+            "Работа един на един с преподавател"
+          ],
+          [
+            "Пробен урок",
+            "10 €",
+            "Опитайте стил, преди да решите"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We teach salsa, ballet and hip-hop to adults and children, from complete beginners to dancers who want to perform.",
+        "audience": "Adults and children who want to dance, with or without experience",
+        "services": [
+          [
+            "Monthly group",
+            "€45",
+            "One class a week in your style"
+          ],
+          [
+            "Private lesson",
+            "€30",
+            "One-to-one with a teacher"
+          ],
+          [
+            "Trial class",
+            "€10",
+            "Try a style before you commit"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "farm",
+    "title": "Farm and weekly boxes",
+    "description": "A farm shop with weekly boxes, a seasons page, a price list and clear delivery and pickup.",
+    "pages": 5,
+    "category": "commerce",
+    "categoryTitle": "Shops & property",
+    "icon": "leaf",
+    "accent": "#55702a",
+    "featured": false,
+    "style": "calm",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/farm/preview.jpg",
+    "art": "leaves",
+    "keywords": [
+      "ферма",
+      "фермерски магазин",
+      "зеленчуци",
+      "кутия със зеленчуци",
+      "седмична кутия",
+      "местни продукти",
+      "мед",
+      "сирене",
+      "вино",
+      "зимнина",
+      "био",
+      "домашни продукти",
+      "farm",
+      "farm shop",
+      "vegetable box",
+      "weekly box",
+      "local produce",
+      "honey",
+      "dairy",
+      "cheese",
+      "wine",
+      "preserves",
+      "farmers market",
+      "organic"
+    ],
+    "sample": "Orchard Hill Farm",
+    "hints": {
+      "bg": {
+        "offer": "Отглеждаме зеленчуци и плодове, правим сирене и мед и пакетираме седмични кутии за вземане или доставка.",
+        "audience": "Семейства и домакинства, които искат сезонна храна от местна ферма",
+        "services": [
+          [
+            "Малка кутия",
+            "20 €",
+            "Сезонни зеленчуци за един или двама"
+          ],
+          [
+            "Семейна кутия",
+            "32 €",
+            "Зеленчуци, билки и плодове за семейна маса"
+          ],
+          [
+            "Мед, 500 г",
+            "9 €",
+            "Буркан от нашите кошери"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We grow vegetables and fruit, make cheese and honey, and pack weekly boxes for pickup or delivery.",
+        "audience": "Families and households who want seasonal food from a local farm",
+        "services": [
+          [
+            "Small box",
+            "€20",
+            "Seasonal vegetables for one or two people"
+          ],
+          [
+            "Family box",
+            "€32",
+            "Vegetables, herbs and fruit for a family table"
+          ],
+          [
+            "Honey, 500 g",
+            "€9",
+            "A jar from our own hives"
+          ]
+        ]
+      }
+    }
   },
   {
     "id": "fitness",
@@ -616,7 +2130,142 @@
       "membership",
       "sport"
     ],
-    "sample": "Iron Yard"
+    "sample": "Iron Yard",
+    "hints": {
+      "bg": {
+        "offer": "Водим групови и персонални тренировки за хора, които искат да станат по-силни, и по желание съставяме лесен хранителен план.",
+        "audience": "Начинаещи и редовно трениращи, които искат треньор и план",
+        "services": [
+          [
+            "Месечна карта",
+            "35 €",
+            "Свободен достъп и групови тренировки"
+          ],
+          [
+            "Персонална тренировка",
+            "20 €",
+            "Час насаме с треньор, по вашата цел"
+          ],
+          [
+            "Начална оценка",
+            "15 €",
+            "Фитнес тест и план за първите седмици"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We run small-group classes and personal training for people who want to get stronger, with a simple nutrition plan if you ask for one.",
+        "audience": "Beginners and regulars who want a coach and a plan",
+        "services": [
+          [
+            "Monthly membership",
+            "€35",
+            "Open gym and group classes"
+          ],
+          [
+            "Personal session",
+            "€20",
+            "One-to-one with a coach, built around your goal"
+          ],
+          [
+            "Starter assessment",
+            "€15",
+            "Fitness test and a plan for the first weeks"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "florist",
+    "title": "Florist",
+    "description": "Bouquets, wedding flowers, subscriptions and sympathy tributes, with an easy order form and a price guide.",
+    "pages": 4,
+    "category": "commerce",
+    "categoryTitle": "Shops & property",
+    "icon": "camera.macro",
+    "accent": "#557a5d",
+    "featured": false,
+    "style": "elegant",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/florist/preview.jpg",
+    "art": "leaves",
+    "keywords": [
+      "цветарница",
+      "цветарски магазин",
+      "цветя",
+      "букет",
+      "цветя за сватба",
+      "сватбена украса",
+      "траурни цветя",
+      "венец",
+      "доставка на цветя",
+      "абонамент за цветя",
+      "рози",
+      "флорист",
+      "саксийни растения",
+      "florist",
+      "flower shop",
+      "flowers",
+      "bouquet",
+      "wedding flowers",
+      "funeral flowers",
+      "sympathy flowers",
+      "flower delivery",
+      "flower subscription",
+      "floral design",
+      "roses",
+      "plants"
+    ],
+    "sample": "Atelier Iris",
+    "hints": {
+      "bg": {
+        "offer": "Правим ръчно вързани букети, сватбени цветя и траурни аранжировки и доставяме из целия град.",
+        "audience": "Хора, които изпращат цветя, двойки преди сватба, офиси и заведения",
+        "services": [
+          [
+            "Сезонен букет",
+            "40 €",
+            "Смесени цветя в избраните от вас цветове"
+          ],
+          [
+            "Булчински букет",
+            "от 90 €",
+            "Изработен според роклята и цветовете ви"
+          ],
+          [
+            "Седмичен абонамент",
+            "от 25 €",
+            "Сезонен букет пред вратата ви"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We make hand-tied bouquets, wedding flowers and sympathy arrangements, and deliver across the city.",
+        "audience": "People sending flowers, couples planning a wedding, offices and venues",
+        "services": [
+          [
+            "Seasonal bouquet",
+            "€40",
+            "Mixed flowers in the colours you choose"
+          ],
+          [
+            "Bridal bouquet",
+            "from €90",
+            "Designed around your dress and colours"
+          ],
+          [
+            "Weekly subscription",
+            "from €25",
+            "A seasonal bouquet at your door"
+          ]
+        ]
+      }
+    }
   },
   {
     "id": "hotel",
@@ -657,7 +2306,325 @@
       "bed and breakfast",
       "resort"
     ],
-    "sample": "Villa Rosa"
+    "sample": "Villa Rosa",
+    "hints": {
+      "bg": {
+        "offer": "Малка семейна къща за гости с уютни стаи, домашна закуска и тераса с изглед към планината.",
+        "audience": "Двойки, семейства и туристи, които търсят тих уикенд",
+        "services": [
+          [
+            "Двойна стая",
+            "60 €",
+            "За нощувка, със закуска"
+          ],
+          [
+            "Семеен апартамент",
+            "95 €",
+            "Две спални и кухненски бокс"
+          ],
+          [
+            "Студио с камина",
+            "80 €",
+            "Кът за сядане и достъп до сауната"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We are a small family guesthouse with cosy rooms, a homemade breakfast and a terrace with a view of the mountain.",
+        "audience": "Couples, families and hikers looking for a quiet weekend",
+        "services": [
+          [
+            "Double room",
+            "€60",
+            "Per night, breakfast included"
+          ],
+          [
+            "Family suite",
+            "€95",
+            "Two bedrooms and a kitchenette"
+          ],
+          [
+            "Studio with fireplace",
+            "€80",
+            "Lounge area and access to the sauna"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "interior",
+    "title": "Interior design studio",
+    "description": "Services, a clear process, project types, packages and a consultation form for a design or furniture studio.",
+    "pages": 3,
+    "category": "personal",
+    "categoryTitle": "Personal",
+    "icon": "sofa",
+    "accent": "#2e3d44",
+    "featured": false,
+    "style": "elegant",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/interior/preview.jpg",
+    "art": "blobs",
+    "keywords": [
+      "интериорен дизайн",
+      "интериор",
+      "дизайнер",
+      "архитект",
+      "мебели",
+      "мебели по поръчка",
+      "ремонт",
+      "декоратор",
+      "стайлинг",
+      "проект",
+      "обзавеждане",
+      "авторски надзор",
+      "interior design",
+      "interior designer",
+      "architect",
+      "furniture",
+      "custom furniture",
+      "home design",
+      "renovation",
+      "decorator",
+      "stylist",
+      "floor plan",
+      "kitchen design",
+      "furniture maker"
+    ],
+    "sample": "Studio Nord",
+    "hints": {
+      "bg": {
+        "offer": "Проектираме апартаменти и къщи от концепцията до авторския надзор на обекта, и правим гардероби и рафтове по поръчка.",
+        "audience": "Собственици, които ремонтират или обзавеждат, и малък бизнес",
+        "services": [
+          [
+            "Концепция",
+            "600 €",
+            "Разпределения, мудборд и материали"
+          ],
+          [
+            "Пълен проект",
+            "2 400 €",
+            "Чертежи, 3D визуализации и спецификация"
+          ],
+          [
+            "Авторски надзор",
+            "60 €",
+            "На посещение, със снимков отчет"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We design apartments and houses from concept to supervision on site, and make custom wardrobes and shelving.",
+        "audience": "Homeowners renovating or furnishing, and small businesses",
+        "services": [
+          [
+            "Concept design",
+            "€600",
+            "Layouts, mood board and materials"
+          ],
+          [
+            "Full interior design",
+            "€2,400",
+            "Drawings, 3D views and specification"
+          ],
+          [
+            "Project supervision",
+            "€60",
+            "Per site visit, with a photo report"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "kids",
+    "title": "Kids’ club and parties",
+    "description": "Activities, a daily rhythm in plain words, care promises for parents and birthday party packages, in a bright, friendly look.",
+    "pages": 3,
+    "category": "community",
+    "categoryTitle": "Events & causes",
+    "icon": "balloon.2",
+    "accent": "#f8a91a",
+    "featured": false,
+    "style": "calm",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/kids/preview.jpg",
+    "art": "confetti",
+    "keywords": [
+      "детска градина",
+      "детски клуб",
+      "ясла",
+      "занималня",
+      "рожден ден",
+      "детско парти",
+      "аниматор",
+      "детски рожден ден",
+      "игри за деца",
+      "забавачка",
+      "организиране на парти",
+      "предучилищна подготовка",
+      "kindergarten",
+      "kids club",
+      "nursery",
+      "childcare",
+      "preschool",
+      "birthday party",
+      "children’s party",
+      "party entertainer",
+      "kids activities",
+      "playgroup",
+      "after school",
+      "animator"
+    ],
+    "sample": "Sunny Kids",
+    "hints": {
+      "bg": {
+        "offer": "Имаме детски клуб с рисуване, музика и игри на открито и организираме рождени дни с аниматор, който води веселбата.",
+        "audience": "Родители на малки деца — от прохождащи до първокласници",
+        "services": [
+          [
+            "Рожден ден",
+            "150 €",
+            "Игри, творчество и аниматор"
+          ],
+          [
+            "Седмичен клуб",
+            "60 €",
+            "Игра, творчество и музика"
+          ],
+          [
+            "Лятна занималня",
+            "35 €",
+            "Цял ден занимания"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We run a kids’ club with crafts, music and outdoor play, and we organise birthday parties with a host who leads the fun.",
+        "audience": "Parents of small children, from toddlers to school age",
+        "services": [
+          [
+            "Birthday party",
+            "€150",
+            "Games, a craft and a host"
+          ],
+          [
+            "Weekly club",
+            "€60",
+            "Play, crafts and music"
+          ],
+          [
+            "Holiday day camp",
+            "€35",
+            "A full day of activities"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "lawyer",
+    "title": "Law office",
+    "description": "Practice areas, how a first consultation works and clear answers on fees and documents — for a law office or notary.",
+    "pages": 5,
+    "category": "business",
+    "categoryTitle": "Business",
+    "icon": "scalemass",
+    "accent": "#1d2c4d",
+    "featured": false,
+    "style": "elegant",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/lawyer/preview.jpg",
+    "art": "grid",
+    "keywords": [
+      "адвокат",
+      "адвокатска кантора",
+      "юрист",
+      "правна помощ",
+      "правен съвет",
+      "нотариус",
+      "договор",
+      "завещание",
+      "наследство",
+      "развод",
+      "имотна сделка",
+      "регистрация на фирма",
+      "събиране на вземания",
+      "дело",
+      "lawyer",
+      "law firm",
+      "law office",
+      "attorney",
+      "solicitor",
+      "notary",
+      "legal advice",
+      "contract",
+      "will",
+      "inheritance",
+      "divorce",
+      "property purchase",
+      "company registration",
+      "debt collection"
+    ],
+    "sample": "Veritas Law Office",
+    "hints": {
+      "bg": {
+        "offer": "Малка адвокатска кантора, която помага на семейства и малки фирми с договори, покупка на имоти, наследство и регистрация на фирма.",
+        "audience": "Семейства, първи купувачи, фрийлансъри и собственици на малък бизнес",
+        "services": [
+          [
+            "Първа консултация",
+            "50 €",
+            "До 45 минути, в кантората или по видеовръзка"
+          ],
+          [
+            "Преглед на договор",
+            "80 €",
+            "Прочитаме го, коментираме и предлагаме промени"
+          ],
+          [
+            "Регистрация на фирма",
+            "250 €",
+            "Учредителни документи и вписване"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We are a small law office helping families and small businesses with contracts, property purchases, inheritance and company registration.",
+        "audience": "Families, first-time buyers, freelancers and small business owners",
+        "services": [
+          [
+            "First consultation",
+            "€50",
+            "Up to 45 minutes, in the office or by video"
+          ],
+          [
+            "Contract review",
+            "€80",
+            "We read it, comment and suggest changes"
+          ],
+          [
+            "Company registration",
+            "€250",
+            "Founding documents and filing"
+          ]
+        ]
+      }
+    }
   },
   {
     "id": "linkinbio",
@@ -696,7 +2663,141 @@
       "social",
       "one page"
     ],
-    "sample": "Mila"
+    "sample": "Mila",
+    "hints": {
+      "bg": {
+        "offer": "Споделям истории за пътувания и храна в Инстаграм и Ютуб, а в магазина си продавам малък пътеводител.",
+        "audience": "Последователи, които искат всичко, което правя, на едно място",
+        "services": [
+          [
+            "Най-новото видео",
+            "",
+            "Последният епизод направо от канала ми"
+          ],
+          [
+            "Пътеводител",
+            "9 €",
+            "Любимите ми места, готови за разпечатване"
+          ],
+          [
+            "За сътрудничество",
+            "",
+            "Партньорства и кампании с марки"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "I share travel and food stories on Instagram and YouTube, and I sell a small travel guide in my shop.",
+        "audience": "Followers who want everything I make in one place",
+        "services": [
+          [
+            "Latest video",
+            "",
+            "The newest episode, straight from my channel"
+          ],
+          [
+            "Travel guide",
+            "€9",
+            "My favourite places, ready to print"
+          ],
+          [
+            "Work with me",
+            "",
+            "Collaborations and brand partnerships"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "music",
+    "title": "Band, musician or DJ",
+    "description": "Show your sound, where you play and how booking works, with a clear way for people to check your date.",
+    "pages": 3,
+    "category": "personal",
+    "categoryTitle": "Personal",
+    "icon": "music.mic",
+    "accent": "#c93cff",
+    "featured": false,
+    "style": "bold",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/music/preview.jpg",
+    "art": "orbit",
+    "keywords": [
+      "музика",
+      "група",
+      "жива музика",
+      "диджей",
+      "сватбена музика",
+      "музикант",
+      "певец",
+      "оркестър",
+      "кавър група",
+      "парти музика",
+      "купон",
+      "свирим",
+      "music",
+      "band",
+      "live band",
+      "dj",
+      "wedding band",
+      "musician",
+      "singer",
+      "party band",
+      "cover band",
+      "gig",
+      "live music",
+      "booking"
+    ],
+    "sample": "Nocturne Live",
+    "hints": {
+      "bg": {
+        "offer": "Сме четиричленна парти група и свирим фънк, соул и поп на сватби и частни партита. Правим и DJ сетове.",
+        "audience": "Младоженци, зали и организатори на събития",
+        "services": [
+          [
+            "Сватбена група",
+            "900 €",
+            "Церемония, вечеря и танцови сетове"
+          ],
+          [
+            "DJ сет",
+            "350 €",
+            "От вечеря до последна песен, с озвучаване"
+          ],
+          [
+            "Акустично дуо",
+            "400 €",
+            "Музика за церемония и вечеря"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We are a four-piece party band playing funk, soul and pop at weddings and private parties, and we also do DJ sets.",
+        "audience": "Couples planning a wedding, venues and event organisers",
+        "services": [
+          [
+            "Wedding band",
+            "€900",
+            "Ceremony, dinner and dance sets"
+          ],
+          [
+            "DJ set",
+            "€350",
+            "Dinner to last song, sound included"
+          ],
+          [
+            "Acoustic duo",
+            "€400",
+            "Music for the ceremony and dinner"
+          ]
+        ]
+      }
+    }
   },
   {
     "id": "nonprofit",
@@ -737,7 +2838,231 @@
       "association",
       "campaign"
     ],
-    "sample": "Green Sofia"
+    "sample": "Green Sofia",
+    "hints": {
+      "bg": {
+        "offer": "Организираме четене и менторство за деца от малките населени места и събираме дарения за книги и стипендии.",
+        "audience": "Дарители, доброволци и местни училища",
+        "services": [
+          [
+            "Еднократно дарение",
+            "10 €",
+            "Книги за един клас"
+          ],
+          [
+            "Месечно дарение",
+            "5 €",
+            "Постоянна подкрепа за наставник и дете"
+          ],
+          [
+            "Доброволчество",
+            "",
+            "Менторство онлайн или на място"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We run a reading club and a mentoring programme for children in small towns, and we collect donations for books and scholarships.",
+        "audience": "Donors, volunteers and local schools",
+        "services": [
+          [
+            "One-off donation",
+            "€10",
+            "Books for a class of children"
+          ],
+          [
+            "Monthly donation",
+            "€5",
+            "Steady support for a mentor and one child"
+          ],
+          [
+            "Volunteering",
+            "",
+            "Mentoring online or in person"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "photographer",
+    "title": "Photographer or videographer",
+    "description": "Genres, how a shoot works from enquiry to delivery, packages with prices and a simple way to book a date.",
+    "pages": 3,
+    "category": "personal",
+    "categoryTitle": "Personal",
+    "icon": "camera",
+    "accent": "#ece2d0",
+    "featured": false,
+    "style": "elegant",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/photographer/preview.jpg",
+    "art": "rings",
+    "keywords": [
+      "фотограф",
+      "фотография",
+      "видеограф",
+      "сватбен фотограф",
+      "портрет",
+      "продуктова фотография",
+      "снимки на имоти",
+      "фотосесия",
+      "събитийна фотография",
+      "заснемане",
+      "видео",
+      "снимки",
+      "photographer",
+      "photography",
+      "videographer",
+      "wedding photographer",
+      "portrait",
+      "product photography",
+      "real estate photos",
+      "photoshoot",
+      "headshots",
+      "event photography",
+      "video",
+      "studio"
+    ],
+    "sample": "Atelier Lumen",
+    "hints": {
+      "bg": {
+        "offer": "Сватбен и портретен фотограф, който работи с естествена светлина и прави кратки филми за социалните мрежи.",
+        "audience": "Младоженци, семейства и малък бизнес",
+        "services": [
+          [
+            "Портретна сесия",
+            "120 €",
+            "Един час, обработена галерия"
+          ],
+          [
+            "Сватбен ден",
+            "900 €",
+            "От подготовката до първия танц"
+          ],
+          [
+            "Продуктова серия",
+            "250 €",
+            "Бял фон и стилизирани кадри"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "Wedding and portrait photographer working in natural light, with short films for social media.",
+        "audience": "Couples, families and small businesses",
+        "services": [
+          [
+            "Portrait session",
+            "€120",
+            "One hour, edited gallery"
+          ],
+          [
+            "Wedding day",
+            "€900",
+            "Preparations to the first dance"
+          ],
+          [
+            "Product set",
+            "€250",
+            "White background and styled shots"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "podcast",
+    "title": "Podcast or video creator",
+    "description": "What your show is about, where to listen or watch, how to be a guest or sponsor, and a newsletter signup.",
+    "pages": 3,
+    "category": "personal",
+    "categoryTitle": "Personal",
+    "icon": "mic",
+    "accent": "#ff5a1f",
+    "featured": false,
+    "style": "bold",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/podcast/preview.jpg",
+    "art": "waves",
+    "keywords": [
+      "подкаст",
+      "ютюб",
+      "ютюбър",
+      "видео",
+      "влог",
+      "шоу",
+      "канал",
+      "епизоди",
+      "стрийм",
+      "бюлетин",
+      "създател на съдържание",
+      "видео блогър",
+      "podcast",
+      "youtube",
+      "youtuber",
+      "video",
+      "creator",
+      "vlog",
+      "show",
+      "channel",
+      "episodes",
+      "streamer",
+      "newsletter",
+      "content creator"
+    ],
+    "sample": "Open Frequency",
+    "hints": {
+      "bg": {
+        "offer": "Седмичен подкаст за живота на малкия бизнес: честни разговори с хора, които вече са го направили. Излиза и в YouTube.",
+        "audience": "Предприемачи, фрийлансъри и любопитни слушатели",
+        "services": [
+          [
+            "Гост в шоуто",
+            "",
+            "Предложете тема и се включете в епизод"
+          ],
+          [
+            "Спонсорство на епизод",
+            "150 €",
+            "Кратко четене или цяла рубрика"
+          ],
+          [
+            "Споменаване в бюлетина",
+            "60 €",
+            "Вашият линк в бележките"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "A weekly podcast about running a small business: honest conversations with people who have done it, also on YouTube.",
+        "audience": "Founders, freelancers and curious listeners",
+        "services": [
+          [
+            "Guest appearance",
+            "",
+            "Pitch a topic and join an episode"
+          ],
+          [
+            "Episode sponsorship",
+            "€150",
+            "A short read or a full segment"
+          ],
+          [
+            "Newsletter mention",
+            "€60",
+            "Your link in the show notes"
+          ]
+        ]
+      }
+    }
   },
   {
     "id": "realestate",
@@ -779,7 +3104,51 @@
       "buy",
       "land"
     ],
-    "sample": "Primus Estates"
+    "sample": "Primus Estates",
+    "hints": {
+      "bg": {
+        "offer": "Помагаме на семейства да продадат, купят или наемат апартамент или къща и сме до тях на огледите, при документите и при нотариуса.",
+        "audience": "Собственици, които продават или отдават имот, и купувачи, които търсят дом",
+        "services": [
+          [
+            "Оценка на имот",
+            "",
+            "Пазарна оценка след кратък оглед"
+          ],
+          [
+            "Продажба на имот",
+            "2%",
+            "Снимки, огледи и договаряне до нотариуса"
+          ],
+          [
+            "Отдаване под наем",
+            "300 €",
+            "Търсене на наемател и договор"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We help families sell, buy and rent apartments and houses, and we stay with you through viewings, paperwork and the notary.",
+        "audience": "Owners who want to sell or let, and buyers looking for a home",
+        "services": [
+          [
+            "Property valuation",
+            "",
+            "A market estimate after a short visit"
+          ],
+          [
+            "Selling your home",
+            "2%",
+            "Photos, viewings and negotiation up to the notary"
+          ],
+          [
+            "Letting",
+            "€300",
+            "Tenant search and a rental contract"
+          ]
+        ]
+      }
+    }
   },
   {
     "id": "resume",
@@ -801,7 +3170,7 @@
     "art": "rings",
     "keywords": [
       "автобиография",
-      "cv",
+      "резюме",
       "работа",
       "кариера",
       "умения",
@@ -810,6 +3179,7 @@
       "инженер",
       "лично",
       "resume",
+      "cv",
       "job",
       "career",
       "skills",
@@ -819,7 +3189,584 @@
       "hire me",
       "personal"
     ],
-    "sample": "Georgi Ivanov"
+    "sample": "Georgi Ivanov",
+    "hints": {
+      "bg": {
+        "offer": "Продуктов мениджър съм — превръщам сложни проблеми в прости продукти и търся следващата си роля в софтуерен екип.",
+        "audience": "Рекрутери и ръководители в софтуерни компании",
+        "services": [
+          [
+            "Продуктова стратегия",
+            "",
+            "Пътна карта и приоритети за софтуерен екип"
+          ],
+          [
+            "Потребителски проучвания",
+            "",
+            "Интервюта и тестове, които оформят продукта"
+          ],
+          [
+            "Менторство",
+            "",
+            "Напътствия за млади колеги в продуктовия екип"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "I am a product manager who turns complex problems into simple products, and I am looking for my next role in a software team.",
+        "audience": "Recruiters and hiring managers at software companies",
+        "services": [
+          [
+            "Product strategy",
+            "",
+            "Roadmaps and priorities for a software team"
+          ],
+          [
+            "User research",
+            "",
+            "Interviews and tests that shape the product"
+          ],
+          [
+            "Mentoring",
+            "",
+            "Guidance for junior product colleagues"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "school",
+    "title": "Language school",
+    "description": "Courses by level and age, a clear teaching method, course prices and answers to the questions learners ask first.",
+    "pages": 3,
+    "category": "community",
+    "categoryTitle": "Events & causes",
+    "icon": "character.book.closed",
+    "accent": "#3f55d4",
+    "featured": false,
+    "style": "calm",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/school/preview.jpg",
+    "art": "blobs",
+    "keywords": [
+      "езикова школа",
+      "езикови курсове",
+      "школа",
+      "уроци",
+      "частни уроци",
+      "курс по английски",
+      "уроци по немски",
+      "обучение",
+      "учебен център",
+      "преподавател",
+      "подготовка за изпит",
+      "езиков център",
+      "language school",
+      "language courses",
+      "tutoring",
+      "tutor",
+      "private lessons",
+      "english lessons",
+      "exam preparation",
+      "training centre",
+      "learn a language",
+      "evening classes",
+      "children's courses"
+    ],
+    "sample": "Lingua Studio",
+    "hints": {
+      "bg": {
+        "offer": "Преподаваме английски и немски на деца и възрастни — в групи и индивидуално, с много говорене във всеки урок.",
+        "audience": "Деца, тийнейджъри и възрастни, които искат да говорят уверено",
+        "services": [
+          [
+            "Групов курс",
+            "45 €",
+            "Седмични уроци по ниво и възраст"
+          ],
+          [
+            "Индивидуален урок",
+            "20 €",
+            "Вашата цел, вашият темп"
+          ],
+          [
+            "Подготовка за изпит",
+            "180 €",
+            "Целенасочена практика преди изпита"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We teach English and German to children and adults, in groups and one-to-one, with a lot of speaking in every lesson.",
+        "audience": "Children, teenagers and adults who want to speak with confidence",
+        "services": [
+          [
+            "Group course",
+            "€45",
+            "Weekly lessons by level and age"
+          ],
+          [
+            "One-to-one lesson",
+            "€20",
+            "Your goal, your pace"
+          ],
+          [
+            "Exam preparation",
+            "€180",
+            "Focused practice before the exam"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "spa",
+    "title": "Massage and spa",
+    "description": "Treatments, prices in euro, what to expect at a first visit, gift vouchers and a calm way to book.",
+    "pages": 4,
+    "category": "beauty",
+    "categoryTitle": "Beauty & health",
+    "icon": "drop",
+    "accent": "#1d5c5a",
+    "featured": false,
+    "style": "elegant",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/spa/preview.jpg",
+    "art": "rings",
+    "keywords": [
+      "масаж",
+      "спа",
+      "спа център",
+      "релаксация",
+      "спортен масаж",
+      "терапия за лице",
+      "козметика",
+      "масаж за двама",
+      "ваучер",
+      "уелнес",
+      "massage",
+      "spa",
+      "day spa",
+      "facial",
+      "relaxation",
+      "sports massage",
+      "body treatment",
+      "wellness",
+      "couples massage",
+      "gift voucher"
+    ],
+    "sample": "Verde Spa",
+    "hints": {
+      "bg": {
+        "offer": "Тихо СПА с релаксиращ, спортен и терапевтичен масаж, терапии за лице и ритуали за тялото, плюс пакети за двама.",
+        "audience": "Всеки, който има нужда да забави темпото: заети професионалисти, спортуващи, двойки и приятели",
+        "services": [
+          [
+            "Релаксиращ масаж, 60 мин",
+            "55 €",
+            "Бавни движения с топло масло"
+          ],
+          [
+            "Класическа терапия за лице",
+            "50 €",
+            "Почистване, масаж и маска"
+          ],
+          [
+            "Масаж за двама",
+            "120 €",
+            "Един до друг, с чай"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "A quiet day spa with relaxing, sports and therapeutic massage, facials and body rituals, plus packages for couples.",
+        "audience": "Anyone who needs to slow down: busy professionals, athletes, couples and friends",
+        "services": [
+          [
+            "Relaxing massage, 60 min",
+            "€55",
+            "Slow strokes with warm oil"
+          ],
+          [
+            "Classic facial",
+            "€50",
+            "Cleanse, massage and mask"
+          ],
+          [
+            "Massage for two",
+            "€120",
+            "Side by side, with tea"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "tattoo",
+    "title": "Tattoo studio",
+    "description": "Tattoo styles, the process from idea to healed, aftercare, booking basics and a place for your gallery.",
+    "pages": 4,
+    "category": "beauty",
+    "categoryTitle": "Beauty & health",
+    "icon": "paintbrush.pointed",
+    "accent": "#e3dccb",
+    "featured": false,
+    "style": "bold",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/tattoo/preview.jpg",
+    "art": "peaks",
+    "keywords": [
+      "татуировка",
+      "татуировки",
+      "тату студио",
+      "тату",
+      "пиърсинг",
+      "татуист",
+      "фин лайн",
+      "блекуърк",
+      "покриване на татуировка",
+      "боди арт",
+      "tattoo",
+      "tattoo studio",
+      "piercing",
+      "tattoo artist",
+      "fine line",
+      "blackwork",
+      "cover-up",
+      "ink",
+      "tattoo aftercare",
+      "body art"
+    ],
+    "sample": "Ash & Ink",
+    "hints": {
+      "bg": {
+        "offer": "Малко студио за фин лайн, блекуърк и цветни татуировки, покриване на стари и пиърсинг. Всеки дизайн се рисува заедно с вас.",
+        "audience": "Възрастни, които искат собствена татуировка или пиърсинг, първи път или за колекцията",
+        "services": [
+          [
+            "Фин лайн татуировка",
+            "от 80 €",
+            "Малки, нежни, детайлни рисунки"
+          ],
+          [
+            "Блекуърк",
+            "от 120 €",
+            "Смели черни шарки и форми"
+          ],
+          [
+            "Покриване на стара",
+            "по запитване",
+            "Нов дизайн върху стара татуировка"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "A small studio for fine line, blackwork and colour tattoos, cover-ups and piercings. Every design is drawn with you.",
+        "audience": "Adults who want a custom tattoo or piercing, first-timers and collectors alike",
+        "services": [
+          [
+            "Fine line tattoo",
+            "from €80",
+            "Small, delicate, detailed pieces"
+          ],
+          [
+            "Blackwork",
+            "from €120",
+            "Bold black patterns and shapes"
+          ],
+          [
+            "Cover-up",
+            "on request",
+            "A new design over an old tattoo"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "transport",
+    "title": "Taxi, transfers and moving",
+    "description": "Taxi rides, airport transfers, moving and courier deliveries, with fleet types, price guidance and a booking form.",
+    "pages": 4,
+    "category": "business",
+    "categoryTitle": "Business",
+    "icon": "box.truck",
+    "accent": "#ffc62d",
+    "featured": false,
+    "style": "bold",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/transport/preview.jpg",
+    "art": "orbit",
+    "keywords": [
+      "такси",
+      "трансфер",
+      "летище",
+      "преместване",
+      "куриер",
+      "доставка",
+      "транспорт",
+      "бус",
+      "минибус",
+      "превоз на товари",
+      "хамали",
+      "логистика",
+      "taxi",
+      "airport transfer",
+      "moving",
+      "courier",
+      "delivery",
+      "transport",
+      "van",
+      "removals",
+      "minibus",
+      "logistics",
+      "cargo",
+      "ride"
+    ],
+    "sample": "Nordline",
+    "hints": {
+      "bg": {
+        "offer": "Извършваме такси превози, трансфери до летището, малки премествания и куриерски доставки с леки автомобили, бусове и минибус — по телефон или онлайн.",
+        "audience": "Жители, пътуващи, малки фирми и магазини",
+        "services": [
+          [
+            "Трансфер до летището",
+            "20 €",
+            "От врата до врата, в една посока"
+          ],
+          [
+            "Бус и шофьор",
+            "30 €",
+            "На час, минимум два часа"
+          ],
+          [
+            "Куриерска доставка",
+            "6 €",
+            "Колет в рамките на града"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We run taxi rides, airport transfers, small moves and courier deliveries with cars, vans and a minibus, booked by phone or online.",
+        "audience": "Residents, travellers, small businesses and shops",
+        "services": [
+          [
+            "Airport transfer",
+            "€20",
+            "Door to door, one way"
+          ],
+          [
+            "Van and driver",
+            "€30",
+            "Per hour, two-hour minimum"
+          ],
+          [
+            "Courier delivery",
+            "€6",
+            "A parcel within the city"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "travel",
+    "title": "Travel agency",
+    "description": "Trip types, step-by-step planning, trip styles and an enquiry form with destination and travellers, in a bold, sunlit look.",
+    "pages": 3,
+    "category": "business",
+    "categoryTitle": "Business",
+    "icon": "airplane",
+    "accent": "#0a6ca8",
+    "featured": false,
+    "style": "bold",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/travel/preview.jpg",
+    "art": "waves",
+    "keywords": [
+      "туристическа агенция",
+      "туроператор",
+      "почивка",
+      "екскурзии",
+      "градски почивки",
+      "море",
+      "планинска почивка",
+      "групови турове",
+      "пътуване",
+      "маршрут",
+      "водач",
+      "организирани пътувания",
+      "travel agency",
+      "tour operator",
+      "holidays",
+      "city breaks",
+      "sea holidays",
+      "mountain trips",
+      "group tours",
+      "tour guide",
+      "itinerary",
+      "travel planning",
+      "excursions",
+      "trip"
+    ],
+    "sample": "Horizon Travel",
+    "hints": {
+      "bg": {
+        "offer": "Планираме градски почивки, море и планински преходи за единични пътници и групи и съставяме маршрути по поръчка.",
+        "audience": "Двойки, семейства и приятели, които искат добре планирано пътуване",
+        "services": [
+          [
+            "Градска почивка",
+            "300 €",
+            "Уикенд или седмица, планирани за вас"
+          ],
+          [
+            "Море",
+            "500 €",
+            "Седмица на морето, настаняване и трансфери"
+          ],
+          [
+            "Маршрут по поръчка",
+            "",
+            "Съставен около вашите дати и интереси"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We plan city breaks, sea holidays and mountain trips for individuals and groups, and build custom itineraries on request.",
+        "audience": "Couples, families and friends who want a well-planned trip",
+        "services": [
+          [
+            "City break",
+            "€300",
+            "A weekend or a week, planned for you"
+          ],
+          [
+            "Sea holiday",
+            "€500",
+            "A week by the sea, stay and transfers"
+          ],
+          [
+            "Custom itinerary",
+            "",
+            "Built around your dates and interests"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "vet",
+    "title": "Vet clinic and grooming",
+    "description": "Check-ups, vaccination, dental care and grooming, with first-visit steps, an FAQ and a booking form.",
+    "pages": 4,
+    "category": "business",
+    "categoryTitle": "Business",
+    "icon": "pawprint.fill",
+    "accent": "#4a8b3c",
+    "featured": false,
+    "style": "calm",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/vet/preview.jpg",
+    "art": "blobs",
+    "keywords": [
+      "ветеринар",
+      "ветеринарна клиника",
+      "домашни любимци",
+      "куче",
+      "котка",
+      "ваксинация",
+      "груминг",
+      "кастрация",
+      "зъби на куче",
+      "ветеринарен лекар",
+      "кученце",
+      "коте",
+      "чип",
+      "vet",
+      "veterinary clinic",
+      "veterinarian",
+      "pet",
+      "dog",
+      "cat",
+      "vaccination",
+      "grooming",
+      "pet dental",
+      "animal hospital",
+      "puppy",
+      "kitten",
+      "neutering"
+    ],
+    "sample": "Paw & Care",
+    "hints": {
+      "bg": {
+        "offer": "Малка клиника за кучета, котки и дребни любимци: прегледи, ваксинации, грижа за зъбите, операции и груминг — в спокойна и приветлива обстановка.",
+        "audience": "Стопани на кучета, котки и дребни любимци",
+        "services": [
+          [
+            "Преглед и ваксинация",
+            "25 €",
+            "Преглед, ваксина и вписване в книжката"
+          ],
+          [
+            "Почистване на зъби",
+            "90 €",
+            "Зъбен камък и полиране под упойка"
+          ],
+          [
+            "Пълен груминг",
+            "40 €",
+            "Къпане, подстригване и нокти"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "A small clinic for dogs, cats and small pets: check-ups, vaccination, dental care, surgery and grooming, in a calm, friendly space.",
+        "audience": "Dog, cat and small-pet owners",
+        "services": [
+          [
+            "Check-up and vaccination",
+            "€25",
+            "Exam, vaccine and booklet entry"
+          ],
+          [
+            "Dental cleaning",
+            "€90",
+            "Scale and polish under anaesthesia"
+          ],
+          [
+            "Full groom",
+            "€40",
+            "Bath, trim and nails"
+          ]
+        ]
+      }
+    }
   },
   {
     "id": "wedding",
@@ -857,6 +3804,136 @@
       "anniversary",
       "save the date"
     ],
-    "sample": "Maria & Petar"
+    "sample": "Maria & Petar",
+    "hints": {
+      "bg": {
+        "offer": "Женим се и ще се радваме да празнуваме с вас. Тук са програмата на деня, мястото и къде да ни кажете, че идвате.",
+        "audience": "Семейство и приятели, които искаме до нас",
+        "services": [
+          [
+            "Църковен ритуал",
+            "",
+            "Следобед, сред семейството и най-близките"
+          ],
+          [
+            "Вечеря и празник",
+            "",
+            "Музика и танци в градината на ресторанта"
+          ],
+          [
+            "Настаняване",
+            "",
+            "Хотели близо до мястото, ако идвате отдалеч"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We are getting married and would love to celebrate with you. Here are the plan for the day, the venue and where to tell us you are coming.",
+        "audience": "Family and friends we want beside us",
+        "services": [
+          [
+            "Church ceremony",
+            "",
+            "In the afternoon, with family and close friends"
+          ],
+          [
+            "Dinner and party",
+            "",
+            "Music and dancing in the restaurant garden"
+          ],
+          [
+            "Where to stay",
+            "",
+            "Hotels near the venue, if you are travelling"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "yoga",
+    "title": "Yoga studio",
+    "description": "Classes, who they are for, passes and memberships, and a simple way to book a first class.",
+    "pages": 4,
+    "category": "beauty",
+    "categoryTitle": "Beauty & health",
+    "icon": "figure.yoga",
+    "accent": "#587a67",
+    "featured": false,
+    "style": "calm",
+    "questions": [
+      "services",
+      "contacts",
+      "photos"
+    ],
+    "preview": "/home/user/bid-reclone/engine/themes/yoga/preview.jpg",
+    "art": "waves",
+    "keywords": [
+      "йога",
+      "пилатес",
+      "йога студио",
+      "стречинг",
+      "медитация",
+      "уелнес",
+      "разтягане",
+      "майндфулнес",
+      "дишане",
+      "групови занимания",
+      "yoga",
+      "pilates",
+      "yoga studio",
+      "stretching",
+      "meditation",
+      "wellness",
+      "mindfulness",
+      "flow",
+      "classes",
+      "wellbeing"
+    ],
+    "sample": "Studio Zora",
+    "hints": {
+      "bg": {
+        "offer": "Провеждаме занимания по йога и пилатес в центъра на града: сутрешен флоу, сила и дълги разтягания. Начинаещите са повече от добре дошли.",
+        "audience": "Възрастни от всички нива, включително съвсем начинаещи",
+        "services": [
+          [
+            "Сутрешен флоу",
+            "10 €",
+            "Нежна последователност за начало на деня"
+          ],
+          [
+            "Пилатес на постелка",
+            "12 €",
+            "Сила в корема и добра стойка"
+          ],
+          [
+            "Карта за 10 занимания",
+            "90 €",
+            "Избирате дните си от седмица на седмица"
+          ]
+        ]
+      },
+      "en": {
+        "offer": "We run yoga and pilates classes in the middle of town: morning flow, strength and long stretches. Beginners are very welcome.",
+        "audience": "Adults of every level, including complete beginners",
+        "services": [
+          [
+            "Morning flow",
+            "€10",
+            "A gentle sequence to start the day"
+          ],
+          [
+            "Mat pilates",
+            "€12",
+            "Core strength and good posture"
+          ],
+          [
+            "10-class pass",
+            "€90",
+            "Pick your days week by week"
+          ]
+        ]
+      }
+    }
   }
 ]

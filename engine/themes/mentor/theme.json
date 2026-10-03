@@ -64,6 +64,50 @@
     "photos",
     "contacts"
   ],
+  "hints": {
+    "en": {
+      "offer": "I work one-to-one with people who want to change career, start their own business or finally act on a plan, through regular sessions and clear next steps.",
+      "audience": "Founders, professionals at a turning point and people at a crossroads",
+      "services": [
+        [
+          "Single session",
+          "€60",
+          "One conversation and a clear next step"
+        ],
+        [
+          "3-month program",
+          "€450",
+          "Regular sessions, a plan with goals and a monthly review"
+        ],
+        [
+          "Team workshop",
+          "",
+          "A half-day session for a small team, priced on request"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Работя индивидуално с хора, които искат да сменят кариерата си, да започнат свой бизнес или най-после да изпълнят план, който отлагат — с редовни сесии и ясни следващи стъпки.",
+      "audience": "Начинаещи предприемачи, специалисти пред смяна и хора на кръстопът",
+      "services": [
+        [
+          "Единична сесия",
+          "60 €",
+          "Един разговор и ясна следваща стъпка"
+        ],
+        [
+          "Програма за 3 месеца",
+          "450 €",
+          "Редовни сесии, план с цели и преглед всеки месец"
+        ],
+        [
+          "Работилница за екип",
+          "",
+          "Полудневна среща за малък екип, цената е по запитване"
+        ]
+      ]
+    }
+  },
   "lang": {
     "bg": {
       "tagline": "менторство и консултации",
@@ -100,9 +144,9 @@
             "eyebrow": "За хора, които искат следваща стъпка",
             "eyebrowIcon": "compass",
             "title": "Помагам ви да стигнете *там, където искате*",
-            "lead": "Индивидуални сесии и програми за хора, които имат цел, но не и ясен път до нея. Първият разговор е безплатен и без ангажимент.",
+            "lead": "Индивидуални сесии и програми за хора, които имат цел, но не и ясен път до нея. Започваме с първи разговор, за да видим дали си пасваме.",
             "cta": [
-              "Запази безплатен разговор",
+              "Запази първи разговор",
               "/contact.html"
             ],
             "cta2": [
@@ -134,7 +178,7 @@
               "type": "audience",
               "id": "who",
               "title": "За кого е",
-              "intro": "Работя най-добре с хора, които знаят какво искат да променят и са готови да действат.",
+              "intro": "Работя с хора, които знаят какво искат да променят и са готови да действат.",
               "items": [
                 [
                   "users",
@@ -165,7 +209,7 @@
                   "price": "120 лв.",
                   "per": "/ сесия",
                   "features": [
-                    "60 минути онлайн или на живо",
+                    "Онлайн или на живо",
                     "Ясен следващ ход в края",
                     "Бележки след срещата"
                   ],
@@ -178,9 +222,9 @@
                   "name": "Програма 3 месеца",
                   "price": "890 лв.",
                   "per": "/ 3 месеца",
-                  "featured": "Най-избирана",
+                  "featured": "Предпочитана",
                   "features": [
-                    "6 сесии по 60 минути",
+                    "Редовни сесии в рамките на три месеца",
                     "Съобщения между сесиите",
                     "План с цели и срокове",
                     "Преглед на напредъка всеки месец"
@@ -195,7 +239,7 @@
                   "price": "по запитване",
                   "features": [
                     "Полудневен или целодневен формат",
-                    "До 8 души",
+                    "За малък екип",
                     "Материали и последваща среща"
                   ],
                   "cta": [
@@ -213,7 +257,7 @@
               "items": [
                 [
                   "Разговор",
-                  "30 минути, в които разбирам къде сте и къде искате да стигнете."
+                  "Първи разговор, в който разбирам къде сте и къде искате да стигнете."
                 ],
                 [
                   "План",
@@ -255,22 +299,22 @@
               "items": [
                 [
                   "Онлайн ли са сесиите?",
-                  "И двете — онлайн през видеовръзка или на живо в София. Вие избирате."
+                  "И двете — онлайн през видеовръзка или на живо по уговорка. Вие избирате."
                 ],
                 [
                   "Какво става, ако не ми подхожда?",
-                  "След първия безплатен разговор решавате спокойно. Ако след първата платена сесия не усетите полза, връщам парите."
+                  "След първия разговор решавате спокойно. Ако нещо не ви подхожда, кажете ми — ще променим подхода или ще се разделим без напрежение."
                 ],
                 [
                   "Колко бързо ще видя резултат?",
-                  "Повечето хора правят първата реална стъпка още след първата сесия. Голямата промяна идва за 2–3 месеца."
+                  "Зависи от целта ви и от това колко редовно действате. След всяка сесия уговаряме по една малка стъпка, така че напредъкът да се вижда рано."
                 ]
               ]
             },
             {
               "type": "cta",
               "h": "Да започнем с един разговор",
-              "p": "30 минути, безплатно, без ангажимент. Ако не съм правилният човек за вас, ще ви кажа честно.",
+              "p": "Първи разговор, без ангажимент. Ако не съм правилният човек за вас, ще ви кажа честно.",
               "button": [
                 "Запази разговор",
                 "/contact.html"
@@ -280,18 +324,18 @@
         },
         "about": {
           "title": "За мен",
-          "description": "Кой стои зад менторството: опит, подход и защо правя това.",
+          "description": "Кой стои зад менторството: подход, начин на работа и защо правя това.",
           "pagehead": [
             "За мен",
-            "Повече от десет години помагам на хора да превърнат намеренията си в действия."
+            "Помагам на хора да превърнат намеренията си в действия — стъпка по стъпка."
           ],
           "sections": [
             {
               "type": "story",
               "items": [
                 [
-                  "Откъде идвам",
-                  "Прекарах години в екипи, където планове се пишеха и не се случваха. Разбрах, че разликата не е в плана, а в това дали някой върви с теб по пътя."
+                  "Защо го правя",
+                  "Плановете се пишат лесно, а се изпълняват трудно. Разликата често е в това дали някой върви с вас по пътя — тази част поемам аз."
                 ],
                 [
                   "Как работя",
@@ -328,7 +372,7 @@
             {
               "type": "cta",
               "h": "Искате да работим заедно?",
-              "p": "Пишете ми — отговарям до един работен ден.",
+              "p": "Пишете ми и ще уговорим как да започнем.",
               "button": [
                 "Към контакта",
                 "/contact.html"
@@ -338,10 +382,10 @@
         },
         "contact": {
           "title": "Контакт",
-          "description": "Запазете безплатен първи разговор или задайте въпрос.",
+          "description": "Запазете първи разговор или задайте въпрос.",
           "pagehead": [
             "Запазете разговор",
-            "Напишете с две изречения какво искате да промените. Отговарям до един работен ден."
+            "Напишете с две изречения какво искате да промените и ще уговорим следващата стъпка."
           ],
           "sections": [
             {
@@ -436,9 +480,9 @@
             "eyebrow": "For people who want their next step",
             "eyebrowIcon": "compass",
             "title": "I help you get *where you want to be*",
-            "lead": "One-to-one sessions and programs for people who have a goal but not a clear path to it. The first conversation is free and without obligation.",
+            "lead": "One-to-one sessions and programs for people who have a goal but not a clear path to it. We begin with a first conversation to see whether we are a good fit.",
             "cta": [
-              "Book a free call",
+              "Book a first call",
               "/contact.html"
             ],
             "cta2": [
@@ -470,7 +514,7 @@
               "type": "audience",
               "id": "who",
               "title": "Who it is for",
-              "intro": "I work best with people who know what they want to change and are ready to act.",
+              "intro": "I work with people who know what they want to change and are ready to act.",
               "items": [
                 [
                   "users",
@@ -501,7 +545,7 @@
                   "price": "€60",
                   "per": "/ session",
                   "features": [
-                    "60 minutes online or in person",
+                    "Online or in person",
                     "A clear next move by the end",
                     "Notes after the meeting"
                   ],
@@ -514,9 +558,9 @@
                   "name": "3-month program",
                   "price": "€450",
                   "per": "/ 3 months",
-                  "featured": "Most popular",
+                  "featured": "Popular",
                   "features": [
-                    "6 sessions of 60 minutes",
+                    "Regular sessions over three months",
                     "Messages between sessions",
                     "A plan with goals and deadlines",
                     "A progress review every month"
@@ -531,7 +575,7 @@
                   "price": "on request",
                   "features": [
                     "Half-day or full-day format",
-                    "Up to 8 people",
+                    "For a small team",
                     "Materials and a follow-up meeting"
                   ],
                   "cta": [
@@ -549,7 +593,7 @@
               "items": [
                 [
                   "Conversation",
-                  "30 minutes in which I understand where you are and where you want to go."
+                  "A first conversation in which I understand where you are and where you want to go."
                 ],
                 [
                   "Plan",
@@ -591,22 +635,22 @@
               "items": [
                 [
                   "Are sessions online?",
-                  "Both — online by video or in person in Sofia. You choose."
+                  "Both — online by video or in person, by arrangement. You choose."
                 ],
                 [
                   "What if it is not a fit?",
-                  "After the free first call you decide at your own pace. If you feel no benefit after the first paid session, I refund it."
+                  "After the first call you decide at your own pace. If it does not feel right, tell me — we will adjust the approach or part ways without hard feelings."
                 ],
                 [
                   "How fast will I see results?",
-                  "Most people take their first real step right after the first session. The big change comes within 2–3 months."
+                  "That depends on your goal and on how regularly you act. We agree one small step after every session, so you can see progress early."
                 ]
               ]
             },
             {
               "type": "cta",
               "h": "Let’s start with one conversation",
-              "p": "30 minutes, free, no obligation. If I am not the right person for you, I will tell you honestly.",
+              "p": "A first conversation, no obligation. If I am not the right person for you, I will tell you honestly.",
               "button": [
                 "Book a call",
                 "/contact.html"
@@ -616,18 +660,18 @@
         },
         "about": {
           "title": "About me",
-          "description": "Who is behind the mentoring: experience, approach and why I do this.",
+          "description": "Who is behind the mentoring: my approach, how I work and why I do this.",
           "pagehead": [
             "About me",
-            "For more than ten years I have helped people turn intentions into action."
+            "I help people turn intentions into action, one step at a time."
           ],
           "sections": [
             {
               "type": "story",
               "items": [
                 [
-                  "Where I come from",
-                  "I spent years in teams where plans were written and never happened. I learned the difference is not the plan but whether someone walks the road with you."
+                  "Why I do this",
+                  "Plans are easy to write and hard to carry out. The difference is often whether someone walks the road with you — that is the part I take on."
                 ],
                 [
                   "How I work",
@@ -664,7 +708,7 @@
             {
               "type": "cta",
               "h": "Want to work together?",
-              "p": "Write to me — I reply within one working day.",
+              "p": "Write to me and we will agree how to start.",
               "button": [
                 "Go to contact",
                 "/contact.html"
@@ -674,10 +718,10 @@
         },
         "contact": {
           "title": "Contact",
-          "description": "Book a free first conversation or ask a question.",
+          "description": "Book a first conversation or ask a question.",
           "pagehead": [
             "Book a call",
-            "Tell me in two sentences what you want to change. I reply within one working day."
+            "Tell me in two sentences what you want to change, and we agree the next step."
           ],
           "sections": [
             {

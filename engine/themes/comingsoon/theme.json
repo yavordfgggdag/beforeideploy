@@ -50,6 +50,50 @@
     "contacts",
     "photos"
   ],
+  "hints": {
+    "en": {
+      "offer": "We are getting ready to open an online shop for handmade ceramics, and we want to tell people the moment it opens.",
+      "audience": "People who follow us and want to hear about the launch first",
+      "services": [
+        [
+          "The first collection",
+          "",
+          "Mugs, bowls and vases, made in small batches"
+        ],
+        [
+          "Gift cards",
+          "",
+          "A present for someone who loves ceramics"
+        ],
+        [
+          "Launch-day email",
+          "",
+          "One message when the shop opens, and nothing else"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Подготвяме откриването на онлайн магазин за ръчно изработена керамика и искаме да съобщим на хората още в деня на старта.",
+      "audience": "Хора, които ни следват и искат да научат първи за старта",
+      "services": [
+        [
+          "Първата колекция",
+          "",
+          "Чаши, купи и вази, правени в малки серии"
+        ],
+        [
+          "Подаръчни карти",
+          "",
+          "Подарък за човек, който обича керамиката"
+        ],
+        [
+          "Писмо в деня на старта",
+          "",
+          "Едно съобщение, когато магазинът отвори, и нищо повече"
+        ]
+      ]
+    }
+  },
   "lang": {
     "bg": {
       "tagline": "скоро отваряме",
@@ -69,10 +113,10 @@
         "index": {
           "hero": {
             "center": true,
-            "eyebrow": "Стартираме тази есен",
+            "eyebrow": "Списъкът за старта е отворен",
             "eyebrowIcon": "rocket",
             "title": "Нещо ново *идва скоро*",
-            "lead": "Работим по последните детайли. Оставете имейл — ще ви пишем веднъж, в деня на старта, с отстъпка за първите 100.",
+            "lead": "Работим по последните детайли. Оставете имейл и ще ви пишем веднъж — в деня на старта.",
             "cta": [
               "Искам покана",
               "/#notify"
@@ -96,8 +140,8 @@
                 ],
                 [
                   "gift",
-                  "Подарък за първите",
-                  "Отстъпка или бонус за абонатите."
+                  "Първи на опашката",
+                  "Абонатите научават за старта преди всички останали."
                 ]
               ]
             },
@@ -133,10 +177,10 @@
         "index": {
           "hero": {
             "center": true,
-            "eyebrow": "Launching this autumn",
+            "eyebrow": "The launch list is open",
             "eyebrowIcon": "rocket",
             "title": "Something new is *coming soon*",
-            "lead": "We are polishing the last details. Leave your email — we write once, on launch day, with a discount for the first 100.",
+            "lead": "We are polishing the last details. Leave your email and we will write to you once, on launch day.",
             "cta": [
               "Get an invite",
               "/#notify"
@@ -160,8 +204,8 @@
                 ],
                 [
                   "gift",
-                  "A gift for early birds",
-                  "A discount or bonus for subscribers."
+                  "First in line",
+                  "Subscribers hear about the launch before everyone else."
                 ]
               ]
             },

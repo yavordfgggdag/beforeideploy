@@ -41,6 +41,22 @@ export const ICONS = {
   close: '<path d="M6 6l12 12M18 6L6 18"/>',
   compass: '<circle cx="12" cy="12" r="8.5"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
   target: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/>',
+  car: '<path d="M4 16v-4l2-5a2 2 0 011.9-1.3h8.2A2 2 0 0118 7l2 5v4"/><path d="M3.5 12h17M4 16v2.5h3V16M17 16v2.5h3V16"/><circle cx="7.5" cy="14" r=".8"/><circle cx="16.5" cy="14" r=".8"/>',
+  paw: '<ellipse cx="12" cy="15.5" rx="4" ry="3.3"/><circle cx="6.5" cy="10.5" r="1.7"/><circle cx="17.5" cy="10.5" r="1.7"/><circle cx="9.5" cy="6.5" r="1.7"/><circle cx="14.5" cy="6.5" r="1.7"/>',
+  scale: '<path d="M12 4v16M7 20h10M5 7h14"/><path d="M5 7l-3 7a3.5 3.5 0 006 0zM19 7l-3 7a3.5 3.5 0 006 0z"/>',
+  plane: '<path d="M20.5 3.5L3.5 10.5l6.5 2.5 2.5 6.5z"/><path d="M10 13l10.5-9.5"/>',
+  truck: '<path d="M3 6.5h11v9H3zM14 9.5h4l3 3v3h-7"/><circle cx="7" cy="17" r="1.8"/><circle cx="17" cy="17" r="1.8"/>',
+  drop: '<path d="M12 3.5s6 6.2 6 10.5a6 6 0 01-12 0C6 9.7 12 3.5 12 3.5z"/>',
+  doc: '<path d="M6.5 3.5h7l4 4v13h-11z"/><path d="M13.5 3.5v4h4M9 12h6M9 15.5h6"/>',
+  lock: '<rect x="5" y="10.5" width="14" height="9.5" rx="2"/><path d="M8.5 10.5V8a3.5 3.5 0 017 0v2.5"/>',
+  sun: '<circle cx="12" cy="12" r="3.8"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6L18 18M18 6l-1.4 1.4M7.4 16.6L6 18"/>',
+  brush: '<path d="M14.5 4.5l5 5-8 8-3.5.5.5-3.5z"/><path d="M13 6l5 5M5 19.5c1.5 0 2.5-1 2.5-2.5"/>',
+  bike: '<circle cx="6" cy="16" r="3.5"/><circle cx="18" cy="16" r="3.5"/><path d="M6 16l4-7h5l3 7M10 9l2.5 7M9 6.5h2.5"/>',
+  flower: '<circle cx="12" cy="12" r="2.2"/><path d="M12 9.8c-1.8-2-1.8-5 0-6 1.8 1 1.8 4 0 6zM12 14.2c1.8 2 1.8 5 0 6-1.8-1-1.8-4 0-6zM9.8 12c-2 1.8-5 1.8-6 0 1-1.8 4-1.8 6 0zM14.2 12c2-1.8 5-1.8 6 0-1 1.8-4 1.8-6 0z"/>',
+  wrench: '<path d="M5 19l8-8M13 11a4 4 0 105.5-5.5l-2.5 2.5-2-.5-.5-2z"/>',
+  sofa: '<path d="M5 11V8.5a2 2 0 012-2h10a2 2 0 012 2V11"/><path d="M3.5 12.5a1.8 1.8 0 013.5 0V15h10v-2.5a1.8 1.8 0 013.5 0V17a1.5 1.5 0 01-1.5 1.5H5A1.5 1.5 0 013.5 17zM6 18.5v1.5M18 18.5v1.5"/>',
+  calc: '<rect x="5.5" y="3.5" width="13" height="17" rx="2"/><path d="M8.5 7.5h7M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 15.5h.01M12 15.5h.01M15.5 15.5h.01"/>',
+  bread: '<path d="M5.5 11a3.5 3.5 0 011.5-6.5h10a3.5 3.5 0 011.5 6.5V18a1.5 1.5 0 01-1.5 1.5H7A1.5 1.5 0 015.5 18z"/><path d="M9.5 11.5l1.5 2.5M13 11.5l1.5 2.5"/>',
 };
 
 export const icon = (name, cls = 'ico') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONS[name] || ICONS.spark}</svg>`;

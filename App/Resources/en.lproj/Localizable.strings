@@ -1497,3 +1497,14 @@
 "billing.intervalNotice" = "You can change plans with your current billing interval. Switching between monthly and annual billing is not available yet.";
 
 "assistant.textUnits" = "text units";
+
+"newsite.hours" = "Opening hours";
+"newsite.hoursHint" = "One line per day or range. Leave it empty and the site shows no hours.";
+"newsite.hoursPlaceholder" = "Mon–Fri 9:00–18:00\nSat 10:00–14:00\nSun closed";
+"newsite.tone" = "How should it sound?";
+"newsite.tone.auto" = "Auto";
+"newsite.tone.friendly" = "Friendly";
+"newsite.tone.playful" = "Playful";
+"newsite.tone.premium" = "Premium";
+"newsite.tone.professional" = "Business";
+"newsite.toneHint" = "Optional. Leave it on Auto and the AI picks a voice that suits your kind of site.";

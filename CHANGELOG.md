@@ -2,6 +2,26 @@
 
 All notable changes, newest first. Versions come from `engine/VERSION`. Each entry has an English and a Bulgarian part; the in-app update banner shows the notes from `latest.json`, which are generated from this file at release time (WP8).
 
+## 13.0.0-alpha.3 (2026-10-03) — Site Builder S7: the best sites and the best fixes
+
+### English
+- Sites that look professional and read honestly: every palette, its dark twin and every theme pass WCAG 2.2 AA (text, buttons, gradients, photo captions); a phone menu without script; search-engine data (schema.org JSON-LD, Open Graph and Twitter cards); the address opens the map; new `trust` and `split` sections.
+- 45 themes — 24 new for every kind of small business: law, accounting, agency, renovation, car repair, cleaning, transport, vet, florist, bakery, bar, farm, yoga, barber, spa, tattoo, music, podcast, photographer, interior, school, kids, dance, travel. Each has a Bulgarian and an English recipe, example texts for the form ("hints" — what to write in each box for that trade) and a picture in the picker. The 21 older themes lost their invented facts ("14 years of experience", "Certified…") and got hints too.
+- Easy for people who do not write: the wizard (Mac and shared UI) shows trade-specific examples in every box, asks how the site should sound (friendly, business, premium, playful) and for the opening hours.
+- The AI writes better and never invents: writing guides for the language (Bulgarian: "вие", sentence case, `25 €`) and the kind of site; a checker finds invented numbers and claims, clichés, the wrong language, over-long and repeated texts; the review returns replacement texts by id instead of rewriting the whole site; what cannot be fixed is cut out or reported; names and prices stay the owner's. `scripts/site-ai-eval.mjs` measures it with your own key.
+- Honest drafts: without AI only what the owner gave is shown — no example email, phone, address, hours, hero card, reviews or stats; a menu or price list left as the theme's example is flagged by the check (`content.sample`) and an example email or phone still in a link fails it (`content.exampleContact`).
+- AI Fix reads more and guesses less: files from the log in any folder or the project root (never secrets), a playbook of about 25 common failures and a hint for every site-quality rule, proof from the project's own files (a file that differs only by capitalisation, the Node version), a note when an earlier automatic fix did not help, and a stricter system prompt (root cause, no silencing, verbatim SEARCH blocks).
+- `scripts/theme-check.mjs` checks a theme end to end (contrast, links, icons, honesty, both languages); 16 new icons.
+
+### Български
+- Сайтове, които изглеждат професионално и звучат честно: всяка палитра, тъмният ѝ близнак и всяка тема отговарят на WCAG 2.2 AA (текст, бутони, градиенти, надписи върху снимки); меню за телефон без скрипт; данни за търсачките (schema.org JSON-LD, Open Graph и Twitter карти); адресът отваря картата; нови секции `trust` и `split`.
+- 45 теми — 24 нови за всеки вид малък бизнес: право, счетоводство, агенция, ремонти, автосервиз, почистване, превози, ветеринар, цветарница, пекарна, бар, ферма, йога, бръснарница, спа, тату, музика, подкаст, фотограф, интериор, школа, детски клуб, танци, туризъм. Всяка има български и английски рецепта, примерни текстове за формата („подсказки“ — какво да напишеш във всяко поле за този занаят) и снимка в галерията. 21-те стари теми загубиха измислените си факти („14 години опит“, „Сертифициран…“) и получиха подсказки.
+- Лесно за хора, които не пишат: wizard-ът (Mac и общият интерфейс) показва примери за занаята във всяко поле, пита как да звучи сайтът (приятелски, делови, премиум, весел) и за работното време.
+- AI пише по-добре и никога не измисля: наръчници за езика (български: „вие“, малки букви в заглавията, `25 €`) и за вида сайт; проверка намира измислени числа и твърдения, клишета, грешен език, прекалено дълги и повтарящи се текстове; ревюто връща заместващи текстове по номер, вместо да пренаписва целия сайт; каквото не може да се оправи, се изрязва или се отчита; имената и цените остават на собственика. `scripts/site-ai-eval.mjs` го измерва с твоя ключ.
+- Честни чернови: без AI се показва само каквото собственикът е дал — без примерен имейл, телефон, адрес, часове, карта в началото, отзиви и числа; меню или ценоразпис, останали като пример от шаблона, се отбелязват от проверката (`content.sample`), а примерен имейл или телефон във връзка я проваля (`content.exampleContact`).
+- AI поправката чете повече и гадае по-малко: файлове от лога във всяка папка или в корена на проекта (никога тайни), справочник от около 25 чести проблема и подсказка за всяко правило за качество на сайта, доказателства от файловете на проекта (файл, различен само по главни букви, версията на Node), бележка, когато по-ранна автоматична поправка не е помогнала, и по-строг системен промпт (първопричина, без заглушаване, SEARCH блокове дословно).
+- `scripts/theme-check.mjs` проверява тема докрай (контраст, връзки, икони, честност, двата езика); 16 нови икони.
+
 ## 13.0.0-alpha.2 (2026-10-02) — Site Builder (work in progress)
 
 ### English

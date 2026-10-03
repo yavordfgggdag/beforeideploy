@@ -1,0 +1,984 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "autoservice",
+  "category": "business",
+  "icon": "car.fill",
+  "accent": "#e03a2f",
+  "mark": "wrench",
+  "art": "grid",
+  "schemaOrg": "AutoRepair",
+  "sample": {
+    "name": "Garage Nord"
+  },
+  "featured": false,
+  "titleKey": "newsite.template.autoservice.title",
+  "descriptionKey": "newsite.template.autoservice.description",
+  "keywords": {
+    "en": [
+      "car repair",
+      "auto service",
+      "garage",
+      "mechanic",
+      "tyres",
+      "oil change",
+      "car service",
+      "brakes",
+      "diagnostics",
+      "detailing",
+      "air conditioning",
+      "pre-inspection check"
+    ],
+    "bg": [
+      "автосервиз",
+      "сервиз",
+      "ремонт на автомобили",
+      "автомеханик",
+      "гуми",
+      "смяна на масла",
+      "спирачки",
+      "диагностика",
+      "детайлинг",
+      "климатик",
+      "ходова част",
+      "вулканизатор",
+      "технически преглед"
+    ]
+  },
+  "style": "bold",
+  "tokens": {
+    "dark": true,
+    "bg": "#111315",
+    "bg2": "#181b1e",
+    "surface": "#1f2327",
+    "text": "#f3f4f6",
+    "muted": "#a8afb8",
+    "line": "rgba(255,255,255,.10)",
+    "accent": "#e03a2f",
+    "accent2": "#ff9d1c",
+    "font": "sans",
+    "head": "grotesk",
+    "radius": 10,
+    "tilt": -1.5
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "hints": {
+    "en": {
+      "offer": "We service and repair cars and vans: diagnostics, oil and filters, brakes, tyres and air-conditioning, always with a written estimate before we start.",
+      "audience": "Private drivers and small businesses with a few vehicles",
+      "services": [
+        [
+          "Full service",
+          "€60",
+          "Oil, filters and a check of the whole car"
+        ],
+        [
+          "Brake pads, one axle",
+          "€30",
+          "Labour; pads priced separately"
+        ],
+        [
+          "Tyre change and balancing",
+          "€25",
+          "Four wheels, per car"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Обслужваме и ремонтираме леки автомобили и бусове: диагностика, масло и филтри, спирачки, гуми и климатик — винаги с писмена оферта, преди да започнем.",
+      "audience": "Шофьори и малки фирми с по няколко автомобила",
+      "services": [
+        [
+          "Пълен сервиз",
+          "60 €",
+          "Масло, филтри и преглед на цялата кола"
+        ],
+        [
+          "Накладки, една ос",
+          "30 €",
+          "Труд; накладките са отделно"
+        ],
+        [
+          "Смяна и баланс на гуми",
+          "25 €",
+          "Четири колела, на автомобил"
+        ]
+      ]
+    }
+  },
+  "lang": {
+    "en": {
+      "tagline": "car service and tyres",
+      "description": "Diagnostics, servicing, brakes, tyres and air-conditioning, with a written estimate before any work begins. Book your visit online.",
+      "nav": [
+        [
+          "Services",
+          "/#services"
+        ],
+        [
+          "How it works",
+          "/#how"
+        ],
+        [
+          "Prices",
+          "/prices.html"
+        ],
+        [
+          "FAQ",
+          "/#faq"
+        ]
+      ],
+      "headerCta": [
+        "Book a visit",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Service, repairs and tyres",
+            "eyebrowIcon": "wrench",
+            "title": "Priced *first*, fixed right",
+            "lead": "Diagnostics, servicing, brakes, tyres and air-conditioning for cars and vans. We find the fault, send a written estimate and only start when you say yes.",
+            "cta": [
+              "Book a visit",
+              "/#contact"
+            ],
+            "cta2": [
+              "See prices",
+              "/prices.html"
+            ],
+            "card": {
+              "icon": "wrench",
+              "title": "Most requested",
+              "rows": [
+                [
+                  "Computer diagnostics",
+                  "from €25"
+                ],
+                [
+                  "Full service",
+                  "from €60"
+                ],
+                [
+                  "Brake pads, one axle",
+                  "from €30"
+                ],
+                [
+                  "Four tyres, fit and balance",
+                  "from €25"
+                ]
+              ],
+              "note": "Guide prices for labour. Your written estimate has the exact amount."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                [
+                  "doc",
+                  "Written estimate first"
+                ],
+                [
+                  "phone",
+                  "We call before extra work"
+                ],
+                [
+                  "calendar",
+                  "Booked time slots"
+                ],
+                [
+                  "shield",
+                  "Old parts shown on request"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "services",
+              "title": "What we repair and service",
+              "intro": "Everyday maintenance and the jobs that keep a car safe on the road.",
+              "items": [
+                [
+                  "tools",
+                  "Diagnostics",
+                  "Computer fault reading plus a hands-on check, so we fix the cause and not just the warning light."
+                ],
+                [
+                  "drop",
+                  "Oil and service",
+                  "Oil, filters and fluids to your car’s service schedule, noted in the service book."
+                ],
+                [
+                  "shield",
+                  "Brakes and suspension",
+                  "Pads, discs, fluid and shock absorbers. We measure what is left and show you before we replace anything."
+                ],
+                [
+                  "car",
+                  "Tyres and wheels",
+                  "Fitting, balancing, puncture repair and alignment, for summer, winter and all-season sets."
+                ]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "also",
+              "title": "Also in the workshop",
+              "items": [
+                [
+                  "Air-conditioning, before summer",
+                  "Cool air is easy to forget until you need it. A check now beats finding out in July.",
+                  "Pressure and leak test",
+                  "Refill and oil, if the system needs it",
+                  "A new cabin filter for cleaner air"
+                ],
+                [
+                  "Pre-inspection check",
+                  "Know what the annual inspection will say before you drive in.",
+                  "Brakes, lights, steering and tyres checked",
+                  "Emissions check",
+                  "A written list of what needs attention"
+                ],
+                [
+                  "Detailing, inside and out",
+                  "A tidy car is easier to live with, and easier to sell.",
+                  "Hand wash and wax",
+                  "Interior deep clean with steam and vacuum",
+                  "Headlight restoration"
+                ]
+              ],
+              "alt": true
+            },
+            {
+              "type": "steps",
+              "id": "how",
+              "alt": false,
+              "title": "How a visit works",
+              "intro": "No surprises on the invoice: four steps from the first call to the keys in your hand.",
+              "items": [
+                [
+                  "Book",
+                  "Choose a day online or by phone and tell us the make, the model and what you noticed."
+                ],
+                [
+                  "Diagnose",
+                  "We inspect the car, read the fault codes and find the cause, not only the symptom."
+                ],
+                [
+                  "Estimate",
+                  "You get a written estimate with labour and parts listed. You say yes, no or later."
+                ],
+                [
+                  "Repair and handover",
+                  "We do the work, check it and walk you through what was changed."
+                ]
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "alt": true,
+              "title": "Questions drivers ask",
+              "items": [
+                [
+                  "Do I need to book?",
+                  "It is best, because we reserve a bay and the time the job needs. For a puncture or a quick check, call us and we will tell you when to come."
+                ],
+                [
+                  "How much will it cost?",
+                  "After diagnosis you get a written estimate with labour and parts listed separately. Nothing starts until you approve it, and we call first if something extra turns up."
+                ],
+                [
+                  "Can I wait while you work?",
+                  "For short jobs such as tyres, an oil change or a diagnosis, many people wait. For a longer repair, leave the car and we call you when it is ready."
+                ],
+                [
+                  "What should I tell you when I book?",
+                  "The make, model and year, what you noticed (a noise, a light, a smell) and when it happens. A photo or short video of the dashboard helps a lot."
+                ],
+                [
+                  "Do you fit original parts?",
+                  "We can fit original, equivalent-quality or economy parts. The estimate explains the difference in quality and price, and you choose."
+                ],
+                [
+                  "Can you prepare my car for the annual inspection?",
+                  "Yes. We check brakes, lights, steering, tyres and emissions, give you a written list and fix what is needed before you go."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Something sounds wrong? Bring it in.",
+              "p": "Describe the noise, the light or the smell. We will book a slot and find out what it is.",
+              "button": [
+                "Book a visit",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Book a visit",
+              "intro": "Tell us the make, the model and what you noticed. We confirm a day and time with you.",
+              "formName": "booking",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Address",
+                  "1 Vitosha St, Sofia"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "service",
+                  "label": "Service",
+                  "options": [
+                    "Diagnostics",
+                    "Oil and service",
+                    "Brakes",
+                    "Tyres",
+                    "Air-conditioning",
+                    "Pre-inspection check",
+                    "Something else"
+                  ]
+                },
+                {
+                  "id": "car",
+                  "label": "Make and model"
+                }
+              ],
+              "messageLabel": "What did you notice? (optional)",
+              "send": "Request a visit",
+              "hoursTitle": "Opening hours",
+              "hours": [
+                [
+                  "Monday – Friday",
+                  "8:30 – 18:00"
+                ],
+                [
+                  "Saturday",
+                  "9:00 – 14:00"
+                ],
+                [
+                  "Sunday",
+                  "closed"
+                ]
+              ]
+            }
+          ]
+        },
+        "prices": {
+          "title": "Price list",
+          "description": "Starting prices for diagnostics, servicing, brakes, tyres, air-conditioning and detailing.",
+          "pagehead": [
+            "Price list",
+            "Starting prices for a typical passenger car. Parts and materials are listed separately in your written estimate."
+          ],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Diagnostics and checks",
+                  "items": [
+                    [
+                      "Computer diagnostics",
+                      "Fault codes read, findings in writing",
+                      "from €25"
+                    ],
+                    [
+                      "Pre-inspection check",
+                      "Brakes, lights, steering, tyres, emissions",
+                      "from €30"
+                    ],
+                    [
+                      "Suspension and steering check",
+                      "On a lift, with a short report",
+                      "from €20"
+                    ],
+                    [
+                      "Pre-purchase check",
+                      "Before you buy a used car",
+                      "from €60"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Service and maintenance",
+                  "items": [
+                    [
+                      "Oil and filter change",
+                      "Labour; oil and filter extra",
+                      "from €20"
+                    ],
+                    [
+                      "Full service",
+                      "Oil, air, cabin and fuel filters",
+                      "from €60"
+                    ],
+                    [
+                      "Timing belt and water pump",
+                      "Labour, most engines",
+                      "from €180"
+                    ],
+                    [
+                      "Battery test and fitting",
+                      "Labour; battery extra",
+                      "from €10"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Brakes and suspension",
+                  "items": [
+                    [
+                      "Brake pads, one axle",
+                      "Labour; pads extra",
+                      "from €30"
+                    ],
+                    [
+                      "Discs and pads, one axle",
+                      "Labour; parts extra",
+                      "from €50"
+                    ],
+                    [
+                      "Brake fluid change",
+                      "Bleed and refill",
+                      "from €25"
+                    ],
+                    [
+                      "Shock absorbers, one axle",
+                      "Labour; parts extra",
+                      "from €60"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Tyres and wheels",
+                  "items": [
+                    [
+                      "Four tyres, fit and balance",
+                      "Per car, steel or alloy wheels",
+                      "from €25"
+                    ],
+                    [
+                      "Puncture repair",
+                      "Per wheel",
+                      "from €8"
+                    ],
+                    [
+                      "Wheel alignment",
+                      "Front and rear axle",
+                      "from €35"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Air-conditioning",
+                  "items": [
+                    [
+                      "Check and leak test",
+                      "Pressure and visual test",
+                      "from €30"
+                    ],
+                    [
+                      "Refill and service",
+                      "Refrigerant, oil and a performance check",
+                      "from €60"
+                    ],
+                    [
+                      "Cabin filter",
+                      "Labour; filter extra",
+                      "from €10"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Detailing",
+                  "items": [
+                    [
+                      "Exterior wash and wax",
+                      "Hand wash and wax",
+                      "from €40"
+                    ],
+                    [
+                      "Interior deep clean",
+                      "Vacuum, steam, plastics and glass",
+                      "from €60"
+                    ],
+                    [
+                      "Headlight restoration",
+                      "Per pair",
+                      "from €30"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Not sure what your car needs?",
+              "p": "Describe the symptoms and we will suggest a diagnosis slot.",
+              "button": [
+                "Book a visit",
+                "/#contact"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "bg": {
+      "tagline": "автосервиз и гуми",
+      "description": "Диагностика, сервиз, спирачки, гуми и климатик — с писмена оферта, преди да започне работата. Запазете час онлайн.",
+      "nav": [
+        [
+          "Услуги",
+          "/#services"
+        ],
+        [
+          "Как протича",
+          "/#how"
+        ],
+        [
+          "Цени",
+          "/prices.html"
+        ],
+        [
+          "Въпроси",
+          "/#faq"
+        ]
+      ],
+      "headerCta": [
+        "Запазете час",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Сервиз, ремонт и гуми",
+            "eyebrowIcon": "wrench",
+            "title": "Ясна цена, *преди* да пипнем колата",
+            "lead": "Диагностика, сервиз, спирачки, гуми и климатик за леки автомобили и бусове. Намираме повредата, изпращаме писмена оферта и започваме само след вашето „да“.",
+            "cta": [
+              "Запазете час",
+              "/#contact"
+            ],
+            "cta2": [
+              "Вижте цените",
+              "/prices.html"
+            ],
+            "card": {
+              "icon": "wrench",
+              "title": "Най-търсени",
+              "rows": [
+                [
+                  "Компютърна диагностика",
+                  "от 25 €"
+                ],
+                [
+                  "Пълен сервиз",
+                  "от 60 €"
+                ],
+                [
+                  "Накладки, една ос",
+                  "от 30 €"
+                ],
+                [
+                  "Четири гуми, монтаж и баланс",
+                  "от 25 €"
+                ]
+              ],
+              "note": "Ориентировъчни цени за труд. Точната сума е в писмената ви оферта."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                [
+                  "doc",
+                  "Оферта в писмен вид"
+                ],
+                [
+                  "phone",
+                  "Звъним преди допълнителна работа"
+                ],
+                [
+                  "calendar",
+                  "Работим по запазен час"
+                ],
+                [
+                  "shield",
+                  "Показваме старите части"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "services",
+              "title": "Какво ремонтираме и обслужваме",
+              "intro": "Ежедневната поддръжка и всичко, което държи колата безопасна на пътя.",
+              "items": [
+                [
+                  "tools",
+                  "Диагностика",
+                  "Четем грешките с компютър и проверяваме на ръка — търсим причината, а не само светналата лампа."
+                ],
+                [
+                  "drop",
+                  "Масло и сервиз",
+                  "Масло, филтри и течности по графика на производителя, с отбелязване в сервизната книжка."
+                ],
+                [
+                  "shield",
+                  "Спирачки и ходова част",
+                  "Накладки, дискове, течност и амортисьори. Измерваме какво е останало и ви показваме, преди да сменим."
+                ],
+                [
+                  "car",
+                  "Гуми и джанти",
+                  "Монтаж, баланс, лепене и геометрия — за летни, зимни и всесезонни гуми."
+                ]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "also",
+              "title": "Още в сервиза",
+              "items": [
+                [
+                  "Климатик — преди лятото",
+                  "За хладния въздух се сещаме чак когато ни трябва. По-добре проверете климатика, преди да е станало горещо.",
+                  "Тест за налягане и течове",
+                  "Зареждане и масло, ако системата има нужда",
+                  "Нов поленов филтър за по-чист въздух"
+                ],
+                [
+                  "Проверка преди технически преглед",
+                  "Разберете какво ще каже годишният преглед, преди да влезете в линията.",
+                  "Проверка на спирачки, светлини, ходова част и гуми",
+                  "Проверка на емисиите",
+                  "Писмен списък на всичко, което се нуждае от внимание"
+                ],
+                [
+                  "Детайлинг — отвън и отвътре",
+                  "Чистата кола е по-приятна за каране и по-лесна за продан.",
+                  "Ръчно измиване и вакса",
+                  "Основно почистване на салона с пара и прахосмукачка",
+                  "Полиране на фарове"
+                ]
+              ],
+              "alt": true
+            },
+            {
+              "type": "steps",
+              "id": "how",
+              "alt": false,
+              "title": "Как протича посещението",
+              "intro": "Без изненади във фактурата: четири стъпки от първото обаждане до връщането на ключовете.",
+              "items": [
+                [
+                  "Запазвате час",
+                  "Избирате ден онлайн или по телефона и ни казвате марка, модел и какво сте забелязали."
+                ],
+                [
+                  "Диагностика",
+                  "Оглеждаме колата, четем грешките и откриваме причината, не само симптома."
+                ],
+                [
+                  "Оферта",
+                  "Получавате писмена оферта с отделни цени за труд и части. Казвате „да“, „не“ или „по-късно“."
+                ],
+                [
+                  "Ремонт и предаване",
+                  "Извършваме работата, проверяваме я и ви показваме какво е сменено."
+                ]
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "alt": true,
+              "title": "Въпроси на шофьорите",
+              "items": [
+                [
+                  "Нужно ли е да запазя час?",
+                  "Препоръчваме го — така резервираме място и време за работата. За спукана гума или бърза проверка се обадете и ще ви кажем кога да дойдете."
+                ],
+                [
+                  "Колко ще струва ремонтът?",
+                  "След диагностиката получавате писмена оферта с отделни цени за труд и части. Нищо не започва без вашето одобрение, а ако се появи нещо допълнително, първо ви звъним."
+                ],
+                [
+                  "Мога ли да изчакам в сервиза?",
+                  "За кратки неща — гуми, смяна на масло или диагностика — мнозина изчакват. При по-дълъг ремонт оставяте колата и ви се обаждаме, когато е готова."
+                ],
+                [
+                  "Какво да ви кажа при записването?",
+                  "Марка, модел и година, какво сте забелязали (шум, лампа, миризма) и кога се проявява. Снимка или кратко видео на таблото много помагат."
+                ],
+                [
+                  "С оригинални части ли работите?",
+                  "Монтираме оригинални, еквивалентни или икономични части. В офертата обясняваме разликата в качеството и в цената, а вие избирате."
+                ],
+                [
+                  "Подготвяте ли колата за технически преглед?",
+                  "Да. Проверяваме спирачки, светлини, ходова част, гуми и емисии, даваме ви писмен списък и отстраняваме нужното, преди да отидете."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Нещо не звучи наред? Донесете я.",
+              "p": "Опишете шума, лампата или миризмата. Ще запазим час и ще разберем какво е.",
+              "button": [
+                "Запазете час",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Запазване на час",
+              "intro": "Кажете ни марка, модел и какво сте забелязали. Ще потвърдим ден и час с вас.",
+              "formName": "booking",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Адрес",
+                  "ул. Витоша 1, София"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "service",
+                  "label": "Услуга",
+                  "options": [
+                    "Диагностика",
+                    "Масло и сервиз",
+                    "Спирачки",
+                    "Гуми",
+                    "Климатик",
+                    "Проверка преди технически преглед",
+                    "Друго"
+                  ]
+                },
+                {
+                  "id": "car",
+                  "label": "Марка и модел"
+                }
+              ],
+              "messageLabel": "Какво забелязахте? (по избор)",
+              "send": "Изпрати заявка",
+              "hoursTitle": "Работно време",
+              "hours": [
+                [
+                  "Понеделник – петък",
+                  "8:30 – 18:00"
+                ],
+                [
+                  "Събота",
+                  "9:00 – 14:00"
+                ],
+                [
+                  "Неделя",
+                  "почивен ден"
+                ]
+              ]
+            }
+          ]
+        },
+        "prices": {
+          "title": "Ценоразпис",
+          "description": "Начални цени за диагностика, сервиз, спирачки, гуми, климатик и детайлинг.",
+          "pagehead": [
+            "Ценоразпис",
+            "Начални цени за обикновен лек автомобил. Частите и материалите са отделно в писмената ви оферта."
+          ],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Диагностика и проверки",
+                  "items": [
+                    [
+                      "Компютърна диагностика",
+                      "Четене на грешки, писмено заключение",
+                      "от 25 €"
+                    ],
+                    [
+                      "Проверка преди технически преглед",
+                      "Спирачки, светлини, ходова част, гуми, емисии",
+                      "от 30 €"
+                    ],
+                    [
+                      "Проверка на ходова част и кормилно",
+                      "На рампа, с кратък протокол",
+                      "от 20 €"
+                    ],
+                    [
+                      "Проверка преди покупка",
+                      "На употребяван автомобил",
+                      "от 60 €"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Сервиз и поддръжка",
+                  "items": [
+                    [
+                      "Смяна на масло и филтър",
+                      "Труд; маслото и филтърът са отделно",
+                      "от 20 €"
+                    ],
+                    [
+                      "Пълен сервиз",
+                      "Масло, въздушен, поленов и горивен филтър",
+                      "от 60 €"
+                    ],
+                    [
+                      "ГРМ и водна помпа",
+                      "Труд, повечето двигатели",
+                      "от 180 €"
+                    ],
+                    [
+                      "Акумулатор: проба и смяна",
+                      "Труд; акумулаторът е отделно",
+                      "от 10 €"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Спирачки и ходова част",
+                  "items": [
+                    [
+                      "Накладки, една ос",
+                      "Труд; накладките са отделно",
+                      "от 30 €"
+                    ],
+                    [
+                      "Дискове и накладки, една ос",
+                      "Труд; частите са отделно",
+                      "от 50 €"
+                    ],
+                    [
+                      "Смяна на спирачна течност",
+                      "Обезвъздушаване и доливане",
+                      "от 25 €"
+                    ],
+                    [
+                      "Амортисьори, една ос",
+                      "Труд; частите са отделно",
+                      "от 60 €"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Гуми и джанти",
+                  "items": [
+                    [
+                      "Четири гуми, монтаж и баланс",
+                      "На автомобил, стоманени или алуминиеви джанти",
+                      "от 25 €"
+                    ],
+                    [
+                      "Лепене на гума",
+                      "На колело",
+                      "от 8 €"
+                    ],
+                    [
+                      "Регулиране на геометрията",
+                      "Преден и заден мост",
+                      "от 35 €"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Климатик",
+                  "items": [
+                    [
+                      "Проверка и тест за течове",
+                      "Налягане и визуален оглед",
+                      "от 30 €"
+                    ],
+                    [
+                      "Зареждане и обслужване",
+                      "Фреон, масло и проверка на работата",
+                      "от 60 €"
+                    ],
+                    [
+                      "Поленов филтър",
+                      "Труд; филтърът е отделно",
+                      "от 10 €"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Детайлинг",
+                  "items": [
+                    [
+                      "Външно измиване и вакса",
+                      "Ръчно измиване и вакса",
+                      "от 40 €"
+                    ],
+                    [
+                      "Основно почистване на салона",
+                      "Прахосмукачка, парочистачка, пластмаси и стъкла",
+                      "от 60 €"
+                    ],
+                    [
+                      "Полиране на фарове",
+                      "Чифт",
+                      "от 30 €"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Не сте сигурни какво трябва на колата?",
+              "p": "Опишете симптомите — ще предложим час за диагностика.",
+              "button": [
+                "Запазете час",
+                "/#contact"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

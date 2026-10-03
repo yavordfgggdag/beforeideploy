@@ -57,10 +57,54 @@
     "contacts",
     "photos"
   ],
+  "hints": {
+    "en": {
+      "offer": "We are a small family guesthouse with cosy rooms, a homemade breakfast and a terrace with a view of the mountain.",
+      "audience": "Couples, families and hikers looking for a quiet weekend",
+      "services": [
+        [
+          "Double room",
+          "€60",
+          "Per night, breakfast included"
+        ],
+        [
+          "Family suite",
+          "€95",
+          "Two bedrooms and a kitchenette"
+        ],
+        [
+          "Studio with fireplace",
+          "€80",
+          "Lounge area and access to the sauna"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Малка семейна къща за гости с уютни стаи, домашна закуска и тераса с изглед към планината.",
+      "audience": "Двойки, семейства и туристи, които търсят тих уикенд",
+      "services": [
+        [
+          "Двойна стая",
+          "60 €",
+          "За нощувка, със закуска"
+        ],
+        [
+          "Семеен апартамент",
+          "95 €",
+          "Две спални и кухненски бокс"
+        ],
+        [
+          "Студио с камина",
+          "80 €",
+          "Кът за сядане и достъп до сауната"
+        ]
+      ]
+    }
+  },
   "lang": {
     "bg": {
       "tagline": "къща за гости в планината",
-      "description": "Уютни стаи, домашна закуска и гледка към планината. Резервирайте директно — най-добра цена.",
+      "description": "Уютни стаи, домашна закуска и гледка към планината. Резервирайте директно при домакините.",
       "nav": [
         [
           "Стаи",
@@ -86,10 +130,10 @@
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "Директна резервация = най-добра цена",
+            "eyebrow": "Резервирайте директно при домакините",
             "eyebrowIcon": "star",
             "title": "Тишина, гора и *закуска с изглед*",
-            "lead": "Осем стаи в сърцето на планината, на 10 минути от ски пистите и на две крачки от горските пътеки.",
+            "lead": "Уютни стаи в планината, горски пътеки пред вратата и закуска, която ви чака всяка сутрин.",
             "cta": [
               "Провери наличност",
               "/#contact"
@@ -100,7 +144,7 @@
             ],
             "card": {
               "icon": "bed",
-              "title": "Свободни този уикенд",
+              "title": "Стаи за този уикенд",
               "rows": [
                 [
                   "Двойна стая",
@@ -127,7 +171,7 @@
                 [
                   "cup",
                   "Домашна закуска",
-                  "Баница, мед от съседа и прясно кафе до 10:30."
+                  "Баница, мед от съседа и прясно кафе всяка сутрин."
                 ],
                 [
                   "leaf",
@@ -137,7 +181,7 @@
                 [
                   "pin",
                   "Паркинг и Wi-Fi",
-                  "Безплатни за всички гости."
+                  "Wi-Fi и място за колата, за всички гости."
                 ],
                 [
                   "heart",
@@ -183,7 +227,7 @@
               "type": "contact",
               "id": "contact",
               "title": "Проверка на наличност",
-              "intro": "Пишете дати и брой гости — отговаряме до 2 часа.",
+              "intro": "Пишете ни датите и броя на гостите и ще ви отговорим кои стаи са свободни.",
               "formName": "booking",
               "rows": [
                 [
@@ -261,7 +305,7 @@
                   "name": "Студио с камина",
                   "price": "160 лв.",
                   "per": "/ нощ",
-                  "featured": "Най-търсено",
+                  "featured": "Популярно",
                   "features": [
                     "До 2 гости",
                     "Камина и кът за сядане",
@@ -295,15 +339,15 @@
               "items": [
                 [
                   "Кога е настаняването?",
-                  "От 14:00, напускане до 11:00. При възможност — гъвкаво."
+                  "Настаняването е следобед, а напускането — в късната сутрин. Кажете ни кога пристигате и ще се разберем, когато е възможно."
                 ],
                 [
                   "Какво е капарото?",
-                  "30% при потвърждение, остатъкът — на място."
+                  "Малко капаро потвърждава резервацията, а останалото се плаща при пристигане."
                 ],
                 [
                   "Мога ли да откажа?",
-                  "Безплатно до 7 дни преди пристигане."
+                  "Съобщете ни възможно най-рано. Условията за отказ уговаряме заедно с резервацията."
                 ]
               ]
             }
@@ -313,7 +357,7 @@
     },
     "en": {
       "tagline": "mountain guesthouse",
-      "description": "Cosy rooms, homemade breakfast and mountain views. Book direct for the best rate.",
+      "description": "Cosy rooms, homemade breakfast and mountain views. Book direct with the hosts.",
       "nav": [
         [
           "Rooms",
@@ -339,10 +383,10 @@
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "Book direct for the best rate",
+            "eyebrow": "Book direct with the hosts",
             "eyebrowIcon": "star",
             "title": "Quiet, forest and *breakfast with a view*",
-            "lead": "Eight rooms in the heart of the mountains, ten minutes from the ski slopes and steps from the forest trails.",
+            "lead": "Cosy rooms in the mountains, forest trails at the door and a breakfast waiting for you every morning.",
             "cta": [
               "Check availability",
               "/#contact"
@@ -353,7 +397,7 @@
             ],
             "card": {
               "icon": "bed",
-              "title": "Free this weekend",
+              "title": "Rooms for this weekend",
               "rows": [
                 [
                   "Double room",
@@ -380,7 +424,7 @@
                 [
                   "cup",
                   "Homemade breakfast",
-                  "Fresh pastry, local honey and coffee until 10:30."
+                  "Fresh pastry, local honey and coffee every morning."
                 ],
                 [
                   "leaf",
@@ -390,7 +434,7 @@
                 [
                   "pin",
                   "Parking and Wi-Fi",
-                  "Free for every guest."
+                  "Wi-Fi and a place to park, for every guest."
                 ],
                 [
                   "heart",
@@ -436,7 +480,7 @@
               "type": "contact",
               "id": "contact",
               "title": "Check availability",
-              "intro": "Send your dates and number of guests — we reply within 2 hours.",
+              "intro": "Send your dates and the number of guests, and we will come back with what is available.",
               "formName": "booking",
               "rows": [
                 [
@@ -514,7 +558,7 @@
                   "name": "Studio with fireplace",
                   "price": "€80",
                   "per": "/ night",
-                  "featured": "Most booked",
+                  "featured": "Popular",
                   "features": [
                     "Up to 2 guests",
                     "Fireplace and lounge",
@@ -548,15 +592,15 @@
               "items": [
                 [
                   "When is check-in?",
-                  "From 14:00, check-out by 11:00. Flexible when we can."
+                  "Check-in is in the afternoon and check-out in the late morning. Tell us your arrival time and we will be flexible when we can."
                 ],
                 [
                   "Is there a deposit?",
-                  "30% on confirmation, the rest on arrival."
+                  "A small deposit confirms your booking and the rest is paid on arrival."
                 ],
                 [
                   "Can I cancel?",
-                  "Free up to 7 days before arrival."
+                  "Tell us as early as you can. We confirm the cancellation terms together with your booking."
                 ]
               ]
             }

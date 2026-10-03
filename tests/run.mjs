@@ -453,7 +453,8 @@ t('new: шаблонът създава сайт, който минава про
       const html = files.filter((f) => f.endsWith('.html')).map((f) => fs.readFileSync(path.join(c.data.path, f), 'utf8')).join('');
       assert(!html.includes('{{') && html.includes(`<html lang="${lang}">`), `${x.id}/${lang} placeholders`);
       const site = bid('check', '--project', c.data.path).data.steps.find((s) => s.id === 'site');
-      assert(site.status === 'pass', `${x.id}/${lang}: ${JSON.stringify(site.details)}`);
+      // a menu or price list the owner did not write is flagged as example content (a warning, nothing else)
+      assert(site.status === 'pass' || (site.status === 'warn' && site.details.every((d) => d.includes('content.sample'))), `${x.id}/${lang}: ${JSON.stringify(site.details)}`);
     }
   }
   const described = bid('new', 'create', '--template', 'restaurant', '--name', 'Моето бистро', '--dir', parent, '--description', 'Бистро с домашна храна');
@@ -500,7 +501,7 @@ t('new: brief → сайт по дизайн на човека (услуги, к
   assert(chk.status === 'pass', JSON.stringify(chk.details));
   // unsafe links never reach the page; unknown style/palette/theme are refused or ignored, never passed through
   const p = bid('new', 'preview', '--brief', JSON.stringify({ name: 'X', theme: 'landing', lang: 'en', contacts: { website: 'javascript:alert(1)', email: 'not an email' }, style: 'weird', palette: 'neon' }));
-  assert(p.result.ok && !p.data['index.html'].includes('javascript:') && p.data['index.html'].includes('hello@example.com') && p.data['styles.css'].includes('--accent: #5b8cff;'), 'preview keeps the theme look and drops unsafe input');
+  assert(p.result.ok && !p.data['index.html'].includes('javascript:') && !p.data['index.html'].includes('hello@example.com') && p.data['styles.css'].includes('--accent: #5b8cff;'), 'preview keeps the theme look and drops unsafe input');
   const unknown = bid('new', 'preview', '--brief', JSON.stringify({ name: 'X', theme: '../../etc' }));
   assert(unknown.result.code === 'usage', 'bad theme id');
   // every theme renders in every style and still passes the quality check
@@ -512,11 +513,11 @@ t('new: brief → сайт по дизайн на човека (услуги, к
       const c = bid('new', 'create', '--template', theme.id, '--name', `${theme.id} ${style}`, '--dir', parent, '--lang', 'en', '--style', style, '--palette', info.palettes[theme.id.length % info.palettes.length].id);
       assert(c.result.ok, `${theme.id}/${style}: ${JSON.stringify(c.result).slice(0, 200)}`);
       const s = bid('check', '--project', c.data.path).data.steps.find((x) => x.id === 'site');
-      assert(s.status === 'pass', `${theme.id}/${style}: ${JSON.stringify(s.details)}`);
+      assert(s.status === 'pass' || (s.status === 'warn' && s.details.every((d) => d.includes('content.sample'))), `${theme.id}/${style}: ${JSON.stringify(s.details)}`);
     }
   }
   const check = bid('new', 'check').data;
-  assert(check.length >= 21 && check.every((x) => x.errors.length === 0), JSON.stringify(check.filter((x) => x.errors.length)));
+  assert(check.length >= 41 && check.every((x) => x.errors.length === 0), JSON.stringify(check.filter((x) => x.errors.length)));
   fixture('new-brief', { brief, result: r.data });
   fixture('new-list', bid('new', 'list').data);
 });
@@ -581,6 +582,131 @@ ta('new S7: достъпност AA за всяка палитра, тъмен �
   assert(idx.includes('class="split"') && idx.includes('class="split rev"') && idx.includes('<li>') && idx.includes('src="/art/split-1.svg"') && files['art/split-2.svg'] && files['art/split-2.svg'].includes('viewBox="0 0 800 600"'), 'feature rows with art');
 });
 
+ta('new S7-B: AI текстове — одит на измислени факти, ревю с поправки по id, тон, без фалшиви ревюта и примерни контакти', async () => {
+  const A = await import(path.join(ROOT, 'engine', 'src', 'sitegen', 'ai.mjs'));
+  const { loadTheme, aiTheme } = await import(path.join(ROOT, 'engine', 'src', 'sitegen', 'themes.mjs'));
+  const { applyBrief, normalizeBrief, parseHours, sampleSections } = await import(path.join(ROOT, 'engine', 'src', 'sitegen', 'brief.mjs'));
+
+  // the checker: invented numbers and claims, clichés, wrong language, repeats — and what the brief says is allowed
+  const brief = normalizeBrief({ name: 'Салон Ива', theme: 'salon', lang: 'bg', offer: 'Правим прически от 2015 година.', services: [{ name: 'Подстригване', price: '25 €' }], tone: 'premium' });
+  assert(brief.tone === 'premium' && normalizeBrief({ name: 'X', tone: 'rude' }).tone === null, 'tone is one of the four or none');
+  const mk = (title, lead) => ({ tagline: 'салон за красота', description: 'Подстригване и оцветяване.', nav: [], pages: { index: { hero: { title, lead }, sections: [{ type: 'cards', title: 'Услуги', items: [['spark', 'Подстригване', 'Точна форма.']] }] } } });
+  const bad = A.auditContent(brief, mk('Най-добрият салон в града', 'Над 500 клиенти и индивидуален подход.'));
+  assert(bad.some((i) => i.kinds.includes('claim')) && bad.some((i) => i.kinds.includes('number')) && bad.some((i) => i.kinds.includes('cliche')), JSON.stringify(bad.map((i) => i.kinds)));
+  assert(!A.auditContent(brief, mk('Прически с грижа', 'Подстригване от 25 € — със записан час.')).length, 'the brief\'s own price passes');
+  assert(!A.auditContent(brief, mk('Прически от 2015 година', 'Подстригване със записан час.')).length, 'the brief\'s own year passes');
+  assert(A.auditContent(brief, mk('Hair salon in the city centre of Sofia', 'Haircuts, colouring and styling for everyone.')).some((i) => i.kinds.includes('language')), 'English text on a Bulgarian site');
+  assert(A.scrub('Great!! **bold** [link](https://x.y) 😀 see www.x.com') === 'Great. bold link see', A.scrub('Great!! **bold** [link](https://x.y) 😀 see www.x.com'));
+  assert(A.fit('Първо изречение. Второ изречение е много по-дълго от лимита, който имаме.', 28) === 'Първо изречение.' && !A.fit('дума '.repeat(40), 33).includes('ду…'), 'cuts at a sentence or a word');
+
+  // the pipeline: the writer overreaches, the review fixes by id, the rest is cut mechanically
+  const theme = loadTheme('salon');
+  const recipe = applyBrief(theme, { ...brief, photos: [] }, []);
+  assert(!JSON.stringify(recipe).includes('example.com') && !JSON.stringify(recipe).includes('000 000') && !JSON.stringify(recipe).includes('tel:+359888000000'), 'no sample contact reaches a real recipe');
+  assert(!Object.values(recipe.pages).some((p) => p.sections.some((s) => s.type === 'quotes')) && !recipe.nav.some((n) => n[1] === '/#reviews'), 'sample reviews are not on a real site, and no link points at them');
+  const answer = { description: 'Салон с над 500 клиенти.', tagline: 'салон за красота', nav: recipe.nav.map((n) => n[0]), headerCta: null, pages: [{ id: 'index', title: null, description: null, pagehead: null, hero: { eyebrow: null, title: 'Най-добрият салон в града!!! 😀', lead: 'Над 1000 доволни клиенти. Подстригване със записан час.', cta: null, cta2: null, cardTitle: null, cardRows: null, cardNote: null, chips: null }, sections: [{ index: 1, keep: true, title: null, intro: null, h: null, p: null, button: null, items: [['Старши стилист', 'Цвят, балеаж и грижа за косата.'], ['Стилист', 'Подстригване и оформяне.'], ['Козметик', 'Грижа за чувствителна кожа.']], plans: null, groups: null, posts: null, body: null, send: null, note: null }] }] };
+  const calls = [];
+  const fake = (review) => async ({ step, prompt }) => {
+    calls.push(step);
+    if (step === 'plan') return { json: { tone: 'calm', styleSuggestion: null, sections: [] }, usage: { input: 10, output: 5, model: 'm' } };
+    if (step === 'content') return { json: answer, usage: { input: 100, output: 50, model: 'm' } };
+    return review(prompt);
+  };
+  const fixing = fake((prompt) => {
+    assert(/Checker findings/.test(prompt) && /t\d+ \| title \| Най-добрият/.test(prompt) && /Writing guide/.test(prompt) && /Tone the owner chose: premium/.test(prompt), 'the review sees the findings, the numbered texts, the guide and the tone');
+    const id = (re) => new RegExp(`(t\\d+) \\| ${re}`).exec(prompt)[1];
+    return { json: { fixes: [{ id: id('title \\| Най-добрият'), text: 'Прически с грижа' }, { id: id('lead \\| Над 1000'), text: 'Подстригване със записан час.' }, { id: id('description \\| Салон с над'), text: 'Подстригване и оцветяване със записан час.' }] }, usage: { input: 30, output: 20, model: 'm' } };
+  });
+  const ok = await A.runPipeline({ brief: { ...brief, ...aiTheme(theme) }, recipe, call: fixing });
+  assert(calls.join() === 'plan,content,review', calls.join());
+  assert(ok.content.pages.index.hero.title === 'Прически с грижа' && ok.content.pages.index.hero.lead === 'Подстригване със записан час.' && ok.content.description.startsWith('Подстригване'), JSON.stringify(ok.content.pages.index.hero));
+  assert(ok.audit.found >= 3 && ok.audit.fixed === 3 && !ok.audit.left.length, JSON.stringify(ok.audit));
+  // when the review fails the checker still cuts the sentence with the invented number out of a paragraph
+  const broken = await A.runPipeline({ brief, recipe, call: fake(() => { throw new Error('upstream down'); }) });
+  assert(broken.content.pages.index.hero.lead === 'Подстригване със записан час.' && !broken.content.pages.index.hero.title.includes('!') && !broken.content.pages.index.hero.title.includes('😀'), JSON.stringify(broken.content.pages.index.hero));
+  assert(broken.audit.left.some((l) => l.path.endsWith('hero.title')), 'what could not be fixed is reported: ' + JSON.stringify(broken.audit));
+  // an old-style answer (a whole site instead of fixes) changes nothing
+  const legacy = await A.runPipeline({ brief, recipe, call: fake(() => ({ json: answer, usage: {} })) });
+  assert(legacy.audit.fixed === 0, 'no fixes → none applied');
+
+  // names and prices are the owner's: the writer cannot change them, the owner's own edit can
+  const pr = loadTheme('mentor');
+  const pb = normalizeBrief({ name: 'Ива', theme: 'mentor', lang: 'en', services: [{ name: 'Single session', price: '€80' }, { name: 'Programme', price: '€400' }] });
+  const precipe = applyBrief(pr, pb, []);
+  const psec = precipe.pages.index.sections.findIndex((s) => s.type === 'pricing' || s.type === 'programs');
+  assert(psec >= 0, 'mentor has a pricing section: ' + precipe.pages.index.sections.map((s) => s.type));
+  const merged = A.mergeContent(precipe, { pages: [{ id: 'index', sections: [{ index: psec, keep: true, plans: [{ name: 'Free trial', price: '€1', per: null, featured: null, features: ['One hour together'], cta: null }, { name: 'X', price: '€2', per: null, featured: null, features: [], cta: null }] }] }] });
+  assert(merged.pages.index.sections[psec].items.map((i) => `${i.name} ${i.price}`).join() === 'Single session €80,Programme €400' && merged.pages.index.sections[psec].items[0].features[0] === 'One hour together', JSON.stringify(merged.pages.index.sections[psec].items));
+  const edited = A.applyEdits(precipe, [{ op: 'set_items', page: 'index', section: psec, items: [['Intro call', '€20', 'Thirty minutes']] }]);
+  assert(edited.content.pages.index.sections[psec].items[0].price === '€20', 'the owner can change a price with words');
+
+  // no AI: the owner's facts or nothing — contacts, hours, hero card, phone links
+  const bare = applyBrief(loadTheme('restaurant'), normalizeBrief({ name: 'Бистро', theme: 'restaurant', lang: 'bg' }), []);
+  const flat = JSON.stringify(bare);
+  assert(!flat.includes('example.com') && !flat.includes('000 000') && !flat.includes('tel:') && !flat.includes('mailto:') && !flat.includes('"hours"'), 'no sample channels or hours without the owner\'s details');
+  assert(!bare.pages.index.hero.card && !/\d/.test(bare.pages.index.hero.eyebrow || ''), 'no sample hero card or eyebrow fact');
+  assert(sampleSections(bare, normalizeBrief({ name: 'Б', theme: 'restaurant' })).some((x) => x.type === 'menu'), 'the sample menu is recorded');
+  const full = applyBrief(loadTheme('restaurant'), normalizeBrief({ name: 'Бистро', theme: 'restaurant', lang: 'bg', contacts: { phone: '+359 888 123 456' }, hours: 'Пн–Пт 12:00–23:00\nСъб 12:00–24:00\nнещо друго', services: [{ name: 'Супа', price: '5 €' }] }), []);
+  const cs = full.pages.index.sections.find((s) => s.type === 'contact');
+  assert(cs.rows.length === 1 && cs.rows[0][3] === 'tel:+359888123456' && cs.hours.length === 2 && cs.hours[0][0] === 'Пн–Пт' && cs.hours[0][1] === '12:00–23:00', JSON.stringify([cs.rows, cs.hours]));
+  assert(full.pages.index.hero.card.rows[0].join() === 'Супа,5 €' && !full.pages.index.hero.card.note, 'the card shows the owner\'s services');
+  assert(parseHours([['Mon', '9:00–17:00'], { days: 'Sun', time: 'closed' }, 'garbage']).length === 2 && parseHours('Sun closed').length === 1 && parseHours(null).length === 0, 'hours parsing');
+
+  // the site written to disk: no example link; a menu nobody wrote is flagged until it changes
+  const parent = path.join(TMP, 'new-sites-s7b');
+  fs.mkdirSync(parent, { recursive: true });
+  const made = bidEnv({ BID_LANG: 'en' }, 'new', 'create', '--template', 'restaurant', '--name', 'Bistro Lipa', '--dir', parent, '--lang', 'en');
+  assert(made.result.ok, JSON.stringify(made.result).slice(0, 200));
+  const html = fs.readFileSync(path.join(made.data.path, 'index.html'), 'utf8');
+  assert(!html.includes('example.com') && !html.includes('tel:+359888000000') && html.includes('class="contact solo"'), 'no sample contact, and the form stands alone');
+  const record = JSON.parse(fs.readFileSync(path.join(made.data.path, 'bid.site.json'), 'utf8'));
+  assert(record.samples.some((x) => x.type === 'menu'), 'bid.site.json records the sample menu');
+  const chk = bid('check', '--project', made.data.path).data.steps.find((x) => x.id === 'site');
+  assert(chk.status === 'warn' && chk.details.some((d) => d.includes('content.sample')), JSON.stringify(chk.details));
+  // an example link left in a page is a failure
+  const idx = path.join(made.data.path, 'index.html');
+  fs.writeFileSync(idx, fs.readFileSync(idx, 'utf8').replace('</main>', '<a href="mailto:hello@example.com">mail</a></main>'));
+  const chk2 = bid('check', '--project', made.data.path, '--force').data.steps.find((x) => x.id === 'site');
+  assert(chk2.status === 'fail' && chk2.details.some((d) => d.includes('content.exampleContact')), JSON.stringify(chk2.details));
+});
+
+ta('new S7-C: 41 тема — всяка е честна (без измислени числа и твърдения), с подсказки за формата, и оценката за AI работи офлайн', async () => {
+  const A = await import(path.join(ROOT, 'engine', 'src', 'sitegen', 'ai.mjs'));
+  const { loadTheme } = await import(path.join(ROOT, 'engine', 'src', 'sitegen', 'themes.mjs'));
+  const { applyBrief, normalizeBrief } = await import(path.join(ROOT, 'engine', 'src', 'sitegen', 'brief.mjs'));
+  const { ICONS } = await import(path.join(ROOT, 'engine', 'src', 'sitegen', 'icons.mjs'));
+  const list = bid('new', 'list').data;
+  assert(list.length >= 41, `${list.length} themes`);
+  const kinds = new Set(list.map((x) => x.id));
+  for (const id of ['lawyer', 'accountant', 'autoservice', 'cleaning', 'florist', 'bakery', 'bar', 'yoga', 'barber', 'spa', 'tattoo', 'music', 'podcast', 'photographer', 'interior', 'school', 'kids', 'dance', 'travel', 'vet', 'agency', 'construction', 'transport', 'farm']) assert(kinds.has(id), `theme ${id}`);
+  const problems = [];
+  for (const th of list) {
+    const theme = loadTheme(th.id);
+    for (const lang of ['en', 'bg']) {
+      // the owner has told us nothing but a name: what the theme says by itself must not state facts
+      const brief = normalizeBrief({ name: th.sample || 'Sample', theme: th.id, lang });
+      const content = applyBrief(theme, brief, [], { keepSamples: true });
+      for (const i of A.auditContent(brief, content)) {
+        const sec = i.path[2] === 'sections' ? content.pages[i.path[1]].sections[i.path[3]] : null;
+        if (sec && (sec.type === 'quotes' || sec.type === 'stats')) continue; // dropped at generation
+        const hard = i.kinds.filter((k) => ['number', 'claim', 'placeholder', 'language'].includes(k));
+        if (hard.length) problems.push(`${th.id}/${lang} ${i.path.join('.')}: ${i.detail[0]} — "${i.text.slice(0, 50)}"`);
+      }
+      const h = th.hints?.[lang];
+      if (!h || !h.offer || !h.audience || h.services.length < 2) problems.push(`${th.id}/${lang}: hints`);
+      // every icon a section names exists in the engine
+      for (const p of Object.values(theme.lang[lang].pages)) for (const s of p.sections || []) for (const it of s.items || []) if (Array.isArray(it) && ['cards', 'trust', 'audience'].includes(s.type) && !ICONS[it[0]]) problems.push(`${th.id}/${lang}: icon ${it[0]}`);
+    }
+    if (!ICONS[theme.mark]) problems.push(`${th.id}: mark ${theme.mark}`);
+  }
+  assert(!problems.length, problems.slice(0, 12).join('\n') + (problems.length > 12 ? `\n… ${problems.length - 12} more` : ''));
+  // the owner's evaluation harness runs offline too: the stand-in writer over-reaches, the pipeline cleans it
+  const r = spawnSync(process.execPath, [path.join(ROOT, 'scripts', 'site-ai-eval.mjs'), '--offline', '--json'], { env: ENV, encoding: 'utf8', timeout: 120000 });
+  assert(r.status === 0, (r.stdout + r.stderr).slice(-800));
+  const rows = JSON.parse(r.stdout);
+  assert(rows.length >= 8 && rows.every((x) => !x.error && x.hard === 0 && x.found > 0 && x.fixed > 0), JSON.stringify(rows.filter((x) => x.error || x.hard)));
+});
+
 t('new S5: превю-снимки и ключови думи за всяка тема, „Нещо друго“ предлага най-близката тема, светло/тъмно/авто, илюстрации по палитра', () => {
   const list = bid('new', 'list').data;
   for (const th of list) {
@@ -614,8 +740,10 @@ t('new S5: превю-снимки и ключови думи за всяка т
   assert(portfolio['index.html'].includes('<img class="art" src="/art/tile-1.svg"') && portfolio['art/tile-6.svg'], 'gallery tiles');
   const wedding = bid('new', 'preview', '--brief', JSON.stringify({ name: 'M & P', theme: 'wedding', lang: 'bg' })).data;
   assert(wedding['index.html'].includes('class="hero-art wide"><img src="/art/band.svg"') && wedding['art/band.svg'].includes('viewBox="0 0 1600 700"'), 'band under a centred hero');
-  const mentor = bid('new', 'preview', '--brief', JSON.stringify({ name: 'Iva', theme: 'mentor', lang: 'en' })).data;
-  assert(mentor['about.html'].includes('src="/art/story.svg"') && mentor['art/story.svg'] && !mentor['art/hero.svg'], 'story picture; the hero has a card so no hero art');
+  // with the owner's services the hero shows them in its card (no hero art); without any, the card is not invented — the picture takes its place
+  const mentor = bid('new', 'preview', '--brief', JSON.stringify({ name: 'Iva', theme: 'mentor', lang: 'en', services: [{ name: 'Single session', price: '€80' }] })).data;
+  assert(mentor['about.html'].includes('src="/art/story.svg"') && mentor['art/story.svg'] && !mentor['art/hero.svg'] && mentor['index.html'].includes('Single session'), 'story picture; the hero has a card so no hero art');
+  assert(bid('new', 'preview', '--brief', JSON.stringify({ name: 'Iva', theme: 'mentor', lang: 'en' })).data['art/hero.svg'], 'no services: no invented card, the hero picture instead');
   assert(mentor['art/story.svg'] === bid('new', 'preview', '--brief', JSON.stringify({ name: 'Iva', theme: 'mentor', lang: 'en' })).data['art/story.svg'], 'deterministic: same site, same picture');
   // a site on disk: the art folder is written and the quality check passes; a photo replaces the hero art
   const parent = path.join(TMP, 's5-sites');
@@ -1217,6 +1345,57 @@ t('overview: карта за всеки проект + внимание', () => 
   assert(r.data.attention.some((a) => a.level === 'fail'), 'blocked project should need attention');
 });
 
+t('aifix S7-D: файловете от лога (и в корена), без тайни, известни причини, регистър на буквите, предишна поправка', () => {
+  // a root-level file and a file with line:col, printed with the absolute path; a secret file and an outside path are never shown
+  const proj = mk('s7d-fix', {
+    'package.json': JSON.stringify({ name: 's7d', scripts: { build: "node -e \"console.error(process.cwd()+'/vite.config.js:2:5 error; Failed to resolve import \\\"./components/header\\\" from \\\"src/App.jsx\\\"; see .env and ../outside.js:1');process.exit(1)\"" } }),
+    'vite.config.js': 'export default {\n  plugins: [bad(],\n};\n',
+    'src/components/Header.jsx': 'export default function Header() { return null; }\n',
+    'src/App.jsx': "import Header from './components/header';\nexport default () => Header();\n",
+    '.env': 'SECRET_TOKEN=supersecretvalue123456\n',
+    '.gitignore': 'node_modules/\n.env\n',
+  });
+  bid('check', '--project', proj);
+  const r = bid('aifix', '--project', proj, '--step', 'build', '--target', 'copy');
+  assert(r.result.ok, JSON.stringify(r.result));
+  const p = r.data.prompt;
+  assert(p.includes('## File: vite.config.js') && p.includes('plugins: [bad(],') && p.includes('around line 2'), 'the root file the log points at, around its line');
+  assert(p.includes('## File: src/App.jsx') && p.includes("import Header from './components/header';"), 'the file named in the message');
+  assert(!p.includes('supersecretvalue123456') && !/## File: .*(?:\.env|outside)/.test(p), 'secret and outside files are never shown');
+  // known causes, proven by the project's own files
+  assert(p.includes('## Likely causes the app already knows'), 'known-causes section');
+  assert(/Header\.jsx.*differ only in capitalisation/.test(p.replace(/\n/g, ' ')), 'the file that differs only by capitalisation is named');
+  assert(p.includes('package, it must be listed') || p.includes('A name that does not start with'), 'module-missing playbook');
+  // the system prompt demands the root cause, no silencing, verbatim SEARCH blocks
+  const ai = fs.readFileSync(path.join(ROOT, 'engine', 'i18n', 'en.json'), 'utf8');
+  assert(/Never \\"fix\\" a check by silencing it/.test(ai) && /copied verbatim from a file shown/.test(ai), 'system prompt rules');
+});
+
+ta('aifix S7-D: знанието — плейбук, правила на сайта, предишна поправка, без съвпадения където не трябва', async () => {
+  const K = await import(path.join(ROOT, 'engine', 'src', 'ai', 'knowledge.mjs'));
+  const ids = (log, extra = {}) => K.knownCauses({ stepIds: ['build'], log, ...extra }).map((c) => c.id);
+  assert(ids("Error: Cannot find module 'left-pad'").includes('module-missing'), 'missing package');
+  assert(ids('npm ERR! code ERESOLVE\nnpm ERR! Could not resolve dependency').includes('eresolve'), 'ERESOLVE');
+  assert(ids('ReferenceError: window is not defined').includes('window-undefined'), 'window');
+  assert(ids('Missing environment variable: API_URL').includes('env-missing'), 'env');
+  assert(ids('error TS7006: Parameter \'x\' implicitly has an \'any\' type.').includes('ts-implicit'), 'implicit any');
+  assert(ids('JavaScript heap out of memory').includes('oom'), 'oom');
+  assert(ids('Error: listen EADDRINUSE: address already in use :::3000').includes('port-busy'), 'port');
+  assert(ids('The engine "node" is incompatible with this module', { node: 'v18.0.0' }).includes('node-version'), 'node version');
+  assert(!ids('everything is fine, built in 2s').length, 'nothing matches a clean log');
+  assert(K.knownCauses({ stepIds: ['site'], log: 'WARN a11y.imgAlt · index.html — 2 images\nFAIL content.exampleContact · index.html:9 — x' }).filter((c) => c.id.startsWith('site:')).length === 2, 'site rules');
+  const prev = K.knownCauses({ stepIds: ['build'], log: 'x', previousFix: { files: ['src/a.js'], at: '2026-10-03' } });
+  assert(prev[0].id === 'previous-fix' && prev[0].text.includes('src/a.js') && /Do not repeat/.test(prev[0].text), 'previous fix first');
+  assert(K.knownCauses({ stepIds: ['build'], log: 'x', siteBuilder: true }).some((c) => c.id === 'site-builder'), 'generated site note');
+  assert(K.siteRulesIn('WARN seo.title · index.html — x\nFAIL content.lorem · about.html:3 — y').join() === 'seo.title,content.lorem', 'rule ids');
+  assert(Object.keys(K.SITE_RULES).every((r) => /^(seo|content|a11y|assets|structure)\./.test(r)), 'rule table');
+  // every site rule the scanner can raise has a hint (the scanner's own table is the source)
+  const { SITE_RULES } = await import(path.join(ROOT, 'engine', 'src', 'site.mjs'));
+  const missing = Object.keys(SITE_RULES).filter((r) => !['seo.robots', 'seo.sitemap', 'seo.canonical', 'seo.og', 'seo.favicon', 'content.todo', 'structure.notFound'].includes(r) && !K.SITE_RULES[r]);
+  assert(!missing.length, 'site rules without a hint: ' + missing);
+});
+
+
 t('aifix: „всички проблеми“ включва грешки и предупреждения', () => {
   const r = bid('aifix', '--project', trackedEnv, '--step', 'all', '--target', 'copy');
   assert(r.result.ok, r.result?.error);
@@ -1314,7 +1493,7 @@ http.createServer((q,r)=>{let b='';q.on('data',c=>b+=c);q.on('end',()=>{r.setHea
    if(req.output_config&&req.output_config.format){const pr=String(req.messages[0].content);let out;
      if(/The owner wants to change their site/.test(pr))out={summary:'AI changed the lead',ops:[{op:'set_text',page:'index',section:null,field:'lead',value:'AI lead from the model',items:null,type:null,after:null,title:null,intro:null,style:null,palette:null}]};
      else if(/Decide for every section/.test(pr))out={tone:'warm',styleSuggestion:'calm',sections:[]};
-     else if(/^Review this site/m.test(pr))out=JSON.parse(pr.slice(pr.indexOf('Content:\\n')+9));
+     else if(/^Review the texts of this website/m.test(pr))out={fixes:[]};
      else{const rec=JSON.parse(pr.slice(pr.indexOf('Recipe:\\n')+8));out={description:'AI '+rec.description,tagline:rec.tagline,nav:rec.nav,headerCta:rec.headerCta,pages:rec.pages.map(pg=>({id:pg.id,title:pg.title,description:pg.description,pagehead:pg.pagehead,hero:pg.hero?Object.assign({},pg.hero,{title:'AI *'+String(pg.hero.title).replace(/\\*/g,'')+'*',cardRows:pg.hero.cardRows||null,chips:pg.hero.chips||null}):null,sections:pg.sections.map(sc=>({index:sc.index,keep:sc.type!=='quotes',title:sc.title?'AI '+sc.title:null,intro:sc.intro||null,h:sc.h||null,p:sc.p||null,button:sc.button||null,items:sc.items||null,plans:sc.plans||null,groups:sc.groups||null,posts:sc.posts||null,body:sc.body||null,send:null,note:null}))}))};}
      const txt=JSON.stringify(out);r.setHeader('content-type','text/event-stream');
      ev({type:'message_start',message:{model:req.model,usage:{input_tokens:3000,output_tokens:1}}});ev({type:'content_block_delta',index:0,delta:{type:'text_delta',text:txt.slice(0,50)}});ev({type:'content_block_delta',index:0,delta:{type:'text_delta',text:txt.slice(50)}});ev({type:'message_delta',delta:{stop_reason:'end_turn'},usage:{output_tokens:1200}});ev({type:'message_stop'});return r.end();}
@@ -1866,14 +2045,15 @@ t('site edit: думи без AI — цвят, стил, по-тъмно, мах
   assert(dark.result.ok && dark.data.applied.join() === 'look: bold / lemon', JSON.stringify(dark.data.applied)); // calm has no dark palette → the first dark one of bold
   const record = JSON.parse(fs.readFileSync(path.join(site, 'bid.site.json'), 'utf8'));
   assert(record.brief.style === 'bold' && record.brief.palette === 'lemon' && record.history.length === 2 && record.files['index.html'], 'the record follows');
-  // remove reviews + a new title, in one sentence
-  const words = bid('site', 'edit', '--project', site, '--say', 'махни отзивите и смени заглавието на „Уроци по китара“');
-  assert(words.result.ok && words.data.applied.some((a) => a.includes('(quotes) removed')) && words.data.applied.includes('index.hero.title'), JSON.stringify(words.data.applied));
+  // remove a section + a new title, in one sentence (sample reviews are never on a generated site)
+  const words = bid('site', 'edit', '--project', site, '--say', 'махни въпросите и смени заглавието на „Уроци по китара“');
+  assert(words.result.ok && words.data.applied.some((a) => a.includes('(faq) removed')) && words.data.applied.includes('index.hero.title'), JSON.stringify(words.data.applied));
   const html = fs.readFileSync(path.join(site, 'index.html'), 'utf8');
-  assert(html.includes('<h1>Уроци по китара</h1>') && !html.includes('class="quotes"'), 'rendered');
-  assert(bid('check', '--project', site).data.steps.find((s) => s.id === 'site').status === 'pass', 'still passes the check');
+  assert(html.includes('<h1>Уроци по китара</h1>') && !html.includes('class="faq"'), 'rendered');
+  const after = bid('check', '--project', site).data.steps.find((s) => s.id === 'site');
+  assert(after.status === 'pass' || after.details.every((d) => d.includes('content.sample')), 'still passes the check (the sample price list is only a reminder)');
   // nothing to do
-  const none = bid('site', 'edit', '--project', site, '--say', 'махни отзивите');
+  const none = bid('site', 'edit', '--project', site, '--say', 'махни въпросите');
   assert(none.result.code === 'nothing', JSON.stringify(none.result));
   // history newest first, undo = a revert commit that brings the reviews back
   const hist = bid('site', 'history', '--project', site).data;
@@ -1881,7 +2061,7 @@ t('site edit: думи без AI — цвят, стил, по-тъмно, мах
   const undo = bid('site', 'undo', '--project', site);
   assert(undo.result.ok && undo.data.reverted.sha === hist[0].sha, JSON.stringify(undo.result).slice(0, 200));
   const back = fs.readFileSync(path.join(site, 'index.html'), 'utf8');
-  assert(back.includes('class="quotes"') && !back.includes('Уроци по китара'), 'reverted');
+  assert(back.includes('class="faq"') && !back.includes('Уроци по китара'), 'reverted');
   assert(bid('site', 'history', '--project', site).data[0].kind === 'undo', 'the undo is in the history');
   // a hand edit is never overwritten silently
   fs.appendFileSync(path.join(site, 'index.html'), '\n<!-- my own change -->');
@@ -1915,7 +2095,7 @@ t('site edit: думи, които моделът разбира — собст�
 t('new content: собствен ключ — план → съдържание → ревю, думите на модела в рецептата, линковете остават; preview/generate с --content', () => {
   const parent = path.join(TMP, 'ai-sites');
   fs.mkdirSync(parent, { recursive: true });
-  const brief = { theme: 'mentor', lang: 'bg', name: 'Ива Петрова', offer: 'Помагам на хора да сменят посоката.', services: [{ name: 'Единична сесия', price: '120 лв.', text: '60 минути' }], contacts: { email: 'iva@example.com', phone: '+359 888 000 000' } };
+  const brief = { theme: 'mentor', lang: 'bg', name: 'Ива Петрова', offer: 'Помагам на хора да сменят посоката.', services: [{ name: 'Единична сесия', price: '120 лв.', text: '60 минути' }], contacts: { email: 'iva@example.com', phone: '+359 888 123 456' } };
   spawnSync(BID, ['account', 'keys', 'set', '--provider', 'anthropic'], { env: { ...ENV, BID_AI_KEY: 'sk-ant-good-key-123' }, encoding: 'utf8' });
   const r = bid('new', 'content', '--brief', JSON.stringify(brief), '--provider', 'anthropic');
   assert(r.result.ok, JSON.stringify(r.result).slice(0, 300));
@@ -1929,7 +2109,7 @@ t('new content: собствен ключ — план → съдържание 
   assert(idx.hero.title.startsWith('AI *') && idx.hero.cta[1] === '/contact.html', 'hero words from the model, link from the recipe');
   assert(!idx.sections.some((x) => x.type === 'quotes') && idx.sections.some((x) => x.type === 'programs' || x.type === 'pricing'), 'the dropped reviews are gone, the programs stay: ' + idx.sections.map((x) => x.type));
   const rows = saved.content.pages.contact.sections.find((x) => x.type === 'contact').rows;
-  assert(rows.some((x) => x[3] === 'mailto:iva@example.com') && rows.some((x) => x[3] === 'tel:+359888000000'), 'the owner\'s contacts, never the model\'s');
+  assert(rows.some((x) => x[3] === 'mailto:iva@example.com') && rows.some((x) => x[3] === 'tel:+359888123456'), 'the owner\'s contacts, never the model\'s');
   // the content file flows into preview and generate
   const p = bid('new', 'preview', '--brief', JSON.stringify(brief), '--content', r.data.contentFile);
   assert(p.result.ok && p.data['index.html'].includes('AI <em>') && p.data['contact.html'].includes('mailto:iva@example.com'), 'preview renders the AI content: ' + JSON.stringify(p.result).slice(0, 200) + ' ' + ((p.data && p.data['index.html']) || '').match(/<h1>[^<]*(<em>[^<]*<\/em>)?[^<]*<\/h1>/)?.[0]);
@@ -1939,7 +2119,8 @@ t('new content: собствен ключ — план → съдържание 
   assert(html.includes('AI <em>') && !html.includes('<script>') && !html.includes('{{'), 'generated from the AI content');
   const record = JSON.parse(fs.readFileSync(path.join(g.data.path, 'bid.site.json'), 'utf8'));
   assert(record.content.pages.index.hero.title.startsWith('AI *'), 'bid.site.json keeps the AI content');
-  assert(bid('check', '--project', g.data.path).data.steps.find((x) => x.id === 'site').status === 'pass', 'the AI site passes the check');
+  const aiSite = bid('check', '--project', g.data.path).data.steps.find((x) => x.id === 'site');
+  assert(aiSite.status === 'pass' || (aiSite.status === 'warn' && aiSite.details.every((d) => d.includes('content.sample'))), 'the AI site passes the check: ' + JSON.stringify(aiSite.details));
   const bad = bid('new', 'generate', '--brief', JSON.stringify(brief), '--dir', parent, '--content', path.join(parent, 'nope.json'));
   assert(bad.result.code === 'usage' && bad.result.key === 'newsite.badContent', JSON.stringify(bad.result));
   // the cost ledger knows about it

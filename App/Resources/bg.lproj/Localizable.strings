@@ -1497,3 +1497,14 @@
 "billing.intervalNotice" = "Можеш да смениш плана със същия период на плащане. Смяната между месечно и годишно плащане още не е достъпна.";
 
 "assistant.textUnits" = "текстови единици";
+
+"newsite.hours" = "Работно време";
+"newsite.hoursHint" = "По един ред за ден или период. Ако го оставите празно, сайтът не показва часове.";
+"newsite.hoursPlaceholder" = "Пн–Пт 9:00–18:00\nСъб 10:00–14:00\nНд почивен ден";
+"newsite.tone" = "Как да звучи?";
+"newsite.tone.auto" = "Авто";
+"newsite.tone.friendly" = "Приятелски";
+"newsite.tone.playful" = "Весел";
+"newsite.tone.premium" = "Премиум";
+"newsite.tone.professional" = "Делови";
+"newsite.toneHint" = "По желание. На „Авто“ изкуственият интелект избира глас, който подхожда на вашия сайт.";

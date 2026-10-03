@@ -1,0 +1,873 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "barber",
+  "category": "beauty",
+  "icon": "scissors",
+  "accent": "#c97b3d",
+  "mark": "scissors",
+  "art": "grid",
+  "schemaOrg": "HairSalon",
+  "sample": {
+    "name": "Brass Chair"
+  },
+  "featured": false,
+  "titleKey": "newsite.template.barber.title",
+  "descriptionKey": "newsite.template.barber.description",
+  "keywords": {
+    "en": [
+      "barber",
+      "barbershop",
+      "men’s haircut",
+      "beard trim",
+      "shave",
+      "hot towel shave",
+      "fade",
+      "grooming",
+      "haircut",
+      "kids haircut"
+    ],
+    "bg": [
+      "бръснар",
+      "бръснарница",
+      "мъжко подстригване",
+      "брада",
+      "бръснене",
+      "фейд",
+      "барбър",
+      "мъжка прическа",
+      "детско подстригване",
+      "оформяне на брада"
+    ]
+  },
+  "style": "bold",
+  "tokens": {
+    "dark": true,
+    "bg": "#14110e",
+    "bg2": "#1b1713",
+    "surface": "#241e19",
+    "text": "#f2ebe1",
+    "muted": "#b8ab9c",
+    "line": "rgba(255,255,255,.10)",
+    "accent": "#c97b3d",
+    "accent2": "#d4a65a",
+    "font": "sans",
+    "head": "grotesk",
+    "radius": 6,
+    "tilt": -1.5
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "hints": {
+    "en": {
+      "offer": "A neighbourhood barbershop for haircuts, beard trims and hot-towel shaves. Classic and modern cuts, and kids are welcome.",
+      "audience": "Men and boys, from first haircuts to full beards",
+      "services": [
+        [
+          "Haircut",
+          "€15",
+          "Scissors or clippers, neck shave"
+        ],
+        [
+          "Beard trim",
+          "€10",
+          "Lined, tidied and softened with oil"
+        ],
+        [
+          "Hot-towel shave",
+          "€15",
+          "Warm towels and a razor finish"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Квартална бръснарница за подстригване, оформяне на брада и бръснене с топли кърпи. Класически и модерни прически, а децата са добре дошли.",
+      "audience": "Мъже и момчета, от първото подстригване до пълната брада",
+      "services": [
+        [
+          "Подстригване",
+          "15 €",
+          "Ножица или машинка, бръснене на врата"
+        ],
+        [
+          "Оформяне на брада",
+          "10 €",
+          "Очертана, подравнена и омекотена с масло"
+        ],
+        [
+          "Бръснене с топли кърпи",
+          "15 €",
+          "Топли кърпи и финиш с бръснач"
+        ]
+      ]
+    }
+  },
+  "lang": {
+    "en": {
+      "tagline": "men’s barbershop",
+      "description": "Haircuts, beard trims and hot-towel shaves. See the services and prices, then book your chair.",
+      "nav": [
+        [
+          "Services",
+          "/#services"
+        ],
+        [
+          "Prices",
+          "/prices.html"
+        ],
+        [
+          "FAQ",
+          "/#faq"
+        ],
+        [
+          "Contact",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Book a chair",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Cuts, beards and hot-towel shaves",
+            "eyebrowIcon": "scissors",
+            "title": "Cuts and beards, *done properly*",
+            "lead": "Classic and modern men’s haircuts, beard trims and hot-towel shaves in an unhurried chair. Bring a photo or just a rough idea and we will work out the rest.",
+            "cta": [
+              "Book a chair",
+              "/#contact"
+            ],
+            "cta2": [
+              "See prices",
+              "/prices.html"
+            ],
+            "card": {
+              "icon": "scissors",
+              "title": "From the price list",
+              "rows": [
+                [
+                  "Haircut",
+                  "from €15"
+                ],
+                [
+                  "Beard trim",
+                  "from €10"
+                ],
+                [
+                  "Haircut and beard",
+                  "€25"
+                ]
+              ],
+              "note": "The full list is on the prices page."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                [
+                  "scissors",
+                  "Classic and modern cuts"
+                ],
+                [
+                  "drop",
+                  "Hot-towel shaves"
+                ],
+                [
+                  "users",
+                  "Kids’ cuts too"
+                ],
+                [
+                  "bag",
+                  "Grooming products"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "services",
+              "title": "What we do",
+              "intro": "A short list, done well. Ask if you want something that is not on it.",
+              "items": [
+                [
+                  "scissors",
+                  "Haircuts",
+                  "Scissor cuts, clipper fades and classic tapers, finished clean around the neck and ears."
+                ],
+                [
+                  "hand",
+                  "Beard trims",
+                  "Shaped, lined and softened with oil, from light stubble to a full beard."
+                ],
+                [
+                  "drop",
+                  "Hot-towel shave",
+                  "A traditional wet shave with warm towels, lather and a cool, calming finish."
+                ],
+                [
+                  "users",
+                  "Kids’ cuts",
+                  "Patient, friendly cuts for boys who would rather be anywhere else."
+                ]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "way",
+              "alt": true,
+              "title": "How we work",
+              "items": [
+                [
+                  "We listen before we cut",
+                  "Show us a photo and tell us how you style it in the morning. We agree the cut before the clippers start.",
+                  "Photos and references welcome",
+                  "Honest advice on what suits your hair",
+                  "A last look in the mirror before you go"
+                ],
+                [
+                  "Details that last",
+                  "A good cut grows out well. We take our time on the neckline, the fade and the edges, so it still looks right weeks later.",
+                  "A clean neckline and sharp edges",
+                  "Fades blended, never patchy",
+                  "Tips for styling it at home"
+                ],
+                [
+                  "A chair to switch off in",
+                  "Warm towels, a steady hand and no rush. For plenty of men this is the quietest half hour of the week.",
+                  "Warm towels and a steady hand",
+                  "Time to talk, or not to",
+                  "A comfortable place to wait"
+                ]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "how",
+              "title": "How to book",
+              "items": [
+                [
+                  "Choose a service",
+                  "Haircut, beard, shave or all three. Pick what you need and we set aside enough time."
+                ],
+                [
+                  "Pick a day",
+                  "Send a preferred day through the form, or call us. We confirm, or suggest another time if that one is taken."
+                ],
+                [
+                  "Come as you are",
+                  "Arrive a few minutes early, with a photo if you have one. No need to wash your hair first."
+                ],
+                [
+                  "Leave sharper",
+                  "We finish, show you the back in a mirror and tell you how to style it."
+                ]
+              ]
+            },
+            {
+              "type": "gallery",
+              "id": "work",
+              "alt": true,
+              "title": "Fresh from the chair",
+              "intro": "A look at the cuts, fades and beard shapes we do.",
+              "items": [
+                "Classic taper",
+                "Skin fade",
+                "Beard line-up",
+                "Neck and edge detail"
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Before you book",
+              "items": [
+                [
+                  "Do I need an appointment?",
+                  "Booking ahead is the safest way to get the time you want. If you are passing by, just ask: we fit people in when there is a gap."
+                ],
+                [
+                  "How long does a visit take?",
+                  "A haircut usually takes under an hour; a cut with a beard or shave takes a little longer. Tell us what you need and we set aside the right time."
+                ],
+                [
+                  "Can I bring a photo?",
+                  "Please do. Photos from the front, side and back help us agree the cut before we start."
+                ],
+                [
+                  "Do you cut kids’ hair?",
+                  "Yes. We keep it calm and patient. For the youngest, mention it when you book so we can allow a little extra time."
+                ],
+                [
+                  "What if I do not like the result?",
+                  "Tell us before you leave and we will adjust it. A good cut is a conversation, so the sooner we hear, the better."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Your chair is ready when you are",
+              "p": "Pick a service and a day. We confirm your time by phone or message.",
+              "button": [
+                "Book a chair",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Book a chair",
+              "intro": "Choose a service and a day that suits you. Prefer to talk? Give us a call and we will find a time together.",
+              "formName": "booking",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Address",
+                  "1 Vitosha St, Sofia"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "service",
+                  "label": "Service",
+                  "options": [
+                    "Haircut",
+                    "Beard trim",
+                    "Hot-towel shave",
+                    "Haircut and beard",
+                    "Kids’ cut",
+                    "Something else"
+                  ]
+                },
+                {
+                  "id": "date",
+                  "label": "Preferred day",
+                  "type": "date"
+                }
+              ],
+              "messageLabel": "Photo link or notes (optional)",
+              "send": "Request a time",
+              "hoursTitle": "Opening hours",
+              "hours": [
+                [
+                  "Tue – Fri",
+                  "10:00 – 20:00"
+                ],
+                [
+                  "Sat",
+                  "10:00 – 18:00"
+                ],
+                [
+                  "Sun – Mon",
+                  "closed"
+                ]
+              ]
+            }
+          ]
+        },
+        "prices": {
+          "title": "Price list",
+          "description": "Prices for men’s haircuts, beard trims, shaves, kids’ cuts and grooming products.",
+          "pagehead": [
+            "Prices",
+            "Prices in euro. Hair length and beard density can change the time a service needs, so we confirm the final price in the chair."
+          ],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Haircuts",
+                  "items": [
+                    [
+                      "Classic haircut",
+                      "Scissors or clippers, neck shave",
+                      "€15"
+                    ],
+                    [
+                      "Skin or razor fade",
+                      "Blended, with a detailed finish",
+                      "€18"
+                    ],
+                    [
+                      "Buzz cut",
+                      "One length, clean edges",
+                      "€10"
+                    ],
+                    [
+                      "Kids’ cut",
+                      "For boys, calm and patient",
+                      "€12"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Beard and shave",
+                  "items": [
+                    [
+                      "Beard trim and shape",
+                      "Lined, tidied, softened with oil",
+                      "€10"
+                    ],
+                    [
+                      "Hot-towel shave",
+                      "Warm towels, lather, razor finish",
+                      "€15"
+                    ],
+                    [
+                      "Head shave",
+                      "Smooth, with warm towels",
+                      "€15"
+                    ],
+                    [
+                      "Moustache tidy",
+                      "",
+                      "€5"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Combinations and extras",
+                  "items": [
+                    [
+                      "Haircut and beard",
+                      "Cut and beard shaped in one visit",
+                      "€25"
+                    ],
+                    [
+                      "The full works",
+                      "Haircut, hot-towel shave and styling",
+                      "€33"
+                    ],
+                    [
+                      "Eyebrow and ear tidy",
+                      "A quick clean-up",
+                      "€5"
+                    ],
+                    [
+                      "Pomade or styling clay",
+                      "Ask which suits your hair",
+                      "from €12"
+                    ],
+                    [
+                      "Beard oil or balm",
+                      "",
+                      "from €12"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Ready for a fresh cut?",
+              "p": "Choose a service and a day that suits you, and we will find a time that works.",
+              "button": [
+                "Book a chair",
+                "/#contact"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "bg": {
+      "tagline": "бръснарница за мъже",
+      "description": "Подстригване, оформяне на брада и бръснене с топли кърпи. Вижте услугите и цените и запазете час.",
+      "nav": [
+        [
+          "Услуги",
+          "/#services"
+        ],
+        [
+          "Цени",
+          "/prices.html"
+        ],
+        [
+          "Въпроси",
+          "/#faq"
+        ],
+        [
+          "Контакти",
+          "/#contact"
+        ]
+      ],
+      "headerCta": [
+        "Запазете час",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Подстригване, брада и бръснене",
+            "eyebrowIcon": "scissors",
+            "title": "Прическа и брада, *както трябва*",
+            "lead": "Класически и модерни мъжки прически, оформяне на брада и бръснене с топли кърпи, без бързане. Донесете снимка или просто идея, а останалото оставете на нас.",
+            "cta": [
+              "Запазете час",
+              "/#contact"
+            ],
+            "cta2": [
+              "Вижте цените",
+              "/prices.html"
+            ],
+            "card": {
+              "icon": "scissors",
+              "title": "От ценовата листа",
+              "rows": [
+                [
+                  "Подстригване",
+                  "от 15 €"
+                ],
+                [
+                  "Брада",
+                  "от 10 €"
+                ],
+                [
+                  "Прическа и брада",
+                  "25 €"
+                ]
+              ],
+              "note": "Цялата листа е на страницата с цени."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                [
+                  "scissors",
+                  "Класически и модерни прически"
+                ],
+                [
+                  "drop",
+                  "Класическо бръснене"
+                ],
+                [
+                  "users",
+                  "И детски подстригвания"
+                ],
+                [
+                  "bag",
+                  "Продукти за грижа"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "services",
+              "title": "Какво правим",
+              "intro": "Кратък списък, изпълнен добре. Попитайте, ако искате нещо, което не е в него.",
+              "items": [
+                [
+                  "scissors",
+                  "Подстригване",
+                  "Ножица, машинка, преходи и класически тейпър, с чист завършек около врата и ушите."
+                ],
+                [
+                  "hand",
+                  "Брада",
+                  "Оформена, очертана и омекотена с масло, от лек набор до пълна брада."
+                ],
+                [
+                  "drop",
+                  "Бръснене с топли кърпи",
+                  "Традиционно мокро бръснене с топли кърпи, пяна и хладен, успокояващ завършек."
+                ],
+                [
+                  "users",
+                  "Детски подстригвания",
+                  "Търпеливо и приятелско подстригване за момчета, на които не им се седи на едно място."
+                ]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "way",
+              "alt": true,
+              "title": "Как работим",
+              "items": [
+                [
+                  "Първо слушаме, после режем",
+                  "Покажете ни снимка и ни кажете как си слагате косата сутрин. Договаряме прическата, преди да включим машинката.",
+                  "Снимки и примери са добре дошли",
+                  "Честен съвет какво отива на косата ви",
+                  "Последен поглед в огледалото, преди да си тръгнете"
+                ],
+                [
+                  "Детайли, които траят",
+                  "Добрата прическа порастава красиво. Отделяме време на врата, прехода и контурите, за да изглежда добре и седмици по-късно.",
+                  "Чист врат и ясни контури",
+                  "Преходи без петна и стъпала",
+                  "Съвети как да я стилизирате у дома"
+                ],
+                [
+                  "Стол, на който да си починете",
+                  "Топли кърпи, сигурна ръка и никакво бързане. За много мъже това е най-спокойният половин час в седмицата.",
+                  "Топли кърпи и сигурна ръка",
+                  "Можем да си говорим или да мълчим",
+                  "Удобно място, където да изчакате"
+                ]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "how",
+              "title": "Как да запазите час",
+              "items": [
+                [
+                  "Изберете услуга",
+                  "Подстригване, брада, бръснене или всичко заедно. Изберете каквото ви трябва и ще отделим достатъчно време."
+                ],
+                [
+                  "Изберете ден",
+                  "Изпратете удобен ден през формата или ни се обадете. Ще потвърдим или ще предложим друг час, ако този е зает."
+                ],
+                [
+                  "Дойдете както сте",
+                  "Пристигнете няколко минути по-рано, със снимка, ако имате. Не е нужно да миете косата си предварително."
+                ],
+                [
+                  "Излезте по-стегнати",
+                  "Довършваме, показваме ви гърба с огледало и обясняваме как да я стилизирате."
+                ]
+              ]
+            },
+            {
+              "type": "gallery",
+              "id": "work",
+              "alt": true,
+              "title": "Току-що от стола",
+              "intro": "Прически, преходи и форми на брада, с които работим.",
+              "items": [
+                "Класически тейпър",
+                "Преход до кожа",
+                "Контур на брада",
+                "Детайл по врата и контурите"
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Преди да запазите час",
+              "items": [
+                [
+                  "Нужен ли ми е запазен час?",
+                  "Най-сигурно е да запазите час предварително. Ако минавате наблизо, просто попитайте: ще ви вмъкнем, ако има свободно място."
+                ],
+                [
+                  "Колко време отнема посещението?",
+                  "Подстригването обикновено отнема под час, а с брада или бръснене малко повече. Кажете ни какво ви трябва и ще отделим нужното време."
+                ],
+                [
+                  "Може ли да донеса снимка?",
+                  "Разбира се. Снимки отпред, отстрани и отзад ни помагат да се разберем за прическата, преди да започнем."
+                ],
+                [
+                  "Подстригвате ли и деца?",
+                  "Да. Работим спокойно и търпеливо. За най-малките го споменете при записването, за да отделим малко повече време."
+                ],
+                [
+                  "Какво става, ако не ми хареса резултатът?",
+                  "Кажете ни, преди да си тръгнете, и ще го коригираме. Добрата прическа е разговор, затова колкото по-рано чуем, толкова по-добре."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Столът ви чака",
+              "p": "Изберете услуга и ден. Ще потвърдим часа по телефона или със съобщение.",
+              "button": [
+                "Запазете час",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Запазете час",
+              "intro": "Изберете услуга и удобен ден. Предпочитате да говорим? Обадете ни се и ще намерим час заедно.",
+              "formName": "booking",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Адрес",
+                  "ул. „Витоша“ 1, София"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "service",
+                  "label": "Услуга",
+                  "options": [
+                    "Подстригване",
+                    "Брада",
+                    "Бръснене с топли кърпи",
+                    "Подстригване и брада",
+                    "Детско подстригване",
+                    "Нещо друго"
+                  ]
+                },
+                {
+                  "id": "date",
+                  "label": "Желан ден",
+                  "type": "date"
+                }
+              ],
+              "messageLabel": "Връзка към снимка или бележки (по избор)",
+              "send": "Заявете час",
+              "hoursTitle": "Работно време",
+              "hours": [
+                [
+                  "Вт – пет",
+                  "10:00 – 20:00"
+                ],
+                [
+                  "Съб",
+                  "10:00 – 18:00"
+                ],
+                [
+                  "Нед – пон",
+                  "почивен ден"
+                ]
+              ]
+            }
+          ]
+        },
+        "prices": {
+          "title": "Ценова листа",
+          "description": "Цени на мъжки подстригвания, брада, бръснене, детски подстригвания и продукти за грижа.",
+          "pagehead": [
+            "Цени",
+            "Цените са в евро. Дължината на косата и гъстотата на брадата могат да променят нужното време, затова окончателната цена уточняваме на стола."
+          ],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Подстригване",
+                  "items": [
+                    [
+                      "Класическо подстригване",
+                      "Ножица или машинка, бръснене на врата",
+                      "15 €"
+                    ],
+                    [
+                      "Преход до кожа",
+                      "Плавен преход с прецизен завършек",
+                      "18 €"
+                    ],
+                    [
+                      "Подстригване на машинка",
+                      "Една дължина, чисти контури",
+                      "10 €"
+                    ],
+                    [
+                      "Детско подстригване",
+                      "За момчета, спокойно и търпеливо",
+                      "12 €"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Брада и бръснене",
+                  "items": [
+                    [
+                      "Оформяне на брада",
+                      "Очертана, подравнена, омекотена с масло",
+                      "10 €"
+                    ],
+                    [
+                      "Бръснене с топли кърпи",
+                      "Топли кърпи, пяна, финиш с бръснач",
+                      "15 €"
+                    ],
+                    [
+                      "Бръснене на глава",
+                      "Гладко, с топли кърпи",
+                      "15 €"
+                    ],
+                    [
+                      "Оформяне на мустаци",
+                      "",
+                      "5 €"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Комбинации и допълнения",
+                  "items": [
+                    [
+                      "Подстригване и брада",
+                      "Прическа и оформена брада в едно посещение",
+                      "25 €"
+                    ],
+                    [
+                      "Пълна грижа",
+                      "Подстригване, бръснене с топли кърпи и стилизиране",
+                      "33 €"
+                    ],
+                    [
+                      "Вежди и уши",
+                      "Бързо подравняване",
+                      "5 €"
+                    ],
+                    [
+                      "Помада или глина за коса",
+                      "Попитайте коя е за вашата коса",
+                      "от 12 €"
+                    ],
+                    [
+                      "Масло или балсам за брада",
+                      "",
+                      "от 12 €"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Готови за свежа прическа?",
+              "p": "Изберете услуга и удобен ден, а ние ще намерим подходящ час.",
+              "button": [
+                "Запазете час",
+                "/#contact"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

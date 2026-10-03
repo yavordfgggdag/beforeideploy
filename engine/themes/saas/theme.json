@@ -55,10 +55,54 @@
     "contacts",
     "photos"
   ],
+  "hints": {
+    "en": {
+      "offer": "We build a tool that helps small teams automate repetitive tasks and get their weekly reports without digging through spreadsheets.",
+      "audience": "Operations, marketing and support teams who lose hours to routine work",
+      "services": [
+        [
+          "Starter",
+          "€0",
+          "For trying it out with a small team"
+        ],
+        [
+          "Team",
+          "€12",
+          "Per user, with all integrations and priority support"
+        ],
+        [
+          "Business",
+          "€29",
+          "Per user, with single sign-on and a dedicated manager"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Създаваме инструмент, с който малките екипи автоматизират повтарящата се работа и получават седмичните си отчети, без да ровят в таблици.",
+      "audience": "Екипи по операции, маркетинг и поддръжка, които губят часове в рутинна работа",
+      "services": [
+        [
+          "Старт",
+          "0 €",
+          "За изпробване с малък екип"
+        ],
+        [
+          "Екип",
+          "12 €",
+          "На потребител, с всички интеграции и приоритетна поддръжка"
+        ],
+        [
+          "Бизнес",
+          "29 €",
+          "На потребител, с единен вход (SSO) и отделен мениджър"
+        ]
+      ]
+    }
+  },
   "lang": {
     "bg": {
       "tagline": "софтуер, който пести часове",
-      "description": "Автоматизирайте рутинната работа на екипа. 14 дни безплатно, без кредитна карта.",
+      "description": "Автоматизирайте рутинната работа на екипа — от задачите до отчетите.",
       "nav": [
         [
           "Възможности",
@@ -74,18 +118,18 @@
         ]
       ],
       "headerCta": [
-        "Опитай безплатно",
+        "Започни",
         "/#start"
       ],
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "Ново: интеграция със Slack",
+            "eyebrow": "Автоматизация на работата в екипа",
             "eyebrowIcon": "spark",
             "title": "По-малко рутина, *повече работа*",
-            "lead": "Една платформа за задачи, отчети и автоматизации. Екипите пестят средно 6 часа седмично още от първия месец.",
+            "lead": "Една платформа за задачи, отчети и автоматизации. Повтарящата се работа тече сама, а екипът се занимава с важното.",
             "cta": [
-              "Опитай 14 дни безплатно",
+              "Започни пробен период",
               "/#start"
             ],
             "cta2": [
@@ -154,18 +198,18 @@
                 [
                   "link",
                   "Интеграции",
-                  "Slack, Google, Stripe и още 50 услуги."
+                  "Свържете чат, календар, плащания и другите инструменти, които ползвате."
                 ],
                 [
                   "shield",
                   "Сигурност",
-                  "Криптиране, SSO и данни, съхранявани в ЕС."
+                  "Роли и права, така че всеки да вижда само каквото му трябва."
                 ]
               ]
             },
             {
               "type": "steps",
-              "title": "Започнете за 3 минути",
+              "title": "Започнете в три стъпки",
               "items": [
                 [
                   "Регистрация",
@@ -207,11 +251,11 @@
               "items": [
                 [
                   "Трябва ли карта за пробния период?",
-                  "Не. След 14 дни избирате план или акаунтът минава на безплатния."
+                  "Не е нужна карта, за да започнете. Когато пробният период свърши, избирате план или оставате на „Старт“."
                 ],
                 [
-                  "Къде се пазят данните?",
-                  "В дата центрове в ЕС, криптирани при съхранение и пренос."
+                  "Безопасни ли са данните ми?",
+                  "Достъпът е само за поканените от вас хора, а вие решавате какво вижда всеки."
                 ],
                 [
                   "Мога ли да откажа по всяко време?",
@@ -223,20 +267,20 @@
               "type": "form",
               "id": "start",
               "alt": true,
-              "title": "Започнете безплатно",
+              "title": "Започнете пробния период",
               "intro": "Ще ви изпратим линк за вход и кратко ръководство.",
               "formName": "trial",
               "button": "Създай акаунт",
-              "note": "14 дни безплатно. Без кредитна карта."
+              "note": "За начало ни трябва само имейлът ви."
             }
           ]
         },
         "pricing": {
           "title": "Цени и планове",
-          "description": "Прозрачни планове за екипи от всякакъв размер. 14 дни безплатно.",
+          "description": "Прозрачни планове за екипи от всякакъв размер — от първия проект до цялата компания.",
           "pagehead": [
             "Цени",
-            "Плащате месечно или годишно (два месеца подарък). Откажете по всяко време."
+            "Плащате месечно или годишно. Сменяте или прекратявате плана, когато поискате."
           ],
           "sections": [
             {
@@ -248,7 +292,7 @@
                   "per": "/ месец",
                   "features": [
                     "До 3 потребители",
-                    "100 автоматизации / мес.",
+                    "Месечен лимит автоматизации",
                     "Основни отчети"
                   ],
                   "cta": [
@@ -267,7 +311,7 @@
                     "Приоритетна поддръжка"
                   ],
                   "cta": [
-                    "Опитай безплатно",
+                    "Опитай",
                     "/#start"
                   ]
                 },
@@ -278,7 +322,7 @@
                   "features": [
                     "SSO и одитен дневник",
                     "Отделен мениджър",
-                    "SLA 99,95%"
+                    "Споразумение за ниво на услугата"
                   ],
                   "cta": [
                     "Свържи се с нас",
@@ -294,7 +338,7 @@
               "items": [
                 [
                   "Има ли ДДС?",
-                  "Цените са без ДДС. Фирмите в ЕС с ДДС номер не плащат ДДС."
+                  "Цените са без ДДС. Той се добавя при плащане, когато се дължи."
                 ],
                 [
                   "Как се плаща?",
@@ -308,7 +352,7 @@
     },
     "en": {
       "tagline": "software that saves hours",
-      "description": "Automate your team’s routine work. 14 days free, no credit card.",
+      "description": "Automate your team’s routine work, from tasks to reports.",
       "nav": [
         [
           "Features",
@@ -324,18 +368,18 @@
         ]
       ],
       "headerCta": [
-        "Try it free",
+        "Get started",
         "/#start"
       ],
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "New: Slack integration",
+            "eyebrow": "Workflow automation for teams",
             "eyebrowIcon": "spark",
             "title": "Less busywork, *more real work*",
-            "lead": "One platform for tasks, reports and automations. Teams save 6 hours a week on average from the first month.",
+            "lead": "One platform for tasks, reports and automations. Repetitive work runs by itself, so your team can focus on what matters.",
             "cta": [
-              "Start a 14-day trial",
+              "Start a trial",
               "/#start"
             ],
             "cta2": [
@@ -404,18 +448,18 @@
                 [
                   "link",
                   "Integrations",
-                  "Slack, Google, Stripe and 50 more."
+                  "Connect chat, calendar, payments and the other tools you use."
                 ],
                 [
                   "shield",
                   "Security",
-                  "Encryption, SSO and data stored in the EU."
+                  "Roles and permissions, so people see only what they need."
                 ]
               ]
             },
             {
               "type": "steps",
-              "title": "Up and running in 3 minutes",
+              "title": "Up and running in three steps",
               "items": [
                 [
                   "Sign up",
@@ -457,11 +501,11 @@
               "items": [
                 [
                   "Do I need a card for the trial?",
-                  "No. After 14 days you pick a plan or move to the free one."
+                  "No card is needed to start. When the trial ends, you pick a plan or stay on Starter."
                 ],
                 [
-                  "Where is my data stored?",
-                  "In EU data centres, encrypted at rest and in transit."
+                  "Is my data safe?",
+                  "Access is limited to the people you invite, and you choose what each of them can see."
                 ],
                 [
                   "Can I cancel any time?",
@@ -473,20 +517,20 @@
               "type": "form",
               "id": "start",
               "alt": true,
-              "title": "Start for free",
+              "title": "Start your trial",
               "intro": "We send you a sign-in link and a short guide.",
               "formName": "trial",
               "button": "Create account",
-              "note": "14 days free. No credit card."
+              "note": "We only ask for your email to begin."
             }
           ]
         },
         "pricing": {
           "title": "Pricing and plans",
-          "description": "Clear plans for teams of every size. 14 days free.",
+          "description": "Clear plans for teams of every size, from a first project to a whole company.",
           "pagehead": [
             "Pricing",
-            "Pay monthly or yearly (two months free). Cancel any time."
+            "Pay monthly or yearly. Change or cancel your plan whenever you need."
           ],
           "sections": [
             {
@@ -498,7 +542,7 @@
                   "per": "/ month",
                   "features": [
                     "Up to 3 users",
-                    "100 automations / month",
+                    "A monthly automation allowance",
                     "Basic reports"
                   ],
                   "cta": [
@@ -517,7 +561,7 @@
                     "Priority support"
                   ],
                   "cta": [
-                    "Try it free",
+                    "Start a trial",
                     "/#start"
                   ]
                 },
@@ -528,7 +572,7 @@
                   "features": [
                     "SSO and audit log",
                     "Dedicated manager",
-                    "99.95% SLA"
+                    "Service level agreement"
                   ],
                   "cta": [
                     "Contact us",
@@ -544,7 +588,7 @@
               "items": [
                 [
                   "Is VAT included?",
-                  "Prices exclude VAT. EU businesses with a VAT number pay no VAT."
+                  "Prices are shown without VAT. VAT is added at checkout where it applies."
                 ],
                 [
                   "How do I pay?",

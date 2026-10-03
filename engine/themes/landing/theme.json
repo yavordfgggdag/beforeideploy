@@ -56,6 +56,50 @@
     "contacts",
     "photos"
   ],
+  "hints": {
+    "en": {
+      "offer": "We are a small team that helps local businesses with their paperwork, accounts and online presence, so the owners can get on with their real work.",
+      "audience": "Small business owners, shops, cafés and freelancers",
+      "services": [
+        [
+          "Consultation",
+          "€40",
+          "We go through the job and agree the next step"
+        ],
+        [
+          "Monthly support",
+          "€120",
+          "Regular tasks handled, one person to call"
+        ],
+        [
+          "Project work",
+          "€300",
+          "A clear scope, a written price and a deadline"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Ние сме малък екип, който помага на местни фирми с документите, счетоводството и присъствието им онлайн, за да могат собствениците да се занимават с истинската си работа.",
+      "audience": "Собственици на малък бизнес, магазини, кафенета и свободни професии",
+      "services": [
+        [
+          "Консултация",
+          "40 €",
+          "Преглеждаме задачата и уточняваме следващата стъпка"
+        ],
+        [
+          "Месечна поддръжка",
+          "120 €",
+          "Редовните задачи са поети, имате един човек за връзка"
+        ],
+        [
+          "Работа по проект",
+          "300 €",
+          "Ясен обхват, цена в писмен вид и срок"
+        ]
+      ]
+    }
+  },
   "lang": {
     "bg": {
       "tagline": "услуги, на които можете да разчитате",
@@ -85,9 +129,9 @@
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "Нови клиенти този месец",
+            "eyebrow": "Ясни отговори, ясен план",
             "title": "Решаваме проблема ви *бързо и честно*",
-            "lead": "Кажете ни какво ви трябва — ще получите ясна оферта до 24 часа, срок, който спазваме, и човек, който вдига телефона.",
+            "lead": "Кажете ни какво ви трябва — ще получите ясна оферта, реалистичен срок и човек, на когото можете да се обадите.",
             "cta": [
               "Поискай оферта",
               "/#contact"
@@ -121,12 +165,12 @@
               "type": "cards",
               "id": "services",
               "title": "Какво правим",
-              "intro": "Три неща, които правим най-добре. Опишете ги с думите на клиента, не с жаргона на бранша.",
+              "intro": "Три части във всяка поръчка: разбираме задачата, изпълняваме я и оставаме във връзка след това.",
               "items": [
                 [
                   "spark",
                   "Консултация",
-                  "Разбираме задачата, преди да дадем цена. Първият разговор е безплатен."
+                  "Разбираме задачата, преди да дадем цена — така офертата отговаря на работата."
                 ],
                 [
                   "tools",
@@ -136,7 +180,7 @@
                 [
                   "shield",
                   "Поддръжка",
-                  "След края оставаме на линия — гаранция и бърза реакция при нужда."
+                  "След приключване оставаме на разположение, ако нещо трябва да се доуточни или поправи."
                 ]
               ]
             },
@@ -153,7 +197,7 @@
                 ],
                 [
                   "Оферта",
-                  "До 24 часа получавате цена и срок в писмен вид."
+                  "Получавате цена и срок в писмен вид, преди да започне работата."
                 ],
                 [
                   "Работа",
@@ -161,7 +205,7 @@
                 ],
                 [
                   "Предаване",
-                  "Проверяваме заедно и получавате гаранция."
+                  "Проверяваме резултата заедно и уточняваме какво, ако има, остава за доработка."
                 ]
               ]
             },
@@ -208,7 +252,7 @@
             {
               "type": "cta",
               "h": "Готови ли сте да започнем?",
-              "p": "Пишете ни днес — отговаряме в рамките на един работен ден.",
+              "p": "Пишете ни и заедно ще уточним следващата стъпка.",
               "button": [
                 "Свържи се с нас",
                 "/#contact"
@@ -287,9 +331,9 @@
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "Taking new clients this month",
+            "eyebrow": "Straight answers, clear plans",
             "title": "We solve your problem *fast and fairly*",
-            "lead": "Tell us what you need — you get a clear quote within 24 hours, a deadline we keep, and a person who answers the phone.",
+            "lead": "Tell us what you need — you get a clear quote, a realistic deadline and one person you can call.",
             "cta": [
               "Get a quote",
               "/#contact"
@@ -323,12 +367,12 @@
               "type": "cards",
               "id": "services",
               "title": "What we do",
-              "intro": "The three things we do best. Describe them in your client’s words, not industry jargon.",
+              "intro": "Three parts of every job: we understand it, we carry it out, and we stay in touch afterwards.",
               "items": [
                 [
                   "spark",
                   "Consulting",
-                  "We understand the job before we price it. The first call is free."
+                  "We understand the job before we price it, so the quote matches the work."
                 ],
                 [
                   "tools",
@@ -338,7 +382,7 @@
                 [
                   "shield",
                   "Support",
-                  "We stay on call after the job — warranty and a fast response."
+                  "We stay in touch after the job and are here if something needs a second look."
                 ]
               ]
             },
@@ -355,7 +399,7 @@
                 ],
                 [
                   "Quote",
-                  "Within 24 hours you get a written price and deadline."
+                  "You get a written price and a deadline before anything starts."
                 ],
                 [
                   "Work",
@@ -363,7 +407,7 @@
                 ],
                 [
                   "Handover",
-                  "We check it together and you get a warranty."
+                  "We check the result together and agree on anything that still needs doing."
                 ]
               ]
             },
@@ -410,7 +454,7 @@
             {
               "type": "cta",
               "h": "Ready to start?",
-              "p": "Write to us today — we answer within one working day.",
+              "p": "Write to us and we will agree the next step together.",
               "button": [
                 "Contact us",
                 "/#contact"

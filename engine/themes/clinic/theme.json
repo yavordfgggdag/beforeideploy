@@ -59,10 +59,54 @@
     "contacts",
     "photos"
   ],
+  "hints": {
+    "en": {
+      "offer": "We are a family dental clinic offering check-ups, fillings, whitening and orthodontic care, with a patient approach for children.",
+      "audience": "Adults and children who want a calm, clearly explained dental visit",
+      "services": [
+        [
+          "Check-up and cleaning",
+          "€45",
+          "Examination, scaling and polishing"
+        ],
+        [
+          "Filling",
+          "€60",
+          "Per tooth, with local anaesthesia"
+        ],
+        [
+          "Teeth whitening",
+          "€180",
+          "Professional whitening in a single visit"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Семейна дентална клиника за профилактични прегледи, лечение, избелване и ортодонтска грижа, с търпелив подход към децата.",
+      "audience": "Възрастни и деца, които искат спокоен и ясно обяснен преглед",
+      "services": [
+        [
+          "Преглед и почистване",
+          "45 €",
+          "Оглед, почистване на зъбен камък и полиране"
+        ],
+        [
+          "Пломба",
+          "60 €",
+          "На зъб, с локална анестезия"
+        ],
+        [
+          "Избелване на зъби",
+          "180 €",
+          "Професионално избелване за една визита"
+        ]
+      ]
+    }
+  },
   "lang": {
     "bg": {
       "tagline": "дентален и медицински център",
-      "description": "Профилактика, лечение и естетика с модерна апаратура. Запишете час онлайн.",
+      "description": "Профилактика, лечение и естетична дентална медицина. Запишете час онлайн.",
       "nav": [
         [
           "Услуги",
@@ -88,7 +132,7 @@
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "Приемаме нови пациенти",
+            "eyebrow": "Внимателна грижа за цялото семейство",
             "eyebrowIcon": "shield",
             "title": "Грижа, която *не боли*",
             "lead": "Профилактика, лечение и естетична дентална медицина с внимание към всеки детайл — и към вашето спокойствие.",
@@ -102,7 +146,7 @@
             ],
             "card": {
               "icon": "calendar",
-              "title": "Най-близки свободни часове",
+              "title": "Часове за запис",
               "rows": [
                 [
                   "Утре, 9:30",
@@ -117,7 +161,7 @@
                   "Консултация"
                 ]
               ],
-              "note": "Работим с НЗОК и частни фондове."
+              "note": "При записване попитайте за здравното осигуряване."
             }
           },
           "sections": [
@@ -177,15 +221,15 @@
               "items": [
                 [
                   "Работите ли с НЗОК?",
-                  "Да — за прегледи и част от лечението. Кажете ни при записване."
+                  "Кажете ни при записване кой е вашият фонд и ще проверим какво покрива."
                 ],
                 [
                   "Боли ли?",
-                  "Използваме съвременна локална анестезия. Повечето процедури са напълно безболезнени."
+                  "Използваме локална анестезия и ви обясняваме какво да очаквате още преди да започнем. Ако усетите нещо, кажете ни и спираме."
                 ],
                 [
                   "Може ли на изплащане?",
-                  "Да, за лечения над 500 лв. — без оскъпяване."
+                  "При по-големи лечения можем да уговорим разсрочено плащане. Попитайте ни при записване."
                 ]
               ]
             },
@@ -258,7 +302,7 @@
           "description": "Запознайте се с лекарите и специалистите в центъра.",
           "pagehead": [
             "Нашите лекари",
-            "Специалисти с дългогодишен опит и постоянно обучение."
+            "Всеки лекар работи в своя област — ето кой с какво може да ви помогне."
           ],
           "sections": [
             {
@@ -266,23 +310,23 @@
               "items": [
                 [
                   "tooth",
-                  "Д-р Анна Николова",
-                  "Главен лекар, естетична дентална медицина. 18 години опит."
+                  "Естетична дентална медицина",
+                  "Избелване, фасети и дизайн на усмивката, планирани заедно с вас."
                 ],
                 [
                   "shield",
-                  "Д-р Петър Стоянов",
-                  "Ендодонтия и микроскопско лечение на канали."
+                  "Ендодонтия",
+                  "Лечение на канали за зъби, които могат да бъдат запазени."
                 ],
                 [
                   "users",
-                  "Д-р Елица Василева",
-                  "Детска дентална медицина — търпение и усмивки."
+                  "Зъболекар за деца",
+                  "Търпение, игра и спокоен първи преглед."
                 ],
                 [
                   "star",
-                  "Д-р Мартин Колев",
-                  "Имплантология и хирургия."
+                  "Имплантология и хирургия",
+                  "Възстановяване на липсващи зъби и хирургична грижа, обяснени стъпка по стъпка."
                 ]
               ]
             },
@@ -301,7 +345,7 @@
     },
     "en": {
       "tagline": "dental and medical centre",
-      "description": "Prevention, treatment and aesthetics with modern equipment. Book online.",
+      "description": "Prevention, treatment and aesthetic dentistry. Book your visit online.",
       "nav": [
         [
           "Services",
@@ -327,7 +371,7 @@
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "Accepting new patients",
+            "eyebrow": "Gentle care for the whole family",
             "eyebrowIcon": "shield",
             "title": "Care that *doesn’t hurt*",
             "lead": "Prevention, treatment and cosmetic dentistry with attention to every detail — and to your peace of mind.",
@@ -341,7 +385,7 @@
             ],
             "card": {
               "icon": "calendar",
-              "title": "Next free slots",
+              "title": "Appointment times",
               "rows": [
                 [
                   "Tomorrow, 9:30",
@@ -356,7 +400,7 @@
                   "Consultation"
                 ]
               ],
-              "note": "We work with major insurers."
+              "note": "Ask us about insurance when you book."
             }
           },
           "sections": [
@@ -416,15 +460,15 @@
               "items": [
                 [
                   "Do you accept insurance?",
-                  "Yes — for check-ups and much of the treatment. Tell us when you book."
+                  "Tell us your insurer when you book and we will check together what it covers."
                 ],
                 [
                   "Will it hurt?",
-                  "We use modern local anaesthesia. Most procedures are completely painless."
+                  "We use local anaesthesia and explain what to expect before we start. If you feel anything, tell us and we stop."
                 ],
                 [
                   "Can I pay in instalments?",
-                  "Yes, for treatment over €250 — at no extra cost."
+                  "For larger treatments we can agree a payment plan. Ask us when you book."
                 ]
               ]
             },
@@ -497,7 +541,7 @@
           "description": "Meet the doctors and specialists at the centre.",
           "pagehead": [
             "Our doctors",
-            "Specialists with years of experience and ongoing training."
+            "Each doctor has their own field — here is who helps with what."
           ],
           "sections": [
             {
@@ -505,23 +549,23 @@
               "items": [
                 [
                   "tooth",
-                  "Dr Anna Nikolova",
-                  "Head doctor, cosmetic dentistry. 18 years of experience."
+                  "Cosmetic dentistry",
+                  "Whitening, veneers and smile design, planned together with you."
                 ],
                 [
                   "shield",
-                  "Dr Peter Stoyanov",
-                  "Endodontics and microscope root-canal treatment."
+                  "Endodontics",
+                  "Root-canal treatment for teeth that can be saved."
                 ],
                 [
                   "users",
-                  "Dr Elitsa Vasileva",
-                  "Children’s dentistry — patience and smiles."
+                  "Dentist for children",
+                  "Patience, play and a calm first visit."
                 ],
                 [
                   "star",
-                  "Dr Martin Kolev",
-                  "Implants and oral surgery."
+                  "Implants and oral surgery",
+                  "Replacing missing teeth and surgical care, explained step by step."
                 ]
               ]
             },

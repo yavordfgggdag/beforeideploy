@@ -14,7 +14,7 @@ import { cloudEngine } from '../ai/assistant.mjs';
 import { ownKey } from '../aikeys.mjs';
 import { recordCost } from '../costs.mjs';
 import { gitBin, gitSh } from '../gitbin.mjs';
-import { loadTheme } from './themes.mjs';
+import { loadTheme, aiTheme } from './themes.mjs';
 import { resolveTokens, STYLES, STYLE_IDS, SCHEMES, paletteIds } from './tokens.mjs';
 import { renderSite } from './render.mjs';
 import { applyEdits, EDIT_SCHEMA, SYSTEM, editPrompt } from './ai.mjs';
@@ -237,7 +237,7 @@ export async function editSite(project, { say, provider = null, force = false, d
   let usage = null;
   if (!ops) {
     const look = { style: record.brief.style || theme.style, palette: record.brief.palette || null, palettes: Object.fromEntries(STYLE_IDS.map((s) => [s, paletteIds(s)])) };
-    const r = await aiEditOps({ brief: record.brief, content: record.content, look, say: words, provider, onStep });
+    const r = await aiEditOps({ brief: { ...record.brief, ...aiTheme(theme) }, content: record.content, look, say: words, provider, onStep });
     ops = r.ops;
     summary = r.summary;
     provider_ = r.provider;

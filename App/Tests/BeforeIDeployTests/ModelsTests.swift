@@ -75,6 +75,9 @@ final class ModelsTests: XCTestCase {
         // S5: pictures, motifs and the words "something else" matches against
         XCTAssertTrue(themes.allSatisfy { ($0.keywords?.count ?? 0) >= 3 && $0.art != nil && !($0.sample ?? "").isEmpty })
         XCTAssertTrue(themes.first?.preview?.hasSuffix("preview.jpg") ?? false)
+        // S7: 45 themes, each with example texts for the form in both site languages
+        XCTAssertTrue(themes.count >= 45)
+        XCTAssertTrue(themes.allSatisfy { ($0.hints?["bg"]?.services.count ?? 0) >= 2 && !($0.hints?["en"]?.offer ?? "").isEmpty && !($0.hints?["bg"]?.audience ?? "").isEmpty })
         let styles = try Fixtures.decode("new-styles", as: [String: SiteStyle].self)
         XCTAssertEqual(Set(styles.keys), ["calm", "bold", "elegant"])
         XCTAssertEqual(styles["calm"]?.palettes.count, 4)
@@ -85,6 +88,12 @@ final class ModelsTests: XCTestCase {
         let json = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(brief.json().utf8)) as? [String: Any])
         XCTAssertEqual(json["schema"] as? String, "bid.site-brief/1")
         XCTAssertEqual(json["scheme"] as? String, "auto")
+        XCTAssertNil(json["tone"], "no tone chosen: the AI decides")
+        brief.tone = "premium"
+        brief.hours = "Пн–Пт 9:00–18:00"
+        let json2 = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(brief.json().utf8)) as? [String: Any])
+        XCTAssertEqual(json2["tone"] as? String, "premium")
+        XCTAssertEqual(json2["hours"] as? String, "Пн–Пт 9:00–18:00")
         XCTAssertEqual((json["services"] as? [[String: Any]])?.count, 1, "empty service rows are left out")
         XCTAssertNil((json["services"] as? [[String: Any]])?.first?["id"], "the row id is UI state, not brief data")
         XCTAssertEqual((json["photos"] as? [[String: Any]])?.first?["path"] as? String, "/tmp/me.jpg")

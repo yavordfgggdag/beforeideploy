@@ -57,6 +57,50 @@
     "contacts",
     "photos"
   ],
+  "hints": {
+    "en": {
+      "offer": "I design brand identities, websites and product photography for small businesses that want to look as good as the work they do.",
+      "audience": "Small businesses, cafés, studios and makers",
+      "services": [
+        [
+          "Logo and brand identity",
+          "€900",
+          "Logo, colours, typefaces and a short guide to using them"
+        ],
+        [
+          "One-page website",
+          "€600",
+          "Designed and built, ready for your own words and photos"
+        ],
+        [
+          "Product photo set",
+          "€250",
+          "Ten edited images for your shop or catalogue"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Правя бранд идентичност, уебсайтове и продуктова фотография за малки бизнеси, които искат да изглеждат толкова добре, колкото работят.",
+      "audience": "Малки бизнеси, кафенета, студия и майстори",
+      "services": [
+        [
+          "Лого и бранд идентичност",
+          "900 €",
+          "Лого, цветове, шрифтове и кратко ръководство за употреба"
+        ],
+        [
+          "Едностраничен сайт",
+          "600 €",
+          "Дизайн и изработка, готов за вашите текстове и снимки"
+        ],
+        [
+          "Продуктова фотосесия",
+          "250 €",
+          "Десет обработени кадъра за магазин или каталог"
+        ]
+      ]
+    }
+  },
   "lang": {
     "bg": {
       "tagline": "дизайн и визуални истории",
@@ -82,7 +126,7 @@
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "Свободен за проекти от ноември",
+            "eyebrow": "Нека поговорим за следващия ви проект",
             "eyebrowIcon": "spark",
             "title": "Създавам визия, *която продава*",
             "lead": "Бранд идентичност, уеб дизайн и фотография за малки бизнеси и смели идеи.",
@@ -99,14 +143,14 @@
             {
               "type": "gallery",
               "title": "Избрани проекти",
-              "intro": "Сменете плочките с корици на проектите си.",
+              "intro": "Няколко примера за работата, с която се занимавам.",
               "items": [
-                "Кафе „Зрънце“ — бранд",
-                "Studio North — уебсайт",
-                "Винарна „Хълм“ — етикети",
-                "Ателие „Лен“ — фотография",
-                "Фестивал „Звук“ — плакати",
-                "Приложение „Ден“ — UI"
+                "Бранд на кафене",
+                "Уебсайт на студио",
+                "Серия винени етикети",
+                "Фотография за ателие",
+                "Плакати за фестивал",
+                "Дизайн на приложение"
               ]
             },
             {
@@ -150,7 +194,7 @@
               "id": "contact",
               "alt": true,
               "title": "Да работим заедно",
-              "intro": "Разкажете за проекта — отговарям до два дни.",
+              "intro": "Разкажете за проекта и ще уговорим следващата стъпка.",
               "formName": "project",
               "rows": [
                 [
@@ -196,30 +240,30 @@
               "items": [
                 {
                   "tag": "Бранд",
-                  "date": "2026",
-                  "h": "Кафе „Зрънце“",
-                  "p": "Нова идентичност за квартално кафе — от логото до чашите.",
+                  "date": "Проект",
+                  "h": "Идентичност за кафене",
+                  "p": "От логото до чашите: един облик за всичко, което гостът вижда и докосва.",
                   "href": "/#contact"
                 },
                 {
                   "tag": "Уеб",
-                  "date": "2026",
-                  "h": "Studio North",
-                  "p": "Сайт за архитектурно студио, който удвои запитванията.",
+                  "date": "Проект",
+                  "h": "Сайт за студио",
+                  "p": "Ясен и спокоен сайт за малко студио, построен около въпросите, които посетителите наистина задават.",
                   "href": "/#contact"
                 },
                 {
                   "tag": "Опаковка",
-                  "date": "2025",
-                  "h": "Винарна „Хълм“",
-                  "p": "Серия етикети, вдъхновени от терените на лозята.",
+                  "date": "Проект",
+                  "h": "Винени етикети",
+                  "p": "Етикети, вдъхновени от релефа на лозето и създадени да работят като комплект.",
                   "href": "/#contact"
                 },
                 {
                   "tag": "Фото",
-                  "date": "2025",
-                  "h": "Ателие „Лен“",
-                  "p": "Продуктова фотография за онлайн каталог.",
+                  "date": "Проект",
+                  "h": "Продуктова фотография",
+                  "p": "Чисти и единни продуктови снимки за онлайн каталог.",
                   "href": "/#contact"
                 }
               ]
@@ -231,15 +275,15 @@
           "description": "Кой стои зад портфолиото, как работя и с какви инструменти.",
           "pagehead": [
             "За мен",
-            "Дизайнер с 10 години опит в агенции и с малки бизнеси."
+            "Дизайнер, който работи с малки бизнеси и смели идеи."
           ],
           "sections": [
             {
               "type": "prose",
               "items": [
                 [
-                  "",
-                  "Разкажете с няколко изречения кой сте, какво обичате да правите и защо клиентите работят с вас. Истинското име и снимка изграждат доверие."
+                  "Кой съм",
+                  "Аз съм дизайнер, който обича ясните идеи и простите, добре направени неща. Работя с малки бизнеси и хора със смели идеи — бранд, уебсайтове и фотография."
                 ],
                 [
                   "Как работя",
@@ -250,22 +294,22 @@
             {
               "type": "timeline",
               "alt": true,
-              "title": "Опит",
+              "title": "Над какво работя",
               "items": [
                 [
-                  "2021 — днес",
-                  "Свободна практика",
-                  "Бранд и уеб за над 60 клиента."
+                  "Бранд",
+                  "Идентичност и лого",
+                  "Лого, цветове и шрифтове, събрани в система, която е лесна за прилагане."
                 ],
                 [
-                  "2017 — 2021",
-                  "Арт директор, агенция",
-                  "Кампании за национални марки."
+                  "Уеб",
+                  "Сайтове и интерфейси",
+                  "Страници и екрани, подредени около това, което посетителят трябва да направи."
                 ],
                 [
-                  "2015 — 2017",
-                  "Дизайнер",
-                  "Печат, опаковки и илюстрация."
+                  "Печат",
+                  "Опаковки и илюстрация",
+                  "Печат, опаковки и илюстрация, подготвени за производство."
                 ]
               ]
             },
@@ -309,7 +353,7 @@
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "Available for projects from November",
+            "eyebrow": "Let’s talk about your next project",
             "eyebrowIcon": "spark",
             "title": "I create visuals *that sell*",
             "lead": "Brand identity, web design and photography for small businesses and bold ideas.",
@@ -326,14 +370,14 @@
             {
               "type": "gallery",
               "title": "Selected projects",
-              "intro": "Replace the tiles with your project covers.",
+              "intro": "A few examples of the kind of work I take on.",
               "items": [
-                "Zrantse Coffee — brand",
-                "Studio North — website",
-                "Halm Winery — labels",
-                "Len Atelier — photography",
-                "Zvuk Festival — posters",
-                "Den App — UI"
+                "Café brand identity",
+                "Studio website",
+                "Wine label series",
+                "Atelier photography",
+                "Festival posters",
+                "App interface design"
               ]
             },
             {
@@ -377,7 +421,7 @@
               "id": "contact",
               "alt": true,
               "title": "Let’s work together",
-              "intro": "Tell me about the project — I reply within two days.",
+              "intro": "Tell me about the project and we agree the next step.",
               "formName": "project",
               "rows": [
                 [
@@ -423,30 +467,30 @@
               "items": [
                 {
                   "tag": "Brand",
-                  "date": "2026",
-                  "h": "Zrantse Coffee",
-                  "p": "A new identity for a neighbourhood café — from logo to cups.",
+                  "date": "Project",
+                  "h": "A café identity",
+                  "p": "From the logo to the cups: one look across everything a guest sees and touches.",
                   "href": "/#contact"
                 },
                 {
                   "tag": "Web",
-                  "date": "2026",
-                  "h": "Studio North",
-                  "p": "A site for an architecture studio that doubled enquiries.",
+                  "date": "Project",
+                  "h": "A studio website",
+                  "p": "A clear, calm site for a small studio, built around the questions visitors actually ask.",
                   "href": "/#contact"
                 },
                 {
                   "tag": "Packaging",
-                  "date": "2025",
-                  "h": "Halm Winery",
-                  "p": "A label series inspired by the vineyard terrain.",
+                  "date": "Project",
+                  "h": "A wine label series",
+                  "p": "Labels inspired by the lay of the vineyard, designed to work as a set.",
                   "href": "/#contact"
                 },
                 {
                   "tag": "Photo",
-                  "date": "2025",
-                  "h": "Len Atelier",
-                  "p": "Product photography for an online catalogue.",
+                  "date": "Project",
+                  "h": "Product photography",
+                  "p": "Clean, consistent product images for an online catalogue.",
                   "href": "/#contact"
                 }
               ]
@@ -458,15 +502,15 @@
           "description": "Who is behind the portfolio, how I work and with which tools.",
           "pagehead": [
             "About",
-            "A designer with 10 years in agencies and with small businesses."
+            "A designer who works with small businesses and bold ideas."
           ],
           "sections": [
             {
               "type": "prose",
               "items": [
                 [
-                  "",
-                  "Say in a few sentences who you are, what you love doing and why clients work with you. A real name and photo build trust."
+                  "Who I am",
+                  "I am a designer who likes clear ideas and simple, well-made things. I work with small businesses and people with bold ideas on identity, websites and photography."
                 ],
                 [
                   "How I work",
@@ -477,22 +521,22 @@
             {
               "type": "timeline",
               "alt": true,
-              "title": "Experience",
+              "title": "What I work on",
               "items": [
                 [
-                  "2021 — now",
-                  "Freelance",
-                  "Brand and web for over 60 clients."
+                  "Brand",
+                  "Identity and logo",
+                  "A logo, colours and typefaces brought together in a system that is easy to apply."
                 ],
                 [
-                  "2017 — 2021",
-                  "Art director, agency",
-                  "Campaigns for national brands."
+                  "Web",
+                  "Sites and interfaces",
+                  "Pages and screens designed around what visitors need to do."
                 ],
                 [
-                  "2015 — 2017",
-                  "Designer",
-                  "Print, packaging and illustration."
+                  "Print",
+                  "Packaging and illustration",
+                  "Print, packaging and illustration, prepared for production."
                 ]
               ]
             },

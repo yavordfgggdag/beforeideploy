@@ -112,7 +112,7 @@ is its byte-identical copy (`node scripts/sitegen-sync.mjs`; a test fails when t
 | --- | --- | --- |
 | plan | Haiku 4.5 (`ai.models.explain`) | brief + recipe outline → which sections stay, the tone, a style suggestion |
 | content | the plan's model (`ai.models[plan]`: Sonnet 5.5 on Flash, Opus 5.5 on High/Knight) | brief + recipe → every text, in a fixed JSON schema (structured outputs) |
-| review | Haiku 4.5 | brief + content → the same content with invented facts removed and lengths cut |
+| review | Haiku 4.5 | the numbered texts + the checker's findings → replacement texts for only the strings that break a rule (S7) |
 
 The model writes words only. `mergeContent()` puts them into the recipe: hrefs, icons, section ids, form fields,
 contact rows and photos never come from the model, and a `keep: false` section is dropped unless it is the
@@ -128,6 +128,38 @@ bonus covers). The result is a content file (`bid.site-content/1`) in the cache;
 
 The wizard: the "Write the texts with AI" toggle on step 2 (on when the account can use the built-in AI), the
 three steps as a progress strip on step 3, the charge after; an AI failure keeps the sample texts and says why.
+
+### Quality of the words (S7)
+
+The model is one part; the pipeline does the rest, deterministically, in the same pure file (`ai.mjs`):
+
+- **Guides.** The writer reads a craft guide (headline starts from the visitor's need, buttons name the action, FAQ answers
+  never invent a policy), a language guide (Bulgarian: "вие", sentence case, „…“, `25 €`, no calques or officialese)
+  and one for the kind of site (the theme's category: business, food, beauty, commerce, tech, personal, community).
+  The brief can carry a **tone** — `friendly`, `professional`, `premium`, `playful` (Mac wizard and shared UI) — and the
+  engine adds the kind of site (`aiTheme()`); none picked = the model decides.
+- **The audit** (`auditContent`, no model): every prose string (`textsOf`) is checked for invented numbers (10 and over,
+  percentages, `+`) and claims (award-winning, certified, guarantee, free first call, best, years of experience …) that the
+  brief does not contain, clichés (`passionate`, `cutting-edge`, `индивидуален подход` …), the wrong language, texts far
+  over their role's length, left-over placeholders and repeats. The brief's own numbers, years and prices pass.
+- **Mechanical clean-up** (`finalizeContent`): emoji, Markdown, links and `!` out; cut at a sentence or word, never
+  mid-word; sample **reviews** and **stats** the brief cannot support are dropped; links to sections that are gone are
+  removed. Names and prices from the brief (or the theme's sample) are locked: the model writes the lines around them.
+- **The review** gets the numbered texts and the findings and answers `{ fixes: [{ id, text }] }` — replacement texts
+  only — so the writer's words stay the writer's and the cheap model cannot flatten the site. `applyFixes` applies them;
+  then `neutralise` cuts a sentence with an invented number or claim out of any paragraph that has other sentences, and
+  reports (`audit.left`) what it could not fix. The result carries `audit: { found, fixed, cut, left }`.
+- **Honest drafts without AI.** `applyBrief` shows only what the owner gave: the contact rows, **opening hours**
+  (`hours`, one line each: "Mon–Fri 9:00–18:00"), phone and mail links, the hero card (their services and prices — or the
+  illustration instead of an invented card) — the theme's example email, phone, address and hours never reach a real site.
+  A menu or price list the owner never gave stays as the theme's example and is recorded in `bid.site.json`
+  (`samples`); `bid check` warns `content.sample` until the section is changed, and fails `content.exampleContact` for
+  `hello@example.com` / `+359 888 000 000` left in a link.
+- **Measuring it.** `ANTHROPIC_API_KEY=… node scripts/site-ai-eval.mjs` writes ten sample briefs
+  (`tests/site-evals/briefs.json`, Bulgarian and English, from thin to full) through the real pipeline with the owner's own
+  key and prints, per brief, what the checker found, what the review fixed and what is left; exit 1 when an invented
+  number, claim or placeholder survives. `--offline` runs the same harness against a stand-in writer that over-reaches
+  (used by the engine tests); `--model` picks the writing model.
 
 ## Editing with words (S4)
 
@@ -172,13 +204,32 @@ three steps as a progress strip on step 3, the charge after; an AI failure keeps
   the story picture (`art/story.svg`) and the gallery tiles (`art/tile-1…6.svg`). Files of the site, so the owner
   can replace them; a photo from the brief still wins. The Mac preview inlines them as data URLs.
 
+### Design and honesty (S7)
+
+- **WCAG 2.2 AA everywhere.** `tokens.mjs` derives, once, the accessible colours the stylesheet uses for text and
+  buttons (`accentText`, `accent2Text`, `accentSolid`, `accent2Solid`, `onAccent`); `auditTokens()` lists failing pairings
+  and the tests prove all 12 palettes, their dark twins and every theme pass. Picture captions are pills, readable on any photo.
+- **A phone menu without script** (a `<details>`), **search-engine data** (`schema.org` JSON-LD from what the site shows,
+  `schemaOrg` per theme; Open Graph and Twitter cards; the address opens the map), and two new section types:
+  `trust` (a strip of short promises, rows `[icon, text]`) and `split` (feature rows with an illustration, rows
+  `[heading, text, bullet…]`).
+- **45 themes** — every kind of small business: the original 21 plus law, accounting, agency, building, car repair,
+  cleaning, transport, vet, florist, bakery, bar, farm, yoga, barber, spa, tattoo, music, podcast, photographer, interior,
+  school, kids, dance and travel. New themes use `trust`, `split`, `steps`, `faq`, never reviews or stats.
+- **Hints.** `hints` in theme.json (`en`/`bg`: an example `offer`, `audience` and three `[name, price, line]` services for
+  that trade) become the placeholders of the wizard (Mac and shared UI), so a first-time owner sees what to write.
+
 ### Adding a theme (the partner's checklist)
 
 1. `engine/themes/<id>/theme.json` — copy the closest theme; keep `schema`, set `id`, `category`, `icon`, `accent`,
-   `mark`, `art`, `sample.name`, `keywords.bg/en` (three or more words people would type), `style`, `tokens`,
-   `questions`, and the recipe in `lang.bg` and `lang.en` with the same page ids.
+   `mark`, `art`, `schemaOrg`, `sample.name`, `keywords.bg/en` (six or more words people would type), `style`,
+   `tokens`, `questions`, `hints.bg/en`, and the recipe in `lang.bg` and `lang.en` with the same pages, sections and item counts.
+   Write only what a template can honestly say: **no invented numbers, years, awards, "free", guarantees, named people,
+   reviews or stats**; concrete words of the trade; natural Bulgarian (the checker flags Latin letters and the list of empty phrases).
 2. `engine/i18n/bg.json` and `en.json` — `newsite.template.<id>.title` and `.description`.
-3. `bid new check` must list no errors for it; `node tests/run.mjs` creates it in both languages and all styles.
+3. `node scripts/theme-check.mjs <id> --strict` must print ✓ with no errors (file, AA contrast in light, dark and the
+   dark twin, links, icons, the text audit, both languages rendered and scanned). `--all` checks every theme.
+   `bid new check` must list no errors; `node tests/run.mjs` creates it in both languages and all styles.
 4. Push — the **theme-previews** workflow renders the picture on macOS and commits it; `git pull` to get it (or
    `node scripts/theme-shots.mjs <id>` locally with Chrome installed). Without it the card shows the accent
    gradient and the engine tests fail.
@@ -215,6 +266,6 @@ quality check, and verify escaping, links, photos, contacts and `bid.site.json`;
 pipeline against the fake model (own key and cloud) and checks that links and contacts never come from it.
 `cd web && npm test` — the pure Site Builder helpers of the shared UI; `cd desktop/src-tauri && cargo test` — the
 desktop shell against the real engine. `deno test supabase/functions` — `site-gen` with a fake model: steps,
-models per plan, merging, billing, duplicates, failures, edit mode. `site edit:` in the engine suite covers the local words, the model path,
+models per plan, merging, billing, duplicates, failures, edit mode. `new S7-B:` covers the audit, the review by id, locked prices, honest drafts and the site check rules; `new S7-C:` the 45 themes (honest, with hints) and the offline AI evaluation; `aifix S7-D:` the evidence and knowledge of AI Fix. `site edit:` in the engine suite covers the local words, the model path,
 the hand-edit guard, history and undo. `new S5:` covers the pictures and their freshness, suggestions in both
 languages, the three schemes, the illustration files and the scheme words.

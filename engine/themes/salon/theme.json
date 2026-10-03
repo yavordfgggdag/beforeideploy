@@ -61,6 +61,50 @@
     "contacts",
     "photos"
   ],
+  "hints": {
+    "en": {
+      "offer": "We are a small salon for hair, nails and skin care. Come for a cut, a colour or a manicure and leave feeling looked after.",
+      "audience": "Women and men who want a calm, unhurried visit",
+      "services": [
+        [
+          "Women’s cut",
+          "€25",
+          "Wash, cut and blow-dry"
+        ],
+        [
+          "Gel manicure",
+          "€20",
+          "Shaping, gel polish and cuticle care"
+        ],
+        [
+          "Colour",
+          "€35",
+          "One tone, after a short consultation"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Ние сме малък салон за коса, нокти и грижа за кожата. Елате за подстригване, боядисване или маникюр и си тръгнете с чувство, че са се погрижили за вас.",
+      "audience": "Жени и мъже, които искат спокойно посещение без бързане",
+      "services": [
+        [
+          "Дамско подстригване",
+          "25 €",
+          "Измиване, подстригване и сешоар"
+        ],
+        [
+          "Маникюр с гел лак",
+          "20 €",
+          "Оформяне, гел лак и грижа за кожичките"
+        ],
+        [
+          "Боядисване",
+          "35 €",
+          "Един тон, след кратка консултация"
+        ]
+      ]
+    }
+  },
   "lang": {
     "bg": {
       "tagline": "салон за красота",
@@ -90,7 +134,7 @@
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "Свободни часове този четвъртък",
+            "eyebrow": "Запазете час онлайн",
             "eyebrowIcon": "calendar",
             "title": "Време само *за вас*",
             "lead": "Подстригване, цвят, маникюр и грижа за лицето в спокойна обстановка — с продукти, които обичаме и на които вярваме.",
@@ -155,22 +199,22 @@
               "id": "team",
               "alt": true,
               "title": "Екипът",
-              "intro": "Сменете с имената и снимките на екипа — клиентите избират човек, не салон.",
+              "intro": "Клиентите избират човек, не просто салон. Запознайте се с хората, които ще се грижат за вас.",
               "items": [
                 [
                   "heart",
-                  "Ива — стилист",
-                  "14 години опит, специалист по цвят и балеаж."
+                  "Фризьор-стилист",
+                  "Специалист по цвят и балеаж."
                 ],
                 [
                   "hand",
-                  "Деси — маникюрист",
+                  "Маникюрист",
                   "Прецизност и търпение за най-сложните дизайни."
                 ],
                 [
                   "leaf",
-                  "Мира — козметик",
-                  "Сертифицирана в терапии за чувствителна кожа."
+                  "Козметик",
+                  "Терапии и грижа за чувствителна кожа."
                 ]
               ]
             },
@@ -386,7 +430,7 @@
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "Free slots this Thursday",
+            "eyebrow": "Book your appointment online",
             "eyebrowIcon": "calendar",
             "title": "Time just *for you*",
             "lead": "Cuts, colour, nails and skin care in a calm space — with products we love and trust.",
@@ -451,22 +495,22 @@
               "id": "team",
               "alt": true,
               "title": "The team",
-              "intro": "Replace with your team’s names and photos — clients choose a person, not a salon.",
+              "intro": "Clients choose a person, not just a salon. Meet the people who will look after you.",
               "items": [
                 [
                   "heart",
-                  "Iva — stylist",
-                  "14 years of experience, colour and balayage specialist."
+                  "Hair stylist",
+                  "Specialist in colour and balayage."
                 ],
                 [
                   "hand",
-                  "Desi — nail artist",
+                  "Nail artist",
                   "Precision and patience for the most detailed designs."
                 ],
                 [
                   "leaf",
-                  "Mira — beautician",
-                  "Certified in treatments for sensitive skin."
+                  "Beautician",
+                  "Treatments and care for sensitive skin."
                 ]
               ]
             },

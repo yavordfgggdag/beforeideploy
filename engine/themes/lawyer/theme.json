@@ -1,0 +1,905 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "lawyer",
+  "category": "business",
+  "icon": "scalemass",
+  "accent": "#1d2c4d",
+  "mark": "scale",
+  "art": "grid",
+  "schemaOrg": "LegalService",
+  "sample": {
+    "name": "Veritas Law Office"
+  },
+  "featured": false,
+  "titleKey": "newsite.template.lawyer.title",
+  "descriptionKey": "newsite.template.lawyer.description",
+  "keywords": {
+    "en": [
+      "lawyer",
+      "law firm",
+      "law office",
+      "attorney",
+      "solicitor",
+      "notary",
+      "legal advice",
+      "contract",
+      "will",
+      "inheritance",
+      "divorce",
+      "property purchase",
+      "company registration",
+      "debt collection"
+    ],
+    "bg": [
+      "адвокат",
+      "адвокатска кантора",
+      "юрист",
+      "правна помощ",
+      "правен съвет",
+      "нотариус",
+      "договор",
+      "завещание",
+      "наследство",
+      "развод",
+      "имотна сделка",
+      "регистрация на фирма",
+      "събиране на вземания",
+      "дело"
+    ]
+  },
+  "style": "elegant",
+  "tokens": {
+    "dark": false,
+    "bg": "#f8f6f1",
+    "bg2": "#efebe2",
+    "surface": "#fffdf9",
+    "text": "#141b2d",
+    "muted": "#545c6d",
+    "line": "rgba(20,27,45,.12)",
+    "accent": "#1d2c4d",
+    "accent2": "#a07a2e",
+    "font": "sans",
+    "head": "serif",
+    "radius": 6,
+    "tilt": 0
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "hints": {
+    "en": {
+      "offer": "We are a small law office helping families and small businesses with contracts, property purchases, inheritance and company registration.",
+      "audience": "Families, first-time buyers, freelancers and small business owners",
+      "services": [
+        [
+          "First consultation",
+          "€50",
+          "Up to 45 minutes, in the office or by video"
+        ],
+        [
+          "Contract review",
+          "€80",
+          "We read it, comment and suggest changes"
+        ],
+        [
+          "Company registration",
+          "€250",
+          "Founding documents and filing"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Малка адвокатска кантора, която помага на семейства и малки фирми с договори, покупка на имоти, наследство и регистрация на фирма.",
+      "audience": "Семейства, първи купувачи, фрийлансъри и собственици на малък бизнес",
+      "services": [
+        [
+          "Първа консултация",
+          "50 €",
+          "До 45 минути, в кантората или по видеовръзка"
+        ],
+        [
+          "Преглед на договор",
+          "80 €",
+          "Прочитаме го, коментираме и предлагаме промени"
+        ],
+        [
+          "Регистрация на фирма",
+          "250 €",
+          "Учредителни документи и вписване"
+        ]
+      ]
+    }
+  },
+  "lang": {
+    "en": {
+      "tagline": "law office",
+      "description": "Legal advice on contracts, property, inheritance, company registration and family matters. Book a first consultation.",
+      "nav": [
+        [
+          "Practice areas",
+          "/areas.html"
+        ],
+        [
+          "First meeting",
+          "/#consultation"
+        ],
+        [
+          "Fees",
+          "/#faq"
+        ],
+        [
+          "Documents",
+          "/documents.html"
+        ]
+      ],
+      "headerCta": [
+        "Book a consultation",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Contracts, property, inheritance, family law",
+            "eyebrowIcon": "scale",
+            "title": "Clear legal advice, *in plain words*",
+            "lead": "Contracts, property, inheritance, company registration and family matters. We explain where you stand, what can be done and what it will cost — before you commit to anything.",
+            "cta": [
+              "Book a consultation",
+              "/#contact"
+            ],
+            "cta2": [
+              "Practice areas",
+              "/areas.html"
+            ],
+            "card": {
+              "icon": "scale",
+              "title": "What happens at a first meeting",
+              "rows": [
+                [
+                  "We listen",
+                  "your situation and goal"
+                ],
+                [
+                  "We explain",
+                  "options, risks, cost"
+                ],
+                [
+                  "We agree",
+                  "the next step, in writing"
+                ]
+              ],
+              "note": "Bring whatever papers you have — incomplete is fine."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                [
+                  "shield",
+                  "Confidential from day one"
+                ],
+                [
+                  "doc",
+                  "Fee agreed in writing"
+                ],
+                [
+                  "book",
+                  "Plain-language explanations"
+                ],
+                [
+                  "check",
+                  "A clear next step each time"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "areas",
+              "title": "Where we can help",
+              "intro": "The questions people bring to a law office most often. Each one is covered in more detail on the practice areas page.",
+              "items": [
+                [
+                  "doc",
+                  "Contracts",
+                  "Drafting, reviewing and negotiating sale, rental, service and loan agreements, before you sign."
+                ],
+                [
+                  "home",
+                  "Property",
+                  "Buying, selling and renting: ownership checks, preliminary agreements and notarial deeds."
+                ],
+                [
+                  "users",
+                  "Inheritance and family",
+                  "Wills, estates and dividing them between heirs; divorce, child custody and maintenance."
+                ],
+                [
+                  "bag",
+                  "Companies and disputes",
+                  "Registering a company and its first contracts; debt collection, claims and court representation."
+                ]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "approach",
+              "alt": true,
+              "title": "How we work with you",
+              "intro": "Three things you will notice from the first meeting.",
+              "items": [
+                [
+                  "Plain words, not legal Latin",
+                  "Law is full of jargon. We translate it: what a document says, what it means for you and what could go wrong.",
+                  "Every important clause explained",
+                  "Risks named, not buried in small print",
+                  "Questions welcome at any stage"
+                ],
+                [
+                  "A fee you can plan around",
+                  "Before we start you receive the scope of work and the fee in writing, so the final bill holds no surprises.",
+                  "A fixed fee or an hourly rate, as agreed",
+                  "Court, notary and registry costs listed separately",
+                  "Any change in scope discussed with you first"
+                ],
+                [
+                  "Your papers stay private",
+                  "What you tell us stays between us. Documents are kept in a protected file and shared only with your consent.",
+                  "A protected file for every matter",
+                  "Nothing passed to third parties without your yes",
+                  "Original documents handed back to you"
+                ]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "consultation",
+              "title": "Your first consultation",
+              "intro": "A first meeting is for clarity, not commitment.",
+              "items": [
+                [
+                  "Tell us",
+                  "Call or write. Say briefly what happened and what you would like to achieve."
+                ],
+                [
+                  "Bring your papers",
+                  "Contracts, letters, notices, ID — whatever you have. We tell you if anything is missing."
+                ],
+                [
+                  "Meet",
+                  "In the office or by video. We explain your options, the risks and the likely cost of each."
+                ],
+                [
+                  "Decide in your own time",
+                  "You receive the proposed steps and the fee in writing, and decide when you are ready."
+                ]
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "alt": true,
+              "title": "Questions about fees and papers",
+              "items": [
+                [
+                  "How much does a consultation cost?",
+                  "We tell you the fee when you book — before the meeting, not after it — so you know what to expect before you walk in."
+                ],
+                [
+                  "How is the fee calculated?",
+                  "It depends on the matter. Defined tasks such as a contract or a registration usually have a fixed fee; disputes are more often hourly. Either way, you receive it in writing before we start."
+                ],
+                [
+                  "What should I bring to the first meeting?",
+                  "Your ID, any contracts or letters about the matter and a short note of the key dates. Incomplete is fine — we tell you what else is needed."
+                ],
+                [
+                  "Is what I tell you confidential?",
+                  "Yes. Confidentiality applies from your first call and stays in force even if you decide not to hire us."
+                ],
+                [
+                  "Can we meet online?",
+                  "Yes. Many matters can be handled by video call and secure document exchange. Some steps, such as signing in front of a notary, need you in person."
+                ],
+                [
+                  "Do you deal with the notary and the court?",
+                  "We prepare the documents, arrange the notary where one is needed and file with the court or registry on your behalf, with your power of attorney. Their fees are listed separately."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Not sure which area your question is in?",
+              "p": "Describe it in two sentences. We will tell you whether we can help and what to bring.",
+              "button": [
+                "Book a consultation",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Book a consultation",
+              "intro": "Tell us briefly what it is about. We get in touch to agree a time.",
+              "formName": "consultation",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Address",
+                  "1 Vitosha St, Sofia"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "area",
+                  "label": "Area of law",
+                  "options": [
+                    "Contracts",
+                    "Property",
+                    "Inheritance",
+                    "Company registration",
+                    "Family law",
+                    "Disputes",
+                    "Other"
+                  ]
+                },
+                {
+                  "id": "meeting",
+                  "label": "Meeting",
+                  "options": [
+                    "In the office",
+                    "By video call"
+                  ]
+                }
+              ],
+              "messageLabel": "Briefly, what is it about?",
+              "send": "Request a consultation",
+              "hoursTitle": "Opening hours",
+              "hours": [
+                [
+                  "Monday – Friday",
+                  "9:00 – 18:00"
+                ],
+                [
+                  "Saturday",
+                  "by appointment"
+                ],
+                [
+                  "Sunday",
+                  "closed"
+                ]
+              ]
+            }
+          ]
+        },
+        "areas": {
+          "title": "Practice areas and what we cover",
+          "description": "Contracts, property, inheritance, company registration, family law and disputes — what each area covers.",
+          "pagehead": [
+            "Practice areas",
+            "What we can help with, and where a matter usually begins."
+          ],
+          "sections": [
+            {
+              "type": "split",
+              "items": [
+                [
+                  "Property and contracts",
+                  "From a preliminary agreement to the deed: we check what you are signing and what you are buying.",
+                  "Checks for mortgages and other claims on a property before you pay a deposit",
+                  "Sale, rental and loan agreements drafted or reviewed",
+                  "Preliminary agreements, deposits and handover protocols"
+                ],
+                [
+                  "Family and inheritance",
+                  "Sensitive matters, handled calmly and step by step, with a clear view of what each option means.",
+                  "Divorce, child custody and maintenance",
+                  "Division of property between spouses",
+                  "Wills, accepting or declining an estate, dividing it between heirs"
+                ],
+                [
+                  "Company law and disputes",
+                  "A solid start for a business, and firm representation when something goes wrong.",
+                  "Choosing the legal form and registering the company",
+                  "Partnership agreements and contracts with suppliers and customers",
+                  "Debt collection, claims and representation in court"
+                ]
+              ]
+            },
+            {
+              "type": "chips",
+              "alt": true,
+              "title": "Also ask us about",
+              "items": [
+                "Preliminary agreements",
+                "Rental contracts",
+                "Powers of attorney",
+                "Wills",
+                "Company changes",
+                "Debt letters",
+                "Divorce by consent",
+                "Child custody"
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Is your question not on the list?",
+              "p": "Ask anyway. We will tell you honestly whether we are the right people to help.",
+              "button": [
+                "Book a consultation",
+                "/#contact"
+              ]
+            }
+          ]
+        },
+        "documents": {
+          "title": "What to bring to a first meeting",
+          "description": "A checklist of documents for the most common matters: property, inheritance, company registration and family law.",
+          "pagehead": [
+            "What to bring",
+            "A short checklist for each kind of matter. Missing something? Come anyway — we will tell you how to get it."
+          ],
+          "sections": [
+            {
+              "type": "cards",
+              "items": [
+                [
+                  "home",
+                  "Buying or selling property",
+                  "ID, the ownership deed, a recent tax valuation and a certificate showing there are no mortgages or other burdens."
+                ],
+                [
+                  "users",
+                  "Inheritance",
+                  "ID, the death certificate, the will if there is one, and a list of the property and accounts you know of."
+                ],
+                [
+                  "bag",
+                  "Registering a company",
+                  "The ID of every partner, the proposed name, the address of the registered office and what the company will do."
+                ],
+                [
+                  "heart",
+                  "Family matters",
+                  "ID, the marriage certificate, the children’s birth certificates and papers about shared property or loans."
+                ]
+              ]
+            },
+            {
+              "type": "prose",
+              "alt": true,
+              "items": [
+                [
+                  "Originals and copies",
+                  "Bring originals where you have them. We make copies at the meeting and hand the originals straight back to you."
+                ],
+                [
+                  "If something is missing",
+                  "Lost a document? In most cases it can be requested again from the institution that issued it. We tell you which one and how."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Ready to book?",
+              "p": "Choose a time and tell us briefly what it is about. We will confirm what to bring.",
+              "button": [
+                "Book a consultation",
+                "/#contact"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "bg": {
+      "tagline": "адвокатска кантора",
+      "description": "Правна помощ по договори, имоти, наследство, регистрация на фирма и семейни въпроси. Запазете час за първа консултация.",
+      "nav": [
+        [
+          "Области",
+          "/areas.html"
+        ],
+        [
+          "Първа среща",
+          "/#consultation"
+        ],
+        [
+          "Хонорари",
+          "/#faq"
+        ],
+        [
+          "Документи",
+          "/documents.html"
+        ]
+      ],
+      "headerCta": [
+        "Запазете час",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Договори, имоти, наследство, семейно право",
+            "eyebrowIcon": "scale",
+            "title": "Ясни правни съвети, *на разбираем език*",
+            "lead": "Договори, имоти, наследство, регистрация на фирма и семейни дела. Обясняваме къде сте, какво може да се направи и колко ще струва — преди да поемете какъвто и да е ангажимент.",
+            "cta": [
+              "Запазете час",
+              "/#contact"
+            ],
+            "cta2": [
+              "Области на работа",
+              "/areas.html"
+            ],
+            "card": {
+              "icon": "scale",
+              "title": "Какво става на първата среща",
+              "rows": [
+                [
+                  "Изслушваме",
+                  "ситуацията и целта ви"
+                ],
+                [
+                  "Обясняваме",
+                  "варианти, рискове, цена"
+                ],
+                [
+                  "Уговаряме",
+                  "следващата стъпка писмено"
+                ]
+              ],
+              "note": "Донесете каквито документи имате — непълните също вършат работа."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                [
+                  "shield",
+                  "Поверителност от първия ден"
+                ],
+                [
+                  "doc",
+                  "Хонорар, уговорен писмено"
+                ],
+                [
+                  "book",
+                  "Обяснения на разбираем език"
+                ],
+                [
+                  "check",
+                  "Ясна следваща стъпка всеки път"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "areas",
+              "title": "С какво можем да помогнем",
+              "intro": "Въпросите, с които най-често идват при адвокат. На страницата „Области на работа“ ги разглеждаме подробно.",
+              "items": [
+                [
+                  "doc",
+                  "Договори",
+                  "Изготвяме, преглеждаме и договаряме условия по продажба, наем, услуги и заеми — преди да подпишете."
+                ],
+                [
+                  "home",
+                  "Имоти",
+                  "Покупка, продажба и наем: проверка на собствеността, предварителни договори, нотариални актове."
+                ],
+                [
+                  "users",
+                  "Наследство и семейство",
+                  "Завещания и подялба на наследство между наследниците; развод, родителски права и издръжка."
+                ],
+                [
+                  "bag",
+                  "Фирми и спорове",
+                  "Регистрация на фирма и първите ѝ договори; събиране на вземания, претенции, защита пред съда."
+                ]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "approach",
+              "alt": true,
+              "title": "Как работим с вас",
+              "intro": "Три неща, които ще забележите още на първата среща.",
+              "items": [
+                [
+                  "Ясни думи, не юридически жаргон",
+                  "Правото е пълно със специални термини. Превеждаме ги: какво пише в документа, какво означава за вас и къде е рискът.",
+                  "Всяка важна клауза е обяснена",
+                  "Рисковете са назовани, не скрити в дребния шрифт",
+                  "Въпроси са добре дошли на всеки етап"
+                ],
+                [
+                  "Хонорар, който можете да планирате",
+                  "Преди да започнем, получавате обхвата на работата и хонорара писмено — и крайната сметка не носи изненади.",
+                  "Фиксиран хонорар или почасова ставка, според уговорката",
+                  "Съдебните, нотариалните и регистърните такси са изброени отделно",
+                  "Промяна в обхвата се обсъжда първо с вас"
+                ],
+                [
+                  "Документите ви остават поверителни",
+                  "Каквото ни разкажете, остава между нас. Документите се пазят в защитено досие и се споделят само с ваше съгласие.",
+                  "Защитено досие за всеки случай",
+                  "Нищо не се предава на трети лица без вашето съгласие",
+                  "Оригиналите се връщат в ръцете ви"
+                ]
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "consultation",
+              "title": "Първата ви консултация",
+              "intro": "Първата среща е за яснота, не за ангажимент.",
+              "items": [
+                [
+                  "Разкажете ни",
+                  "Обадете се или пишете. Кажете накратко какво се е случило и какво искате да постигнете."
+                ],
+                [
+                  "Донесете документите",
+                  "Договори, писма, покани, лична карта — каквото имате. Ще кажем дали нещо липсва."
+                ],
+                [
+                  "Срещнете се с нас",
+                  "В кантората или по видеовръзка. Обясняваме вариантите, рисковете и вероятната цена на всеки от тях."
+                ],
+                [
+                  "Решете спокойно",
+                  "Получавате предложените стъпки и хонорара писмено и решавате, когато сте готови."
+                ]
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "alt": true,
+              "title": "Въпроси за хонорарите и документите",
+              "items": [
+                [
+                  "Колко струва консултацията?",
+                  "Казваме цената при записването — преди срещата, а не след нея. Така знаете какво да очаквате още преди да дойдете."
+                ],
+                [
+                  "Как се определя хонорарът?",
+                  "Зависи от случая. За ясно определени задачи — договор, регистрация — обикновено е фиксиран; при спорове по-често е почасов. И в двата случая го получавате писмено, преди да започнем."
+                ],
+                [
+                  "Какво да донеса на първата среща?",
+                  "Личната си карта, договорите и писмата по случая и кратка бележка с важните дати. Непълните документи не са проблем — ще ви кажем какво още трябва."
+                ],
+                [
+                  "Поверително ли е това, което ви казвам?",
+                  "Да. Поверителността важи от първото обаждане и остава в сила, дори да решите да не ни наемете."
+                ],
+                [
+                  "Може ли да се срещнем онлайн?",
+                  "Да. Много въпроси се уреждат по видеовръзка и със защитен обмен на документи. Някои стъпки, като подписване при нотариус, изискват присъствие на място."
+                ],
+                [
+                  "Занимавате ли се с нотариуса и съда?",
+                  "Подготвяме документите, уговаряме нотариус, когато е нужно, и подаваме в съда или в регистъра от ваше име — с ваше пълномощно. Таксите им са изброени отделно."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Не сте сигурни коя е вашата тема?",
+              "p": "Опишете случая с две изречения. Ще ви кажем дали можем да помогнем и какво да донесете.",
+              "button": [
+                "Запазете час",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Запазете час за консултация",
+              "intro": "Кажете накратко за какво става дума. Ще се свържем с вас, за да уговорим час.",
+              "formName": "consultation",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Адрес",
+                  "ул. „Витоша“ 1, София"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "area",
+                  "label": "Област",
+                  "options": [
+                    "Договори",
+                    "Имоти",
+                    "Наследство",
+                    "Регистрация на фирма",
+                    "Семейно право",
+                    "Спорове",
+                    "Друго"
+                  ]
+                },
+                {
+                  "id": "meeting",
+                  "label": "Среща",
+                  "options": [
+                    "В кантората",
+                    "По видеовръзка"
+                  ]
+                }
+              ],
+              "messageLabel": "Накратко: за какво става дума?",
+              "send": "Поискайте консултация",
+              "hoursTitle": "Работно време",
+              "hours": [
+                [
+                  "Понеделник – петък",
+                  "9:00 – 18:00"
+                ],
+                [
+                  "Събота",
+                  "по уговорка"
+                ],
+                [
+                  "Неделя",
+                  "почивен ден"
+                ]
+              ]
+            }
+          ]
+        },
+        "areas": {
+          "title": "Области на работа и какво включват",
+          "description": "Договори, имоти, наследство, регистрация на фирма, семейно право и спорове — какво включва всяка област.",
+          "pagehead": [
+            "Области на работа",
+            "С какво можем да помогнем и откъде обикновено започва един случай."
+          ],
+          "sections": [
+            {
+              "type": "split",
+              "items": [
+                [
+                  "Имоти и договори",
+                  "От предварителния договор до нотариалния акт: проверяваме какво подписвате и какво купувате.",
+                  "Проверка за ипотеки и други тежести върху имота, преди да платите задатък",
+                  "Договори за продажба, наем и заем — изготвени или прегледани",
+                  "Предварителни договори, задатъци и приемо-предавателни протоколи"
+                ],
+                [
+                  "Семейство и наследство",
+                  "Деликатни въпроси, уреждани спокойно и стъпка по стъпка, с ясна представа какво означава всеки вариант.",
+                  "Развод, родителски права и издръжка",
+                  "Подялба на имуществото между съпрузите",
+                  "Завещания, приемане или отказ от наследство, подялба между наследниците"
+                ],
+                [
+                  "Фирмено право и спорове",
+                  "Стабилно начало за бизнеса и твърда защита, когато нещо се обърка.",
+                  "Избор на правна форма и регистрация на фирмата",
+                  "Съдружнически договори и договори с доставчици и купувачи",
+                  "Събиране на вземания, претенции и представителство пред съда"
+                ]
+              ]
+            },
+            {
+              "type": "chips",
+              "alt": true,
+              "title": "Питайте ни и за",
+              "items": [
+                "Предварителни договори",
+                "Договори за наем",
+                "Пълномощни",
+                "Завещания",
+                "Промени във фирмата",
+                "Покани за дългове",
+                "Развод по взаимно съгласие",
+                "Родителски права"
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Вашият въпрос не е в списъка?",
+              "p": "Попитайте въпреки това. Ще ви кажем честно дали сме подходящите хора, които да помогнат.",
+              "button": [
+                "Запазете час",
+                "/#contact"
+              ]
+            }
+          ]
+        },
+        "documents": {
+          "title": "Какво да донесете на първата среща",
+          "description": "Списък с документи за най-честите случаи: имоти, наследство, регистрация на фирма и семейни въпроси.",
+          "pagehead": [
+            "Какво да донесете",
+            "Кратък списък за всеки вид случай. Липсва ви нещо? Елате все пак — ще ви кажем как да го набавите."
+          ],
+          "sections": [
+            {
+              "type": "cards",
+              "items": [
+                [
+                  "home",
+                  "Покупка или продажба на имот",
+                  "Лична карта, документът за собственост, скорошна данъчна оценка и удостоверение, че няма ипотеки и други тежести."
+                ],
+                [
+                  "users",
+                  "Наследство",
+                  "Лична карта, смъртен акт, завещанието (ако има) и списък с известните ви имоти и сметки."
+                ],
+                [
+                  "bag",
+                  "Регистрация на фирма",
+                  "Личните карти на всички съдружници, предложеното име, адресът на управление и предметът на дейност."
+                ],
+                [
+                  "heart",
+                  "Семейни въпроси",
+                  "Лична карта, акт за граждански брак, актове за раждане на децата и документи за общо имущество или кредити."
+                ]
+              ]
+            },
+            {
+              "type": "prose",
+              "alt": true,
+              "items": [
+                [
+                  "Оригинали и копия",
+                  "Носете оригиналите, ако ги имате. Копираме ги на срещата и веднага ви ги връщаме."
+                ],
+                [
+                  "Ако нещо липсва",
+                  "Изгубили сте документ? В повечето случаи той може да бъде поискан отново от институцията, която го е издала. Ще ви кажем коя е тя и как става."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Готови ли сте да запазите час?",
+              "p": "Изберете удобно време и кажете накратко за какво става дума. Ще потвърдим какво да донесете.",
+              "button": [
+                "Запазете час",
+                "/#contact"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

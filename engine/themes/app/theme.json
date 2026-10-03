@@ -26,8 +26,8 @@
     ],
     "bg": [
       "мобилно приложение",
-      "ios",
-      "android",
+      "айфон",
+      "андроид",
       "изтегли",
       "функции",
       "игра"
@@ -53,10 +53,54 @@
     "contacts",
     "photos"
   ],
+  "hints": {
+    "en": {
+      "offer": "I build a simple task and habit app for iPhone and Android that helps people plan their day and keep small routines going.",
+      "audience": "Busy people who want one calm place for tasks, habits and reminders",
+      "services": [
+        [
+          "Pro monthly",
+          "€3",
+          "Themes, shared lists and statistics"
+        ],
+        [
+          "Pro yearly",
+          "€25",
+          "The same as monthly, paid once a year"
+        ],
+        [
+          "Family plan",
+          "€5",
+          "Pro for the whole household, with shared lists"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Правя просто приложение за задачи и навици за iPhone и Android, което помага на хората да планират деня си и да поддържат малките си ритуали.",
+      "audience": "Заети хора, които искат на едно спокойно място задачите, навиците и напомнянията си",
+      "services": [
+        [
+          "Pro за месец",
+          "3 €",
+          "Теми, споделени списъци и статистика"
+        ],
+        [
+          "Pro за година",
+          "25 €",
+          "Същото като месечния план, но с едно плащане годишно"
+        ],
+        [
+          "Семеен план",
+          "5 €",
+          "Pro за целия дом, със споделени списъци"
+        ]
+      ]
+    }
+  },
   "lang": {
     "bg": {
       "tagline": "мобилно приложение",
-      "description": "Приложението, което подрежда деня ви. Безплатно за iPhone и Android.",
+      "description": "Приложението, което подрежда деня ви: задачи, навици и напомняния на едно място.",
       "nav": [
         [
           "Функции",
@@ -82,12 +126,12 @@
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "№1 в „Продуктивност“ тази седмица",
+            "eyebrow": "Спокойно приложение за натоварени дни",
             "eyebrowIcon": "star",
             "title": "Денят ви, *подреден*",
             "lead": "Задачи, навици и напомняния в едно красиво приложение. Синхронизира се между телефона, таблета и компютъра.",
             "cta": [
-              "Изтегли безплатно",
+              "Изтегли приложението",
               "/#download"
             ],
             "cta2": [
@@ -138,7 +182,7 @@
                 [
                   "shield",
                   "Поверителност",
-                  "Данните ви са криптирани и остават ваши."
+                  "Данните ви остават ваши, а вие решавате какво да споделяте."
                 ]
               ]
             },
@@ -150,7 +194,7 @@
               "items": [
                 [
                   "Изтеглете",
-                  "Безплатно от App Store или Google Play."
+                  "От магазина за приложения на телефона ви."
                 ],
                 [
                   "Изберете цел",
@@ -158,7 +202,7 @@
                 ],
                 [
                   "Следете напредъка",
-                  "Седмичен отчет всяка неделя."
+                  "Седмичен преглед на свършеното."
                 ]
               ]
             },
@@ -188,8 +232,8 @@
               "title": "Въпроси",
               "items": [
                 [
-                  "Безплатно ли е?",
-                  "Да. Pro версията добавя теми, споделени списъци и статистика."
+                  "Има ли Pro версия?",
+                  "Да. Pro добавя теми, споделени списъци и статистика."
                 ],
                 [
                   "Работи ли офлайн?",
@@ -201,7 +245,7 @@
               "type": "cta",
               "id": "download",
               "h": "Изтеглете днес",
-              "p": "Безплатно за iPhone и Android. Pro — 30 дни безплатно.",
+              "p": "Изтеглете приложението за iPhone и Android и подредете първия си ден.",
               "button": [
                 "Изтегли за iPhone и Android",
                 "mailto:hello@example.com"
@@ -213,7 +257,7 @@
     },
     "en": {
       "tagline": "mobile app",
-      "description": "The app that organises your day. Free for iPhone and Android.",
+      "description": "The app that organises your day: tasks, habits and reminders in one place.",
       "nav": [
         [
           "Features",
@@ -239,12 +283,12 @@
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "#1 in Productivity this week",
+            "eyebrow": "A calm app for busy days",
             "eyebrowIcon": "star",
             "title": "Your day, *sorted*",
             "lead": "Tasks, habits and reminders in one beautiful app. Syncs between your phone, tablet and computer.",
             "cta": [
-              "Download free",
+              "Get the app",
               "/#download"
             ],
             "cta2": [
@@ -295,7 +339,7 @@
                 [
                   "shield",
                   "Privacy",
-                  "Your data is encrypted and stays yours."
+                  "Your data stays yours, and you decide what is shared."
                 ]
               ]
             },
@@ -307,7 +351,7 @@
               "items": [
                 [
                   "Download",
-                  "Free on the App Store or Google Play."
+                  "From the app store on your phone."
                 ],
                 [
                   "Pick a goal",
@@ -315,7 +359,7 @@
                 ],
                 [
                   "Track progress",
-                  "A weekly report every Sunday."
+                  "A weekly summary of what you got done."
                 ]
               ]
             },
@@ -345,7 +389,7 @@
               "title": "FAQ",
               "items": [
                 [
-                  "Is it free?",
+                  "Is there a Pro version?",
                   "Yes. Pro adds themes, shared lists and statistics."
                 ],
                 [
@@ -358,7 +402,7 @@
               "type": "cta",
               "id": "download",
               "h": "Download today",
-              "p": "Free for iPhone and Android. Pro is free for 30 days.",
+              "p": "Get the app for iPhone and Android and plan your first day.",
               "button": [
                 "Get it for iPhone and Android",
                 "mailto:hello@example.com"

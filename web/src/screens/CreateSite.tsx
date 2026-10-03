@@ -3,7 +3,7 @@ import { Button, Card, PageHeader, Segmented, Field, Badge, EmptyState, LoadingS
 import { Icon } from '../components/Icon';
 import { t, num, getLang } from '../i18n';
 import { hasEngine, run, themePreview, pickFolder, pickPhotos, EngineError, type EngineEvent } from '../lib/engine';
-import { briefJSON, emptyBrief, errorKey, inlinePreview, pageFromHash, rankThemes, ESTIMATE, type Brief, type Theme, type Styles, type ContentResult, type GenerateResult, type EditResult, type SiteInfo } from '../lib/sitebuilder';
+import { briefJSON, emptyBrief, errorKey, inlinePreview, pageFromHash, rankThemes, ESTIMATE, TONES, type Brief, type Theme, type Styles, type ContentResult, type GenerateResult, type EditResult, type SiteInfo } from '../lib/sitebuilder';
 import { go } from '../App';
 
 // Site Builder (S6) in the shared UI: the same three steps as the Mac app, on the same engine commands — pick a
@@ -91,7 +91,7 @@ export function CreateSite() {
       )}
       {loadError ? <Card attention="danger"><p>{loadError}</p></Card> : null}
       {step === 'theme' && <ThemeStep themes={themes} brief={brief} onPick={(th) => set({ theme: th.id, style: th.style, palette: null })} onNext={() => setStep('details')} />}
-      {step === 'details' && <DetailsStep brief={brief} set={set} styles={styles} aiReady={aiReady} useAI={useAI} setUseAI={setUseAI} dir={dir} setDir={setDir} onBack={() => setStep('theme')} onNext={() => setStep('preview')} nameOK={nameOK} />}
+      {step === 'details' && <DetailsStep brief={brief} set={set} themes={themes} styles={styles} aiReady={aiReady} useAI={useAI} setUseAI={setUseAI} dir={dir} setDir={setDir} onBack={() => setStep('theme')} onNext={() => setStep('preview')} nameOK={nameOK} />}
       {step === 'preview' && <PreviewStep brief={brief} set={set} useAI={useAI} dir={dir} onBack={() => setStep('details')} onSaved={(r) => { setResult(r); setStep('done'); }} />}
       {step === 'done' && result && <DoneStep result={result} aiReady={aiReady} onAnother={() => { setResult(null); setBrief(emptyBrief(lang())); setStep('theme'); }} />}
     </div>
@@ -165,24 +165,27 @@ function ThemeCard({ theme, selected, onPick }: { theme: Theme; selected: boolea
 
 // ---------------------------------------------------------------- step 2: the brief
 
-function DetailsStep({ brief, set, styles, aiReady, useAI, setUseAI, dir, setDir, onBack, onNext, nameOK }: { brief: Brief; set: (p: Partial<Brief>) => void; styles: Styles; aiReady: boolean; useAI: boolean; setUseAI: (v: boolean) => void; dir: string; setDir: (d: string) => void; onBack: () => void; onNext: () => void; nameOK: boolean }) {
+function DetailsStep({ brief, set, themes, styles, aiReady, useAI, setUseAI, dir, setDir, onBack, onNext, nameOK }: { brief: Brief; set: (p: Partial<Brief>) => void; themes: Theme[]; styles: Styles; aiReady: boolean; useAI: boolean; setUseAI: (v: boolean) => void; dir: string; setDir: (d: string) => void; onBack: () => void; onNext: () => void; nameOK: boolean }) {
   const services = brief.services;
   const setService = (i: number, patch: Partial<Brief['services'][number]>) => set({ services: services.map((s, j) => (j === i ? { ...s, ...patch } : s)) });
   const contacts = brief.contacts;
+  // S7: examples for this kind of site, in the site's language — placeholders only
+  const hints = themes.find((th) => th.id === brief.theme)?.hints?.[brief.lang];
+  const eg = (i: number, col: number, fallback: string) => hints?.services[i]?.[col] || fallback;
   return (
     <div className="create-grid">
       <Card className="create-main">
         <h2>{t('create.step.details')}</h2>
         <Field label={t('create.f.name')}><input value={brief.name} onChange={(e) => set({ name: e.target.value })} placeholder={t('create.f.namePh')} /></Field>
-        <Field label={t('create.f.offer')} hint={t('create.f.offerHint')}><textarea rows={3} value={brief.offer} onChange={(e) => set({ offer: e.target.value })} placeholder={t('create.f.offerPh')} /></Field>
-        <Field label={t('create.f.audience')} hint={t('create.f.audienceHint')}><input value={brief.audience} onChange={(e) => set({ audience: e.target.value })} placeholder={t('create.f.audiencePh')} /></Field>
+        <Field label={t('create.f.offer')} hint={t('create.f.offerHint')}><textarea rows={3} value={brief.offer} onChange={(e) => set({ offer: e.target.value })} placeholder={hints?.offer || t('create.f.offerPh')} /></Field>
+        <Field label={t('create.f.audience')} hint={t('create.f.audienceHint')}><input value={brief.audience} onChange={(e) => set({ audience: e.target.value })} placeholder={hints?.audience || t('create.f.audiencePh')} /></Field>
         <div className="field">
           <span className="field-label">{t('create.f.services')}</span>
           {services.map((s, i) => (
             <div className="service-row" key={i}>
-              <input value={s.name} onChange={(e) => setService(i, { name: e.target.value })} placeholder={t('create.f.serviceName')} aria-label={t('create.f.serviceName')} />
-              <input value={s.price} onChange={(e) => setService(i, { price: e.target.value })} placeholder={t('create.f.servicePrice')} aria-label={t('create.f.servicePrice')} />
-              <input value={s.text} onChange={(e) => setService(i, { text: e.target.value })} placeholder={t('create.f.serviceText')} aria-label={t('create.f.serviceText')} />
+              <input value={s.name} onChange={(e) => setService(i, { name: e.target.value })} placeholder={eg(i, 0, t('create.f.serviceName'))} aria-label={t('create.f.serviceName')} />
+              <input value={s.price} onChange={(e) => setService(i, { price: e.target.value })} placeholder={eg(i, 1, t('create.f.servicePrice'))} aria-label={t('create.f.servicePrice')} />
+              <input value={s.text} onChange={(e) => setService(i, { text: e.target.value })} placeholder={eg(i, 2, t('create.f.serviceText'))} aria-label={t('create.f.serviceText')} />
               <button className="icon-btn" aria-label={t('common.remove')} onClick={() => set({ services: services.filter((_, j) => j !== i) })} disabled={services.length === 1}><Icon name="x" size={14} /></button>
             </div>
           ))}
@@ -199,6 +202,7 @@ function DetailsStep({ brief, set, styles, aiReady, useAI, setUseAI, dir, setDir
           </div>
           <span className="field-hint">{t('create.f.contactsHint')}</span>
         </div>
+        <Field label={t('create.f.hours')} hint={t('create.f.hoursHint')}><textarea rows={3} value={brief.hours} onChange={(e) => set({ hours: e.target.value })} placeholder={t('create.f.hoursPh')} /></Field>
         <div className="field">
           <span className="field-label">{t('create.f.style')}</span>
           <div className="style-grid">
@@ -230,6 +234,7 @@ function DetailsStep({ brief, set, styles, aiReady, useAI, setUseAI, dir, setDir
           </div>
           <span className="field-hint">{t('create.f.photosHint')}</span>
         </div>
+        <Field label={t('create.f.tone')} hint={t('create.f.toneHint')}><Segmented label={t('create.f.tone')} value={brief.tone ?? 'auto'} onChange={(v) => set({ tone: v === 'auto' ? null : v })} options={[{ id: 'auto', label: t('tone.auto') }, ...TONES.map((x) => ({ id: x, label: t('tone.' + x) }))]} /></Field>
         <Field label={t('create.f.language')}><Segmented label={t('create.f.language')} value={brief.lang} onChange={(v) => set({ lang: v })} options={[{ id: 'bg', label: 'Български' }, { id: 'en', label: 'English' }]} /></Field>
         <div className="field">
           <span className="field-label">{t('create.f.folder')}</span>

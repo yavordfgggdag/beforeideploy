@@ -57,10 +57,54 @@
     "contacts",
     "photos"
   ],
+  "hints": {
+    "en": {
+      "offer": "We do home and office repairs: plumbing, electrics, painting and installation. Tell us what is broken and we agree a time to come and take a look.",
+      "audience": "Homeowners, tenants and small offices",
+      "services": [
+        [
+          "New tap",
+          "€25",
+          "We remove the old one and fit the new, materials extra"
+        ],
+        [
+          "Socket or switch",
+          "€15",
+          "Replacing an existing one, safely"
+        ],
+        [
+          "Painting",
+          "€3",
+          "Per square metre, two coats"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Правим ремонти в дома и офиса: ВиК, електро, боядисване и монтаж. Кажете ни какво се е счупило и уговаряме кога да дойдем да го огледаме.",
+      "audience": "Собственици на жилища, наематели и малки офиси",
+      "services": [
+        [
+          "Смяна на смесител",
+          "25 €",
+          "Сваляме стария и монтираме новия, материалите са отделно"
+        ],
+        [
+          "Контакт или ключ",
+          "15 €",
+          "Безопасна смяна на съществуващ"
+        ],
+        [
+          "Боядисване",
+          "3 €",
+          "На квадратен метър, на две ръце"
+        ]
+      ]
+    }
+  },
   "lang": {
     "bg": {
       "tagline": "ремонти и майсторски услуги",
-      "description": "Ремонти, монтаж и поддръжка на дома и офиса — с ясна цена и гаранция.",
+      "description": "Ремонти, монтаж и поддръжка на дома и офиса — с ясна цена, преди да започнем.",
       "nav": [
         [
           "Услуги",
@@ -86,10 +130,10 @@
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "Идваме още днес в София",
+            "eyebrow": "Дребни ремонти, свършени както трябва",
             "eyebrowIcon": "clock",
             "title": "Майстори, които *идват навреме*",
-            "lead": "ВиК, ел. инсталации, боядисване и дребни ремонти. Оглед и оферта без ангажимент, гаранция на всяка работа.",
+            "lead": "ВиК, ел. инсталации, боядисване и дребни ремонти. Опишете какво трябва да се направи и уговаряме час за оглед и оферта.",
             "cta": [
               "Заяви оглед",
               "/#contact"
@@ -152,14 +196,14 @@
               "id": "projects",
               "alt": true,
               "title": "Последни проекти",
-              "intro": "Сменете плочките с ваши снимки „преди и след“.",
+              "intro": "Помещенията и работите, които поемаме.",
               "items": [
-                "Баня, Лозенец",
-                "Кухня, Младост",
-                "Офис, Център",
-                "Детска стая, Бояна",
-                "Тераса, Витоша",
-                "Антре, Изток"
+                "Ремонт на баня",
+                "Ремонт на кухня",
+                "Боядисване на офис",
+                "Детска стая",
+                "Тераса",
+                "Антре"
               ]
             },
             {
@@ -179,8 +223,8 @@
                   "Работим чисто и в срок."
                 ],
                 [
-                  "Гаранция",
-                  "Получавате протокол и 12 месеца гаранция."
+                  "Предаване",
+                  "Преглеждаме свършеното заедно с вас и ви предаваме протокол."
                 ]
               ]
             },
@@ -191,7 +235,7 @@
               "items": [
                 [
                   "Колко струва огледът?",
-                  "В рамките на града огледът е безплатен, ако приемете офертата."
+                  "Преди посещението ви казваме дали огледът се заплаща и колко струва, така че денят да мине без изненади."
                 ],
                 [
                   "Осигурявате ли материали?",
@@ -199,7 +243,7 @@
                 ],
                 [
                   "Работите ли в събота?",
-                  "Да, до 14:00. Спешни случаи — и в неделя."
+                  "Да, по уговорка — работното време е по-долу. При спешен случай се обадете и ще намерим най-ранния възможен час."
                 ]
               ]
             },
@@ -207,7 +251,7 @@
               "type": "contact",
               "id": "contact",
               "title": "Заяви оглед",
-              "intro": "Опишете какво трябва да се направи — връщаме обаждане до час.",
+              "intro": "Опишете какво трябва да се направи — ще ви се обадим, за да уговорим час.",
               "rows": [
                 [
                   "mail",
@@ -358,7 +402,7 @@
     },
     "en": {
       "tagline": "home repairs and handyman services",
-      "description": "Repairs, installation and maintenance for homes and offices — clear prices and a warranty.",
+      "description": "Repairs, installation and maintenance for homes and offices — with a clear price before we start.",
       "nav": [
         [
           "Services",
@@ -384,10 +428,10 @@
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "Same-day visits in the city",
+            "eyebrow": "Small repairs, done properly",
             "eyebrowIcon": "clock",
             "title": "Handymen who *show up on time*",
-            "lead": "Plumbing, electrics, painting and small repairs. Free inspection and quote, and a warranty on every job.",
+            "lead": "Plumbing, electrics, painting and small repairs. Tell us what needs doing and we agree a time for an inspection and a quote.",
             "cta": [
               "Book a visit",
               "/#contact"
@@ -450,14 +494,14 @@
               "id": "projects",
               "alt": true,
               "title": "Recent projects",
-              "intro": "Replace the tiles with your own before-and-after photos.",
+              "intro": "The kinds of rooms and jobs we take on.",
               "items": [
-                "Bathroom, Lozenets",
-                "Kitchen, Mladost",
-                "Office, City centre",
-                "Kids room, Boyana",
-                "Terrace, Vitosha",
-                "Hallway, Iztok"
+                "Bathroom refit",
+                "Kitchen repairs",
+                "Office repainting",
+                "Kids’ room",
+                "Terrace",
+                "Hallway"
               ]
             },
             {
@@ -477,8 +521,8 @@
                   "Clean, on-time work."
                 ],
                 [
-                  "Warranty",
-                  "You get a report and a 12-month warranty."
+                  "Handover",
+                  "We go through the finished work with you and give you a written report."
                 ]
               ]
             },
@@ -489,7 +533,7 @@
               "items": [
                 [
                   "How much is an inspection?",
-                  "Within the city it is free if you accept the quote."
+                  "We tell you before the visit whether an inspection is charged and how much, so there are no surprises on the day."
                 ],
                 [
                   "Do you supply materials?",
@@ -497,7 +541,7 @@
                 ],
                 [
                   "Do you work on Saturdays?",
-                  "Yes, until 14:00. Emergencies on Sundays too."
+                  "Yes, by arrangement — the opening hours are below. For an emergency, call us and we will find the earliest time we can."
                 ]
               ]
             },
@@ -505,7 +549,7 @@
               "type": "contact",
               "id": "contact",
               "title": "Book a visit",
-              "intro": "Tell us what needs doing — we call back within an hour.",
+              "intro": "Tell us what needs doing — we call you back to agree a time.",
               "rows": [
                 [
                   "mail",

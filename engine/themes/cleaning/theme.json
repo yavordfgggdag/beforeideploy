@@ -1,0 +1,1239 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "cleaning",
+  "category": "business",
+  "icon": "sparkles",
+  "accent": "#0b9aa0",
+  "mark": "spark",
+  "art": "waves",
+  "schemaOrg": "HomeAndConstructionBusiness",
+  "sample": {
+    "name": "Clear Day"
+  },
+  "featured": false,
+  "titleKey": "newsite.template.cleaning.title",
+  "descriptionKey": "newsite.template.cleaning.description",
+  "keywords": {
+    "en": [
+      "cleaning",
+      "house cleaning",
+      "office cleaning",
+      "post-renovation cleaning",
+      "window cleaning",
+      "upholstery cleaning",
+      "carpet cleaning",
+      "cleaner",
+      "deep clean",
+      "cleaning company"
+    ],
+    "bg": [
+      "почистване",
+      "почистване на домове",
+      "почистване на офиси",
+      "почистване след ремонт",
+      "миене на прозорци",
+      "пране на мека мебел",
+      "пране на килими",
+      "фирма за почистване",
+      "хигиенист",
+      "основно почистване"
+    ]
+  },
+  "style": "calm",
+  "tokens": {
+    "dark": false,
+    "bg": "#f2fbfa",
+    "bg2": "#e0f3f0",
+    "surface": "#ffffff",
+    "text": "#0d2a2e",
+    "muted": "#40656a",
+    "line": "rgba(15,23,42,.10)",
+    "accent": "#0b9aa0",
+    "accent2": "#5dd6b3",
+    "font": "sans",
+    "head": "rounded",
+    "radius": 22,
+    "tilt": 1
+  },
+  "questions": [
+    "services",
+    "contacts",
+    "photos"
+  ],
+  "hints": {
+    "en": {
+      "offer": "We clean homes and offices, one-off or on a regular schedule, and also do post-renovation cleaning, windows and upholstery.",
+      "audience": "Households, landlords, offices and small shops",
+      "services": [
+        [
+          "Home cleaning",
+          "€40",
+          "Kitchen, bathroom, floors and dusting"
+        ],
+        [
+          "Post-renovation clean",
+          "€120",
+          "Dust, paint splashes and window frames"
+        ],
+        [
+          "Sofa cleaning",
+          "€45",
+          "Deep extraction cleaning for a two-seater"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Почистваме домове и офиси — еднократно или по график, както и след ремонт, прозорци и мека мебел.",
+      "audience": "Домакинства, наемодатели, офиси и малки магазини",
+      "services": [
+        [
+          "Почистване на дом",
+          "40 €",
+          "Кухня, баня, подове и прах"
+        ],
+        [
+          "Почистване след ремонт",
+          "120 €",
+          "Прах, петна от боя и дограма"
+        ],
+        [
+          "Почистване на диван",
+          "45 €",
+          "Дълбоко екстракционно почистване на двуместен"
+        ]
+      ]
+    }
+  },
+  "lang": {
+    "en": {
+      "tagline": "cleaning for homes and offices",
+      "description": "Home, office and post-renovation cleaning, plus windows and upholstery. Pick a package and book online.",
+      "nav": [
+        [
+          "Services",
+          "/services.html"
+        ],
+        [
+          "Prices",
+          "/prices.html"
+        ],
+        [
+          "How to order",
+          "/#how"
+        ],
+        [
+          "FAQ",
+          "/#faq"
+        ]
+      ],
+      "headerCta": [
+        "Get a quote",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Home, office and post-renovation cleaning",
+            "eyebrowIcon": "spark",
+            "title": "A clean home and *your weekend back*",
+            "lead": "Regular home and office cleaning, deep cleans after renovation, windows and upholstery. Tell us the size of the place and we agree a package and a day.",
+            "cta": [
+              "Get a quote",
+              "/#contact"
+            ],
+            "cta2": [
+              "See packages",
+              "/#packages"
+            ],
+            "card": {
+              "icon": "home",
+              "title": "A typical home clean",
+              "rows": [
+                [
+                  "Kitchen",
+                  "hob, sink, surfaces"
+                ],
+                [
+                  "Bathroom",
+                  "tiles, toilet, mirrors"
+                ],
+                [
+                  "Rooms",
+                  "dusting and floors"
+                ],
+                [
+                  "Finish",
+                  "bins, windows on request"
+                ]
+              ],
+              "note": "Every room has its own checklist."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                [
+                  "check",
+                  "Checklist for every room"
+                ],
+                [
+                  "drop",
+                  "We bring products and equipment"
+                ],
+                [
+                  "calendar",
+                  "One-off or regular visits"
+                ],
+                [
+                  "leaf",
+                  "Unscented on request"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "services",
+              "title": "What we clean",
+              "intro": "Pick one service or combine them. Each has a clear list of what is included.",
+              "items": [
+                [
+                  "home",
+                  "Home cleaning",
+                  "Kitchen, bathrooms, bedrooms and floors, with a checklist for every room."
+                ],
+                [
+                  "users",
+                  "Office cleaning",
+                  "Desks, kitchenette, meeting rooms, floors and bins, in the evening or early morning if you prefer."
+                ],
+                [
+                  "brush",
+                  "After renovation",
+                  "Fine dust from every surface, paint and plaster splashes, window frames and a final floor wash."
+                ],
+                [
+                  "sun",
+                  "Windows and upholstery",
+                  "Glass, frames and sills, plus deep cleaning for sofas, armchairs and mattresses."
+                ]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "approach",
+              "alt": true,
+              "title": "A clean you can check",
+              "items": [
+                [
+                  "A checklist for every room",
+                  "A written list means you know what is cleaned, and we know what to check before we leave.",
+                  "Kitchen: hob, sink, worktops, outside of appliances",
+                  "Bathroom: tiles, taps, toilet, mirrors",
+                  "Floors vacuumed and washed, bins emptied"
+                ],
+                [
+                  "Our products, or yours",
+                  "We bring the equipment and professional products. If anyone at home is sensitive to scents, tell us and we switch.",
+                  "Colour-coded cloths, so kitchen and bathroom never mix",
+                  "Unscented products on request",
+                  "Shoe covers or indoor shoes, as you prefer"
+                ],
+                [
+                  "A little preparation helps",
+                  "A bit of tidying lets us spend the time cleaning, not moving things around.",
+                  "Put away valuables, papers and fragile items",
+                  "Clear floors and surfaces where you can",
+                  "Tell us about pets, keys and parking"
+                ]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "packages",
+              "title": "Packages by property size",
+              "intro": "Starting prices for a standard clean. Offices, post-renovation, windows and upholstery are on the price list.",
+              "items": [
+                {
+                  "name": "Studio",
+                  "price": "from €40",
+                  "per": "per visit",
+                  "features": [
+                    "A studio or one-room flat",
+                    "Kitchen and bathroom",
+                    "Floors, dusting and bins",
+                    "Checklist for the room"
+                  ],
+                  "cta": [
+                    "Get a quote",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Apartment",
+                  "price": "from €65",
+                  "per": "per visit",
+                  "featured": "Popular",
+                  "features": [
+                    "Two or three rooms",
+                    "Kitchen and one or two bathrooms",
+                    "Dusting, vacuuming and mopping",
+                    "Room-by-room checklist"
+                  ],
+                  "cta": [
+                    "Get a quote",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "House",
+                  "price": "from €110",
+                  "per": "per visit",
+                  "features": [
+                    "A house on several floors",
+                    "Kitchen and several bathrooms",
+                    "Stairs and hallways included",
+                    "Time planned to suit the size"
+                  ],
+                  "cta": [
+                    "Get a quote",
+                    "/#contact"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "how",
+              "alt": true,
+              "title": "How to order",
+              "intro": "Four short steps from the first message to a clean home.",
+              "items": [
+                [
+                  "Tell us",
+                  "The type of cleaning, the size of the place and the address. A few photos help."
+                ],
+                [
+                  "Get a quote",
+                  "We confirm the package, the price and a day that suits you."
+                ],
+                [
+                  "Prepare",
+                  "Put away valuables and clear surfaces where you can."
+                ],
+                [
+                  "We clean",
+                  "We follow the checklist for each room and tell you when we are done."
+                ]
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Questions we hear often",
+              "items": [
+                [
+                  "Do I need to be at home?",
+                  "Not necessarily. You can leave a key or an access code and we confirm when we finish. For the first visit it helps if you are there to show us around."
+                ],
+                [
+                  "Do you bring your own products and equipment?",
+                  "Yes: vacuum, steam cleaner, microfibre cloths and professional products. If you prefer your own, or need unscented ones, tell us when you order."
+                ],
+                [
+                  "How is the price decided?",
+                  "By the size of the place, the type of cleaning and how dirty it is. The packages show starting prices; we confirm the final amount from your details or photos before we start."
+                ],
+                [
+                  "How long does a clean take?",
+                  "A small flat takes a few hours. A house or a post-renovation job can take a full day or more, with several people. We give you the estimate in the quote."
+                ],
+                [
+                  "Can I book regular visits?",
+                  "Yes: weekly, every two weeks or monthly, on a fixed day and time. Tell us which rhythm suits you when you order."
+                ],
+                [
+                  "What if something is not right?",
+                  "Tell us as soon as you notice, with a photo if you can. We will agree how to put it right."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Not sure which package fits?",
+              "p": "Send the size of the place and a couple of photos. We will suggest what is needed and what is not.",
+              "button": [
+                "Get a quote",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Get a quote",
+              "intro": "Choose a service and the size of the place. We reply with a package and a suggested day.",
+              "formName": "quote",
+              "rows": [
+                [
+                  "mail",
+                  "Email",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Phone",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Address",
+                  "1 Vitosha St, Sofia"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "service",
+                  "label": "Service",
+                  "options": [
+                    "Home cleaning",
+                    "Office cleaning",
+                    "After renovation",
+                    "Windows",
+                    "Upholstery"
+                  ]
+                },
+                {
+                  "id": "size",
+                  "label": "Property size",
+                  "options": [
+                    "Up to 45 m²",
+                    "46–80 m²",
+                    "81–140 m²",
+                    "Over 140 m²"
+                  ]
+                }
+              ],
+              "messageLabel": "Address and notes (optional)",
+              "send": "Request a quote",
+              "hoursTitle": "Office hours",
+              "hours": [
+                [
+                  "Monday – Friday",
+                  "8:00 – 18:00"
+                ],
+                [
+                  "Saturday",
+                  "9:00 – 14:00"
+                ],
+                [
+                  "Sunday",
+                  "closed"
+                ]
+              ]
+            }
+          ]
+        },
+        "services": {
+          "title": "Services and what is included",
+          "description": "What is included in home, office, post-renovation, window and upholstery cleaning.",
+          "pagehead": [
+            "What is included",
+            "Every service has a checklist. Tell us if you want something added or left out."
+          ],
+          "sections": [
+            {
+              "type": "split",
+              "items": [
+                [
+                  "Home cleaning",
+                  "A full refresh of the rooms you live in.",
+                  "Kitchen: hob, sink, worktops and the front of appliances",
+                  "Bathrooms: tiles, taps, toilet and mirrors",
+                  "Bedrooms and living rooms: dusting, floors and bins"
+                ],
+                [
+                  "Office cleaning",
+                  "Regular cleaning that fits around your working day.",
+                  "Desks, shared surfaces, kitchenette and meeting rooms",
+                  "Floors, bins and washrooms restocked with your supplies",
+                  "Evenings, early mornings or weekends"
+                ],
+                [
+                  "After renovation",
+                  "Dust, paint and plaster, gone before you move in.",
+                  "Fine dust from shelves, sills, radiators and doors",
+                  "Paint, plaster and glue splashes on glass, tiles and floors",
+                  "Frames, sockets and a final floor wash"
+                ],
+                [
+                  "Windows",
+                  "Clear glass and clean frames, without you on a ladder.",
+                  "Glass, frames and sills, inside and out",
+                  "Balcony doors and glass partitions",
+                  "Only reachable heights; we tell you in advance what is not"
+                ],
+                [
+                  "Upholstery",
+                  "Deep cleaning that lifts out dirt and everyday stains.",
+                  "Sofas, armchairs, dining chairs and mattresses",
+                  "Fabric checked first, so we choose the right method",
+                  "Drying time explained before we start"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "prepare",
+              "alt": true,
+              "title": "What to prepare",
+              "intro": "A few minutes before we arrive makes the clean faster and better.",
+              "items": [
+                [
+                  "lock",
+                  "Valuables and papers",
+                  "Put away cash, jewellery, documents and anything fragile."
+                ],
+                [
+                  "key",
+                  "Access",
+                  "Tell us about keys, entry codes, lifts and where we can park."
+                ],
+                [
+                  "heart",
+                  "Pets and allergies",
+                  "Let us know about pets, allergies and products you would rather avoid."
+                ],
+                [
+                  "drop",
+                  "Water and power",
+                  "We need running water and a working socket in each area."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Ready to book?",
+              "p": "Tell us the service and the size of the place. We suggest a package and a day.",
+              "button": [
+                "Get a quote",
+                "/#contact"
+              ]
+            }
+          ]
+        },
+        "prices": {
+          "title": "Price list",
+          "description": "Starting prices for home, office, post-renovation, window and upholstery cleaning, and extras.",
+          "pagehead": [
+            "Price list",
+            "Starting prices for a typical visit. We confirm the exact amount from your details or photos, before any work starts."
+          ],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Home cleaning",
+                  "items": [
+                    [
+                      "Studio, up to 45 m²",
+                      "Standard clean",
+                      "from €40"
+                    ],
+                    [
+                      "Apartment, up to 80 m²",
+                      "Standard clean",
+                      "from €65"
+                    ],
+                    [
+                      "House, up to 140 m²",
+                      "Standard clean",
+                      "from €110"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Offices",
+                  "items": [
+                    [
+                      "Small office, per visit",
+                      "Up to 60 m²: desks, floors, kitchenette",
+                      "from €35"
+                    ],
+                    [
+                      "Larger office, per visit",
+                      "Up to 150 m²",
+                      "from €80"
+                    ]
+                  ]
+                },
+                {
+                  "name": "After renovation",
+                  "items": [
+                    [
+                      "Per m²",
+                      "Fine dust, splashes, floors and frames",
+                      "from €4"
+                    ],
+                    [
+                      "Minimum charge",
+                      "Small jobs, up to 30 m²",
+                      "from €120"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Windows",
+                  "items": [
+                    [
+                      "Standard window",
+                      "Glass, frame and sill, inside and out",
+                      "from €8"
+                    ],
+                    [
+                      "Balcony door",
+                      "Both sides",
+                      "from €10"
+                    ],
+                    [
+                      "Shopfront or large glass, per m²",
+                      "Reachable from the ground",
+                      "from €3"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Upholstery",
+                  "items": [
+                    [
+                      "Two-seat sofa",
+                      "Extraction cleaning",
+                      "from €45"
+                    ],
+                    [
+                      "Armchair",
+                      "",
+                      "from €20"
+                    ],
+                    [
+                      "Dining chair",
+                      "",
+                      "from €8"
+                    ],
+                    [
+                      "Mattress, one side",
+                      "",
+                      "from €35"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Extras",
+                  "items": [
+                    [
+                      "Inside the oven",
+                      "",
+                      "from €20"
+                    ],
+                    [
+                      "Inside the fridge",
+                      "",
+                      "from €15"
+                    ],
+                    [
+                      "Kitchen cupboards, inside",
+                      "",
+                      "from €25"
+                    ],
+                    [
+                      "Balcony",
+                      "",
+                      "from €15"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Not sure what you need?",
+              "p": "Send a few photos and we will suggest the right service.",
+              "button": [
+                "Get a quote",
+                "/#contact"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "bg": {
+      "tagline": "почистване на домове и офиси",
+      "description": "Почистване на дом, офис и след ремонт, както и прозорци и мека мебел. Изберете пакет и поръчайте онлайн.",
+      "nav": [
+        [
+          "Услуги",
+          "/services.html"
+        ],
+        [
+          "Цени",
+          "/prices.html"
+        ],
+        [
+          "Как да поръчате",
+          "/#how"
+        ],
+        [
+          "Въпроси",
+          "/#faq"
+        ]
+      ],
+      "headerCta": [
+        "Поискайте оферта",
+        "/#contact"
+      ],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Дом, офис и почистване след ремонт",
+            "eyebrowIcon": "spark",
+            "title": "Чист дом и *свободен уикенд*",
+            "lead": "Редовно почистване на дом и офис, основно почистване след ремонт, прозорци и мека мебел. Кажете ни колко е голям обектът и ще уговорим пакет и ден.",
+            "cta": [
+              "Поискайте оферта",
+              "/#contact"
+            ],
+            "cta2": [
+              "Вижте пакетите",
+              "/#packages"
+            ],
+            "card": {
+              "icon": "home",
+              "title": "Как изглежда едно почистване",
+              "rows": [
+                [
+                  "Кухня",
+                  "плот, мивка, печка"
+                ],
+                [
+                  "Баня",
+                  "плочки, тоалетна, огледала"
+                ],
+                [
+                  "Стаи",
+                  "прах и подове"
+                ],
+                [
+                  "Накрая",
+                  "кошчета, прозорци по желание"
+                ]
+              ],
+              "note": "Всяка стая има свой списък."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                [
+                  "check",
+                  "Списък за всяка стая"
+                ],
+                [
+                  "drop",
+                  "Носим препарати и уреди"
+                ],
+                [
+                  "calendar",
+                  "Еднократно или редовно"
+                ],
+                [
+                  "leaf",
+                  "Без аромати — при поискване"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "services",
+              "title": "Какво почистваме",
+              "intro": "Изберете една услуга или комбинирайте. Всяка има ясен списък с това, което включва.",
+              "items": [
+                [
+                  "home",
+                  "Почистване на дом",
+                  "Кухня, бани, спални и подове, със списък за всяка стая."
+                ],
+                [
+                  "users",
+                  "Почистване на офис",
+                  "Бюра, офис кухня, заседателни зали, подове и кошчета — вечер или рано сутрин, ако предпочитате."
+                ],
+                [
+                  "brush",
+                  "След ремонт",
+                  "Фин прах от всички повърхности, петна от боя и мазилка, дограма и накрая измиване на подовете."
+                ],
+                [
+                  "sun",
+                  "Прозорци и мека мебел",
+                  "Стъкла, дограма и первази, както и дълбоко почистване на дивани, фотьойли и матраци."
+                ]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "approach",
+              "alt": true,
+              "title": "Чисто, което можете да проверите",
+              "items": [
+                [
+                  "Ясен списък за всяка стая",
+                  "С писмен списък вие знаете какво се почиства, а ние — какво да проверим, преди да си тръгнем.",
+                  "Кухня: плот, мивка, печка, външната страна на уредите",
+                  "Баня: плочки, смесители, тоалетна, огледала",
+                  "Подовете — с прахосмукачка и измити, кошчетата — изпразнени"
+                ],
+                [
+                  "Наши препарати или ваши",
+                  "Носим уредите и професионалните препарати. Ако някой у дома е чувствителен към аромати, кажете ни и ще ги сменим.",
+                  "Цветни кърпи, за да не се смесват кухнята и банята",
+                  "Препарати без аромат — при поискване",
+                  "Калцуни или чехли — както предпочитате"
+                ],
+                [
+                  "Малко подготовка помага",
+                  "Малко разтребване ни позволява да отделим времето за почистване, а не за местене на вещи.",
+                  "Приберете ценностите, документите и чупливите предмети",
+                  "Освободете подовете и повърхностите, доколкото можете",
+                  "Кажете ни за домашни любимци, ключове и паркиране"
+                ]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "packages",
+              "title": "Пакети според размера",
+              "intro": "Начални цени за стандартно почистване. Офисите, ремонтите, прозорците и меката мебел са в ценоразписа.",
+              "items": [
+                {
+                  "name": "Студио",
+                  "price": "от 40 €",
+                  "per": "на посещение",
+                  "features": [
+                    "Студио или едностаен апартамент",
+                    "Кухня и баня",
+                    "Подове, прах и кошчета",
+                    "Списък за помещенията"
+                  ],
+                  "cta": [
+                    "Поискайте оферта",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Апартамент",
+                  "price": "от 65 €",
+                  "per": "на посещение",
+                  "featured": "Популярен",
+                  "features": [
+                    "Две или три стаи",
+                    "Кухня и една-две бани",
+                    "Прах, прахосмукачка и мокро почистване",
+                    "Списък стая по стая"
+                  ],
+                  "cta": [
+                    "Поискайте оферта",
+                    "/#contact"
+                  ]
+                },
+                {
+                  "name": "Къща",
+                  "price": "от 110 €",
+                  "per": "на посещение",
+                  "features": [
+                    "Къща на няколко етажа",
+                    "Кухня и няколко бани",
+                    "Стълбища и коридори",
+                    "Време, планирано според размера"
+                  ],
+                  "cta": [
+                    "Поискайте оферта",
+                    "/#contact"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "how",
+              "alt": true,
+              "title": "Как да поръчате",
+              "intro": "Четири кратки стъпки от първото съобщение до чистия дом.",
+              "items": [
+                [
+                  "Разкажете ни",
+                  "Вид почистване, размер на обекта и адрес. Няколко снимки помагат."
+                ],
+                [
+                  "Получавате оферта",
+                  "Потвърждаваме пакета, цената и удобен за вас ден."
+                ],
+                [
+                  "Подготвяте се",
+                  "Приберете ценностите и освободете повърхностите, доколкото можете."
+                ],
+                [
+                  "Почистваме",
+                  "Следваме списъка за всяка стая и ви казваме, когато сме готови."
+                ]
+              ]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "title": "Въпроси, които чуваме често",
+              "items": [
+                [
+                  "Трябва ли да съм вкъщи?",
+                  "Не непременно. Можете да оставите ключ или код за достъп, а ние ще ви уведомим, когато приключим. За първото посещение е полезно да сте там и да ни разведете."
+                ],
+                [
+                  "Носите ли си препарати и уреди?",
+                  "Да — прахосмукачка, парочистачка, микрофибърни кърпи и професионални препарати. Ако предпочитате свои или ви трябват без аромат, кажете ни при поръчката."
+                ],
+                [
+                  "Как се определя цената?",
+                  "По размера на обекта, вида почистване и степента на замърсяване. Пакетите показват начални цени, а точната сума потвърждаваме по ваши данни или снимки, преди да започнем."
+                ],
+                [
+                  "Колко време отнема едно почистване?",
+                  "Малък апартамент — няколко часа. Къща или обект след ремонт могат да отнемат цял ден или повече, с няколко души. Времето ви казваме в офертата."
+                ],
+                [
+                  "Може ли редовно почистване?",
+                  "Да — всяка седмица, на две седмици или веднъж месечно, в точно определен ден и час. Кажете ни кой ритъм ви е удобен при поръчката."
+                ],
+                [
+                  "Ами ако нещо не е наред?",
+                  "Кажете ни веднага щом забележите, по възможност със снимка. Ще се разберем как да го поправим."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Не знаете кой пакет ви трябва?",
+              "p": "Изпратете размера на обекта и няколко снимки. Ще предложим какво е нужно и какво не.",
+              "button": [
+                "Поискайте оферта",
+                "/#contact"
+              ]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Поискайте оферта",
+              "intro": "Изберете услуга и размер на обекта. Ще отговорим с пакет и предложение за ден.",
+              "formName": "quote",
+              "rows": [
+                [
+                  "mail",
+                  "Имейл",
+                  "hello@example.com",
+                  "mailto:hello@example.com"
+                ],
+                [
+                  "phone",
+                  "Телефон",
+                  "+359 888 000 000",
+                  "tel:+359888000000"
+                ],
+                [
+                  "pin",
+                  "Адрес",
+                  "ул. Витоша 1, София"
+                ]
+              ],
+              "fields": [
+                {
+                  "id": "service",
+                  "label": "Услуга",
+                  "options": [
+                    "Почистване на дом",
+                    "Почистване на офис",
+                    "След ремонт",
+                    "Прозорци",
+                    "Мека мебел"
+                  ]
+                },
+                {
+                  "id": "size",
+                  "label": "Размер на обекта",
+                  "options": [
+                    "До 45 м²",
+                    "46–80 м²",
+                    "81–140 м²",
+                    "Над 140 м²"
+                  ]
+                }
+              ],
+              "messageLabel": "Адрес и бележки (по избор)",
+              "send": "Изпратете заявка",
+              "hoursTitle": "Работно време",
+              "hours": [
+                [
+                  "Понеделник – петък",
+                  "8:00 – 18:00"
+                ],
+                [
+                  "Събота",
+                  "9:00 – 14:00"
+                ],
+                [
+                  "Неделя",
+                  "почивен ден"
+                ]
+              ]
+            }
+          ]
+        },
+        "services": {
+          "title": "Услуги и какво включват",
+          "description": "Какво включва почистването на дом, офис, след ремонт, на прозорци и мека мебел.",
+          "pagehead": [
+            "Какво включва",
+            "Всяка услуга има списък. Кажете ни, ако искате нещо да добавим или пропуснем."
+          ],
+          "sections": [
+            {
+              "type": "split",
+              "items": [
+                [
+                  "Почистване на дом",
+                  "Цялостно освежаване на стаите, в които живеете.",
+                  "Кухня: плот, мивка, печка и предната част на уредите",
+                  "Бани: плочки, смесители, тоалетна и огледала",
+                  "Спални и дневна: прах, подове и кошчета"
+                ],
+                [
+                  "Почистване на офис",
+                  "Редовно почистване, което се нарежда около работния ви ден.",
+                  "Бюра, общи повърхности, офис кухня и заседателни зали",
+                  "Подове, кошчета и санитарни помещения — с вашите консумативи",
+                  "Вечер, рано сутрин или през почивните дни"
+                ],
+                [
+                  "След ремонт",
+                  "Прах, боя и мазилка — премахнати, преди да се нанесете.",
+                  "Фин прах от рафтове, первази, радиатори и врати",
+                  "Петна от боя, мазилка и лепило по стъкла, плочки и подове",
+                  "Дограма, контакти и накрая измиване на подовете"
+                ],
+                [
+                  "Прозорци",
+                  "Бистри стъкла и чиста дограма — без да се качвате на стълба.",
+                  "Стъкла, дограма и первази — отвътре и отвън",
+                  "Балконски врати и стъклени прегради",
+                  "Само достъпни височини; предварително казваме кое не може"
+                ],
+                [
+                  "Мека мебел",
+                  "Дълбоко почистване, което вдига мръсотията и ежедневните петна.",
+                  "Дивани, фотьойли, трапезни столове и матраци",
+                  "Първо проверяваме плата, за да изберем подходящия метод",
+                  "Преди да започнем, обясняваме колко време ще съхне"
+                ]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "prepare",
+              "alt": true,
+              "title": "Какво да подготвите",
+              "intro": "Няколко минути преди да пристигнем правят почистването по-бързо и по-добро.",
+              "items": [
+                [
+                  "lock",
+                  "Ценности и документи",
+                  "Приберете пари, бижута, документи и всичко чупливо."
+                ],
+                [
+                  "key",
+                  "Достъп",
+                  "Кажете ни за ключове, кодове, асансьор и къде можем да паркираме."
+                ],
+                [
+                  "heart",
+                  "Любимци и алергии",
+                  "Споделете за домашни любимци, алергии и препарати, които искате да избегнем."
+                ],
+                [
+                  "drop",
+                  "Вода и ток",
+                  "Във всяка зона са ни нужни течаща вода и работещ контакт."
+                ]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Готови ли сте да поръчате?",
+              "p": "Кажете ни услугата и размера на обекта. Ще предложим пакет и ден.",
+              "button": [
+                "Поискайте оферта",
+                "/#contact"
+              ]
+            }
+          ]
+        },
+        "prices": {
+          "title": "Ценоразпис",
+          "description": "Начални цени за почистване на дом, офис, след ремонт, прозорци и мека мебел, както и за допълнителни услуги.",
+          "pagehead": [
+            "Ценоразпис",
+            "Начални цени за обикновено посещение. Точната сума потвърждаваме по ваши данни или снимки, преди да започнем."
+          ],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Почистване на дом",
+                  "items": [
+                    [
+                      "Студио, до 45 м²",
+                      "Стандартно почистване",
+                      "от 40 €"
+                    ],
+                    [
+                      "Апартамент, до 80 м²",
+                      "Стандартно почистване",
+                      "от 65 €"
+                    ],
+                    [
+                      "Къща, до 140 м²",
+                      "Стандартно почистване",
+                      "от 110 €"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Офиси",
+                  "items": [
+                    [
+                      "Малък офис, на посещение",
+                      "До 60 м²: бюра, подове, офис кухня",
+                      "от 35 €"
+                    ],
+                    [
+                      "По-голям офис, на посещение",
+                      "До 150 м²",
+                      "от 80 €"
+                    ]
+                  ]
+                },
+                {
+                  "name": "След ремонт",
+                  "items": [
+                    [
+                      "На квадратен метър",
+                      "Фин прах, петна, подове и дограма",
+                      "от 4 €"
+                    ],
+                    [
+                      "Минимална цена",
+                      "Малки обекти, до 30 м²",
+                      "от 120 €"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Прозорци",
+                  "items": [
+                    [
+                      "Стандартен прозорец",
+                      "Стъкло, дограма и перваз, отвътре и отвън",
+                      "от 8 €"
+                    ],
+                    [
+                      "Балконска врата",
+                      "И от двете страни",
+                      "от 10 €"
+                    ],
+                    [
+                      "Витрина или голямо стъкло, на м²",
+                      "Достъпно от земята",
+                      "от 3 €"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Мека мебел",
+                  "items": [
+                    [
+                      "Двуместен диван",
+                      "Екстракционно почистване",
+                      "от 45 €"
+                    ],
+                    [
+                      "Фотьойл",
+                      "",
+                      "от 20 €"
+                    ],
+                    [
+                      "Стол за маса",
+                      "",
+                      "от 8 €"
+                    ],
+                    [
+                      "Матрак, едната страна",
+                      "",
+                      "от 35 €"
+                    ]
+                  ]
+                },
+                {
+                  "name": "Допълнително",
+                  "items": [
+                    [
+                      "Вътре във фурната",
+                      "",
+                      "от 20 €"
+                    ],
+                    [
+                      "Вътре в хладилника",
+                      "",
+                      "от 15 €"
+                    ],
+                    [
+                      "Кухненски шкафове, отвътре",
+                      "",
+                      "от 25 €"
+                    ],
+                    [
+                      "Балкон",
+                      "",
+                      "от 15 €"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Не сте сигурни какво ви трябва?",
+              "p": "Изпратете няколко снимки и ще предложим подходящата услуга.",
+              "button": [
+                "Поискайте оферта",
+                "/#contact"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

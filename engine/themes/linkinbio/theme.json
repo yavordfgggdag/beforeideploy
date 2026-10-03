@@ -55,6 +55,50 @@
     "contacts",
     "photos"
   ],
+  "hints": {
+    "en": {
+      "offer": "I share travel and food stories on Instagram and YouTube, and I sell a small travel guide in my shop.",
+      "audience": "Followers who want everything I make in one place",
+      "services": [
+        [
+          "Latest video",
+          "",
+          "The newest episode, straight from my channel"
+        ],
+        [
+          "Travel guide",
+          "€9",
+          "My favourite places, ready to print"
+        ],
+        [
+          "Work with me",
+          "",
+          "Collaborations and brand partnerships"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Споделям истории за пътувания и храна в Инстаграм и Ютуб, а в магазина си продавам малък пътеводител.",
+      "audience": "Последователи, които искат всичко, което правя, на едно място",
+      "services": [
+        [
+          "Най-новото видео",
+          "",
+          "Последният епизод направо от канала ми"
+        ],
+        [
+          "Пътеводител",
+          "9 €",
+          "Любимите ми места, готови за разпечатване"
+        ],
+        [
+          "За сътрудничество",
+          "",
+          "Партньорства и кампании с марки"
+        ]
+      ]
+    }
+  },
   "lang": {
     "bg": {
       "tagline": "всички линкове на едно място",

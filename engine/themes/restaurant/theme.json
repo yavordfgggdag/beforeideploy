@@ -62,6 +62,50 @@
     "contacts",
     "photos"
   ],
+  "hints": {
+    "en": {
+      "offer": "We are a small restaurant with a seasonal menu, local produce and a wine list from small wineries. Come for lunch, dinner or a celebration.",
+      "audience": "Couples, families, friends and groups celebrating",
+      "services": [
+        [
+          "Roast beetroot salad",
+          "€7",
+          "Goat cheese, walnuts and honey"
+        ],
+        [
+          "Rosemary lamb",
+          "€14",
+          "Slow-roasted, with potatoes"
+        ],
+        [
+          "Chocolate fondant",
+          "€6",
+          "With vanilla ice cream"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Ние сме малък ресторант със сезонно меню, местни продукти и винена листа от малки изби. Елате на обяд, на вечеря или за празник.",
+      "audience": "Двойки, семейства, приятели и компании, които празнуват",
+      "services": [
+        [
+          "Салата с печена цвекла",
+          "7 €",
+          "Козе сирене, орехи и мед"
+        ],
+        [
+          "Агнешко с розмарин",
+          "14 €",
+          "Бавно печено, с картофи"
+        ],
+        [
+          "Шоколадов фондан",
+          "6 €",
+          "С ванилов сладолед"
+        ]
+      ]
+    }
+  },
   "lang": {
     "bg": {
       "tagline": "ресторант и винен бар",
@@ -91,10 +135,10 @@
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "Отворено днес до 23:00",
+            "eyebrow": "Дойдете гладни, останете за по-дълго",
             "eyebrowIcon": "clock",
             "title": "Сезонна кухня, *сготвена с време*",
-            "lead": "Местни продукти, хляб с квас от нашата фурна и вино от малки изби. Маса за двама или празник за двайсет.",
+            "lead": "Сезонни ястия, пресен хляб и вино от малки изби. Маса за двама или празник с цялото семейство.",
             "cta": [
               "Резервирай маса",
               "/#contact"
@@ -133,17 +177,17 @@
                 [
                   "leaf",
                   "Местни продукти",
-                  "Зеленчуци от ферми до 80 км и месо от проверени стопанства."
+                  "Зеленчуци от близки ферми и месо от стопанства, които познаваме."
                 ],
                 [
                   "cup",
                   "Подбрани вина",
-                  "Над 60 етикета от малки български изби."
+                  "Винена листа от малки български изби."
                 ],
                 [
                   "users",
                   "Събития",
-                  "Рождени дни, фирмени вечери и дегустации до 40 гости."
+                  "Рождени дни, фирмени вечери и дегустации за по-големи компании."
                 ]
               ]
             },
@@ -151,12 +195,12 @@
               "type": "gallery",
               "alt": true,
               "title": "Атмосфера",
-              "intro": "Сменете плочките със снимки на салона, ястията и екипа.",
+              "intro": "Поглед към салона, ястията и хората.",
               "items": [
                 "Салонът",
-                "Лятната градина",
+                "Барът",
                 "Кухнята",
-                "Винената изба"
+                "Чаши и бутилки"
               ]
             },
             {
@@ -183,7 +227,7 @@
               "id": "contact",
               "alt": true,
               "title": "Резервация",
-              "intro": "За групи над 8 души се обадете по телефона.",
+              "intro": "За по-големи компании се обадете по телефона.",
               "formName": "reservation",
               "rows": [
                 [
@@ -335,7 +379,7 @@
             {
               "type": "cta",
               "h": "Запазете маса",
-              "p": "Петък и събота вечер са пълни — резервирайте предварително.",
+              "p": "Планирате вечер навън? Резервирайте предварително и масата ви ще е готова.",
               "button": [
                 "Резервирай",
                 "/#contact"
@@ -373,10 +417,10 @@
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "Open today until 23:00",
+            "eyebrow": "Come hungry, stay a while",
             "eyebrowIcon": "clock",
             "title": "Seasonal cooking, *made with time*",
-            "lead": "Local produce, sourdough from our own oven and wine from small wineries. A table for two or a party for twenty.",
+            "lead": "Seasonal dishes, fresh bread and wine from small wineries. A table for two or a celebration with the whole family.",
             "cta": [
               "Book a table",
               "/#contact"
@@ -415,17 +459,17 @@
                 [
                   "leaf",
                   "Local produce",
-                  "Vegetables from farms within 80 km and meat from farms we know."
+                  "Vegetables from nearby farms and meat from farms we know."
                 ],
                 [
                   "cup",
                   "Hand-picked wine",
-                  "Over 60 labels from small wineries."
+                  "A wine list from small wineries."
                 ],
                 [
                   "users",
                   "Events",
-                  "Birthdays, company dinners and tastings for up to 40 guests."
+                  "Birthdays, company dinners and tastings for larger groups."
                 ]
               ]
             },
@@ -433,12 +477,12 @@
               "type": "gallery",
               "alt": true,
               "title": "Atmosphere",
-              "intro": "Replace the tiles with photos of the room, the food and the team.",
+              "intro": "A look at the room, the food and the people.",
               "items": [
                 "The dining room",
-                "Summer garden",
+                "The bar",
                 "The kitchen",
-                "Wine cellar"
+                "Glasses and bottles"
               ]
             },
             {
@@ -465,7 +509,7 @@
               "id": "contact",
               "alt": true,
               "title": "Book a table",
-              "intro": "For groups over 8 please call us.",
+              "intro": "For larger groups please call us.",
               "formName": "reservation",
               "rows": [
                 [
@@ -617,7 +661,7 @@
             {
               "type": "cta",
               "h": "Save a table",
-              "p": "Friday and Saturday evenings fill up — book ahead.",
+              "p": "Planning an evening out? Book ahead and we will have your table ready.",
               "button": [
                 "Book",
                 "/#contact"

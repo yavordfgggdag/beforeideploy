@@ -56,10 +56,54 @@
     "contacts",
     "photos"
   ],
+  "hints": {
+    "en": {
+      "offer": "We organise a one-day design conference with talks, hands-on workshops and an evening party for people who work in digital products.",
+      "audience": "Designers, developers and product people, from students to team leads",
+      "services": [
+        [
+          "Standard ticket",
+          "€89",
+          "All talks, lunch and coffee"
+        ],
+        [
+          "VIP ticket",
+          "€199",
+          "Dinner with the speakers and front-row seats"
+        ],
+        [
+          "Team ticket",
+          "€75",
+          "Price per person for groups, with one invoice"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Организираме еднодневна конференция по дизайн с лекции, практически работилници и вечерно парти за хората, които работят с дигитални продукти.",
+      "audience": "Дизайнери, разработчици и продуктови специалисти — от студенти до ръководители на екипи",
+      "services": [
+        [
+          "Стандартен билет",
+          "89 €",
+          "Всички лекции, обяд и кафе"
+        ],
+        [
+          "VIP билет",
+          "199 €",
+          "Вечеря с лекторите и места на първите редове"
+        ],
+        [
+          "Билет за екип",
+          "75 €",
+          "Цена на човек за групи, с обща фактура"
+        ]
+      ]
+    }
+  },
   "lang": {
     "bg": {
-      "tagline": "конференция 2026",
-      "description": "Един ден, 20 лектори и 500 участници. Вземете билет, докато има ранни цени.",
+      "tagline": "ден на лекции и работилници",
+      "description": "Ден на лекции, работилници и добра компания. Разгледайте програмата и изберете билет.",
       "nav": [
         [
           "Програма",
@@ -85,10 +129,10 @@
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "14 ноември · София",
+            "eyebrow": "Лекции · работилници · запознанства",
             "eyebrowIcon": "calendar",
             "title": "Един ден, който *променя посоката*",
-            "lead": "20 лектори, 3 сцени и 500 души, които правят интересни неща. Лекции, работилници и много разговори.",
+            "lead": "Лекции, практически работилници и дълги почивки за разговори с хора, които правят интересни неща.",
             "cta": [
               "Вземи билет",
               "/#tickets"
@@ -157,7 +201,7 @@
                 ],
                 [
                   "11:00",
-                  "Лекции на три сцени",
+                  "Лекции в паралелни потоци",
                   "Технологии, дизайн и бизнес."
                 ],
                 [
@@ -180,18 +224,18 @@
               "items": [
                 [
                   "mic",
-                  "Анна Георгиева",
-                  "Продуктов директор · за растежа без хаос."
+                  "Основна лекция",
+                  "Откриващата лекция — за това как се правят добри продукти."
                 ],
                 [
                   "mic",
-                  "Иван Петков",
-                  "Основател · от гараж до 100 служители."
+                  "Случай от практиката",
+                  "Екип разказва за реален проект: какво проработи и какво не."
                 ],
                 [
                   "mic",
-                  "Мария Стоянова",
-                  "Дизайнер · как се прави продукт, който се обича."
+                  "Работилница",
+                  "Практическа сесия в малка група, за да опитате сами."
                 ]
               ]
             },
@@ -231,7 +275,7 @@
                   ]
                 },
                 {
-                  "name": "Екип (5+)",
+                  "name": "Екип",
                   "price": "75 €",
                   "per": "/ човек",
                   "features": [
@@ -253,7 +297,7 @@
               "items": [
                 [
                   "Мога ли да върна билета?",
-                  "Да, до 14 дни преди събитието — или да го прехвърлите на колега."
+                  "Пишете ни преди събитието и ще върнем билета или ще го прехвърлим на колега."
                 ],
                 [
                   "Ще има ли записи?",
@@ -261,7 +305,7 @@
                 ],
                 [
                   "Къде е?",
-                  "В конгресен център в центъра на София, на 5 минути от метро."
+                  "Адресът е в раздела за контакт по-долу, заедно с указания как да стигнете."
                 ]
               ]
             },
@@ -298,7 +342,7 @@
                   "options": [
                     "Стандартен",
                     "VIP",
-                    "Екип (5+)",
+                    "Екип",
                     "Партньорство"
                   ]
                 }
@@ -311,8 +355,8 @@
       }
     },
     "en": {
-      "tagline": "conference 2026",
-      "description": "One day, 20 speakers and 500 attendees. Get your ticket while early prices last.",
+      "tagline": "a day of talks and workshops",
+      "description": "A day of talks, workshops and good company. See the programme and choose your ticket.",
       "nav": [
         [
           "Schedule",
@@ -338,10 +382,10 @@
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "14 November · Sofia",
+            "eyebrow": "Talks · workshops · networking",
             "eyebrowIcon": "calendar",
             "title": "One day that *changes direction*",
-            "lead": "20 speakers, 3 stages and 500 people doing interesting things. Talks, workshops and plenty of conversations.",
+            "lead": "Talks, hands-on workshops and long breaks for conversation with people who are doing interesting things.",
             "cta": [
               "Get a ticket",
               "/#tickets"
@@ -410,7 +454,7 @@
                 ],
                 [
                   "11:00",
-                  "Talks on three stages",
+                  "Talks in parallel tracks",
                   "Tech, design and business."
                 ],
                 [
@@ -433,18 +477,18 @@
               "items": [
                 [
                   "mic",
-                  "Anna Georgieva",
-                  "Chief product officer · growth without chaos."
+                  "Keynote",
+                  "The opening talk, on how good products get made."
                 ],
                 [
                   "mic",
-                  "Ivan Petkov",
-                  "Founder · from a garage to 100 people."
+                  "Case study",
+                  "A team shows a real project: what worked and what did not."
                 ],
                 [
                   "mic",
-                  "Maria Stoyanova",
-                  "Designer · building products people love."
+                  "Workshop",
+                  "A hands-on session in a small group, so you can try it yourself."
                 ]
               ]
             },
@@ -484,7 +528,7 @@
                   ]
                 },
                 {
-                  "name": "Team (5+)",
+                  "name": "Team",
                   "price": "€75",
                   "per": "/ person",
                   "features": [
@@ -506,7 +550,7 @@
               "items": [
                 [
                   "Can I get a refund?",
-                  "Yes, up to 14 days before the event — or transfer it to a colleague."
+                  "Write to us before the event and we will refund the ticket or transfer it to a colleague."
                 ],
                 [
                   "Will there be recordings?",
@@ -514,7 +558,7 @@
                 ],
                 [
                   "Where is it?",
-                  "A congress centre in central Sofia, 5 minutes from the metro."
+                  "The address is in the contact section below, with directions on how to get there."
                 ]
               ]
             },
@@ -551,7 +595,7 @@
                   "options": [
                     "Standard",
                     "VIP",
-                    "Team (5+)",
+                    "Team",
                     "Partnership"
                   ]
                 }

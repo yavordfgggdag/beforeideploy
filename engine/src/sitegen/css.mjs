@@ -245,6 +245,7 @@ p { margin: 0; }
 
 /* contact */
 .contact { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.contact.solo { grid-template-columns: minmax(0, 640px); justify-content: center; }
 .info { display: grid; gap: 14px; align-content: start; }
 .row { display: flex; gap: 14px; align-items: flex-start; padding: 18px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); }
 .row svg { width: 22px; height: 22px; color: var(--accent-text); flex: none; margin-top: 2px; }

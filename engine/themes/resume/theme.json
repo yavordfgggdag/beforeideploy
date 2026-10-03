@@ -28,7 +28,7 @@
     ],
     "bg": [
       "автобиография",
-      "cv",
+      "резюме",
       "работа",
       "кариера",
       "умения",
@@ -57,6 +57,50 @@
     "contacts",
     "photos"
   ],
+  "hints": {
+    "en": {
+      "offer": "I am a product manager who turns complex problems into simple products, and I am looking for my next role in a software team.",
+      "audience": "Recruiters and hiring managers at software companies",
+      "services": [
+        [
+          "Product strategy",
+          "",
+          "Roadmaps and priorities for a software team"
+        ],
+        [
+          "User research",
+          "",
+          "Interviews and tests that shape the product"
+        ],
+        [
+          "Mentoring",
+          "",
+          "Guidance for junior product colleagues"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Продуктов мениджър съм — превръщам сложни проблеми в прости продукти и търся следващата си роля в софтуерен екип.",
+      "audience": "Рекрутери и ръководители в софтуерни компании",
+      "services": [
+        [
+          "Продуктова стратегия",
+          "",
+          "Пътна карта и приоритети за софтуерен екип"
+        ],
+        [
+          "Потребителски проучвания",
+          "",
+          "Интервюта и тестове, които оформят продукта"
+        ],
+        [
+          "Менторство",
+          "",
+          "Напътствия за млади колеги в продуктовия екип"
+        ]
+      ]
+    }
+  },
   "lang": {
     "bg": {
       "tagline": "автобиография и опит",
@@ -89,7 +133,7 @@
             "eyebrow": "Отворен за нови възможности",
             "eyebrowIcon": "spark",
             "title": "Здравейте, аз съм *{{NAME}}*",
-            "lead": "Продуктов мениджър с 8 години опит в софтуерни компании. Превръщам сложни проблеми в прости продукти, които хората обичат.",
+            "lead": "Продуктов мениджър в софтуерни компании. Превръщам сложни проблеми в прости продукти, които хората обичат.",
             "cta": [
               "Свържи се",
               "mailto:hello@example.com"
@@ -99,8 +143,8 @@
               "/#experience"
             ],
             "chips": [
-              "София / дистанционно",
-              "Български, английски, немски"
+              "Дистанционно или на място",
+              "Пишете ми по имейл"
             ]
           },
           "sections": [
@@ -110,23 +154,23 @@
               "title": "Опит",
               "items": [
                 [
-                  "2022 — днес",
+                  "Текуща позиция",
                   "Старши продуктов мениджър · Компания А",
-                  "Водя екип от 12 души. Ръст на активните потребители с 40% за година."
+                  "Ръководя продуктовия екип: пътна карта, приоритети и версии."
                 ],
                 [
-                  "2019 — 2022",
+                  "Предишна позиция",
                   "Продуктов мениджър · Компания Б",
-                  "Пуснах мобилното приложение от нулата до 200 000 потребители."
+                  "Преведох мобилното приложение от първата идея до пускането му."
                 ],
                 [
-                  "2016 — 2019",
+                  "По-рано",
                   "Бизнес анализатор · Компания В",
                   "Анализи и процеси за отдела по продажби."
                 ],
                 [
-                  "2012 — 2016",
-                  "Бакалавър, Икономика · СУ",
+                  "Образование",
+                  "Бакалавър, Икономика · Университет",
                   "Дипломна работа за поведенческа икономика."
                 ]
               ]
@@ -154,17 +198,17 @@
                 [
                   "rocket",
                   "Мобилно приложение",
-                  "От идея до 200 000 потребители за 18 месеца."
+                  "От първата идея до пуснато приложение, което хората ползват."
                 ],
                 [
                   "chart",
                   "Нова ценова политика",
-                  "+18% приходи без загуба на клиенти."
+                  "По-ясен ценови модел, изпробван с реални клиенти."
                 ],
                 [
                   "users",
                   "Програма за менторство",
-                  "30 младши колеги, 8 от тях вече водят екипи."
+                  "Млади колеги, подкрепяни стъпка по стъпка, докато поемат повече отговорност."
                 ]
               ]
             },
@@ -231,7 +275,7 @@
             "eyebrow": "Open to new opportunities",
             "eyebrowIcon": "spark",
             "title": "Hi, I’m *{{NAME}}*",
-            "lead": "A product manager with 8 years at software companies. I turn complex problems into simple products people love.",
+            "lead": "A product manager at software companies. I turn complex problems into simple products people love.",
             "cta": [
               "Get in touch",
               "mailto:hello@example.com"
@@ -241,8 +285,8 @@
               "/#experience"
             ],
             "chips": [
-              "Sofia / remote",
-              "Bulgarian, English, German"
+              "Remote or on site",
+              "Write to me by email"
             ]
           },
           "sections": [
@@ -252,23 +296,23 @@
               "title": "Experience",
               "items": [
                 [
-                  "2022 — now",
+                  "Current role",
                   "Senior Product Manager · Company A",
-                  "Leading a team of 12. Active users up 40% in a year."
+                  "Running the product team: roadmap, priorities and releases."
                 ],
                 [
-                  "2019 — 2022",
+                  "Previous role",
                   "Product Manager · Company B",
-                  "Launched the mobile app from zero to 200,000 users."
+                  "Took the mobile app from the first idea to launch."
                 ],
                 [
-                  "2016 — 2019",
+                  "Earlier role",
                   "Business Analyst · Company C",
                   "Analysis and processes for the sales department."
                 ],
                 [
-                  "2012 — 2016",
-                  "BSc Economics · Sofia University",
+                  "Education",
+                  "BSc Economics · University",
                   "Thesis on behavioural economics."
                 ]
               ]
@@ -296,17 +340,17 @@
                 [
                   "rocket",
                   "Mobile app",
-                  "From idea to 200,000 users in 18 months."
+                  "From first idea to a launched app that people use."
                 ],
                 [
                   "chart",
                   "New pricing",
-                  "+18% revenue with no customer loss."
+                  "A clearer pricing model, tested with real customers."
                 ],
                 [
                   "users",
                   "Mentoring program",
-                  "30 junior colleagues, 8 of them now lead teams."
+                  "Junior colleagues supported step by step as they take on more responsibility."
                 ]
               ]
             },

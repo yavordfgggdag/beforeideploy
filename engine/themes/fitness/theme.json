@@ -59,10 +59,54 @@
     "contacts",
     "photos"
   ],
+  "hints": {
+    "en": {
+      "offer": "We run small-group classes and personal training for people who want to get stronger, with a simple nutrition plan if you ask for one.",
+      "audience": "Beginners and regulars who want a coach and a plan",
+      "services": [
+        [
+          "Monthly membership",
+          "€35",
+          "Open gym and group classes"
+        ],
+        [
+          "Personal session",
+          "€20",
+          "One-to-one with a coach, built around your goal"
+        ],
+        [
+          "Starter assessment",
+          "€15",
+          "Fitness test and a plan for the first weeks"
+        ]
+      ]
+    },
+    "bg": {
+      "offer": "Водим групови и персонални тренировки за хора, които искат да станат по-силни, и по желание съставяме лесен хранителен план.",
+      "audience": "Начинаещи и редовно трениращи, които искат треньор и план",
+      "services": [
+        [
+          "Месечна карта",
+          "35 €",
+          "Свободен достъп и групови тренировки"
+        ],
+        [
+          "Персонална тренировка",
+          "20 €",
+          "Час насаме с треньор, по вашата цел"
+        ],
+        [
+          "Начална оценка",
+          "15 €",
+          "Фитнес тест и план за първите седмици"
+        ]
+      ]
+    }
+  },
   "lang": {
     "bg": {
       "tagline": "фитнес и персонални тренировки",
-      "description": "Групови и персонални тренировки, хранителни планове и първа тренировка безплатно.",
+      "description": "Групови и персонални тренировки, хранителни планове и първа тренировка, на която поставяме целите ви.",
       "nav": [
         [
           "Програми",
@@ -82,13 +126,13 @@
         ]
       ],
       "headerCta": [
-        "Безплатна тренировка",
+        "Запишете тренировка",
         "/#contact"
       ],
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "Първата тренировка е безплатна",
+            "eyebrow": "Започнете с първа тренировка",
             "eyebrowIcon": "bolt",
             "title": "По-силен *всяка седмица*",
             "lead": "Персонални и групови тренировки с треньори, които следят напредъка ви — и хранителен план, който се спазва лесно.",
@@ -139,7 +183,7 @@
                 [
                   "users",
                   "Групови",
-                  "Мотивация в малки групи до 10 души."
+                  "Мотивация в малка група."
                 ],
                 [
                   "leaf",
@@ -162,7 +206,7 @@
                 [
                   "Вт, Чет · 18:30",
                   "HIIT",
-                  "40 минути, които горят."
+                  "Кратки серии, които горят."
                 ],
                 [
                   "Събота · 10:00",
@@ -194,7 +238,7 @@
                   "name": "Персонална",
                   "price": "240 лв.",
                   "per": "/ 8 трен.",
-                  "featured": "Най-бърз резултат",
+                  "featured": "Популярна",
                   "features": [
                     "Треньор само за вас",
                     "Хранителен план",
@@ -210,8 +254,8 @@
                   "price": "690 лв.",
                   "per": "/ година",
                   "features": [
-                    "Два месеца подарък",
-                    "Замразяване до 30 дни",
+                    "Едно плащане за цялата година",
+                    "Възможност за замразяване",
                     "Карта за гост"
                   ],
                   "cta": [
@@ -225,7 +269,7 @@
               "type": "contact",
               "id": "contact",
               "alt": true,
-              "title": "Запиши безплатна тренировка",
+              "title": "Запишете тренировка",
               "intro": "Кажете ни целта си — ще подберем треньор и час.",
               "formName": "trial",
               "rows": [
@@ -283,7 +327,7 @@
     },
     "en": {
       "tagline": "gym and personal training",
-      "description": "Group and personal training, nutrition plans and a free first session.",
+      "description": "Group and personal training, nutrition plans and a first session to set your goals.",
       "nav": [
         [
           "Programs",
@@ -303,13 +347,13 @@
         ]
       ],
       "headerCta": [
-        "Free session",
+        "Book a session",
         "/#contact"
       ],
       "pages": {
         "index": {
           "hero": {
-            "eyebrow": "Your first session is free",
+            "eyebrow": "Start with a first session",
             "eyebrowIcon": "bolt",
             "title": "Stronger *every week*",
             "lead": "Personal and group training with coaches who track your progress — plus a nutrition plan that is easy to stick to.",
@@ -360,7 +404,7 @@
                 [
                   "users",
                   "Small groups",
-                  "Motivation in groups of up to 10."
+                  "Motivation in a small group."
                 ],
                 [
                   "leaf",
@@ -383,7 +427,7 @@
                 [
                   "Tue, Thu · 18:30",
                   "HIIT",
-                  "40 minutes that burn."
+                  "Short rounds that burn."
                 ],
                 [
                   "Saturday · 10:00",
@@ -415,7 +459,7 @@
                   "name": "Personal",
                   "price": "€120",
                   "per": "/ 8 sessions",
-                  "featured": "Fastest results",
+                  "featured": "Popular",
                   "features": [
                     "A coach just for you",
                     "Nutrition plan",
@@ -431,8 +475,8 @@
                   "price": "€345",
                   "per": "/ year",
                   "features": [
-                    "Two months free",
-                    "Freeze up to 30 days",
+                    "One payment for the year",
+                    "Option to pause your membership",
                     "Guest pass"
                   ],
                   "cta": [
@@ -446,7 +490,7 @@
               "type": "contact",
               "id": "contact",
               "alt": true,
-              "title": "Book a free session",
+              "title": "Book a session",
               "intro": "Tell us your goal — we match you with a coach and a time.",
               "formName": "trial",
               "rows": [

@@ -437,14 +437,17 @@ private struct DetailsStep: View {
     @EnvironmentObject var model: AppModel
     @ObservedObject var draft: SiteBuilderDraft
 
+    /// What to write in each box for this kind of site, in the site's language (S7); the general example when a theme has none.
+    private var hints: SiteHints? { model.templates.first(where: { $0.id == draft.brief.theme })?.hints?[draft.brief.lang] }
+
     var body: some View {
         ScrollView {
             HStack(alignment: .top, spacing: 22) {
                 VStack(alignment: .leading, spacing: 16) {
                     field(L("newsite.name"), required: true) { BIDTextField(placeholder: L("newsite.namePlaceholder"), text: $draft.brief.name) }
-                    field(L("newsite.offer"), hint: L("newsite.offerHint")) { MultilineField(placeholder: L("newsite.offerPlaceholder"), text: $draft.brief.offer, lines: 3) }
-                    field(L("newsite.audience"), hint: L("newsite.audienceHint")) { BIDTextField(placeholder: L("newsite.audiencePlaceholder"), text: $draft.brief.audience) }
-                    field(L("newsite.services"), hint: L("newsite.servicesHint")) { ServicesEditor(services: $draft.brief.services) }
+                    field(L("newsite.offer"), hint: L("newsite.offerHint")) { MultilineField(placeholder: hints?.offer ?? L("newsite.offerPlaceholder"), text: $draft.brief.offer, lines: 3) }
+                    field(L("newsite.audience"), hint: L("newsite.audienceHint")) { BIDTextField(placeholder: hints?.audience ?? L("newsite.audiencePlaceholder"), text: $draft.brief.audience) }
+                    field(L("newsite.services"), hint: L("newsite.servicesHint")) { ServicesEditor(services: $draft.brief.services, examples: hints?.services ?? []) }
                     field(L("newsite.contacts"), hint: L("newsite.contactsHint")) {
                         VStack(spacing: 8) {
                             HStack(spacing: 8) {
@@ -457,6 +460,7 @@ private struct DetailsStep: View {
                             }
                         }
                     }
+                    field(L("newsite.hours"), hint: L("newsite.hoursHint")) { MultilineField(placeholder: L("newsite.hoursPlaceholder"), text: $draft.brief.hours, lines: 3) }
                 }
                 .frame(maxWidth: .infinity)
                 VStack(alignment: .leading, spacing: 16) {
@@ -465,6 +469,10 @@ private struct DetailsStep: View {
                     field(L("newsite.photos"), hint: L("newsite.photosHint")) { PhotosEditor(photos: $draft.brief.photos) }
                     field(L("newsite.language")) {
                         SegmentedControl(options: [(Localization.nativeName("bg"), "bg"), (Localization.nativeName("en"), "en")], selection: $draft.brief.lang)
+                    }
+                    field(L("newsite.tone"), hint: L("newsite.toneHint")) {
+                        SegmentedControl(options: [(L("newsite.tone.auto"), ""), (L("newsite.tone.friendly"), "friendly"), (L("newsite.tone.professional"), "professional"), (L("newsite.tone.premium"), "premium"), (L("newsite.tone.playful"), "playful")],
+                                         selection: Binding(get: { draft.brief.tone ?? "" }, set: { draft.brief.tone = $0.isEmpty ? nil : $0 }))
                     }
                     field(L("newsite.folder"), hint: L("newsite.folderMessage")) {
                         HStack(spacing: 8) {
@@ -528,13 +536,19 @@ private struct MultilineField: View {
 
 private struct ServicesEditor: View {
     @Binding var services: [SiteBrief.Service]
+    /// S7: `[name, price, line]` examples for this kind of site; row n shows example n as its placeholders.
+    var examples: [[String]] = []
+    private func example(_ s: SiteBrief.Service, _ column: Int, _ fallback: String) -> String {
+        guard let i = services.firstIndex(where: { $0.id == s.id }), i < examples.count, column < examples[i].count, !examples[i][column].isEmpty else { return fallback }
+        return examples[i][column]
+    }
     var body: some View {
         VStack(spacing: 8) {
             ForEach($services) { $s in
                 HStack(spacing: 8) {
-                    BIDTextField(placeholder: L("newsite.serviceName"), text: $s.name)
-                    BIDTextField(placeholder: L("newsite.servicePrice"), text: $s.price).frame(width: 110)
-                    BIDTextField(placeholder: L("newsite.serviceText"), text: $s.text)
+                    BIDTextField(placeholder: example(s, 0, L("newsite.serviceName")), text: $s.name)
+                    BIDTextField(placeholder: example(s, 1, L("newsite.servicePrice")), text: $s.price).frame(width: 110)
+                    BIDTextField(placeholder: example(s, 2, L("newsite.serviceText")), text: $s.text)
                     IconButton(symbol: "minus", help: L("newsite.removeService")) { services.removeAll { $0.id == s.id } }
                         .disabled(services.count == 1 && s.name.isEmpty)
                 }

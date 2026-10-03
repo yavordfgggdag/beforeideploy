@@ -1,0 +1,543 @@
+{
+  "schema": "bid.site-theme/1",
+  "id": "farm",
+  "category": "commerce",
+  "icon": "leaf",
+  "accent": "#55702a",
+  "mark": "leaf",
+  "art": "leaves",
+  "schemaOrg": "LocalBusiness",
+  "sample": { "name": "Orchard Hill Farm" },
+  "featured": false,
+  "titleKey": "newsite.template.farm.title",
+  "descriptionKey": "newsite.template.farm.description",
+  "keywords": {
+    "en": ["farm", "farm shop", "vegetable box", "weekly box", "local produce", "honey", "dairy", "cheese", "wine", "preserves", "farmers market", "organic"],
+    "bg": ["ферма", "фермерски магазин", "зеленчуци", "кутия със зеленчуци", "седмична кутия", "местни продукти", "мед", "сирене", "вино", "зимнина", "био", "домашни продукти"]
+  },
+  "style": "calm",
+  "tokens": {
+    "dark": false,
+    "bg": "#f6f4e6",
+    "bg2": "#eaead3",
+    "surface": "#fffef7",
+    "text": "#222b18",
+    "muted": "#556047",
+    "line": "rgba(15,23,42,.10)",
+    "accent": "#55702a",
+    "accent2": "#e0aa2c",
+    "font": "sans",
+    "head": "grotesk",
+    "radius": 16,
+    "tilt": 1
+  },
+  "questions": ["services", "contacts", "photos"],
+  "hints": {
+    "en": {
+      "offer": "We grow vegetables and fruit, make cheese and honey, and pack weekly boxes for pickup or delivery.",
+      "audience": "Families and households who want seasonal food from a local farm",
+      "services": [
+        ["Small box", "€20", "Seasonal vegetables for one or two people"],
+        ["Family box", "€32", "Vegetables, herbs and fruit for a family table"],
+        ["Honey, 500 g", "€9", "A jar from our own hives"]
+      ]
+    },
+    "bg": {
+      "offer": "Отглеждаме зеленчуци и плодове, правим сирене и мед и пакетираме седмични кутии за вземане или доставка.",
+      "audience": "Семейства и домакинства, които искат сезонна храна от местна ферма",
+      "services": [
+        ["Малка кутия", "20 €", "Сезонни зеленчуци за един или двама"],
+        ["Семейна кутия", "32 €", "Зеленчуци, билки и плодове за семейна маса"],
+        ["Мед, 500 г", "9 €", "Буркан от нашите кошери"]
+      ]
+    }
+  },
+  "lang": {
+    "en": {
+      "tagline": "farm shop and weekly boxes",
+      "description": "Seasonal vegetables, dairy, honey, wine and preserves from our farm. Choose a box, then collect it or have it delivered.",
+      "nav": [
+        ["Boxes", "/#boxes"],
+        ["Farm shop", "/shop.html"],
+        ["Seasons", "/seasons.html"],
+        ["Delivery", "/#delivery"]
+      ],
+      "headerCta": ["Order a box", "/#contact"],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Weekly boxes from the farm",
+            "eyebrowIcon": "leaf",
+            "title": "Whatever is ripe, *in one box*",
+            "lead": "Seasonal vegetables, dairy, honey, wine and preserves from our own farm. Pick a box size, then collect it at the farm or have it brought to your door.",
+            "cta": ["Choose a box", "/#boxes"],
+            "cta2": ["What we grow", "/#grow"],
+            "card": {
+              "icon": "leaf",
+              "title": "What goes in a box",
+              "rows": [
+                ["Vegetables and herbs", "The base"],
+                ["Fruit and berries", "In season"],
+                ["Dairy, honey, preserves", "Add-ons"]
+              ],
+              "note": "The contents follow the harvest, so no two weeks are alike."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                ["leaf", "Grown and made on the farm"],
+                ["calendar", "A box every week or two"],
+                ["truck", "Delivery or farm pickup"],
+                ["hand", "Packed by hand"]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "grow",
+              "title": "What we grow and make",
+              "intro": "Vegetables first, then dairy, honey, wine and the pantry shelf.",
+              "items": [
+                ["leaf", "Vegetables and fruit", "Tomatoes, peppers, roots, greens, herbs, berries and orchard fruit as the seasons turn."],
+                ["cup", "Dairy", "Yoghurt, butter and cheese from the farm’s dairy."],
+                ["drop", "Honey and preserves", "Honey by the jar, and jams, pickles and relishes put up when the harvest is at its peak."],
+                ["star", "Wine", "Wine from the farm’s own grapes, by the bottle."]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "boxes",
+              "alt": true,
+              "title": "Choose your box",
+              "intro": "Pick a size, then a rhythm: weekly, every two weeks or just once. Add dairy, honey or wine to any box.",
+              "items": [
+                {
+                  "name": "Small box",
+                  "price": "€20",
+                  "per": "per box",
+                  "features": ["Seasonal vegetables and herbs", "Enough for one or two people", "Weekly or every two weeks"],
+                  "cta": ["Order a box", "/#contact"]
+                },
+                {
+                  "name": "Family box",
+                  "price": "€32",
+                  "per": "per box",
+                  "featured": "Popular",
+                  "features": ["A bigger mix of vegetables, herbs and fruit", "Enough for a family table", "Room for dairy, honey or wine"],
+                  "cta": ["Order a box", "/#contact"]
+                },
+                {
+                  "name": "Large box",
+                  "price": "€48",
+                  "per": "per box",
+                  "features": ["A generous mix for a big household", "Extra roots and storage vegetables", "Made for batch cooking and preserving"],
+                  "cta": ["Order a box", "/#contact"]
+                }
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "how",
+              "title": "How a box works",
+              "intro": "From a few words in a form to a box at your door.",
+              "items": [
+                ["Choose a size", "Small, family or large — whichever fits your table."],
+                ["Pick a rhythm", "Every week, every two weeks, or just once to try it."],
+                ["We pack", "We pack what is ripe that week and, where we can, leave out what you do not eat."],
+                ["Collect or receive", "Pick the box up at the farm, or have it brought to your door."]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "delivery",
+              "alt": true,
+              "title": "Delivery and pickup",
+              "intro": "Two ways to get your box. Choose whichever suits your week.",
+              "items": [
+                ["Delivered to your door", "Give us your address and the day you prefer. We confirm whether we deliver to you, and on which day.", "Delivery days depend on where you live", "Tell us a safe place if nobody is home", "We confirm the delivery price when you order"],
+                ["Collect from the farm", "Prefer to come by? Pick up your box on a day you choose, and see where it grew.", "Choose a pickup day when you order", "Add a jar of honey or a bottle of wine on the spot", "Bring your own bags"]
+              ]
+            },
+            {
+              "type": "gallery",
+              "title": "From the farm",
+              "intro": "Replace the tiles with photos of your fields, your boxes and your produce.",
+              "items": ["The fields", "The weekly box", "Jars on the shelf", "The farm shop"]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "alt": true,
+              "title": "Good to know",
+              "items": [
+                ["Can I choose what goes in the box?", "The box follows the harvest, so we choose. Tell us what you do not eat and, where we can, we leave it out."],
+                ["Can I skip a week?", "Yes. Let us know in good time before your packing day and we skip that week."],
+                ["Do you deliver to my area?", "Send us your address and we tell you whether we deliver there and on which day. If we do not, you can always collect from the farm."],
+                ["Can I add dairy, honey or wine?", "Yes, any box can carry extras from the farm shop. List them in your order and we add them to the total."],
+                ["How do I keep the vegetables fresh?", "Take them out of the bag, wrap leafy greens in a damp cloth in the fridge, and keep roots and squash somewhere cool and dark."]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Ready for your first box?",
+              "p": "Tell us the size and where it should go — we confirm the first day with you.",
+              "button": ["Order a box", "/#contact"]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Order a box",
+              "intro": "Tell us the size, how often you want it and where it should go. We confirm the first delivery or pickup day with you.",
+              "formName": "box-order",
+              "rows": [
+                ["mail", "Email", "hello@example.com", "mailto:hello@example.com"],
+                ["phone", "Phone", "+359 888 000 000", "tel:+359888000000"],
+                ["pin", "Address", "1 Vitosha St, Sofia"]
+              ],
+              "fields": [
+                { "id": "box", "label": "Box size", "options": ["Small", "Family", "Large", "Not sure yet"] },
+                { "id": "receive", "label": "Delivery or pickup", "options": ["Delivery", "Farm pickup"] }
+              ],
+              "messageLabel": "Address, rhythm and anything you do not eat",
+              "send": "Send order",
+              "hoursTitle": "Farm shop hours",
+              "hours": [
+                ["Wednesday – Friday", "10:00 – 18:00"],
+                ["Saturday", "9:00 – 14:00"],
+                ["Sunday – Tuesday", "closed"]
+              ]
+            }
+          ]
+        },
+        "seasons": {
+          "title": "Seasons on the farm",
+          "description": "What a farm box usually brings in spring, summer, autumn and winter.",
+          "pagehead": ["Through the seasons", "A box follows the calendar, so what is in it changes through the year. Here is how the seasons usually look."],
+          "sections": [
+            {
+              "type": "cards",
+              "items": [
+                ["leaf", "Spring", "Young greens, radishes, spring onions, herbs and the first strawberries."],
+                ["sun", "Summer", "Tomatoes, cucumbers, peppers, courgettes, berries and stone fruit."],
+                ["bag", "Autumn", "Squash, apples, grapes, potatoes, onions and the first jars of preserves."],
+                ["home", "Winter", "Roots, cabbage, leeks, stored apples, honey, cheese and wine."]
+              ]
+            },
+            {
+              "type": "prose",
+              "alt": true,
+              "items": [
+                ["Why we pack by season", "Food picked when it is ready tastes like itself. It also keeps the box varied, because no crop is in the field all year."],
+                ["What if my favourite is missing?", "Some things have a short season and are gone before you know it. Tell us what you miss, and we will say when to expect it."]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Taste the season",
+              "p": "Choose a box and we start with whatever is ripe now.",
+              "button": ["Choose a box", "/#boxes"]
+            }
+          ]
+        },
+        "shop": {
+          "title": "Farm shop and prices",
+          "description": "Guide prices for vegetables, dairy, honey, preserves and wine from the farm shop.",
+          "pagehead": ["Farm shop", "Guide prices in euro. Stock follows the harvest, so ask us what is ready this week."],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Vegetables and fruit",
+                  "items": [
+                    ["Tomatoes", "Per kg", "€4"],
+                    ["Potatoes", "Per kg", "€2"],
+                    ["Mixed salad leaves", "A big bag", "€3"],
+                    ["Herbs", "A bunch", "€2"],
+                    ["Orchard fruit", "Per kg", "€3"]
+                  ]
+                },
+                {
+                  "name": "Dairy",
+                  "items": [
+                    ["Yoghurt", "A jar", "€3"],
+                    ["White brined cheese", "300 g", "€7"],
+                    ["Butter", "200 g", "€4"]
+                  ]
+                },
+                {
+                  "name": "Honey and preserves",
+                  "items": [
+                    ["Honey", "500 g jar", "€9"],
+                    ["Jam", "A jar", "€4"],
+                    ["Roasted pepper relish", "A jar", "€4"],
+                    ["Pickles", "A jar", "€4"]
+                  ]
+                },
+                {
+                  "name": "Wine",
+                  "items": [
+                    ["Red", "0.75 l bottle", "€12"],
+                    ["White", "0.75 l bottle", "€11"],
+                    ["Rosé", "0.75 l bottle", "€11"]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Add it to your box",
+              "p": "Anything here can ride along with your weekly box — just list it in your order.",
+              "button": ["Order a box", "/#contact"]
+            }
+          ]
+        }
+      }
+    },
+    "bg": {
+      "tagline": "фермерски магазин и седмични кутии",
+      "description": "Сезонни зеленчуци, млечни продукти, мед, вино и буркани от нашата ферма. Изберете кутия и я вземете или я получете у дома.",
+      "nav": [
+        ["Кутии", "/#boxes"],
+        ["Магазин", "/shop.html"],
+        ["Сезони", "/seasons.html"],
+        ["Доставка", "/#delivery"]
+      ],
+      "headerCta": ["Поръчайте кутия", "/#contact"],
+      "pages": {
+        "index": {
+          "hero": {
+            "eyebrow": "Седмични кутии от фермата",
+            "eyebrowIcon": "leaf",
+            "title": "Каквото е узряло, *в една кутия*",
+            "lead": "Сезонни зеленчуци, млечни продукти, мед, вино и буркани от нашата ферма. Изберете размер на кутията и я вземете от фермата или я получете пред вратата си.",
+            "cta": ["Изберете кутия", "/#boxes"],
+            "cta2": ["Какво отглеждаме", "/#grow"],
+            "card": {
+              "icon": "leaf",
+              "title": "Какво има в кутията",
+              "rows": [
+                ["Зеленчуци и билки", "Основата"],
+                ["Плодове и горски плодове", "По сезон"],
+                ["Мляко, мед, буркани", "По избор"]
+              ],
+              "note": "Съдържанието следва реколтата, затова две седмици не си приличат."
+            }
+          },
+          "sections": [
+            {
+              "type": "trust",
+              "items": [
+                ["leaf", "Отгледано и приготвено във фермата"],
+                ["calendar", "Кутия всяка седмица или през седмица"],
+                ["truck", "Доставка или вземане от фермата"],
+                ["hand", "Опаковано на ръка"]
+              ]
+            },
+            {
+              "type": "cards",
+              "id": "grow",
+              "title": "Какво отглеждаме и правим",
+              "intro": "Първо зеленчуците, а до тях — млечни продукти, мед, вино и буркани.",
+              "items": [
+                ["leaf", "Зеленчуци и плодове", "Домати, чушки, корени, зелени листа, билки, горски и овощни плодове — всеки в своя сезон."],
+                ["cup", "Млечни продукти", "Кисело мляко, масло и сирене от млекарницата на фермата."],
+                ["drop", "Мед и буркани", "Мед на буркан, а също сладка, туршии и лютеници, приготвени, когато реколтата е в разцвета си."],
+                ["star", "Вино", "Вино от гроздето на фермата — на бутилка."]
+              ]
+            },
+            {
+              "type": "pricing",
+              "id": "boxes",
+              "alt": true,
+              "title": "Изберете кутия",
+              "intro": "Изберете размер, после ритъм: всяка седмица, на две седмици или само веднъж. Към всяка кутия можете да добавите мляко, мед или вино.",
+              "items": [
+                {
+                  "name": "Малка кутия",
+                  "price": "20 €",
+                  "per": "на кутия",
+                  "features": ["Сезонни зеленчуци и билки", "Достатъчна за един или двама", "Всяка седмица или на две седмици"],
+                  "cta": ["Поръчайте кутия", "/#contact"]
+                },
+                {
+                  "name": "Семейна кутия",
+                  "price": "32 €",
+                  "per": "на кутия",
+                  "featured": "Популярна",
+                  "features": ["По-богат избор зеленчуци, билки и плодове", "Достатъчна за семейна маса", "Място за мляко, мед или вино"],
+                  "cta": ["Поръчайте кутия", "/#contact"]
+                },
+                {
+                  "name": "Голяма кутия",
+                  "price": "48 €",
+                  "per": "на кутия",
+                  "features": ["Щедър избор за голямо домакинство", "Допълнително корени и зеленчуци за зимата", "Подходяща за готвене на повече и за зимнина"],
+                  "cta": ["Поръчайте кутия", "/#contact"]
+                }
+              ]
+            },
+            {
+              "type": "steps",
+              "id": "how",
+              "title": "Как работи кутията",
+              "intro": "От няколко думи във формата до кутия пред вратата ви.",
+              "items": [
+                ["Изберете размер", "Малка, семейна или голяма — каквато ви е по мярка."],
+                ["Изберете ритъм", "Всяка седмица, на две седмици или само веднъж, за опит."],
+                ["Опаковаме", "Слагаме каквото е узряло през седмицата и — доколкото можем — пропускаме това, което не ядете."],
+                ["Вземете или получете", "Вземете кутията от фермата или я получете пред вратата си."]
+              ]
+            },
+            {
+              "type": "split",
+              "id": "delivery",
+              "alt": true,
+              "title": "Доставка и вземане",
+              "intro": "Два начина да получите кутията. Изберете този, който пасва на седмицата ви.",
+              "items": [
+                ["До вратата ви", "Дайте ни адреса си и деня, който предпочитате. Ще потвърдим дали доставяме до вас и в кой ден.", "Дните за доставка зависят от района", "Кажете ни къде да оставим кутията, ако никой не си е вкъщи", "Цената на доставката потвърждаваме при поръчката"],
+                ["От фермата", "Предпочитате да минете? Вземете кутията в избран от вас ден и вижте къде е израснала.", "Избирате ден за вземане при поръчката", "Добавете буркан мед или бутилка вино на място", "Донесете си торби"]
+              ]
+            },
+            {
+              "type": "gallery",
+              "title": "От фермата",
+              "intro": "Сменете плочките със снимки на нивите, кутиите и продуктите ви.",
+              "items": ["Нивите", "Седмичната кутия", "Буркани на рафта", "Фермерският магазин"]
+            },
+            {
+              "type": "faq",
+              "id": "faq",
+              "alt": true,
+              "title": "Полезно да знаете",
+              "items": [
+                ["Мога ли да избирам какво влиза в кутията?", "Кутията следва реколтата, затова ние избираме. Кажете ни какво не ядете и — доколкото можем — ще го пропуснем."],
+                ["Мога ли да пропусна седмица?", "Да. Кажете ни навреме преди деня за опаковане и ще пропуснем тази седмица."],
+                ["Доставяте ли до моя район?", "Изпратете ни адреса си и ще ви кажем дали доставяме дотам и в кой ден. Ако не, винаги можете да вземете кутията от фермата."],
+                ["Мога ли да добавя млечни продукти, мед или вино?", "Да, към всяка кутия можем да добавим продукти от фермерския магазин. Напишете ги в поръчката и ще ги включим в общата сума."],
+                ["Как да запазя зеленчуците свежи?", "Извадете ги от торбата, увийте листните зеленчуци във влажна кърпа в хладилника, а корените и тиквите дръжте на хладно и тъмно място."]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Готови ли сте за първата кутия?",
+              "p": "Кажете ни размера и къде да я доставим — първия ден ще уточним с вас.",
+              "button": ["Поръчайте кутия", "/#contact"]
+            },
+            {
+              "type": "contact",
+              "id": "contact",
+              "alt": true,
+              "title": "Поръчайте кутия",
+              "intro": "Кажете ни размера, колко често я искате и къде да я доставим. Първия ден за доставка или вземане ще уточним с вас.",
+              "formName": "box-order",
+              "rows": [
+                ["mail", "Имейл", "hello@example.com", "mailto:hello@example.com"],
+                ["phone", "Телефон", "+359 888 000 000", "tel:+359888000000"],
+                ["pin", "Адрес", "ул. „Витоша“ 1, София"]
+              ],
+              "fields": [
+                { "id": "box", "label": "Размер на кутията", "options": ["Малка", "Семейна", "Голяма", "Още не знам"] },
+                { "id": "receive", "label": "Доставка или вземане", "options": ["Доставка", "Вземане от фермата"] }
+              ],
+              "messageLabel": "Адрес, ритъм и какво не ядете",
+              "send": "Изпратете поръчката",
+              "hoursTitle": "Работно време на магазина",
+              "hours": [
+                ["Сряда – петък", "10:00 – 18:00"],
+                ["Събота", "9:00 – 14:00"],
+                ["Неделя – вторник", "затворено"]
+              ]
+            }
+          ]
+        },
+        "seasons": {
+          "title": "Сезоните във фермата",
+          "description": "Какво обикновено носи кутията от фермата през пролетта, лятото, есента и зимата.",
+          "pagehead": ["През сезоните", "Кутията следва календара, затова съдържанието ѝ се сменя през годината. Ето как обикновено изглеждат сезоните."],
+          "sections": [
+            {
+              "type": "cards",
+              "items": [
+                ["leaf", "Пролет", "Млади зелени листа, репички, пресен лук, билки и първите ягоди."],
+                ["sun", "Лято", "Домати, краставици, чушки, тиквички, горски плодове и костилкови плодове."],
+                ["bag", "Есен", "Тикви, ябълки, грозде, картофи, лук и първите буркани зимнина."],
+                ["home", "Зима", "Корени, зеле, праз, ябълки от склада, мед, сирене и вино."]
+              ]
+            },
+            {
+              "type": "prose",
+              "alt": true,
+              "items": [
+                ["Защо пакетираме по сезон", "Храната, набрана, когато е узряла, има истински вкус. А кутията остава разнообразна, защото нито една култура не е на нивата цяла година."],
+                ["А ако любимото ми липсва?", "Някои неща имат кратък сезон и изчезват, преди да се усетите. Кажете ни какво ви липсва и ще ви кажем кога да го очаквате."]
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Вкусете сезона",
+              "p": "Изберете кутия и започваме с това, което е узряло сега.",
+              "button": ["Изберете кутия", "/#boxes"]
+            }
+          ]
+        },
+        "shop": {
+          "title": "Фермерски магазин и цени",
+          "description": "Ориентировъчни цени на зеленчуци, млечни продукти, мед, буркани и вино от фермерския магазин.",
+          "pagehead": ["Фермерски магазин", "Цените са в евро и са ориентировъчни. Наличностите следват реколтата — питайте ни какво е готово тази седмица."],
+          "sections": [
+            {
+              "type": "menu",
+              "groups": [
+                {
+                  "name": "Зеленчуци и плодове",
+                  "items": [
+                    ["Домати", "На кг", "4 €"],
+                    ["Картофи", "На кг", "2 €"],
+                    ["Микс от салатни листа", "Голяма торба", "3 €"],
+                    ["Билки", "Връзка", "2 €"],
+                    ["Овощни плодове", "На кг", "3 €"]
+                  ]
+                },
+                {
+                  "name": "Млечни продукти",
+                  "items": [
+                    ["Кисело мляко", "Буркан", "3 €"],
+                    ["Бяло саламурено сирене", "300 г", "7 €"],
+                    ["Масло", "200 г", "4 €"]
+                  ]
+                },
+                {
+                  "name": "Мед и буркани",
+                  "items": [
+                    ["Мед", "Буркан 500 г", "9 €"],
+                    ["Сладко", "Буркан", "4 €"],
+                    ["Лютеница", "Буркан", "4 €"],
+                    ["Туршия", "Буркан", "4 €"]
+                  ]
+                },
+                {
+                  "name": "Вино",
+                  "items": [
+                    ["Червено", "Бутилка 0,75 л", "12 €"],
+                    ["Бяло", "Бутилка 0,75 л", "11 €"],
+                    ["Розе", "Бутилка 0,75 л", "11 €"]
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "cta",
+              "h": "Добавете го към кутията",
+              "p": "Всичко тук може да пътува заедно със седмичната ви кутия — просто го напишете в поръчката.",
+              "button": ["Поръчайте кутия", "/#contact"]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -276,5 +276,15 @@
   "err.noEngine": "Creating and changing sites runs on the engine inside the desktop app (macOS, Windows, Linux). Download it and open this page there.",
   "settings.ai": "Built-in AI",
   "settings.engine": "Cloud AI engine",
-  "settings.engineHint": "Which AI answers through the built-in cloud service: fixes, the assistant and the Site Builder. Own keys are not affected."
+  "settings.engineHint": "Which AI answers through the built-in cloud service: fixes, the assistant and the Site Builder. Own keys are not affected.",
+  "create.f.hours": "Opening hours",
+  "create.f.hoursHint": "One line per day or range. Leave it empty and the site shows no hours.",
+  "create.f.hoursPh": "Mon–Fri 9:00–18:00\nSat 10:00–14:00\nSun closed",
+  "create.f.tone": "How should it sound?",
+  "create.f.toneHint": "Optional. On Auto the AI picks a voice that suits your kind of site.",
+  "tone.auto": "Auto",
+  "tone.friendly": "Friendly",
+  "tone.professional": "Business",
+  "tone.premium": "Premium",
+  "tone.playful": "Playful"
 }

@@ -12,7 +12,7 @@ import { chooseProvider, stream, sseEvents } from '../ai/providers.mjs';
 import { cloudEngine } from '../ai/assistant.mjs';
 import { ownKey } from '../aikeys.mjs';
 import { recordCost } from '../costs.mjs';
-import { loadTheme } from './themes.mjs';
+import { loadTheme, aiTheme } from './themes.mjs';
 import { normalizeBrief, applyBrief } from './brief.mjs';
 import { runPipeline, STEPS } from './ai.mjs';
 
@@ -113,7 +113,7 @@ async function cloudContent({ brief, recipe, onStep }) {
     else if (j.type === 'done') break;
   }
   if (!result?.content) throw new EngineError(msg('newsite.ai.badAnswer'), 'ai_failed');
-  return { content: result.content, plan: result.plan || null, styleSuggestion: result.styleSuggestion || null, usage };
+  return { content: result.content, plan: result.plan || null, audit: result.audit || null, styleSuggestion: result.styleSuggestion || null, usage };
 }
 
 // ---------------------------------------------------------------- the command
@@ -128,6 +128,8 @@ export async function siteContent({ brief: input, provider: requested = null }) 
   if (!theme) throw new EngineError(msg('newsite.unknownTemplate', { template: brief.theme }), 'usage', 2);
   // the recipe the model rewrites already carries the owner's services and contacts; photos come at save time
   const recipe = applyBrief(theme, { ...brief, photos: [] }, []);
+  // what the model also needs to know: the kind of site (its writing guide) — never stored in the owner's brief
+  const aiBrief = { ...brief, ...aiTheme(theme) };
   const status = await accountStatus();
   const provider = chooseProvider({ features: status.features || null, requested });
   const t0 = Date.now();
@@ -138,15 +140,15 @@ export async function siteContent({ brief: input, provider: requested = null }) 
   };
   let out;
   if (provider === 'cloud') {
-    out = await cloudContent({ brief, recipe, onStep });
+    out = await cloudContent({ brief: aiBrief, recipe, onStep });
   } else {
     if (provider === 'openai') throw new EngineError(msg('newsite.ai.anthropicOnly'), 'ai_unavailable');
     if (!ownKey('anthropic')) throw new EngineError(msg('ai.unavailable.noKey', { provider: 'anthropic' }), 'ai_unavailable');
     const models = status?.settings?.['ai.models'] ? { content: status.settings['ai.models'].standard || undefined } : {};
-    out = await runPipeline({ brief, recipe, call: ownKeyCall('anthropic'), models, onStep });
+    out = await runPipeline({ brief: aiBrief, recipe, call: ownKeyCall('anthropic'), models, onStep });
   }
   const file = contentFile();
-  fs.writeFileSync(file, JSON.stringify({ schema: 'bid.site-content/1', createdAt: new Date().toISOString(), theme: theme.id, lang: brief.lang, provider, usage: out.usage, content: out.content }, null, 2));
+  fs.writeFileSync(file, JSON.stringify({ schema: 'bid.site-content/1', createdAt: new Date().toISOString(), theme: theme.id, lang: brief.lang, provider, usage: out.usage, audit: out.audit || null, content: out.content }, null, 2));
   const amount = out.usage.charged ?? (out.usage.input || 0) + (out.usage.output || 0);
   recordCost({ project: null, projectName: brief.name, service: provider === 'cloud' ? 'ai-cloud' : `ai-${provider}`, op: 'site.create', amount, unit: out.usage.charged != null ? 'credits' : 'tokens', estimated: false, ref: out.usage.model || null });
   return {
@@ -154,6 +156,7 @@ export async function siteContent({ brief: input, provider: requested = null }) 
     provider,
     model: out.usage.model || out.usage.steps?.content?.model || null,
     usage: out.usage,
+    audit: out.audit || null,
     styleSuggestion: out.styleSuggestion || null,
     pages: Object.keys(out.content.pages || {}),
     steps: STEPS,

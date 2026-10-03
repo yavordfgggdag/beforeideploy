@@ -8,7 +8,7 @@ import { repoSlug } from '../fixes.mjs';
 import { t, msg } from '../i18n.mjs';
 import { gitBin, gitSh } from '../gitbin.mjs';
 import { loadTheme } from './themes.mjs';
-import { normalizeBrief, applyBrief, applyImages } from './brief.mjs';
+import { normalizeBrief, applyBrief, applyImages, sampleSections } from './brief.mjs';
 import { resolveTokens } from './tokens.mjs';
 import { renderSite } from './render.mjs';
 import crypto from 'node:crypto';
@@ -89,7 +89,7 @@ export function generateSite({ brief: input, dir, content = null }) {
     // the source of truth for "change it with words" (S4): brief + resolved look + the content that was rendered
     // file hashes: `bid site edit` refuses to overwrite a file the owner changed by hand (S4)
     const hashes = Object.fromEntries(Object.entries(files).map(([name, body]) => [name, crypto.createHash('sha256').update(body).digest('hex').slice(0, 16)]));
-    const record = { schema: 'bid.site/1', createdAt: new Date().toISOString(), engine: 'sitegen/1', theme: theme.id, brief: { ...brief, photos: images.map((im) => ({ file: im.file, alt: im.alt, caption: im.caption })) }, tokens, content: pageContent, files: hashes, history: [] };
+    const record = { schema: 'bid.site/1', createdAt: new Date().toISOString(), engine: 'sitegen/1', theme: theme.id, brief: { ...brief, photos: images.map((im) => ({ file: im.file, alt: im.alt, caption: im.caption })) }, tokens, content: pageContent, samples: sampleSections(pageContent, brief), files: hashes, history: [] };
     fs.writeFileSync(path.join(target, 'bid.site.json'), JSON.stringify(record, null, 2) + '\n');
   } catch (e) {
     fs.rmSync(target, { recursive: true, force: true });
