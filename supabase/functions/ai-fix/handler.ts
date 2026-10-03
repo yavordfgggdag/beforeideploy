@@ -218,7 +218,11 @@ export function createAiFixHandler(deps: AiFixDeps): (req: Request) => Promise<R
       const text = await upstream.text().catch(() => "");
       console.error(engine, upstream.status, text.slice(0, 300));
       await release("upstream");
-      return json(502, { error: `model request failed (${upstream.status})`, code: "upstream" });
+      // name the engine and the provider's error type (never its message: it can echo part of the key)
+      let kind = "";
+      try { const e = JSON.parse(text)?.error; kind = String(e?.type ?? e?.code ?? "").replace(/[^a-z0-9_.-]/gi, "").slice(0, 60); } catch { /* not JSON */ }
+      const rejected = upstream.status === 401 || upstream.status === 403;
+      return json(502, { error: `model request failed (${upstream.status}) [${engine}${kind ? ": " + kind : ""}]${rejected ? " — the provider rejected the key stored for this engine" : ""}`, code: "upstream" });
     }
 
     const encoder = new TextEncoder();
