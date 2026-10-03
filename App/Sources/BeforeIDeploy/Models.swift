@@ -1730,3 +1730,45 @@ struct SiteChatTurn: Decodable {
     var brief: Brief?
     var model: String?
 }
+
+/// Builder phase 2: the conversation about one site (`bid site talk`).
+struct SiteTalkEntry: Codable, Identifiable {
+    struct Plan: Codable { var summary: String; var steps: [String] }
+    struct Build: Codable {
+        var applied: [String]?
+        var refused: [String]?
+        var changed: [String]?
+        var commit: String?
+        var usage: SiteContentResult.Usage?
+    }
+    var at: String?
+    var role: String
+    var kind: String
+    var mode: String?
+    var text: String
+    var plan: Plan?
+    var build: Build?
+    var next: [String]?
+    var usage: SiteContentResult.Usage?
+    var id: String { (at ?? "") + role + kind + String(text.prefix(24)) }
+}
+
+struct SiteTalkHistory: Codable {
+    var entries: [SiteTalkEntry]
+    var hasMore: Bool?
+    var instructions: String
+}
+
+struct SiteTalkResult: Codable {
+    var mode: String
+    var reply: String?
+    var next: [String]?
+    var plan: SiteTalkEntry.Plan?
+    var summary: String?
+    var applied: [String]?
+    var refused: [String]?
+    var changed: [String]?
+    var commit: String?
+    var usage: SiteContentResult.Usage?
+    var provider: String?
+}

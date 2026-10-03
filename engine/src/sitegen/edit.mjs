@@ -219,14 +219,14 @@ function renderRecord(record, theme) {
  * `bid site edit`: applies the words to the site. `force` overwrites files the owner changed by hand; without it
  * such a change is refused (code `site_modified`) and the files are listed, so nothing is lost silently.
  */
-export async function editSite(project, { say, provider = null, force = false, dryRun = false } = {}) {
+export async function editSite(project, { say, provider = null, force = false, dryRun = false, maxChars = 400 } = {}) {
   if (!say || say === true || !String(say).trim()) throw new EngineError(msg('site.edit.missingSay'), 'usage', 2);
   const dir = project.path;
   const record = siteRecord(dir);
   if (!record) throw new EngineError(msg('site.edit.notGenerated'), 'not_generated');
   const theme = loadTheme(record.theme);
   if (!theme) throw new EngineError(msg('newsite.unknownTemplate', { template: record.theme }), 'not_found');
-  const words = String(say).trim().slice(0, 400);
+  const words = String(say).trim().slice(0, maxChars);
   const t0 = Date.now();
   const onStep = (id, state, info = {}) => ev.step(`site.${id}`, { label: t('site.edit.step'), category: 'AI', status: state === 'running' ? 'running' : state === 'pass' ? 'pass' : 'fail', summary: state === 'running' ? t('newsite.ai.working', { model: info.model || t('ai.step.cloudModel') }) : state === 'pass' ? t('newsite.ai.done') : info.error || '' });
 

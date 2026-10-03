@@ -2045,6 +2045,42 @@ ta('site chat (v2): от едно съобщение — въпроси с от�
   function listThemeIds() { return JSON.parse(fs.readFileSync(path.join(ROOT, 'engine', 'themes', 'mentor', 'theme.json'), 'utf8')) && fs.readdirSync(path.join(ROOT, 'engine', 'themes')).filter((d) => fs.existsSync(path.join(ROOT, 'engine', 'themes', d, 'theme.json'))); }
 });
 
+ta('builder phase 2: говори със сайта — Обсъждане не пипа нищо, План е редактируем, Изграждане променя истинските файлове с undo; разговорът се пази; постоянни инструкции', async () => {
+  const T = await import(path.join(ROOT, 'engine', 'src', 'sitegen', 'talk.mjs'));
+  assert(T.talkModel('auto', 'chat') === 'claude-haiku-4-5' && T.talkModel('auto', 'plan') === 'claude-sonnet-5-5' && T.talkModel('claude-opus-5-5', 'plan') === 'claude-opus-5-5', 'Auto: cheap to talk, stronger to plan; an explicit pick is kept');
+  assert(T.buildWords({ plan: ['Махни отзивите', '  ', 'По-тъмни цветове'] }) === '1. Махни отзивите 2. По-тъмни цветове' && T.buildWords({ say: '  ново заглавие ' }) === 'ново заглавие', 'plan steps become the words of the build');
+  assert(T.readPlan({ summary: 'S', steps: Array.from({ length: 9 }, (_, i) => `стъпка ${i}`) }).steps.length === T.MAX_STEPS, 'at most six steps');
+  let bad = null; try { T.readPlan({ steps: [] }); } catch (e) { bad = e; }
+  assert(bad && bad.code === 'ai_bad_answer', 'an empty plan is a bad answer');
+  const parent = path.join(TMP, 'talk-sites');
+  fs.mkdirSync(parent, { recursive: true });
+  const made = bidEnv({ BID_LANG: 'bg' }, 'new', 'create', '--template', 'mentor', '--name', 'Ментор Ива', '--dir', parent, '--lang', 'bg');
+  assert(made.result.ok, JSON.stringify(made.result).slice(0, 200));
+  const dir = made.data.path;
+  const project = { key: 'talk-test', name: 'Ментор Ива', path: dir };
+  const snap = () => fs.readdirSync(dir).filter((f) => f.endsWith('.html') || f === 'bid.site.json').sort().map((f) => f + ':' + fs.readFileSync(path.join(dir, f), 'utf8').length).join('|');
+  const seen = [];
+  const fake = (answer) => async (req) => { seen.push(req); return { json: answer, usage: { input: 5, output: 5, model: req.model } }; };
+  // standing instructions go into every prompt
+  assert(T.writeInstructions(project, 'Винаги на „ти“, без удивителни.') === 'Винаги на „ти“, без удивителни.', 'instructions saved');
+  const before = snap();
+  const chat = await T.talkTurn(project, { mode: 'chat', say: 'Какво липсва на сайта ми?', call: fake({ reply: 'Липсват отзиви.', next: ['Добави отзиви', 'a', 'b', 'c'] }) });
+  assert(chat.reply === 'Липсват отзиви.' && chat.next.length === 3 && seen[0].step === 'chat' && seen[0].model === 'claude-haiku-4-5' && seen[0].prompt.includes('Винаги на „ти“') && seen[0].prompt.includes('Какво липсва'), 'chat answers with the standing instructions in the prompt');
+  assert(snap() === before, 'discussion changes no file');
+  const plan = await T.talkTurn(project, { mode: 'plan', say: 'Искам по-тъмен сайт', call: fake({ summary: 'По-тъмни цветове', steps: ['Направи сайта по-тъмен'] }) });
+  assert(plan.plan.steps.length === 1 && seen[1].step === 'plan' && snap() === before, 'a plan changes no file');
+  // build: the words are understood without a model ("по-тъмно"), so this runs offline; the edit is a Git commit with undo
+  const built = await T.talkTurn(project, { mode: 'build', plan: plan.plan.steps });
+  assert(built.applied.length >= 1 && built.changed.length >= 1 && snap() !== before, JSON.stringify(built).slice(0, 300));
+  const hist = T.talkHistory(project);
+  assert(hist.entries.map((e) => e.kind).join() === 'chat,chat,plan,plan,build,build', hist.entries.map((e) => e.kind).join());
+  assert(hist.entries.at(-1).role === 'assistant' && hist.entries.at(-1).build.applied.length >= 1 && hist.instructions.includes('„ти“'), 'the conversation is kept and carries the build report');
+  const undo = bid('site', 'undo', '--project', dir);
+  assert(undo.result.ok && snap() === before, 'undo restores the files');
+  let none = null; try { await T.talkTurn(project, { mode: 'chat', say: '   ', call: fake({}) }); } catch (e) { none = e; }
+  assert(none && none.code === 'usage', 'an empty message is refused');
+});
+
 t('builder: регистърът на изискванията (260 реда, F001–F260) е актуален и нито един ред не е „налично и тествано“ без доказателство', () => {
   const r = spawnSync(process.execPath, [path.join(ROOT, 'scripts', 'builder-registry.mjs'), '--check'], { encoding: 'utf8' });
   assert(r.status === 0, (r.stdout + r.stderr).slice(0, 300));

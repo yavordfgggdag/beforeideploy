@@ -522,6 +522,30 @@ final class AppModel: ObservableObject, Feedback {
         return r
     }
 
+    /// The kept conversation about the site (chat, plan and build entries) and its standing instructions.
+    func siteTalkHistory(_ project: Project) async -> SiteTalkHistory? {
+        try? await engine.call(["site", "talk", "--project", project.key, "--history"], as: SiteTalkHistory.self, timeout: 30)
+    }
+
+    /// One turn: `chat` answers, `plan` writes editable steps, `build` changes the real site. `handle` cancels the run (Stop).
+    func siteTalk(_ project: Project, mode: String, say: String, plan: [String]?, modelChoice: String, force: Bool, handle: EngineHandle) async throws -> SiteTalkResult {
+        var args = ["site", "talk", "--project", project.key, "--mode", mode, "--model", modelChoice]
+        if mode == "build", let plan, !plan.isEmpty, let d = try? JSONSerialization.data(withJSONObject: plan) { args += ["--plan", String(decoding: d, as: UTF8.self)] }
+        if !say.isEmpty { args += ["--say", say] }
+        if force { args.append("--force") }
+        let outcome = try await engine.run(args, handle: handle, timeout: 600)
+        let r = try outcome.decode(SiteTalkResult.self)
+        if mode == "build" { await refreshStatus(quiet: true) }
+        return r
+    }
+
+    @discardableResult
+    func siteInstructions(_ project: Project, text: String) async -> String? {
+        struct R: Decodable { var instructions: String }
+        let args = text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? ["site", "talk", "--project", project.key, "--instructions-clear"] : ["site", "talk", "--project", project.key, "--instructions", text]
+        return (try? await engine.call(args, as: R.self, timeout: 30))?.instructions
+    }
+
     /// `bid site undo`: reverts the last edit with a new commit.
     func siteUndo(_ project: Project) async throws {
         struct Undo: Decodable { var commit: String? }

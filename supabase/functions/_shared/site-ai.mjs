@@ -765,7 +765,7 @@ const ADDABLE = new Set(['cards', 'steps', 'faq', 'quotes', 'stats', 'prose', 'c
 export function editPrompt(brief, content, look, say) {
   return `${briefText(brief)}
 
-The owner wants to change their site. Their words: "${clip(say, 400)}"
+The owner wants to change their site. Their words: "${clip(say, 1500)}"
 
 The site today (page ids, section indexes and the current texts):
 ${recipeText(content)}

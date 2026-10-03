@@ -44,6 +44,7 @@ import { launchStatus } from './launch.mjs';
 import { createSite, listTemplates } from './newsite.mjs';
 import { generateSite, previewSite } from './sitegen/generate.mjs';
 import { siteContent, siteChat, readContentArg } from './sitegen/aicontent.mjs';
+import { talkTurn, talkHistory, writeInstructions } from './sitegen/talk.mjs';
 import { editSite, undoSite, siteHistory, siteInfo } from './sitegen/edit.mjs';
 import { loadTheme, validateTheme, previewStatus, suggestThemes } from './sitegen/themes.mjs';
 import { STYLES, paletteIds } from './sitegen/tokens.mjs';
@@ -267,6 +268,14 @@ async function main() {
       }
       const p = proj();
       if (sub === 'info' || !sub) return ok(siteInfo(p));
+      if (sub === 'talk') {
+        if (flags.history) return ok(talkHistory(p));
+        if (flags['instructions-clear']) return ok({ instructions: writeInstructions(p, '') });
+        if (flags.instructions && flags.instructions !== true) return ok({ instructions: writeInstructions(p, String(flags.instructions)) });
+        let plan = null;
+        if (flags.plan && flags.plan !== true) { try { plan = JSON.parse(String(flags.plan)); } catch { throw new EngineError(msg('site.edit.missingSay'), 'usage', 2); } }
+        return ok(await talkTurn(p, { mode: String(flags.mode || 'chat'), say: flags.say && flags.say !== true ? String(flags.say) : '', plan, model: flags.model && flags.model !== true ? String(flags.model) : 'auto', provider: flags.provider && flags.provider !== true ? String(flags.provider) : null, force: !!flags.force }));
+      }
       if (sub === 'history') return ok(siteHistory(p));
       if (sub === 'undo') return ok(undoSite(p));
       if (sub === 'edit') return ok(await editSite(p, { say: flags.say, provider: flags.provider && flags.provider !== true ? String(flags.provider) : null, force: !!flags.force, dryRun: !!flags['dry-run'] }));
