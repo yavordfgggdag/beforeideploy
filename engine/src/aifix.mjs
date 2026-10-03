@@ -64,7 +64,7 @@ function tailFile(file, lines = 80) {
 // Files the log points at. A path with a folder (any folder) or a file in the project root; the project itself decides
 // what exists, so a stray match costs nothing. `file:line[:col]` gives the window to show.
 const EXT = 'tsx?|jsx?|mjs|cjs|astro|vue|svelte|css|scss|sass|less|json|html?|md|mdx|toml|ya?ml|php|py';
-const FILE_RE = new RegExp(`(?:^|[\\s("'\`=<>\\[])((?:\\.{1,2}/)?(?:[\\w@~.-]+/)*[\\w@~.-]+\\.(?:${EXT}))(?::(\\d+))?(?::\\d+)?`, 'g');
+const FILE_RE = new RegExp(`(?:^|[\\s("'\`=<>\\[])((?:\\.{1,2}/)?(?:[\\w@~.-]+/)*[\\w@~.-]+\\.(?:${EXT}))(?::(\\d+))?(?::\\d+)?`, 'gm');
 // never show these to a model: secrets, keys, lockfiles, generated or vendored code
 const NEVER_SHOW = /(?:^|\/)(?:\.env[^/]*|[^/]*\.(?:pem|key|p12|pfx)|id_(?:rsa|ed25519)[^/]*|credentials[^/]*|[^/]*secrets?[^/]*\.(?:json|ya?ml|toml)|package-lock\.json|yarn\.lock|pnpm-lock\.yaml|node_modules\/.*|\.git\/.*|\.next\/.*|\.netlify\/.*)$/i;
 const MAX_FILES = 4;
@@ -75,7 +75,7 @@ function mentionedFiles(dir, log) {
   // (macOS prints /private/var/… for the folder the app knows as /var/…, so both spellings go)
   let real = root;
   try { real = fs.realpathSync(root); } catch {}
-  const text = [...new Set([root, real])].reduce((acc, r) => acc.split(`${r}/`).join(''), String(log));
+  const text = [...new Set([root, real])].sort((a, b) => b.length - a.length).reduce((acc, r) => acc.split(`${r}/`).join(' '), String(log));
   const found = new Map();
   let m;
   FILE_RE.lastIndex = 0;
